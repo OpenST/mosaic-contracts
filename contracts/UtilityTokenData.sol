@@ -50,7 +50,6 @@ contract UtilityTokenData {
 	struct Redemption {
 		address redeemer;
 		uint256 amountUT;
-		uint256 amountST;
 		uint256 escrowUnlockHeight;
 	}
 }
