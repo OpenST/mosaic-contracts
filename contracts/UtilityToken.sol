@@ -13,7 +13,7 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Utility Token
 //
@@ -32,7 +32,7 @@ import "./UtilityTokenData.sol";
 contract UtilityToken is EIP20Token, UtilityTokenData {
     using SafeMath for uint256;
 
-    event UnstakingIntentDeclared(bytes32 indexed _uuid, address indexed _unstaker, uint256 _unstakerNonce, uint256 _amountST, uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _unstakingIntentHash /* redundant for abundance of clarity for MVU */);
+    event UnstakingIntentDeclared(bytes32 indexed _uuid, address indexed _unstaker, uint256 _unstakerNonce, uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _unstakingIntentHash /* redundant for abundance of clarity for MVU */);
     event Redeemed(bytes32 indexed _uuid, address indexed _account, uint256 _amount, uint256 _balance, uint256 _totalSupply);
     event MintingIntentConfirmed(bytes32 indexed _uuid, bytes32 _mintingIntentHash);
     event Minted(bytes32 indexed _uuid, address indexed _account, uint256 _amount, uint256 _balance, uint256 _totalSupply);
@@ -48,8 +48,8 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		uuid = keccak256(_name, _chainId);
 	}
 
-	// TBD: move to a parent contract because this is identical to `hashIntent` in Staking?
-	function hashIntent(
+	// TBD: move to a parent contract because this is identical to `hashMintingIntent` in Staking?
+	function hashMintingIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
@@ -61,26 +61,39 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		return keccak256(_uuid, _account, _accountNonce, _amountST, _amountUT, _escrowUnlockHeight);
 	}
 
+	function hashUnstakingIntent(
+		bytes32 _uuid,
+		address _account,
+		uint256 _accountNonce,
+		uint256 _amountUT,
+		uint256 _escrowUnlockHeight
+	)
+	public pure returns (bytes32) {
+		return keccak256(_uuid, _account, _accountNonce, _amountUT, _escrowUnlockHeight);
+	}
+
 	// @dev There's no need for msg.sender to approve this contract to transfer
 	// 		because calling `transfer` from `redeem` has the same msg.sender
-	function redeem(uint256 _amountUT) public returns (bool, uint256) {
+	// TODO redeem needs user nonce from staking contract as parameter
+	//      and must be strictly greater than stored nonce in UtilityToken
+	function redeem(uint256 _amountUT) public returns (bool) {
 		require(_amountUT > 0);
 		require(transfer(address(this), _amountUT));
 
-		uint256 amountST = _amountUT.div(conversionRate);
-		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT;
-		bytes32 unstakingIntentHash = hashIntent(
+		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+		bytes32 unstakingIntentHash = hashUnstakingIntent(
 			uuid,
 			msg.sender,
 			nonces[msg.sender],
-			amountST,
 			_amountUT,
 			escrowUnlockHeight
 		);
+
+		nonces[msg.sender]++;
+
 		redemptions[unstakingIntentHash] = Redemption({
 			redeemer: 			msg.sender,
 			amountUT: 			_amountUT,
-			amountST: 			amountST,
 			escrowUnlockHeight: escrowUnlockHeight
 		});
 
@@ -89,26 +102,22 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 			msg.sender,
 			nonces[msg.sender],
 			_amountUT,
-			amountST,
 			escrowUnlockHeight,
 			unstakingIntentHash
 		);
 
-		nonces[msg.sender]++;
-
-		return (true, amountST);
+		return (true);
 	}
 
-	// TBD: don't delete Redemption after processing?
 	function processRedepmtion(bytes32 _unstakingIntentHash) public returns (bool) {
 		require(_unstakingIntentHash != "");
 		require(redemptions[_unstakingIntentHash].redeemer == msg.sender);
 
 		Redemption storage redemption = redemptions[_unstakingIntentHash];
-		tokenTotalSupply = tokenTotalSupply.sub(redemption.amountST);
-		balances[address(this)] = balances[address(this)].sub(redemption.amountST);
+		tokenTotalSupply = tokenTotalSupply.sub(redemption.amountUT);
+		balances[address(this)] = balances[address(this)].sub(redemption.amountUT);
 
-		Redeemed(uuid, redemption.redeemer, redemption.amountST, balances[redemption.redeemer], tokenTotalSupply);
+		Redeemed(uuid, redemption.redeemer, redemption.amountUT, balances[redemption.redeemer], tokenTotalSupply);
 
 		delete redemptions[_unstakingIntentHash];
 
@@ -131,10 +140,12 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		require(_escrowUnlockHeight > 0);
 		require(_mintingIntentHash != "");
 
-		bytes32 mintingIntentHash = hashIntent(
+		nonces[_minter] = _minterNonce;
+
+		bytes32 mintingIntentHash = hashMintingIntent(
 			_uuid,
 			_minter,
-			nonces[_minter],
+			_minterNonce,
 			_amountST,
 			_amountUT,
 			_escrowUnlockHeight
@@ -146,14 +157,12 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 			minter: _minter,
 			amount: _amountUT
 		});
-		nonces[_minter]++;
 
 		MintingIntentConfirmed(_uuid, mintingIntentHash);
 
 		return true;
 	}
 
-	// TBD: don't delete Mint after processing?
 	function processMinting(bytes32 _mintingIntentHash) external returns (bool) {
 		require(_mintingIntentHash != "");
 
