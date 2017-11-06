@@ -13,7 +13,7 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Staking
 //
@@ -43,8 +43,7 @@ contract Staking is OpsManaged, StakingData {
 		eip20Token = _eip20Token;
 	}
 
-	// TBD: move to a parent contract because this is identical to `hashIntent` in Staking?
-	function hashIntent(
+	function hashMintingIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
@@ -58,6 +57,17 @@ contract Staking is OpsManaged, StakingData {
 		return keccak256(_uuid, _account, _accountNonce, _amountST, _amountUT, _escrowUnlockHeight);
 	}
 
+	function hashUnstakingIntent(
+		bytes32 _uuid,
+		address _account,
+		uint256 _accountNonce,
+		uint256 _amountUT,
+		uint256 _escrowUnlockHeight
+	)
+	public pure returns (bytes32) {
+		return keccak256(_uuid, _account, _accountNonce, _amountUT, _escrowUnlockHeight);
+	}
+
 	// @dev `_chainId` should be blank for MVU
 	// @dev `_stakingAccount` is optional
 	function registerUtilityToken(
@@ -68,7 +78,7 @@ contract Staking is OpsManaged, StakingData {
 		bytes32 _chainId,
 		address _stakingAccount
 	)
-	public onlyAdmin returns (bool, bytes32) {
+	public onlyAdmin returns(bytes32) {
 		require(bytes(_name).length > 0);
 		require(bytes(_symbol).length > 0);
 		require(_decimals > 0);
@@ -91,11 +101,11 @@ contract Staking is OpsManaged, StakingData {
 
 		UtilityTokenRegistered(uuid, _symbol, _name, _decimals, _conversionRate, _chainId, _stakingAccount);
 
-		return (true, uuid);
+		return uuid;
 	}
-	
-	// 2 step like ownership --> Yes
-	// If this is 0, it cannot be set to non-0
+
+	// TODO: 2 step change
+	// Require that if this is 0, it cannot be set to non-0
 	function setUtilityTokenStakingAccount(bytes32 _uuid, address _newStakingAccount) public returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
@@ -104,7 +114,7 @@ contract Staking is OpsManaged, StakingData {
 		// TODO;
 	}
 
-	function stake(bytes32 _uuid, uint256 _amountST) external returns (bool, uint256) {
+	function stake(bytes32 _uuid, uint256 _amountST) external returns (uint256) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
 		require(_amountST > 0);
@@ -115,8 +125,9 @@ contract Staking is OpsManaged, StakingData {
 		require(eip20Token.transferFrom(msg.sender, address(this), _amountST));
 
 		uint256 amountUT = _amountST.mul(utilityToken.conversionRate);
-		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT;
-		bytes32 mintingIntentHash = hashIntent(
+		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+		nonces[msg.sender]++;
+		bytes32 mintingIntentHash = hashMintingIntent(
 			_uuid,
 			msg.sender,
 			nonces[msg.sender],
@@ -142,16 +153,13 @@ contract Staking is OpsManaged, StakingData {
 			mintingIntentHash
 		);
 
-		nonces[msg.sender]++;
-
-		return (true, amountUT);
+		return amountUT;
 	}
 
-	// TODO: Come back to this
-	// when calling hashIntent, make sure the beneficiary is passed in as _staker
+	// when calling hashMintingIntent, make sure the beneficiary is passed in as _staker
 	// if _uuid == a branded token, require(msg.sender == adminAddress) && require(_beneficiary == utilityTokens[_uuid].stakingAccount)
 	// requires(eip20Token.transferFrom(_beneficiary, this, _amount))
-	// Calls hashIntent
+	// Calls hashMintingIntent
 	// Adds Stake to stakes
 	// Emits event: MintingIntentDeclared
 	function stakeFor(address _beneficiary, bytes32 _uuid, uint256 _amountST) external returns (bool, uint256) {
@@ -164,7 +172,6 @@ contract Staking is OpsManaged, StakingData {
 	}
 
 	// @dev Checks msg.sender for purposes of MVU
-	// TBD: don't delete Stake after processing?
 	function processStaking(bytes32 _uuid, bytes32 _mintingIntentHash) external returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
@@ -189,20 +196,19 @@ contract Staking is OpsManaged, StakingData {
 		uint256 _amountUT,
 		uint256 _escrowUnlockHeight,
 		bytes32 _unstakingIntentHash
-	) external returns (bool) {
+	) external onlyAdmin returns (bool) {
 		require(_uuid != "");
-		require(utilityTokens[_uuid].conversionRate > 0);		
+		require(utilityTokens[_uuid].conversionRate > 0);
 		require(nonces[_unstaker] < _unstakerNonce);
 		require(_amountST > 0);
 		require(_amountUT > 0);
 		require(_escrowUnlockHeight > 0);
 		require(_unstakingIntentHash != "");
 
-		bytes32 unstakingIntentHash = hashIntent(
+		bytes32 unstakingIntentHash = hashUnstakingIntent(
 			_uuid,
 			_unstaker,
 			nonces[_unstaker],
-			_amountST,
 			_amountUT,
 			_escrowUnlockHeight
 		);
@@ -220,7 +226,6 @@ contract Staking is OpsManaged, StakingData {
 		return true;
 	}
 
-	// TBD: don't delete Unstake after processing?
 	function processUnstaking(bytes32 _uuid, bytes32 _unstakingIntentHash) public returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);

@@ -31,7 +31,9 @@ contract StakingData {
 	EIP20Interface public eip20Token;
 
 	// ~2 weeks, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT = 80667;
+	uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
+	// ~1hour, assuming ~15s per block
+	uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
 
 	// [uuid == H(utility token name, chainId)]
 	mapping(bytes32 => UtilityToken) public utilityTokens;

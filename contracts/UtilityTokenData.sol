@@ -29,7 +29,9 @@ contract UtilityTokenData {
 	bytes32 public uuid;
 
 	// ~2 weeks, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT = 80667;
+	uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
+	// ~1hour, assuming ~15s per block
+	uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
 
 	// [staker address]
 	mapping(address => uint) nonces;
@@ -48,7 +50,6 @@ contract UtilityTokenData {
 	struct Redemption {
 		address redeemer;
 		uint256 amountUT;
-		uint256 amountST;
 		uint256 escrowUnlockHeight;
 	}
 }
