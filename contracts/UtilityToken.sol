@@ -67,7 +67,7 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		require(_amountUT > 0);
 		require(transfer(address(this), _amountUT));
 
-		uint256 amountST = _amountUT.div(conversionRate);
+		uint256 amountST = _amountUT.div(100);
 		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT;
 		bytes32 unstakingIntentHash = hashIntent(
 			uuid,
