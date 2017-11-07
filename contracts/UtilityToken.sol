@@ -108,7 +108,7 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		return (true);
 	}
 
-	function processRedepmtion(bytes32 _unstakingIntentHash) public returns (bool) {
+	function processRedemption(bytes32 _unstakingIntentHash) public returns (bool) {
 		require(_unstakingIntentHash != "");
 		require(redemptions[_unstakingIntentHash].redeemer == msg.sender);
 

@@ -51,9 +51,7 @@ contract Staking is OpsManaged, StakingData {
 		uint256 _amountUT,
 		uint256 _escrowUnlockHeight
 	)
-	public
-	pure
-	returns (bytes32) {
+	public pure returns (bytes32) {
 		return keccak256(_uuid, _account, _accountNonce, _amountST, _amountUT, _escrowUnlockHeight);
 	}
 
@@ -114,7 +112,15 @@ contract Staking is OpsManaged, StakingData {
 	// 	// TODO;
 	// }
 
-	function stake(bytes32 _uuid, uint256 _amountST) external returns (uint256) {
+	function stake(
+		bytes32 _uuid,
+		uint256 _amountST
+	)
+	external 
+	returns (
+		uint256 _nonce,
+		uint256 _unlockHeight
+	) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
 		require(_amountST > 0);
@@ -157,7 +163,8 @@ contract Staking is OpsManaged, StakingData {
 			escrowUnlockHeight,
 			mintingIntentHash
 		);
-		return amountUT;
+
+		return (usedNonce, escrowUnlockHeight);
 	}
 
 	// when calling hashMintingIntent, make sure the beneficiary is passed in as _staker
@@ -176,7 +183,10 @@ contract Staking is OpsManaged, StakingData {
 	// }
 
 	// @dev Checks msg.sender for purposes of MVU
-	function processStaking(bytes32 _uuid, bytes32 _mintingIntentHash) external returns (bool) {
+	function processStaking(
+		bytes32 _uuid,
+		bytes32 _mintingIntentHash
+	) external returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
 		require(_mintingIntentHash != "");
@@ -196,18 +206,18 @@ contract Staking is OpsManaged, StakingData {
 		bytes32 _uuid,
 		address _unstaker,
 		uint256 _unstakerNonce,
-		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _escrowUnlockHeight,
 		bytes32 _unstakingIntentHash
 	) external onlyAdmin returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
-		require(nonces[_unstaker] < _unstakerNonce);
-		require(_amountST > 0);
+		require(nonces[_unstaker] + 1 == _unstakerNonce);
 		require(_amountUT > 0);
 		require(_escrowUnlockHeight > 0);
 		require(_unstakingIntentHash != "");
+
+		nonces[_unstaker]++;
 
 		bytes32 unstakingIntentHash = hashUnstakingIntent(
 			_uuid,
@@ -219,18 +229,23 @@ contract Staking is OpsManaged, StakingData {
 
 		require(_unstakingIntentHash == unstakingIntentHash);
 
+		UtilityToken storage utilityToken = utilityTokens[_uuid];
+		uint256 amountST = _amountUT.div(utilityToken.conversionRate);
+
 		utilityTokens[_uuid].unstakes[unstakingIntentHash] = Unstake({
 			unstaker: _unstaker,
-			amount: _amountST
+			amount: amountST
 		});
-		nonces[_unstaker]++;
 
 		UnstakingIntentConfirmed(_uuid, unstakingIntentHash);
 
 		return true;
 	}
 
-	function processUnstaking(bytes32 _uuid, bytes32 _unstakingIntentHash) public returns (bool) {
+	function processUnstaking(
+		bytes32 _uuid,
+		bytes32 _unstakingIntentHash
+	) public returns (bool) {
 		require(_uuid != "");
 		require(utilityTokens[_uuid].conversionRate > 0);
 		require(_unstakingIntentHash != "");
