@@ -68,7 +68,7 @@ contract Staking is OpsManaged, StakingData {
 		return keccak256(_uuid, _account, _accountNonce, _amountUT, _escrowUnlockHeight);
 	}
 
-	// @dev `_chainId` should be blank for MVU
+	// @dev `_chainId` should be blank for v0.9
 	// @dev `_stakingAccount` is optional
 	function registerUtilityToken(
 		string _symbol,
@@ -106,13 +106,13 @@ contract Staking is OpsManaged, StakingData {
 
 	// TODO: 2 step change
 	// Require that if this is 0, it cannot be set to non-0
-	function setUtilityTokenStakingAccount(bytes32 _uuid, address _newStakingAccount) public returns (bool) {
-		require(_uuid != "");
-		require(utilityTokens[_uuid].conversionRate > 0);
-		require(_newStakingAccount != address(0));
+	// function setUtilityTokenStakingAccount(bytes32 _uuid, address _newStakingAccount) public returns (bool) {
+	// 	require(_uuid != "");
+	// 	require(utilityTokens[_uuid].conversionRate > 0);
+	// 	require(_newStakingAccount != address(0));
 
-		// TODO;
-	}
+	// 	// TODO;
+	// }
 
 	function stake(bytes32 _uuid, uint256 _amountST) external returns (uint256) {
 		require(_uuid != "");
@@ -126,15 +126,20 @@ contract Staking is OpsManaged, StakingData {
 
 		uint256 amountUT = _amountST.mul(utilityToken.conversionRate);
 		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+		
 		nonces[msg.sender]++;
+
+		uint256 usedNonce = nonces[msg.sender];
+
 		bytes32 mintingIntentHash = hashMintingIntent(
 			_uuid,
 			msg.sender,
-			nonces[msg.sender],
+			usedNonce,
 			_amountST,
 			amountUT,
 			escrowUnlockHeight
 		);
+
 		utilityToken.stakes[mintingIntentHash] = Stake({
 			staker: 			msg.sender,
 			amountST: 			_amountST,
@@ -145,14 +150,13 @@ contract Staking is OpsManaged, StakingData {
 
 		MintingIntentDeclared(
 			_uuid,
-			msg.sender,
-			nonces[msg.sender],
-			_amountST,
-			amountUT,
+			utilityToken.stakes[mintingIntentHash].staker,
+			usedNonce,
+			utilityToken.stakes[mintingIntentHash].amountST,
+			utilityToken.stakes[mintingIntentHash].amountUT,
 			escrowUnlockHeight,
 			mintingIntentHash
 		);
-
 		return amountUT;
 	}
 
@@ -162,14 +166,14 @@ contract Staking is OpsManaged, StakingData {
 	// Calls hashMintingIntent
 	// Adds Stake to stakes
 	// Emits event: MintingIntentDeclared
-	function stakeFor(address _beneficiary, bytes32 _uuid, uint256 _amountST) external returns (bool, uint256) {
-		require(_beneficiary != address(0));
-		require(_uuid != "");
-		require(utilityTokens[_uuid].conversionRate > 0);
-		require(_amountST > 0);
+	// function stakeFor(address _beneficiary, bytes32 _uuid, uint256 _amountST) external returns (bool, uint256) {
+	// 	require(_beneficiary != address(0));
+	// 	require(_uuid != "");
+	// 	require(utilityTokens[_uuid].conversionRate > 0);
+	// 	require(_amountST > 0);
 
-		// TODO;
-	}
+	// 	// TODO;
+	// }
 
 	// @dev Checks msg.sender for purposes of MVU
 	function processStaking(bytes32 _uuid, bytes32 _mintingIntentHash) external returns (bool) {

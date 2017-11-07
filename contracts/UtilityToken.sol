@@ -48,7 +48,6 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		uuid = keccak256(_name, _chainId);
 	}
 
-	// TBD: move to a parent contract because this is identical to `hashMintingIntent` in Staking?
 	function hashMintingIntent(
 		bytes32 _uuid,
 		address _account,
@@ -80,7 +79,6 @@ contract UtilityToken is EIP20Token, UtilityTokenData {
 		require(_amountUT > 0);
 		require(transfer(address(this), _amountUT));
 
-		uint256 amountST = _amountUT.div(100);
 		uint256 escrowUnlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
 		bytes32 unstakingIntentHash = hashUnstakingIntent(
 			uuid,
