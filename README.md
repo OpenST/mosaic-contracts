@@ -1,6 +1,10 @@
 # [OpenST protocol](https://simpletoken.org) - staking value for utility
 
-**warning: this is pre-alpha software and under heavy development**
+While OpenST 0.9 is available as-is for anyone to use, we caution that this is early stage software and under heavy ongoing development and improvement. Please report bugs and suggested improvements.
+
+Watch demo video of milestone 1 (will take you to [https://www.youtube.com/watch?v=-SxJ8c1Xh_A](https://www.youtube.com/watch?v=-SxJ8c1Xh_A))
+
+[![Milestone 1 demo video](https://img.youtube.com/vi/-SxJ8c1Xh_A/0.jpg)](https://www.youtube.com/watch?v=-SxJ8c1Xh_A)
 
 ## About Simple Token
 
