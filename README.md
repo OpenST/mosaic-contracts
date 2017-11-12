@@ -1,5 +1,7 @@
 # [OpenST protocol](https://simpletoken.org) - staking value for utility
 
+[![Gitter: JOIN CHAT](https://img.shields.io/badge/gitter-JOIN%20CHAT-brightgreen.svg)](https://gitter.im/OpenSTFoundation/SimpleToken)
+
 While OpenST 0.9 is available as-is for anyone to use, we caution that this is early stage software and under heavy ongoing development and improvement. Please report bugs and suggested improvements.
 
 Watch demo video of milestone 1 (will take you to [https://www.youtube.com/watch?v=-SxJ8c1Xh_A](https://www.youtube.com/watch?v=-SxJ8c1Xh_A))
