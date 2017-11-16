@@ -20,8 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-// const BigNumer = require('bignumber.js');
-// const SolidityEvent = require("web3/lib/web3/event.js");
+// const BigNumber = require('bignumber.js');
+const SolidityEvent = require("web3/lib/web3/event.js");
 
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 // var SimpleStake = artifacts.require("./SimpleStake.sol");
@@ -29,7 +29,7 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 /// @dev Deploy SimpleToken and finalize it
 module.exports.deployContracts = async (artifacts, accounts) => {
 
-	const token = await SimpleToken.new({ from: accounts[0]}, gas: 3500000 });
+	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
 
 	// // Set Simple Token admin to account[1]
 	// await token.setAdminAddress(accounts[1]);

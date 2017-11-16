@@ -1,3 +1,5 @@
+pragma solidity ^0.4.17;
+
 // Copyright 2017 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +15,24 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleStake.js
+// Registrar
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('./lib/utils.js');
+import "./OpsManaged.sol";
 
-const BigNumber = require('bignumber.js');
+/// @title Registrar - registers for a utility token
+contract Registrar is OpsManaged {
 
-///
-///  Test stories
-///
-///
-
-contract('SimpleStake', function(accounts) {
-	
-});
+	/*
+	 * Public functions
+	 */
+	function Registrar()
+		public
+		OpsManaged()
+	{
+		
+	}
+}

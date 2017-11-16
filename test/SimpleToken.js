@@ -20,12 +20,15 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-const Utils = require('./lib/utils.js')
+// const Web3 = require('web3');
+const Moment = require('moment');
+const BigNumber = require('bignumber.js');
 
-const Moment = require('moment')
-const BigNumber = require('bignumber.js')
+const Utils = require('./lib/utils.js');
+const SimpleTokenUtils = require('./SimpleToken_utils.js')
 
-const SimpleToken = artifacts.require("./SimpleToken.sol")
+
+const SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 
 
 //
@@ -147,8 +150,27 @@ contract('SimpleToken', (accounts) => {
           const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
           assert.equal(receipt.logs.length, 1)
           const logs = Utils.decodeLogs(token.abi, [ receipt.logs[0] ])
-          Utils.checkTransferEvent(logs[0], 0, accounts[0], TOTAL_SUPPLY)
+          SimpleTokenUtils.checkTransferEvent(logs[0], 0, accounts[0], TOTAL_SUPPLY)
       })
+      // it('Constructor raised transfer event', async () => {
+      //     const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
+      //     assert.equal(receipt.logs.length, 1)
+      //     console.log("Simple Token -------- token.abi");
+      //     console.log(token.abi.length)
+      //     console.log(JSON.stringify(token.abi[32], null, 4));
+      //     console.log("Simple Token -------- receipt.logs[0]");
+      //     console.log(receipt.logs[0])
+      //     console.log("Simple Token -------- receipt.logs[0].topics");
+      //     console.log(receipt.logs[0].topics)
+      //     // @dev SimpleToken abi[32] is 'Transfer' event;
+      //     // solve this better for moving to web3 v1.0.0
+      //     // var inputs = token.abi[32].inputs;
+      //     // var data = receipt.logs[0].data;
+      //     // var topics = receipt.logs[0].topics;
+      //     // const logs = Web3.eth.abi.decodeLog(inputs, data, topics)
+      //     // console.log(JSON.stringify(logs, null, 4));
+      //     // Utils.checkTransferEvent(logs, 0, accounts[0], TOTAL_SUPPLY)
+      // })
    })
 
 
@@ -166,12 +188,13 @@ contract('SimpleToken', (accounts) => {
       })
 
       it("transfer tokens from owner to other", async () => {
-         Utils.checkTransferEventGroup(await token.transfer(accounts[1], 1000), accounts[0], accounts[1], 1000)
+         var res = await token.transfer(accounts[1], 1000);
+         SimpleTokenUtils.checkTransferEventGroup(await token.transfer(accounts[1], 1000), accounts[0], accounts[1], 1000)
       })
 
       it("transfer 0 tokens", async () => {
          assert.equal(await token.transfer.call(accounts[2], 0, { from: accounts[1] }), true)
-         Utils.checkTransferEventGroup(await token.transfer(accounts[2], 0, { from: accounts[1] }), accounts[1], accounts[2], 0)
+         SimpleTokenUtils.checkTransferEventGroup(await token.transfer(accounts[2], 0, { from: accounts[1] }), accounts[1], accounts[2], 0)
       })
 
       it("transfer > balance", async () => {
@@ -236,7 +259,7 @@ contract('SimpleToken', (accounts) => {
 
       it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
          assert.equal(await token.approve.call(accounts[2], 10, { from: accounts[4] }), true)
-         Utils.checkApprovalEventGroup(await token.approve(accounts[2], 10, { from: accounts[4] }), accounts[4], accounts[2], 10)
+         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(accounts[2], 10, { from: accounts[4] }), accounts[4], accounts[2], 10)
 
          assert.equal((await token.allowance.call(accounts[4], accounts[2], { from: accounts[4] })).toNumber(), 10)
 
@@ -247,12 +270,12 @@ contract('SimpleToken', (accounts) => {
       it("transfer 1000 from account 1 -> 2 with 1000 allowance (as ops)", async () => {
          // We first need to bring approval to 0
          assert.equal(await token.approve.call(ops, 0, { from: accounts[4] }), true)
-         Utils.checkApprovalEventGroup(await token.approve(ops, 0, { from: accounts[4] }), accounts[4], ops, 0)
+         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(ops, 0, { from: accounts[4] }), accounts[4], ops, 0)
 
          assert.equal(await token.allowance.call(accounts[4], ops, { from: accounts[4] }), 0)
 
          assert.equal(await token.approve.call(ops, 1000, { from: accounts[4] }), true)
-         Utils.checkApprovalEventGroup(await token.approve(ops, 1000, { from: accounts[4] }), accounts[4], ops, 1000)
+         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(ops, 1000, { from: accounts[4] }), accounts[4], ops, 1000)
 
          assert.equal(await token.allowance.call(accounts[4], ops), 1000, { from: accounts[4] })
 
@@ -267,12 +290,12 @@ contract('SimpleToken', (accounts) => {
       it("transfer 1000 from account 1 -> 2 with 1000 allowance (as admin)", async () => {
          // We first need to bring approval to 0
          assert.equal(await token.approve.call(admin, 0, { from: accounts[4] }), true)
-         Utils.checkApprovalEventGroup(await token.approve(admin, 0, { from: accounts[4] }), accounts[4], admin, 0)
+         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(admin, 0, { from: accounts[4] }), accounts[4], admin, 0)
 
          assert.equal(await token.allowance.call(accounts[4], admin, { from: accounts[4] }), 0)
 
          assert.equal(await token.approve.call(admin, 1000, { from: accounts[4] }), true)
-         Utils.checkApprovalEventGroup(await token.approve(admin, 1000, { from: accounts[4] }), accounts[4], admin, 1000)
+         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(admin, 1000, { from: accounts[4] }), accounts[4], admin, 1000)
 
          assert.equal(await token.allowance.call(accounts[4], admin), 1000, { from: accounts[4] })
 
@@ -409,7 +432,7 @@ contract('SimpleToken', (accounts) => {
 
       it("check properties before and after finalize", async () => {
          assert.equal(await token.finalized.call(), false)
-         Utils.checkFinalizedEventGroup(await token.finalize({ from: admin }))
+         SimpleTokenUtils.checkFinalizedEventGroup(await token.finalize({ from: admin }))
          assert.equal(await token.finalized.call(), true)
       })
 
@@ -437,7 +460,7 @@ contract('SimpleToken', (accounts) => {
       it("burn less than or equal to balance", async () => {
          const balanceBefore = await token.balanceOf(accounts[0])
 
-         Utils.checkBurntEventGroup(await token.burn(1000, { from: accounts[0] }))
+         SimpleTokenUtils.checkBurntEventGroup(await token.burn(1000, { from: accounts[0] }))
 
          const currentBalance = await token.balanceOf(accounts[0])
          const currentSupply = await token.totalSupply.call()

@@ -9,3 +9,6 @@ ubuntu-xenial-16.04-cloudimg-console.log
 # we do commit the contract binaries in platform
 contracts/bin/
 contracts/abi/
+
+# don't commit node_modules
+node_modules

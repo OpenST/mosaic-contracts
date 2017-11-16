@@ -20,11 +20,11 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-const BigNumer = require('bignumber.js');
+const BigNumber = require('bignumber.js');
 
 /// @dev Assert on Transfer event
 module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
-   assert.equal(result.logs.length, 1);
+   Assert.equal(result.logs.length, 1);
 
    const event = result.logs[0];
 
@@ -36,9 +36,43 @@ module.exports.checkTransferEvent = (event, _from, _to, _value) => {
    if (Number.isInteger(_value)) {
       _value = new BigNumber(_value);
    }
+   Assert.equal(event.event, "Transfer");
+   Assert.equal(event.args._from, _from);
+   Assert.equal(event.args._to, _to);
+   Assert.equal(event.args._value.toNumber(), _value.toNumber());
+}
 
-   assert.equal(event.event, "Transfer");
-   assert.equal(event.args._from, _from);
-   assert.equal(event.args._to, _to);
-   assert.equal(event.args._value.toNumber(), _value.toNumber());
+
+module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
+   assert.equal(result.logs.length, 1)
+
+   const event = result.logs[0]
+
+   if (Number.isInteger(_value)) {
+      _value = new BigNumber(_value)
+   }
+
+   assert.equal(event.event, "Approval")
+   assert.equal(event.args._owner, _owner)
+   assert.equal(event.args._spender, _spender)
+   assert.equal(event.args._value.toNumber(), _value.toNumber())
+}
+
+module.exports.checkFinalizedEventGroup = (result) => {
+   assert.equal(result.logs.length, 1)
+
+   const event = result.logs[0]
+
+   assert.equal(event.event, "Finalized")
+}
+
+
+module.exports.checkBurntEventGroup = (result, _from, _value) => {
+   assert.equal(result.logs.length, 1)
+
+   const event = result.logs[0]
+
+   assert.equal(event.event, "Burnt")
+   assert.equal(event._from, _from)
+   assert.equal(event._value, _value)
 }
