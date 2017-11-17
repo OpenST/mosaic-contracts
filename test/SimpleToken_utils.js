@@ -22,6 +22,19 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
+var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+
+/// @dev currently unused as tests for SimpleToken.js don't
+///      follow this paradigm - to align
+module.exports.deploySimpleToken = async (artifacts, accounts) => {
+
+   const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
+
+   return {
+      token : token
+   }
+}
+
 /// @dev Assert on Transfer event
 module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
    Assert.equal(result.logs.length, 1);

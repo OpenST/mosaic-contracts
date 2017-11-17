@@ -13,21 +13,30 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleStake.js
+// test/SimpleStake_utils.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('./lib/utils.js');
+const Assert = require('assert');
 
-const BigNumber = require('bignumber.js');
+var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var SimpleStake = artifacts.require("./SimpleStake.sol");
 
-///
-///  Test stories
-///
-///
+/// @dev Deploy 
+module.exports.deploySingleSimpleStake = async (artifacts, accounts, protocol, UUID) => {
 
-contract('SimpleStake', function(accounts) {
-	
-});
+	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
+	// Set Simple Token admin to account[1]
+	await token.setAdminAddress(accounts[1]);
+	// and finalize Simple Token
+	Assert.ok(await token.finalize({ from: accounts[1] }));
+
+	const simpleStake = await SimpleStake.new(token.address, protocol, UUID, { from: accounts[0] });
+
+	return {
+		token       : token,
+		simpleStake : simpleStake
+	};
+};

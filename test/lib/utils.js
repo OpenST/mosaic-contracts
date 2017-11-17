@@ -26,16 +26,14 @@ const SolidityEvent = require("web3/lib/web3/event.js");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 // var SimpleStake = artifacts.require("./SimpleStake.sol");
 
-/// @dev Deploy SimpleToken and finalize it
+/// @dev Deploy SimpleToken and other contracts
+///      to test full protocol
 module.exports.deployContracts = async (artifacts, accounts) => {
 
 	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
 
-	// // Set Simple Token admin to account[1]
-	// await token.setAdminAddress(accounts[1]);
-	// // and finalize Simple Token
-	// Assert.ok(await token.finalize({ from: accounts[1] }));
-
+  // to be extended
+  
 	return {
 		token : token
 	}

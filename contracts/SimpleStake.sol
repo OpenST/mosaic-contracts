@@ -70,6 +70,12 @@ contract SimpleStake {
 		_;
 	}
 
+	modifier onlyProposedProtocolAfterWait() {
+        require(msg.sender == proposedProtocol);
+        require(earliestTransferHeight <= block.number);
+        _;
+	}
+
 	modifier notNull(address _address) {
 		if (_address == 0)
 			revert();
@@ -113,9 +119,12 @@ contract SimpleStake {
 	function initiateProtocolTransfer(
 		address _proposedProtocol)
 		public 
-		onlyProtocol 
+		onlyProtocol
+		notNull(_proposedProtocol)
 		returns (bool)
 	{
+		require(_proposedProtocol != openSTProtocol);
+
 		earliestTransferHeight = block.number + PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
         proposedProtocol = _proposedProtocol;
 
@@ -125,9 +134,11 @@ contract SimpleStake {
     }
 
 
-    function completeProtocolTransfer() public returns (bool) {
-        require(msg.sender == proposedProtocol);
-
+    function completeProtocolTransfer()
+    	public
+    	onlyProposedProtocolAfterWait
+    	returns (bool) 
+    {
         openSTProtocol = proposedProtocol;
         proposedProtocol = address(0);
 
@@ -136,10 +147,27 @@ contract SimpleStake {
         return true;
     }
 
+    function revokeProtocolTransfer()
+    	public
+    	onlyProtocol
+    	returns (bool)
+    {
+    	require(proposedProtocol != address(0));
+
+    	proposedProtocol = address(0);
+    	earliestTransferHeight = 0;
+
+    	return true;
+    }
+
 	/*
      * Web3 call functions
      */
-    /// @dev 
+    /// @dev total stake is the balance of the staking contract
+    ///      accidental transfers directly to SimpleStake bypassing
+    ///      the OpenST protocol will not mint new utility tokens,
+    ///      but will add to the total stake.
+    ///      (accidental) donations can not be prevented
     function getTotalStake()
     	public
     	constant
