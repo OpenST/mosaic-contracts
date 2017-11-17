@@ -102,9 +102,10 @@ contract('SimpleStake', function(accounts) {
 			});
 
 			it("can release 3ST", async () => {
-				Assert.ok(await simpleStake.releaseTo(accounts[0], ST3, { from: openSTProtocol }));
+				const result = await simpleStake.releaseTo(accounts[0], ST3, { from: openSTProtocol });
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST2);
 				Assert.equal((await token.balanceOf(accounts[0])).toNumber(), totalSupply.sub(ST2).toNumber());
+				SimpleStakeUtils.checkReleasedEventGroup(result, openSTProtocol, accounts[0], ST3);
 			});
 
 			it("must fail to release 3ST", async () => {
@@ -120,5 +121,18 @@ contract('SimpleStake', function(accounts) {
 				Assert.equal((await token.balanceOf(accounts[0])).toNumber(), totalSupply.toNumber());
 			});
 		});
+
+		// TODO: [ben]
+		// - test protocol transfers
+		// - test staking and releasing during protocol transfers
+		// - test the time to wait by calling repeatedly complete and expect it to fail if
+		//   blockheight is not yet reached - find better way to test this
+
+		// context('during protocol transfer', async () => {
+
+		// 	it('can initiate protocol transfer', async () => {
+		// 		Assert.ok(await );
+		// 	});
+		// });
 	})
 });

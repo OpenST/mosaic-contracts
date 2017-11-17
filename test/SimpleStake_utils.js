@@ -47,6 +47,24 @@ module.exports.checkTotalStaked = async (stake, token, amount) => {
 	Assert.equal((await token.balanceOf.call(stake.address)).toNumber(), amount.toNumber());
 };
 
+/*
+ *  Event checks
+ */
+
+/// @dev Check stake release events
+module.exports.checkReleasedEventGroup = (result, _protocol, _to, _amount) => {
+	if (Number.isInteger(_amount)) {
+	   _amount = new BigNumber(_amount);
+	};
+   	// TODO: [ben] parse result.receipt.logs for EIP20.Transfer event too
+	Assert.equal(result.logs.length, 1);
+
+	const releaseEvent = result.logs[0];
+	Assert.equal(releaseEvent.event, "ReleasedStake");
+	Assert.equal(releaseEvent.args._protocol, _protocol);
+	Assert.equal(releaseEvent.args._to, _to);
+	Assert.equal(releaseEvent.args._amount.toNumber(), _amount.toNumber());
+};
 
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
    if (Number.isInteger(_value)) {

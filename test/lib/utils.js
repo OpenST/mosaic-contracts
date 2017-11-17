@@ -41,6 +41,12 @@ module.exports.deployContracts = async (artifacts, accounts) => {
 	}
 }
 
+/*
+ *  General event checks
+ */
+module.exports.expectNoEvents = (result) => {
+   Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
+}
 
 /*
  *  Basic Ethereum checks

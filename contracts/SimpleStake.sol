@@ -76,6 +76,9 @@ contract SimpleStake {
         _;
 	}
 
+	// TODO: [ben] change notNull to hasCode so that for 
+	//       a significant wait time the code at the proposed new
+	//       protocol can be reviewed
 	modifier notNull(address _address) {
 		if (_address == 0)
 			revert();
@@ -101,7 +104,10 @@ contract SimpleStake {
 	}
 
 	/// @dev Allows the protocol to release the staked amount
-	///      into provided address
+	///      into provided address.
+	///      The protocol MUST be a contract that sets the rules
+	///      on how the stake can be released and to who.
+	///      The protocol takes the role of an "owner" of the stake.
 	/// @param _to Beneficiary of the amount of the stake
 	/// @param _amount Amount of stake to release to beneficiary
 	function releaseTo(address _to, uint256 _amount) 
