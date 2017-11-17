@@ -44,8 +44,8 @@ contract SimpleStake {
 	/// Blocks to wait before the protocol transfer can be completed
 	/// This allows anyone with a stake to unstake under the existing
 	/// protocol if they disagree with the new proposed protocol
-	/// @dev from OpenST ^v1.0 this constant will be set 
-	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 1;
+	/// @dev from OpenST ^v1.0 this constant will be set to a significant value
+	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 5;
 	
 	/*
 	 *  Storage

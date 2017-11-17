@@ -40,3 +40,13 @@ module.exports.deploySingleSimpleStake = async (artifacts, accounts, protocol, U
 		simpleStake : simpleStake
 	};
 };
+
+module.exports.checkTransferEvent = (event, _from, _to, _value) => {
+   if (Number.isInteger(_value)) {
+      _value = new BigNumber(_value);
+   }
+   Assert.equal(event.event, "Transfer");
+   Assert.equal(event.args._from, _from);
+   Assert.equal(event.args._to, _to);
+   Assert.equal(event.args._value.toNumber(), _value.toNumber());
+}

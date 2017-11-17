@@ -26,6 +26,8 @@ const SolidityEvent = require("web3/lib/web3/event.js");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 // var SimpleStake = artifacts.require("./SimpleStake.sol");
 
+const NullAddress = "0x0000000000000000000000000000000000000000";
+
 /// @dev Deploy SimpleToken and other contracts
 ///      to test full protocol
 module.exports.deployContracts = async (artifacts, accounts) => {
@@ -33,7 +35,7 @@ module.exports.deployContracts = async (artifacts, accounts) => {
 	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
 
   // to be extended
-  
+
 	return {
 		token : token
 	}
@@ -43,6 +45,12 @@ module.exports.deployContracts = async (artifacts, accounts) => {
 /*
  *  Basic Ethereum checks
  */
+
+/// @dev Compare to null address
+module.exports.isNullAddress = function (address) {
+    Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
+    return (address == NullAddress);
+}
 
 /// @dev Expect failure from invalid opcode or out of gas,
 ///      but returns error instead
