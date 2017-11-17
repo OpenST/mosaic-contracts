@@ -41,6 +41,13 @@ module.exports.deploySingleSimpleStake = async (artifacts, accounts, protocol, U
 	};
 };
 
+/// @dev Check staked balance
+module.exports.checkTotalStaked = async (stake, token, amount) => {
+	Assert.equal((await stake.getTotalStake.call()).toNumber(), amount.toNumber());
+	Assert.equal((await token.balanceOf.call(stake.address)).toNumber(), amount.toNumber());
+};
+
+
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
    if (Number.isInteger(_value)) {
       _value = new BigNumber(_value);
