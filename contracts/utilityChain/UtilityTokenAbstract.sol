@@ -21,8 +21,8 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
-import "./ProtocolVersioned.sol";
+import "../SafeMath.sol";
+import "../ProtocolVersioned.sol";
 
 /// @title UtilityToken abstract
 contract UtilityTokenAbstract is ProtocolVersioned {

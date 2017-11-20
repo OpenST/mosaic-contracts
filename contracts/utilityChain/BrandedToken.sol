@@ -21,7 +21,7 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
+import "../SafeMath.sol";
 import "./EIP20Token.sol";
 import "./UtilityTokenAbstract.sol";
 

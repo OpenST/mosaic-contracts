@@ -21,7 +21,7 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
+import "../SafeMath.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST 
 /// @notice 
