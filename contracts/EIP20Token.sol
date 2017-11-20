@@ -31,10 +31,9 @@ import "./SafeMath.sol";
 contract EIP20Token is EIP20Interface {
     using SafeMath for uint256;
 
-    string  internal tokenName;
-    string  internal tokenSymbol;
-    uint8   internal tokenDecimals;
-    uint256 internal tokenTotalSupply;
+    string private tokenName;
+    string private tokenSymbol;
+    uint8  private tokenDecimals;
 
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
@@ -45,7 +44,6 @@ contract EIP20Token is EIP20Interface {
         tokenSymbol      = _symbol;
         tokenName        = _name;
         tokenDecimals    = _decimals;
-        tokenTotalSupply = 0;
     }
 
 
@@ -61,11 +59,6 @@ contract EIP20Token is EIP20Interface {
 
     function decimals() public view returns (uint8) {
         return tokenDecimals;
-    }
-
-
-    function totalSupply() public view returns (uint256) {
-        return tokenTotalSupply;
     }
 
 
@@ -109,6 +102,25 @@ contract EIP20Token is EIP20Interface {
 
         Approval(msg.sender, _spender, _value);
 
+        return true;
+    }
+
+
+    function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {
+        // claimable tokens are minted in the contract address to be pulled on claim
+        balances[address(this)] = balances[address(this)].sub(_amount);
+        balances[_beneficiary] = balances[_beneficiary].add(_amount);
+
+        Transfer(address(this), _beneficiary, _amount);
+
+        return true;
+    }
+
+
+    function mintEIP20(uint256 _amount) internal returns (bool /* success */) {
+        // mint EIP20 tokens in contract address for them to be claimed
+        balances[address(this)] = balances[address(this)].add(_amount);
+    
         return true;
     }
 }

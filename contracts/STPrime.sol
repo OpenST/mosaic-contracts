@@ -52,14 +52,14 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 
 	}
 
+	/// @dev transfer full claim to beneficiary
     function claim(
     	address _beneficiary)
     	public
-    	returns (bool success)
+    	returns (bool /* success */)
     {
-    	uint256 amount = claims[_beneficiary];
-		require(this.balance >= amount);
-        claims[_beneficiary] = 0;
+    	uint256 amount = claimInternal(_beneficiary);
+		assert(this.balance >= amount);
 
         // transfer throws if insufficient funds
         _beneficiary.transfer(amount);
@@ -73,10 +73,10 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     	uint256 _amount)
 	    public
 	    onlyProtocol
-	    returns (bool success)
+	    returns (bool /* success */)
 	{
 		// can't mint more ST' than there are available base tokens
-		assert(this.balance >= totalSupplyInternal() + _amount);
+		assert(this.balance >= totalSupply() + _amount);
 		
 		// add the minted amount to the beneficiary's claim 
 		return mintInternal(_beneficiary, _amount);
@@ -84,24 +84,18 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 
     /// @dev Burn utility tokens after having redeemed them
     ///      through the protocol for the staked Simple Token
-    function burn(address _redeemer, uint256 _amount)
+    function burn(
+    	address _redeemer,
+    	uint256 _amount)
     	public
     	onlyProtocol
     	payable
-    	returns (bool success)
+    	returns (bool /* success */)
    	{
    		// only accept the exact amount of base tokens to be returned
    		// to the ST' minting contract
    		require(msg.value == _amount);
 
    		return burnInternal(_redeemer, _amount);
-    }
-
-    /*
-     *  Web3 call functions
-     */
-    /// @dev returns total token supply
-    function totalSupply() public view returns (uint256) {
-        return totalSupplyInternal();
-    }
+   	}
 }

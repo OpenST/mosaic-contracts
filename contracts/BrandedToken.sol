@@ -53,5 +53,44 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
 	{
 
 	}
-	
+
+	function claim(
+		address _beneficiary)
+		public
+		returns (bool /* success */)
+	{
+		uint256 amount = claimInternal(_beneficiary);
+
+		return claimEIP20(_beneficiary, amount);
+	}
+
+	function mint(
+		address _beneficiary,
+		uint256 _amount)
+		public
+		onlyProtocol
+		returns (bool /* success */)
+	{
+		mintEIP20(_amount);
+		assert(balanceOf(address(this)) >= totalSupply() + _amount);
+
+		return mintInternal(_beneficiary, _amount);
+	}
+
+	function burn(
+		address _redeemer,
+		uint256 _amount)
+		public
+		onlyProtocol
+		payable
+		returns (bool /* success */)
+	{
+		// force non-payable, as only ST' handles in base tokens
+		require(msg.value == 0);
+		require(_amount <= balanceOf(msg.sender));
+
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+
+		return burnInternal(_redeemer, _amount);
+	}
 }

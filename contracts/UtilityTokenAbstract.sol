@@ -48,7 +48,7 @@ contract UtilityTokenAbstract is ProtocolVersioned {
 	uint256 private totalTokenSupply;
 	/// claims is follows EIP20 allowance pattern but
 	/// for a staker to stake the utility token for a beneficiary
-	mapping(address => uint256) public claims;
+	mapping(address => uint256) private claims;
 
     /*
      * Public functions
@@ -60,23 +60,56 @@ contract UtilityTokenAbstract is ProtocolVersioned {
     	uuid = _uuid;
     	totalTokenSupply = 0;
     }
- 	
- 	/// @dev claim transfers all utility tokens to _beneficiary
- 	function claim(
-    	address _beneficiary)
-    	public
-    	returns (bool success);
+
+	/// @dev transfer full claim to beneficiary
+    function claim(address _beneficiary) public returns (bool success);
+    /// @dev Mint new utility token into 
+    function mint(address _beneficiary, uint256 _amount) public returns (bool success);
+    /// @dev Burn utility tokens after having redeemed them
+    ///      through the protocol for the staked Simple Token
+    function burn(address _redeemer, uint256 _amount) public payable returns (bool success);
+   	
+ 	/// @dev Get totalTokenSupply as view so that child cannot edit
+	function totalSupply()
+		public
+		view
+		returns (uint256 /* supply */)
+	{
+		return totalTokenSupply;
+	}
+
+    /// @dev returns unclaimed amount for beneficiary
+	function unclaimed(
+		address _beneficiary)
+		public
+		view
+		returns (uint256 /* amount */)
+	{
+		return claims[_beneficiary];
+	}
 
     /*
      * Internal functions
      */
+ 	/// @dev claim transfers all utility tokens to _beneficiary
+ 	function claimInternal(
+    	address _beneficiary)
+    	internal
+    	returns (uint256 amount)
+    {
+    	amount = claims[_beneficiary];
+    	claims[_beneficiary] = 0;
+
+    	return amount;
+    }
+
     /// @dev Mint new utility token by adding a claim
     ///      for the beneficiary
     function mintInternal(
     	address _beneficiary,
     	uint256 _amount)
     	internal
-    	returns (bool success)
+    	returns (bool /* success */)
     {
     	totalTokenSupply = totalTokenSupply.add(_amount);
         claims[_beneficiary] = claims[_beneficiary].add(_amount);
@@ -92,21 +125,12 @@ contract UtilityTokenAbstract is ProtocolVersioned {
     	address _redeemer,
     	uint256 _amount)
     	internal
-    	returns (bool success)
+    	returns (bool /* success */)
 	{
 		totalTokenSupply = totalTokenSupply.sub(_amount);
 
 		Burnt(uuid, _redeemer, _amount, totalTokenSupply);
 
 		return true;
-	}
-
-	/// @dev Get totalTokenSupply as view so that child cannot edit
-	function totalSupplyInternal()
-		internal
-		view
-		returns (uint256)
-	{
-		return totalTokenSupply;
 	}
 }
