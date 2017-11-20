@@ -22,6 +22,8 @@ pragma solidity ^0.4.17;
 // ----------------------------------------------------------------------------
 
 import "./SafeMath.sol";
+import "./EIP20Token.sol";
+import "./UtilityTokenAbstract.sol";
 
 /// @dev  Branded Token is an EIP20 token minted by staking Simple Token
 ///       on Ethereum mainnet. Branded tokens are designed to be used
@@ -33,8 +35,23 @@ import "./SafeMath.sol";
 ///        - hard-exit for all users if the utility chain halts to reclaim
 ///          their equivalent part of the Simple Token stake
 ///          on Ethereum (before v1.0)
-// contract BrandedToken is EIP20Token, UtilityTokenAbstract {
-// 	using SafeMath for uint256;
+contract BrandedToken is EIP20Token, UtilityTokenAbstract {
+	using SafeMath for uint256;
 
+	/*
+	 *  Public functions
+	 */
+	function BrandedToken(
+		address _openSTProtocol,
+		bytes32 _uuid,
+		string _symbol,
+		string _name,
+		uint8 _decimals)
+		EIP20Token(_symbol, _name, _decimals)
+		UtilityTokenAbstract(_openSTProtocol, _uuid)
+		public
+	{
+
+	}
 	
-// }
+}

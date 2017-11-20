@@ -40,11 +40,6 @@ import "./STPrimeConfig.sol";
 contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 	using SafeMath for uint256;
 
-	/*
-	 *  Storage
-	 */ 
-
-
     /*
      * Public functions
      */
@@ -56,11 +51,6 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 	{
 
 	}
-    
-    /// @dev returns total token supply
-    function totalSupply() public view returns (uint256) {
-        return totalTokenSupply;
-    }
 
     function claim(
     	address _beneficiary)
@@ -86,7 +76,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 	    returns (bool success)
 	{
 		// can't mint more ST' than there are available base tokens
-		assert(this.balance >= totalTokenSupply + _amount);
+		assert(this.balance >= totalSupplyInternal() + _amount);
 		
 		// add the minted amount to the beneficiary's claim 
 		return mintInternal(_beneficiary, _amount);
@@ -105,5 +95,13 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
    		require(msg.value == _amount);
 
    		return burnInternal(_redeemer, _amount);
+    }
+
+    /*
+     *  Web3 call functions
+     */
+    /// @dev returns total token supply
+    function totalSupply() public view returns (uint256) {
+        return totalSupplyInternal();
     }
 }

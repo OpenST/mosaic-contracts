@@ -45,7 +45,7 @@ contract UtilityTokenAbstract is ProtocolVersioned {
 	/// UUID for the utility token
 	bytes32 public uuid;
 	/// totalSupply holds the total supply of utility tokens
-	uint256 internal totalTokenSupply;
+	uint256 private totalTokenSupply;
 	/// claims is follows EIP20 allowance pattern but
 	/// for a staker to stake the utility token for a beneficiary
 	mapping(address => uint256) public claims;
@@ -99,5 +99,14 @@ contract UtilityTokenAbstract is ProtocolVersioned {
 		Burnt(uuid, _redeemer, _amount, totalTokenSupply);
 
 		return true;
+	}
+
+	/// @dev Get totalTokenSupply as view so that child cannot edit
+	function totalSupplyInternal()
+		internal
+		view
+		returns (uint256)
+	{
+		return totalTokenSupply;
 	}
 }
