@@ -22,14 +22,13 @@ pragma solidity ^0.4.17;
 // ----------------------------------------------------------------------------
 
 import "./EIP20Interface.sol";
-import "./Owned.sol";
 import "./SafeMath.sol";
 
 /**
    @title EIP20Token
    @notice Implements EIP20 token
 */
-contract EIP20Token is Owned, EIP20Interface {
+contract EIP20Token is EIP20Interface {
     using SafeMath for uint256;
 
     string  internal tokenName;
@@ -42,15 +41,11 @@ contract EIP20Token is Owned, EIP20Interface {
 
 
     function EIP20Token(string _symbol, string _name, uint8 _decimals) public
-        Owned()
     {
         tokenSymbol      = _symbol;
         tokenName        = _name;
         tokenDecimals    = _decimals;
-
-        // According to the EIP20 standard, a token contract which creates new tokens should trigger
-        // a Transfer event and transfers of 0 values must also fire the event.
-        Transfer(0x0, owner, tokenTotalSupply);
+        tokenTotalSupply = 0;
     }
 
 

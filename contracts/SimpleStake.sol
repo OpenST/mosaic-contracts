@@ -15,38 +15,27 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// SimpleStake - holds the value for a utility token on the OpenST platform
-//
+// contracts/SimpleStake
+// 
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
+import "./ProtocolVersioned.sol";
 
-/// @title SimpleStake - holds the value of an EIP20 token
+/// @title SimpleStake - stakes the value of an EIP20 token on Ethereum
 ///        for a utility token on the OpenST platform
 /// @author OpenST Ltd.
-contract SimpleStake {
+contract SimpleStake is ProtocolVersioned {
 	using SafeMath for uint256;
 
 	/*
 	 *  Events
 	 */
 	event ReleasedStake(address indexed _protocol, address indexed _to, uint256 _amount);
-	event ProtocolTransferInitiated(address indexed _existingProtocol, address indexed _proposedProtocol, uint256 _activationHeight);
-	event ProtocolTransferRevoked(address indexed _existingProtocol, address indexed _revokedProtocol);
-	event ProtocolTransferCompleted(address indexed _newProtocol);
 
-	/*
-	 *  Constants
-	 */
-	/// Blocks to wait before the protocol transfer can be completed
-	/// This allows anyone with a stake to unstake under the existing
-	/// protocol if they disagree with the new proposed protocol
-	/// @dev from OpenST ^v1.0 this constant will be set to a significant value
-	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 5;
-	
 	/*
 	 *  Storage
 	 */
@@ -54,36 +43,6 @@ contract SimpleStake {
 	EIP20Interface public eip20Token;
 	/// UUID for the utility token
 	bytes32 public uuid;
-
-	/// OpenST protocol contract
-	address public openSTProtocol;
-	/// proposed OpenST protocol
-	address public proposedProtocol;
-	/// earliest protocol transfer height
-	uint256 public earliestTransferHeight;
-
-	/*
-	 * Modifiers
-	 */
-	modifier onlyProtocol() {
-		require(msg.sender == openSTProtocol);
-		_;
-	}
-
-	modifier onlyProposedProtocolAfterWait() {
-        require(msg.sender == proposedProtocol);
-        require(earliestTransferHeight <= block.number);
-        _;
-	}
-
-	// TODO: [ben] change notNull to hasCode so that for 
-	//       a significant wait time the code at the proposed new
-	//       protocol can be reviewed
-	modifier notNull(address _address) {
-		if (_address == 0)
-			revert();
-		_;
-	}
 
 	/*
 	 *  Public functions
@@ -96,10 +55,10 @@ contract SimpleStake {
 		EIP20Interface _eip20Token,
 		address _openSTProtocol,
 		bytes32 _uuid)
+		ProtocolVersioned(_openSTProtocol)
 		public
 	{
 		eip20Token = _eip20Token;
-		openSTProtocol = _openSTProtocol;
 		uuid = _uuid;
 	}
 
@@ -121,50 +80,6 @@ contract SimpleStake {
 
 		return true;
 	}
-
-	function initiateProtocolTransfer(
-		address _proposedProtocol)
-		public 
-		onlyProtocol
-		notNull(_proposedProtocol)
-		returns (bool)
-	{
-		require(_proposedProtocol != openSTProtocol);
-
-		earliestTransferHeight = block.number + PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
-        proposedProtocol = _proposedProtocol;
-
-        ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
-
-        return true;
-    }
-
-
-    function completeProtocolTransfer()
-    	public
-    	onlyProposedProtocolAfterWait
-    	returns (bool) 
-    {
-        openSTProtocol = proposedProtocol;
-        proposedProtocol = address(0);
-
-        ProtocolTransferCompleted(openSTProtocol);
-
-        return true;
-    }
-
-    function revokeProtocolTransfer()
-    	public
-    	onlyProtocol
-    	returns (bool)
-    {
-    	require(proposedProtocol != address(0));
-
-    	proposedProtocol = address(0);
-    	earliestTransferHeight = 0;
-
-    	return true;
-    }
 
 	/*
      * Web3 call functions
