@@ -35,7 +35,7 @@ contract UtilityTokenAbstract is ProtocolVersioned {
 	/// Minted utility tokens still need to be claimed by anyone to transfer
 	/// them to the beneficiary.
     event Minted(bytes32 indexed _uuid, address indexed _beneficiary,
-    	uint256 _amount, uint256 _openClaim, uint256 _totalSupply);
+    	uint256 _amount, uint256 _unclaimed, uint256 _totalSupply);
     event Burnt(bytes32 indexed _uuid, address indexed _account,
     	uint256 _amount, uint256 _totalSupply);
 	

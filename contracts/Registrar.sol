@@ -23,7 +23,7 @@ pragma solidity ^0.4.17;
 
 import "./OpsManaged.sol";
 
-/// @title Registrar - registers for a utility token
+/// @title Registrar - registers for utility tokens
 contract Registrar is OpsManaged {
 
 	/*

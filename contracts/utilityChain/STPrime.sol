@@ -26,15 +26,16 @@ pragma solidity ^0.4.17;
 /// The gasprice on utility chains is set in [ST'-Wei/gas] (like Ether pays for gas
 /// on Ethereum mainnet) when sending a transaction on the open utility chain.
 
-import "./SafeMath.sol";
+import "../SafeMath.sol";
 import "./UtilityTokenAbstract.sol";
 import "./STPrimeConfig.sol";
 
 /*
- *  @title STPrime - is a freely tradable equivalent representation of Simple Token [ST]
- *         on Ethereum mainnet on the utility chain
+ *  @title STPrime
+ *  @notice a freely tradable equivalent representation of Simple Token [ST]
+ *          on Ethereum mainnet on the utility chain
  *  @dev STPrime functions as the base token to pay for gas consumption on the utility chain
- *       It is not an ERC20 token, but functions as the genesis guardian
+ *       It is not an EIP20 token, but functions as the genesis guardian
  *       of the finite amount of base tokens on the utility chain
  */
 contract STPrime is UtilityTokenAbstract, STPrimeConfig {
@@ -53,6 +54,13 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 	}
 
 	/// @dev transfer full claim to beneficiary
+    ///      claim can be called publicly as the beneficiary
+    ///      and amount are set, and this allows for reduced
+    ///      steps on the user experience to complete the claim
+    ///      automatically.
+    /// @notice for first stake of ST' the gas price by one validator
+    ///         has to be zero to deploy the contracts and accept the very
+    ///         first staking of ST for ST' and its protocol executions.
     function claim(
     	address _beneficiary)
     	public
@@ -67,17 +75,18 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         return true;
     }
 
-    /// @dev Mint new utility token into 
+    /// @dev Mint new Simple Token Prime into circulation
+    ///      and increase total supply accordingly.
+    ///      Tokens are minted into a claim to ensure that
+    ///      the protocol completion does not continue into
+    ///      foreign contracts at _beneficiary.
     function mint(
     	address _beneficiary,
     	uint256 _amount)
 	    public
 	    onlyProtocol
 	    returns (bool /* success */)
-	{
-		// can't mint more ST' than there are available base tokens
-		assert(this.balance >= totalSupply() + _amount);
-		
+	{		
 		// add the minted amount to the beneficiary's claim 
 		return mintInternal(_beneficiary, _amount);
     }

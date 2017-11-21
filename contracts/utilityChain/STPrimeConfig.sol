@@ -15,14 +15,10 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// SafeMath Library Implementation
+// contracts/utilityChain/STPrimeConfig.sol
 //
 // http://www.simpletoken.org/
 //
-// Based on the SafeMath library by the OpenZeppelin team.
-// Copyright (c) 2016 Smart Contract Solutions, Inc.
-// https://github.com/OpenZeppelin/zeppelin-solidity
-// The MIT License.
 // ----------------------------------------------------------------------------
 
 

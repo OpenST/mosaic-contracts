@@ -72,13 +72,12 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
 		returns (bool /* success */)
 	{
 		mintEIP20(_amount);
-		assert(balanceOf(address(this)) >= totalSupply() + _amount);
 
 		return mintInternal(_beneficiary, _amount);
 	}
 
 	function burn(
-		address _redeemer,
+		address _burner,
 		uint256 _amount)
 		public
 		onlyProtocol
@@ -87,10 +86,9 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
 	{
 		// force non-payable, as only ST' handles in base tokens
 		require(msg.value == 0);
-		require(_amount <= balanceOf(msg.sender));
 
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
+		burnEIP20(_burner, _amount);
 
-		return burnInternal(_redeemer, _amount);
+		return burnInternal(_burner, _amount);
 	}
 }
