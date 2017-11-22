@@ -133,8 +133,11 @@ contract ProtocolVersioned {
     {
     	require(proposedProtocol != address(0));
 
+    	address revokedProtocol = proposedProtocol;
     	proposedProtocol = address(0);
     	earliestTransferHeight = 0;
+
+		ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
     	return true;
     }
