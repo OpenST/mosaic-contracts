@@ -124,7 +124,7 @@ contract EIP20Token is EIP20Interface {
         return true;
     }
 
-    function burnEIP20(address _burner, uint256 _amount) internal returns (bool /* success */) {
+    function burnEIP20(uint256 _amount) internal returns (bool /* success */) {
         balances[msg.sender] = balances[msg.sender].sub(_amount);
 
         return true;

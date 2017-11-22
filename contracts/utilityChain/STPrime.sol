@@ -94,7 +94,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     /// @dev Burn utility tokens after having redeemed them
     ///      through the protocol for the staked Simple Token
     function burn(
-    	address _redeemer,
+    	address _burner,
     	uint256 _amount)
     	public
     	onlyProtocol
@@ -105,6 +105,6 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
    		// to the ST' minting contract
    		require(msg.value == _amount);
 
-   		return burnInternal(_redeemer, _amount);
+   		return burnInternal(_burner, _amount);
    	}
 }

@@ -122,14 +122,14 @@ contract UtilityTokenAbstract is ProtocolVersioned {
     /// @dev Burn utility tokens after having redeemed them
     ///      through the protocol for the staked Simple Token
     function burnInternal(
-    	address _redeemer,
+    	address _burner,
     	uint256 _amount)
     	internal
     	returns (bool /* success */)
 	{
 		totalTokenSupply = totalTokenSupply.sub(_amount);
 
-		Burnt(uuid, _redeemer, _amount, totalTokenSupply);
+		Burnt(uuid, _burner, _amount, totalTokenSupply);
 
 		return true;
 	}
