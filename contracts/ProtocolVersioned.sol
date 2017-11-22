@@ -97,6 +97,7 @@ contract ProtocolVersioned {
 		returns (bool)
 	{
 		require(_proposedProtocol != openSTProtocol);
+		require(proposedProtocol == address(0));
 
 		earliestTransferHeight = block.number + PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
         proposedProtocol = _proposedProtocol;
