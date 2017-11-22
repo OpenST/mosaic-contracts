@@ -67,7 +67,7 @@ contract UtilityTokenAbstract is ProtocolVersioned {
     function mint(address _beneficiary, uint256 _amount) public returns (bool success);
     /// @dev Burn utility tokens after having redeemed them
     ///      through the protocol for the staked Simple Token
-    function burn(address _redeemer, uint256 _amount) public payable returns (bool success);
+    function burn(address _burner, uint256 _amount) public payable returns (bool success);
    	
  	/// @dev Get totalTokenSupply as view so that child cannot edit
 	function totalSupply()

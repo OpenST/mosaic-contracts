@@ -15,29 +15,16 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Registrar
+// contracts/CoreInterface.sol
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./OpsManaged.sol";
-import "./valueChain/OpenSTValueInterface.sol";
-import "./utilityChain/OpenSTUtilityInterface.sol";
+contract CoreInterface {
+	
+	function registrar() public view returns (address /* registrar */);
 
-/// @title Registrar - registers for utility tokens
-contract Registrar is OpsManaged {
-
-    /*
-     *  Public functions
-     */
-    function Registrar() public
-        OpsManaged()
-    {
-    }
-
-
-    
-
-
+	function chainIdRemote() public view returns (uint256 /* chainIdRemote */);
+	function openSTRemote() public view returns (address /* OpenSTRemote */);
 }

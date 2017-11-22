@@ -27,6 +27,7 @@ contract Hasher {
 	 *  Public pure functions
 	 */
 	function hashUuid(
+		string _symbol,
 		string _name,
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
@@ -37,6 +38,7 @@ contract Hasher {
 		returns (bytes32)
 	{
 		return keccak256(
+			_symbol,
 			_name,
 			_chainIdValue,
 			_chainIdUtility,

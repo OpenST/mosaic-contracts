@@ -24,6 +24,7 @@ pragma solidity ^0.4.17;
 import "../SafeMath.sol";
 import "../Hasher.sol";
 import "../OpsManaged.sol";
+import "../CoreInterface.sol";
 import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
@@ -49,9 +50,14 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	/*
 	 *  Constants
 	 */
+	string  public constant STPRIME_SYMBOL = "STP";
     string public constant STPRIME_NAME = "SimpleTokenPrime";
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
+	// ~2 weeks, assuming ~15s per block
+	uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
+	// ~1hour, assuming ~15s per block
+	uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
 
 	/*
 	 *  Storage
@@ -64,6 +70,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	uint256 public chainIdValue;
 	/// chainId of the current utility chain
 	uint256 public chainIdUtility;
+	address public registrar;
 	/// registered branded tokens 
 	mapping(bytes32 /* uuid */ => RegisteredBrandedToken) public registeredBrandedTokens;
 	/// name reservation is first come, first serve
@@ -73,16 +80,34 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	mapping(bytes32 /* hashSymbol */ => address /* BrandedToken */) public symbolRoute;
 	
 	/*
+	 *  Modifiers
+	 */
+	modifier onlyRegistrar() {
+		// for now keep unique registrar
+		require(msg.sender == registrar);
+		_;
+	}
+
+	/*
 	 *  Public functions
 	 */
 	function OpenSTUtility(
 		uint256 _chainIdValue,
-		uint256 _chainIdUtility)
+		uint256 _chainIdUtility,
+		address _registrar)
 		public
+		OpsManaged()
 	{
+		require(_chainIdValue != 0);
+		require(_chainIdUtility != 0);
+		require(_registrar != address(0));
+
 		chainIdValue = _chainIdValue;
 		chainIdUtility = _chainIdUtility;
+		registrar = _registrar;
+
 		uuidSTPrime = hashUuid(
+			STPRIME_SYMBOL,
 			STPRIME_NAME,
 			_chainIdValue,
 			_chainIdUtility,
@@ -92,6 +117,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			address(this),
 			uuidSTPrime);
 
+		// TODO
 	}
 
 	function proposeBrandedToken(
@@ -101,16 +127,22 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		public
 		returns (bytes32)
 	{
+		require(bytes(_symbol).length > 0);
+		require(bytes(_name).length > 0);
+		require(_conversionRate > 0);
+
 		bytes32 hashSymbol = keccak256(_symbol);
 		bytes32 hashName = keccak256(_name);
-		require(checkAvailability(hashSymbol, hashName));
+		require(checkAvailability(hashSymbol, hashName, msg.sender));
 
 		bytes32 btUuid = hashUuid(
+			_symbol,
 			_name,
 			chainIdValue,
 			chainIdUtility,
 			address(this),
 			_conversionRate);
+
 		BrandedToken proposedBT = new BrandedToken(
 			address(this),
 			btUuid,
@@ -127,9 +159,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return btUuid;
 	}
 
+
 	function checkAvailability(
 		bytes32 _hashSymbol,
-		bytes32 _hashName)
+		bytes32 _hashName,
+		address _requester)
 		public
 		view
 		returns (bool /* success */)
@@ -143,16 +177,71 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// otherwise proposals are first come, first serve
 		// under opt-in discretion of registrar
 		address requester = nameReservation[_hashName]; 
-		if (requester == address(0) ||
-			requester == msg.sender) {
+		if ((requester == address(0) ||
+			requester == _requester)) {
 			return true;
 		}
 		return false;
 	}
 
 	/*
-	 *  Internal functions
+	 *  Registrar functions
 	 */
+	/// @dev for v0.9.1 tracking Ethereum mainnet on the utility chain
+	///      is not a required feature yet, so the core is simplified
+	///      to uint256 valueChainId as storage on construction
+	// function addCore(
+	// 	CoreInterface _core)
+	// 	public
+	// 	onlyRegistrar
+	// 	returns (bool /* success */)
+	// {
+	// 	require(address(_core) != address(0));
+	// 	// core constructed with same registrar
+	// 	require(registrar == _core.registrar());
+	// 	// on utility chain core only tracks a remote value chain
+	// 	uint256 coreChainIdValue = _core.chainIdRemote();
+	// 	require(chainIdUtility != 0);
+	// 	// cannot overwrite core for given chainId
+	// 	require(cores[coreChainIdValue] == address(0));
+
+	// 	cores[coreChainIdValue] = _core;
+
+	// 	return true;
+	// }
+
+	function registerBrandedToken(
+		string _symbol,
+		string _name,
+		uint256 _conversionRate,
+		address _requester,
+		bytes32 _checkUuid)
+		public
+		onlyRegistrar
+		returns (bytes32 uuid)
+	{
+		require(bytes(_symbol).length > 0);
+		require(bytes(_name).length > 0);
+		require(_conversionRate > 0);
+
+		bytes32 hashSymbol = keccak256(_symbol);
+		bytes32 hashName = keccak256(_name);
+		require(checkAvailability(hashSymbol, hashName, _requester));
+
+		uuid = hashUuid(
+			_symbol,
+			_name,
+			chainIdValue,
+			chainIdUtility,
+			address(this),
+			_conversionRate);
+
+		require(uuid == _checkUuid);
+
+		// ...
+
+		return uuid;
+	}
 
 	/*
 	 *  Operation functions

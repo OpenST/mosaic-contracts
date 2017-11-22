@@ -13,31 +13,14 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
+// 
 // ----------------------------------------------------------------------------
-// Registrar
+// OpenST protocol interface - Value chain
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./OpsManaged.sol";
-import "./valueChain/OpenSTValueInterface.sol";
-import "./utilityChain/OpenSTUtilityInterface.sol";
-
-/// @title Registrar - registers for utility tokens
-contract Registrar is OpsManaged {
-
-    /*
-     *  Public functions
-     */
-    function Registrar() public
-        OpsManaged()
-    {
-    }
-
-
-    
-
-
+contract OpenSTValueInterface {
+	
 }
