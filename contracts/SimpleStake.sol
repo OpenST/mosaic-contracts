@@ -74,6 +74,7 @@ contract SimpleStake is ProtocolVersioned {
 		onlyProtocol
 		returns (bool)
 	{
+		require(_to != address(0));
 		require(eip20Token.transfer(_to, _amount));
 		
 		ReleasedStake(msg.sender, _to, _amount);
@@ -91,7 +92,7 @@ contract SimpleStake is ProtocolVersioned {
     ///      (accidental) donations can not be prevented
     function getTotalStake()
     	public
-    	constant
+    	view
     	returns (uint256)
     {
     	return eip20Token.balanceOf(this);
