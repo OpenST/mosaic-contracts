@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleStake_basic.js
+// test/SimpleStake_integrated.js
 //
 // http://www.simpletoken.org/
 //
@@ -54,8 +54,8 @@ contract('SimpleStake', function(accounts) {
 
 		before(async () => {
 			var contracts =
-				await SimpleStakeUtils.deploySingleSimpleStake(
-				artifacts, accounts, openSTProtocol, UUID);
+				await SimpleStakeUtils.deploySimpleStake(
+				artifacts, accounts);
 
 			token = contracts.token;
 			simpleStake = contracts.simpleStake;
