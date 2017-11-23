@@ -25,7 +25,11 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var SimpleStake = artifacts.require("./SimpleStake.sol");
 
 /// @dev Deploy 
-module.exports.deploySingleSimpleStake = async (artifacts, accounts, protocol, UUID) => {
+module.exports.deploySimpleStake = async (artifacts, accounts) => {
+	/// mock unique identifier for utility token
+	const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
+	/// mock OpenST protocol contract address with an external account
+	const openSTProtocol = accounts[4];
 
 	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
 	// Set Simple Token admin to account[1]
@@ -33,7 +37,7 @@ module.exports.deploySingleSimpleStake = async (artifacts, accounts, protocol, U
 	// and finalize Simple Token
 	Assert.ok(await token.finalize({ from: accounts[1] }));
 
-	const simpleStake = await SimpleStake.new(token.address, protocol, UUID, { from: accounts[0] });
+	const simpleStake = await SimpleStake.new(token.address, openSTProtocol, UUID, { from: accounts[0] });
 
 	return {
 		token       : token,
