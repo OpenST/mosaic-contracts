@@ -36,7 +36,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	/*
 	 *  Structures
 	 */
-	struct RegisteredBrandedToken {
+	struct RegisteredToken {
 		address tokenAddress;
 		address registrar;
 	}
@@ -46,7 +46,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	 */
 	event RequestedBrandedToken(address indexed _requester, address indexed _token,
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate);
-
+	event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
+		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
 	/*
 	 *  Constants
 	 */
@@ -72,12 +73,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	uint256 public chainIdUtility;
 	address public registrar;
 	/// registered branded tokens 
-	mapping(bytes32 /* uuid */ => RegisteredBrandedToken) public registeredBrandedTokens;
+	mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
 	/// name reservation is first come, first serve
 	mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
 	/// symbol reserved for unique API routes
 	/// and resolves to address
-	mapping(bytes32 /* hashSymbol */ => address /* BrandedToken */) public symbolRoute;
+	mapping(bytes32 /* hashSymbol */ => address /* UtilityToken */) public symbolRoute;
 	
 	/*
 	 *  Modifiers
@@ -117,7 +118,18 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			address(this),
 			uuidSTPrime);
 
-		// TODO
+		registeredTokens[uuidSTPrime] = RegisteredToken({
+			tokenAddress: simpleTokenPrime,
+			registrar:    registrar
+		});
+
+		// lock name and symbol route for ST'
+		bytes32 hashName = keccak256(STPRIME_NAME);
+		nameReservation[hashName] = registrar;
+		bytes32 hashSymbol = keccak256(STPRIME_SYMBOL);
+		symbolRoute[hashSymbol] = simpleTokenPrime;
+
+		// @dev read STPrime address and uuid from contract
 	}
 
 	function proposeBrandedToken(
@@ -215,6 +227,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		string _name,
 		uint256 _conversionRate,
 		address _requester,
+		BrandedToken _brandedToken,
 		bytes32 _checkUuid)
 		public
 		onlyRegistrar
@@ -237,9 +250,23 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			_conversionRate);
 
 		require(uuid == _checkUuid);
+		require(_brandedToken.uuid() == _checkUuid);
 
-		// ...
+		assert(registeredTokens[uuid].tokenAddress == address(0)); 
+		
+		registeredTokens[uuid] = RegisteredToken({
+			tokenAddress: _brandedToken,
+			registrar:    registrar
+		});
 
+		// register name to registrar
+		nameReservation[hashName] = registrar;
+		// register symbol
+		symbolRoute[hashSymbol] = _brandedToken;
+
+		RegisteredBrandedToken(registrar, _brandedToken, uuid, _symbol, _name,
+			_conversionRate, _requester);
+		
 		return uuid;
 	}
 
