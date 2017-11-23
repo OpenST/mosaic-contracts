@@ -68,8 +68,7 @@ contract ProtocolVersioned {
 	}
 
 	modifier notNull(address _address) {
-		if (_address == 0)
-			revert();
+		require(_address != 0);
 		_;
 	}
 	
