@@ -46,10 +46,11 @@ contract Hasher {
 			_conversionRate);
 	}
 
-	function hashMintingIntent(
+	function hashStakingIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
+		address _beneficiary,
 		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _escrowUnlockHeight)
@@ -61,6 +62,7 @@ contract Hasher {
 			_uuid,
 			_account,
 			_accountNonce,
+			_beneficiary,
 			_amountST,
 			_amountUT,
 			_escrowUnlockHeight);

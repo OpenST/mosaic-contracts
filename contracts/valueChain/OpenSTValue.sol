@@ -39,6 +39,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     event UtilityTokenRegistered(bytes32 indexed _uuid, address indexed stake,
     	string _symbol, string _name, uint8 _decimals, uint256 _conversionRate,
     	uint256 _chainIdUtility, address indexed _stakingAccount);
+    event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
+    	uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
+    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash);
 
 	/*
 	 *  Constants
@@ -61,19 +64,20 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 chainIdUtility;
     	address simpleStake;
     	address stakingAccount;
-    	mapping(bytes32 /* hashStakingIntent */ => Stake) stakes;
-    	mapping(bytes32 /* hashRedemptionIntent */ => Unstake) unstakes;
     }
 
     struct Stake {
+    	bytes32 uuid;
     	address staker;
     	address beneficiary;
+    	uint256 nonce;
     	uint256 amountST;
     	uint256 amountUT;
     	uint256 escrowUnlockHeight;
     }
 
     struct Unstake {
+    	bytes32 uuid;
     	address unstaker;
     	uint256 amount;
     }
@@ -86,6 +90,16 @@ contract OpenSTValue is OpsManaged, Hasher {
  	address public registrar;
 	mapping(uint256 /* chainIdUtility */ => CoreInterface) cores;
 	mapping(bytes32 /* uuid */ => UtilityToken) utilityTokens;
+	/// nonce makes the staking process atomic across the two-phased process
+	/// and protects against replay attack on (un)staking proofs during the process.
+	/// On the value chain nonces need to strictly increase by one; on the utility
+	/// chain the nonce need to strictly increase (as one value chain can have multiple
+	/// utility chains)
+	mapping(address /* (un)staker */ => uint256) nonces;
+	/// register the active stakes and unstakes
+	mapping(bytes32 /* hashStakingIntent */ => Stake) stakes;
+	mapping(bytes32 /* hashRedemptionIntent */ => Unstake) unstakes;
+
 
 	/*
 	 *  Modifiers
@@ -120,8 +134,69 @@ contract OpenSTValue is OpsManaged, Hasher {
 	/// @dev In order to stake the tx.origin needs to set an allowance
 	///      for the OpenSTValue contract to transfer to itself to hold
 	///      during the staking process.
-	// function stake(
-	// 	)
+	function stake(
+		bytes32 _uuid,
+		uint256 _amountST,
+		address _beneficiary)
+		external
+		returns (
+		uint256 amountUT,
+		uint256 nonce,
+		uint256 unlockHeight,
+		bytes32 stakingIntentHash)
+	{
+		// check the staking contract has been approved to spend the amount to stake
+		// OpenSTValue needs to be able to transfer the stake into its balance for
+		// keeping until the two-phase process is completed on both chains.
+		require(_amountST > 0);
+		// Consider the security risk of using tx.origin; at the same time an allowance
+		// needs to be set before calling stake over a potentially malicious contract at stakingAccount.
+		// The second protection is that the staker needs to check the intent hash before
+		// signing off on completing the two-phased process.
+		require(valueToken.allowance(tx.origin, address(this)) >= _amountST);
+
+		require(utilityTokens[_uuid].simpleStake != address(0));
+		require(_beneficiary != address(0));
+
+		UtilityToken storage utilityToken = utilityTokens[_uuid];
+
+		// if the staking account is set to a non-zero address,
+		// then all transactions have come (from/over) the staking account,
+		// whether this is an EOA or a contract; tx.origin is putting forward the funds
+		if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
+		require(valueToken.transferFrom(tx.origin, address(this), _amountST));
+
+		amountUT = _amountST.mul(utilityToken.conversionRate);
+		unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+
+		nonces[tx.origin]++;
+		nonce = nonces[tx.origin];
+
+		stakingIntentHash = hashStakingIntent(
+			_uuid,
+			tx.origin,
+			nonce,
+			_beneficiary,
+			_amountST,
+			amountUT,
+			unlockHeight
+		);
+
+		stakes[stakingIntentHash] = Stake({
+			uuid:               _uuid,
+			staker:             tx.origin,
+			beneficiary:        _beneficiary,
+			nonce:              nonce,
+			amountST:           _amountST,
+			amountUT:           amountUT,
+			escrowUnlockHeight: unlockHeight
+		});
+    	
+    	StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
+    		_amountST, amountUT, unlockHeight, stakingIntentHash);
+
+    	return (amountUT, nonce, unlockHeight, stakingIntentHash);
+	}
 
 
 	/*

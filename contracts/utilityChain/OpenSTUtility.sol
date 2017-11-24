@@ -37,10 +37,25 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	 *  Structures
 	 */
 	struct RegisteredToken {
-		address tokenAddress;
+		UtilityTokenInterface token;
 		address registrar;
 	}
 
+
+	struct Mint {
+		bytes32 uuid;
+		address staker;
+		address beneficiary;
+		uint256 amount;
+		uint256 unlockHeight;
+	}
+
+	struct Redemption {
+		bytes32 uuid;
+		address redeemer;
+		uint256 amountUT;
+		uint256 escrowUnlockHeight;
+	}
 	/*
 	 *	Events
 	 */
@@ -48,10 +63,15 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate);
 	event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
+    event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
+    	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 unlockHeight);
+    event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
+    	address _beneficiary, uint256 _amount);
+
 	/*
 	 *  Constants
 	 */
-	string  public constant STPRIME_SYMBOL = "STP";
+	string public constant STPRIME_SYMBOL = "STP";
     string public constant STPRIME_NAME = "SimpleTokenPrime";
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
@@ -63,7 +83,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	/*
 	 *  Storage
 	 */
-	// mapping()
 	/// store address of Simple Token Prime
 	address public simpleTokenPrime;
 	bytes32 public uuidSTPrime;
@@ -79,7 +98,16 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	/// symbol reserved for unique API routes
 	/// and resolves to address
 	mapping(bytes32 /* hashSymbol */ => address /* UtilityToken */) public symbolRoute;
-	
+	/// nonce makes the staking process atomic across the two-phased process
+	/// and protects against replay attack on (un)staking proofs during the process.
+	/// On the value chain nonces need to strictly increase by one; on the utility
+	/// chain the nonce need to strictly increase (as one value chain can have multiple
+	/// utility chains)
+	mapping(address /* (un)staker */ => uint256) nonces;
+	/// store the ongoing mints and redemptions
+	mapping(bytes32 /* stakingIntentHash */ => Mint) mints;
+	mapping(bytes32 /* redemptionIntentHash*/ => Redemption) redemptions;
+
 	/*
 	 *  Modifiers
 	 */
@@ -119,8 +147,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			uuidSTPrime);
 
 		registeredTokens[uuidSTPrime] = RegisteredToken({
-			tokenAddress: simpleTokenPrime,
-			registrar:    registrar
+			token:     UtilityTokenInterface(simpleTokenPrime),
+			registrar: registrar
 		});
 
 		// lock name and symbol route for ST'
@@ -252,11 +280,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(uuid == _checkUuid);
 		require(_brandedToken.uuid() == _checkUuid);
 
-		assert(registeredTokens[uuid].tokenAddress == address(0)); 
+		assert(address(registeredTokens[uuid].token) == address(0)); 
 		
 		registeredTokens[uuid] = RegisteredToken({
-			tokenAddress: _brandedToken,
-			registrar:    registrar
+			token:     _brandedToken,
+			registrar: registrar
 		});
 
 		// register name to registrar
@@ -270,11 +298,86 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return uuid;
 	}
 
+	function confirmStakingIntent(
+		bytes32 _uuid,
+		address _staker,
+		uint256 _stakerNonce,
+		address _beneficiary,
+		uint256 _amountST,
+		uint256 _amountUT,
+		uint256 _stakingUnlockHeight,
+		bytes32 _stakingIntentHash)
+		external
+		onlyRegistrar
+		returns (uint256 unlockHeight)
+	{
+		require(address(registeredTokens[_uuid].token) != address(0));
+
+		require(nonces[_staker] < _stakerNonce);
+		require(_amountST > 0);
+		require(_amountUT > 0);
+		// escrowunlockheight needs to be checked against the core that tracks the value chain
+		require(_stakingUnlockHeight > 0);
+		require(_stakingIntentHash != "");
+
+		unlockHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+		nonces[_staker] = _stakerNonce;
+
+		bytes32 stakingIntentHash = hashStakingIntent(
+			_uuid,
+			_staker,
+			_stakerNonce,
+			_beneficiary,
+			_amountST,
+			_amountUT,
+			_stakingUnlockHeight
+		);
+
+		require(stakingIntentHash == _stakingIntentHash);
+
+		mints[stakingIntentHash] = Mint({
+			uuid:         _uuid,
+			staker:       _staker,
+			beneficiary:  _beneficiary,
+			amount:       _amountUT,
+			unlockHeight: unlockHeight
+		});
+
+    	StakingIntentConfirmed(_uuid, _stakingIntentHash, _staker, _beneficiary, _amountST,
+    		_amountUT, unlockHeight);
+
+    	return unlockHeight;
+    }
+
+    function processMinting(
+    	bytes32 _stakingIntentHash)
+    	external
+    	returns (address tokenAddress)
+    {
+    	require(_stakingIntentHash != "");
+
+    	Mint storage mint = mints[_stakingIntentHash];
+    	require(mint.staker == msg.sender);
+    	require(mint.unlockHeight > block.number);
+
+    	UtilityTokenInterface token = registeredTokens[mint.uuid].token;
+    	tokenAddress = address(token);
+    	require(tokenAddress != address(0));
+
+    	require(token.mint(mint.beneficiary, mint.amount));
+
+		ProcessedMint(mint.uuid, _stakingIntentHash, mint.staker, mint.beneficiary, mint.amount);
+
+		delete mints[_stakingIntentHash];
+
+    	return tokenAddress;
+    }
+
+
 	/*
 	 *  Operation functions
 	 */
 	/// @dev TODO: add events to trigger for each action
-
 	function addNameReservation(
 		bytes32 _hashName,
 		address _requester)
