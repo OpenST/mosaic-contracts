@@ -24,8 +24,7 @@ const BigNumber = require('bignumber.js');
 
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
-/// @dev currently unused as tests for SimpleToken.js don't
-///      follow this paradigm - to align
+/// @dev Deploy 
 module.exports.deploySimpleToken = async (artifacts, accounts) => {
 
    const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });

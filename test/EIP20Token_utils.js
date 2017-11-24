@@ -24,8 +24,7 @@ const BigNumber = require('bignumber.js');
 
 var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
 
-/// @dev currently unused as tests for EIP20Token.js don't
-///      follow this paradigm - to align
+/// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
    const token = await EIP20Token.new("SYMBOL", "Name", 18, { from: accounts[0], gas: 3500000 });
 
