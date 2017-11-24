@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleStake_utils.js
+// Test: SimpleStake_utils.js
 //
 // http://www.simpletoken.org/
 //

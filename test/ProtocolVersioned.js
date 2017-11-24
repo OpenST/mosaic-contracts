@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/ProtocolVersioned.js
+// Test: ProtocolVersioned.js
 //
 // http://www.simpletoken.org/
 //

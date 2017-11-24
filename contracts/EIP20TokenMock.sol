@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// contracts/EIP20TokenMock.sol
+// Utility chain: EIP20TokenMock.sol
 //
 // http://www.simpletoken.org/
 //
