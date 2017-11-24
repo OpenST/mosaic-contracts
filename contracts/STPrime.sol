@@ -43,6 +43,22 @@ import "./STPrimeConfig.sol";
 contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 	using SafeMath for uint256;
 
+
+    /*
+     *  Storage
+     */
+    /// set when ST' has received TOKENS_MAX tokens;
+    /// when uninitialised minting is not allowed
+    bool private initialized;
+
+    /*
+     *  Modifiers
+     */
+    modifier onlyInitialized() {
+        require(initialized);
+        _;
+    }
+
     /*
      * Public functions
      */
@@ -55,6 +71,21 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 
 	}
 
+    /// On setup of the utility chain the base tokens need to be transfered
+    /// in full to STPrime for the base tokens to be minted as ST'
+    function initialize()
+        public
+        payable
+    {
+        // @dev before the registrar registers a core on the value chain
+        //      it must verify that the genesis exactly specified TOKENS_MAX
+        //      so that all base tokens are held by STPrime 
+        require(msg.value == TOKENS_MAX);
+        require(msg.sender.balance == 0);
+        initialized = true;
+    }
+
+
 	/// @dev transfer full claim to beneficiary
     ///      claim can be called publicly as the beneficiary
     ///      and amount are set, and this allows for reduced
@@ -66,6 +97,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     function claim(
     	address _beneficiary)
     	public
+        onlyInitialized
     	returns (bool /* success */)
     {
     	uint256 amount = claimInternal(_beneficiary);
@@ -87,6 +119,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     	uint256 _amount)
 	    public
 	    onlyProtocol
+        onlyInitialized
 	    returns (bool /* success */)
 	{		
 		// add the minted amount to the beneficiary's claim 
@@ -100,6 +133,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     	uint256 _amount)
     	public
     	onlyProtocol
+        onlyInitialized
     	payable
     	returns (bool /* success */)
    	{
