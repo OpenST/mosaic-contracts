@@ -44,6 +44,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
     	uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
     	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash);
+    event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
+    	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
 
 	/*
 	 *  Constants
@@ -64,7 +66,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 conversionRate;
     	uint8   decimals;
     	uint256 chainIdUtility;
-    	address simpleStake;
+    	SimpleStake simpleStake;
     	address stakingAccount;
     }
 
@@ -200,6 +202,34 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return (amountUT, nonce, unlockHeight, stakingIntentHash);
 	}
 
+	function processStaking(
+		bytes32 _stakingIntentHash)
+		external
+		returns (address stakeAddress)
+	{
+		require(_stakingIntentHash != "");
+
+		Stake storage stake = stakes[_stakingIntentHash];
+		require(stake.staker == msg.sender);
+		// as this bears the cost, there is no need to require
+		// that the stake.unlockHeight is not yet surpassed
+		// as is required on processMinting
+
+		UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+		stakeAddress = address(utilityToken.simpleStake);
+		require(stakeAddress != address(0));
+
+		assert(valueToken.balanceOf(address(this)) > stake.amountST);
+		require(valueToken.transfer(stakeAddress, stake.amountST));
+
+    	ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
+    		stake.amountST, stake.amountUT);
+
+    	delete stakes[_stakingIntentHash];
+
+    	return stakeAddress;
+    }
+
 
 	/*
 	 *  Registrar functions
@@ -261,7 +291,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 			conversionRate: _conversionRate,
 			decimals:       TOKEN_DECIMALS,
 			chainIdUtility: _chainIdUtility,
-			simpleStake:    address(simpleStake),
+			simpleStake:    simpleStake,
 			stakingAccount: _stakingAccount
 		});
 

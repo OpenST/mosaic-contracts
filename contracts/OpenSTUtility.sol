@@ -67,8 +67,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 unlockHeight);
-    event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
-    	address _beneficiary, uint256 _amount);
+    event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
+    	address _staker, address _beneficiary, uint256 _amount);
 
 	/*
 	 *  Constants
@@ -369,7 +369,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	require(token.mint(mint.beneficiary, mint.amount));
 
-		ProcessedMint(mint.uuid, _stakingIntentHash, mint.staker, mint.beneficiary, mint.amount);
+		ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
+			mint.beneficiary, mint.amount);
 
 		delete mints[_stakingIntentHash];
 

@@ -85,7 +85,6 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         initialized = true;
     }
 
-
 	/// @dev transfer full claim to beneficiary
     ///      claim can be called publicly as the beneficiary
     ///      and amount are set, and this allows for reduced
