@@ -15,15 +15,15 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Registrar
+// Common: Registrar
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 import "./OpsManaged.sol";
-import "./valueChain/OpenSTValueInterface.sol";
-import "./utilityChain/OpenSTUtilityInterface.sol";
+import "./OpenSTValueInterface.sol";
+import "./OpenSTUtilityInterface.sol";
 
 /// @title Registrar - registers for utility tokens
 contract Registrar is OpsManaged {

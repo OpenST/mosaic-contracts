@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Standard EIP20 Interface
+// Common: Standard EIP20 Interface
 //
 // http://www.simpletoken.org/
 //

@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Basic Ownership Implementation
+// Common: Basic Ownership Implementation
 //
 // http://www.simpletoken.org/
 //

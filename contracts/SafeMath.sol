@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// SafeMath Library Implementation
+// Common: SafeMath Library Implementation
 //
 // http://www.simpletoken.org/
 //

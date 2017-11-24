@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/Core.sol
+// Common: Core
 //
 // http://www.simpletoken.org/
 //

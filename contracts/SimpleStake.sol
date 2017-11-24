@@ -15,15 +15,15 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/SimpleStake
+// ValueChain: SimpleStake
 // 
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../EIP20Interface.sol";
-import "../SafeMath.sol";
-import "../ProtocolVersioned.sol";
+import "./EIP20Interface.sol";
+import "./SafeMath.sol";
+import "./ProtocolVersioned.sol";
 
 /// @title SimpleStake - stakes the value of an EIP20 token on Ethereum
 ///        for a utility token on the OpenST platform

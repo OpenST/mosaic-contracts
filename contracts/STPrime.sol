@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/STPrime.sol
+// Utility chain: STPrime
 //
 // http://www.simpletoken.org/
 //
@@ -26,7 +26,9 @@ pragma solidity ^0.4.17;
 /// The gasprice on utility chains is set in [ST'-Wei/gas] (like Ether pays for gas
 /// on Ethereum mainnet) when sending a transaction on the open utility chain.
 
-import "../SafeMath.sol";
+import "./SafeMath.sol";
+
+// utility chain contracts
 import "./UtilityTokenAbstract.sol";
 import "./STPrimeConfig.sol";
 

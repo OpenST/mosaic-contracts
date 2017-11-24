@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/Hasher.sol
+// Common: Hasher
 //
 // http://www.simpletoken.org/
 //

@@ -15,17 +15,19 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// OpenST - Value staking contract for OpenST Platform v0.9 on value chain
+// Value chain: OpenSTValue
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../SafeMath.sol";
-import "../Hasher.sol";
-import "../OpsManaged.sol";
-import "../EIP20Interface.sol";
-import "../CoreInterface.sol";
+import "./SafeMath.sol";
+import "./Hasher.sol";
+import "./OpsManaged.sol";
+import "./EIP20Interface.sol";
+import "./CoreInterface.sol";
+
+// value chain contracts
 import "./SimpleStake.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST 

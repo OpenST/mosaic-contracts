@@ -15,16 +15,18 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/utilityChain/OpenSTUtility.sol
+// Utility chain: OpenSTUtility
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../SafeMath.sol";
-import "../Hasher.sol";
-import "../OpsManaged.sol";
-import "../CoreInterface.sol";
+import "./SafeMath.sol";
+import "./Hasher.sol";
+import "./OpsManaged.sol";
+import "./CoreInterface.sol";
+
+// utility chain contracts
 import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
@@ -73,6 +75,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	 */
 	string public constant STPRIME_SYMBOL = "STP";
     string public constant STPRIME_NAME = "SimpleTokenPrime";
+    uint256 public constant STPRIME_CONVERSION_RATE = 1;
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
 	// ~2 weeks, assuming ~15s per block
@@ -141,7 +144,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			_chainIdValue,
 			_chainIdUtility,
 			address(this),
-			1);
+			STPRIME_CONVERSION_RATE);
 		simpleTokenPrime = new STPrime(
 			address(this),
 			uuidSTPrime);
@@ -343,7 +346,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			unlockHeight: unlockHeight
 		});
 
-    	StakingIntentConfirmed(_uuid, _stakingIntentHash, _staker, _beneficiary, _amountST,
+    	StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
     		_amountUT, unlockHeight);
 
     	return unlockHeight;

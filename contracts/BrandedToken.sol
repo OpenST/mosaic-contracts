@@ -15,13 +15,15 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/BrandedToken.sol
+// Utility chain: BrandedToken
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../SafeMath.sol";
+import "./SafeMath.sol";
+
+// utility chain contracts
 import "./EIP20Token.sol";
 import "./UtilityTokenAbstract.sol";
 

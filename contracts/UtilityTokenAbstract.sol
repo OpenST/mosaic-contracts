@@ -15,14 +15,16 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/UtilityToken.sol
+// Utility chain: UtilityTokenAbstract
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../SafeMath.sol";
-import "../ProtocolVersioned.sol";
+import "./SafeMath.sol";
+import "./ProtocolVersioned.sol";
+
+// utility chain contracts
 import "./UtilityTokenInterface.sol";
 
 /// @title UtilityToken abstract

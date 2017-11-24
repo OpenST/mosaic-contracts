@@ -15,8 +15,12 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// OpenST protocol interface - Utility chain
+// Value chain: OpenST protocol interface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
+
+contract OpenSTValueInterface {
+	
+}

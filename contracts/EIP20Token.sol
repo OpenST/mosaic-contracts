@@ -15,14 +15,14 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// EIP20 Token Implementation
+// Utility chain: EIP20 Token Implementation
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "../EIP20Interface.sol";
-import "../SafeMath.sol";
+import "./EIP20Interface.sol";
+import "./SafeMath.sol";
 
 /**
    @title EIP20Token

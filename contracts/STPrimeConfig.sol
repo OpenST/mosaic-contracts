@@ -13,24 +13,21 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
+// 
 // ----------------------------------------------------------------------------
-// contracts/utilityChain/UtilityTokenInterface.sol
+// Utility chain: STPrimeConfig
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-contract UtilityTokenInterface {
 
-	/// @dev transfer full claim to beneficiary
-    function claim(address _beneficiary) public returns (bool success);
-    /// @dev Mint new utility token into  claim for beneficiary
-    function mint(address _beneficiary, uint256 _amount) public returns (bool success);
-    /// @dev Burn utility tokens after having redeemed them
-    ///      through the protocol for the staked Simple Token
-    function burn(address _burner, uint256 _amount) public payable returns (bool success);
-   	
- 	/// @dev Get totalTokenSupply as view so that child cannot edit
-	function totalSupply() public view returns (uint256 supply);
+contract STPrimeConfig {
+
+    string  public constant TOKEN_SYMBOL   = "STP";
+    string  public constant TOKEN_NAME     = "SimpleTokenPrime";
+    uint8   public constant TOKEN_DECIMALS = 18;
+
+    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
+    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
 }
