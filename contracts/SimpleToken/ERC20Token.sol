@@ -1,49 +1,47 @@
 pragma solidity ^0.4.17;
 
-// Copyright 2017 OpenST Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// 
 // ----------------------------------------------------------------------------
-// Utility chain: EIP20 Token Implementation
+// Standard ERC20 Token Implementation
 //
-// http://www.simpletoken.org/
+// Copyright (c) 2017 OpenST Ltd.
+// https://simpletoken.org/
 //
+// The MIT Licence.
 // ----------------------------------------------------------------------------
 
-import "./EIP20Interface.sol";
+import "./ERC20Interface.sol";
+import "./Owned.sol";
 import "./SafeMath.sol";
 
-/**
-   @title EIP20Token
-   @notice Implements EIP20 token
-*/
-contract EIP20Token is EIP20Interface {
+
+//
+// Standard ERC20 implementation, with ownership.
+//
+contract ERC20Token is ERC20Interface, Owned {
+
     using SafeMath for uint256;
 
-    string private tokenName;
-    string private tokenSymbol;
-    uint8  private tokenDecimals;
+    string  private tokenName;
+    string  private tokenSymbol;
+    uint8   private tokenDecimals;
+    uint256 internal tokenTotalSupply;
 
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
 
 
-    function EIP20Token(string _symbol, string _name, uint8 _decimals) public
+    function ERC20Token(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
+        Owned()
     {
         tokenSymbol      = _symbol;
         tokenName        = _name;
         tokenDecimals    = _decimals;
+        tokenTotalSupply = _totalSupply;
+        balances[owner]  = _totalSupply;
+
+        // According to the ERC20 standard, a token contract which creates new tokens should trigger
+        // a Transfer event and transfers of 0 values must also fire the event.
+        Transfer(0x0, owner, _totalSupply);
     }
 
 
@@ -59,6 +57,11 @@ contract EIP20Token is EIP20Interface {
 
     function decimals() public view returns (uint8) {
         return tokenDecimals;
+    }
+
+
+    function totalSupply() public view returns (uint256) {
+        return tokenTotalSupply;
     }
 
 
@@ -105,28 +108,4 @@ contract EIP20Token is EIP20Interface {
         return true;
     }
 
-
-    function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {
-        // claimable tokens are minted in the contract address to be pulled on claim
-        balances[address(this)] = balances[address(this)].sub(_amount);
-        balances[_beneficiary] = balances[_beneficiary].add(_amount);
-
-        Transfer(address(this), _beneficiary, _amount);
-
-        return true;
-    }
-
-
-    function mintEIP20(uint256 _amount) internal returns (bool /* success */) {
-        // mint EIP20 tokens in contract address for them to be claimed
-        balances[address(this)] = balances[address(this)].add(_amount);
-    
-        return true;
-    }
-
-    function burnEIP20(uint256 _amount) internal returns (bool /* success */) {
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
-
-        return true;
-    }
 }

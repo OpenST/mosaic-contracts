@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Common: Admin / Ops Permission Model
+// Admin / Ops Permission Model
 //
 // http://www.simpletoken.org/
 //

@@ -15,41 +15,8 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility Token Data
+// Utility chain: OpenSTUtilityInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-
-/**
-   @title UtilityTokenData
-   @notice Data structures for a UtilityToken contract
-*/
-contract UtilityTokenData {
-	bytes32 public uuid;
-
-	// ~2 weeks, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
-	// ~1hour, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
-
-	// [staker address]
-	mapping(address => uint) nonces;
-
-	// [stakingHash]
-	mapping(bytes32 => Mint) mints;
-
-	// [unstakingHash]
-	mapping(bytes32 => Redemption) redemptions;
-
-	struct Mint {
-		address minter;
-		uint256 amount;
-	}
-
-	struct Redemption {
-		address redeemer;
-		uint256 amountUT;
-		uint256 escrowUnlockHeight;
-	}
-}

@@ -1,0 +1,15 @@
+{
+  "name": "openst-protocol",
+  "version": "0.9.1",
+  "description": "",
+  "dependencies": {
+    "assert": "^1.4.1",
+    "bignumber": "^1.1.0",
+    "bignumber.js": "^4.1.0",
+    "moment": "^2.19.2",
+    "web3": "^0.20.2"
+  },
+  "devDependencies": {},
+  "author": "OpenST Foundation Ltd.",
+  "license": "Apache v2.0"
+}
