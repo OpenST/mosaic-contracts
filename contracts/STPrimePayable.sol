@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/STPrimePayable.sol
+// Utility chain: STPrimePayable.sol
 //
 // http://www.simpletoken.org/
 //

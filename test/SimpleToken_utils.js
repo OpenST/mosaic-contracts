@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleToken_utils.js
+// Test: SimpleToken_utils.js
 //
 // http://www.simpletoken.org/
 //
