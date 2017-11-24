@@ -26,6 +26,7 @@ const BigNumber = require('bignumber.js');
 
 const Utils = require('./lib/utils.js');
 const SimpleTokenUtils = require('./SimpleToken_utils.js')
+const EIP20Token_utils = require('./EIP20Token_utils.js')
 
 
 const SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
@@ -150,7 +151,7 @@ contract('SimpleToken', (accounts) => {
           const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
           assert.equal(receipt.logs.length, 1)
           const logs = Utils.decodeLogs(token.abi, [ receipt.logs[0] ])
-          SimpleTokenUtils.checkTransferEvent(logs[0], 0, accounts[0], TOTAL_SUPPLY)
+          EIP20Token_utils.checkTransferEvent(logs[0], 0, accounts[0], TOTAL_SUPPLY)
       })
       // it('Constructor raised transfer event', async () => {
       //     const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
@@ -189,12 +190,12 @@ contract('SimpleToken', (accounts) => {
 
       it("transfer tokens from owner to other", async () => {
          var res = await token.transfer(accounts[1], 1000);
-         SimpleTokenUtils.checkTransferEventGroup(await token.transfer(accounts[1], 1000), accounts[0], accounts[1], 1000)
+         EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[1], 1000), accounts[0], accounts[1], 1000)
       })
 
       it("transfer 0 tokens", async () => {
          assert.equal(await token.transfer.call(accounts[2], 0, { from: accounts[1] }), true)
-         SimpleTokenUtils.checkTransferEventGroup(await token.transfer(accounts[2], 0, { from: accounts[1] }), accounts[1], accounts[2], 0)
+         EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[2], 0, { from: accounts[1] }), accounts[1], accounts[2], 0)
       })
 
       it("transfer > balance", async () => {
@@ -259,7 +260,7 @@ contract('SimpleToken', (accounts) => {
 
       it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
          assert.equal(await token.approve.call(accounts[2], 10, { from: accounts[4] }), true)
-         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(accounts[2], 10, { from: accounts[4] }), accounts[4], accounts[2], 10)
+         EIP20Token_utils.checkApprovalEventGroup(await token.approve(accounts[2], 10, { from: accounts[4] }), accounts[4], accounts[2], 10)
 
          assert.equal((await token.allowance.call(accounts[4], accounts[2], { from: accounts[4] })).toNumber(), 10)
 
@@ -270,12 +271,12 @@ contract('SimpleToken', (accounts) => {
       it("transfer 1000 from account 1 -> 2 with 1000 allowance (as ops)", async () => {
          // We first need to bring approval to 0
          assert.equal(await token.approve.call(ops, 0, { from: accounts[4] }), true)
-         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(ops, 0, { from: accounts[4] }), accounts[4], ops, 0)
+         EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, 0, { from: accounts[4] }), accounts[4], ops, 0)
 
          assert.equal(await token.allowance.call(accounts[4], ops, { from: accounts[4] }), 0)
 
          assert.equal(await token.approve.call(ops, 1000, { from: accounts[4] }), true)
-         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(ops, 1000, { from: accounts[4] }), accounts[4], ops, 1000)
+         EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, 1000, { from: accounts[4] }), accounts[4], ops, 1000)
 
          assert.equal(await token.allowance.call(accounts[4], ops), 1000, { from: accounts[4] })
 
@@ -290,12 +291,12 @@ contract('SimpleToken', (accounts) => {
       it("transfer 1000 from account 1 -> 2 with 1000 allowance (as admin)", async () => {
          // We first need to bring approval to 0
          assert.equal(await token.approve.call(admin, 0, { from: accounts[4] }), true)
-         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(admin, 0, { from: accounts[4] }), accounts[4], admin, 0)
+         EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, 0, { from: accounts[4] }), accounts[4], admin, 0)
 
          assert.equal(await token.allowance.call(accounts[4], admin, { from: accounts[4] }), 0)
 
          assert.equal(await token.approve.call(admin, 1000, { from: accounts[4] }), true)
-         SimpleTokenUtils.checkApprovalEventGroup(await token.approve(admin, 1000, { from: accounts[4] }), accounts[4], admin, 1000)
+         EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, 1000, { from: accounts[4] }), accounts[4], admin, 1000)
 
          assert.equal(await token.allowance.call(accounts[4], admin), 1000, { from: accounts[4] })
 
