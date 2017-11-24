@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/STPrime_utils.js
+// Test: STPrime_utils.js
 //
 // http://www.simpletoken.org/
 //

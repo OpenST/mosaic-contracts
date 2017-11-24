@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/OpenST.js
+// Test: OpenST.js
 //
 // http://www.simpletoken.org/
 //

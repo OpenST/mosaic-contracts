@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/BrandedToken_utils.js
+// Test: BrandedToken_utils.js
 //
 // http://www.simpletoken.org/
 //

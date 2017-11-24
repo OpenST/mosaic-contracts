@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/EIP20Token_protocol_extensions.js
+// Test: EIP20Token_protocol_extensions.js
 //
 // http://www.simpletoken.org/
 //

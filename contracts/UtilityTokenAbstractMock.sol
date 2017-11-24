@@ -15,7 +15,7 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// contracts/UtilityTokenAbstractMock.sol
+// Utility chain: UtilityTokenAbstractMock.sol
 //
 // http://www.simpletoken.org/
 //
