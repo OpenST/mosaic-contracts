@@ -230,6 +230,17 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return stakeAddress;
     }
 
+    /*
+     *  Public view functions
+     */
+    function getNextNonce(
+    	address _account)
+    	public
+    	view
+    	returns (uint256 nextNonce)
+    {
+    	return (nonces[_account] + 1);
+    }
 
 	/*
 	 *  Registrar functions
