@@ -22,7 +22,7 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-var BrandedToken = artifacts.require("./BrandedToken.sol");
+var BrandedToken = artifacts.require('./BrandedToken.sol');
 
 /// @dev Deploy 
 module.exports.deployBrandedToken = async (artifacts, accounts) => {
