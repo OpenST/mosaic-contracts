@@ -26,7 +26,7 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
 /// @dev Deploy 
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
-	const chainIdValue = "3";
+	const chainIdValue = 3;
 	const valueToken   = await SimpleToken.new();
 	const registrar    = accounts[1]
 

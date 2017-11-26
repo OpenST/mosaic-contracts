@@ -32,7 +32,7 @@ const Core_utils = require('./Core_utils.js');
 
 contract('Core', function(accounts) {
 	const registrar = accounts[1];
-	const chainIdRemote = "1410";
+	const chainIdRemote = 1410;
 	const openSTRemote = accounts[4];
 
 	describe('Properties', async () => {

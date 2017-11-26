@@ -24,8 +24,8 @@ var Core = artifacts.require("./Core.sol");
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
 	const registrar = accounts[1];
-	const chainIdOrigin = "3";
-	const chainIdRemote = "1410";
+	const chainIdOrigin = 3;
+	const chainIdRemote = 1410;
 	const openSTRemote = accounts[4];
 
 	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote);

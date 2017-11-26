@@ -63,8 +63,8 @@ const Hasher = artifacts.require("./Hasher.sol");
 ///
 
 contract('OpenSTValue', function(accounts) {
-	const chainIdValue  = "3";
-	const chainIdRemote = "1410";
+	const chainIdValue  = 3;
+	const chainIdRemote = 1410;
 	const openSTRemote  = accounts[4];
 	const registrar     = accounts[1];
 
