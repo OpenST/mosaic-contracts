@@ -22,7 +22,7 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
+var EIP20Token = artifacts.require('./EIP20TokenMock.sol');
 
 /// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
@@ -47,6 +47,7 @@ module.exports.checkTransferEvent = (event, _from, _to, _value) => {
    if (Number.isInteger(_value)) {
       _value = new BigNumber(_value);
    }
+
    Assert.equal(event.event, "Transfer");
    Assert.equal(event.args._from, _from);
    Assert.equal(event.args._to, _to);
@@ -55,16 +56,16 @@ module.exports.checkTransferEvent = (event, _from, _to, _value) => {
 
 
 module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
-   assert.equal(result.logs.length, 1)
+   Assert.equal(result.logs.length, 1)
 
-   const event = result.logs[0]
+   const event = result.logs[0];
 
    if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value)
+      _value = new BigNumber(_value);
    }
 
-   assert.equal(event.event, "Approval")
-   assert.equal(event.args._owner, _owner)
-   assert.equal(event.args._spender, _spender)
-   assert.equal(event.args._value.toNumber(), _value.toNumber())
+   Assert.equal(event.event, "Approval");
+   Assert.equal(event.args._owner, _owner);
+   Assert.equal(event.args._spender, _spender);
+   Assert.equal(event.args._value.toNumber(), _value.toNumber());
 }
