@@ -429,6 +429,47 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return (unlockHeight, redemptionIntentHash);
     }
 
+    /// @dev redeemer must send as value the amount STP to redeem
+    ///      note: nonce must be queried from OpenSTValue contract
+    function redeemSTPrime(
+    	uint256 _nonce)
+    	external
+    	payable
+    	returns (
+  		uint256 amountSTP,
+    	uint256 unlockHeight,
+    	bytes32 redemptionIntentHash)
+    {
+    	require(msg.value > 0);
+    	require(_nonce > nonces[msg.sender]);
+    	nonces[msg.sender] = _nonce;
+
+    	amountSTP = msg.value;
+    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+
+    	redemptionIntentHash = hashRedemptionIntent(
+    		uuidSTPrime,
+    		msg.sender,
+    		_nonce,
+    		amountSTP,
+    		unlockHeight
+		);
+
+		redemptions[redemptionIntentHash] = Redemption({
+			uuid:               uuidSTPrime,
+			redeemer:           msg.sender,
+			amountUT:           amountSTP,
+			escrowUnlockHeight: unlockHeight
+		});
+
+		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
+			msg.sender, _nonce, amountSTP, unlockHeight);
+
+		return (amountSTP, unlockHeight, redemptionIntentHash);
+    }
+
+    
+
 	/*
 	 *  Operation functions
 	 */
