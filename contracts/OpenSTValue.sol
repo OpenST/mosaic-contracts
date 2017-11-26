@@ -47,6 +47,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+	event RedemptionIntentConfirmed(bytes32 indexed uuid, bytes32 _redemptionIntentHash,
+		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _unlockHeight);
 
 	/*
 	 *  Constants
@@ -83,8 +85,10 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     struct Unstake {
     	bytes32 uuid;
-    	address unstaker;
-    	uint256 amount;
+    	address redeemer;
+    	uint256 amountST;
+    	uint256 amountUT;
+    	uint256 unlockHeight;
     }
 
 	/*
@@ -230,6 +234,61 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     	return stakeAddress;
     }
+
+    function confirmRedemptionIntent(
+    	bytes32 _uuid,
+    	address _redeemer,
+    	uint256 _redeemerNonce,
+    	uint256 _amountUT,
+    	uint256 _redemptionUnlockHeight,
+    	bytes32 _redemptionIntentHash)
+    	external
+    	onlyRegistrar
+    	returns (
+    	uint256 amountST,
+    	uint256 unlockHeight)
+    {
+		require(utilityTokens[_uuid].simpleStake != address(0));
+    	require(_amountUT > 0);
+    	// later core will provide a view on the block height of the
+    	// utility chain
+    	require(_redemptionUnlockHeight > 0);
+    	require(_redemptionIntentHash != "");
+
+		require(nonces[_redeemer] + 1 == _redeemerNonce);
+    	nonces[_redeemer]++;
+
+    	bytes32 redemptionIntentHash = hashRedemptionIntent(
+    		_uuid,
+    		_redeemer,
+    		nonces[_redeemer]++,
+    		_amountUT,
+    		_redemptionUnlockHeight
+    	);
+
+    	require(_redemptionIntentHash == redemptionIntentHash);
+
+    	unlockHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+
+    	UtilityToken storage utilityToken = utilityTokens[_uuid];
+    	amountST = _amountUT.div(utilityToken.conversionRate);
+
+    	require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
+
+    	unstakes[redemptionIntentHash] = Unstake({
+    		uuid:         _uuid,
+    		redeemer:     _redeemer,
+    		amountUT:     _amountUT,
+    		amountST:     amountST,
+    		unlockHeight: unlockHeight
+    	});
+
+		RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
+			amountST, _amountUT, unlockHeight);
+
+		return (amountST, unlockHeight);
+	}
+
 
     /*
      *  Public view functions

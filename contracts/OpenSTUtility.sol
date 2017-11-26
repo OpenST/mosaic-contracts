@@ -322,7 +322,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(nonces[_staker] < _stakerNonce);
 		require(_amountST > 0);
 		require(_amountUT > 0);
-		// escrowunlockheight needs to be checked against the core that tracks the value chain
+		// stakingUnlockheight needs to be checked against the core that tracks the value chain
 		require(_stakingUnlockHeight > 0);
 		require(_stakingIntentHash != "");
 
@@ -468,8 +468,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		return (amountSTP, unlockHeight, redemptionIntentHash);
     }
-
-    
 
 	/*
 	 *  Operation functions
