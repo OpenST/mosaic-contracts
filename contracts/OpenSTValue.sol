@@ -43,7 +43,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility, address indexed _stakingAccount);
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
     	uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
-    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash);
+    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash,
+    	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
 
@@ -197,7 +198,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 		});
     	
     	StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
-    		_amountST, amountUT, unlockHeight, stakingIntentHash);
+    		_amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
     	return (amountUT, nonce, unlockHeight, stakingIntentHash);
 	}

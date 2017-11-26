@@ -70,7 +70,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
     	address _staker, address _beneficiary, uint256 _amount);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight);
+		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
+		uint256 _chainIdValue);
 
 	/*
 	 *  Constants
@@ -424,7 +425,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		});
 
 		RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
-			msg.sender, _nonce, _amountBT, unlockHeight);
+			msg.sender, _nonce, _amountBT, unlockHeight, chainIdValue);
 
 		return (unlockHeight, redemptionIntentHash);
     }
@@ -463,7 +464,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		});
 
 		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
-			msg.sender, _nonce, amountSTP, unlockHeight);
+			msg.sender, _nonce, amountSTP, unlockHeight, chainIdValue);
 
 		return (amountSTP, unlockHeight, redemptionIntentHash);
     }
