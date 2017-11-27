@@ -22,7 +22,6 @@
 const Utils = require('./lib/utils.js');
 const OpenSTValue_utils = require('./OpenSTValue_utils.js');
 const Core = artifacts.require("./Core.sol");
-const Hasher = artifacts.require("./Hasher.sol");
 
 ///
 /// Test stories
@@ -135,8 +134,7 @@ contract('OpenSTValue', function(accounts) {
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
             await openSTValue.addCore(core.address, { from: registrar });
-        	hasher = await Hasher.new();
-        	checkUuid = await hasher.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 	    })
 
 		it('fails to register by non-registrar', async () => {
@@ -196,8 +194,7 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('fails to stake when the beneficiary is null', async () => {
-	        	hasher = await Hasher.new();
-	        	checkUuid = await hasher.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });        	
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, 0, { from: accounts[0] }));
 			})
@@ -221,8 +218,7 @@ contract('OpenSTValue', function(accounts) {
 		        openSTValue = contracts.openSTValue;
 	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 	            await openSTValue.addCore(core.address, { from: registrar });
-	        	hasher = await Hasher.new();
-	        	checkUuid = await hasher.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, accounts[0], checkUuid, { from: registrar });
 				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });        	
 		    })

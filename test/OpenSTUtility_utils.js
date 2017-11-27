@@ -81,8 +81,8 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 		_amountUT = new BigNumber(_amountUT);
 	}
 
-	if (Number.isInteger(_unlockHeight)) {
-		_unlockHeight = new BigNumber(_unlockHeight);
+	if (Number.isInteger(unlockHeight)) {
+		unlockHeight = new BigNumber(unlockHeight);
 	}
 
 	assert.equal(event.event, "StakingIntentConfirmed");
@@ -92,7 +92,9 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-	assert.equal(event.args.unlockHeight.toNumber(), unlockHeight.toNumber());
+
+	// The block.number received from confirmStakingIntent.call(...) is one less than from confirmStakingIntent(...)
+	assert.equal(event.args.unlockHeight.toNumber(), unlockHeight.plus(1).toNumber());
 }
 
 module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {
@@ -106,25 +108,4 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _sta
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
-}
-
-
-module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, stake, _symbol, _name, _decimals, _conversionRate, _chainIdUtility, _stakingAccount) => {
-	if (Number.isInteger(_decimals)) {
-		_decimals = new BigNumber(_decimals);
-	}
-
-	if (Number.isInteger(_conversionRate)) {
-		_conversionRate = new BigNumber(_conversionRate);
-	}
-
-	assert.equal(event.event, "UtilityTokenRegistered");
-	assert.equal(event.args._uuid, _uuid);
-	assert.equal(event.args.stake, stake);
-	assert.equal(event.args._symbol, _symbol);
-	assert.equal(event.args._name, _name);
-	assert.equal(event.args._decimals.toNumber(), _decimals);
-	assert.equal(event.args._conversionRate.toNumber(), _conversionRate);
-	assert.equal(event.args._chainIdUtility, _chainIdUtility);
-	assert.equal(event.args._stakingAccount, _stakingAccount);
 }
