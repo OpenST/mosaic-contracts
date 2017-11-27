@@ -22,8 +22,8 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-// Temporarily use STPrimePayable until STPrime is enabled to receive base tokens
-var STPrime = artifacts.require("./STPrimePayable.sol");
+// STPrimeMock does not require that initialization faucet be empty
+var STPrime = artifacts.require("./STPrimeMock.sol");
 
 /// @dev Deploy 
 module.exports.deploySTPrime = async (artifacts, accounts) => {
@@ -32,7 +32,7 @@ module.exports.deploySTPrime = async (artifacts, accounts) => {
    /// mock OpenST protocol contract address with an external account
    const openSTProtocol = accounts[4];
 
-   const stPrime = await STPrime.new(openSTProtocol, UUID, { from: accounts[0], gas: 3500000 });
+   const stPrime = await STPrime.new(openSTProtocol, UUID);
 
    return {
       stPrime : stPrime

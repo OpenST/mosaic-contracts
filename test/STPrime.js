@@ -28,6 +28,7 @@ const STPrime_utils = require('./STPrime_utils.js');
 /// 
 /// Mint, Claim, Burn
 /// 	fails to mint by non-openSTProtocol
+///		fails to mint by openSTProtocol when not initialized
 ///		successfully mints
 ///		successfully claims
 /// 	fails to burn by non-openSTProtocol
@@ -41,9 +42,10 @@ const STPrime_utils = require('./STPrime_utils.js');
 contract('STPrime', function(accounts) {
 	const openSTProtocol = accounts[4];
 
-	const beneficiary = accounts[1];
+	const beneficiary = accounts[9]; // set to 0 balance in runGanache.sh
 	const ST1		  = new BigNumber(web3.toWei(1, "ether"));
 	const ST2 		  = new BigNumber(web3.toWei(2, "ether"));
+	const ST800M	  = new BigNumber(web3.toWei(800000000, "ether"));
 	const sendGas 	  = new BigNumber(21000);
 
 	var result 				= null;
@@ -57,24 +59,22 @@ contract('STPrime', function(accounts) {
 			console.log()
 	        contracts = await STPrime_utils.deploySTPrime(artifacts, accounts);
 	        stPrime = contracts.stPrime;
-
-	        // STPrime needs some base tokens to start
-	        startingBalance = await web3.eth.getBalance(beneficiary);
-	        totalBase = startingBalance.dividedBy(2);
-	        await web3.eth.sendTransaction({ from: beneficiary, to: stPrime.address, value: totalBase.toNumber() });
-	        // test treats startingBalance as 0
-	        startingBalance = await web3.eth.getBalance(beneficiary);
-
 		})
 
 		it('fails to mint by non-openSTProtocol', async () => {
             await Utils.expectThrow(stPrime.mint(beneficiary, ST2, { from: accounts[0] }));
 		})
 
+		it('fails to mint by openSTProtocol when not initialized', async () => {
+            await Utils.expectThrow(stPrime.mint(beneficiary, ST2, { from: openSTProtocol }));
+		})
+
 		it('successfully mints', async () => {
+			await stPrime.initialize({ from: accounts[1], value: ST800M });
+
 			assert.equal(await stPrime.totalSupply.call(), 0);
 			beneficiaryBalance = await web3.eth.getBalance(beneficiary);
-			assert.equal(beneficiaryBalance.toNumber(), startingBalance.toNumber());
+			assert.equal(beneficiaryBalance.toNumber(), 0);
 			assert.equal(await stPrime.unclaimed.call(beneficiary), 0);
 			assert.equal(await stPrime.mint.call(beneficiary, ST2, { from: openSTProtocol }), true);
 			result = await stPrime.mint(beneficiary, ST2, { from: openSTProtocol });
@@ -84,10 +84,10 @@ contract('STPrime', function(accounts) {
 			unclaimed 			= await stPrime.unclaimed.call(beneficiary);
 			beneficiaryBalance 	= await web3.eth.getBalance(beneficiary);
 
-			assert.equal(postMintBase.toNumber(), totalBase.toNumber());
+			assert.equal(postMintBase.toNumber(), ST800M);
 			assert.equal(totalSupply.toNumber(), ST2);
 			assert.equal(unclaimed.toNumber(), ST2);
-			assert.equal(beneficiaryBalance.toNumber(), startingBalance);
+			assert.equal(beneficiaryBalance.toNumber(), 0);
 		})
 
 		it('successfully claims', async () => {
@@ -99,10 +99,10 @@ contract('STPrime', function(accounts) {
 			unclaimed 			= await stPrime.unclaimed.call(beneficiary);
 			beneficiaryBalance 	= await web3.eth.getBalance(beneficiary);
 
-			assert.equal(postClaimBase.toNumber(), totalBase.minus(ST2).toNumber());
+			assert.equal(postClaimBase.toNumber(), ST800M.minus(ST2).toNumber());
 			assert.equal(totalSupply.toNumber(), ST2);
 			assert.equal(unclaimed.toNumber(), 0);
-			assert.equal(beneficiaryBalance.toNumber(), startingBalance.plus(ST2));
+			assert.equal(beneficiaryBalance.toNumber(), ST2);
 		})
 
 		it('fails to burn by non-openSTProtocol', async () => {
@@ -123,13 +123,13 @@ contract('STPrime', function(accounts) {
 			totalSupply 		= await stPrime.totalSupply.call();
 			beneficiaryBalance 	= await web3.eth.getBalance(beneficiary);
 
-			assert.equal(postBurnBase.toNumber(), totalBase.minus(ST1).toNumber());
+			assert.equal(postBurnBase.toNumber(), ST800M.minus(ST1).toNumber());
 			assert.equal(totalSupply.toNumber(), ST1);
 
 			// beneficiary balance is down the transfer plus the cost of the transfer
 			// the certain calculation of which has proved difficult
-			assert.ok(beneficiaryBalance.toNumber() < startingBalance.plus(ST1).toNumber());
-			assert.ok(beneficiaryBalance.toNumber() > startingBalance.toNumber());
+			assert.ok(beneficiaryBalance.toNumber() < ST1);
+			assert.ok(beneficiaryBalance.toNumber() > 0);
 		})
 	})
 })
