@@ -169,6 +169,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// @dev read STPrime address and uuid from contract
 	}
 
+	/// @dev Congratulations on looking under the hood and obtaining ST' to call proposeBrandedToken;
+	///      however, OpenSTFoundation is not yet actively listening to these events
+	///      because to automate it we will build a web UI where you can authenticate
+	///      with your msg.sender = _requester key;
+	///      until that time please drop us a line on partners(at)simpletoken.org and we can
+	///      work with you to register for your branded token
 	function proposeBrandedToken(
 		string _symbol,
 		string _name,
