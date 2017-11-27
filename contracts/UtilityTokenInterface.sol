@@ -33,4 +33,6 @@ contract UtilityTokenInterface {
    	
  	/// @dev Get totalTokenSupply as view so that child cannot edit
 	function totalSupply() public view returns (uint256 supply);
+	/// get unique universal identifier for utility token
+	function uuid() public view returns (bytes32 getUuid);
 }

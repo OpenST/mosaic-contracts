@@ -21,6 +21,36 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
+import "./CoreInterface.sol";
+
 contract OpenSTValueInterface {
-	
+	function confirmRedemptionIntent(
+    	bytes32 _uuid,
+    	address _redeemer,
+    	uint256 _redeemerNonce,
+    	uint256 _amountUT,
+    	uint256 _redemptionUnlockHeight,
+    	bytes32 _redemptionIntentHash)
+    	external
+    	returns (
+    	uint256 amountST,
+    	uint256 expirationHeight);
+
+    function addCore(
+		CoreInterface _core)
+		public
+		returns (
+		bool /* success */);
+
+	function registerUtilityToken(
+		string _symbol,
+		string _name,
+		uint256 _conversionRate,
+		uint256 _chainIdUtility,
+		address _stakingAccount,
+		bytes32 _checkUuid)
+		public
+		returns ( 
+		bytes32 uuid);
+
 }
