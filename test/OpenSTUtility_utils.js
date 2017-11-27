@@ -30,13 +30,13 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
 	const chainIdUtility = 1410;
 	const registrar      = accounts[1];
 
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 6500000});
+	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
 
 	// Changed OpenSTUtility locally to deploy STPrime separately in order to move forward with testing
 	// These changes have not been pushed to the remote repository
-	const uuidSTPrime = await openSTUtility.uuidSTPrime.call();
-	const stPrime = await STPrime.new(openSTUtility.address, uuidSTPrime, { from: accounts[0], gas: 3500000 });
-	await openSTUtility.deploySTPrime(stPrime.address);
+	// const uuidSTPrime = await openSTUtility.uuidSTPrime.call();
+	// const stPrime = await STPrime.new(openSTUtility.address, uuidSTPrime, { from: accounts[0], gas: 3500000 });
+	// await openSTUtility.deploySTPrime(stPrime.address);
 
 	return {
 		openSTUtility : openSTUtility

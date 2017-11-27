@@ -152,11 +152,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			_chainIdUtility,
 			address(this),
 			STPRIME_CONVERSION_RATE);
-	}
+		simpleTokenPrime = new STPrime(
+			address(this),
+			uuidSTPrime);
 
-	function deploySTPrime(address _simpleTokenPrime) public {
 		registeredTokens[uuidSTPrime] = RegisteredToken({
-			token:     UtilityTokenInterface(_simpleTokenPrime),
+			token:     UtilityTokenInterface(simpleTokenPrime),
 			registrar: registrar
 		});
 
@@ -164,7 +165,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 hashName = keccak256(STPRIME_NAME);
 		nameReservation[hashName] = registrar;
 		bytes32 hashSymbol = keccak256(STPRIME_SYMBOL);
-		symbolRoute[hashSymbol] = _simpleTokenPrime;
+		symbolRoute[hashSymbol] = simpleTokenPrime;
 
 		// @dev read STPrime address and uuid from contract
 	}
