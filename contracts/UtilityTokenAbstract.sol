@@ -46,7 +46,7 @@ contract UtilityTokenAbstract is ProtocolVersioned, UtilityTokenInterface {
      *  Storage
      */
 	/// UUID for the utility token
-	bytes32 public uuid;
+	bytes32 private tokenUuid;
 	/// totalSupply holds the total supply of utility tokens
 	uint256 private totalTokenSupply;
 	/// claims is follows EIP20 allowance pattern but
@@ -60,17 +60,9 @@ contract UtilityTokenAbstract is ProtocolVersioned, UtilityTokenInterface {
     	public
     	ProtocolVersioned(_protocol)
     {
-    	uuid = _uuid;
+    	tokenUuid = _uuid;
     	totalTokenSupply = 0;
     }
-
-	// /// @dev transfer full claim to beneficiary
- //    function claim(address _beneficiary) public returns (bool success);
- //    /// @dev Mint new utility token into 
- //    function mint(address _beneficiary, uint256 _amount) public returns (bool success);
- //    /// @dev Burn utility tokens after having redeemed them
- //    ///      through the protocol for the staked Simple Token
- //    function burn(address _burner, uint256 _amount) public payable returns (bool success);
    	
  	/// @dev Get totalTokenSupply as view so that child cannot edit
 	function totalSupply()
@@ -80,6 +72,15 @@ contract UtilityTokenAbstract is ProtocolVersioned, UtilityTokenInterface {
 	{
 		return totalTokenSupply;
 	}
+
+    function uuid()
+        public
+        view
+        returns (bytes32 /* uuid */)
+    {
+        return tokenUuid;
+    }
+
 
     /// @dev returns unclaimed amount for beneficiary
 	function unclaimed(
@@ -117,7 +118,7 @@ contract UtilityTokenAbstract is ProtocolVersioned, UtilityTokenInterface {
     	totalTokenSupply = totalTokenSupply.add(_amount);
         claims[_beneficiary] = claims[_beneficiary].add(_amount);
 
-		Minted(uuid, _beneficiary, _amount, claims[_beneficiary], totalTokenSupply);
+		Minted(tokenUuid, _beneficiary, _amount, claims[_beneficiary], totalTokenSupply);
 
 		return true;    	
     }
@@ -132,7 +133,7 @@ contract UtilityTokenAbstract is ProtocolVersioned, UtilityTokenInterface {
 	{
 		totalTokenSupply = totalTokenSupply.sub(_amount);
 
-		Burnt(uuid, _burner, _amount, totalTokenSupply);
+		Burnt(tokenUuid, _burner, _amount, totalTokenSupply);
 
 		return true;
 	}

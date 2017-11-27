@@ -24,12 +24,13 @@ pragma solidity ^0.4.17;
 import "./SafeMath.sol";
 import "./Hasher.sol";
 import "./OpsManaged.sol";
-import "./CoreInterface.sol";
+// import "./CoreInterface.sol";
 
 // utility chain contracts
 import "./STPrime.sol";
 import "./STPrimeConfig.sol";
-import "./BrandedToken.sol";
+import "./BrandedToken.sol"; 
+import "./UtilityTokenInterface.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged {
@@ -49,29 +50,31 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		address staker;
 		address beneficiary;
 		uint256 amount;
-		uint256 unlockHeight;
+		uint256 expirationHeight;
 	}
 
 	struct Redemption {
 		bytes32 uuid;
 		address redeemer;
 		uint256 amountUT;
-		uint256 escrowUnlockHeight;
+		uint256 unlockHeight;
 	}
 	/*
 	 *	Events
 	 */
-	event RequestedBrandedToken(address indexed _requester, address indexed _token,
+	event ProposedBrandedToken(address indexed _requester, address indexed _token,
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate);
 	event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-    	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _unlockHeight);
+    	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
     	address _staker, address _beneficiary, uint256 _amount);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
 		uint256 _chainIdValue);
+	event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
+		address _redeemer, uint256 _amount);
 
 	/*
 	 *  Constants
@@ -166,6 +169,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// @dev read STPrime address and uuid from contract
 	}
 
+	/// @dev Congratulations on looking under the hood and obtaining ST' to call proposeBrandedToken;
+	///      however, OpenSTFoundation is not yet actively listening to these events
+	///      because to automate it we will build a web UI where you can authenticate
+	///      with your msg.sender = _requester key;
+	///      until that time please drop us a line on partners(at)simpletoken.org and we can
+	///      work with you to register for your branded token
 	function proposeBrandedToken(
 		string _symbol,
 		string _name,
@@ -199,7 +208,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// registrar
 		nameReservation[hashName] = msg.sender;
 
-		RequestedBrandedToken(msg.sender, address(proposedBT), btUuid,
+		ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
 			_symbol, _name, _conversionRate);
 
 		return btUuid;
@@ -261,11 +270,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		string _name,
 		uint256 _conversionRate,
 		address _requester,
-		BrandedToken _brandedToken,
+		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
 		onlyRegistrar
-		returns (bytes32 uuid)
+		returns (bytes32 registeredUuid)
 	{
 		require(bytes(_symbol).length > 0);
 		require(bytes(_name).length > 0);
@@ -275,7 +284,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 hashName = keccak256(_name);
 		require(checkAvailability(hashSymbol, hashName, _requester));
 
-		uuid = hashUuid(
+		registeredUuid = hashUuid(
 			_symbol,
 			_name,
 			chainIdValue,
@@ -283,12 +292,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			address(this),
 			_conversionRate);
 
-		require(uuid == _checkUuid);
+		require(registeredUuid == _checkUuid);
 		require(_brandedToken.uuid() == _checkUuid);
 
-		assert(address(registeredTokens[uuid].token) == address(0)); 
+		assert(address(registeredTokens[registeredUuid].token) == address(0)); 
 		
-		registeredTokens[uuid] = RegisteredToken({
+		registeredTokens[registeredUuid] = RegisteredToken({
 			token:     _brandedToken,
 			registrar: registrar
 		});
@@ -298,10 +307,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// register symbol
 		symbolRoute[hashSymbol] = _brandedToken;
 
-		RegisteredBrandedToken(registrar, _brandedToken, uuid, _symbol, _name,
+		RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
 			_conversionRate, _requester);
 		
-		return uuid;
+		return registeredUuid;
 	}
 
 	function confirmStakingIntent(
@@ -315,7 +324,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 _stakingIntentHash)
 		external
 		onlyRegistrar
-		returns (uint256 unlockHeight)
+		returns (uint256 expirationHeight)
 	{
 		require(address(registeredTokens[_uuid].token) != address(0));
 
@@ -326,7 +335,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(_stakingUnlockHeight > 0);
 		require(_stakingIntentHash != "");
 
-		unlockHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+		expirationHeight = block.number + BLOCKS_TO_WAIT_SHORT;
 		nonces[_staker] = _stakerNonce;
 
 		bytes32 stakingIntentHash = hashStakingIntent(
@@ -342,17 +351,17 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(stakingIntentHash == _stakingIntentHash);
 
 		mints[stakingIntentHash] = Mint({
-			uuid:         _uuid,
-			staker:       _staker,
-			beneficiary:  _beneficiary,
-			amount:       _amountUT,
-			unlockHeight: unlockHeight
+			uuid:             _uuid,
+			staker:           _staker,
+			beneficiary:      _beneficiary,
+			amount:           _amountUT,
+			expirationHeight: expirationHeight
 		});
 
     	StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
-    		_amountUT, unlockHeight);
+    		_amountUT, expirationHeight);
 
-    	return unlockHeight;
+    	return expirationHeight;
     }
 
     function processMinting(
@@ -364,7 +373,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	Mint storage mint = mints[_stakingIntentHash];
     	require(mint.staker == msg.sender);
-    	require(mint.unlockHeight > block.number);
+
+    	// as process minting results in a gain it needs to expire well before
+    	// the escrow on the cost unlocks in OpenSTValue.processStake
+    	require(mint.expirationHeight > block.number);
 
     	UtilityTokenInterface token = registeredTokens[mint.uuid].token;
     	tokenAddress = address(token);
@@ -418,10 +430,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		);
 
 		redemptions[redemptionIntentHash] = Redemption({
-			uuid:               _uuid,
-			redeemer:           msg.sender,
-			amountUT:           _amountBT,
-			escrowUnlockHeight: unlockHeight
+			uuid:         _uuid,
+			redeemer:     msg.sender,
+			amountUT:     _amountBT,
+			unlockHeight: unlockHeight
 		});
 
 		RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
@@ -457,10 +469,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		);
 
 		redemptions[redemptionIntentHash] = Redemption({
-			uuid:               uuidSTPrime,
-			redeemer:           msg.sender,
-			amountUT:           amountSTP,
-			escrowUnlockHeight: unlockHeight
+			uuid:         uuidSTPrime,
+			redeemer:     msg.sender,
+			amountUT:     amountSTP,
+			unlockHeight: unlockHeight
 		});
 
 		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
@@ -468,6 +480,38 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		return (amountSTP, unlockHeight, redemptionIntentHash);
     }
+
+    function processRedeeming(
+    	bytes23 _redemptionIntentHash)
+    	external
+    	returns (
+    	address tokenAddress)
+    {
+    	require(_redemptionIntentHash != "");
+
+    	Redemption storage redemption = redemptions[_redemptionIntentHash];
+    	require(redemption.redeemer == msg.sender);
+
+    	// as process redemption bears the cost there is no need to require
+    	// the unlockHeight is not past, the same way as we do require for
+    	// the expiration height on the unstake to not have expired yet.
+
+    	UtilityTokenInterface token = registeredTokens[redemption.uuid].token;
+    	tokenAddress = address(token);
+    	require(tokenAddress != address(0));
+
+    	uint256 value = 0;
+    	if (redemption.uuid == uuidSTPrime) value = redemption.amountUT;
+
+    	require(token.burn.value(value)(redemption.redeemer, redemption.amountUT));
+
+		ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
+			redemption.redeemer, redemption.amountUT);
+
+		delete redemptions[_redemptionIntentHash];
+
+		return tokenAddress;
+	}
 
 	/*
 	 *  Operation functions
