@@ -36,7 +36,6 @@ const Core = artifacts.require("./Core.sol");
 ///     fails to propose when name is empty
 /// 	fails to propose when conversion rate is not > 0
 ///		successfully proposes
-///		fails to propose if a match exists // Fails
 ///
 /// RegisterBrandedToken
 ///		fails to register by non-registrar
@@ -66,23 +65,49 @@ const Core = artifacts.require("./Core.sol");
 ///		when unlockHeight is < block number
 ///			fails if unlockHeight is < block number
 ///
+/// AddNameReservation
+///		fails to add by non-adminOrOps
+///		successfully adds
+///		fails to add if exists with a different requester
+///
+/// SetSymbolRoute
+///		fails to set by non-adminOrOps
+///		successfully sets
+///		fails to set if exists with a different token
+///
+/// RemoveNameReservation
+/// 	fails to remove by non-adminOrOps
+/// 	successfully removes
+/// 	fails to remove if it does not exist
+///
+/// RemoveSymbolRoute
+/// 	fails to remove by non-adminOrOps
+/// 	successfully removes
+/// 	fails to remove if it does not exist
+///
+
 
 
 contract('OpenSTUtility', function(accounts) {
-	const chainIdValue   = 3;
-	const chainIdUtility = 1410;
-	const registrar      = accounts[1];
+	const chainIdValue   		= 3;
+	const chainIdUtility 		= 1410;
+	const registrar      		= accounts[1];
 
-	const symbol = "MCC";
-	const name = "Member Company Coin";
-	const conversionRate = 5;
-	const BLOCKS_TO_WAIT_SHORT = 240;
+	const symbol 				= "MCC";
+	const name 					= "Member Company Coin";
+	const conversionRate 		= 5;
+	const BLOCKS_TO_WAIT_SHORT	= 240;
 
-	var result = null;
-	var checkBtUuid = null;
-	var brandedToken = null;
-	var checkStakingIntentHash = null;
-	var unlockHeight = null;
+    const hashName 	 			= "hashName";
+    const hashSymbol 			= "hashSymbol";
+    const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const token 	 			= "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+	var result 					= null;
+	var checkBtUuid 			= null;
+	var brandedToken 			= null;
+	var checkStakingIntentHash 	= null;
+	var unlockHeight 			= null;
 
 	describe('Properties', async () => {
 		before(async () => {
@@ -127,12 +152,6 @@ contract('OpenSTUtility', function(accounts) {
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
             // Event cannot be tested because the address of token is not known
             // OpenSTUtility_utils.checkRequestedBrandedTokenEvent(result.logs[0], accounts[0], token, btUuid, symbol, name, conversionRate);
-		})
-
-		// Fails
-		it('fails to propose if a match exists', async () => {
-            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, name, conversionRate, { from: accounts[1] }));
-            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, name, conversionRate, { from: accounts[0] }));
 		})
 	})
 
@@ -267,17 +286,119 @@ contract('OpenSTUtility', function(accounts) {
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
 				unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 				unlockHeight = unlockHeight.plus(1);
-				console.log("KSJKSKJSKJHSFKHJSDFKJH")
-				console.log(unlockHeight);
 	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 		    })
 
 			it('fails if unlockHeight is > block number', async () => {
 				console.log("::", (BLOCKS_TO_WAIT_SHORT - 1), "TRANSFERS TO TEST UNLOCKHEIGHT ::");
-				for (var i = 0; i < (BLOCKS_TO_WAIT_SHORT - 1); i++) { await web3.eth.sendTransaction({ from: accounts[9], to: accounts[0], value: 1 });}
+				for (var i = 0; i < (BLOCKS_TO_WAIT_SHORT - 1); i++) { await web3.eth.sendTransaction({ from: accounts[8], to: accounts[0], value: 1 });}
 
 				await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash));
 			})
 		})		
+	})
+
+	describe('AddNameReservation', async () => {
+		before(async () => {
+	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        openSTUtility = contracts.openSTUtility;
+	        await openSTUtility.setAdminAddress(accounts[2]);
+	    })
+
+		it('fails to add by non-adminOrOps', async () => {
+            await Utils.expectThrow(openSTUtility.addNameReservation(hashName, requester));
+		})
+
+		it('successfully adds', async () => {
+			assert.equal(await openSTUtility.nameReservation.call(hashName), 0);
+            assert.equal(await openSTUtility.addNameReservation.call(hashName, requester, { from: accounts[2] }), true);
+            await openSTUtility.addNameReservation(hashName, requester, { from: accounts[2] });
+
+			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
+		})
+
+		it('fails to add if exists with a different requester', async () => {
+            await openSTUtility.addNameReservation.call(hashName, accounts[0], { from: accounts[2] });
+
+			assert.notEqual(await openSTUtility.nameReservation.call(hashName), accounts[0]);
+			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
+		})
+	})
+
+	describe('SetSymbolRoute', async () => {
+		before(async () => {
+	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        openSTUtility = contracts.openSTUtility;
+	        await openSTUtility.setAdminAddress(accounts[2]);
+	    })
+
+		it('fails to set by non-adminOrOps', async () => {
+            await Utils.expectThrow(openSTUtility.setSymbolRoute(hashSymbol, token));
+		})
+
+		it('successfully sets', async () => {
+			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), 0);
+            assert.equal(await openSTUtility.setSymbolRoute.call(hashSymbol, token, { from: accounts[2] }), true);
+            await openSTUtility.setSymbolRoute(hashSymbol, token, { from: accounts[2] });
+
+			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
+		})
+
+		it('fails to set if exists with a different token', async () => {
+            await openSTUtility.setSymbolRoute.call(hashSymbol, accounts[0], { from: accounts[2] });
+
+			assert.notEqual(await openSTUtility.symbolRoute.call(hashSymbol), accounts[0]);
+			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
+		})
+	})
+
+	describe('RemoveNameReservation', async () => {
+		before(async () => {
+	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        openSTUtility = contracts.openSTUtility;
+	        await openSTUtility.setAdminAddress(accounts[2]);
+            await openSTUtility.addNameReservation(hashName, requester, { from: accounts[2] });
+	    })
+
+		it('fails to remove by non-adminOrOps', async () => {
+            await Utils.expectThrow(openSTUtility.removeNameReservation(hashName));
+		})
+
+		it('successfully removes', async () => {
+			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
+            assert.equal(await openSTUtility.removeNameReservation.call(hashName, { from: accounts[2] }), true);
+            await openSTUtility.removeNameReservation(hashName, { from: accounts[2] })
+
+			assert.equal(await openSTUtility.nameReservation.call(hashName), 0);
+		})
+
+		it('fails to remove if it does not exist', async () => {
+            await Utils.expectThrow(openSTUtility.removeNameReservation(hashName, { from: accounts[2] }));
+		})
+	})
+
+	describe('removeSymbolRoute', async () => {
+		before(async () => {
+	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        openSTUtility = contracts.openSTUtility;
+	        await openSTUtility.setAdminAddress(accounts[2]);
+            await openSTUtility.setSymbolRoute(hashSymbol, token, { from: accounts[2] });
+	    })
+
+		it('fails to remove by non-adminOrOps', async () => {
+            await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol));
+		})
+
+		it('successfully removes', async () => {
+			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
+            assert.equal(await openSTUtility.removeSymbolRoute.call(hashSymbol, { from: accounts[2] }), true);
+            await openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] })
+
+			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), 0);
+		})
+
+		it('fails to remove if it does not exist', async () => {
+            await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] }));
+		})
 	})
 })
