@@ -24,12 +24,14 @@ pragma solidity ^0.4.17;
 import "./SafeMath.sol";
 import "./Hasher.sol";
 import "./OpsManaged.sol";
-import "./CoreInterface.sol";
+// import "./CoreInterface.sol";
 
 // utility chain contracts
 import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol"; 
+import "./UtilityTokenInterface.sol";
+
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged {
@@ -168,6 +170,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// @dev read STPrime address and uuid from contract
 	}
 
+	/// @dev Congratulations on looking under the hood and obtaining ST' to call proposeBrandedToken;
+	///      however, OpenSTFoundation is not yet actively listening to these events
+	///      because to automate it we will build a web UI where you can authenticate
+	///      with your msg.sender = _requester key;
+	///      until that time please drop us a line on partners(at)simpletoken.org and we can
+	///      work with you to register for your branded token
 	function proposeBrandedToken(
 		string _symbol,
 		string _name,
@@ -263,11 +271,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		string _name,
 		uint256 _conversionRate,
 		address _requester,
-		BrandedToken _brandedToken,
+		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
 		onlyRegistrar
-		returns (bytes32 uuid)
+		returns (bytes32 registeredUuid)
 	{
 		require(bytes(_symbol).length > 0);
 		require(bytes(_name).length > 0);
@@ -277,7 +285,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		bytes32 hashName = keccak256(_name);
 		require(checkAvailability(hashSymbol, hashName, _requester));
 
-		uuid = hashUuid(
+		registeredUuid = hashUuid(
 			_symbol,
 			_name,
 			chainIdValue,
@@ -285,12 +293,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			address(this),
 			_conversionRate);
 
-		require(uuid == _checkUuid);
+		require(registeredUuid == _checkUuid);
 		require(_brandedToken.uuid() == _checkUuid);
 
-		assert(address(registeredTokens[uuid].token) == address(0)); 
+		assert(address(registeredTokens[registeredUuid].token) == address(0)); 
 		
-		registeredTokens[uuid] = RegisteredToken({
+		registeredTokens[registeredUuid] = RegisteredToken({
 			token:     _brandedToken,
 			registrar: registrar
 		});
@@ -300,10 +308,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		// register symbol
 		symbolRoute[hashSymbol] = _brandedToken;
 
-		RegisteredBrandedToken(registrar, _brandedToken, uuid, _symbol, _name,
+		RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
 			_conversionRate, _requester);
 		
-		return uuid;
+		return registeredUuid;
 	}
 
 	function confirmStakingIntent(
@@ -505,7 +513,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		return tokenAddress;
 	}
-	
+
+
 	/*
 	 *  Operation functions
 	 */
