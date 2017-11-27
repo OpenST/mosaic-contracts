@@ -43,12 +43,14 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility, address indexed _stakingAccount);
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
     	uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
-    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash,
+    	uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
     	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
-	event RedemptionIntentConfirmed(bytes32 indexed uuid, bytes32 _redemptionIntentHash,
-		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _unlockHeight);
+	event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
+		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
+	event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+		address stake, address _redeemer, uint256 _amountST);
 
 	/*
 	 *  Constants
@@ -80,15 +82,16 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 nonce;
     	uint256 amountST;
     	uint256 amountUT;
-    	uint256 escrowUnlockHeight;
+    	uint256 unlockHeight;
     }
 
     struct Unstake {
     	bytes32 uuid;
     	address redeemer;
     	uint256 amountST;
+    	// @dev consider removal of amountUT
     	uint256 amountUT;
-    	uint256 unlockHeight;
+    	uint256 expirationHeight;
     }
 
 	/*
@@ -192,13 +195,13 @@ contract OpenSTValue is OpsManaged, Hasher {
 		);
 
 		stakes[stakingIntentHash] = Stake({
-			uuid:               _uuid,
-			staker:             tx.origin,
-			beneficiary:        _beneficiary,
-			nonce:              nonce,
-			amountST:           _amountST,
-			amountUT:           amountUT,
-			escrowUnlockHeight: unlockHeight
+			uuid:         _uuid,
+			staker:       tx.origin,
+			beneficiary:  _beneficiary,
+			nonce:        nonce,
+			amountST:     _amountST,
+			amountUT:     amountUT,
+			unlockHeight: unlockHeight
 		});
     	
     	StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
@@ -246,7 +249,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	onlyRegistrar
     	returns (
     	uint256 amountST,
-    	uint256 unlockHeight)
+    	uint256 expirationHeight)
     {
 		require(utilityTokens[_uuid].simpleStake != address(0));
     	require(_amountUT > 0);
@@ -268,7 +271,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     	require(_redemptionIntentHash == redemptionIntentHash);
 
-    	unlockHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+    	expirationHeight = block.number + BLOCKS_TO_WAIT_SHORT;
 
     	UtilityToken storage utilityToken = utilityTokens[_uuid];
     	amountST = _amountUT.div(utilityToken.conversionRate);
@@ -280,15 +283,44 @@ contract OpenSTValue is OpsManaged, Hasher {
     		redeemer:     _redeemer,
     		amountUT:     _amountUT,
     		amountST:     amountST,
-    		unlockHeight: unlockHeight
+    		expirationHeight: expirationHeight
     	});
 
 		RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
-			amountST, _amountUT, unlockHeight);
+			amountST, _amountUT, expirationHeight);
 
-		return (amountST, unlockHeight);
+		return (amountST, expirationHeight);
 	}
 
+	function processUnstaking(
+		bytes32 _redemptionIntentHash)
+		external
+		returns (
+		address stakeAddress)
+	{
+		require(_redemptionIntentHash != "");
+
+		Unstake storage unstake = unstakes[_redemptionIntentHash];
+		require(unstake.redeemer == msg.sender);
+
+		// as the process unstake results in a gain for the caller
+		// it needs to expire well before the process redemption can
+		// be reverted in OpenSTUtility
+		require(unstake.expirationHeight > block.number);
+
+		UtilityToken storage utilityToken = utilityTokens[unstake.uuid];
+		stakeAddress = address(utilityToken.simpleStake);
+		require(stakeAddress != address(0));
+
+		require(utilityToken.simpleStake.releaseTo(unstake.redeemer, unstake.amountST));
+	
+		ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress, 
+			unstake.redeemer, unstake.amountST);
+
+		delete unstakes[_redemptionIntentHash];
+
+		return stakeAddress;
+	}
 
     /*
      *  Public view functions

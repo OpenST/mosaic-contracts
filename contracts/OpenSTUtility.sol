@@ -504,8 +504,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		delete redemptions[_redemptionIntentHash];
 
 		return tokenAddress;
-
 	}
+	
 	/*
 	 *  Operation functions
 	 */
