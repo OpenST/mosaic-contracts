@@ -43,7 +43,12 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility, address indexed _stakingAccount);
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
     	uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
-    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash);
+    	uint256 _amountUT, uint256 _escrowUnlockHeight, bytes32 _stakingIntentHash,
+    	uint256 _chainIdUtility);
+    event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
+    	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+	event RedemptionIntentConfirmed(bytes32 indexed uuid, bytes32 _redemptionIntentHash,
+		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _unlockHeight);
 
 	/*
 	 *  Constants
@@ -64,7 +69,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 conversionRate;
     	uint8   decimals;
     	uint256 chainIdUtility;
-    	address simpleStake;
+    	SimpleStake simpleStake;
     	address stakingAccount;
     }
 
@@ -80,8 +85,10 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     struct Unstake {
     	bytes32 uuid;
-    	address unstaker;
-    	uint256 amount;
+    	address redeemer;
+    	uint256 amountST;
+    	uint256 amountUT;
+    	uint256 unlockHeight;
     }
 
 	/*
@@ -195,11 +202,105 @@ contract OpenSTValue is OpsManaged, Hasher {
 		});
     	
     	StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
-    		_amountST, amountUT, unlockHeight, stakingIntentHash);
+    		_amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
     	return (amountUT, nonce, unlockHeight, stakingIntentHash);
 	}
 
+	function processStaking(
+		bytes32 _stakingIntentHash)
+		external
+		returns (address stakeAddress)
+	{
+		require(_stakingIntentHash != "");
+
+		Stake storage stake = stakes[_stakingIntentHash];
+		require(stake.staker == msg.sender);
+		// as this bears the cost, there is no need to require
+		// that the stake.unlockHeight is not yet surpassed
+		// as is required on processMinting
+
+		UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+		stakeAddress = address(utilityToken.simpleStake);
+		require(stakeAddress != address(0));
+
+		assert(valueToken.balanceOf(address(this)) > stake.amountST);
+		require(valueToken.transfer(stakeAddress, stake.amountST));
+
+    	ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
+    		stake.amountST, stake.amountUT);
+
+    	delete stakes[_stakingIntentHash];
+
+    	return stakeAddress;
+    }
+
+    function confirmRedemptionIntent(
+    	bytes32 _uuid,
+    	address _redeemer,
+    	uint256 _redeemerNonce,
+    	uint256 _amountUT,
+    	uint256 _redemptionUnlockHeight,
+    	bytes32 _redemptionIntentHash)
+    	external
+    	onlyRegistrar
+    	returns (
+    	uint256 amountST,
+    	uint256 unlockHeight)
+    {
+		require(utilityTokens[_uuid].simpleStake != address(0));
+    	require(_amountUT > 0);
+    	// later core will provide a view on the block height of the
+    	// utility chain
+    	require(_redemptionUnlockHeight > 0);
+    	require(_redemptionIntentHash != "");
+
+		require(nonces[_redeemer] + 1 == _redeemerNonce);
+    	nonces[_redeemer]++;
+
+    	bytes32 redemptionIntentHash = hashRedemptionIntent(
+    		_uuid,
+    		_redeemer,
+    		nonces[_redeemer]++,
+    		_amountUT,
+    		_redemptionUnlockHeight
+    	);
+
+    	require(_redemptionIntentHash == redemptionIntentHash);
+
+    	unlockHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+
+    	UtilityToken storage utilityToken = utilityTokens[_uuid];
+    	amountST = _amountUT.div(utilityToken.conversionRate);
+
+    	require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
+
+    	unstakes[redemptionIntentHash] = Unstake({
+    		uuid:         _uuid,
+    		redeemer:     _redeemer,
+    		amountUT:     _amountUT,
+    		amountST:     amountST,
+    		unlockHeight: unlockHeight
+    	});
+
+		RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
+			amountST, _amountUT, unlockHeight);
+
+		return (amountST, unlockHeight);
+	}
+
+
+    /*
+     *  Public view functions
+     */
+    function getNextNonce(
+    	address _account)
+    	public
+    	view
+    	returns (uint256 nextNonce)
+    {
+    	return (nonces[_account] + 1);
+    }
 
 	/*
 	 *  Registrar functions
@@ -261,7 +362,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 			conversionRate: _conversionRate,
 			decimals:       TOKEN_DECIMALS,
 			chainIdUtility: _chainIdUtility,
-			simpleStake:    address(simpleStake),
+			simpleStake:    simpleStake,
 			stakingAccount: _stakingAccount
 		});
 

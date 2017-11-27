@@ -66,9 +66,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
 		bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-    	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 unlockHeight);
-    event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
-    	address _beneficiary, uint256 _amount);
+    	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _unlockHeight);
+    event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
+    	address _staker, address _beneficiary, uint256 _amount);
+	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
+		uint256 _chainIdValue);
 
 	/*
 	 *  Constants
@@ -319,7 +322,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(nonces[_staker] < _stakerNonce);
 		require(_amountST > 0);
 		require(_amountUT > 0);
-		// escrowunlockheight needs to be checked against the core that tracks the value chain
+		// stakingUnlockheight needs to be checked against the core that tracks the value chain
 		require(_stakingUnlockHeight > 0);
 		require(_stakingIntentHash != "");
 
@@ -369,13 +372,102 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	require(token.mint(mint.beneficiary, mint.amount));
 
-		ProcessedMint(mint.uuid, _stakingIntentHash, mint.staker, mint.beneficiary, mint.amount);
+		ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
+			mint.beneficiary, mint.amount);
 
 		delete mints[_stakingIntentHash];
 
     	return tokenAddress;
     }
 
+    /// @dev redeemer must set an allowance for the branded token with OpenSTUtility
+    ///      as the spender so that the branded token can be taken into escrow by OpenSTUtility
+    ///      note: for STPrime, call OpenSTUtility.redeemSTPrime as a payable function
+    ///      note: nonce must be queried from OpenSTValue contract
+    function redeem(
+    	bytes32 _uuid,
+    	uint256 _amountBT,
+    	uint256 _nonce)
+    	external
+    	returns (
+    	uint256 unlockHeight,
+    	bytes32 redemptionIntentHash)
+    {
+    	require(_uuid != "");
+    	require(_amountBT > 0);
+    	require(_nonce > nonces[msg.sender]);
+    	nonces[msg.sender] = _nonce;
+
+    	// to redeem ST' one needs to send value to payable
+    	// function redeemSTPrime
+    	require(_uuid != uuidSTPrime);
+
+    	BrandedToken token = BrandedToken(registeredTokens[_uuid].token);
+
+    	require(token.allowance(msg.sender, address(this)) >= _amountBT);
+    	require(token.transferFrom(msg.sender, address(this), _amountBT));
+
+    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+
+    	redemptionIntentHash = hashRedemptionIntent(
+    		_uuid,
+    		msg.sender,
+    		_nonce,
+    		_amountBT,
+    		unlockHeight
+		);
+
+		redemptions[redemptionIntentHash] = Redemption({
+			uuid:               _uuid,
+			redeemer:           msg.sender,
+			amountUT:           _amountBT,
+			escrowUnlockHeight: unlockHeight
+		});
+
+		RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
+			msg.sender, _nonce, _amountBT, unlockHeight, chainIdValue);
+
+		return (unlockHeight, redemptionIntentHash);
+    }
+
+    /// @dev redeemer must send as value the amount STP to redeem
+    ///      note: nonce must be queried from OpenSTValue contract
+    function redeemSTPrime(
+    	uint256 _nonce)
+    	external
+    	payable
+    	returns (
+  		uint256 amountSTP,
+    	uint256 unlockHeight,
+    	bytes32 redemptionIntentHash)
+    {
+    	require(msg.value > 0);
+    	require(_nonce > nonces[msg.sender]);
+    	nonces[msg.sender] = _nonce;
+
+    	amountSTP = msg.value;
+    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+
+    	redemptionIntentHash = hashRedemptionIntent(
+    		uuidSTPrime,
+    		msg.sender,
+    		_nonce,
+    		amountSTP,
+    		unlockHeight
+		);
+
+		redemptions[redemptionIntentHash] = Redemption({
+			uuid:               uuidSTPrime,
+			redeemer:           msg.sender,
+			amountUT:           amountSTP,
+			escrowUnlockHeight: unlockHeight
+		});
+
+		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
+			msg.sender, _nonce, amountSTP, unlockHeight, chainIdValue);
+
+		return (amountSTP, unlockHeight, redemptionIntentHash);
+    }
 
 	/*
 	 *  Operation functions

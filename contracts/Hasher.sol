@@ -68,7 +68,7 @@ contract Hasher {
 			_escrowUnlockHeight);
 	}
 
-	function hashUnstakingIntent(
+	function hashRedemptionIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
