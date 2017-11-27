@@ -32,6 +32,7 @@ import "./STPrimeConfig.sol";
 import "./BrandedToken.sol"; 
 import "./UtilityTokenInterface.sol";
 
+
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged {
 	using SafeMath for uint256;
@@ -512,6 +513,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		return tokenAddress;
 	}
+
 
 	/*
 	 *  Operation functions
