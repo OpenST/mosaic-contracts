@@ -63,7 +63,7 @@ module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, stake, _symbol,
 	assert.equal(event.args._stakingAccount, _stakingAccount);
 }
 
-module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _escrowUnlockHeight, _stakingIntentHash) => {
+module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _escrowUnlockHeight, _stakingIntentHash, _chainIdUtility) => {
 	if (Number.isInteger(_stakerNonce)) {
 		_stakerNonce = new BigNumber(_stakerNonce);
 	}
@@ -87,9 +87,47 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert.equal(event.args._escrowUnlockHeight.toNumber(), _escrowUnlockHeight.toNumber());
+	assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+	assert.equal(event.args._chainIdUtility, _chainIdUtility);
+}
 
-	// The block.number received from stake.call(...) is one less than from stake(...)
-	assert.equal(event.args._escrowUnlockHeight.toNumber(), _escrowUnlockHeight.plus(1).toNumber());
-	// Because the block numbers are different, the hashes are different
-	// assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT) => {
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	if (Number.isInteger(_amountUT)) {
+		_amountUT = new BigNumber(_amountUT);
+	}
+
+	assert.equal(event.event, "ProcessedStake");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+	assert.equal(event.args._stake, _stake);
+	assert.equal(event.args._staker, _staker);
+	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+}
+
+module.exports.checkRedemptionIntentConfirmedEvent = (event, uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _unlockHeight) => {
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	if (Number.isInteger(_amountUT)) {
+		_amountUT = new BigNumber(_amountUT);
+	}
+
+	if (Number.isInteger(_unlockHeight)) {
+		_unlockHeight = new BigNumber(_unlockHeight);
+	}
+
+	assert.equal(event.event, "RedemptionIntentConfirmed");
+	assert.equal(event.args.uuid, uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args._redeemer, _redeemer);
+	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 }

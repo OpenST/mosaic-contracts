@@ -57,8 +57,13 @@ const Core = artifacts.require("./Core.sol");
 ///			fails to stake when the beneficiary is null
 ///			successfully stakes
 ///		when the staking account is not null
-///			fails to when msg.sender is not the stakingAccount
+///			fails to stake when msg.sender is not the stakingAccount
 ///			successfully stakes
+///
+/// ProcessStaking
+///		fails to process when stakingIntentHash is empty
+///		fails to process when msg.sender != staker
+///		successfully processes
 ///
 
 contract('OpenSTValue', function(accounts) {
@@ -77,6 +82,8 @@ contract('OpenSTValue', function(accounts) {
 	var checkUuid = null;
 	var result = null;
 	var hasher = null;
+	var stakingIntentHash = null;
+	var stake = null;
 
 	describe('Properties', async () => {
 		before(async () => {
@@ -203,11 +210,13 @@ contract('OpenSTValue', function(accounts) {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, 1, accounts[0], { from: accounts[0] });
 	            var amountUT = stakeReturns[0].toNumber();
 	            var nonce = stakeReturns[1].toNumber();
-	            var unlockHeight = stakeReturns[2].toNumber()
-	            var stakingIntentHash = stakeReturns[3];
+
+    			// call block number is one less than send block number
+	            var unlockHeight = stakeReturns[2].plus(1);
+	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight);
 	            result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash);
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
 		})
 
@@ -223,7 +232,7 @@ contract('OpenSTValue', function(accounts) {
 				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });        	
 		    })
 
-			it('fails to when msg.sender is not the stakingAccount', async () => {
+			it('fails to stake when msg.sender is not the stakingAccount', async () => {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[1] }));
 			})
 
@@ -231,12 +240,52 @@ contract('OpenSTValue', function(accounts) {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, 1, accounts[0], { from: accounts[0] });
 	            var amountUT = stakeReturns[0].toNumber();
 	            var nonce = stakeReturns[1].toNumber();
-	            var unlockHeight = stakeReturns[2].toNumber()
-	            var stakingIntentHash = stakeReturns[3];
+
+    			// call block number is one less than send block number
+	            var unlockHeight = stakeReturns[2].plus(1);
+	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight);
 	            result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash);
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
+		})
+	})
+
+	describe('ProcessStaking', async () => {
+		before(async () => {
+	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+	        valueToken  = contracts.valueToken;
+	        openSTValue = contracts.openSTValue;
+        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+            await openSTValue.addCore(core.address, { from: registrar });
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+			stake = result.logs[0].args.stake;
+			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
+			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+			stakingIntentHash = result.logs[0].args._stakingIntentHash;
+	    })
+
+		it('fails to process when stakingIntentHash is empty', async () => {
+            await Utils.expectThrow(openSTValue.processStaking("", { from: accounts[0] }));
+		})
+
+		it('fails to process when msg.sender != staker', async () => {
+            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, { from: registrar }));
+		})
+
+		it('successfully processes', async () => {
+			var openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
+			var stakeBal = await valueToken.balanceOf.call(stake);
+			assert.equal(openSTValueBal.toNumber(), 1);
+			assert.equal(stakeBal.toNumber(), 0);
+			result = await openSTValue.processStaking(stakingIntentHash, { from: accounts[0] });
+
+			openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
+			stakeBal = await valueToken.balanceOf.call(stake);
+			assert.equal(openSTValueBal.toNumber(), 0);
+			assert.equal(stakeBal.toNumber(), 1);
+            await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], 1, 10);
 		})
 	})
 })
