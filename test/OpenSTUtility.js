@@ -21,7 +21,8 @@
 
 const Utils = require('./lib/utils.js');
 const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');
-const Core = artifacts.require("./Core.sol");
+const BrandedToken = artifacts.require("./BrandedToken.sol");
+const STPrime = artifacts.require("./STPrime.sol");
 
 ///
 /// Test stories
@@ -64,6 +65,19 @@ const Core = artifacts.require("./Core.sol");
 /// 		fails to re-process a processed mint
 ///		when unlockHeight is < block number
 ///			fails if unlockHeight is < block number
+///
+///	Redeem
+/// 	fails to redeem when uuid is empty
+/// 	fails to redeem when amount is not > 0
+/// 	fails to redeem when nonce is not > previously
+/// 	fails to redeem when uuid is uuidSTPrime
+/// 	fails to redeem if not approved to transfer the amount
+/// 	successfully redeems
+///
+///	RedeemSTPrime
+///		fails to redeem when msg.value is not > 0
+/// 	fails to redeem when nonce is not > previously
+/// 	successfully redeems
 ///
 /// AddNameReservation
 ///		fails to add by non-adminOrOps
@@ -108,6 +122,7 @@ contract('OpenSTUtility', function(accounts) {
 	var brandedToken 			= null;
 	var checkStakingIntentHash 	= null;
 	var unlockHeight 			= null;
+	var uuidSTPrime				= null;
 
 	describe('Properties', async () => {
 		before(async () => {
@@ -235,7 +250,10 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('successfully confirms', async () => {
-			var unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+			unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+
+			// call block number is one less than send block number
+			unlockHeight = unlockHeight.plus(1)
             result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
             await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], 1, 5, unlockHeight);
 		})
@@ -251,8 +269,6 @@ contract('OpenSTUtility', function(accounts) {
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
-				// var unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
-				// unlockHeight = unlockHeight.plus(1);
 	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 		    })
 
@@ -267,7 +283,7 @@ contract('OpenSTUtility', function(accounts) {
 			it('successfully mints', async () => {
 				assert.equal(await openSTUtility.processMinting.call(checkStakingIntentHash), brandedToken);
 				result = await openSTUtility.processMinting(checkStakingIntentHash);
-				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], 5);
+				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, brandedToken, accounts[0], accounts[0], 5);
 			})
 
 			it('fails to re-process a processed mint', async () => {
@@ -286,7 +302,7 @@ contract('OpenSTUtility', function(accounts) {
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
 				unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 				unlockHeight = unlockHeight.plus(1);
-	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 		    })
 
 			it('fails if unlockHeight is > block number', async () => {
@@ -296,6 +312,91 @@ contract('OpenSTUtility', function(accounts) {
 				await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash));
 			})
 		})		
+	})
+
+	describe('Redeem', async () => {
+		before(async () => {
+	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        openSTUtility = contracts.openSTUtility;
+        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+            brandedToken = result.logs[0].args._token;
+            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
+            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+            await openSTUtility.processMinting(checkStakingIntentHash);
+	    })
+
+		it('fails to redeem when uuid is empty', async () => {
+            await Utils.expectThrow(openSTUtility.redeem("", 3, 2, { from: accounts[0] }));
+		})
+
+		it('fails to redeem when amount is not > 0', async () => {
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: accounts[0] }));
+		})
+
+		it('fails to redeem when nonce is not > previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 1, { from: accounts[0] }));
+		})
+
+		it('fails to redeem when uuid is uuidSTPrime', async () => {
+			uuidSTPrime = await openSTUtility.uuidSTPrime.call();
+            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, 3, 2, { from: accounts[0] }));
+		})
+
+		it('fails to redeem if not approved to transfer the amount', async () => {
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 2, { from: accounts[0] }));
+		})
+
+		it('successfully redeems', async () => {
+			var brandedTokenContract = new BrandedToken(brandedToken);
+			await brandedTokenContract.claim(accounts[0]);
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: accounts[0] });
+            var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: accounts[0] });
+
+            // call block number is one less than send block number
+            unlockHeight = redeemReturns[0].plus(1)
+            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, 3, unlockHeight);
+            result = await openSTUtility.redeem(checkBtUuid, 3, 2, { from: accounts[0] });
+
+            await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], checkBtUuid, checkRedemptionIntentHash, brandedToken,
+			accounts[0], 2, 3, unlockHeight, chainIdValue);
+		})
+	})
+
+	describe('RedeemSTPrime', async () => {
+		before(async () => {
+	        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+	        stPrime     			= contracts.stPrime;
+	        openSTUtility 			= contracts.openSTUtility;
+
+	        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
+            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668)
+
+            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668, checkStakingIntentHash, { from: registrar });
+            await openSTUtility.processMinting(checkStakingIntentHash);
+			await stPrime.claim(accounts[0]);
+	    })
+
+		it('fails to redeem when msg.value is not > 0', async () => {
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: accounts[0], value: 0 }));
+		})
+
+		it('fails to redeem when nonce is not > previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(1, { from: accounts[0], value: 2 }));
+		})
+
+		it('successfully redeems', async () => {
+            var redeemReturns = await openSTUtility.redeemSTPrime.call(2, { from: accounts[0], value: 2 });
+
+            // call block number is one less than send block number
+            unlockHeight = redeemReturns[1].plus(1)
+            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, accounts[0], 2, 2, unlockHeight);
+            result = await openSTUtility.redeemSTPrime(2, { from: accounts[0], value: 2 });
+
+            await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
+			accounts[0], 2, 2, unlockHeight, chainIdValue);
+		})
 	})
 
 	describe('AddNameReservation', async () => {

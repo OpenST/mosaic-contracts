@@ -22,8 +22,8 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-// STPrimeMock does not require that initialization faucet be empty
-var STPrime = artifacts.require("./STPrimeMock.sol");
+// Note: for testing, disabled `require(msg.sender.balance == 0)` in STPrime.sol
+var STPrime = artifacts.require("./STPrime.sol");
 
 /// @dev Deploy 
 module.exports.deploySTPrime = async (artifacts, accounts) => {

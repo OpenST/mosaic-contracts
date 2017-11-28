@@ -42,7 +42,7 @@ const STPrime_utils = require('./STPrime_utils.js');
 contract('STPrime', function(accounts) {
 	const openSTProtocol = accounts[4];
 
-	const beneficiary = accounts[9]; // set to 0 balance in runGanache.sh
+	const beneficiary = accounts[9]; // set to 0 balance in runTestRpc.sh
 	const ST1		  = new BigNumber(web3.toWei(1, "ether"));
 	const ST2 		  = new BigNumber(web3.toWei(2, "ether"));
 	const ST800M	  = new BigNumber(web3.toWei(800000000, "ether"));
@@ -56,7 +56,6 @@ contract('STPrime', function(accounts) {
 
 	describe ('Mint, Claim, Burn', async () => {
 		before(async () => {
-			console.log()
 	        contracts = await STPrime_utils.deploySTPrime(artifacts, accounts);
 	        stPrime = contracts.stPrime;
 		})

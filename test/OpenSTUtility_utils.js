@@ -22,7 +22,7 @@
 const BigNumber = require('bignumber.js');
 
 var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
-var STPrime = artifacts.require("./STPrimePayable.sol");
+var STPrime = artifacts.require("./STPrime.sol");
 
 /// @dev Deploy 
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
@@ -31,14 +31,15 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
 	const registrar      = accounts[1];
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
+    const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
+	const stPrime = new STPrime(stPrimeAddress);
 
-	// Changed OpenSTUtility locally to deploy STPrime separately in order to move forward with testing
-	// These changes have not been pushed to the remote repository
-	// const uuidSTPrime = await openSTUtility.uuidSTPrime.call();
-	// const stPrime = await STPrime.new(openSTUtility.address, uuidSTPrime, { from: accounts[0], gas: 3500000 });
-	// await openSTUtility.deploySTPrime(stPrime.address);
+    // This requires disabling `require(msg.sender.balance == 0)` in STPrime.sol
+    // Or setting the faucet account to have 800M + cost to transfer
+	await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
 
 	return {
+		stPrime       : stPrime,
 		openSTUtility : openSTUtility
 	}
 }
@@ -72,7 +73,7 @@ module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _u
 	assert.equal(event.args._requester, _requester);
 }
 
-module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, unlockHeight) => {
+module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, _unlockHeight) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -81,8 +82,8 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 		_amountUT = new BigNumber(_amountUT);
 	}
 
-	if (Number.isInteger(unlockHeight)) {
-		unlockHeight = new BigNumber(unlockHeight);
+	if (Number.isInteger(_unlockHeight)) {
+		_unlockHeight = new BigNumber(_unlockHeight);
 	}
 
 	assert.equal(event.event, "StakingIntentConfirmed");
@@ -92,12 +93,10 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-
-	// The block.number received from confirmStakingIntent.call(...) is one less than from confirmStakingIntent(...)
-	assert.equal(event.args.unlockHeight.toNumber(), unlockHeight.plus(1).toNumber());
+	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 }
 
-module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {
+module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -105,7 +104,36 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _sta
 	assert.equal(event.event, "ProcessedMint");
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+	assert.equal(event.args._token, _token);
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+}
+
+module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _amount, _unlockHeight, _chainIdValue) => {
+	if (Number.isInteger(_amount)) {
+		_amount = new BigNumber(_amount);
+	}
+
+	if (Number.isInteger(_nonce)) {
+		_nonce = new BigNumber(_nonce);
+	}
+
+	if (Number.isInteger(_unlockHeight)) {
+		_unlockHeight = new BigNumber(_unlockHeight);
+	}
+
+	if (Number.isInteger(_chainIdValue)) {
+		_chainIdValue = new BigNumber(_chainIdValue);
+	}
+
+	assert.equal(event.event, "RedemptionIntentDeclared");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args._token, _token);
+	assert.equal(event.args._redeemer, _redeemer);
+	assert.equal(event.args._nonce.toNumber(), _nonce.toNumber());
+	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
+	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
 }
