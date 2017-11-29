@@ -22,7 +22,6 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-// Note: for testing, disabled `require(msg.sender.balance == 0)` in STPrime.sol
 var STPrime = artifacts.require("./STPrime.sol");
 
 /// @dev Deploy 

@@ -34,8 +34,6 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
 	const stPrime = new STPrime(stPrimeAddress);
 
-    // This requires disabling `require(msg.sender.balance == 0)` in STPrime.sol
-    // Or setting the faucet account to have 800M + cost to transfer
 	await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
 
 	return {

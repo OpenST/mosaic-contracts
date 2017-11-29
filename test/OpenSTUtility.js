@@ -63,8 +63,7 @@ const STPrime = artifacts.require("./STPrime.sol");
 ///			fails if msg.sender != staker
 ///			successfully mints
 /// 		fails to re-process a processed mint
-///		when unlockHeight is < block number
-///			fails if unlockHeight is < block number
+///		when unlockHeight is < block number // TBD: how or where to test this practically
 ///
 ///	Redeem
 /// 	fails to redeem when uuid is empty
@@ -288,28 +287,6 @@ contract('OpenSTUtility', function(accounts) {
 			})
 
 			it('fails to re-process a processed mint', async () => {
-				await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash));
-			})
-		})
-
-		context('when unlockHeight is < block number', async () => {
-			before(async () => {
-		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-		        openSTUtility = contracts.openSTUtility;
-	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
-	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
-	            brandedToken = result.logs[0].args._token;
-	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
-				unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
-				unlockHeight = unlockHeight.plus(1);
-	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
-		    })
-
-			it('fails if unlockHeight is > block number', async () => {
-				console.log("::", (BLOCKS_TO_WAIT_SHORT - 1), "TRANSFERS TO TEST UNLOCKHEIGHT ::");
-				for (var i = 0; i < (BLOCKS_TO_WAIT_SHORT - 1); i++) { await web3.eth.sendTransaction({ from: accounts[8], to: accounts[0], value: 1 });}
-
 				await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash));
 			})
 		})		

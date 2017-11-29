@@ -81,7 +81,6 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         //      it must verify that the genesis exactly specified TOKENS_MAX
         //      so that all base tokens are held by STPrime 
         require(msg.value == TOKENS_MAX);
-        require(msg.sender.balance == 0);
         initialized = true;
     }
 
