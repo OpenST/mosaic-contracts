@@ -385,6 +385,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 
 		require(uuid == _checkUuid);
 
+		require(address(utilityTokens[uuid].simpleStake) == address(0));
+
 		SimpleStake simpleStake = new SimpleStake(
 			valueToken, address(this), uuid);
 

@@ -1,3 +1,5 @@
+pragma solidity ^0.4.17;
+
 // Copyright 2017 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +15,25 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: OpenST.js
+// Utility chain: STPrimePayable.sol
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
+import "./STPrime.sol";
+
+/// @title STPrimePayable
+/// @dev Temporary payable implementation of STPrime--TO BE REMOVED ONCE STPRIME.SOL IS ENABLED TO RECEIVE BASE TOKENS
+contract STPrimePayable is STPrime {
+    /*
+     * Public functions
+     */
+    function STPrimePayable(
+    	address _openSTProtocol,
+    	bytes32 _uuid)
+        STPrime(_openSTProtocol, _uuid)
+    	public { }
+
+    function() public payable { }
+}

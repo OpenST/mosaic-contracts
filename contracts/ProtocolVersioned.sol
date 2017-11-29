@@ -68,8 +68,7 @@ contract ProtocolVersioned {
 	}
 
 	modifier notNull(address _address) {
-		if (_address == 0)
-			revert();
+		require(_address != 0);
 		_;
 	}
 	
@@ -97,6 +96,7 @@ contract ProtocolVersioned {
 		returns (bool)
 	{
 		require(_proposedProtocol != openSTProtocol);
+		require(proposedProtocol == address(0));
 
 		earliestTransferHeight = block.number + PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
         proposedProtocol = _proposedProtocol;
@@ -132,8 +132,11 @@ contract ProtocolVersioned {
     {
     	require(proposedProtocol != address(0));
 
+    	address revokedProtocol = proposedProtocol;
     	proposedProtocol = address(0);
     	earliestTransferHeight = 0;
+
+		ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
     	return true;
     }

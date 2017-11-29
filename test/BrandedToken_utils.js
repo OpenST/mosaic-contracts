@@ -13,9 +13,27 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: OpenST.js
+// Test: BrandedToken_utils.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
+const Assert = require('assert');
+const BigNumber = require('bignumber.js');
+
+var BrandedToken = artifacts.require("./BrandedToken.sol");
+
+/// @dev Deploy 
+module.exports.deployBrandedToken = async (artifacts, accounts) => {
+   /// mock unique identifier for utility token
+   const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
+   /// mock OpenST protocol contract address with an external account
+   const openSTProtocol = accounts[4];
+
+   const token = await BrandedToken.new(openSTProtocol, UUID, "SYMBOL", "Name", 18, { from: accounts[0], gas: 3500000 });
+
+   return {
+      token : token
+   }
+}

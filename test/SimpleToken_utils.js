@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/SimpleToken_utils.js
+// Test: SimpleToken_utils.js
 //
 // http://www.simpletoken.org/
 //
@@ -24,8 +24,7 @@ const BigNumber = require('bignumber.js');
 
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
-/// @dev currently unused as tests for SimpleToken.js don't
-///      follow this paradigm - to align
+/// @dev Deploy 
 module.exports.deploySimpleToken = async (artifacts, accounts) => {
 
    const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
@@ -33,42 +32,6 @@ module.exports.deploySimpleToken = async (artifacts, accounts) => {
    return {
       token : token
    }
-}
-
-/// @dev Assert on Transfer event
-module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
-   Assert.equal(result.logs.length, 1);
-
-   const event = result.logs[0];
-
-   module.exports.checkTransferEvent(event, _from, _to, _value);
-}
-
-
-module.exports.checkTransferEvent = (event, _from, _to, _value) => {
-   if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value);
-   }
-   Assert.equal(event.event, "Transfer");
-   Assert.equal(event.args._from, _from);
-   Assert.equal(event.args._to, _to);
-   Assert.equal(event.args._value.toNumber(), _value.toNumber());
-}
-
-
-module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
-   assert.equal(result.logs.length, 1)
-
-   const event = result.logs[0]
-
-   if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value)
-   }
-
-   assert.equal(event.event, "Approval")
-   assert.equal(event.args._owner, _owner)
-   assert.equal(event.args._spender, _spender)
-   assert.equal(event.args._value.toNumber(), _value.toNumber())
 }
 
 module.exports.checkFinalizedEventGroup = (result) => {

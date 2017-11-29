@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// test/lib/utils.js
+// Test: lib/utils.js
 //
 // http://www.simpletoken.org/
 //
@@ -68,7 +68,10 @@ module.exports.expectThrow = async (promise) => {
 
         const outOfGas = error.message.search('out of gas') > -1;
 
-        assert(invalidOpcode || outOfGas, `Expected throw, but got ${error} instead`);
+        // Latest TestRPC has trouble with require
+        const revertInstead = error.message.search('revert') > -1;
+
+        assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
 
         return;
     }

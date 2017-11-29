@@ -13,9 +13,27 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: OpenST.js
+// Test: STPrime_utils.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
+const Assert = require('assert');
+const BigNumber = require('bignumber.js');
+
+var STPrime = artifacts.require("./STPrime.sol");
+
+/// @dev Deploy 
+module.exports.deploySTPrime = async (artifacts, accounts) => {
+   /// mock unique identifier for utility token
+   const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
+   /// mock OpenST protocol contract address with an external account
+   const openSTProtocol = accounts[4];
+
+   const stPrime = await STPrime.new(openSTProtocol, UUID);
+
+   return {
+      stPrime : stPrime
+   }
+}
