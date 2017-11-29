@@ -63,7 +63,7 @@ module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, stake, _symbol,
 	assert.equal(event.args._stakingAccount, _stakingAccount);
 }
 
-module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _escrowUnlockHeight, _stakingIntentHash, _chainIdUtility) => {
+module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
 	if (Number.isInteger(_stakerNonce)) {
 		_stakerNonce = new BigNumber(_stakerNonce);
 	}
@@ -76,8 +76,8 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 		_amountUT = new BigNumber(_amountUT);
 	}
 
-	if (Number.isInteger(_escrowUnlockHeight)) {
-		_escrowUnlockHeight = new BigNumber(_escrowUnlockHeight);
+	if (Number.isInteger(_unlockHeight)) {
+		_unlockHeight = new BigNumber(_unlockHeight);
 	}
 
 	assert.equal(event.event, "StakingIntentDeclared");
@@ -87,7 +87,7 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-	assert.equal(event.args._escrowUnlockHeight.toNumber(), _escrowUnlockHeight.toNumber());
+	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 	assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
 	assert.equal(event.args._chainIdUtility, _chainIdUtility);
 }

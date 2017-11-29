@@ -73,7 +73,7 @@ module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _u
 	assert.equal(event.args._requester, _requester);
 }
 
-module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, _unlockHeight) => {
+module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -82,8 +82,8 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 		_amountUT = new BigNumber(_amountUT);
 	}
 
-	if (Number.isInteger(_unlockHeight)) {
-		_unlockHeight = new BigNumber(_unlockHeight);
+	if (Number.isInteger(_expirationHeight)) {
+		_expirationHeight = new BigNumber(_expirationHeight);
 	}
 
 	assert.equal(event.event, "StakingIntentConfirmed");
@@ -93,7 +93,7 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
+	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
 }
 
 module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {

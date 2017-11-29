@@ -123,6 +123,7 @@ contract('OpenSTUtility', function(accounts) {
 	var checkStakingIntentHash 	= null;
 	var unlockHeight 			= null;
 	var uuidSTPrime				= null;
+	var expirationHeight 		= null;
 
 	describe('Properties', async () => {
 		before(async () => {
@@ -250,12 +251,12 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('successfully confirms', async () => {
-			unlockHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
 
 			// call block number is one less than send block number
-			unlockHeight = unlockHeight.plus(1)
+			expirationHeight = expirationHeight.plus(1)
             result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
-            await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], 1, 5, unlockHeight);
+            await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], 1, 5, expirationHeight);
 		})
 	})
 
