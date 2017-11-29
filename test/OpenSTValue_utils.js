@@ -30,7 +30,7 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	const valueToken   = await SimpleToken.new();
 	const registrar    = accounts[1]
 
-	// Set SimpleToken admin to in order to finalize SimpleToken
+	// Set SimpleToken admin in order to finalize SimpleToken
 	await valueToken.setAdminAddress(accounts[1]);
 	// SimpleToken must be finalized to permit certain transfers
 	assert.ok(await valueToken.finalize({ from: accounts[1] }));
@@ -110,7 +110,7 @@ module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _st
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 }
 
-module.exports.checkRedemptionIntentConfirmedEvent = (event, uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _unlockHeight) => {
+module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _unlockHeight) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -124,10 +124,23 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, uuid, _redemptionIn
 	}
 
 	assert.equal(event.event, "RedemptionIntentConfirmed");
-	assert.equal(event.args.uuid, uuid);
+	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event.args._redeemer, _redeemer);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
+}
+
+module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _amountST) => {
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	assert.equal(event.event, "ProcessedUnstake");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args.stake, stake);
+	assert.equal(event.args._redeemer, _redeemer);
+	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 }

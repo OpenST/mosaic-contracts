@@ -58,12 +58,12 @@ const STPrime = artifacts.require("./STPrime.sol");
 /// 	successfully confirms
 ///
 /// ProcessMinting
-/// 	when unlockHeight is > block number
+/// 	when expirationHeight is > block number
 ///			fails if stakingIntentHash is empty
 ///			fails if msg.sender != staker
 ///			successfully mints
 /// 		fails to re-process a processed mint
-///		when unlockHeight is < block number // TBD: how or where to test this practically
+///		when expirationHeight is < block number // TBD: how or where to test this practically
 ///
 ///	Redeem
 /// 	fails to redeem when uuid is empty
@@ -260,7 +260,7 @@ contract('OpenSTUtility', function(accounts) {
 	})
 
 	describe('ProcessMinting', async () => {
-		context('when unlockHeight is > block number', async () => {
+		context('when expirationHeight is > block number', async () => {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
