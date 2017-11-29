@@ -21,6 +21,7 @@
 
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
+const utils = require("./lib/utils.js");
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
@@ -39,20 +40,6 @@ contract('OpenST', function(accounts) {
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
 
-	var receipts = []
-
-	function logReceipt(receipt, description) {
-		receipts.push({
-			receipt     : receipt,
-			description : description
-		})
-	}
-
-	async function logTransaction(hash, description) {
-		const receipt = await web3.eth.getTransactionReceipt(hash)
-		await logReceipt(receipt, description)
-	}
-
 	describe('Setup Utility chain with Simple Token Prime', async () => {
 
 		var simpleToken = null;
@@ -64,11 +51,13 @@ contract('OpenST', function(accounts) {
 
 		before(async () => {
 			var contracts = await ProtocolUtils.deployOpenSTProtocol(artifacts, accounts);
-			simpleToken = contracts.simpleToken;
+			simpleToken = contracts.token;
 			registrarVC = contracts.registrarVC;
 			registrarUC = contracts.registrarUC;
 			openSTValue = contracts.openSTValue;
 			openSTUtility = contracts.openSTUtility;
+
+			// await logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new")
 			// core on VC to represent UC
 			coreVC = contracts.coreVC;
 		});
@@ -79,4 +68,11 @@ contract('OpenST', function(accounts) {
         	// console.log(await simpleToken.balanceOf.call(deployMachine));
 		});
 	});
+
+	describe('Statistics', async () => {
+
+		it("gasUsed", async () => {
+			utils.printGasStatistics();
+		})
+    })
 });

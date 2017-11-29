@@ -28,18 +28,66 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
+
+/*
+ *  Tracking Gas Usage
+ */
+
+const receipts = [];
+
+module.exports.logResponse = (response, description) => {
+  receipts.push({
+    receipt     : response.receipt,
+    description : description,
+    response    : response
+  }); 
+}
+
+module.exports.logReceipt = (receipt, description) => {
+  receipts.push({
+    receipt     : receipt,
+    description : description,
+    response    : null
+  })
+}
+
+module.exports.logTransaction = async (hash, description) => {
+  const receipt = await web3.eth.getTransactionReceipt(hash)
+  await this.logReceipt(receipt, description)
+}
+
+module.exports.printGasStatistics = () => {
+  var totalGasUsed = 0
+
+  for (i = 0; i < receipts.length; i++) {
+    const entry = receipts[i]
+
+    totalGasUsed += entry.receipt.gasUsed
+
+    console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
+  }
+
+  console.log("      -----------------------------------------------------")
+  console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed)
+}
+
+module.exports.clearReceipts = () => {
+  receipts.splice( 0, receipts.length );
+}
+
+
 /// @dev Deploy SimpleToken and other contracts
 ///      to test full protocol
-module.exports.deployContracts = async (artifacts, accounts) => {
+// module.exports.deployContracts = async (artifacts, accounts) => {
 
-	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
+// 	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
 
-  // to be extended
+//   // to be extended
 
-	return {
-		token : token
-	}
-}
+// 	return {
+// 		token : token
+// 	}
+// }
 
 /*
  *  General event checks

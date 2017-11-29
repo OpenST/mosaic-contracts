@@ -20,6 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
+const utils = require("./lib/utils.js");
 
 var SimpleToken   = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
@@ -39,39 +40,61 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
 
+	var res = null;
+
 	const simpleToken = await SimpleToken.new({ from: deployMachine });
+	await utils.logTransaction(simpleToken.transactionHash, "SimpleToken.new");
 	// finalize the tokens
-	await simpleToken.setAdminAddress(admin, { from: deployMachine });
-	await simpleToken.finalize({ from: admin });
+	utils.logResponse(await simpleToken.setAdminAddress(admin, { from: deployMachine }),
+		"SimpleToken.setAdminAddress");
+	utils.logResponse(await simpleToken.finalize({ from: admin }),
+		"SimpleToken.finalize");
 	// transfer ownership
-	await simpleToken.initiateOwnershipTransfer(owner, { from: deployMachine });
-	await simpleToken.completeOwnershipTransfer({ from: owner });
+	utils.logResponse(await simpleToken.initiateOwnershipTransfer(owner, { from: deployMachine }),
+		"SimpleToken.initiateOwnershipTransfer");
+	utils.logResponse(await simpleToken.completeOwnershipTransfer({ from: owner }),
+		"SimpleToken.completeOwnershipTransfer");
 
 	const registrarVC = await Registrar.new({ from: deployMachine });
+	await utils.logTransaction(registrarVC.transactionHash, "RegistrarVC.new");
 	// set Ops of registrar to Intercom account on value chain
-	await registrarVC.setOpsAddress(intercommVC, { from: deployMachine });
-	await registrarVC.initiateOwnershipTransfer(owner, { from: deployMachine });
-	await registrarVC.completeOwnershipTransfer({ from: owner });
+	utils.logResponse(await registrarVC.setOpsAddress(intercommVC, { from: deployMachine }),
+		"Registrar.setOpsAddress");
+	utils.logResponse(await registrarVC.initiateOwnershipTransfer(owner, { from: deployMachine }),
+		"Registrar.initiateOwnershipTransfer");
+	utils.logResponse(await registrarVC.completeOwnershipTransfer({ from: owner }),
+		"Registrar.completeOwnershipTransfer");
 
 	const registrarUC = await Registrar.new({ from: deployMachine });
+	await utils.logTransaction(registrarUC.transactionHash, "RegistrarUC.new");
 	// set Ops of registrar to Intercom account on utility chain
-	await registrarUC.setOpsAddress(intercommUC, { from: deployMachine });
-	await registrarUC.initiateOwnershipTransfer(owner, { from: deployMachine });
-	await registrarUC.completeOwnershipTransfer({ from: owner });
+	utils.logResponse(await registrarUC.setOpsAddress(intercommVC, { from: deployMachine }),
+		"Registrar.setOpsAddress");
+	utils.logResponse(await registrarUC.initiateOwnershipTransfer(owner, { from: deployMachine }),	
+		"Registrar.initiateOwnershipTransfer");
+	utils.logResponse(await registrarUC.completeOwnershipTransfer({ from: owner }),
+		"Registrar.completeOwnershipTransfer");
 
 	const openSTValue = await OpenSTValue.new(CHAINID_VALUE, simpleToken.address,
 		registrarVC.address);
-	await openSTValue.initiateOwnershipTransfer(owner, { from: deployMachine });
-	await openSTValue.completeOwnershipTransfer({ from: owner });
+	await utils.logTransaction(openSTValue.transactionHash, "OpenSTValue.new");
+	utils.logResponse(await openSTValue.initiateOwnershipTransfer(owner, { from: deployMachine }),
+		"OpenSTValue.initiateOwnershipTransfer");
+	utils.logResponse(await openSTValue.completeOwnershipTransfer({ from: owner }),
+		"OpenSTValue.completeOwnershipTransfer");
 
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
-		registrarUC.address);
-	await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine });
-	await openSTUtility.completeOwnershipTransfer({ from: owner });
+		registrarUC.address, { from: deployMachine, gas: 8500000 });
+	await utils.logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new");
+	utils.logResponse(await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine }),
+		"OpenSTUtility.initiateOwnershipTransfer");
+	utils.logResponse(await openSTUtility.completeOwnershipTransfer({ from: owner }),
+		"OpenSTUtility.completeOwnershipTransfer");
 
 	// only setup a core for the Value Chain to track the Utility Chain for v0.9.1
 	const coreVC = await Core.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
 		openSTUtility.address);
+	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
 	// console.log("Simple Token:", simpleToken.address);
 	// console.log("Registrar VC:", registrarVC.address);
