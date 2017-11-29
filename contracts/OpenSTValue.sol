@@ -264,7 +264,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	bytes32 redemptionIntentHash = hashRedemptionIntent(
     		_uuid,
     		_redeemer,
-    		nonces[_redeemer]++,
+    		nonces[_redeemer],
     		_amountUT,
     		_redemptionUnlockHeight
     	);
