@@ -43,7 +43,8 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	}
 }
 
-module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, stake, _symbol, _name, _decimals, _conversionRate, _chainIdUtility, _stakingAccount) => {
+// Stake address is returned by UtilityTokenRegistered but verified elsewhere
+module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, _symbol, _name, _decimals, _conversionRate, _chainIdUtility, _stakingAccount) => {
 	if (Number.isInteger(_decimals)) {
 		_decimals = new BigNumber(_decimals);
 	}
@@ -54,7 +55,6 @@ module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, stake, _symbol,
 
 	assert.equal(event.event, "UtilityTokenRegistered");
 	assert.equal(event.args._uuid, _uuid);
-	assert.equal(event.args.stake, stake);
 	assert.equal(event.args._symbol, _symbol);
 	assert.equal(event.args._name, _name);
 	assert.equal(event.args._decimals.toNumber(), _decimals);

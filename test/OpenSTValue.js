@@ -22,6 +22,7 @@
 const Utils = require('./lib/utils.js');
 const OpenSTValue_utils = require('./OpenSTValue_utils.js');
 const Core = artifacts.require("./Core.sol");
+const SimpleStake = artifacts.require("./SimpleStake.sol");
 
 ///
 /// Test stories
@@ -47,7 +48,7 @@ const Core = artifacts.require("./Core.sol");
 ///		fails to register when core.openSTRemote is null // Cannot test because Core cannot be deployed with null openSTRemote
 ///		fails to register when the given UUID does not match the calculated hash
 ///		successfully registers
-///		fails to register if already exists // Fails
+///		fails to register if already exists
 /// 
 /// Stake
 ///		when the staking account is null
@@ -138,6 +139,7 @@ contract('OpenSTValue', function(accounts) {
 	describe('RegisterUtilityToken', async () => {
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
             await openSTValue.addCore(core.address, { from: registrar });
@@ -167,11 +169,14 @@ contract('OpenSTValue', function(accounts) {
 		it('successfully registers', async () => {
             assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }), checkUuid);
             result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
-            // Event cannot be tested because the address of stake is not known
-            // OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, stake, symbol, name, 18, conversionRate, chainIdRemote, 0);
+
+            // Stake address is returned by UtilityTokenRegistered but verified below rather than by checkUtilityTokenRegisteredEvent
+            OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, symbol, name, 18, conversionRate, chainIdRemote, 0);
+            var simpleStake = new SimpleStake(result.logs[0].args.stake);
+            assert.equal(await simpleStake.uuid.call(), checkUuid);
+            assert.equal(await simpleStake.eip20Token.call(), valueToken.address);
 		})
 
-		// Fails
 		it('fails to register if already exists', async () => {
             await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }));
 		})
