@@ -227,7 +227,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 		stakeAddress = address(utilityToken.simpleStake);
 		require(stakeAddress != address(0));
 
-		assert(valueToken.balanceOf(address(this)) > stake.amountST);
+		assert(valueToken.balanceOf(address(this)) >= stake.amountST);
 		require(valueToken.transfer(stakeAddress, stake.amountST));
 
     	ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
