@@ -23,6 +23,7 @@ const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
+const STPrime = artifacts.require("./STPrime.sol");
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
@@ -56,6 +57,9 @@ contract('OpenST', function(accounts) {
 		var coreVC      = null;
 		var openSTValue = null;
 		var openSTUtility = null;
+		var stPrime = null;
+
+		var stpContractAddress = null;
 
 	//- [x] truffle complete deployment process
 
@@ -68,6 +72,9 @@ contract('OpenST', function(accounts) {
 			openSTUtility = contracts.openSTUtility;
 			// core on VC to represent UC
 			coreVC = contracts.coreVC;
+		  stpContractAddress = await openSTUtility.simpleTokenPrime.call();
+			Assert.notEqual(stpContractAddress, utils.NullAddress);
+			stPrime = STPrime.at(stpContractAddress);
 		});
 
 		it("add core to represent utility chain", async () => {
@@ -80,8 +87,6 @@ contract('OpenST', function(accounts) {
 		it("register Simple Token Prime", async () => {
 			const uuidSTP = await openSTUtility.uuidSTPrime.call();
 			Assert.notEqual(uuidSTP, "");
-			const stp = await openSTUtility.simpleTokenPrime.call();
-			Assert.notEqual(stp, utils.NullAddress);
 			const o = await registrarVC.registerUtilityToken(
 				openSTValue.address,
 				STPRIME_SYMBOL,
@@ -94,10 +99,14 @@ contract('OpenST', function(accounts) {
 			Assert.notEqual((await openSTValue.utilityTokenBreakdown.call(uuidSTP))[5], utils.NullAddress);
 		});
 
-	  //- [ ] Initialize Transfer to ST' Contract Address
-
+	  // Initialize Transfer to ST' Contract Address
 	  it("Initialize transfer to ST PRIME Contract Address", async () => {
-		  await stpContractAddress.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
+			Assert.equal(await web3.eth.getBalance(stpContractAddress),  0);
+
+		  await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
+			var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stpContractAddress).toNumber();
+			Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
+
     });
 
 	});
