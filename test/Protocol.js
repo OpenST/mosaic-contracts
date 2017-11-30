@@ -22,8 +22,12 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
+const openSTValueUtils = require("./OpenSTValue_utils.js");
 
 const ProtocolUtils = require('./Protocol_utils.js');
+
+const CHAINID_VALUE   = new BigNumber(2001);
+const CHAINID_UTILITY = new BigNumber(2002);
 
 contract('OpenST', function(accounts) {
 	
@@ -32,6 +36,10 @@ contract('OpenST', function(accounts) {
 	const TOKEN_NAME     = "Simple Token";
 	const TOKEN_DECIMALS = 18;
 	const TOKENS_MAX     = new BigNumber('800000000').mul(DECIMALSFACTOR);
+	
+	const STPRIME_SYMBOL          = "STP";
+    const STPRIME_NAME            = "SimpleTokenPrime";
+    const STPRIME_CONVERSION_RATE = new BigNumber(1);
 
 	const deployMachine = accounts[0];
 	const owner         = accounts[1];
@@ -56,20 +64,36 @@ contract('OpenST', function(accounts) {
 			registrarUC = contracts.registrarUC;
 			openSTValue = contracts.openSTValue;
 			openSTUtility = contracts.openSTUtility;
-
-			// await logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new")
 			// core on VC to represent UC
 			coreVC = contracts.coreVC;
 		});
 
 		it("add core to represent utility chain", async () => {
-			console.log("hello")
-			Assert.ok(await registrarVC.addCore(openSTValue.address, coreVC.address, { from: intercommVC }));
-        	// console.log(await simpleToken.balanceOf.call(deployMachine));
+			const o = await registrarVC.addCore(openSTValue.address, coreVC.address, { from: intercommVC });
+			Assert.ok(o);
+			utils.logResponse(o, "RegistrarVC.addCore");
+			Assert.equal(await openSTValue.core.call(CHAINID_UTILITY), coreVC.address);
+		});
+
+		it("register Simple Token Prime", async () => {
+			const uuidSTP = await openSTUtility.uuidSTPrime.call();
+			Assert.notEqual(uuidSTP, "");
+			const stp = await openSTUtility.simpleTokenPrime.call();
+			Assert.notEqual(stp, utils.NullAddress);
+			const o = await registrarVC.registerUtilityToken(
+				openSTValue.address,
+				STPRIME_SYMBOL,
+				STPRIME_NAME,
+				STPRIME_CONVERSION_RATE, 
+				CHAINID_UTILITY,
+				0,
+				uuidSTP, { from: intercommVC });
+			utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
+			Assert.notEqual((await openSTValue.utilityTokenBreakdown.call(uuidSTP))[5], utils.NullAddress);
 		});
 	});
 
-	describe('Statistics', async () => {
+	describe('Report', async () => {
 
 		it("gasUsed", async () => {
 			utils.printGasStatistics();

@@ -28,7 +28,6 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
-
 /*
  *  Tracking Gas Usage
  */
