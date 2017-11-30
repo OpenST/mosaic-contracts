@@ -56,6 +56,19 @@ module.exports.checkProposedBrandedTokenEvent = (event, _requester, _uuid, _symb
 	assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
 }
 
+module.exports.validateProposedBrandedTokenEvent = (event, _requester, _symbol, _name, _conversionRate) => {
+  if (Number.isInteger(_conversionRate)) {
+    _conversionRate = new BigNumber(_conversionRate);
+  }
+
+  assert.equal(event.event, "ProposedBrandedToken");
+  assert.equal(event.args._requester, _requester);
+  assert.equal(event.args._symbol, _symbol);
+  assert.equal(event.args._name, _name);
+  assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
+}
+
+
 module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _uuid, _symbol, _name, _conversionRate, _requester) => {
 	assert.equal(event.event, "RegisteredBrandedToken");
 	if (Number.isInteger(_conversionRate)) {
