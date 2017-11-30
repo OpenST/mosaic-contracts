@@ -25,8 +25,7 @@ const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 const openSTUtilityUtils = require('./OpenSTUtility_utils.js');
 
-
-const STPrime = artifacts.require("./STPrime.sol");
+const web3EventsDecoder = require('./lib/event_decoder.js');
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
@@ -44,6 +43,11 @@ contract('OpenST', function(accounts) {
 	const STPRIME_SYMBOL          = "STP";
 	const STPRIME_NAME            = "SimpleTokenPrime";
 	const STPRIME_CONVERSION_RATE = new BigNumber(1);
+
+	// Member Details
+	const symbol = "BT";
+	const name = "Branded Token";
+	const conversionRate = 10;
 
 	const deployMachine = accounts[0];
 	const owner         = accounts[1];
@@ -80,10 +84,7 @@ contract('OpenST', function(accounts) {
 			openSTUtility = contracts.openSTUtility;
 			// core on VC to represent UC
 			coreVC = contracts.coreVC;
-		    
-		    stpContractAddress = await openSTUtility.simpleTokenPrime.call();
-			Assert.notEqual(stpContractAddress, utils.NullAddress);
-			stPrime = STPrime.at(stpContractAddress);
+		    stPrime = contracts.stPrime;
 		});
 
 		it("add core to represent utility chain", async () => {
@@ -110,10 +111,10 @@ contract('OpenST', function(accounts) {
 
 		// Initialize Transfer to ST' Contract Address
 		it("Initialize transfer to ST PRIME Contract Address", async () => {
-			Assert.equal(await web3.eth.getBalance(stpContractAddress),  0);
+			Assert.equal(await web3.eth.getBalance(stPrime.address),  0);
 
 		 	await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
-			var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stpContractAddress).toNumber();
+			var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stPrime.address).toNumber();
 			Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
 
 	    });
@@ -149,9 +150,6 @@ contract('OpenST', function(accounts) {
   		//- [ ] propose and register Branded Token
 
 		it("propose and register branded token for a member company", async() => {
-			const symbol = "PC",
-				  name = "Pepo Coin",
-				  conversionRate = 10;
       		var result = await openSTUtility.proposeBrandedToken(
       			symbol,
 				name,
@@ -188,6 +186,11 @@ contract('OpenST', function(accounts) {
 				eventLog.args._uuid,
 				{ from: intercommUC }
 			);
+
+			const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
+			var formattedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
+			console.log("formattedEvents");
+			console.log(formattedEvents);
 
   		Assert.equal(eventLog.args._uuid, registeredBrandedTokenUuid);
 

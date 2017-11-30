@@ -20,6 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
+const Assert = require('assert');
+
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 
@@ -28,6 +30,7 @@ var Registrar     = artifacts.require("./Registrar.sol");
 var Core          = artifacts.require("./Core.sol");
 var OpenSTValue   = artifacts.require("./OpenSTValue.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
+var STPrime       = artifacts.require("./STPrime.sol");
 
 const CHAINID_VALUE   = 2001;
 const CHAINID_UTILITY = 2002;
@@ -97,6 +100,10 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		openSTUtility.address);
 	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
+	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
+	Assert.notEqual(stpContractAddress, utils.NullAddress);
+	const stPrime = STPrime.at(stpContractAddress);
+
 	// console.log("Simple Token:", simpleToken.address);
 	// console.log("Registrar VC:", registrarVC.address);
 	// console.log("Registrar UC:", registrarUC.address);
@@ -110,6 +117,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		registrarUC   : registrarUC,
 		openSTValue   : openSTValue,
 		openSTUtility : openSTUtility,
-		coreVC        : coreVC
+		coreVC        : coreVC,
+		stPrime       : stPrime
 	};
 }
