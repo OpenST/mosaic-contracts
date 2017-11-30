@@ -150,7 +150,7 @@ contract('OpenST', function(accounts) {
 				{ from: intercommUC }
 			);
 
-  		result = await registrarUC.registerBrandedToken.call(
+  		result = await registrarUC.registerBrandedToken(
 				openSTUtility.address,
 				symbol,
 				name,
