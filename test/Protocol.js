@@ -25,6 +25,7 @@ const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 const openSTUtilityUtils = require('./OpenSTUtility_utils.js');
 const web3EventsDecoder = require('./lib/event_decoder.js');
+
 const ProtocolUtils = require('./Protocol_utils.js');
 
 const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
@@ -161,7 +162,7 @@ contract('OpenST', function(accounts) {
 				const o = await openSTValue.processStaking(stakingIntentHash, { from: staker });
 				utils.logResponse(o, "OpenSTValue.processStaking");
 			});
-			
+
 			it("process minting", async () => {
 				const o = await openSTUtility.processMinting(stakingIntentHash, { from: staker });
 				utils.logResponse(o, "OpenSTUtility.processMinting");
