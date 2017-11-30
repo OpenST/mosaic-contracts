@@ -69,7 +69,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const registrarUC = await Registrar.new({ from: deployMachine });
 	await utils.logTransaction(registrarUC.transactionHash, "RegistrarUC.new");
 	// set Ops of registrar to Intercom account on utility chain
-	utils.logResponse(await registrarUC.setOpsAddress(intercommVC, { from: deployMachine }),
+	utils.logResponse(await registrarUC.setOpsAddress(intercommUC, { from: deployMachine }),
 		"Registrar.setOpsAddress");
 	utils.logResponse(await registrarUC.initiateOwnershipTransfer(owner, { from: deployMachine }),	
 		"Registrar.initiateOwnershipTransfer");

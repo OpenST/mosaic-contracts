@@ -24,6 +24,7 @@ const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 const STPrime = artifacts.require("./STPrime.sol");
+const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
@@ -48,6 +49,7 @@ contract('OpenST', function(accounts) {
 	const ops           = accounts[3];
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
+	const memberCompany = accounts[6];
 
 	describe('Setup Utility chain with Simple Token Prime', async () => {
 
@@ -60,6 +62,7 @@ contract('OpenST', function(accounts) {
 		var stPrime = null;
 
 		var stpContractAddress = null;
+		var registeredBrandedTokenUuid = null;
 
 	//- [x] truffle complete deployment process
 
@@ -108,6 +111,35 @@ contract('OpenST', function(accounts) {
 			Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
 
     });
+
+	  //- [ ] Initialize Transfer to ST' Contract Address
+
+	  it("Initialize transfer to ST PRIME Contract Address", async () => {
+		  //await stpContractAddress.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
+    });
+
+  	//- [ ] propose and register Branded Token
+
+		it("propose and register branded token for a member company", async() => {
+			const symbol = "PC",
+						name = "Pepo Coin",
+						conversionRate = 10;
+      var result = await openSTUtility.proposeBrandedToken( symbol, name, conversionRate, {from: memberCompany});
+      var eventLog = result.logs[0];
+  		OpenSTUtility_utils.validateProposedBrandedTokenEvent(eventLog, memberCompany, symbol, name, conversionRate);
+
+  		registeredBrandedTokenUuid = await registrarUC.registerBrandedToken.call(openSTUtility.address, symbol, name,
+																conversionRate, memberCompany, eventLog.args._token, eventLog.args._uuid,
+																{ from: intercommUC });
+
+  		result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, memberCompany,
+										eventLog.args._token, eventLog.args._uuid, { from: intercommUC });
+
+  		Assert.equal(eventLog.args._uuid, registeredBrandedTokenUuid);
+
+  		// OpenSTUtility_utils.checkRegisteredBrandedTokenEvent(result.logs[0], intercommUC, eventLog.args._token, eventLog.args._uuid,
+				// 			symbol, name, conversionRate, memberCompany);
+		});
 
 	});
 
