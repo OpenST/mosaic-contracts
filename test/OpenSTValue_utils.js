@@ -65,6 +65,30 @@ module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, _symbol, _name,
 	assert.equal(event.args._stakingAccount, _stakingAccount);
 }
 
+module.exports.checkUtilityTokenRegisteredEventOnProtocol = (formattedDecodedEvents, _uuid, _symbol, _name, _decimals, _conversionRate, _chainIdUtility, _stakingAccount) => {
+
+  var event = formattedDecodedEvents['UtilityTokenRegistered'];
+
+  assert.notEqual(event, null);
+
+	if (Number.isInteger(_decimals)) {
+    _decimals = new BigNumber(_decimals);
+  }
+
+  if (Number.isInteger(_conversionRate)) {
+    _conversionRate = new BigNumber(_conversionRate);
+  }
+
+  assert.equal(event._uuid, _uuid);
+  // assert.equal(event.args.stake, stake);
+  assert.equal(event._symbol, _symbol);
+  assert.equal(event._name, _name);
+  assert.equal(event._decimals, _decimals);
+  assert.equal(event._conversionRate, _conversionRate);
+  assert.equal(event._chainIdUtility, _chainIdUtility);
+  assert.equal(event._stakingAccount, _stakingAccount);
+}
+
 module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
 	if (Number.isInteger(_stakerNonce)) {
 		_stakerNonce = new BigNumber(_stakerNonce);

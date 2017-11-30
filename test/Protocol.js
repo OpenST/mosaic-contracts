@@ -24,10 +24,11 @@ const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 const openSTUtilityUtils = require('./OpenSTUtility_utils.js');
-
 const web3EventsDecoder = require('./lib/event_decoder.js');
-
 const ProtocolUtils = require('./Protocol_utils.js');
+
+const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
+const openSTValueArtifacts = artifacts.require("./OpenSTValue.sol");
 
 const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
@@ -72,6 +73,7 @@ contract('OpenST', function(accounts) {
 
 		var stpContractAddress = null;
 		var registeredBrandedTokenUuid = null;
+    var registeredBrandedToken = null;
 
 		//- [x] truffle complete deployment process
 
@@ -147,77 +149,47 @@ contract('OpenST', function(accounts) {
 			utils.clearReceipts();
 		});
 
-  		//- [ ] propose and register Branded Token
+    // propose branded token
 
-		it("propose and register branded token for a member company", async() => {
-      		var result = await openSTUtility.proposeBrandedToken(
-      			symbol,
-				name,
-				conversionRate,
-				{ from: requester });
+    it("propose branded token for member company", async() => {
 
-      		var eventLog = result.logs[0];
+      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, {from: requester});
+      var eventLog = result.logs[0];
 
-      openSTUtilityUtils.validateProposedBrandedTokenEvent(
-      	eventLog,
-				requester,
-				symbol,
-				name,
-				conversionRate);
+      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
 
-  		registeredBrandedTokenUuid = await registrarUC.registerBrandedToken.call(
-				openSTUtility.address,
-				symbol,
-				name,
-				conversionRate,
-				requester,
-				eventLog.args._token,
-				eventLog.args._uuid,
-				{ from: intercommUC }
-			);
+      registeredBrandedTokenUuid = eventLog.args._uuid;
+      registeredBrandedToken = eventLog.args._token;
 
-  		result = await registrarUC.registerBrandedToken(
-				openSTUtility.address,
-				symbol,
-				name,
-				conversionRate,
-				requester,
-				eventLog.args._token,
-				eventLog.args._uuid,
-				{ from: intercommUC }
-			);
+    });
 
-			const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
-			var formattedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
-			console.log("formattedEvents");
-			console.log(formattedEvents);
+    // register Branded Token on Utility Chain
 
-  		Assert.equal(eventLog.args._uuid, registeredBrandedTokenUuid);
+    it("register branded token on utility chain", async() => {
 
-			const returnedUuid = await registrarVC.registerUtilityToken.call(
-				openSTValue.address,
-				symbol,
-				name,
-				conversionRate,
-				CHAINID_UTILITY,
-				requester,
-				registeredBrandedTokenUuid,
-				{ from: intercommVC }
-			);
+      const result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name,
+        conversionRate, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
 
-  		result = await registrarVC.registerUtilityToken(
-				openSTValue.address,
-				symbol,
-				name,
-				conversionRate,
-				CHAINID_UTILITY,
-				requester,
-				registeredBrandedTokenUuid,
-				{ from: intercommVC }
-			);
+      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
-  		Assert.equal(returnedUuid, registeredBrandedTokenUuid);
+      openSTUtilityUtils.checkRegisteredBrandedTokenEventOnProtocol(formattedDecodedEvents, registrarUC.address,
+        registeredBrandedToken, registeredBrandedTokenUuid, symbol, name, conversionRate, requester);
 
-		});
+    });
+
+    // register Utility Token on Value Chain
+
+    it("register utility token on value chain", async() => {
+
+      const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate,
+        CHAINID_UTILITY, requester, registeredBrandedTokenUuid, { from: intercommVC });
+
+      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTValue.address, openSTValueArtifacts.abi);
+
+      openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+        symbol, name, 18, conversionRate, CHAINID_UTILITY, requester);
+
+    });
+
 	});
 });

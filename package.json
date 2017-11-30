@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "truffle": "^4.0.1",
-    "ethereumjs-testrpc": "^5.5.1",
+    "ganache-cli": "^6.0.3",
     "abi-decoder": "^1.0.9"
   },
   "author": "OpenST Foundation Ltd.",
