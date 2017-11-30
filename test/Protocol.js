@@ -124,21 +124,69 @@ contract('OpenST', function(accounts) {
 			const symbol = "PC",
 						name = "Pepo Coin",
 						conversionRate = 10;
-      var result = await openSTUtility.proposeBrandedToken( symbol, name, conversionRate, {from: memberCompany});
+      var result = await openSTUtility.proposeBrandedToken(
+      	symbol,
+				name,
+				conversionRate,
+				{from: memberCompany}
+			);
       var eventLog = result.logs[0];
-  		OpenSTUtility_utils.validateProposedBrandedTokenEvent(eventLog, memberCompany, symbol, name, conversionRate);
 
-  		registeredBrandedTokenUuid = await registrarUC.registerBrandedToken.call(openSTUtility.address, symbol, name,
-																conversionRate, memberCompany, eventLog.args._token, eventLog.args._uuid,
-																{ from: intercommUC });
+      OpenSTUtility_utils.validateProposedBrandedTokenEvent(
+      	eventLog,
+				memberCompany,
+				symbol,
+				name,
+				conversionRate);
 
-  		result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, memberCompany,
-										eventLog.args._token, eventLog.args._uuid, { from: intercommUC });
+  		registeredBrandedTokenUuid = await registrarUC.registerBrandedToken.call(
+				openSTUtility.address,
+				symbol,
+				name,
+				conversionRate,
+				memberCompany,
+				eventLog.args._token,
+				eventLog.args._uuid,
+				{ from: intercommUC }
+			);
+
+  		result = await registrarUC.registerBrandedToken.call(
+				openSTUtility.address,
+				symbol,
+				name,
+				conversionRate,
+				memberCompany,
+				eventLog.args._token,
+				eventLog.args._uuid,
+				{ from: intercommUC }
+			);
 
   		Assert.equal(eventLog.args._uuid, registeredBrandedTokenUuid);
 
-  		// OpenSTUtility_utils.checkRegisteredBrandedTokenEvent(result.logs[0], intercommUC, eventLog.args._token, eventLog.args._uuid,
-				// 			symbol, name, conversionRate, memberCompany);
+			const returnedUuid = await registrarVC.registerUtilityToken.call(
+				openSTValue.address,
+				symbol,
+				name,
+				conversionRate,
+				CHAINID_UTILITY,
+				memberCompany,
+				registeredBrandedTokenUuid,
+				{ from: intercommVC }
+			);
+
+  		result = await registrarVC.registerUtilityToken(
+				openSTValue.address,
+				symbol,
+				name,
+				conversionRate,
+				CHAINID_UTILITY,
+				memberCompany,
+				registeredBrandedTokenUuid,
+				{ from: intercommVC }
+			);
+
+  		Assert.equal(returnedUuid, registeredBrandedTokenUuid);
+
 		});
 
 	});
