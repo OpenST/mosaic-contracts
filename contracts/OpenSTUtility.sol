@@ -514,6 +514,22 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return tokenAddress;
 	}
 
+	/*
+	 *  Public view functions
+	 */ 
+    function registeredTokenProperties(
+    	bytes32 _uuid)
+    	external
+    	view
+    	returns (
+    	address /* token */,
+    	address /* registrar */)
+    {
+    	RegisteredToken storage registeredToken = registeredTokens[_uuid];
+    	return (
+    		address(registeredToken.token),
+    		registeredToken.registrar);
+    }
 
 	/*
 	 *  Operation functions

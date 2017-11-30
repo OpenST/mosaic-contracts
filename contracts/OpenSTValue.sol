@@ -343,13 +343,13 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return address(cores[_chainIdUtility]);
     }
 
-    function utilityTokenBreakdown(
+    function utilityTokenProperties(
     	bytes32 _uuid)
     	external
     	view
     	returns (
-    	string symbol,
-    	string name,
+    	string  symbol,
+    	string  name,
     	uint256 conversionRate,
     	uint8   decimals,
     	uint256 chainIdUtility,

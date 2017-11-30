@@ -23,8 +23,10 @@ const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
+const openSTUtilityUtils = require('./OpenSTUtility_utils.js');
+
+
 const STPrime = artifacts.require("./STPrime.sol");
-const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
@@ -49,7 +51,10 @@ contract('OpenST', function(accounts) {
 	const ops           = accounts[3];
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
-	const memberCompany = accounts[6];
+	const requester     = accounts[6];
+	const staker        = accounts[7];
+
+	const AMOUNT_ST = new BigNumber(1000);
 
 	describe('Setup Utility chain with Simple Token Prime', async () => {
 
@@ -64,9 +69,9 @@ contract('OpenST', function(accounts) {
 		var stpContractAddress = null;
 		var registeredBrandedTokenUuid = null;
 
-	//- [x] truffle complete deployment process
+		//- [x] truffle complete deployment process
 
-	  before(async () => {
+		before(async () => {
 			var contracts = await ProtocolUtils.deployOpenSTProtocol(artifacts, accounts);
 			simpleToken = contracts.token;
 			registrarVC = contracts.registrarVC;
@@ -75,7 +80,8 @@ contract('OpenST', function(accounts) {
 			openSTUtility = contracts.openSTUtility;
 			// core on VC to represent UC
 			coreVC = contracts.coreVC;
-		  stpContractAddress = await openSTUtility.simpleTokenPrime.call();
+		    
+		    stpContractAddress = await openSTUtility.simpleTokenPrime.call();
 			Assert.notEqual(stpContractAddress, utils.NullAddress);
 			stPrime = STPrime.at(stpContractAddress);
 		});
@@ -99,42 +105,64 @@ contract('OpenST', function(accounts) {
 				0,
 				uuidSTP, { from: intercommVC });
 			utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
-			Assert.notEqual((await openSTValue.utilityTokenBreakdown.call(uuidSTP))[5], utils.NullAddress);
+			Assert.notEqual((await openSTValue.utilityTokenProperties.call(uuidSTP))[5], utils.NullAddress);
 		});
 
-	  // Initialize Transfer to ST' Contract Address
-	  it("Initialize transfer to ST PRIME Contract Address", async () => {
+		// Initialize Transfer to ST' Contract Address
+		it("Initialize transfer to ST PRIME Contract Address", async () => {
 			Assert.equal(await web3.eth.getBalance(stpContractAddress),  0);
 
-		  await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
+		 	await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
 			var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stpContractAddress).toNumber();
 			Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
 
-    });
+	    });
 
-	  //- [ ] Initialize Transfer to ST' Contract Address
+	    it("Report gas usage: deployment and setup", async () => {
+			utils.printGasStatistics();
+			utils.clearReceipts();
+		});
 
-	  it("Initialize transfer to ST PRIME Contract Address", async () => {
-		  //await stpContractAddress.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
-    });
+		// - [ ] stake ST for ST'
+		it("stake ST for ST Prime", async () => {
+			const uuidSTP = await openSTUtility.uuidSTPrime.call();
+			// transfer ST to staker account
+			Assert.ok(await simpleToken.transfer(staker, AMOUNT_ST, { from: deployMachine }));
+			// staker sets allowance for OpenSTValue
+			Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: staker }));
+			// for testing purpose query nonce in advance
+			var nonce = await openSTValue.getNextNonce.call(staker);
+			Assert.equal(nonce, 1);
+			// staker calls OpenSTValue.stake to initiate the staking for ST' with uuidSTP
+			// with staker as the beneficiary
+			const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, staker, { from: staker });
+			utils.logResponse(o, "OpenSTValue.stake");
+			openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, staker, nonce, staker,
+				AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
+		});
 
-  	//- [ ] propose and register Branded Token
+		it("Report gas usage: staking Simple Token Prime", async () => {
+			utils.printGasStatistics();
+			utils.clearReceipts();
+		});
+
+  		//- [ ] propose and register Branded Token
 
 		it("propose and register branded token for a member company", async() => {
 			const symbol = "PC",
-						name = "Pepo Coin",
-						conversionRate = 10;
-      var result = await openSTUtility.proposeBrandedToken(
-      	symbol,
+				  name = "Pepo Coin",
+				  conversionRate = 10;
+      		var result = await openSTUtility.proposeBrandedToken(
+      			symbol,
 				name,
 				conversionRate,
-				{from: memberCompany}
-			);
-      var eventLog = result.logs[0];
+				{ from: requester });
 
-      OpenSTUtility_utils.validateProposedBrandedTokenEvent(
+      		var eventLog = result.logs[0];
+
+      openSTUtilityUtils.validateProposedBrandedTokenEvent(
       	eventLog,
-				memberCompany,
+				requester,
 				symbol,
 				name,
 				conversionRate);
@@ -144,7 +172,7 @@ contract('OpenST', function(accounts) {
 				symbol,
 				name,
 				conversionRate,
-				memberCompany,
+				requester,
 				eventLog.args._token,
 				eventLog.args._uuid,
 				{ from: intercommUC }
@@ -155,7 +183,7 @@ contract('OpenST', function(accounts) {
 				symbol,
 				name,
 				conversionRate,
-				memberCompany,
+				requester,
 				eventLog.args._token,
 				eventLog.args._uuid,
 				{ from: intercommUC }
@@ -169,7 +197,7 @@ contract('OpenST', function(accounts) {
 				name,
 				conversionRate,
 				CHAINID_UTILITY,
-				memberCompany,
+				requester,
 				registeredBrandedTokenUuid,
 				{ from: intercommVC }
 			);
@@ -180,7 +208,7 @@ contract('OpenST', function(accounts) {
 				name,
 				conversionRate,
 				CHAINID_UTILITY,
-				memberCompany,
+				requester,
 				registeredBrandedTokenUuid,
 				{ from: intercommVC }
 			);
@@ -188,14 +216,5 @@ contract('OpenST', function(accounts) {
   		Assert.equal(returnedUuid, registeredBrandedTokenUuid);
 
 		});
-
 	});
-
-	describe('Report', async () => {
-
-		it("gasUsed", async () => {
-			utils.printGasStatistics();
-		});
-
-  })
 });
