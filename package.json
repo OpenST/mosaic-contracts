@@ -11,7 +11,8 @@
   },
   "devDependencies": {
     "truffle": "^4.0.1",
-    "ethereumjs-testrpc": "^5.5.1"
+    "ethereumjs-testrpc": "^5.5.1",
+    "abi-decoder": "^1.0.9"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
