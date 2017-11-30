@@ -30,7 +30,7 @@ const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
 
 contract('OpenST', function(accounts) {
-	
+
 	const DECIMALSFACTOR = new BigNumber('10').pow('18');
 	const TOKEN_SYMBOL   = "ST";
 	const TOKEN_NAME     = "Simple Token";
@@ -38,8 +38,8 @@ contract('OpenST', function(accounts) {
 	const TOKENS_MAX     = new BigNumber('800000000').mul(DECIMALSFACTOR);
 	
 	const STPRIME_SYMBOL          = "STP";
-    const STPRIME_NAME            = "SimpleTokenPrime";
-    const STPRIME_CONVERSION_RATE = new BigNumber(1);
+	const STPRIME_NAME            = "SimpleTokenPrime";
+	const STPRIME_CONVERSION_RATE = new BigNumber(1);
 
 	const deployMachine = accounts[0];
 	const owner         = accounts[1];
@@ -57,7 +57,9 @@ contract('OpenST', function(accounts) {
 		var openSTValue = null;
 		var openSTUtility = null;
 
-		before(async () => {
+	//- [x] truffle complete deployment process
+
+	  before(async () => {
 			var contracts = await ProtocolUtils.deployOpenSTProtocol(artifacts, accounts);
 			simpleToken = contracts.token;
 			registrarVC = contracts.registrarVC;
@@ -91,12 +93,20 @@ contract('OpenST', function(accounts) {
 			utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
 			Assert.notEqual((await openSTValue.utilityTokenBreakdown.call(uuidSTP))[5], utils.NullAddress);
 		});
+
+	  //- [ ] Initialize Transfer to ST' Contract Address
+
+	  it("Initialize transfer to ST PRIME Contract Address", async () => {
+		  await stpContractAddress.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
+    });
+
 	});
 
 	describe('Report', async () => {
 
 		it("gasUsed", async () => {
 			utils.printGasStatistics();
-		})
-    })
+		});
+
+  })
 });
