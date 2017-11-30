@@ -55,6 +55,8 @@ module.exports.checkUtilityTokenRegisteredEvent = (event, _uuid, _symbol, _name,
 
 	assert.equal(event.event, "UtilityTokenRegistered");
 	assert.equal(event.args._uuid, _uuid);
+	// TODO: re-evaluate checking
+	// assert.equal(event.args.stake, stake);
 	assert.equal(event.args._symbol, _symbol);
 	assert.equal(event.args._name, _name);
 	assert.equal(event.args._decimals.toNumber(), _decimals);
