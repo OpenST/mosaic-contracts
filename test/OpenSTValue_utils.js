@@ -94,6 +94,33 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._chainIdUtility, _chainIdUtility);
 }
 
+module.exports.checkStakingIntentDeclaredEventProtocol = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _chainIdUtility) => {
+	if (Number.isInteger(_stakerNonce)) {
+		_stakerNonce = new BigNumber(_stakerNonce);
+	}
+
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	if (Number.isInteger(_amountUT)) {
+		_amountUT = new BigNumber(_amountUT);
+	}
+
+	if (Number.isInteger(_chainIdUtility)) {
+		_chainIdUtility = new BigNumber(_chainIdUtility);
+	}
+
+	assert.equal(event.event, "StakingIntentDeclared");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._staker, _staker);
+	assert.equal(event.args._stakerNonce.toNumber(), _stakerNonce.toNumber());
+	assert.equal(event.args._beneficiary, _beneficiary);
+	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert.equal(event.args._chainIdUtility.toNumber(), _chainIdUtility.toNumber());
+}
+
 module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);

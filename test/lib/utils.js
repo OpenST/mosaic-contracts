@@ -58,6 +58,9 @@ module.exports.logTransaction = async (hash, description) => {
 module.exports.printGasStatistics = () => {
   var totalGasUsed = 0
 
+  console.log("      -----------------------------------------------------");
+  console.log("      Report gas usage\n");
+
   for (i = 0; i < receipts.length; i++) {
     const entry = receipts[i]
 
@@ -67,7 +70,7 @@ module.exports.printGasStatistics = () => {
   }
 
   console.log("      -----------------------------------------------------")
-  console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed)
+  console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
 }
 
 module.exports.clearReceipts = () => {
