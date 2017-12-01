@@ -59,9 +59,11 @@ contract('OpenST', function(accounts) {
 	const requester     = accounts[6];
 	const staker        = accounts[7];
 
-	const AMOUNT_ST = new BigNumber(1000);
+	const AMOUNT_ST = new BigNumber(1000).mul(DECIMALSFACTOR);
 
-	describe('Setup Utility chain with Simple Token Prime', async () => {
+
+	describe('Setup Utility chain with Simple Token Prime', function () {
+
 
 		var simpleToken = null;
 		var registrarVC = null;
@@ -73,7 +75,11 @@ contract('OpenST', function(accounts) {
 
 		var stpContractAddress = null;
 		var registeredBrandedTokenUuid = null;
-    var registeredBrandedToken = null;
+		var registeredBrandedToken = null;
+		var uuidSTP = null;
+		var nonce = null;
+		var stakingIntentHash = null;
+		var unlockHeight = null;
 
 		//- [x] truffle complete deployment process
 
@@ -89,107 +95,139 @@ contract('OpenST', function(accounts) {
 		    stPrime = contracts.stPrime;
 		});
 
-		it("add core to represent utility chain", async () => {
-			const o = await registrarVC.addCore(openSTValue.address, coreVC.address, { from: intercommVC });
-			Assert.ok(o);
-			utils.logResponse(o, "RegistrarVC.addCore");
-			Assert.equal(await openSTValue.core.call(CHAINID_UTILITY), coreVC.address);
+		context('deploy and configure utility chain', function() {
+
+			it("add core to represent utility chain", async () => {
+				const o = await registrarVC.addCore(openSTValue.address, coreVC.address, { from: intercommVC });
+				Assert.ok(o);
+				utils.logResponse(o, "RegistrarVC.addCore");
+				Assert.equal(await openSTValue.core.call(CHAINID_UTILITY), coreVC.address);
+			});
+
+			it("register Simple Token Prime", async () => {
+				const uuidSTP = await openSTUtility.uuidSTPrime.call();
+				Assert.notEqual(uuidSTP, "");
+				const o = await registrarVC.registerUtilityToken(openSTValue.address, STPRIME_SYMBOL, STPRIME_NAME,
+					STPRIME_CONVERSION_RATE, CHAINID_UTILITY, 0, uuidSTP, { from: intercommVC });
+				utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
+				Assert.notEqual((await openSTValue.utilityTokenProperties.call(uuidSTP))[5], utils.NullAddress);
+			});
+
+			// Initialize Transfer to ST' Contract Address
+			it("initialize transfer to Simple Token Prime contract address", async () => {
+				Assert.equal(await web3.eth.getBalance(stPrime.address),  0);
+
+			 	const o = await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
+				utils.logResponse(o, "STPrime.initialize");
+				var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stPrime.address).toNumber();
+				Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
+		    });
+
+		    it("report gas usage: deployment and setup", async () => {
+				utils.printGasStatistics();
+				utils.clearReceipts();
+			});
 		});
 
-		it("register Simple Token Prime", async () => {
-			const uuidSTP = await openSTUtility.uuidSTPrime.call();
-			Assert.notEqual(uuidSTP, "");
-			const o = await registrarVC.registerUtilityToken(
-				openSTValue.address,
-				STPRIME_SYMBOL,
-				STPRIME_NAME,
-				STPRIME_CONVERSION_RATE, 
-				CHAINID_UTILITY,
-				0,
-				uuidSTP, { from: intercommVC });
-			utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
-			Assert.notEqual((await openSTValue.utilityTokenProperties.call(uuidSTP))[5], utils.NullAddress);
+		context('stake Simple Token for Simple Token Prime', function() {
+
+			it("stake Simple Token", async () => {
+				uuidSTP = await openSTUtility.uuidSTPrime.call();
+				// transfer ST to staker account
+				Assert.ok(await simpleToken.transfer(staker, AMOUNT_ST, { from: deployMachine }));
+				// staker sets allowance for OpenSTValue
+				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: staker }));
+				// for testing purpose query nonce in advance
+				nonce = await openSTValue.getNextNonce.call(staker);
+				Assert.equal(nonce, 1);
+				// staker calls OpenSTValue.stake to initiate the staking for ST' with uuidSTP
+				// with staker as the beneficiary
+				const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, staker, { from: staker });
+				utils.logResponse(o, "OpenSTValue.stake");
+				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, staker, nonce, staker,
+					AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
+				stakingIntentHash = o.logs[0].args._stakingIntentHash;
+				unlockHeight = o.logs[0].args._unlockHeight;
+			});
+
+			it("confirm staking intent for Simple Token Prime", async () => {
+				// registrar registers staking intent on utility chain
+				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, staker, nonce,
+					staker, AMOUNT_ST, AMOUNT_ST, unlockHeight, stakingIntentHash, { from: intercommUC });
+				utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
+			});
+
+			it("process staking", async () => {
+				const o = await openSTValue.processStaking(stakingIntentHash, { from: staker });
+				utils.logResponse(o, "OpenSTValue.processStaking");
+			});
+			
+			it("process minting", async () => {
+				const o = await openSTUtility.processMinting(stakingIntentHash, { from: staker });
+				utils.logResponse(o, "OpenSTUtility.processMinting");
+			});
+
+			it("claim Simple Token Prime", async () => {
+				var balanceBefore = await web3.eth.getBalance(staker);
+				const o = await stPrime.claim(staker, { from: intercommUC });
+				utils.logResponse(o, "STPrime.claim");
+				var balanceAfter = await web3.eth.getBalance(staker);
+				console.log(balanceBefore, balanceAfter);
+				var totalSupply = await stPrime.totalSupply.call();
+				console.log(totalSupply.toNumber());
+				Assert.equal(totalSupply.toNumber(), AMOUNT_ST.toNumber());
+				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_ST.toNumber());
+			});
+
+			it("report gas usage: staking Simple Token Prime", async () => {
+				utils.printGasStatistics();
+				utils.clearReceipts();
+			});
 		});
 
-		// Initialize Transfer to ST' Contract Address
-		it("Initialize transfer to ST PRIME Contract Address", async () => {
-			Assert.equal(await web3.eth.getBalance(stPrime.address),  0);
+		context('propose and register branded token', function() {
+	    // propose branded token
 
-		 	await stPrime.initialize({ from: deployMachine, value:  TOKENS_MAX});
-			var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stPrime.address).toNumber();
-			Assert.equal(stPrimeContractBalanceAfterTransfer,  TOKENS_MAX);
+		    it("propose branded token for member company", async() => {
 
-	    });
+		      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, {from: requester});
+		      var eventLog = result.logs[0];
 
-	    it("Report gas usage: deployment and setup", async () => {
-			utils.printGasStatistics();
-			utils.clearReceipts();
+		      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
+
+		      registeredBrandedTokenUuid = eventLog.args._uuid;
+		      registeredBrandedToken = eventLog.args._token;
+
+		    });
+
+		    // register Branded Token on Utility Chain
+
+		    it("register branded token on utility chain", async() => {
+
+		      const result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name,
+		        conversionRate, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
+
+		      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
+
+		      openSTUtilityUtils.checkRegisteredBrandedTokenEventOnProtocol(formattedDecodedEvents, registrarUC.address,
+		        registeredBrandedToken, registeredBrandedTokenUuid, symbol, name, conversionRate, requester);
+
+		    });
+
+		    // register Utility Token on Value Chain
+
+		    it("register utility token on value chain", async() => {
+
+		     	const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate,
+		    		CHAINID_UTILITY, requester, registeredBrandedTokenUuid, { from: intercommVC });
+
+		    	var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTValue.address, openSTValueArtifacts.abi);
+
+		     	openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+		    		symbol, name, 18, conversionRate, CHAINID_UTILITY, requester);
+
+		    });
 		});
-
-		// - [ ] stake ST for ST'
-		it("stake ST for ST Prime", async () => {
-			const uuidSTP = await openSTUtility.uuidSTPrime.call();
-			// transfer ST to staker account
-			Assert.ok(await simpleToken.transfer(staker, AMOUNT_ST, { from: deployMachine }));
-			// staker sets allowance for OpenSTValue
-			Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: staker }));
-			// for testing purpose query nonce in advance
-			var nonce = await openSTValue.getNextNonce.call(staker);
-			Assert.equal(nonce, 1);
-			// staker calls OpenSTValue.stake to initiate the staking for ST' with uuidSTP
-			// with staker as the beneficiary
-			const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, staker, { from: staker });
-			utils.logResponse(o, "OpenSTValue.stake");
-			openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, staker, nonce, staker,
-				AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
-		});
-
-		it("Report gas usage: staking Simple Token Prime", async () => {
-			utils.printGasStatistics();
-			utils.clearReceipts();
-		});
-
-    // propose branded token
-
-    it("propose branded token for member company", async() => {
-
-      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, {from: requester});
-      var eventLog = result.logs[0];
-
-      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
-
-      registeredBrandedTokenUuid = eventLog.args._uuid;
-      registeredBrandedToken = eventLog.args._token;
-
-    });
-
-    // register Branded Token on Utility Chain
-
-    it("register branded token on utility chain", async() => {
-
-      const result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name,
-        conversionRate, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
-
-      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
-
-      openSTUtilityUtils.checkRegisteredBrandedTokenEventOnProtocol(formattedDecodedEvents, registrarUC.address,
-        registeredBrandedToken, registeredBrandedTokenUuid, symbol, name, conversionRate, requester);
-
-    });
-
-    // register Utility Token on Value Chain
-
-    it("register utility token on value chain", async() => {
-
-      const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate,
-        CHAINID_UTILITY, requester, registeredBrandedTokenUuid, { from: intercommVC });
-
-      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTValue.address, openSTValueArtifacts.abi);
-
-      openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
-        symbol, name, 18, conversionRate, CHAINID_UTILITY, requester);
-
-    });
 
 	});
 });
