@@ -230,5 +230,30 @@ contract('OpenST', function(accounts) {
 		    });
 		});
 
+		// stake ST for BT
+		context('stake Simple Token for Branded Token', function() {
+
+				it("stake Simple Token", async() => {
+
+				});
+
+				it("confirm staking intent for Branded Token", async() => {
+
+				});
+
+				it("process staking", async() => {
+
+				});
+
+				it("process minting", async() => {
+
+				});
+
+				it("claim Branded Token", async() => {
+
+				});
+
+		});
+
 	});
 });
