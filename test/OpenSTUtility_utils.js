@@ -126,6 +126,29 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
 }
 
+module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEvents, _uuid, _stakingIntentHash,
+	_staker, _beneficiary, _amountST, _amountUT) => {
+
+  var event = formattedDecodedEvents['StakingIntentConfirmed'];
+
+  assert.notEqual(event, null);
+
+	if (Number.isInteger(_amountST)) {
+    _amountST = new BigNumber(_amountST);
+  }
+
+  if (Number.isInteger(_amountUT)) {
+    _amountUT = new BigNumber(_amountUT);
+  }
+
+  assert.equal(event._uuid, _uuid);
+  assert.equal(event._stakingIntentHash, _stakingIntentHash);
+  assert.equal(event._staker, _staker);
+  assert.equal(event._beneficiary, _beneficiary);
+  assert.equal(event._amountST, _amountST.toNumber());
+  assert.equal(event._amountUT, _amountUT.toNumber());
+}
+
 module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);

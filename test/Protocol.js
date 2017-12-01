@@ -30,6 +30,7 @@ const ProtocolUtils = require('./Protocol_utils.js');
 
 const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
 const openSTValueArtifacts = artifacts.require("./OpenSTValue.sol");
+const BrandedToken = artifacts.require("./BrandedToken.sol");
 
 const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
@@ -74,8 +75,10 @@ contract('OpenST', function(accounts) {
 		var openSTValue = null;
 		var openSTUtility = null;
 		var stPrime = null;
+		var brandedToken = null
 
 		var stpContractAddress = null;
+    var simpleStakeContractAddress = null;
 		var registeredBrandedTokenUuid = null;
 		var registeredBrandedToken = null;
 		var uuidSTP = null;
@@ -156,7 +159,7 @@ contract('OpenST', function(accounts) {
 				// registrar registers staking intent on utility chain
 				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, staker, nonce,
 					staker, AMOUNT_ST, AMOUNT_ST, unlockHeight, stakingIntentHash, { from: intercommUC });
-				utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
+				  utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
 			});
 
 			it("process staking", async () => {
@@ -199,6 +202,9 @@ contract('OpenST', function(accounts) {
 
 		      registeredBrandedTokenUuid = eventLog.args._uuid;
 		      registeredBrandedToken = eventLog.args._token;
+          brandedToken = BrandedToken.at(registeredBrandedToken);
+
+          utils.logResponse(result, "OpenSTUtility.proposeBrandedToken");
 
 		    });
 
@@ -214,6 +220,8 @@ contract('OpenST', function(accounts) {
 		      openSTUtilityUtils.checkRegisteredBrandedTokenEventOnProtocol(formattedDecodedEvents, registrarUC.address,
 		        registeredBrandedToken, registeredBrandedTokenUuid, symbol, name, conversionRate, requester);
 
+          utils.logResponse(result, "OpenSTUtility.registerBrandedToken");
+
 		    });
 
 		    // register Utility Token on Value Chain
@@ -228,7 +236,19 @@ contract('OpenST', function(accounts) {
 		     	openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 		    		symbol, name, 18, conversionRate, CHAINID_UTILITY, requester);
 
+          var event = formattedDecodedEvents['UtilityTokenRegistered'];
+
+          simpleStakeContractAddress = event.stake;
+
+          utils.logResponse(result, "OpenSTValue.registerUtilityToken");
+
 		    });
+
+        it("report gas usage: register and propose branded token", async () => {
+          utils.printGasStatistics();
+          utils.clearReceipts();
+        });
+
 		});
 
 		// stake ST for BT
@@ -249,34 +269,66 @@ contract('OpenST', function(accounts) {
 					// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
 					// with requester as the beneficiary
 					var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
-					openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0],
-						registeredBrandedTokenUuid,
-						requester,
-						nonce,
-						requester,
-						AMOUNT_ST,
-						AMOUNT_BT,
-						CHAINID_UTILITY);
-					stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+
+					openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, requester, nonce,
+						requester, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
+
+          stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 					unlockHeight = stakeResult.logs[0].args._unlockHeight;
+          nonce = stakeResult.logs[0].args._stakerNonce;
+
+          utils.logResponse(stakeResult, "OpenSTUtility.approveAndStake");
 
 		    });
 
 				it("confirm staking intent for Branded Token", async() => {
 
+          const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
+            requester, nonce, requester, AMOUNT_ST, AMOUNT_BT, unlockHeight, stakingIntentHash, { from: intercommUC });
+
+          var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
+
+          openSTUtilityUtils.checkStakingIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+            stakingIntentHash, requester, requester, AMOUNT_ST, AMOUNT_BT);
+
+          utils.logResponse(result, "OpenSTUtility.confirmStakingIntent");
+
 				});
 
 				it("process staking", async() => {
+          const result = await openSTValue.processStaking(stakingIntentHash, { from: requester });
+
+          openSTValueUtils.checkProcessedStakeEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+            simpleStakeContractAddress, requester, AMOUNT_ST, AMOUNT_BT);
+
+          utils.logResponse(result, "OpenSTValue.processStaking");
 
 				});
 
 				it("process minting", async() => {
+          const result = await openSTUtility.processMinting(stakingIntentHash, { from: requester });
 
+          openSTUtilityUtils.checkProcessedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+            registeredBrandedToken, requester, requester, AMOUNT_BT);
+
+          utils.logResponse(result, "OpenSTValue.processminting");
 				});
 
 				it("claim Branded Token", async() => {
-
+          var balanceBefore = await brandedToken.balanceOf(requester);
+          const o = await brandedToken.claim(requester, { from: intercommUC });
+          var balanceAfter = await brandedToken.balanceOf(requester);
+          console.log(balanceBefore, balanceAfter);
+          var totalSupply = await brandedToken.totalSupply.call();
+          console.log(totalSupply.toNumber());
+          Assert.equal(totalSupply.toNumber(), AMOUNT_BT.toNumber());
+          Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_BT.toNumber());
 				});
+
+        it("report gas usage: stake Simple Token for Branded Token", async () => {
+           utils.printGasStatistics();
+           utils.clearReceipts();
+        });
 
 		});
 
