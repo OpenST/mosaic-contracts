@@ -61,6 +61,7 @@ contract('OpenST', function(accounts) {
 	const staker        = accounts[7];
 
 	const AMOUNT_ST = new BigNumber(1000).mul(DECIMALSFACTOR);
+	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
 
 
 	describe('Setup Utility chain with Simple Token Prime', function () {
@@ -233,9 +234,33 @@ contract('OpenST', function(accounts) {
 		// stake ST for BT
 		context('stake Simple Token for Branded Token', function() {
 
-				it("stake Simple Token", async() => {
+				it("approve and stake Simple Token", async() => {
+					// transfer ST to requester account
+					Assert.ok(await simpleToken.transfer(requester, AMOUNT_ST, { from: deployMachine }));
+					// Check for requester simpleToken Balance
+					var balanceOfRequester = await simpleToken.balanceOf(requester);
+					Assert.equal(balanceOfRequester, AMOUNT_ST.toNumber());
+					// requester sets allowance for OpenSTValue
+					Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: requester }));
 
-				});
+					//  Query nonce in advance
+					nonce = await openSTValue.getNextNonce.call(requester);
+					Assert.equal(nonce, 1);
+					// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
+					// with requester as the beneficiary
+					var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
+					openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0],
+						registeredBrandedTokenUuid,
+						requester,
+						nonce,
+						requester,
+						AMOUNT_ST,
+						AMOUNT_BT,
+						CHAINID_UTILITY);
+					stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+					unlockHeight = stakeResult.logs[0].args._unlockHeight;
+
+		    });
 
 				it("confirm staking intent for Branded Token", async() => {
 
