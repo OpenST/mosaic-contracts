@@ -223,7 +223,12 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(_stakingIntentHash != "");
 
 		Stake storage stake = stakes[_stakingIntentHash];
-		require(stake.staker == msg.sender);
+		// note: as processStaking incurs a cost for the staker, we provide a fallback
+		// in v0.9 for registrar to process the staking on behalf of the staker;
+		// this will be replaced with a signature carry-over implementation instead, where
+		// the signature of the intent hash suffices on value and utility chain, decoupling
+		// it from the transaction to processStaking and processMinting
+		require(stake.staker == msg.sender || registrar == msg.sender);
 		// as this bears the cost, there is no need to require
 		// that the stake.unlockHeight is not yet surpassed
 		// as is required on processMinting

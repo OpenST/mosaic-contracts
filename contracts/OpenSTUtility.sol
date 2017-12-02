@@ -107,7 +107,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	uint256 public chainIdUtility;
 	address public registrar;
 	/// registered branded tokens 
-	mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
+	mapping(bytes32 /* uuid */ => RegisteredToken) registeredTokens;
 	/// name reservation is first come, first serve
 	mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
 	/// symbol reserved for unique API routes
@@ -534,7 +534,13 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(_redemptionIntentHash != "");
 
     	Redemption storage redemption = redemptions[_redemptionIntentHash];
-    	require(redemption.redeemer == msg.sender);
+
+    	// note: as processRedemption incurs a cost for the staker, we provide a fallback
+		// in v0.9 for registrar to process the redemption on behalf of the staker;
+		// this will be replaced with a signature carry-over implementation instead, where
+		// the signature of the intent hash suffices on value and utility chain, decoupling
+		// it from the transaction to processRedemption and processUnstaking
+    	require(redemption.redeemer == msg.sender || registrar == msg.sender);
 
     	// as process redemption bears the cost there is no need to require
     	// the unlockHeight is not past, the same way as we do require for

@@ -300,7 +300,8 @@ contract('OpenSTValue', function(accounts) {
 		})
 
 		it('fails to process when msg.sender != staker', async () => {
-            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, { from: registrar }));
+			// registrar can additionally as a fallback process staking in v0.9
+            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, { from: accounts[5] }));
 		})
 
 		it('successfully processes', async () => {
@@ -470,6 +471,36 @@ contract('OpenSTValue', function(accounts) {
 			it('fails to reprocess', async () => {
 	            await Utils.expectThrow(openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer }));
 			})
+		})
+	})
+
+	describe('ProcessStaking with fallback', async () => {
+		before(async () => {
+	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+	        valueToken  = contracts.valueToken;
+	        openSTValue = contracts.openSTValue;
+        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+            await openSTValue.addCore(core.address, { from: registrar });
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+			stake = result.logs[0].args.stake;
+			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
+			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+			stakingIntentHash = result.logs[0].args._stakingIntentHash;
+	    })
+
+		it('successfully processes by registrar', async () => {
+			var openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
+			var stakeBal = await valueToken.balanceOf.call(stake);
+			assert.equal(openSTValueBal.toNumber(), 1);
+			assert.equal(stakeBal.toNumber(), 0);
+			result = await openSTValue.processStaking(stakingIntentHash, { from: registrar });
+
+			openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
+			stakeBal = await valueToken.balanceOf.call(stake);
+			assert.equal(openSTValueBal.toNumber(), 0);
+			assert.equal(stakeBal.toNumber(), 1);
+            await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], 1, 10);
 		})
 	})
 })
