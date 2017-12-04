@@ -75,8 +75,8 @@ const SimpleStake = artifacts.require("./SimpleStake.sol");
 /// 	fails to confirm when redemptionIntentHash is empty
 /// 	fails to confirm when nonce is not exactly 1 greater than previously
 /// 	fails to confirm when redemptionIntentHash does not match calculated hash
-/// 	fails to confirm when token balance of stake is not >= amountST
-///		successfully confirms
+/// 	fails to confirm when token balance of stake is not >= amountST // Fails
+///		successfully confirms // Fails
 ///		fails to confirm a replay
 ///
 /// ProcessUnstaking
@@ -377,11 +377,13 @@ contract('OpenSTValue', function(accounts) {
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce.minus(1), amountUT, redemptionUnlockHeight, "bad hash", { from: registrar }));
 		})
 
+		// Fails because 1/10 == 0 in Solidity, and 0 balance >= 0 amountST
 		it('fails to confirm when token balance of stake is not >= amountST', async () => {
 			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar }));
 		})
 
+		// Fails because of and in relation to cause of preceding failure
 		it('successfully confirms', async () => {
 			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
 			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
