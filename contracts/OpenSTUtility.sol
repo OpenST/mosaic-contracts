@@ -78,6 +78,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		uint256 _chainIdValue);
 	event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
 		address _redeemer, uint256 _amount);
+	event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+		address _redeemer, uint256 _amountUT);
 
 	/*
 	 *  Constants
@@ -398,12 +400,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
     function revertMinting(
     	bytes32 _stakingIntentHash)
     	external
-    	onlyRegistrar
     	returns (
     	bytes32 uuid,
-    	uint256 amount,
     	address staker,
-    	address beneficiary)
+    	address beneficiary,
+    	uint256 amount)
     {
     	require(_stakingIntentHash != "");
 
@@ -414,9 +415,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(mint.expirationHeight > 0);
     	require(mint.expirationHeight <= block.number);
 
-    	RevertedMint(mint.uuid, _stakingIntentHash, mint.staker, mint.beneficiary,
-    		mint.amount);
-
     	uuid = mint.uuid;
     	amount = mint.amount;
     	staker = mint.staker;
@@ -424,7 +422,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	delete mints[_stakingIntentHash];
 
-    	return (uuid, amount, staker, beneficiary);
+    	RevertedMint(uuid, _stakingIntentHash, staker, beneficiary, amount);
+
+    	return (uuid, staker, beneficiary, amount);
     }
 
     /// @dev redeemer must set an allowance for the branded token with OpenSTUtility
@@ -553,8 +553,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		external
 		returns (
 		bytes32 uuid,
-		uint256 amountUT,
-		address redeemer)
+		address redeemer,
+		uint256 amountUT)
 	{
 		require(_redemptionIntentHash != "");
 
@@ -579,7 +579,10 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		delete redemptions[_redemptionIntentHash];
 
-		return (uuid, amountUT, redeemer);
+		// fire event
+		RevertedRedemption(uuid, _redemptionIntentHash, redeemer, amountUT);
+
+		return (uuid, redeemer, amountUT);
 	}
 
 	/*

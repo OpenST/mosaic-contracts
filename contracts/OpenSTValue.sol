@@ -53,6 +53,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 	event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address stake, address _redeemer, uint256 _amountST);
+    event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+    	address _redeemer, uint256 _amountST);
 
 	/*
 	 *  Constants
@@ -354,6 +356,35 @@ contract OpenSTValue is OpsManaged, Hasher {
 		delete unstakes[_redemptionIntentHash];
 
 		return stakeAddress;
+	}
+
+	function revertUnstaking(
+		bytes32 _redemptionIntentHash)
+		external
+		onlyRegistrar
+		returns (
+		bytes32 uuid,
+		address redeemer,
+		uint256 amountST)
+	{
+		require(_redemptionIntentHash != "");
+		
+		Unstake storage unstake = unstakes[_redemptionIntentHash];
+
+    	// require that the unstake has expired and that the redeemer has not
+    	// processed the unstaking, ie unstake has not been deleted
+    	require(unstake.expirationHeight > 0);
+    	require(unstake.expirationHeight <= block.number);
+
+    	uuid = unstake.uuid;
+    	redeemer = unstake.redeemer;
+    	amountST = unstake.amountST;
+
+    	delete unstakes[_redemptionIntentHash];
+
+    	RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
+
+    	return (uuid, redeemer, amountST);
 	}
 
     /*
