@@ -377,6 +377,7 @@ contract('OpenSTUtility', function(accounts) {
 		})
 	})
 
+/*
 	describe('AddNameReservation', async () => {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
@@ -480,4 +481,5 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] }));
 		})
 	})
+*/
 })

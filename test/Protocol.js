@@ -173,9 +173,7 @@ contract('OpenST', function(accounts) {
 				const o = await stPrime.claim(staker, { from: intercommUC });
 				utils.logResponse(o, "STPrime.claim");
 				var balanceAfter = await web3.eth.getBalance(staker);
-				console.log(balanceBefore, balanceAfter);
 				var totalSupply = await stPrime.totalSupply.call();
-				console.log(totalSupply.toNumber());
 				Assert.equal(totalSupply.toNumber(), AMOUNT_ST.toNumber());
 				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_ST.toNumber());
 			});

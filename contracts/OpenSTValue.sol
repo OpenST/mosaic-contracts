@@ -252,7 +252,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     	Stake storage stake = stakes[_stakingIntentHash];
 
-    	require(stake.unlockHeight < block.number);
+    	// require that the stake is unlocked and exists
+    	require(stake.unlockHeight > 0);
+		require(stake.unlockHeight <= block.number);
 
     	assert(valueToken.balanceOf(address(this)) >= stake.amountST);
     	// revert the amount that was intended to be staked back to staker

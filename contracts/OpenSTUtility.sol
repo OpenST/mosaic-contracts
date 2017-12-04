@@ -71,6 +71,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
     	address _staker, address _beneficiary, uint256 _amount);
+	event RevertedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
+		address _beneficiary, uint256 _amountUT);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
 		uint256 _chainIdValue);
@@ -393,6 +395,38 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	return tokenAddress;
     }
 
+    function revertMinting(
+    	bytes32 _stakingIntentHash)
+    	external
+    	onlyRegistrar
+    	returns (
+    	bytes32 uuid,
+    	uint256 amount,
+    	address staker,
+    	address beneficiary)
+    {
+    	require(_stakingIntentHash != "");
+
+    	Mint storage mint = mints[_stakingIntentHash];
+
+    	// require that the mint has expired and that the staker has not
+    	// processed the minting, ie mint has not been deleted
+    	require(mint.expirationHeight > 0);
+    	require(mint.expirationHeight <= block.number);
+
+    	RevertedMint(mint.uuid, _stakingIntentHash, mint.staker, mint.beneficiary,
+    		mint.amount);
+
+    	uuid = mint.uuid;
+    	amount = mint.amount;
+    	staker = mint.staker;
+    	beneficiary = mint.beneficiary;
+
+    	delete mints[_stakingIntentHash];
+
+    	return (uuid, amount, staker, beneficiary);
+    }
+
     /// @dev redeemer must set an allowance for the branded token with OpenSTUtility
     ///      as the spender so that the branded token can be taken into escrow by OpenSTUtility
     ///      note: for STPrime, call OpenSTUtility.redeemSTPrime as a payable function
@@ -514,6 +548,40 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return tokenAddress;
 	}
 
+	function revertRedemption(
+		bytes32 _redemptionIntentHash)
+		external
+		returns (
+		bytes32 uuid,
+		uint256 amountUT,
+		address redeemer)
+	{
+		require(_redemptionIntentHash != "");
+
+		Redemption storage redemption = redemptions[_redemptionIntentHash];
+
+    	// require that the redemption is unlocked and exists
+    	require(redemption.unlockHeight > 0);
+		require(redemption.unlockHeight <= block.number);
+
+		uuid = redemption.uuid;
+		amountUT = redemption.amountUT;
+		redeemer = redemption.redeemer;		
+
+		if (redemption.uuid == uuidSTPrime) {
+	        // transfer throws if insufficient funds
+			redeemer.transfer(amountUT);
+		} else {
+		   	EIP20Interface token = EIP20Interface(registeredTokens[redemption.uuid].token);
+
+			require(token.transfer(redemption.redeemer, redemption.amountUT));
+		}
+
+		delete redemptions[_redemptionIntentHash];
+
+		return (uuid, amountUT, redeemer);
+	}
+
 	/*
 	 *  Public view functions
 	 */ 
@@ -531,63 +599,63 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		registeredToken.registrar);
     }
 
-	/*
-	 *  Operation functions
-	 */
-	/// @dev TODO: add events to trigger for each action
-	function addNameReservation(
-		bytes32 _hashName,
-		address _requester)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		address requester = nameReservation[_hashName]; 
-		if (requester == _requester) return true;
-		if (requester == address(0)) {
-			nameReservation[_hashName] = _requester;
-			return true;
-		}
-		return false;
-	}
+	// /*
+	//  *  Operation functions
+	//  */
+	// /// @dev TODO: add events to trigger for each action
+	// function addNameReservation(
+	// 	bytes32 _hashName,
+	// 	address _requester)
+	// 	public
+	// 	onlyAdminOrOps
+	// 	returns (bool success)
+	// {
+	// 	address requester = nameReservation[_hashName]; 
+	// 	if (requester == _requester) return true;
+	// 	if (requester == address(0)) {
+	// 		nameReservation[_hashName] = _requester;
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
 
-	function setSymbolRoute(
-		bytes32 _hashSymbol,
-		address _token)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		address token = symbolRoute[_hashSymbol];
-		if (token == _token) return true;
-		if (token == address(0)) {
-			symbolRoute[_hashSymbol] = _token;
-			return true;
-		}
-		return false;
-	}
+	// function setSymbolRoute(
+	// 	bytes32 _hashSymbol,
+	// 	address _token)
+	// 	public
+	// 	onlyAdminOrOps
+	// 	returns (bool /* success */)
+	// {
+	// 	address token = symbolRoute[_hashSymbol];
+	// 	if (token == _token) return true;
+	// 	if (token == address(0)) {
+	// 		symbolRoute[_hashSymbol] = _token;
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
 
-	function removeNameReservation(
-		bytes32 _hashName)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		require(nameReservation[_hashName] != address(0));
+	// function removeNameReservation(
+	// 	bytes32 _hashName)
+	// 	public
+	// 	onlyAdminOrOps
+	// 	returns (bool /* success */)
+	// {
+	// 	require(nameReservation[_hashName] != address(0));
 
-		delete nameReservation[_hashName];
-		return true;
-	}
+	// 	delete nameReservation[_hashName];
+	// 	return true;
+	// }
 
-	function removeSymbolRoute(
-		bytes32 _hashSymbol)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		require(symbolRoute[_hashSymbol] != address(0));
+	// function removeSymbolRoute(
+	// 	bytes32 _hashSymbol)
+	// 	public
+	// 	onlyAdminOrOps
+	// 	returns (bool /* success */)
+	// {
+	// 	require(symbolRoute[_hashSymbol] != address(0));
 
-		delete symbolRoute[_hashSymbol];
-		return true;
-	}
+	// 	delete symbolRoute[_hashSymbol];
+	// 	return true;
+	// }
 }
