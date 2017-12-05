@@ -218,6 +218,28 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionI
 	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 }
 
+module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecodedEvents, uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT) => {
+	var event = formattedDecodedEvents['RedemptionIntentConfirmed'];
+	assert.notEqual(event, null);
+
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	if (Number.isInteger(_amountUT)) {
+		_amountUT = new BigNumber(_amountUT);
+	}
+
+	var	_unlockHeight = new BigNumber(event._expirationHeight);
+
+	assert.equal(event._uuid, uuid);
+	assert.equal(event._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event._redeemer, _redeemer);
+	assert.equal(event._amountST, _amountST.toNumber());
+	assert.equal(event._amountUT, _amountUT.toNumber());
+	assert.isAbove(_unlockHeight.toNumber(), 0);
+}
+
 module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _amountST) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
