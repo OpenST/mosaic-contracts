@@ -110,7 +110,7 @@ module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _st
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 }
 
-module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _unlockHeight) => {
+module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _expirationHeight) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -119,8 +119,8 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionI
 		_amountUT = new BigNumber(_amountUT);
 	}
 
-	if (Number.isInteger(_unlockHeight)) {
-		_unlockHeight = new BigNumber(_unlockHeight);
+	if (Number.isInteger(_expirationHeight)) {
+		_expirationHeight = new BigNumber(_expirationHeight);
 	}
 
 	assert.equal(event.event, "RedemptionIntentConfirmed");
@@ -129,7 +129,7 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionI
 	assert.equal(event.args._redeemer, _redeemer);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
+	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
 }
 
 module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _amountST) => {

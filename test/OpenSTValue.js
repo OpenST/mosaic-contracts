@@ -68,16 +68,17 @@ const SimpleStake = artifacts.require("./SimpleStake.sol");
 ///		fails to reprocess
 ///
 /// ConfirmRedemptionIntent
-/// 	fails to confirm by non-registrar
-/// 	fails to confirm when utility token does not have a simpleStake address
-/// 	fails to confirm when amountUT is not > 0
-/// 	fails to confirm when redemptionUnlockHeight is not > 0
-/// 	fails to confirm when redemptionIntentHash is empty
-/// 	fails to confirm when nonce is not exactly 1 greater than previously
-/// 	fails to confirm when redemptionIntentHash does not match calculated hash
-/// 	fails to confirm when token balance of stake is not >= amountST // Fails
-///		successfully confirms // Fails
-///		fails to confirm a replay
+/// 		fails to confirm by non-registrar
+/// 		fails to confirm when utility token does not have a simpleStake address
+/// 		fails to confirm when amountUT is not > 0
+/// 		fails to confirm when redemptionUnlockHeight is not > 0
+/// 		fails to confirm when redemptionIntentHash is empty
+/// 		fails to confirm when nonce is not exactly 1 greater than previously
+/// 		fails to confirm when redemptionIntentHash does not match calculated hash
+/// 		fails to confirm when token balance of stake is not >= amountST
+///			successfully confirms
+///			fails to confirm a replay
+/// 		fails to confirm when amountUT does not convert into at least 1 STWei // Fails
 ///
 /// ProcessUnstaking
 /// 	when expirationHeight is > block number
@@ -326,7 +327,7 @@ contract('OpenSTValue', function(accounts) {
 		var redeemer 				= accounts[2];
 		var redemptionIntentHash 	= null;
 		var redemptionUnlockHeight 	= 80668;
-		var amountUT 				= 1;
+		var amountUT 				= conversionRate;
 
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
@@ -377,16 +378,14 @@ contract('OpenSTValue', function(accounts) {
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce.minus(1), amountUT, redemptionUnlockHeight, "bad hash", { from: registrar }));
 		})
 
-		// Fails because 1/10 == 0 in Solidity, and 0 balance >= 0 amountST
 		it('fails to confirm when token balance of stake is not >= amountST', async () => {
 			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar }));
 		})
 
-		// Fails because of and in relation to cause of preceding failure
 		it('successfully confirms', async () => {
-			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
-			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+			await valueToken.approve(openSTValue.address, 2, { from: accounts[0] });
+			result = await openSTValue.stake(checkUuid, 2, accounts[0], { from: accounts[0] });
 			stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, { from: accounts[0] });
 
@@ -396,12 +395,24 @@ contract('OpenSTValue', function(accounts) {
 			assert.equal(amountST, amountUT / conversionRate);
 
             result = await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar });
-            await OpenSTValue_utils.checkRedemptionIntentConfirmedEvent(result.logs[0], checkUuid, redemptionIntentHash, redeemer, amountST, amountUT, redemptionUnlockHeight);
+			var BLOCKS_TO_WAIT_SHORT = 240;
+			var blockNumber = web3.eth.blockNumber;
+			var expirationHeight = blockNumber + BLOCKS_TO_WAIT_SHORT;
+            await OpenSTValue_utils.checkRedemptionIntentConfirmedEvent(result.logs[0], checkUuid, redemptionIntentHash, redeemer, amountST, amountUT, expirationHeight);
 		})
 
 		it('fails to confirm a replay', async () => {
 			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar }));
+		})
+
+		// Fails because logic does not prevent attempting to redeem 1 UTWei when the conversion rate is greater than 1
+		it('fails to confirm when amountUT does not convert into at least 1 STWei', async () => {
+			nonce = await openSTValue.getNextNonce.call(redeemer);
+
+			// 1 STWei == 10 UTWei at the given conversion rate
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, 1, redemptionUnlockHeight);
+            await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, 1, redemptionUnlockHeight, redemptionIntentHash, { from: registrar }));
 		})
 	})
 
