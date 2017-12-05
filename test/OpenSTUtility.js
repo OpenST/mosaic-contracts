@@ -22,7 +22,6 @@
 const Utils = require('./lib/utils.js');
 const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');
 const BrandedToken = artifacts.require("./BrandedToken.sol");
-const STPrime = artifacts.require("./STPrime.sol");
 
 ///
 /// Test stories
@@ -58,12 +57,12 @@ const STPrime = artifacts.require("./STPrime.sol");
 /// 	successfully confirms
 ///
 /// ProcessMinting
-/// 	when unlockHeight is > block number
+/// 	when expirationHeight is > block number
 ///			fails if stakingIntentHash is empty
 ///			fails if msg.sender != staker
 ///			successfully mints
 /// 		fails to re-process a processed mint
-///		when unlockHeight is < block number // TBD: how or where to test this practically
+///		when expirationHeight is < block number // TBD: how or where to test this practically
 ///
 ///	Redeem
 /// 	fails to redeem when uuid is empty
@@ -77,6 +76,15 @@ const STPrime = artifacts.require("./STPrime.sol");
 ///		fails to redeem when msg.value is not > 0
 /// 	fails to redeem when nonce is not > previously
 /// 	successfully redeems
+///
+/// ProcessRedeeming
+///		BrandedToken
+/// 		fails to process if redemptionIntentHash is empty
+/// 		fails to process if msg.sender != redeemer
+/// 		successfully processes
+/// 		fails to reprocess
+///		STPrime
+/// 		successfully processes
 ///
 /// AddNameReservation
 ///		fails to add by non-adminOrOps
@@ -115,6 +123,7 @@ contract('OpenSTUtility', function(accounts) {
     const hashSymbol 			= "hashSymbol";
     const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     const token 	 			= "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    const redeemer 				= accounts[0];
 
 	var result 					= null;
 	var checkBtUuid 			= null;
@@ -165,8 +174,11 @@ contract('OpenSTUtility', function(accounts) {
 		it('successfully proposes', async () => {
             assert.equal(await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate), checkBtUuid);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
-            // Event cannot be tested because the address of token is not known
-            // OpenSTUtility_utils.checkRequestedBrandedTokenEvent(result.logs[0], accounts[0], token, btUuid, symbol, name, conversionRate);
+
+            // Token address is returned by ProposedBrandedToken but verified below rather than by checkProposedBrandedTokenEvent
+            OpenSTUtility_utils.checkProposedBrandedTokenEvent(result.logs[0], accounts[0], checkBtUuid, symbol, name, conversionRate);
+            var brandedTokenContract = new BrandedToken(result.logs[0].args._token);
+            assert.equal(await brandedTokenContract.uuid.call(), checkBtUuid);
 		})
 	})
 
@@ -260,7 +272,7 @@ contract('OpenSTUtility', function(accounts) {
 	})
 
 	describe('ProcessMinting', async () => {
-		context('when unlockHeight is > block number', async () => {
+		context('when expirationHeight is > block number', async () => {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
@@ -306,39 +318,39 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when uuid is empty', async () => {
-            await Utils.expectThrow(openSTUtility.redeem("", 3, 2, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.redeem("", 3, 2, { from: redeemer }));
 		})
 
 		it('fails to redeem when amount is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: redeemer }));
 		})
 
 		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 1, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 1, { from: redeemer }));
 		})
 
 		it('fails to redeem when uuid is uuidSTPrime', async () => {
 			uuidSTPrime = await openSTUtility.uuidSTPrime.call();
-            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, 3, 2, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, 3, 2, { from: redeemer }));
 		})
 
 		it('fails to redeem if not approved to transfer the amount', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 2, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 2, { from: redeemer }));
 		})
 
 		it('successfully redeems', async () => {
 			var brandedTokenContract = new BrandedToken(brandedToken);
 			await brandedTokenContract.claim(accounts[0]);
-			await brandedTokenContract.approve(openSTUtility.address, 3, { from: accounts[0] });
-            var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: accounts[0] });
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
+            var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: redeemer });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[0].plus(1)
             var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, 3, unlockHeight);
-            result = await openSTUtility.redeem(checkBtUuid, 3, 2, { from: accounts[0] });
+            result = await openSTUtility.redeem(checkBtUuid, 3, 2, { from: redeemer });
 
             await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], checkBtUuid, checkRedemptionIntentHash, brandedToken,
-			accounts[0], 2, 3, unlockHeight, chainIdValue);
+			redeemer, 2, 3, unlockHeight, chainIdValue);
 		})
 	})
 
@@ -357,25 +369,110 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when msg.value is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: accounts[0], value: 0 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: redeemer, value: 0 }));
 		})
 
 		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(1, { from: accounts[0], value: 2 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(1, { from: redeemer, value: 2 }));
 		})
 
 		it('successfully redeems', async () => {
-            var redeemReturns = await openSTUtility.redeemSTPrime.call(2, { from: accounts[0], value: 2 });
+            var redeemReturns = await openSTUtility.redeemSTPrime.call(2, { from: redeemer, value: 2 });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[1].plus(1)
-            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, accounts[0], 2, 2, unlockHeight);
-            result = await openSTUtility.redeemSTPrime(2, { from: accounts[0], value: 2 });
+            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, 2, unlockHeight);
+            result = await openSTUtility.redeemSTPrime(2, { from: redeemer, value: 2 });
 
             await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
-			accounts[0], 2, 2, unlockHeight, chainIdValue);
+			redeemer, 2, 2, unlockHeight, chainIdValue);
 		})
 	})
+
+	describe('ProcessRedeeming', async () => {
+		var redemptionIntentHash = null;
+		var brandedToken = null;
+		var brandedTokenContract = null;
+
+		context('BrandedToken', async () => {
+			var redemptionAmount = 3;
+
+			before(async () => {
+		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        openSTUtility = contracts.openSTUtility;
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            brandedToken = result.logs[0].args._token;
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				brandedTokenContract = new BrandedToken(brandedToken);
+				await brandedTokenContract.claim(accounts[0]);
+				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
+
+			it('fails to process if redemptionIntentHash is empty', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming("", { from: redeemer }));
+			})
+
+			it('fails to process if msg.sender != redeemer', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[1] }));
+			})
+
+			it('successfully processes', async () => {
+				var openSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var totalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), brandedToken);
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				var postProcessOpenSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+			})
+
+			it('fails to reprocess', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer }));
+			})
+		})
+
+		context('STPrime', async () => {
+			var redemptionAmount = 2;
+
+			before(async () => {
+		        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        stPrime     			= contracts.stPrime;
+		        openSTUtility 			= contracts.openSTUtility;
+
+		        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
+	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668)
+
+	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				await stPrime.claim(accounts[0]);
+	            result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
+
+			it('successfully processes', async () => {
+				var stPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var totalSupply = await stPrime.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), stPrime.address);
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				var postProcessStPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var postProcessTotalSupply = await stPrime.totalSupply.call();
+				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+			})
+		})
+	})
+
 
 	describe('AddNameReservation', async () => {
 		before(async () => {
