@@ -181,9 +181,7 @@ contract('OpenST', function(accounts) {
 				const o = await stPrime.claim(staker, { from: intercommUC });
 				utils.logResponse(o, "STPrime.claim");
 				var balanceAfter = await web3.eth.getBalance(staker);
-				console.log(balanceBefore, balanceAfter);
 				var totalSupply = await stPrime.totalSupply.call();
-				console.log(totalSupply.toNumber());
 				Assert.equal(totalSupply.toNumber(), AMOUNT_ST.toNumber());
 				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_ST.toNumber());
 			});
@@ -322,9 +320,7 @@ contract('OpenST', function(accounts) {
           var balanceBefore = await brandedToken.balanceOf(requester);
           const o = await brandedToken.claim(requester, { from: intercommUC });
           var balanceAfter = await brandedToken.balanceOf(requester);
-          console.log(balanceBefore, balanceAfter);
           var totalSupply = await brandedToken.totalSupply.call();
-          console.log(totalSupply.toNumber());
           Assert.equal(totalSupply.toNumber(), AMOUNT_BT.toNumber());
           Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_BT.toNumber());
 				});
@@ -441,9 +437,6 @@ contract('OpenST', function(accounts) {
 					openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], uuidSTP, redemptionIntentHash, stPrime.address,
 						redeemer, nonce, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
 
-					console.log("STPrime redeemResult");
-					console.log(redeemResult);
-
 					utils.logResponse(redeemResult, "OpenSTUtility.STPrime.redeem");
 
 				});
@@ -464,11 +457,8 @@ contract('OpenST', function(accounts) {
 
 				it("process redemption", async() => {
 
-					console.log("redemptionIntentHash:"+redemptionIntentHash);
-					console.log("redeemer:"+redeemer);
+
 					var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
-					console.log("processRedeemingResult");
-					console.log(processRedeemingResult);
 
 					utils.logResponse(processRedeemingResult, "openSTUtility.STPrime.processRedeeming");
 
@@ -477,13 +467,11 @@ contract('OpenST', function(accounts) {
 				it("process unstake", async() => {
 
 					var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
-					console.log("processUnstakeResult");
-					console.log(processUnstakeResult);
 					utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
 
 				});
 
-				it("report gas usage: Redeem and Unstake Branded Token", async () => {
+				it("report gas usage: Redeem and Unstake Simple Token Prime", async () => {
 
 					utils.printGasStatistics();
 					utils.clearReceipts();
