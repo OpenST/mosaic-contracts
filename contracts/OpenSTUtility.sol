@@ -483,7 +483,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
     function processRedeeming(
-    	bytes23 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash)
     	external
     	returns (
     	address tokenAddress)
