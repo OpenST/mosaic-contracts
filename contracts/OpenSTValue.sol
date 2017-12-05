@@ -276,6 +276,11 @@ contract OpenSTValue is OpsManaged, Hasher {
     	UtilityToken storage utilityToken = utilityTokens[_uuid];
     	amountST = _amountUT.div(utilityToken.conversionRate);
 
+    	// check that the amount being redeemed is an integer amount
+    	// times the conversionRate
+    	uint256 assertAmountUT = amountST.mul(utilityToken.conversionRate);
+    	require(assertAmountUT == _amountUT);
+
     	require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
     	unstakes[redemptionIntentHash] = Unstake({
