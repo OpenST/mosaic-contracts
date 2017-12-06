@@ -56,6 +56,19 @@ module.exports.checkProposedBrandedTokenEvent = (event, _requester, _uuid, _symb
 	assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
 }
 
+module.exports.validateProposedBrandedTokenEvent = (event, _requester, _symbol, _name, _conversionRate) => {
+  if (Number.isInteger(_conversionRate)) {
+    _conversionRate = new BigNumber(_conversionRate);
+  }
+
+  assert.equal(event.event, "ProposedBrandedToken");
+  assert.equal(event.args._requester, _requester);
+  assert.equal(event.args._symbol, _symbol);
+  assert.equal(event.args._name, _name);
+  assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
+}
+
+
 module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _uuid, _symbol, _name, _conversionRate, _requester) => {
 	assert.equal(event.event, "RegisteredBrandedToken");
 	if (Number.isInteger(_conversionRate)) {
@@ -69,6 +82,25 @@ module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _u
 	assert.equal(event.args._name, _name);
 	assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
 	assert.equal(event.args._requester, _requester);
+}
+
+module.exports.checkRegisteredBrandedTokenEventOnProtocol = (formattedDecodedEvents, _registrar, _token, _uuid, _symbol, _name, _conversionRate, _requester) => {
+
+  var event = formattedDecodedEvents['RegisteredBrandedToken'];
+
+  assert.notEqual(event, null);
+
+  if (Number.isInteger(_conversionRate)) {
+    _conversionRate = new BigNumber(_conversionRate);
+  }
+
+  assert.equal(event._registrar, _registrar);
+  assert.equal(event._token, _token);
+  assert.equal(event._uuid, _uuid);
+  assert.equal(event._symbol, _symbol);
+  assert.equal(event._name, _name);
+  assert.equal(event._conversionRate, _conversionRate.toNumber());
+  assert.equal(event._requester, _requester);
 }
 
 module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
@@ -92,6 +124,29 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
+}
+
+module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEvents, _uuid, _stakingIntentHash,
+	_staker, _beneficiary, _amountST, _amountUT) => {
+
+  var event = formattedDecodedEvents['StakingIntentConfirmed'];
+
+  assert.notEqual(event, null);
+
+	if (Number.isInteger(_amountST)) {
+    _amountST = new BigNumber(_amountST);
+  }
+
+  if (Number.isInteger(_amountUT)) {
+    _amountUT = new BigNumber(_amountUT);
+  }
+
+  assert.equal(event._uuid, _uuid);
+  assert.equal(event._stakingIntentHash, _stakingIntentHash);
+  assert.equal(event._staker, _staker);
+  assert.equal(event._beneficiary, _beneficiary);
+  assert.equal(event._amountST, _amountST.toNumber());
+  assert.equal(event._amountUT, _amountUT.toNumber());
 }
 
 module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {

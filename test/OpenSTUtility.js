@@ -473,6 +473,9 @@ contract('OpenSTUtility', function(accounts) {
 		})
 	})
 
+/**
+ *  note: code is removed from contracts as unused and space needed for protocol completion
+    TODO: remove once certain no such logic is required
 
 	describe('AddNameReservation', async () => {
 		before(async () => {
@@ -577,4 +580,5 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] }));
 		})
 	})
+*/
 })

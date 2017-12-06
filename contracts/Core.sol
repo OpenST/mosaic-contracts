@@ -23,6 +23,9 @@ pragma solidity ^0.4.17;
 
 import "./CoreInterface.sol";
 
+
+/// @dev Core is a minimal stub that will become the anchoring and consensus point for
+///      the utility chain to validate itself against
 contract Core is CoreInterface {
 
 	/*

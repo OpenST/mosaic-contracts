@@ -9,7 +9,11 @@
     "moment": "^2.19.2",
     "web3": "^0.20.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "truffle": "^4.0.1",
+    "ganache-cli": "^6.0.3",
+    "abi-decoder": "^1.0.9"
+  },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
 }

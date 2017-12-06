@@ -264,7 +264,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	bytes32 redemptionIntentHash = hashRedemptionIntent(
     		_uuid,
     		_redeemer,
-    		nonces[_redeemer]++,
+    		nonces[_redeemer],
     		_amountUT,
     		_redemptionUnlockHeight
     	);
@@ -329,9 +329,43 @@ contract OpenSTValue is OpsManaged, Hasher {
     	address _account)
     	public
     	view
-    	returns (uint256 nextNonce)
+    	returns (uint256 /* nextNonce */)
     {
     	return (nonces[_account] + 1);
+    }
+
+    function core(
+    	uint256 _chainIdUtility)
+    	external
+    	view
+    	returns (address /* core address */ )
+    {
+    	return address(cores[_chainIdUtility]);
+    }
+
+    function utilityTokenProperties(
+    	bytes32 _uuid)
+    	external
+    	view
+    	returns (
+    	string  symbol,
+    	string  name,
+    	uint256 conversionRate,
+    	uint8   decimals,
+    	uint256 chainIdUtility,
+    	address simpleStake,
+    	address stakingAccount
+    	/* utility token struct */ )
+    {
+    	UtilityToken storage utilityToken = utilityTokens[_uuid];
+    	return (
+    		utilityToken.symbol,
+    		utilityToken.name,
+    		utilityToken.conversionRate,
+    		utilityToken.decimals,
+    		utilityToken.chainIdUtility,
+    		address(utilityToken.simpleStake),
+    		utilityToken.stakingAccount);
     }
 
 	/*
