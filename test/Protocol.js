@@ -87,6 +87,7 @@ contract('OpenST', function(accounts) {
 		var stakingIntentHash = null;
 		var unlockHeight = null;
 		var redemptionIntentHash = null;
+		var redeemedAmountST = null;
 
 		//- [x] truffle complete deployment process
 
@@ -389,7 +390,7 @@ contract('OpenST', function(accounts) {
 				redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				var redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
 
@@ -401,6 +402,9 @@ contract('OpenST', function(accounts) {
 
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
 
+				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
+					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+
 				utils.logResponse(processRedeemingResult, "openSTUtility.processRedeeming");
 
 			});
@@ -408,6 +412,9 @@ contract('OpenST', function(accounts) {
 			it("process unstake", async() => {
 
 				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
+
+				openSTValueUtils.checkProcessedUnstakeEvent(processUnstakeResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
+					simpleStakeContractAddress, redeemer, redeemedAmountST);
 
 				utils.logResponse(processUnstakeResult, "openSTValue.processUnstaking");
 
@@ -454,8 +461,10 @@ contract('OpenST', function(accounts) {
 
 			it("process redemption", async() => {
 
-
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], uuidSTP, redemptionIntentHash,
+					stPrime.address, redeemer, REDEEM_AMOUNT_STPRIME)
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.STPrime.processRedeeming");
 
@@ -464,6 +473,10 @@ contract('OpenST', function(accounts) {
 			it("process unstake", async() => {
 
 				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
+
+				var event = processUnstakeResult.logs[0];
+				openSTValueUtils.checkProcessedUnstakeEvent(event, uuidSTP, redemptionIntentHash,
+					event.args.stake, redeemer, REDEEM_AMOUNT_STPRIME);
 				utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
 
 			});
