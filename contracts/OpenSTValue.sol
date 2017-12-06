@@ -47,10 +47,14 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+    event RevertedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
+    	address _staker, uint256 _amountST, uint256 _amountUT);
 	event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
 		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 	event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address stake, address _redeemer, uint256 _amountST);
+    event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+    	address _redeemer, uint256 _amountST);
 
 	/*
 	 *  Constants
@@ -238,6 +242,38 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return stakeAddress;
     }
 
+    function revertStaking(
+    	bytes32 _stakingIntentHash)
+    	external
+    	returns (
+    	bytes32 uuid,
+    	uint256 amountST,
+    	address staker)
+    {
+    	require(_stakingIntentHash != "");
+
+    	Stake storage stake = stakes[_stakingIntentHash];
+
+    	// require that the stake is unlocked and exists
+    	require(stake.unlockHeight > 0);
+		require(stake.unlockHeight <= block.number);
+
+    	assert(valueToken.balanceOf(address(this)) >= stake.amountST);
+    	// revert the amount that was intended to be staked back to staker
+		require(valueToken.transfer(stake.staker, stake.amountST));
+
+		uuid = stake.uuid;
+		amountST = stake.amountST;
+		staker = stake.staker;
+
+		RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
+    		stake.amountST, stake.amountUT);
+
+		delete stakes[_stakingIntentHash];
+
+		return (uuid, amountST, staker);
+    }
+
     function confirmRedemptionIntent(
     	bytes32 _uuid,
     	address _redeemer,
@@ -322,6 +358,35 @@ contract OpenSTValue is OpsManaged, Hasher {
 		delete unstakes[_redemptionIntentHash];
 
 		return stakeAddress;
+	}
+
+	function revertUnstaking(
+		bytes32 _redemptionIntentHash)
+		external
+		onlyRegistrar
+		returns (
+		bytes32 uuid,
+		address redeemer,
+		uint256 amountST)
+	{
+		require(_redemptionIntentHash != "");
+		
+		Unstake storage unstake = unstakes[_redemptionIntentHash];
+
+    	// require that the unstake has expired and that the redeemer has not
+    	// processed the unstaking, ie unstake has not been deleted
+    	require(unstake.expirationHeight > 0);
+    	require(unstake.expirationHeight <= block.number);
+
+    	uuid = unstake.uuid;
+    	redeemer = unstake.redeemer;
+    	amountST = unstake.amountST;
+
+    	delete unstakes[_redemptionIntentHash];
+
+    	RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
+
+    	return (uuid, redeemer, amountST);
 	}
 
     /*
