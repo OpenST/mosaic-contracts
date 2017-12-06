@@ -30,6 +30,7 @@ const ProtocolUtils = require('./Protocol_utils.js');
 
 const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
 const openSTValueArtifacts = artifacts.require("./OpenSTValue.sol");
+const BrandedToken = artifacts.require("./BrandedToken.sol");
 
 const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
@@ -59,12 +60,14 @@ contract('OpenST', function(accounts) {
 	const intercommUC   = accounts[5];
 	const requester     = accounts[6];
 	const staker        = accounts[7];
+	const redeemer      = accounts[8];
 
 	const AMOUNT_ST = new BigNumber(1000).mul(DECIMALSFACTOR);
-
+	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
+	const REDEEM_AMOUNT_BT = new BigNumber(5).mul(DECIMALSFACTOR);
+	const REDEEM_AMOUNT_STPRIME = new BigNumber(15).mul(DECIMALSFACTOR);
 
 	describe('Setup Utility chain with Simple Token Prime', function () {
-
 
 		var simpleToken = null;
 		var registrarVC = null;
@@ -75,12 +78,15 @@ contract('OpenST', function(accounts) {
 		var stPrime = null;
 
 		var stpContractAddress = null;
+    	var simpleStakeContractAddress = null;
 		var registeredBrandedTokenUuid = null;
 		var registeredBrandedToken = null;
+		var nonceBT = null;
 		var uuidSTP = null;
-		var nonce = null;
+		var nonceSTP = null;
 		var stakingIntentHash = null;
 		var unlockHeight = null;
+		var redemptionIntentHash = null;
 
 		//- [x] truffle complete deployment process
 
@@ -138,14 +144,14 @@ contract('OpenST', function(accounts) {
 				Assert.ok(await simpleToken.transfer(staker, AMOUNT_ST, { from: deployMachine }));
 				// staker sets allowance for OpenSTValue
 				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: staker }));
-				// for testing purpose query nonce in advance
-				nonce = await openSTValue.getNextNonce.call(staker);
-				Assert.equal(nonce, 1);
+				// for testing purpose query nonceSTP in advance
+				nonceSTP = await openSTValue.getNextNonce.call(staker);
+				Assert.equal(nonceSTP, 1);
 				// staker calls OpenSTValue.stake to initiate the staking for ST' with uuidSTP
 				// with staker as the beneficiary
 				const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, staker, { from: staker });
 				utils.logResponse(o, "OpenSTValue.stake");
-				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, staker, nonce, staker,
+				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, staker, nonceSTP, staker,
 					AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
 				stakingIntentHash = o.logs[0].args._stakingIntentHash;
 				unlockHeight = o.logs[0].args._unlockHeight;
@@ -153,9 +159,9 @@ contract('OpenST', function(accounts) {
 
 			it("confirm staking intent for Simple Token Prime", async () => {
 				// registrar registers staking intent on utility chain
-				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, staker, nonce,
+				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, staker, nonceSTP,
 					staker, AMOUNT_ST, AMOUNT_ST, unlockHeight, stakingIntentHash, { from: intercommUC });
-				utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
+				  utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
 			});
 
 			it("process staking", async () => {
@@ -196,7 +202,9 @@ contract('OpenST', function(accounts) {
 
 		      registeredBrandedTokenUuid = eventLog.args._uuid;
 		      registeredBrandedToken = eventLog.args._token;
+	          brandedToken = BrandedToken.at(registeredBrandedToken);
 
+    	      utils.logResponse(result, "OpenSTUtility.proposeBrandedToken");
 		    });
 
 		    // register Branded Token on Utility Chain
@@ -211,6 +219,7 @@ contract('OpenST', function(accounts) {
 		      openSTUtilityUtils.checkRegisteredBrandedTokenEventOnProtocol(formattedDecodedEvents, registrarUC.address,
 		        registeredBrandedToken, registeredBrandedTokenUuid, symbol, name, conversionRate, requester);
 
+	          utils.logResponse(result, "OpenSTUtility.registerBrandedToken");
 		    });
 
 		    // register Utility Token on Value Chain
@@ -225,31 +234,246 @@ contract('OpenST', function(accounts) {
 		     	openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 		    		symbol, name, 18, conversionRate, CHAINID_UTILITY, requester);
 
+				var event = formattedDecodedEvents['UtilityTokenRegistered'];
+
+				simpleStakeContractAddress = event.stake;
+
+				utils.logResponse(result, "OpenSTValue.registerUtilityToken");
+
 		    });
+
+	        it("report gas usage: register and propose branded token", async () => {
+	          utils.printGasStatistics();
+	          utils.clearReceipts();
+	        });
+
 		});
 
 		// stake ST for BT
 		context('stake Simple Token for Branded Token', function() {
 
-				it("stake Simple Token", async() => {
+			it("approve and stake Simple Token", async() => {
+				// transfer ST to requester account
+				Assert.ok(await simpleToken.transfer(requester, AMOUNT_ST, { from: deployMachine }));
+				// Check for requester simpleToken Balance
+				var balanceOfRequester = await simpleToken.balanceOf(requester);
+				Assert.equal(balanceOfRequester, AMOUNT_ST.toNumber());
+				// requester sets allowance for OpenSTValue
+				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: requester }));
 
-				});
+				//  Query nonceBT in advance
+				nonceBT = await openSTValue.getNextNonce.call(requester);
+				Assert.equal(nonceBT, 1);
+				// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
+				// with requester as the beneficiary
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
 
-				it("confirm staking intent for Branded Token", async() => {
+				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, requester, nonceBT,
+					requester, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
-				});
+				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+				unlockHeight = stakeResult.logs[0].args._unlockHeight;
+				nonceBT = stakeResult.logs[0].args._stakerNonce;
 
-				it("process staking", async() => {
+				utils.logResponse(stakeResult, "OpenSTUtility.approveAndStake");
 
-				});
+		    });
 
-				it("process minting", async() => {
+			it("confirm staking intent for Branded Token", async() => {
 
-				});
+				const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
+					requester, nonceBT, requester, AMOUNT_ST, AMOUNT_BT, unlockHeight, stakingIntentHash, { from: intercommUC });
 
-				it("claim Branded Token", async() => {
+				var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
-				});
+				openSTUtilityUtils.checkStakingIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+					stakingIntentHash, requester, requester, AMOUNT_ST, AMOUNT_BT);
+
+				utils.logResponse(result, "OpenSTUtility.confirmStakingIntent");
+
+			});
+
+			it("process staking", async() => {
+				const result = await openSTValue.processStaking(stakingIntentHash, { from: requester });
+
+				openSTValueUtils.checkProcessedStakeEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+					simpleStakeContractAddress, requester, AMOUNT_ST, AMOUNT_BT);
+
+				utils.logResponse(result, "OpenSTValue.processStaking");
+
+			});
+
+			it("process minting", async() => {
+
+				const result = await openSTUtility.processMinting(stakingIntentHash, { from: requester });
+
+				openSTUtilityUtils.checkProcessedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+					registeredBrandedToken, requester, requester, AMOUNT_BT);
+
+				utils.logResponse(result, "OpenSTValue.processminting");
+			});
+
+			it("claim Branded Token", async() => {
+				var balanceBefore = await brandedToken.balanceOf(requester);
+				const o = await brandedToken.claim(requester, { from: intercommUC });
+				var balanceAfter = await brandedToken.balanceOf(requester);
+				var totalSupply = await brandedToken.totalSupply.call();
+				Assert.equal(totalSupply.toNumber(), AMOUNT_BT.toNumber());
+				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_BT.toNumber());
+			});
+
+			it("report gas usage: stake Simple Token for Branded Token", async () => {
+				utils.printGasStatistics();
+				utils.clearReceipts();
+			});
+
+		});
+
+		context('Transfer Branded Token and STPrime to Redeemer', function() {
+
+			it("transfer branded token from Requester to Redeemer", async() => {
+
+				var result = await brandedToken.transfer(redeemer, REDEEM_AMOUNT_BT, { from: requester });
+				Assert.ok(result);
+				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
+				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+
+				utils.logResponse(result, "brandedToken.transfer");
+
+			});
+
+			it("transfer STPrime to Redeemer", async() => {
+
+				var redeemerBalanceBeforeTransfer = await web3.eth.getBalance(redeemer).toNumber();
+				result = await web3.eth.sendTransaction({ from: staker, to: redeemer, value: REDEEM_AMOUNT_STPRIME ,gasPrice: '0x12A05F200' });
+				var redeemerBalanceAfterTransfer = await web3.eth.getBalance(redeemer).toNumber();
+				Assert.equal((redeemerBalanceBeforeTransfer+(REDEEM_AMOUNT_STPRIME.toNumber())), redeemerBalanceAfterTransfer);
+
+			});
+
+			it("report gas usage: Transfer Branded Token and STPrime to Redeemer", async () => {
+
+				utils.printGasStatistics();
+				utils.clearReceipts();
+
+			});
+
+		});
+
+		// unstake BT by Redeemer
+		context('Redeem and Unstake Branded Token', function() {
+
+			it("approve branded token", async() => {
+
+				var approveResult = await brandedToken.approve(openSTUtility.address, REDEEM_AMOUNT_BT, { from: redeemer })
+				Assert.ok(approveResult);
+				utils.logResponse(approveResult, "OpenSTUtility.approveResult");
+
+			});
+
+			it("call redeem", async() => {
+
+				nonce = await openSTValue.getNextNonce.call(redeemer);
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
+				unlockHeight = redeemResult.logs[0].args._unlockHeight;
+				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash, brandedToken.address,
+						redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+				utils.logResponse(redeemResult, "OpenSTUtility.redeem");
+
+			});
+
+			it("confirm redemption intent", async() => {
+
+				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
+				redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
+
+				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
+				var redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
+				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
+
+				utils.logResponse(confirmRedemptionResult, "OpenSTValue.confirmRedemptionIntent");
+
+			});
+
+			it("process redemption", async() => {
+
+				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				utils.logResponse(processRedeemingResult, "openSTUtility.processRedeeming");
+
+			});
+
+			it("process unstake", async() => {
+
+				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
+
+				utils.logResponse(processUnstakeResult, "openSTValue.processUnstaking");
+
+		 	});
+
+			it("report gas usage: Redeem and Unstake Branded Token", async () => {
+
+				utils.printGasStatistics();
+				utils.clearReceipts();
+
+			});
+
+		});
+
+		 // unstake STPrime by Redeemer
+		context('Redeem and Unstake STPrime', function() {
+
+			it("call redeem", async() => {
+
+				nonce = await openSTValue.getNextNonce.call(redeemer);
+				var redeemResult = await openSTUtility.redeemSTPrime(nonce, { from: redeemer, value: REDEEM_AMOUNT_STPRIME });
+				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
+				unlockHeight = redeemResult.logs[0].args._unlockHeight;
+				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], uuidSTP, redemptionIntentHash, stPrime.address,
+					redeemer, nonce, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
+
+				utils.logResponse(redeemResult, "OpenSTUtility.STPrime.redeem");
+
+			});
+
+			it("confirm redemption intent", async() => {
+
+				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, uuidSTP, redeemer, nonce,
+					REDEEM_AMOUNT_STPRIME, unlockHeight, redemptionIntentHash, { from: intercommVC });
+
+				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt,
+					openSTValue.address, openSTValueArtifacts.abi);
+				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, uuidSTP,
+					redemptionIntentHash, redeemer, REDEEM_AMOUNT_STPRIME, REDEEM_AMOUNT_STPRIME);
+
+				utils.logResponse(confirmRedemptionResult, "OpenSTValue.STPrime.confirmRedemptionIntent");
+
+			});
+
+			it("process redemption", async() => {
+
+
+				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				utils.logResponse(processRedeemingResult, "openSTUtility.STPrime.processRedeeming");
+
+			});
+
+			it("process unstake", async() => {
+
+				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
+				utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
+
+			});
+
+			it("report gas usage: Redeem and Unstake Simple Token Prime", async () => {
+
+				utils.printGasStatistics();
+				utils.clearReceipts();
+
+			});
 
 		});
 
