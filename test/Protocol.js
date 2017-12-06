@@ -124,7 +124,7 @@ contract('OpenST', function(accounts) {
 
 				var event = formattedDecodedEvents['UtilityTokenRegistered'];
 
-				stPrimeStakeAddress = event.stake;
+				stPrimeSimpleStakeContractAddress = event.stake;
 
 				Assert.notEqual((await openSTValue.utilityTokenProperties.call(uuidSTP))[5], utils.NullAddress);
 			});
@@ -484,7 +484,7 @@ contract('OpenST', function(accounts) {
 
 				var event = processUnstakeResult.logs[0];
 				openSTValueUtils.checkProcessedUnstakeEvent(event, uuidSTP, redemptionIntentHash,
-					stPrimeStakeAddress, redeemer, REDEEM_AMOUNT_STPRIME);
+					stPrimeSimpleStakeContractAddress, redeemer, REDEEM_AMOUNT_STPRIME);
 				utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
 
 			});
