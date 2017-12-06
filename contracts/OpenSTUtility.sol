@@ -517,7 +517,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
     function processRedeeming(
-    	bytes23 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash)
     	external
     	returns (
     	address tokenAddress)
@@ -601,64 +601,4 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		address(registeredToken.token),
     		registeredToken.registrar);
     }
-
-	// /*
-	//  *  Operation functions
-	//  */
-	// /// @dev TODO: add events to trigger for each action
-	// function addNameReservation(
-	// 	bytes32 _hashName,
-	// 	address _requester)
-	// 	public
-	// 	onlyAdminOrOps
-	// 	returns (bool success)
-	// {
-	// 	address requester = nameReservation[_hashName]; 
-	// 	if (requester == _requester) return true;
-	// 	if (requester == address(0)) {
-	// 		nameReservation[_hashName] = _requester;
-	// 		return true;
-	// 	}
-	// 	return false;
-	// }
-
-	// function setSymbolRoute(
-	// 	bytes32 _hashSymbol,
-	// 	address _token)
-	// 	public
-	// 	onlyAdminOrOps
-	// 	returns (bool /* success */)
-	// {
-	// 	address token = symbolRoute[_hashSymbol];
-	// 	if (token == _token) return true;
-	// 	if (token == address(0)) {
-	// 		symbolRoute[_hashSymbol] = _token;
-	// 		return true;
-	// 	}
-	// 	return false;
-	// }
-
-	// function removeNameReservation(
-	// 	bytes32 _hashName)
-	// 	public
-	// 	onlyAdminOrOps
-	// 	returns (bool /* success */)
-	// {
-	// 	require(nameReservation[_hashName] != address(0));
-
-	// 	delete nameReservation[_hashName];
-	// 	return true;
-	// }
-
-	// function removeSymbolRoute(
-	// 	bytes32 _hashSymbol)
-	// 	public
-	// 	onlyAdminOrOps
-	// 	returns (bool /* success */)
-	// {
-	// 	require(symbolRoute[_hashSymbol] != address(0));
-
-	// 	delete symbolRoute[_hashSymbol];
-	// 	return true;
-	// }
 }

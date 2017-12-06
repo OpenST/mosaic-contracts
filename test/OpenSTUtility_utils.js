@@ -42,14 +42,14 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
 	}
 }
 
-module.exports.checkRequestedBrandedTokenEvent = (event, _requester, _token, _uuid, _symbol, _name, _conversionRate) => {
+// Token address is returned by ProposedBrandedToken but verified elsewhere
+module.exports.checkProposedBrandedTokenEvent = (event, _requester, _uuid, _symbol, _name, _conversionRate) => {
 	if (Number.isInteger(_conversionRate)) {
 		_conversionRate = new BigNumber(_conversionRate);
 	}
 
-	assert.equal(event.event, "RequestedBrandedToken");
+	assert.equal(event.event, "ProposedBrandedToken");
 	assert.equal(event.args._requester, _requester);
-	assert.equal(event.args._token, _token);
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._symbol, _symbol);
 	assert.equal(event.args._name, _name);
@@ -166,4 +166,17 @@ module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIn
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
 	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
+}
+
+module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _amount) => {
+	if (Number.isInteger(_amount)) {
+		_amount = new BigNumber(_amount);
+	}
+
+	assert.equal(event.event, "ProcessedRedemption");
+	assert.equal(event.args._uuid, _uuid)
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash)
+	assert.equal(event.args._token, _token)
+	assert.equal(event.args._redeemer, _redeemer)
+	assert.equal(event.args._amount.toNumber(), _amount.toNumber())
 }
