@@ -601,4 +601,28 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		address(registeredToken.token),
     		registeredToken.registrar);
     }
+
+	/*
+	 *  Administrative functions
+	 */
+	function initiateProtocolTransfer(
+		// including ProtocolVersioned interface explicitly adds to the size
+		// of OpenSTValue, so we make it explicitly SimpleStake which is already included.
+		UtilityTokenAbstract _token,
+		address _proposedProtocol)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_token.initiateProtocolTransfer(_proposedProtocol);
+	}
+
+	function revokeProtocolTransfer(
+		UtilityTokenAbstract _token)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_token.revokeProtocolTransfer();
+	}
 }
