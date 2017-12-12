@@ -498,5 +498,50 @@ contract('OpenST', function(accounts) {
 
 		});
 
+    // Revert stake and revert minting
+    context('Revert stake', function() {
+
+      it("call stake ", async() => {
+        // transfer ST to requester account
+        Assert.ok(await simpleToken.transfer(requester, AMOUNT_ST, { from: deployMachine }));
+      	// Check for requester simpleToken Balance
+      	var balanceOfRequester = await simpleToken.balanceOf(requester);
+      	Assert.equal(balanceOfRequester, AMOUNT_ST.toNumber());
+      	// requester sets allowance for OpenSTValue
+      	Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: requester }));
+
+      	nonceBT = await openSTValue.getNextNonce.call(requester);
+      	// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
+      	// with requester as the beneficiary
+      	var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
+
+      	openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, requester, nonceBT,
+        	requester, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
+
+      	stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+
+    	});
+
+      // // Before wait time as passed
+      // it('fails to revertStaking before waiting period ends', async () => {
+      	// var waitTime = await openSTValue.BLOCKS_TO_WAIT_LONG.call();
+      	// waitTime = waitTime.toNumber();
+      	// console.log(waitTime);
+       //  // Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	// for (var i = 0; i < waitTime; i++) { await web3.eth.sendTransaction({ from: accounts[9], to: accounts[1], value: 1 });}
+      // });
+      //
+			// it("revert staking after unlocking block height", async() => {
+       //  // Revert staking from staker user as it can called from any external user.
+       //  // If we put this as a contrain this test case will fail
+       //  var result = await openSTValue.revertStaking(stakingIntentHash, {from: staker});
+       //  console.log(result);
+       //  // openSTValueUtils.checkRevertStakingEventProtocol(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash, requester,
+       //  //  AMOUNT_ST, AMOUNT_BT)
+      //
+			// });
+
+    });
+
 	});
 });

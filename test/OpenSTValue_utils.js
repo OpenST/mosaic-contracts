@@ -118,38 +118,6 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._chainIdUtility, _chainIdUtility);
 }
 
-
-module.exports.checkStakingIntentDeclaredEventProtocol = (formattedDecodedEvents, _uuid, _staker, _stakerNonce, _beneficiary,
-  _amountST, _amountUT, _chainIdUtility) => {
-
-  var event = formattedDecodedEvents['StakingIntentDeclared'];
-
-  if (Number.isInteger(_stakerNonce)) {
-    _stakerNonce = new BigNumber(_stakerNonce);
-  }
-
-  if (Number.isInteger(_amountST)) {
-    _amountST = new BigNumber(_amountST);
-  }
-
-  if (Number.isInteger(_amountUT)) {
-    _amountUT = new BigNumber(_amountUT);
-  }
-
-  if (Number.isInteger(_chainIdUtility)) {
-    _chainIdUtility = new BigNumber(_chainIdUtility);
-  }
-
-  assert.equal(event.event, "StakingIntentDeclared");
-  assert.equal(event._uuid, _uuid);
-  assert.equal(event._staker, _staker);
-  assert.equal(event._stakerNonce, _stakerNonce.toNumber());
-  assert.equal(event._beneficiary, _beneficiary);
-  assert.equal(event._amountST, _amountST.toNumber());
-  assert.equal(event._amountUT, _amountUT.toNumber());
-  assert.equal(event._chainIdUtility, _chainIdUtility.toNumber());
-}
-
 module.exports.checkStakingIntentDeclaredEventProtocol = (event, _uuid, _staker, _stakerNonce, _beneficiary,
 	_amountST, _amountUT, _chainIdUtility) => {
 
@@ -252,4 +220,22 @@ module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash
 	assert.equal(event.args.stake, stake);
 	assert.equal(event.args._redeemer, _redeemer);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+}
+
+module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHash, _staker, _amountST, _amountUT) => {
+
+  if (Number.isInteger(_amountUT)) {
+    _amountUT = new BigNumber(_amountUT);
+  }
+
+  if (Number.isInteger(_amountST)) {
+    _amountST = new BigNumber(_amountST);
+  }
+
+  assert.equal(event.event, "RevertedStake");
+  assert.equal(event._uuid, _uuid);
+  assert.equal(event._staker, _staker);
+  assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+  assert.equal(event._amountST, _amountST.toNumber());
+  assert.equal(event._amountUT, _amountUT.toNumber());
 }
