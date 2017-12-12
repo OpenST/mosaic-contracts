@@ -340,7 +340,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(_stakingUnlockHeight > 0);
 		require(_stakingIntentHash != "");
 
-		expirationHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+		expirationHeight = block.number + blocksToWaitShort();
 		nonces[_staker] = _stakerNonce;
 
 		bytes32 stakingIntentHash = hashStakingIntent(
@@ -454,7 +454,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(token.allowance(msg.sender, address(this)) >= _amountBT);
     	require(token.transferFrom(msg.sender, address(this), _amountBT));
 
-    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+    	unlockHeight = block.number + blocksToWaitLong();
 
     	redemptionIntentHash = hashRedemptionIntent(
     		_uuid,
@@ -493,7 +493,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	nonces[msg.sender] = _nonce;
 
     	amountSTP = msg.value;
-    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+    	unlockHeight = block.number + blocksToWaitLong();
 
     	redemptionIntentHash = hashRedemptionIntent(
     		uuidSTPrime,
@@ -601,4 +601,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		address(registeredToken.token),
     		registeredToken.registrar);
     }
+
+	function blocksToWaitLong() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_LONG;
+	}
+
+	function blocksToWaitShort() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_SHORT;
+	}
 }
