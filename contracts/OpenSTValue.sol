@@ -26,6 +26,7 @@ import "./Hasher.sol";
 import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
+import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
@@ -410,30 +411,30 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return address(cores[_chainIdUtility]);
     }
 
-    function utilityTokenProperties(
-    	bytes32 _uuid)
-    	external
-    	view
-    	returns (
-    	string  symbol,
-    	string  name,
-    	uint256 conversionRate,
-    	uint8   decimals,
-    	uint256 chainIdUtility,
-    	address simpleStake,
-    	address stakingAccount
-    	/* utility token struct */ )
-    {
-    	UtilityToken storage utilityToken = utilityTokens[_uuid];
-    	return (
-    		utilityToken.symbol,
-    		utilityToken.name,
-    		utilityToken.conversionRate,
-    		utilityToken.decimals,
-    		utilityToken.chainIdUtility,
-    		address(utilityToken.simpleStake),
-    		utilityToken.stakingAccount);
-    }
+	function utilityTokenProperties(
+		bytes32 _uuid)
+		external
+		view
+		returns (
+		string  symbol,
+		string  name,
+		uint256 conversionRate,
+		uint8   decimals,
+		uint256 chainIdUtility,
+		address simpleStake,
+		address stakingAccount
+		/* utility token struct */ )
+	{
+		UtilityToken storage utilityToken = utilityTokens[_uuid];
+		return (
+			utilityToken.symbol,
+			utilityToken.name,
+			utilityToken.conversionRate,
+			utilityToken.decimals,
+			utilityToken.chainIdUtility,
+			address(utilityToken.simpleStake),
+			utilityToken.stakingAccount);
+	}
 
 	/*
 	 *  Registrar functions
@@ -505,5 +506,34 @@ contract OpenSTValue is OpsManaged, Hasher {
 			TOKEN_DECIMALS, _conversionRate, _chainIdUtility, _stakingAccount);
 
 		return uuid;
+	}
+
+	/*
+	 *  Administrative functions
+	 */
+	function initiateProtocolTransfer(
+		ProtocolVersioned _simpleStake,
+		address _proposedProtocol)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_simpleStake.initiateProtocolTransfer(_proposedProtocol);
+
+		return true;
+	}
+
+	// on the very first released version v0.9.1 there is no need
+	// to completeProtocolTransfer from a previous version
+
+	function revokeProtocolTransfer(
+		ProtocolVersioned _simpleStake)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_simpleStake.revokeProtocolTransfer();
+
+		return true;
 	}
 }
