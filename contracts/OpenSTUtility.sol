@@ -31,6 +31,7 @@ import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol"; 
 import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
 
 
 /// @title OpenST Utility
@@ -606,23 +607,28 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	 *  Administrative functions
 	 */
 	function initiateProtocolTransfer(
-		// including ProtocolVersioned interface explicitly adds to the size
-		// of OpenSTValue, so we make it explicitly SimpleStake which is already included.
-		UtilityTokenAbstract _token,
+		ProtocolVersioned _token,
 		address _proposedProtocol)
 		public
 		onlyAdmin
 		returns (bool)
 	{
 		_token.initiateProtocolTransfer(_proposedProtocol);
+
+		return true;
 	}
 
+	// on the very first released version v0.9.1 there is no need
+	// to completeProtocolTransfer from a previous version
+
 	function revokeProtocolTransfer(
-		UtilityTokenAbstract _token)
+		ProtocolVersioned _token)
 		public
 		onlyAdmin
 		returns (bool)
 	{
 		_token.revokeProtocolTransfer();
+
+		return true;
 	}
 }

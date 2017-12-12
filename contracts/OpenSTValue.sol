@@ -26,6 +26,7 @@ import "./Hasher.sol";
 import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
+import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
@@ -511,23 +512,28 @@ contract OpenSTValue is OpsManaged, Hasher {
 	 *  Administrative functions
 	 */
 	function initiateProtocolTransfer(
-		// including ProtocolVersioned interface explicitly adds to the size
-		// of OpenSTValue, so we make it explicitly SimpleStake which is already included.
-		SimpleStake _simpleStake,
+		ProtocolVersioned _simpleStake,
 		address _proposedProtocol)
 		public
 		onlyAdmin
 		returns (bool)
 	{
 		_simpleStake.initiateProtocolTransfer(_proposedProtocol);
+
+		return true;
 	}
 
+	// on the very first released version v0.9.1 there is no need
+	// to completeProtocolTransfer from a previous version
+
 	function revokeProtocolTransfer(
-		SimpleStake _simpleStake)
+		ProtocolVersioned _simpleStake)
 		public
 		onlyAdmin
 		returns (bool)
 	{
 		_simpleStake.revokeProtocolTransfer();
+
+		return true;
 	}
 }

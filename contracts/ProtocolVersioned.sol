@@ -37,7 +37,8 @@ contract ProtocolVersioned {
 	/// This allows anyone with a stake to unstake under the existing
 	/// protocol if they disagree with the new proposed protocol
 	/// @dev from OpenST ^v1.0 this constant will be set to a significant value
-	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 5;
+	/// ~ 1 week at 15 seconds per block
+	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 	
 	/*
 	 *  Storage
