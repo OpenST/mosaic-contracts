@@ -425,7 +425,7 @@ contract('OpenSTUtility', function(accounts) {
 			})
 
 			it('fails to process if msg.sender != redeemer', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[1] }));
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[5] }));
 			})
 
 			it('successfully processes', async () => {
