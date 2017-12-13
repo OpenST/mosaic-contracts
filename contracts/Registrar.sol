@@ -109,6 +109,20 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
+	function processStaking(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+    	// OpenSTValue function:
+		bytes32 _stakingIntentHash)
+		external
+		onlyAdmin
+		returns (
+		address stakeAddress)
+	{
+		return _registry.processStaking(
+			_stakingIntentHash);
+	}
+
 	/*
 	 *  OpenSTUtility
 	 */
@@ -163,4 +177,18 @@ contract Registrar is OpsManaged {
 			_brandedToken,
 			_checkUuid);
 	}
+
+    function processRedeeming(
+    	// address of OpenSTUtility registry:
+    	OpenSTUtilityInterface _registry,
+    	// OpenSTUtility function:
+    	bytes32 _redemptionIntentHash)
+    	external
+    	onlyAdmin
+    	returns (
+    	address tokenAddress)
+    {
+    	return _registry.processRedeeming(
+    		_redemptionIntentHash);
+    }
 }

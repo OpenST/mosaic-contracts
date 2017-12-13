@@ -80,34 +80,18 @@ const BrandedToken = artifacts.require("./BrandedToken.sol");
 /// ProcessRedeeming
 ///		BrandedToken
 /// 		fails to process if redemptionIntentHash is empty
-/// 		fails to process if msg.sender != redeemer
+/// 		fails to process if msg.sender is not redeemer or registrar
 /// 		successfully processes
 /// 		fails to reprocess
 ///		STPrime
 /// 		successfully processes
 ///
-/// AddNameReservation
-///		fails to add by non-adminOrOps
-///		successfully adds
-///		fails to add if exists with a different requester
+/// ProcessRedeeming with fallback
+///		BrandedToken
+/// 		successfully processes by registrar
+///		STPrime
+/// 		successfully processes by registrar
 ///
-/// SetSymbolRoute
-///		fails to set by non-adminOrOps
-///		successfully sets
-///		fails to set if exists with a different token
-///
-/// RemoveNameReservation
-/// 	fails to remove by non-adminOrOps
-/// 	successfully removes
-/// 	fails to remove if it does not exist
-///
-/// RemoveSymbolRoute
-/// 	fails to remove by non-adminOrOps
-/// 	successfully removes
-/// 	fails to remove if it does not exist
-///
-
-
 
 contract('OpenSTUtility', function(accounts) {
 	const chainIdValue   		= 3;
@@ -424,8 +408,8 @@ contract('OpenSTUtility', function(accounts) {
 	            await Utils.expectThrow(openSTUtility.processRedeeming("", { from: redeemer }));
 			})
 
-			it('fails to process if msg.sender != redeemer', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[1] }));
+			it('fails to process if msg.sender is not redeemer or registrar', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[5] }));
 			})
 
 			it('successfully processes', async () => {
@@ -478,4 +462,79 @@ contract('OpenSTUtility', function(accounts) {
 			})
 		})
 	})
+
+	describe('ProcessRedeeming with fallback', async () => {
+		var redemptionIntentHash = null;
+		var brandedToken = null;
+		var brandedTokenContract = null;
+
+		context('BrandedToken', async () => {
+			var redemptionAmount = 3;
+
+			before(async () => {
+		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        openSTUtility = contracts.openSTUtility;
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            brandedToken = result.logs[0].args._token;
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				brandedTokenContract = new BrandedToken(brandedToken);
+				await brandedTokenContract.claim(accounts[0]);
+				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
+
+			it('successfully processes by registrar', async () => {
+				var openSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var totalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), brandedToken);
+				// redemption is processed by Registrar
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
+
+				var postProcessOpenSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+			})
+		})
+
+		context('STPrime', async () => {
+			var redemptionAmount = 2;
+
+			before(async () => {
+		        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        stPrime     			= contracts.stPrime;
+		        openSTUtility 			= contracts.openSTUtility;
+
+		        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
+	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668)
+
+	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				await stPrime.claim(accounts[0]);
+	            result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
+
+			it('successfully processes by registrar', async () => {
+				var stPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var totalSupply = await stPrime.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), stPrime.address);
+				// redemption is processed by Registrar
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
+
+				var postProcessStPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var postProcessTotalSupply = await stPrime.totalSupply.call();
+				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+			})
+		})
+	})
+
 })
