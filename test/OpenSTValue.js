@@ -63,7 +63,7 @@ const SimpleStake = artifacts.require("./SimpleStake.sol");
 ///
 /// ProcessStaking
 ///		fails to process when stakingIntentHash is empty
-///		fails to process when msg.sender != staker
+///		fails to process when msg.sender is not staker or registrar
 ///		successfully processes
 ///		fails to reprocess
 ///
@@ -299,7 +299,7 @@ contract('OpenSTValue', function(accounts) {
             await Utils.expectThrow(openSTValue.processStaking("", { from: accounts[0] }));
 		})
 
-		it('fails to process when msg.sender != staker', async () => {
+		it('fails to process when msg.sender is not staker or registrar', async () => {
 			// registrar can additionally as a fallback process staking in v0.9
             await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, { from: accounts[5] }));
 		})

@@ -223,8 +223,10 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(_stakingIntentHash != "");
 
 		Stake storage stake = stakes[_stakingIntentHash];
+
 		// note: as processStaking incurs a cost for the staker, we provide a fallback
-		// in v0.9 for registrar to process the staking on behalf of the staker;
+		// in v0.9 for registrar to process the staking on behalf of the staker,
+		// as the staker could fail to process the stake and avoid the cost of staking;
 		// this will be replaced with a signature carry-over implementation instead, where
 		// the signature of the intent hash suffices on value and utility chain, decoupling
 		// it from the transaction to processStaking and processMinting

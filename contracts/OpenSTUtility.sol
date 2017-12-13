@@ -535,8 +535,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	Redemption storage redemption = redemptions[_redemptionIntentHash];
 
-    	// note: as processRedemption incurs a cost for the staker, we provide a fallback
-		// in v0.9 for registrar to process the redemption on behalf of the staker;
+    	// note: as processRedemption incurs a cost for the redeemer, we provide a fallback
+		// in v0.9 for registrar to process the redemption on behalf of the redeemer,
+		// as the redeemer could fail to process the redemption and avoid the cost of redeeming;
 		// this will be replaced with a signature carry-over implementation instead, where
 		// the signature of the intent hash suffices on value and utility chain, decoupling
 		// it from the transaction to processRedemption and processUnstaking

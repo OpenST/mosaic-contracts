@@ -80,7 +80,7 @@ const BrandedToken = artifacts.require("./BrandedToken.sol");
 /// ProcessRedeeming
 ///		BrandedToken
 /// 		fails to process if redemptionIntentHash is empty
-/// 		fails to process if msg.sender != redeemer
+/// 		fails to process if msg.sender is not redeemer or registrar
 /// 		successfully processes
 /// 		fails to reprocess
 ///		STPrime
@@ -424,7 +424,7 @@ contract('OpenSTUtility', function(accounts) {
 	            await Utils.expectThrow(openSTUtility.processRedeeming("", { from: redeemer }));
 			})
 
-			it('fails to process if msg.sender != redeemer', async () => {
+			it('fails to process if msg.sender is not redeemer or registrar', async () => {
 	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[5] }));
 			})
 

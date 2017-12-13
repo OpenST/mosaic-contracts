@@ -182,7 +182,7 @@ contract Registrar is OpsManaged {
     	// address of OpenSTUtility registry:
     	OpenSTUtilityInterface _registry,
     	// OpenSTUtility function:
-    	bytes23 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash)
     	external
     	onlyAdmin
     	returns (
