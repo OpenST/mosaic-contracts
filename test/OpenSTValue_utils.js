@@ -239,3 +239,19 @@ module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHa
   assert.equal(event.args._amountST, _amountST.toNumber());
   assert.equal(event.args._amountUT, _amountUT.toNumber());
 }
+
+module.exports.checkRevertedUnstake = (event, _uuid, _redemptionIntentHash, _redeemer, _amountST) => {
+
+	var event = event['RevertedUnstake'];
+	assert.notEqual(event, null);
+
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	assert.equal(event._uuid, _uuid);
+	assert.equal(event._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event._redeemer, _redeemer);
+	assert.equal(event._amountST, _amountST.toNumber());
+
+}
