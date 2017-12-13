@@ -26,8 +26,8 @@ import "./OpenSTUtility.sol";
 /// @title OpenSTUtilityMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTUtility
 contract OpenSTUtilityMock is OpenSTUtility {
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 2;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 1;
+	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
+	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
 
 	/*
 	 *  Public functions

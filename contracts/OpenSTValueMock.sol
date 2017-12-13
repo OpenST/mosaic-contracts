@@ -26,8 +26,8 @@ import "./OpenSTValue.sol";
 /// @title OpenSTValueMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTValue
 contract OpenSTValueMock is OpenSTValue {
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 2;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 1;
+	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
+	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
 
 	/*
 	 *  Public functions

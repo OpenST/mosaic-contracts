@@ -233,9 +233,9 @@ module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHa
   }
 
   assert.equal(event.event, "RevertedStake");
-  assert.equal(event._uuid, _uuid);
-  assert.equal(event._staker, _staker);
+  assert.equal(event.args._uuid, _uuid);
+  assert.equal(event.args._staker, _staker);
   assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
-  assert.equal(event._amountST, _amountST.toNumber());
-  assert.equal(event._amountUT, _amountUT.toNumber());
+  assert.equal(event.args._amountST, _amountST.toNumber());
+  assert.equal(event.args._amountUT, _amountUT.toNumber());
 }

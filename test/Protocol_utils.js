@@ -28,8 +28,8 @@ const openSTValueUtils = require("./OpenSTValue_utils.js");
 var SimpleToken   = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
 var Core          = artifacts.require("./Core.sol");
-var OpenSTValue   = artifacts.require("./OpenSTValue.sol");
-var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
+var OpenSTValue   = artifacts.require("./OpenSTValueMock.sol");
+var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime       = artifacts.require("./STPrime.sol");
 
 const CHAINID_VALUE   = 2001;

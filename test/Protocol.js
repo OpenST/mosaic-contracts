@@ -28,9 +28,10 @@ const web3EventsDecoder = require('./lib/event_decoder.js');
 
 const ProtocolUtils = require('./Protocol_utils.js');
 
-const openSTUtilityArtifacts = artifacts.require("./OpenSTUtility.sol");
-const openSTValueArtifacts = artifacts.require("./OpenSTValue.sol");
+const openSTUtilityArtifacts = artifacts.require("./OpenSTUtilityMock.sol");
+const openSTValueArtifacts = artifacts.require("./OpenSTValueMock.sol");
 const BrandedToken = artifacts.require("./BrandedToken.sol");
+const SimpleStake = artifacts.require("./SimpleStake.sol");
 
 const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
@@ -76,9 +77,10 @@ contract('OpenST', function(accounts) {
 		var openSTValue = null;
 		var openSTUtility = null;
 		var stPrime = null;
+		var btSimpleStake = null;
 
-    	var btSimpleStakeContractAddress = null;
-	    var stPrimeSimpleStakeContractAddress = null;
+    var btSimpleStakeContractAddress = null;
+    var stPrimeSimpleStakeContractAddress = null;
 		var registeredBrandedTokenUuid = null;
 		var registeredBrandedToken = null;
 		var nonceBT = null;
@@ -246,6 +248,8 @@ contract('OpenST', function(accounts) {
 				var event = formattedDecodedEvents['UtilityTokenRegistered'];
 
 				btSimpleStakeContractAddress = event.stake;
+
+				btSimpleStake = SimpleStake.at(btSimpleStakeContractAddress);
 
 				utils.logResponse(result, "OpenSTValue.registerUtilityToken");
 
@@ -498,7 +502,7 @@ contract('OpenST', function(accounts) {
 
 		});
 
-    // Revert stake and revert minting
+    // Revert stake
     context('Revert stake', function() {
 
       it("call stake ", async() => {
@@ -523,23 +527,185 @@ contract('OpenST', function(accounts) {
     	});
 
       // // Before wait time as passed
-      // it('fails to revertStaking before waiting period ends', async () => {
-      	// var waitTime = await openSTValue.BLOCKS_TO_WAIT_LONG.call();
-      	// waitTime = waitTime.toNumber();
-      	// console.log(waitTime);
-       //  // Wait time less 1 block for preceding test case and 1 block because condition is <=
-      	// for (var i = 0; i < waitTime; i++) { await web3.eth.sendTransaction({ from: accounts[9], to: accounts[1], value: 1 });}
-      // });
-      //
-			// it("revert staking after unlocking block height", async() => {
-       //  // Revert staking from staker user as it can called from any external user.
-       //  // If we put this as a contrain this test case will fail
-       //  var result = await openSTValue.revertStaking(stakingIntentHash, {from: staker});
-       //  console.log(result);
-       //  // openSTValueUtils.checkRevertStakingEventProtocol(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash, requester,
-       //  //  AMOUNT_ST, AMOUNT_BT)
-      //
-			// });
+      it('fails to revertStaking before waiting period ends', async () => {
+      	var waitTime = await openSTValue.blocksToWaitLong.call();
+      	waitTime = waitTime.toNumber();
+        // Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	for (var i = 0; i < waitTime/2 ; i++) {
+      		await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+      	}
+      });
+
+			it("revert staking after unlocking block height", async() => {
+        // Revert staking from staker user as it can called from any external user.
+        // If we put this as a contrain this test case will fail
+        var result = await openSTValue.revertStaking(stakingIntentHash, {from: staker});
+      	openSTValueUtils.checkRevertStakingEventProtocol(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash, requester,
+        	AMOUNT_ST, AMOUNT_BT)
+
+			});
+
+    });
+
+    // // Revert minting
+    // // Revert staking should also work smoothly before calling revert minting
+    context('Revert minting', function() {
+
+			it("call stake ", async() => {
+					// transfer ST to requester account
+				Assert.ok(await simpleToken.transfer(requester, AMOUNT_ST, { from: deployMachine }));
+				// requester sets allowance for OpenSTValue
+				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: requester }));
+
+				nonceBT = await openSTValue.getNextNonce.call(requester);
+				// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
+				// with requester as the beneficiary
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
+
+				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, requester, nonceBT,
+					requester, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
+
+				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+      	unlockHeight = stakeResult.logs[0].args._unlockHeight;
+      	nonceBT = stakeResult.logs[0].args._stakerNonce;
+
+			});
+
+      it("confirm staking intent for Branded Token", async() => {
+
+        const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
+        requester, nonceBT, requester, AMOUNT_ST, AMOUNT_BT, unlockHeight, stakingIntentHash, { from: intercommUC });
+
+      	var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
+
+      	openSTUtilityUtils.checkStakingIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+        	stakingIntentHash, requester, requester, AMOUNT_ST, AMOUNT_BT);
+
+      	utils.logResponse(result, "OpenSTUtility.confirmStakingIntent");
+
+    	});
+
+      // Before wait time as passed
+			// Revert minting should run only if revert staking can be done. Hence checking that first
+      it('fails to revertStaking before waiting period ends', async () => {
+        var waitTime = await openSTValue.blocksToWaitLong.call();
+      	waitTime = waitTime.toNumber();
+      	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	for (var i = 0; i < waitTime/2; i++) {
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+      	}
+    	});
+
+      it("revert staking after unlocking block height", async() => {
+        // Revert staking from staker user as it can called from any external user.
+        // If we put this as a contraint this test case will fail
+        var result = await openSTValue.revertStaking(stakingIntentHash, {from: staker});
+      	openSTValueUtils.checkRevertStakingEventProtocol(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash, requester,
+        	AMOUNT_ST, AMOUNT_BT)
+
+    	});
+
+      // Before wait time as passed
+			it('fails to revertMinting before expiration block', async () => {
+				var waitTime = await openSTUtility.blocksToWaitShort.call();
+				waitTime = waitTime.toNumber();
+				// Wait time less 1 block for preceding test case and 1 block because condition is <=
+				for (var i = 0; i < waitTime/2; i++) {
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+				}
+			});
+
+			it("revert minting after expiring block height", async() => {
+        // Revert minting from staker user as it can called from any external user.
+        // If we put this as a contraint this test case will fail
+				var result = await openSTUtility.revertMinting(stakingIntentHash, {from: staker});
+      	openSTUtilityUtils.checkRevertedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+					requester, requester, AMOUNT_BT)
+
+    	});
+
+    });
+    //
+    // // After process staking, revertStake cannot be called but revertMinting can still be called.
+    // // As of now ST get stuck in SimpleStake Contract for the staker which should ideally be returned after revertMinting
+    // // Checking the ST balance in SimpleStake as non zero which will start failing once we fix the issue of
+    // // releasing ST after revertMinting as well
+    context('Revert minting after process Staking', function() {
+
+    	var previousSTBalance = null;
+
+    	it("previous balance on simple stake", async() => {
+
+        previousSTBalance = await btSimpleStake.getTotalStake.call();
+
+    	});
+
+      it("call stake ", async() => {
+
+				// transfer ST to requester account
+				Assert.ok(await simpleToken.transfer(requester, AMOUNT_ST, { from: deployMachine }));
+				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: requester }));
+
+				nonceBT = await openSTValue.getNextNonce.call(requester);
+				// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
+				// with requester as the beneficiary
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, requester, { from: requester });
+
+				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, requester, nonceBT,
+					requester, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
+
+				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
+				unlockHeight = stakeResult.logs[0].args._unlockHeight;
+				nonceBT = stakeResult.logs[0].args._stakerNonce;
+
+    	});
+
+      it("confirm staking intent for Branded Token", async() => {
+
+        const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
+        requester, nonceBT, requester, AMOUNT_ST, AMOUNT_BT, unlockHeight, stakingIntentHash, { from: intercommUC });
+
+				var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
+
+				openSTUtilityUtils.checkStakingIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+					stakingIntentHash, requester, requester, AMOUNT_ST, AMOUNT_BT);
+
+				utils.logResponse(result, "OpenSTUtility.confirmStakingIntent");
+
+    	});
+
+      it("process staking", async () => {
+        const o = await openSTValue.processStaking(stakingIntentHash, { from: requester });
+      	utils.logResponse(o, "OpenSTValue.processStaking");
+    	});
+
+      // Before wait time as passed
+      it('fails to revertMinting before expiration block', async () => {
+        var waitTime = await openSTUtility.blocksToWaitShort.call();
+		 		waitTime = waitTime.toNumber();
+      	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	for (var i = 0; i < waitTime/2; i++) {
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+      	}
+    	});
+
+      it("revert minting after expiring block height", async() => {
+        // Revert minting from staker user as it can called from any external user.
+        // If we put this as a contraint this test case will fail
+        var result = await openSTUtility.revertMinting(stakingIntentHash, {from: staker});
+      	openSTUtilityUtils.checkRevertedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
+        	requester, requester, AMOUNT_BT);
+    	});
+
+      it ("validate if the ST is stuck in Simple Stake", async() => {
+				var currentStBalance = await btSimpleStake.getTotalStake.call()
+				var tobeBalance = previousSTBalance.toNumber() + AMOUNT_ST.toNumber();
+				Assert.equal(currentStBalance.toNumber(), tobeBalance)
+			});
 
     });
 
