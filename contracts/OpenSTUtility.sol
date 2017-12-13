@@ -31,6 +31,7 @@ import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol"; 
 import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
 
 
 /// @title OpenST Utility
@@ -442,7 +443,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
     {
     	require(_uuid != "");
     	require(_amountBT > 0);
-    	require(_nonce > nonces[msg.sender]);
+    	// on redemption allow the nonce to be re-used to cover for an unsuccessful
+    	// previous redemption previously; as the nonce is strictly increasing plus
+    	// one on the value chain; there is no gain on redeeming with the same nonce,
+    	// only self-inflicted cost.
+    	require(_nonce >= nonces[msg.sender]);
     	nonces[msg.sender] = _nonce;
 
     	// to redeem ST' one needs to send value to payable
@@ -489,7 +494,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	bytes32 redemptionIntentHash)
     {
     	require(msg.value > 0);
-    	require(_nonce > nonces[msg.sender]);
+    	// on redemption allow the nonce to be re-used to cover for an unsuccessful
+    	// previous redemption previously; as the nonce is strictly increasing plus
+    	// one on the value chain; there is no gain on redeeming with the same nonce,
+    	// only self-inflicted cost.
+    	require(_nonce >= nonces[msg.sender]);
     	nonces[msg.sender] = _nonce;
 
     	amountSTP = msg.value;
@@ -566,7 +575,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		uuid = redemption.uuid;
 		amountUT = redemption.amountUT;
-		redeemer = redemption.redeemer;		
+		redeemer = redemption.redeemer;
 
 		if (redemption.uuid == uuidSTPrime) {
 	        // transfer throws if insufficient funds
@@ -600,6 +609,35 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	return (
     		address(registeredToken.token),
     		registeredToken.registrar);
+    }
+
+    /*
+     *  Administrative functions
+     */
+    function initiateProtocolTransfer(
+        ProtocolVersioned _token,
+        address _proposedProtocol)
+        public
+        onlyAdmin
+        returns (bool)
+    {
+        _token.initiateProtocolTransfer(_proposedProtocol);
+
+        return true;
+    }
+
+    // on the very first released version v0.9.1 there is no need
+    // to completeProtocolTransfer from a previous version
+
+    function revokeProtocolTransfer(
+        ProtocolVersioned _token)
+        public
+        onlyAdmin
+        returns (bool)
+    {
+        _token.revokeProtocolTransfer();
+
+        return true;
     }
 
 	function blocksToWaitLong() public pure returns (uint256) {

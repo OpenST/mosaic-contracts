@@ -67,14 +67,14 @@ const BrandedToken = artifacts.require("./BrandedToken.sol");
 ///	Redeem
 /// 	fails to redeem when uuid is empty
 /// 	fails to redeem when amount is not > 0
-/// 	fails to redeem when nonce is not > previously
+/// 	fails to redeem when nonce is not >= previously
 /// 	fails to redeem when uuid is uuidSTPrime
 /// 	fails to redeem if not approved to transfer the amount
 /// 	successfully redeems
 ///
 ///	RedeemSTPrime
 ///		fails to redeem when msg.value is not > 0
-/// 	fails to redeem when nonce is not > previously
+/// 	fails to redeem when nonce is not >= previously
 /// 	successfully redeems
 ///
 /// ProcessRedeeming
@@ -305,6 +305,9 @@ contract('OpenSTUtility', function(accounts) {
 	})
 
 	describe('Redeem', async () => {
+
+		var brandedTokenContract = null;
+
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
@@ -315,6 +318,10 @@ contract('OpenSTUtility', function(accounts) {
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
             await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
             await openSTUtility.processMinting(checkStakingIntentHash);
+	    
+	    	brandedTokenContract = new BrandedToken(brandedToken);
+			await brandedTokenContract.claim(accounts[0]);
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
 	    })
 
 		it('fails to redeem when uuid is empty', async () => {
@@ -325,8 +332,8 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: redeemer }));
 		})
 
-		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 1, { from: redeemer }));
+		it('fails to redeem when nonce is not >= previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 0, { from: redeemer }));
 		})
 
 		it('fails to redeem when uuid is uuidSTPrime', async () => {
@@ -335,14 +342,13 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('fails to redeem if not approved to transfer the amount', async () => {
+			await brandedTokenContract.approve(openSTUtility.address, 0, { from: redeemer });
             await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 2, { from: redeemer }));
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
 		})
 
 		it('successfully redeems', async () => {
-			var brandedTokenContract = new BrandedToken(brandedToken);
-			await brandedTokenContract.claim(accounts[0]);
-			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
-            var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: redeemer });
+			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: redeemer });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[0].plus(1)
@@ -372,8 +378,8 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: redeemer, value: 0 }));
 		})
 
-		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(1, { from: redeemer, value: 2 }));
+		it('fails to redeem when nonce is not >= previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, { from: redeemer, value: 2 }));
 		})
 
 		it('successfully redeems', async () => {

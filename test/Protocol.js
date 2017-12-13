@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: initialise and stake Simple Token Prime
+// Test: stake Simple Token for utility tokens and branded tokens
 //
 // http://www.simpletoken.org/
 //

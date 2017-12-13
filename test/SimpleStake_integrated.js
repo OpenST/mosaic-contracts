@@ -39,7 +39,7 @@ contract('SimpleStake', function(accounts) {
 	/// mock upgraded OpenST protocol contract address with an external account
 	const upgradedOpenSTProtocol = accounts[5];
 	/// constant protocol wait time for protocol transfer in blocks
-	const PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 5;
+	const PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 
 	describe('in isolation', async () => {
 
