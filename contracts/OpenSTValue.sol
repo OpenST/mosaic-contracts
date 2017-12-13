@@ -364,7 +364,6 @@ contract OpenSTValue is OpsManaged, Hasher {
 	function revertUnstaking(
 		bytes32 _redemptionIntentHash)
 		external
-		onlyRegistrar
 		returns (
 		bytes32 uuid,
 		address redeemer,
