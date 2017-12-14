@@ -692,6 +692,22 @@ contract('OpenST', function(accounts) {
       	}
     	});
 
+      // Before wait time as passed
+      // Revert staking called after unlock block
+      it('fails to revertStaking before waiting period ends', async () => {
+        var waitTime = await openSTValue.blocksToWaitLong.call();
+      	waitTime = waitTime.toNumber();
+      	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	for (var i = 0; i < waitTime/2; i++) {
+        	await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
+        	await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+      	}
+    	});
+
+      it("revert staking should not be allowed after processStaking", async() => {
+        await utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: staker}));
+    	});
+
       it("revert minting after expiring block height", async() => {
         // Revert minting from staker user as it can be called from any external user.
         // If we put this as a contraint this test case will fail
