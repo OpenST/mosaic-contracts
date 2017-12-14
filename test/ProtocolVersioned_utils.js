@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-var ProtocolVersioned = artifacts.require("./ProtocolVersioned.sol");
+var ProtocolVersioned = artifacts.require("./ProtocolVersionedMock.sol");
 
 /// @dev Deploy 
 module.exports.deployProtocolVersioned = async (artifacts, accounts) => {

@@ -50,7 +50,7 @@ const ProtocolVersioned_utils = require('./ProtocolVersioned_utils.js');
 contract('ProtocolVersioned', function(accounts) {
 	const openSTProtocol = accounts[1];
 	const proposedProtocol = accounts[2];
-	const PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
+	const PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 3;
 
 	var result = null;
 	var earliestTransferHeight = null;
@@ -105,6 +105,7 @@ contract('ProtocolVersioned', function(accounts) {
 	 *  @dev commented because the wait time is set to 1 week (40320 blocks)
 	 *   needs to be mocked in v0.9.2
 	 *   https://github.com/OpenSTFoundation/openst-protocol/issues/57
+ 	*/
 	
 	describe ('CompleteProtocolTransfer', async () => {
 		before(async () => {
@@ -123,7 +124,7 @@ contract('ProtocolVersioned', function(accounts) {
 			var wait = PROTOCOL_TRANSFER_BLOCKS_TO_WAIT - 2;
 
 			for (var i = 0; i < wait; i++) {
-	            await Utils.expectThrow(protocolVersioned.completeProtocolTransfer({ from: proposedProtocol }));
+					await Utils.expectThrow(protocolVersioned.completeProtocolTransfer({ from: proposedProtocol }));
 			}
 		})
 
@@ -142,8 +143,8 @@ contract('ProtocolVersioned', function(accounts) {
 			assert.equal(newTransferHeight.toNumber(), 0);
 			ProtocolVersioned_utils.checkProtocolTransferCompletedEvent(result.logs[0], proposedProtocol);
 		})
+	
 	});
-	*/
 
 	describe ('RevokeProtocolTransfer', async () => {
 		before(async () => {
