@@ -341,7 +341,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		require(_stakingUnlockHeight > 0);
 		require(_stakingIntentHash != "");
 
-		expirationHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+		expirationHeight = block.number + blocksToWaitShort();
 		nonces[_staker] = _stakerNonce;
 
 		bytes32 stakingIntentHash = hashStakingIntent(
@@ -459,7 +459,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(token.allowance(msg.sender, address(this)) >= _amountBT);
     	require(token.transferFrom(msg.sender, address(this), _amountBT));
 
-    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+    	unlockHeight = block.number + blocksToWaitLong();
 
     	redemptionIntentHash = hashRedemptionIntent(
     		_uuid,
@@ -502,7 +502,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	nonces[msg.sender] = _nonce;
 
     	amountSTP = msg.value;
-    	unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+    	unlockHeight = block.number + blocksToWaitLong();
 
     	redemptionIntentHash = hashRedemptionIntent(
     		uuidSTPrime,
@@ -618,32 +618,40 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		registeredToken.registrar);
     }
 
-	/*
-	 *  Administrative functions
-	 */
-	function initiateProtocolTransfer(
-		ProtocolVersioned _token,
-		address _proposedProtocol)
-		public
-		onlyAdmin
-		returns (bool)
-	{
-		_token.initiateProtocolTransfer(_proposedProtocol);
+    /*
+     *  Administrative functions
+     */
+    function initiateProtocolTransfer(
+        ProtocolVersioned _token,
+        address _proposedProtocol)
+        public
+        onlyAdmin
+        returns (bool)
+    {
+        _token.initiateProtocolTransfer(_proposedProtocol);
 
-		return true;
+        return true;
+    }
+
+    // on the very first released version v0.9.1 there is no need
+    // to completeProtocolTransfer from a previous version
+
+    function revokeProtocolTransfer(
+        ProtocolVersioned _token)
+        public
+        onlyAdmin
+        returns (bool)
+    {
+        _token.revokeProtocolTransfer();
+
+        return true;
+    }
+
+	function blocksToWaitLong() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_LONG;
 	}
 
-	// on the very first released version v0.9.1 there is no need
-	// to completeProtocolTransfer from a previous version
-
-	function revokeProtocolTransfer(
-		ProtocolVersioned _token)
-		public
-		onlyAdmin
-		returns (bool)
-	{
-		_token.revokeProtocolTransfer();
-
-		return true;
+	function blocksToWaitShort() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_SHORT;
 	}
 }

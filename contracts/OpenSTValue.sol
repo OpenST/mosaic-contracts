@@ -63,9 +63,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
 	// ~2 weeks, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
+	uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
 	// ~1hour, assuming ~15s per block
-	uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
+	uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
 
     /*
      *  Structures
@@ -184,7 +184,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(valueToken.transferFrom(tx.origin, address(this), _amountST));
 
 		amountUT = _amountST.mul(utilityToken.conversionRate);
-		unlockHeight = block.number + BLOCKS_TO_WAIT_LONG;
+		unlockHeight = block.number + blocksToWaitLong();
 
 		nonces[tx.origin]++;
 		nonce = nonces[tx.origin];
@@ -315,7 +315,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     	require(_redemptionIntentHash == redemptionIntentHash);
 
-    	expirationHeight = block.number + BLOCKS_TO_WAIT_SHORT;
+    	expirationHeight = block.number + blocksToWaitShort();
 
     	UtilityToken storage utilityToken = utilityTokens[_uuid];
     	// minimal precision to unstake 1 STWei
@@ -440,6 +440,14 @@ contract OpenSTValue is OpsManaged, Hasher {
 			utilityToken.chainIdUtility,
 			address(utilityToken.simpleStake),
 			utilityToken.stakingAccount);
+	}
+
+	function blocksToWaitLong() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_LONG;
+	}
+
+	function blocksToWaitShort() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_SHORT;
 	}
 
 	/*
