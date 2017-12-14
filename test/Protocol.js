@@ -693,7 +693,7 @@ contract('OpenST', function(accounts) {
     	});
 
       it("revert minting after expiring block height", async() => {
-        // Revert minting from staker user as it can called from any external user.
+        // Revert minting from staker user as it can be called from any external user.
         // If we put this as a contraint this test case will fail
         var result = await openSTUtility.revertMinting(stakingIntentHash, {from: staker});
       	openSTUtilityUtils.checkRevertedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
@@ -708,8 +708,9 @@ contract('OpenST', function(accounts) {
 
     });
 
-		 // SEQUENCE OF PROCESS
-		// Call Redeem => Call RevertRedemption
+			// SEQUENCE OF EVENTS
+		 // Call Redeem => Call RevertRedemption
+		//
 		context('call redeem then revertRedemption', function() {
 
 			// Redeemer should have some branded token
@@ -773,9 +774,9 @@ contract('OpenST', function(accounts) {
 
 		});
 
-		// SEQUENCE OF PROCESS
-		// Redeem => confirmRedemptionIntent
-		// revertRedemption => revertUnstaking
+		   // SEQUENCE OF EVENTS
+		 // Redeem => confirmRedemptionIntent => revertRedemption => revertUnstaking
+		//
 		context('call redeem then confirmRedemptionIntent then revertRedemption then revertUnstaking', function() {
 
 			// Since we reverted redemption in above case we don't need to transfer again as redeemer will already have REDEEM_AMOUNT_BT balance
@@ -856,6 +857,136 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkRevertedUnstake(revertUnstakingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
 					redeemer, redeemedAmountST);
 				utils.logResponse(revertUnstakingResult, "OpenSTUtility.revertUnstake.revertUnstaking");
+
+			});
+
+			// Report Gas usages
+			it("report gas usage: revert unstake", async () => {
+
+				utils.printGasStatistics();
+				utils.clearReceipts();
+
+			});
+
+		});
+
+		  // SEQUENCE OF EVENTS
+		 // Redeem => confirmRedemptionIntent => ProcessRedemption => revertRedemption => revertUnstaking
+		//
+		context('call redeem then confirmRedemptionIntent then ProcessRedemption then revertRedemption then revertUnstaking', function() {
+
+			var previousSTBalance = null;
+
+			it("previous balance on simple stake contract", async() => {
+
+				previousSTBalance = await btSimpleStake.getTotalStake.call();
+
+			});
+
+			// Since we reverted redemption in above case we don't need to transfer again as redeemer will already have REDEEM_AMOUNT_BT balance
+			it("check branded token balance of redeemer", async() => {
+
+				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
+				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+
+			});
+
+			// Gives allawance and call redeem
+			it("gives allowance and calls redeem", async() => {
+
+				var approveResult = await brandedToken.approve(openSTUtility.address, REDEEM_AMOUNT_BT, { from: redeemer })
+				Assert.ok(approveResult);
+
+				nonce = await openSTValue.getNextNonce.call(redeemer);
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
+				unlockHeight = redeemResult.logs[0].args._unlockHeight;
+				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
+					brandedToken.address, redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+
+				utils.logResponse(redeemResult, "OpenSTUtility.revertUnstake.redeem");
+
+			});
+
+			// Call confirmRedemptionIntent
+			it("calls confirmRedemptionIntent", async() => {
+
+				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
+				redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
+				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
+				redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
+				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
+					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
+				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
+
+			});
+
+			it("process redemption", async() => {
+
+				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+
+				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
+					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+
+				utils.logResponse(processRedeemingResult, "openSTUtility.revertUnstake.processRedeeming");
+
+			});
+
+			// Fake transactions so that redeem is expired and revertRedemption can be called
+			it('waits till redeem is expired', async () => {
+
+				var waitTime = await openSTUtility.blocksToWaitLong.call();
+				waitTime = waitTime.toNumber();
+				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+
+				// Mock transactions so that block number increases
+				for (var i = 0; i < waitTime; i++) {
+					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
+				}
+
+			});
+
+			// Revert Redemption
+			it("reverts redemption", async() => {
+
+				await utils.expectThrow(openSTUtility.revertRedemption(redemptionIntentHash, { from: redeemer }));
+
+			});
+
+			// Fake transactions so that unstakes is expired and revertUnstakes can be called
+			it('waits till unstake is expired', async () => {
+
+				var waitTime = await openSTValue.blocksToWaitShort.call();
+				waitTime = waitTime.toNumber();
+				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+
+				// Mock transactions so that block number increases
+				for (var i = 0; i < waitTime; i++) {
+					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
+				}
+
+			});
+
+			// Revert unstakes
+			it("reverts unstake", async() => {
+
+				var revertUnstakingResult = await openSTValue.revertUnstaking(redemptionIntentHash, { from: redeemer });
+				openSTValueUtils.checkRevertedUnstake(revertUnstakingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
+					redeemer, redeemedAmountST);
+				utils.logResponse(revertUnstakingResult, "OpenSTUtility.revertUnstake.revertUnstaking");
+
+			});
+
+
+			it("checks that branded token has been burned but SimpleToken has not been releases to redeemer", async() => {
+
+				// Branded token has burned so balance will be 0
+				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
+				Assert.equal(balanceOfRedeemer, 0);
+
+			  // Simple Token has not been released so previous and current balance is same
+				var currentStBalance = await btSimpleStake.getTotalStake.call();
+				Assert.equal(previousSTBalance.toNumber(), currentStBalance.toNumber());
 
 			});
 
