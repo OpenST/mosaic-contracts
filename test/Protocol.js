@@ -708,7 +708,8 @@ contract('OpenST', function(accounts) {
 
     });
 
-		 // After Redeem Call Revert Redemption
+		 // SEQUENCE OF PROCESS
+		// Call Redeem => Call RevertRedemption
 		context('call redeem then revertRedemption', function() {
 
 			// Redeemer should have some branded token
@@ -754,7 +755,7 @@ contract('OpenST', function(accounts) {
 			// after redeem, revert redemption can be called
 			it("revert redemption", async() => {
 
-				var revertResult = await openSTUtility.revertRedemption(redemptionIntentHash);
+				var revertResult = await openSTUtility.revertRedemption(redemptionIntentHash, { from: redeemer });
 				openSTUtilityUtils.checkRevertedRedemption(revertResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash, redeemer,
 					REDEEM_AMOUNT_BT);
 
@@ -829,7 +830,7 @@ contract('OpenST', function(accounts) {
 			// Revert Redemption
 			it("reverts redemption", async() => {
 
-				var revertRedemptionResult = await openSTUtility.revertRedemption(redemptionIntentHash);
+				var revertRedemptionResult = await openSTUtility.revertRedemption(redemptionIntentHash, { from: redeemer });
 				openSTUtilityUtils.checkRevertedRedemption(revertRedemptionResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
 					redeemer, REDEEM_AMOUNT_BT);
 
@@ -851,9 +852,8 @@ contract('OpenST', function(accounts) {
 			// Revert unstakes
 			it("reverts unstake", async() => {
 
-				var revertUnstakingResult = await registrarVC.revertUnstaking( openSTValue.address, redemptionIntentHash, { from: intercommVC });
-				var formattedDecodedEvents = web3EventsDecoder.perform(revertUnstakingResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				openSTValueUtils.checkRevertedUnstake(formattedDecodedEvents, registeredBrandedTokenUuid, redemptionIntentHash,
+				var revertUnstakingResult = await openSTValue.revertUnstaking(redemptionIntentHash, { from: redeemer });
+				openSTValueUtils.checkRevertedUnstake(revertUnstakingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
 					redeemer, redeemedAmountST);
 				utils.logResponse(revertUnstakingResult, "OpenSTUtility.revertUnstake.revertUnstaking");
 
