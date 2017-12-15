@@ -22,13 +22,15 @@
 const BigNumber = require('bignumber.js');
 
 var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
+var OpenSTUtilityMock = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
 
-/// @dev Deploy 
+const chainIdValue   = 3;
+const chainIdUtility = 1410;
+
+/// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-	const chainIdValue   = 3;
-	const chainIdUtility = 1410;
-	const registrar      = accounts[1];
+  const registrar      = accounts[1];
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
@@ -39,6 +41,17 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
 	return {
 		stPrime       : stPrime,
 		openSTUtility : openSTUtility
+	}
+}
+
+// @dev Deploy OpenSTUtilityMock
+module.exports.deployOpenSTUtilityMock = async (artifacts, accounts) => {
+  const registrar      = accounts[1];
+
+	const openSTUtilityMock = await OpenSTUtilityMock.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
+
+	return {
+		OpenSTUtilityMock : openSTUtilityMock
 	}
 }
 
@@ -218,9 +231,7 @@ module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _stak
 }
 
 module.exports.checkRevertedRedemption = (event, _uuid, _redemptionIntentHash, _redeemer, _amountUT) => {
-	if (Number.isInteger(_amountUT)) {
-		_amount = new BigNumber(_amountUT);
-	}
+  _amountUT = new BigNumber(_amountUT);
 
 	assert.equal(event.event, "RevertedRedemption");
 	assert.equal(event.args._uuid, _uuid);
