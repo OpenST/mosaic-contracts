@@ -94,7 +94,7 @@ const BigNumber = require('bignumber.js');
 /// 		successfully processes by registrar
 ///
 
-contract('OpenSTUtilityMock', function(accounts) {
+contract('OpenSTUtility', function(accounts) {
 	const chainIdValue   		= 3;
 	const chainIdUtility 		= 1410;
 	const registrar      		= accounts[1];
@@ -537,6 +537,10 @@ contract('OpenSTUtilityMock', function(accounts) {
 			})
 		})
 
+
+	// Unit test cases for revert rdemption
+	describe('revert redemption', async () => {
+
 		context('revert redemption', async () => {
 
 			var stakeAmountST = 1,
@@ -583,17 +587,26 @@ contract('OpenSTUtilityMock', function(accounts) {
 			});
 
 			it('fails to revert redemption when redemptionIntentHash is empty', async () => {
+
 				await Utils.expectThrow(OpenSTUtility.revertRedemption("", { from: redeemerForRevert }));
 
 			});
 
+			it('fails to revert redemption when redemptionIntentHash is any random string', async () => {
+
+				await Utils.expectThrow(OpenSTUtility.revertRedemption("hshhsgdg7alffwwsda", { from: redeemerForRevert }));
+
+			});
+
 			it('Verify balance of redeemer just before reverting redemption', async () => {
+
 				 var balanceOfRedeemer = await brandedTokenContract.balanceOf(redeemerForRevert);
 	  		 await assert.equal(balanceOfRedeemer.toNumber(), (convertedAmountBT-redemptionAmountBT));
 
 			});
 
 			it('successfully reverts redemption', async () => {
+
 				var revertRedemptionResult = await OpenSTUtility.revertRedemption(redemptionIntentHash, { from: redeemerForRevert });
 				OpenSTUtility_utils.checkRevertedRedemption(revertRedemptionResult.logs[0], checkBtUuid, redemptionIntentHash,
 						redeemerForRevert, redemptionAmountBT);
@@ -601,14 +614,21 @@ contract('OpenSTUtilityMock', function(accounts) {
 			});
 
 			it('Verify balance of redeemer just after reverting redemption', async () => {
+
 				var balanceOfRedeemer = await brandedTokenContract.balanceOf(redeemerForRevert);
 				await assert.equal(balanceOfRedeemer.toNumber(), convertedAmountBT);
 
 			});
 
+			it('fails to processRedeeming after revert redemption', async () => {
+
+				await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemerForRevert }));
+
+			});
+
 		});
 
-	})
+	});
 
 	// Unit test case for revertMinting
   describe('revert minting', async () => {
@@ -618,39 +638,42 @@ contract('OpenSTUtilityMock', function(accounts) {
   	const AMOUNT_ST = new BigNumber(10).mul(DECIMALSFACTOR);
   	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
 
-  	context('BrandedToken', async () => {
+			context('BrandedToken', async () => {
 
-  		before(async () => {
-				contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-				openSTUtility = contracts.openSTUtility;
-				checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
-				result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
-				brandedToken = result.logs[0].args._token;
-				await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-  			stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
-      												AMOUNT_ST, AMOUNT_BT, 80668);
-				result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,
-      						AMOUNT_BT, 80668, stakingIntentHash, { from: registrar });
-			});
+				before(async () => {
+					contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+					openSTUtility = contracts.openSTUtility;
+					checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+					brandedToken = result.logs[0].args._token;
+					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+					stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
+																AMOUNT_ST, AMOUNT_BT, 80668);
+					result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,
+										AMOUNT_BT, 80668, stakingIntentHash, { from: registrar });
+				});
 
-  		it('fails if stakingIntentHash is empty', async() => {
-        await Utils.expectThrow(openSTUtility.revertMinting("", { from: accounts[2] }));
-			});
+				it('fails if stakingIntentHash is empty', async() => {
+					await Utils.expectThrow(openSTUtility.revertMinting("", { from: accounts[2] }));
+				});
 
-  		// Before wait time as passed
-  		it('fails to complete by proposedProtocol before waiting period ends', async () => {
-    		// Wait time less 1 block for preceding test case and 1 block because condition is <=
-        var waitBlock = await openSTUtility.blocksToWaitShort.call();
-				for (var i = 0; i < waitBlock - 2; i++) {
-					await Utils.expectThrow(openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2], gasPrice: '0x12A05F200' }));
-				}
-			})
+				// Before wait time as passed
+				it('fails to complete by proposedProtocol before waiting period ends', async () => {
+					// Wait time less 1 block for preceding test case and 1 block because condition is <=
+					var waitBlock = await openSTUtility.blocksToWaitShort.call();
+					for (var i = 0; i < waitBlock - 2; i++) {
+						await Utils.expectThrow(openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2], gasPrice: '0x12A05F200' }));
+					}
+				})
 
-			it('successfully revert Minting', async () => {
-				var result = await openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2] , gasPrice: '0x12A05F200'});
-				await OpenSTUtility_utils.checkRevertedMintEvent(result.logs[0], checkBtUuid, stakingIntentHash, accounts[0],
-    			accounts[0], AMOUNT_BT);
+				it('successfully revert Minting', async () => {
+					var result = await openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2] , gasPrice: '0x12A05F200'});
+					await OpenSTUtility_utils.checkRevertedMintEvent(result.logs[0], checkBtUuid, stakingIntentHash, accounts[0],
+						accounts[0], AMOUNT_BT);
+				})
 			})
 		})
-	})
-})
+
+	});
+
+});
