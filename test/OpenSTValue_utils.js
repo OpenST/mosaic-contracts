@@ -21,7 +21,8 @@
 
 const BigNumber = require('bignumber.js');
 
-var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+//var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
 /// @dev Deploy 
