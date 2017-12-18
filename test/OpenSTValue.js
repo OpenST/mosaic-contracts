@@ -627,9 +627,10 @@ contract('OpenSTValue', function(accounts) {
 				var waitTime = await openSTValue.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
+				var transferAmount = new BigNumber(0.0000000000000000000000000000000000001);
 				for (var i = 0; i < waitTime / 2 ; i++) {
-					await web3.eth.sendTransaction({ from: accounts[10], to: accounts[11], value: 0.000000000000000000001 });
-					await web3.eth.sendTransaction({ from: accounts[11], to: accounts[10], value: 0.000000000000000000001 });
+					await web3.eth.sendTransaction({ from: accounts[10], to: accounts[11], value: transferAmount });
+					await web3.eth.sendTransaction({ from: accounts[11], to: accounts[10], value: transferAmount });
 				}
 
 			})
