@@ -94,7 +94,7 @@ const BigNumber = require('bignumber.js');
 /// 		successfully processes by registrar
 ///
 
-contract('OpenSTUtility', function(accounts) {
+contract('OpenSTUtilityMock', function(accounts) {
 	const chainIdValue   		= 3;
 	const chainIdUtility 		= 1410;
 	const registrar      		= accounts[1];
@@ -102,14 +102,13 @@ contract('OpenSTUtility', function(accounts) {
 	const symbol 				= "MCC";
 	const name 					= "Member Company Coin";
 	const conversionRate 		= 5;
-	const BLOCKS_TO_WAIT_SHORT	= 240;
-	const DECIMALSFACTOR = new BigNumber('10').pow('18');
 
 	const hashName 	 			= "hashName";
 	const hashSymbol 			= "hashSymbol";
 	const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 	const token 	 			  = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 	const redeemer 				= accounts[0];
+  const DECIMALSFACTOR = new BigNumber('10').pow('18');
 
 	var result 					= null;
 	var checkBtUuid 			= null;
@@ -548,26 +547,26 @@ contract('OpenSTUtility', function(accounts) {
 
 			before(async () => {
 
-				contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtilityMock(artifacts, accounts);
-				// Use OpenSTUtilityMock Contract to expire redeem soon
-				OpenSTUtilityMock = contracts.OpenSTUtilityMock;
-				checkBtUuid = await OpenSTUtilityMock.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtilityMock.address, conversionRate);
-				result = await OpenSTUtilityMock.proposeBrandedToken(symbol, name, conversionRate);
+				contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+				// Use OpenSTUtility Contract to expire redeem soon
+				OpenSTUtility = contracts.openSTUtility;
+				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate);
+				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 				brandedToken = result.logs[0].args._token;
-				await OpenSTUtilityMock.registerBrandedToken(symbol, name, conversionRate, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
+				await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
 
-				escrowUnlockHeight = await OpenSTUtilityMock.blocksToWaitLong.call();
-				// 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtilityMock contract so that redeem expires
+				escrowUnlockHeight = await OpenSTUtility.blocksToWaitLong.call();
+				// 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtility contract so that redeem expires
 				escrowUnlockHeight = escrowUnlockHeight.toNumber() + 1;
-				checkStakingIntentHash = await OpenSTUtilityMock.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight);
-				await OpenSTUtilityMock.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, checkStakingIntentHash, { from: registrar });
-				await OpenSTUtilityMock.processMinting(checkStakingIntentHash);
+				checkStakingIntentHash = await OpenSTUtility.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight);
+				await OpenSTUtility.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, checkStakingIntentHash, { from: registrar });
+				await OpenSTUtility.processMinting(checkStakingIntentHash);
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(redeemerForRevert);
 				// redeemerForRevert is approved with 5 BT
-				await brandedTokenContract.approve(OpenSTUtilityMock.address, redemptionAmountBT, { from: redeemerForRevert });
+				await brandedTokenContract.approve(OpenSTUtility.address, redemptionAmountBT, { from: redeemerForRevert });
 				// After calling Redeem is left with 3 BT since redemptionAmountBT is 2 (5-2)
-				result = await OpenSTUtilityMock.redeem(checkBtUuid, redemptionAmountBT, 2, { from: redeemerForRevert });
+				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, { from: redeemerForRevert });
 				redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 
 			});
@@ -584,28 +583,24 @@ contract('OpenSTUtility', function(accounts) {
 			});
 
 			it('fails to revert redemption when redemptionIntentHash is empty', async () => {
-
-				await Utils.expectThrow(OpenSTUtilityMock.revertRedemption("", { from: redeemerForRevert }));
+				await Utils.expectThrow(OpenSTUtility.revertRedemption("", { from: redeemerForRevert }));
 
 			});
 
 			it('Verify balance of redeemer just before reverting redemption', async () => {
-
 				 var balanceOfRedeemer = await brandedTokenContract.balanceOf(redeemerForRevert);
 	  		 await assert.equal(balanceOfRedeemer.toNumber(), (convertedAmountBT-redemptionAmountBT));
 
 			});
 
 			it('successfully reverts redemption', async () => {
-
-				var revertRedemptionResult = await OpenSTUtilityMock.revertRedemption(redemptionIntentHash, { from: redeemerForRevert });
+				var revertRedemptionResult = await OpenSTUtility.revertRedemption(redemptionIntentHash, { from: redeemerForRevert });
 				OpenSTUtility_utils.checkRevertedRedemption(revertRedemptionResult.logs[0], checkBtUuid, redemptionIntentHash,
 						redeemerForRevert, redemptionAmountBT);
 
 			});
 
 			it('Verify balance of redeemer just after reverting redemption', async () => {
-
 				var balanceOfRedeemer = await brandedTokenContract.balanceOf(redeemerForRevert);
 				await assert.equal(balanceOfRedeemer.toNumber(), convertedAmountBT);
 
@@ -615,4 +610,47 @@ contract('OpenSTUtility', function(accounts) {
 
 	})
 
+	// Unit test case for revertMinting
+  describe('revert minting', async () => {
+    var redemptionIntentHash = null;
+  	var brandedToken = null;
+  	var stakingIntentHash = null;
+  	const AMOUNT_ST = new BigNumber(10).mul(DECIMALSFACTOR);
+  	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
+
+  	context('BrandedToken', async () => {
+
+  		before(async () => {
+				contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+				openSTUtility = contracts.openSTUtility;
+				checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+				result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+				brandedToken = result.logs[0].args._token;
+				await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+  			stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
+      												AMOUNT_ST, AMOUNT_BT, 80668);
+				result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,
+      						AMOUNT_BT, 80668, stakingIntentHash, { from: registrar });
+			});
+
+  		it('fails if stakingIntentHash is empty', async() => {
+        await Utils.expectThrow(openSTUtility.revertMinting("", { from: accounts[2] }));
+			});
+
+  		// Before wait time as passed
+  		it('fails to complete by proposedProtocol before waiting period ends', async () => {
+    		// Wait time less 1 block for preceding test case and 1 block because condition is <=
+        var waitBlock = await openSTUtility.blocksToWaitShort.call();
+				for (var i = 0; i < waitBlock - 2; i++) {
+					await Utils.expectThrow(openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2], gasPrice: '0x12A05F200' }));
+				}
+			})
+
+			it('successfully revert Minting', async () => {
+				var result = await openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2] , gasPrice: '0x12A05F200'});
+				await OpenSTUtility_utils.checkRevertedMintEvent(result.logs[0], checkBtUuid, stakingIntentHash, accounts[0],
+    			accounts[0], AMOUNT_BT);
+			})
+		})
+	})
 })
