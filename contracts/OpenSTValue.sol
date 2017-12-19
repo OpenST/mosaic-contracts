@@ -380,20 +380,20 @@ contract OpenSTValue is OpsManaged, Hasher {
 		
 		Unstake storage unstake = unstakes[_redemptionIntentHash];
 
-    	// require that the unstake has expired and that the redeemer has not
-    	// processed the unstaking, ie unstake has not been deleted
-    	require(unstake.expirationHeight > 0);
-    	require(unstake.expirationHeight <= block.number);
+			// require that the unstake has expired and that the redeemer has not
+			// processed the unstaking, ie unstake has not been deleted
+			require(unstake.expirationHeight > 0);
+			require(unstake.expirationHeight <= block.number);
 
-    	uuid = unstake.uuid;
-    	redeemer = unstake.redeemer;
-    	amountST = unstake.amountST;
+			uuid = unstake.uuid;
+			redeemer = unstake.redeemer;
+			amountST = unstake.amountST;
 
-    	delete unstakes[_redemptionIntentHash];
+			delete unstakes[_redemptionIntentHash];
 
-    	RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
+			RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
 
-    	return (uuid, redeemer, amountST);
+			return (uuid, redeemer, amountST);
 	}
 
     /*

@@ -365,16 +365,16 @@ contract('OpenSTValue', function(accounts) {
 		var amountUT 				= conversionRate;
 
 		before(async () => {
-	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
-	        valueToken  = contracts.valueToken;
-	        openSTValue = contracts.openSTValue;
-        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
-            await openSTValue.addCore(core.address, { from: registrar });
-        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+			contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+			valueToken  = contracts.valueToken;
+			openSTValue = contracts.openSTValue;
+			core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+			await openSTValue.addCore(core.address, { from: registrar });
+			checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			nonce = await openSTValue.getNextNonce.call(redeemer);
-	    })
+		})
 
 		it('fails to confirm by non-registrar', async () => {
 			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
@@ -544,21 +544,6 @@ contract('OpenSTValue', function(accounts) {
 
 			});
 						
-			it('fails to process when reverting before waiting period ends', async () => {	  
-
-				await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: staker}));		
-				// for test of the test case lets make sure that waiting period is ended
-				var waitTime = await openSTValue.blocksToWaitLong.call();
-				waitTime = waitTime.toNumber();
-				// Wait time less 1 block for preceding test case and 1 block because condition is <=
-				var transferAmount = new BigNumber(0.0000000000000000000000000000000000001);
-				for (var i = 0; i < waitTime / 2 ; i++) {
-					await web3.eth.sendTransaction({ from: accounts[10], to: accounts[11], value: transferAmount });
-					await web3.eth.sendTransaction({ from: accounts[11], to: accounts[10], value: transferAmount });
-				}
-
-			})
-
 			it('fails to process when stakingIntentHash is empty', async () => {	    			
 
 				await Utils.expectThrow(openSTValue.revertStaking("", {from: staker}));
@@ -571,6 +556,17 @@ contract('OpenSTValue', function(accounts) {
 
 			});
 
+			it('fails to process when reverting before waiting period ends', async () => {	  				
+				// for test of the test case lets make sure that waiting period is ended
+				var waitTime = await openSTValue.blocksToWaitLong.call();
+				waitTime = waitTime.toNumber()-3;
+				// Wait time less 1 block for preceding test case and 1 block because condition is <=				
+				for (var i = 0; i < waitTime ; i++) {
+						await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: staker}));
+				}
+
+			});
+			
 			it('success  processing revert staking', async () => {	 
 
 				var result = await openSTValue.revertStaking(stakingIntentHash, {from: staker});
@@ -621,16 +617,12 @@ contract('OpenSTValue', function(accounts) {
 						
 			it('fails to process when reverting before waiting period ends', async () => {	    	
 
-				await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: staker}));		
-
 				// for test of the test case lets make sure that waiting period is ended
 				var waitTime = await openSTValue.blocksToWaitLong.call();
-				waitTime = waitTime.toNumber();
-				// Wait time less 1 block for preceding test case and 1 block because condition is <=
-				var transferAmount = new BigNumber(0.0000000000000000000000000000000000001);
-				for (var i = 0; i < waitTime / 2 ; i++) {
-					await web3.eth.sendTransaction({ from: accounts[10], to: accounts[11], value: transferAmount });
-					await web3.eth.sendTransaction({ from: accounts[11], to: accounts[10], value: transferAmount });
+				waitTime = waitTime.toNumber()-1;
+				// Wait time less 1 block for preceding test case and 1 block because condition is <=				
+				for (var i = 0; i < waitTime; i++) {
+					await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: staker}));	
 				}
 
 			})
@@ -642,6 +634,122 @@ contract('OpenSTValue', function(accounts) {
 			});
 
 			
+		});
+
+	});
+
+	// Revert Unstaking
+	describe('Revert Unstaking', async () => {
+
+		var staker 									= accounts[0];
+		var redeemer 								= accounts[2];
+		var redemptionIntentHash 		= null;
+		var redemptionUnlockHeight 	= 80668;
+		var amountST 								= 1;
+		var amountUT 								= 1 * conversionRate;
+		var externalUser 						= accounts[7];
+
+		context('Revert Unstaking before ProcessUnstaking ', async () => {
+			before(async () => {
+
+				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+				valueToken  = contracts.valueToken;
+				openSTValue = contracts.openSTValue;
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				await openSTValue.addCore(core.address, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				stake = result.logs[0].args.stake;
+				nonce = await openSTValue.getNextNonce.call(redeemer);
+				await valueToken.approve(openSTValue.address, amountST, { from: staker });
+				result = await openSTValue.stake(checkUuid, amountST, staker, { from: staker });
+				stakingIntentHash = result.logs[0].args._stakingIntentHash;
+				await openSTValue.processStaking(stakingIntentHash, { from: staker });
+				redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
+				await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar });
+
+			});
+			
+
+			it('fails to process when redemptionIntentHash is empty ', async () => {
+
+				await Utils.expectThrow(openSTValue.revertUnstaking("", { from: externalUser }));				
+
+			});
+
+			it('fails to process when redemptionIntentHash is Bad Hash ', async () => {
+
+				await Utils.expectThrow(openSTValue.revertUnstaking("Bad Hash", { from: externalUser }));				
+
+			});
+
+			it('fails to process when reverting before waiting period ends', async () => {	  
+
+				// for test of the test case lets make sure that waiting period is ended
+				var waitTime = await openSTValue.blocksToWaitShort.call();
+				waitTime = waitTime.toNumber() - 3;
+				// Wait time less 1 block for preceding test case and 1 block because condition is <=
+				for (var i = 0; i < waitTime ; i++) {
+					await Utils.expectThrow(openSTValue.revertUnstaking(redemptionIntentHash, { from: externalUser }));
+				}
+			
+			});
+
+
+			it('success processing revert unstaking', async () => {
+
+				var revertUnstakingResult = await openSTValue.revertUnstaking(redemptionIntentHash, { from: externalUser });
+				await OpenSTValue_utils.checkRevertedUnstake(revertUnstakingResult.logs[0], checkUuid, redemptionIntentHash,redeemer, amountST);
+
+			});
+
+			it('fails to process when revertUnstaking once its already done', async () => {
+
+				await Utils.expectThrow(openSTValue.revertUnstaking(redemptionIntentHash, { from: externalUser }));				
+
+			});
+			
+		});
+
+		context('Revert Unstaking after ProcessUnstaking ', async () => {
+			before(async () => {
+
+				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+				valueToken  = contracts.valueToken;
+				openSTValue = contracts.openSTValue;
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				await openSTValue.addCore(core.address, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				stake = result.logs[0].args.stake;
+				nonce = await openSTValue.getNextNonce.call(redeemer);
+				await valueToken.approve(openSTValue.address, amountST, { from: staker });
+				result = await openSTValue.stake(checkUuid, amountST, staker, { from: staker });
+				stakingIntentHash = result.logs[0].args._stakingIntentHash;
+				await openSTValue.processStaking(stakingIntentHash, { from: staker });
+				redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight);
+				await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar });
+
+
+				// Successfull ProcessUnstaking				
+				processUnstakingResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });				
+				await OpenSTValue_utils.checkProcessedUnstakeEvent(processUnstakingResult.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, amountST);
+
+			});
+			
+
+			it('fails to process when revertUnstaking once its already done', async () => {
+
+				var waitTime = await openSTValue.blocksToWaitShort.call();
+				waitTime = waitTime.toNumber() - 1;
+				// Wait time less 1 block for preceding test case and 1 block because condition is <=
+				for (var i = 0; i < waitTime ; i++) {
+					await Utils.expectThrow(openSTValue.revertUnstaking(redemptionIntentHash, { from: externalUser }));
+				}
+				await Utils.expectThrow(openSTValue.revertUnstaking(redemptionIntentHash, { from: externalUser }));				
+
+			});
+
 		});
 
 	});
