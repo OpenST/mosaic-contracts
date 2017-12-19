@@ -538,14 +538,14 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 
-	// Unit test cases for revert rdemption
+	// Unit test cases for revert redemption
 	describe('revert redemption', async () => {
 
 		context('revert redemption', async () => {
 
-			var stakeAmountST = 1,
+			var stakeAmountST = new BigNumber(1).mul(DECIMALSFACTOR),
 					convertedAmountBT = (stakeAmountST*conversionRate),
-					redemptionAmountBT = 2, // How many Branded tokens to redeem
+					redemptionAmountBT = new BigNumber(2).mul(DECIMALSFACTOR), // How many Branded tokens to redeem
 					redeemerForRevert = accounts[0] // requester and redeemer is same here
 					escrowUnlockHeight = 0;
 
