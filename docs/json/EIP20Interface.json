@@ -1,0 +1,63 @@
+
+{
+   "methods" : {
+      "allowance(address,address)" : {
+         "details" : "Returns remaining allowance of _spender from _owner",
+         "params" : {
+            "_owner" : "owner",
+            "_spender" : "spender"
+         },
+         "return" : "remaining"
+      },
+      "approve(address,uint256)" : {
+         "details" : "Approves _spender to transfer _value from msg.sender; emits Approval event",
+         "params" : {
+            "_spender" : "spender",
+            "_value" : "value"
+         },
+         "return" : "success"
+      },
+      "balanceOf(address)" : {
+         "details" : "Returns balance of _owner",
+         "params" : {
+            "_owner" : "owner"
+         },
+         "return" : "balance"
+      },
+      "decimals()" : {
+         "details" : "Returns decimals",
+         "return" : "uint8"
+      },
+      "name()" : {
+         "details" : "Returns name",
+         "return" : "string"
+      },
+      "symbol()" : {
+         "details" : "Returns symbol",
+         "return" : "string"
+      },
+      "totalSupply()" : {
+         "details" : "Returns totalSupply",
+         "return" : "uint256"
+      },
+      "transfer(address,uint256)" : {
+         "details" : "Transfers _value from balance of msg.sender to _to; emits Transfer event",
+         "params" : {
+            "_to" : "to",
+            "_value" : "value"
+         },
+         "return" : "success"
+      },
+      "transferFrom(address,address,uint256)" : {
+         "details" : "Transfers _value from balance of _from to _to; emits Transfer event",
+         "params" : {
+            "_from" : "from",
+            "_to" : "to",
+            "_value" : "value"
+         },
+         "return" : "success"
+      }
+   },
+   "title" : "EIP20Interface - Interface for EIP20Token"
+}
+

@@ -1,0 +1,18 @@
+
+{
+   "methods" : {
+      "chainIdRemote()" : {
+         "details" : "Returns ID of remote chain",
+         "return" : "uint256"
+      },
+      "openSTRemote()" : {
+         "details" : "Returns protocol on remote chain",
+         "return" : "address"
+      },
+      "registrar()" : {
+         "details" : "Returns registrar",
+         "return" : "address"
+      }
+   },
+   "title" : "Core - A minimal stub that will become the anchoring and consensus point for the utility chain to validate itself against"
+}
