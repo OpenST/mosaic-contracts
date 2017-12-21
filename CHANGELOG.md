@@ -1,5 +1,39 @@
 ## OpenST-protocol v0.9.1 December 19 2017
 
+OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
+activation of Simple Token to power the OpenST platform.  The OpenST platform
+allows Ethereum smart contracts to runs faster and cheaper while leveraging
+the security properties of Ethereum's Proof-of-Work.  In this release we implement
+the first corner stone of the protocol: the ability to stake value on Ethereum
+mainnet and mint a new representation of that value on a utility chain,
+effectively increasing the computational throughput of Ethereum smart contracts
+by allowing parallel execution across chains.
+
+OpenST smart contracts have been restructured to store value separately from
+the logic that implements the protocol.  v0.9.1 is not yet protocol complete
+as the validators are whitelisted and not yet open with stake put forward on
+Ethereum mainnet.  However, by splitting the protocol implementation into
+these two logically separate problems, we can already start working with
+member companies and developers to fine-tune the APIs and the developer
+experience to build mainstream applications on Ethereum.
+
+```
+  Ethereum mainnet (value)   |  OpenST platform (utility)
+  ---------------------------------------------------------------------
+      Core - - - - - - - - - - - (Core)
+      /                      |      \
+     /                       |       \
+  Registrar                  |  Registrar
+    |                        |        |
+  OpenSTValue                |  OpenSTUtility
+    \_ SimpleStake           |    \_ UtilityTokenAbstract
+                             |         \_ SimpleTokenPrime (base token)
+                             |         \_ BrandedToken
+```
+
+Detailed changelog:
+
+- Generate documentation in /docs ([openst-protocol#78](https://github.com/OpenSTFoundation/openst-protocol/pull/78))
 - Unit tests for Owned, OpsManaged, SafeMath (carry over from SimpleTokenSale) ([openst-protocol#73](https://github.com/OpenSTFoundation/openst-protocol/pull/73))
 - Add mock ERC20 token for dryrun on Ethereum mainnet ([openst-protocol#71](https://github.com/OpenSTFoundation/openst-protocol/pull/71))
 - Unit tests for protocol transfer ([openst-protocol#66](https://github.com/OpenSTFoundation/openst-protocol/pull/66))
