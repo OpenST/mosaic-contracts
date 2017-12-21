@@ -1,0 +1,83 @@
+
+{
+   "methods" : {
+      "allowance(address,address)" : {
+         "details" : "Takes _owner, _spender; returns remaining allowance of _spender from _owner",
+         "params" : {
+            "_owner" : "owner",
+            "_spender" : "spender"
+         },
+         "return" : "remaining"
+      },
+      "approve(address,uint256)" : {
+         "details" : "Takes _spender, _value; approves _spender to transfer _value from msg.sender; emits Approval event",
+         "params" : {
+            "_spender" : "spender",
+            "_value" : "value"
+         },
+         "return" : "success"
+      },
+      "balanceOf(address)" : {
+         "details" : "Takes _owner; returns balance of _owner",
+         "params" : {
+            "_owner" : "owner"
+         },
+         "return" : "balance"
+      },
+      "burnEIP20Public(uint256)" : {
+         "details" : "Public wrapper for burnEIP20Public",
+         "params" : {
+            "_amount" : "amount"
+         },
+         "return" : "success bool"
+      },
+      "claimEIP20Public(address,uint256)" : {
+         "details" : "Public wrapper for claimEIP20Public",
+         "params" : {
+            "_amount" : "amount",
+            "_beneficiary" : "beneficiary"
+         },
+         "return" : "success bool"
+      },
+      "decimals()" : {
+         "details" : "Returns decimals",
+         "return" : "uint8"
+      },
+      "mintEIP20Public(uint256)" : {
+         "details" : "Public wrapper for mintEIP20Public",
+         "params" : {
+            "_amount" : "amount"
+         },
+         "return" : "success bool"
+      },
+      "name()" : {
+         "details" : "Returns name",
+         "return" : "string"
+      },
+      "symbol()" : {
+         "details" : "Returns symbol",
+         "return" : "string"
+      },
+      "totalSupply()" : {
+         "details" : "Mock totalSupply function"
+      },
+      "transfer(address,uint256)" : {
+         "details" : "Takes _to, _value; transfers _value from balance of msg.sender to _to; emits Transfer event",
+         "params" : {
+            "_to" : "to",
+            "_value" : "value"
+         },
+         "return" : "success"
+      },
+      "transferFrom(address,address,uint256)" : {
+         "details" : "Takes _from, _to, _value; transfers _value from balance of _from to _to; emits Transfer event",
+         "params" : {
+            "_from" : "from",
+            "_to" : "to",
+            "_value" : "value"
+         },
+         "return" : "success"
+      }
+   },
+   "title" : "EIP20TokenMock - Implements mock totalSupply function and wraps internal functions to enable testing EIP20Token"
+}

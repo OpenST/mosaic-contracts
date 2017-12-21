@@ -26,6 +26,7 @@ import "./Hasher.sol";
 import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
+import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
@@ -47,10 +48,14 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+    event RevertedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
+    	address _staker, uint256 _amountST, uint256 _amountUT);
 	event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
 		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 	event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address stake, address _redeemer, uint256 _amountST);
+    event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+    	address _redeemer, uint256 _amountST);
 
 	/*
 	 *  Constants
@@ -218,7 +223,14 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(_stakingIntentHash != "");
 
 		Stake storage stake = stakes[_stakingIntentHash];
-		require(stake.staker == msg.sender);
+
+		// note: as processStaking incurs a cost for the staker, we provide a fallback
+		// in v0.9 for registrar to process the staking on behalf of the staker,
+		// as the staker could fail to process the stake and avoid the cost of staking;
+		// this will be replaced with a signature carry-over implementation instead, where
+		// the signature of the intent hash suffices on value and utility chain, decoupling
+		// it from the transaction to processStaking and processMinting
+		require(stake.staker == msg.sender || registrar == msg.sender);
 		// as this bears the cost, there is no need to require
 		// that the stake.unlockHeight is not yet surpassed
 		// as is required on processMinting
@@ -236,6 +248,38 @@ contract OpenSTValue is OpsManaged, Hasher {
     	delete stakes[_stakingIntentHash];
 
     	return stakeAddress;
+    }
+
+    function revertStaking(
+    	bytes32 _stakingIntentHash)
+    	external
+    	returns (
+    	bytes32 uuid,
+    	uint256 amountST,
+    	address staker)
+    {
+    	require(_stakingIntentHash != "");
+
+    	Stake storage stake = stakes[_stakingIntentHash];
+
+    	// require that the stake is unlocked and exists
+    	require(stake.unlockHeight > 0);
+		require(stake.unlockHeight <= block.number);
+
+    	assert(valueToken.balanceOf(address(this)) >= stake.amountST);
+    	// revert the amount that was intended to be staked back to staker
+		require(valueToken.transfer(stake.staker, stake.amountST));
+
+		uuid = stake.uuid;
+		amountST = stake.amountST;
+		staker = stake.staker;
+
+		RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
+    		stake.amountST, stake.amountUT);
+
+		delete stakes[_stakingIntentHash];
+
+		return (uuid, amountST, staker);
     }
 
     function confirmRedemptionIntent(
@@ -324,6 +368,34 @@ contract OpenSTValue is OpsManaged, Hasher {
 		return stakeAddress;
 	}
 
+	function revertUnstaking(
+		bytes32 _redemptionIntentHash)
+		external
+		returns (
+		bytes32 uuid,
+		address redeemer,
+		uint256 amountST)
+	{
+		require(_redemptionIntentHash != "");
+		
+		Unstake storage unstake = unstakes[_redemptionIntentHash];
+
+    	// require that the unstake has expired and that the redeemer has not
+    	// processed the unstaking, ie unstake has not been deleted
+    	require(unstake.expirationHeight > 0);
+    	require(unstake.expirationHeight <= block.number);
+
+    	uuid = unstake.uuid;
+    	redeemer = unstake.redeemer;
+    	amountST = unstake.amountST;
+
+    	delete unstakes[_redemptionIntentHash];
+
+    	RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
+
+    	return (uuid, redeemer, amountST);
+	}
+
     /*
      *  Public view functions
      */
@@ -345,30 +417,30 @@ contract OpenSTValue is OpsManaged, Hasher {
     	return address(cores[_chainIdUtility]);
     }
 
-    function utilityTokenProperties(
-    	bytes32 _uuid)
-    	external
-    	view
-    	returns (
-    	string  symbol,
-    	string  name,
-    	uint256 conversionRate,
-    	uint8   decimals,
-    	uint256 chainIdUtility,
-    	address simpleStake,
-    	address stakingAccount
-    	/* utility token struct */ )
-    {
-    	UtilityToken storage utilityToken = utilityTokens[_uuid];
-    	return (
-    		utilityToken.symbol,
-    		utilityToken.name,
-    		utilityToken.conversionRate,
-    		utilityToken.decimals,
-    		utilityToken.chainIdUtility,
-    		address(utilityToken.simpleStake),
-    		utilityToken.stakingAccount);
-    }
+	function utilityTokenProperties(
+		bytes32 _uuid)
+		external
+		view
+		returns (
+		string  symbol,
+		string  name,
+		uint256 conversionRate,
+		uint8   decimals,
+		uint256 chainIdUtility,
+		address simpleStake,
+		address stakingAccount
+		/* utility token struct */ )
+	{
+		UtilityToken storage utilityToken = utilityTokens[_uuid];
+		return (
+			utilityToken.symbol,
+			utilityToken.name,
+			utilityToken.conversionRate,
+			utilityToken.decimals,
+			utilityToken.chainIdUtility,
+			address(utilityToken.simpleStake),
+			utilityToken.stakingAccount);
+	}
 
 	/*
 	 *  Registrar functions
@@ -440,5 +512,34 @@ contract OpenSTValue is OpsManaged, Hasher {
 			TOKEN_DECIMALS, _conversionRate, _chainIdUtility, _stakingAccount);
 
 		return uuid;
+	}
+
+	/*
+	 *  Administrative functions
+	 */
+	function initiateProtocolTransfer(
+		ProtocolVersioned _simpleStake,
+		address _proposedProtocol)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_simpleStake.initiateProtocolTransfer(_proposedProtocol);
+
+		return true;
+	}
+
+	// on the very first released version v0.9.1 there is no need
+	// to completeProtocolTransfer from a previous version
+
+	function revokeProtocolTransfer(
+		ProtocolVersioned _simpleStake)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_simpleStake.revokeProtocolTransfer();
+
+		return true;
 	}
 }

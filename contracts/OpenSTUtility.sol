@@ -31,6 +31,7 @@ import "./STPrime.sol";
 import "./STPrimeConfig.sol";
 import "./BrandedToken.sol"; 
 import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
 
 
 /// @title OpenST Utility
@@ -71,11 +72,15 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
     	address _staker, address _beneficiary, uint256 _amount);
+	event RevertedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
+		address _beneficiary, uint256 _amountUT);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
 		uint256 _chainIdValue);
 	event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
 		address _redeemer, uint256 _amount);
+	event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
+		address _redeemer, uint256 _amountUT);
 
 	/*
 	 *  Constants
@@ -102,7 +107,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	uint256 public chainIdUtility;
 	address public registrar;
 	/// registered branded tokens 
-	mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
+	mapping(bytes32 /* uuid */ => RegisteredToken) registeredTokens;
 	/// name reservation is first come, first serve
 	mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
 	/// symbol reserved for unique API routes
@@ -393,6 +398,36 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	return tokenAddress;
     }
 
+    function revertMinting(
+    	bytes32 _stakingIntentHash)
+    	external
+    	returns (
+    	bytes32 uuid,
+    	address staker,
+    	address beneficiary,
+    	uint256 amount)
+    {
+    	require(_stakingIntentHash != "");
+
+    	Mint storage mint = mints[_stakingIntentHash];
+
+    	// require that the mint has expired and that the staker has not
+    	// processed the minting, ie mint has not been deleted
+    	require(mint.expirationHeight > 0);
+    	require(mint.expirationHeight <= block.number);
+
+    	uuid = mint.uuid;
+    	amount = mint.amount;
+    	staker = mint.staker;
+    	beneficiary = mint.beneficiary;
+
+    	delete mints[_stakingIntentHash];
+
+    	RevertedMint(uuid, _stakingIntentHash, staker, beneficiary, amount);
+
+    	return (uuid, staker, beneficiary, amount);
+    }
+
     /// @dev redeemer must set an allowance for the branded token with OpenSTUtility
     ///      as the spender so that the branded token can be taken into escrow by OpenSTUtility
     ///      note: for STPrime, call OpenSTUtility.redeemSTPrime as a payable function
@@ -408,7 +443,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
     {
     	require(_uuid != "");
     	require(_amountBT > 0);
-    	require(_nonce > nonces[msg.sender]);
+    	// on redemption allow the nonce to be re-used to cover for an unsuccessful
+    	// previous redemption previously; as the nonce is strictly increasing plus
+    	// one on the value chain; there is no gain on redeeming with the same nonce,
+    	// only self-inflicted cost.
+    	require(_nonce >= nonces[msg.sender]);
     	nonces[msg.sender] = _nonce;
 
     	// to redeem ST' one needs to send value to payable
@@ -455,7 +494,11 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	bytes32 redemptionIntentHash)
     {
     	require(msg.value > 0);
-    	require(_nonce > nonces[msg.sender]);
+    	// on redemption allow the nonce to be re-used to cover for an unsuccessful
+    	// previous redemption previously; as the nonce is strictly increasing plus
+    	// one on the value chain; there is no gain on redeeming with the same nonce,
+    	// only self-inflicted cost.
+    	require(_nonce >= nonces[msg.sender]);
     	nonces[msg.sender] = _nonce;
 
     	amountSTP = msg.value;
@@ -491,7 +534,14 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(_redemptionIntentHash != "");
 
     	Redemption storage redemption = redemptions[_redemptionIntentHash];
-    	require(redemption.redeemer == msg.sender);
+
+    	// note: as processRedemption incurs a cost for the redeemer, we provide a fallback
+		// in v0.9 for registrar to process the redemption on behalf of the redeemer,
+		// as the redeemer could fail to process the redemption and avoid the cost of redeeming;
+		// this will be replaced with a signature carry-over implementation instead, where
+		// the signature of the intent hash suffices on value and utility chain, decoupling
+		// it from the transaction to processRedemption and processUnstaking
+    	require(redemption.redeemer == msg.sender || registrar == msg.sender);
 
     	// as process redemption bears the cost there is no need to require
     	// the unlockHeight is not past, the same way as we do require for
@@ -514,6 +564,43 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		return tokenAddress;
 	}
 
+	function revertRedemption(
+		bytes32 _redemptionIntentHash)
+		external
+		returns (
+		bytes32 uuid,
+		address redeemer,
+		uint256 amountUT)
+	{
+		require(_redemptionIntentHash != "");
+
+		Redemption storage redemption = redemptions[_redemptionIntentHash];
+
+    	// require that the redemption is unlocked and exists
+    	require(redemption.unlockHeight > 0);
+		require(redemption.unlockHeight <= block.number);
+
+		uuid = redemption.uuid;
+		amountUT = redemption.amountUT;
+		redeemer = redemption.redeemer;
+
+		if (redemption.uuid == uuidSTPrime) {
+	        // transfer throws if insufficient funds
+			redeemer.transfer(amountUT);
+		} else {
+		   	EIP20Interface token = EIP20Interface(registeredTokens[redemption.uuid].token);
+
+			require(token.transfer(redemption.redeemer, redemption.amountUT));
+		}
+
+		delete redemptions[_redemptionIntentHash];
+
+		// fire event
+		RevertedRedemption(uuid, _redemptionIntentHash, redeemer, amountUT);
+
+		return (uuid, redeemer, amountUT);
+	}
+
 	/*
 	 *  Public view functions
 	 */ 
@@ -532,62 +619,31 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
 	/*
-	 *  Operation functions
+	 *  Administrative functions
 	 */
-	/// @dev TODO: add events to trigger for each action
-	function addNameReservation(
-		bytes32 _hashName,
-		address _requester)
+	function initiateProtocolTransfer(
+		ProtocolVersioned _token,
+		address _proposedProtocol)
 		public
-		onlyAdminOrOps
-		returns (bool /* success */)
+		onlyAdmin
+		returns (bool)
 	{
-		address requester = nameReservation[_hashName]; 
-		if (requester == _requester) return true;
-		if (requester == address(0)) {
-			nameReservation[_hashName] = _requester;
-			return true;
-		}
-		return false;
-	}
+		_token.initiateProtocolTransfer(_proposedProtocol);
 
-	function setSymbolRoute(
-		bytes32 _hashSymbol,
-		address _token)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		address token = symbolRoute[_hashSymbol];
-		if (token == _token) return true;
-		if (token == address(0)) {
-			symbolRoute[_hashSymbol] = _token;
-			return true;
-		}
-		return false;
-	}
-
-	function removeNameReservation(
-		bytes32 _hashName)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		require(nameReservation[_hashName] != address(0));
-
-		delete nameReservation[_hashName];
 		return true;
 	}
 
-	function removeSymbolRoute(
-		bytes32 _hashSymbol)
-		public
-		onlyAdminOrOps
-		returns (bool /* success */)
-	{
-		require(symbolRoute[_hashSymbol] != address(0));
+	// on the very first released version v0.9.1 there is no need
+	// to completeProtocolTransfer from a previous version
 
-		delete symbolRoute[_hashSymbol];
+	function revokeProtocolTransfer(
+		ProtocolVersioned _token)
+		public
+		onlyAdmin
+		returns (bool)
+	{
+		_token.revokeProtocolTransfer();
+
 		return true;
 	}
 }

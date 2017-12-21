@@ -67,47 +67,31 @@ const BrandedToken = artifacts.require("./BrandedToken.sol");
 ///	Redeem
 /// 	fails to redeem when uuid is empty
 /// 	fails to redeem when amount is not > 0
-/// 	fails to redeem when nonce is not > previously
+/// 	fails to redeem when nonce is not >= previously
 /// 	fails to redeem when uuid is uuidSTPrime
 /// 	fails to redeem if not approved to transfer the amount
 /// 	successfully redeems
 ///
 ///	RedeemSTPrime
 ///		fails to redeem when msg.value is not > 0
-/// 	fails to redeem when nonce is not > previously
+/// 	fails to redeem when nonce is not >= previously
 /// 	successfully redeems
 ///
 /// ProcessRedeeming
 ///		BrandedToken
 /// 		fails to process if redemptionIntentHash is empty
-/// 		fails to process if msg.sender != redeemer
+/// 		fails to process if msg.sender is not redeemer or registrar
 /// 		successfully processes
 /// 		fails to reprocess
 ///		STPrime
 /// 		successfully processes
 ///
-/// AddNameReservation
-///		fails to add by non-adminOrOps
-///		successfully adds
-///		fails to add if exists with a different requester
+/// ProcessRedeeming with fallback
+///		BrandedToken
+/// 		successfully processes by registrar
+///		STPrime
+/// 		successfully processes by registrar
 ///
-/// SetSymbolRoute
-///		fails to set by non-adminOrOps
-///		successfully sets
-///		fails to set if exists with a different token
-///
-/// RemoveNameReservation
-/// 	fails to remove by non-adminOrOps
-/// 	successfully removes
-/// 	fails to remove if it does not exist
-///
-/// RemoveSymbolRoute
-/// 	fails to remove by non-adminOrOps
-/// 	successfully removes
-/// 	fails to remove if it does not exist
-///
-
-
 
 contract('OpenSTUtility', function(accounts) {
 	const chainIdValue   		= 3;
@@ -305,6 +289,9 @@ contract('OpenSTUtility', function(accounts) {
 	})
 
 	describe('Redeem', async () => {
+
+		var brandedTokenContract = null;
+
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
@@ -315,6 +302,10 @@ contract('OpenSTUtility', function(accounts) {
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
             await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
             await openSTUtility.processMinting(checkStakingIntentHash);
+	    
+	    	brandedTokenContract = new BrandedToken(brandedToken);
+			await brandedTokenContract.claim(accounts[0]);
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
 	    })
 
 		it('fails to redeem when uuid is empty', async () => {
@@ -325,8 +316,8 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: redeemer }));
 		})
 
-		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 1, { from: redeemer }));
+		it('fails to redeem when nonce is not >= previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 0, { from: redeemer }));
 		})
 
 		it('fails to redeem when uuid is uuidSTPrime', async () => {
@@ -335,14 +326,13 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('fails to redeem if not approved to transfer the amount', async () => {
+			await brandedTokenContract.approve(openSTUtility.address, 0, { from: redeemer });
             await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 3, 2, { from: redeemer }));
+			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
 		})
 
 		it('successfully redeems', async () => {
-			var brandedTokenContract = new BrandedToken(brandedToken);
-			await brandedTokenContract.claim(accounts[0]);
-			await brandedTokenContract.approve(openSTUtility.address, 3, { from: redeemer });
-            var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: redeemer });
+			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, 3, 2, { from: redeemer });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[0].plus(1)
@@ -372,8 +362,8 @@ contract('OpenSTUtility', function(accounts) {
             await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: redeemer, value: 0 }));
 		})
 
-		it('fails to redeem when nonce is not > previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(1, { from: redeemer, value: 2 }));
+		it('fails to redeem when nonce is not >= previously', async () => {
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, { from: redeemer, value: 2 }));
 		})
 
 		it('successfully redeems', async () => {
@@ -418,8 +408,8 @@ contract('OpenSTUtility', function(accounts) {
 	            await Utils.expectThrow(openSTUtility.processRedeeming("", { from: redeemer }));
 			})
 
-			it('fails to process if msg.sender != redeemer', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[1] }));
+			it('fails to process if msg.sender is not redeemer or registrar', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[5] }));
 			})
 
 			it('successfully processes', async () => {
@@ -473,112 +463,78 @@ contract('OpenSTUtility', function(accounts) {
 		})
 	})
 
-/**
- *  note: code is removed from contracts as unused and space needed for protocol completion
-    TODO: remove once certain no such logic is required
+	describe('ProcessRedeeming with fallback', async () => {
+		var redemptionIntentHash = null;
+		var brandedToken = null;
+		var brandedTokenContract = null;
 
-	describe('AddNameReservation', async () => {
-		before(async () => {
-	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-	        openSTUtility = contracts.openSTUtility;
-	        await openSTUtility.setAdminAddress(accounts[2]);
-	    })
+		context('BrandedToken', async () => {
+			var redemptionAmount = 3;
 
-		it('fails to add by non-adminOrOps', async () => {
-            await Utils.expectThrow(openSTUtility.addNameReservation(hashName, requester));
+			before(async () => {
+		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        openSTUtility = contracts.openSTUtility;
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            brandedToken = result.logs[0].args._token;
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 1, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				brandedTokenContract = new BrandedToken(brandedToken);
+				await brandedTokenContract.claim(accounts[0]);
+				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
+
+			it('successfully processes by registrar', async () => {
+				var openSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var totalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), brandedToken);
+				// redemption is processed by Registrar
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
+
+				var postProcessOpenSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
+				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
+				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+			})
 		})
 
-		it('successfully adds', async () => {
-			assert.equal(await openSTUtility.nameReservation.call(hashName), 0);
-            assert.equal(await openSTUtility.addNameReservation.call(hashName, requester, { from: accounts[2] }), true);
-            await openSTUtility.addNameReservation(hashName, requester, { from: accounts[2] });
+		context('STPrime', async () => {
+			var redemptionAmount = 2;
 
-			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
-		})
+			before(async () => {
+		        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+		        stPrime     			= contracts.stPrime;
+		        openSTUtility 			= contracts.openSTUtility;
 
-		it('fails to add if exists with a different requester', async () => {
-            await openSTUtility.addNameReservation.call(hashName, accounts[0], { from: accounts[2] });
+		        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
+	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668)
 
-			assert.notEqual(await openSTUtility.nameReservation.call(hashName), accounts[0]);
-			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
-		})
-	})
+	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], 5, 5, 80668, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.processMinting(checkStakingIntentHash);
+				await stPrime.claim(accounts[0]);
+	            result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+		    })
 
-	describe('SetSymbolRoute', async () => {
-		before(async () => {
-	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-	        openSTUtility = contracts.openSTUtility;
-	        await openSTUtility.setAdminAddress(accounts[2]);
-	    })
+			it('successfully processes by registrar', async () => {
+				var stPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var totalSupply = await stPrime.totalSupply.call();
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), stPrime.address);
+				// redemption is processed by Registrar
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
 
-		it('fails to set by non-adminOrOps', async () => {
-            await Utils.expectThrow(openSTUtility.setSymbolRoute(hashSymbol, token));
-		})
-
-		it('successfully sets', async () => {
-			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), 0);
-            assert.equal(await openSTUtility.setSymbolRoute.call(hashSymbol, token, { from: accounts[2] }), true);
-            await openSTUtility.setSymbolRoute(hashSymbol, token, { from: accounts[2] });
-
-			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
-		})
-
-		it('fails to set if exists with a different token', async () => {
-            await openSTUtility.setSymbolRoute.call(hashSymbol, accounts[0], { from: accounts[2] });
-
-			assert.notEqual(await openSTUtility.symbolRoute.call(hashSymbol), accounts[0]);
-			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
-		})
-	})
-
-	describe('RemoveNameReservation', async () => {
-		before(async () => {
-	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-	        openSTUtility = contracts.openSTUtility;
-	        await openSTUtility.setAdminAddress(accounts[2]);
-            await openSTUtility.addNameReservation(hashName, requester, { from: accounts[2] });
-	    })
-
-		it('fails to remove by non-adminOrOps', async () => {
-            await Utils.expectThrow(openSTUtility.removeNameReservation(hashName));
-		})
-
-		it('successfully removes', async () => {
-			assert.equal(await openSTUtility.nameReservation.call(hashName), requester);
-            assert.equal(await openSTUtility.removeNameReservation.call(hashName, { from: accounts[2] }), true);
-            await openSTUtility.removeNameReservation(hashName, { from: accounts[2] })
-
-			assert.equal(await openSTUtility.nameReservation.call(hashName), 0);
-		})
-
-		it('fails to remove if it does not exist', async () => {
-            await Utils.expectThrow(openSTUtility.removeNameReservation(hashName, { from: accounts[2] }));
+				var postProcessStPrimeBal = await web3.eth.getBalance(stPrime.address);
+				var postProcessTotalSupply = await stPrime.totalSupply.call();
+				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
+				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+			})
 		})
 	})
 
-	describe('removeSymbolRoute', async () => {
-		before(async () => {
-	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-	        openSTUtility = contracts.openSTUtility;
-	        await openSTUtility.setAdminAddress(accounts[2]);
-            await openSTUtility.setSymbolRoute(hashSymbol, token, { from: accounts[2] });
-	    })
-
-		it('fails to remove by non-adminOrOps', async () => {
-            await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol));
-		})
-
-		it('successfully removes', async () => {
-			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), token);
-            assert.equal(await openSTUtility.removeSymbolRoute.call(hashSymbol, { from: accounts[2] }), true);
-            await openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] })
-
-			assert.equal(await openSTUtility.symbolRoute.call(hashSymbol), 0);
-		})
-
-		it('fails to remove if it does not exist', async () => {
-            await Utils.expectThrow(openSTUtility.removeSymbolRoute(hashSymbol, { from: accounts[2] }));
-		})
-	})
-*/
 })
