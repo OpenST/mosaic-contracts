@@ -1,0 +1,19 @@
+
+{
+   "methods" : {
+      "chainIdRemote()" : {
+         "details" : "Returns ID of remote chain",
+         "return" : "uint256"
+      },
+      "openSTRemote()" : {
+         "details" : "Returns protocol on remote chain",
+         "return" : "address"
+      },
+      "registrar()" : {
+         "details" : "Returns registrar",
+         "return" : "address"
+      }
+   },
+   "title" : "CoreInterface - Interface for Core"
+}
+
