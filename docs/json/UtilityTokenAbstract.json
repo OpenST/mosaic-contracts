@@ -1,0 +1,59 @@
+
+{
+   "methods" : {
+      "burn(address,uint256)" : {
+         "details" : "Takes _burner, _amount; burns utility tokens after having redeemed them through the protocol for the staked Simple Token",
+         "params" : {
+            "_amount" : "amount",
+            "_burner" : "burner"
+         },
+         "return" : "success"
+      },
+      "claim(address)" : {
+         "details" : "Takes _beneficiary; transfers full claim to beneficiary",
+         "params" : {
+            "_beneficiary" : "beneficiary"
+         },
+         "return" : "success"
+      },
+      "completeProtocolTransfer()" : {
+         "details" : "Only after the waiting period, can proposed protocol complete the transfer; emits ProtocolTransferCompleted event; only callable by proposed protocol",
+         "return" : "success bool"
+      },
+      "initiateProtocolTransfer(address)" : {
+         "details" : "Takes _proposedProtocol; initiates protocol transfer; emits ProtocolTransferInitiated event; only callable by protocol",
+         "params" : {
+            "_proposedProtocol" : "proposedProtocol"
+         },
+         "return" : "success bool"
+      },
+      "mint(address,uint256)" : {
+         "details" : "Takes _beneficiary, _amount; mints new utility tokens",
+         "params" : {
+            "_amount" : "amount",
+            "_beneficiary" : "beneficiary"
+         },
+         "return" : "success"
+      },
+      "revokeProtocolTransfer()" : {
+         "details" : "protocol can revoke initiated protocol transfer; emits ProtocolTransferRevoked event; only callable by protocol",
+         "return" : "success bool"
+      },
+      "totalSupply()" : {
+         "details" : "Get totalTokenSupply as view so that child cannot edit",
+         "return" : "uint256"
+      },
+      "unclaimed(address)" : {
+         "details" : "Takes _beneficiary; returns unclaimed amount for _beneficiary",
+         "params" : {
+            "_beneficiary" : "beneficiary"
+         },
+         "return" : "uint256"
+      },
+      "uuid()" : {
+         "details" : "Returns uuid",
+         "return" : "bytes32"
+      }
+   },
+   "title" : "UtilityTokenAbstract - Base utility token functionality for BrandedTokens and STPrime"
+}

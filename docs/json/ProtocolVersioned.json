@@ -1,0 +1,22 @@
+
+{
+   "methods" : {
+      "completeProtocolTransfer()" : {
+         "details" : "Only after the waiting period, can proposed protocol complete the transfer; emits ProtocolTransferCompleted event; only callable by proposed protocol",
+         "return" : "success bool"
+      },
+      "initiateProtocolTransfer(address)" : {
+         "details" : "Takes _proposedProtocol; initiates protocol transfer; emits ProtocolTransferInitiated event; only callable by protocol",
+         "params" : {
+            "_proposedProtocol" : "proposedProtocol"
+         },
+         "return" : "success bool"
+      },
+      "revokeProtocolTransfer()" : {
+         "details" : "protocol can revoke initiated protocol transfer; emits ProtocolTransferRevoked event; only callable by protocol",
+         "return" : "success bool"
+      }
+   },
+   "title" : "ProtocolVersioned - Administers protocol versioning"
+}
+

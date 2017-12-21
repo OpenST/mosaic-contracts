@@ -118,6 +118,7 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._chainIdUtility, _chainIdUtility);
 }
 
+
 module.exports.checkStakingIntentDeclaredEventProtocol = (formattedDecodedEvents, _uuid, _staker, _stakerNonce, _beneficiary,
   _amountST, _amountUT, _chainIdUtility) => {
 
