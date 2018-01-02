@@ -37,12 +37,11 @@ const CHAINID_VALUE   = new BigNumber(2001);
 const CHAINID_UTILITY = new BigNumber(2002);
 
 contract('OpenST', function(accounts) {
-
-	const DECIMALSFACTOR = new BigNumber('10').pow('18');
+	
 	const TOKEN_SYMBOL   = "ST";
 	const TOKEN_NAME     = "Simple Token";
 	const TOKEN_DECIMALS = 18;
-	const TOKENS_MAX     = new BigNumber('800000000').mul(DECIMALSFACTOR);
+	const TOKENS_MAX     = new BigNumber(web3.toWei(800000000, "ether"));
 	
 	const STPRIME_SYMBOL          = "STP";
 	const STPRIME_NAME            = "SimpleTokenPrime";
@@ -63,10 +62,10 @@ contract('OpenST', function(accounts) {
 	const staker        = accounts[7];
 	const redeemer      = accounts[8];
 
-	const AMOUNT_ST = new BigNumber(1000).mul(DECIMALSFACTOR);
+	const AMOUNT_ST = new BigNumber(web3.toWei(1000, "ether"));
 	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
-	const REDEEM_AMOUNT_BT = new BigNumber(5).mul(DECIMALSFACTOR);
-	const REDEEM_AMOUNT_STPRIME = new BigNumber(15).mul(DECIMALSFACTOR);
+	const REDEEM_AMOUNT_BT = new BigNumber(web3.toWei(5, "ether"));
+	const REDEEM_AMOUNT_STPRIME = new BigNumber(web3.toWei(15, "ether"));
 
 	describe('Setup Utility chain with Simple Token Prime', function () {
 
@@ -529,10 +528,11 @@ contract('OpenST', function(accounts) {
       it('fails to revertStaking before waiting period ends', async () => {
       	var waitTime = await openSTValue.blocksToWaitLong.call();
       	waitTime = waitTime.toNumber();
+      	const amount = new BigNumber(1);
         // Wait time less 1 block for preceding test case and 1 block because condition is <=
       	for (var i = 0; i < waitTime/2 ; i++) {
-      		await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
-          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+      		await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
       	}
       });
 
@@ -591,9 +591,10 @@ contract('OpenST', function(accounts) {
         var waitTime = await openSTValue.blocksToWaitLong.call();
       	waitTime = waitTime.toNumber();
       	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	const amount = new BigNumber(1);
       	for (var i = 0; i < waitTime/2; i++) {
-          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
-          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
       	}
     	});
 
@@ -611,9 +612,11 @@ contract('OpenST', function(accounts) {
 				var waitTime = await openSTUtility.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
+
+				const amount = new BigNumber(1);
 				for (var i = 0; i < waitTime/2; i++) {
-          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
-          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
 				}
 			});
 
@@ -686,9 +689,11 @@ contract('OpenST', function(accounts) {
         var waitTime = await openSTUtility.blocksToWaitShort.call();
 		 		waitTime = waitTime.toNumber();
       	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+
+      	const amount = new BigNumber(1);
       	for (var i = 0; i < waitTime/2; i++) {
-          await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
-          await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+          await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
+          await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
       	}
     	});
 
@@ -698,9 +703,10 @@ contract('OpenST', function(accounts) {
         var waitTime = await openSTValue.blocksToWaitLong.call();
       	waitTime = waitTime.toNumber();
       	// Wait time less 1 block for preceding test case and 1 block because condition is <=
+      	const amount = new BigNumber(1);				
       	for (var i = 0; i < waitTime/2; i++) {
-        	await web3.eth.sendTransaction({ from: owner, to: admin, value: 0.000000000000000000001 });
-        	await web3.eth.sendTransaction({ from: admin, to: owner, value: 0.000000000000000000001 });
+        	await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
+        	await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
       	}
     	});
 
@@ -762,7 +768,7 @@ contract('OpenST', function(accounts) {
 			it('waits till redeem is expired', async () => {
 				 var waitTime = await openSTUtility.blocksToWaitLong.call();
 				 waitTime = waitTime.toNumber();
-				 var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+				 var amountToTransfer = new BigNumber(web3.toWei(0.000001, "ether"));				 
 					// Mock transactions so that block number increases
 				 for (var i = 0; i < waitTime; i++) {
 					 await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -837,7 +843,7 @@ contract('OpenST', function(accounts) {
 			it('waits till redeem is expired', async () => {
 				var waitTime = await openSTUtility.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));				 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -859,7 +865,7 @@ contract('OpenST', function(accounts) {
 			it('waits till unstake is expired', async () => {
 				var waitTime = await openSTValue.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));				 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -953,7 +959,7 @@ contract('OpenST', function(accounts) {
 
 				var waitTime = await openSTUtility.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));	
 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
@@ -974,7 +980,7 @@ contract('OpenST', function(accounts) {
 
 				var waitTime = await openSTValue.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer = new BigNumber(0.000001).mul(DECIMALSFACTOR);
+				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));
 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
