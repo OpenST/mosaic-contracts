@@ -339,7 +339,7 @@ contract('OpenSTUtility', function(accounts) {
 			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
 
             // call block number is one less than send block number
-            unlockHeight = redeemReturns[0].plus(1)
+            unlockHeight = redeemReturns[0].plus(1);
             var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemAmountUT, unlockHeight);
             result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
 
@@ -349,6 +349,8 @@ contract('OpenSTUtility', function(accounts) {
 	})
 
 	describe('RedeemSTPrime', async () => {
+
+		const redeemSTP = new BigNumber(2);
 
 		before(async () => {
 	        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
@@ -364,7 +366,7 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when msg.value is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(2, { from: redeemer, value: 0 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(redeemSTP.toNumber(), { from: redeemer, value: 0 }));
 		})
 
 		it('fails to redeem when nonce is not >= previously', async () => {
@@ -372,15 +374,15 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('successfully redeems', async () => {
-			var redeemReturns = await openSTUtility.redeemSTPrime.call(2, { from: redeemer, value: 2 });
+			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), { from: redeemer, value: 2 });
 
       // call block number is one less than send block number
       unlockHeight = redeemReturns[1].plus(1)
-      var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, 2, unlockHeight);
-      result = await openSTUtility.redeemSTPrime(2, { from: redeemer, value: 2 });
+      var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemSTP, unlockHeight);
+      result = await openSTUtility.redeemSTPrime(redeemSTP.toNumber(), { from: redeemer, value: redeemSTP });
 
       await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
-				redeemer, 2, 2, unlockHeight, chainIdValue);
+				redeemer, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
 		})
 	})
 
