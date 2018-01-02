@@ -142,11 +142,11 @@ contract('OpenSTValue', function(accounts) {
 	    })
 
 		it('fails to add core by non-registrar', async () => {
-            await Utils.expectThrow(openSTValue.addCore(core.address, { from: accounts[0] }));
+    	await Utils.expectThrow(openSTValue.addCore(core.address, { from: accounts[0] }));
 		})
 
 		it('fails to add core by registrar when core is null', async () => {
-            await Utils.expectThrow(openSTValue.addCore(0, { from: registrar }));
+      await Utils.expectThrow(openSTValue.addCore(0, { from: registrar }));
 		})
 
 		it('fails to add core when registrar != core.registrar', async () => {
@@ -170,7 +170,7 @@ contract('OpenSTValue', function(accounts) {
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
-            await openSTValue.addCore(core.address, { from: registrar });
+          await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 	    })
 
@@ -211,6 +211,7 @@ contract('OpenSTValue', function(accounts) {
 	})
 
 	describe('Stake', async () => {
+		const amountST = new BigNumber(web3.toWei(1, "ether"));
 		context('when the staking account is null', async () => {
 			before(async () => {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
@@ -225,35 +226,37 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('fails to stake when tx.origin has not approved it to transfer at least the amount', async () => {
-	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] }));
+	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] }));
 			})
 
 			it('fails to stake when the SimpleStake address for the given UUID is null', async () => {
-				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
-	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] }));
+				await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
+	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] }));
 			})
 
 			it('fails to stake when the beneficiary is null', async () => {
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });        	
-	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, 0, { from: accounts[0] }));
+	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, { from: accounts[0] }));
 			})
 
 			it('successfully stakes', async () => {
-	            var stakeReturns = await openSTValue.stake.call(checkUuid, 1, accounts[0], { from: accounts[0] });
+	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], { from: accounts[0] });
 	            var amountUT = stakeReturns[0].toNumber();
 	            nonce = stakeReturns[1].toNumber();
 
     			// call block number is one less than send block number
 	            var unlockHeight = stakeReturns[2].plus(1);
-	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight);
-	            result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], amountST, amountUT, unlockHeight);
+	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0],
+								amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
 		})
 
 		context('when the staking account is not null', async () => {
+
 			before(async () => {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 		        valueToken  = contracts.valueToken;
@@ -261,30 +264,33 @@ contract('OpenSTValue', function(accounts) {
 	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 	            await openSTValue.addCore(core.address, { from: registrar });
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, accounts[0], checkUuid, { from: registrar });
-				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });        	
+						await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, accounts[0], checkUuid, { from: registrar });
+						await valueToken.approve(openSTValue.address,amountST, { from: accounts[0] });
 		    })
 
 			it('fails to stake when msg.sender is not the stakingAccount', async () => {
-	            await Utils.expectThrow(openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[1] }));
+	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[1] }));
 			})
 
 			it('successfully stakes', async () => {
-	            var stakeReturns = await openSTValue.stake.call(checkUuid, 1, accounts[0], { from: accounts[0] });
+	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], { from: accounts[0] });
 	            var amountUT = stakeReturns[0].toNumber();
 	            nonce = stakeReturns[1].toNumber();
 
-    			// call block number is one less than send block number
+    			    // call block number is one less than send block number
 	            var unlockHeight = stakeReturns[2].plus(1);
-	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight);
-	            result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], amountST, amountUT, unlockHeight);
+	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0], 1, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0],
+								amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
 		})
 	})
 
 	describe('ProcessStaking', async () => {
+		const amountST = new BigNumber(web3.toWei(1, "ether")),
+			amountUT = amountST * conversionRate;
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
@@ -294,8 +300,8 @@ contract('OpenSTValue', function(accounts) {
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
-			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
-			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
+			result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
 			stakingIntentHash = result.logs[0].args._stakingIntentHash;
 	    })
 
@@ -311,15 +317,15 @@ contract('OpenSTValue', function(accounts) {
 		it('successfully processes', async () => {
 			var openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
 			var stakeBal = await valueToken.balanceOf.call(stake);
-			assert.equal(openSTValueBal.toNumber(), 1);
+			assert.equal(openSTValueBal.toNumber(), amountST);
 			assert.equal(stakeBal.toNumber(), 0);
 			result = await openSTValue.processStaking(stakingIntentHash, { from: accounts[0] });
 
 			openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
 			stakeBal = await valueToken.balanceOf.call(stake);
 			assert.equal(openSTValueBal.toNumber(), 0);
-			assert.equal(stakeBal.toNumber(), 1);
-            await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], 1, 10);
+			assert.equal(stakeBal.toNumber(), amountST);
+      await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], amountST, amountUT);
 		})
 
 		it('fails to reprocess', async () => {
@@ -328,32 +334,35 @@ contract('OpenSTValue', function(accounts) {
 	})
 
 	describe('ProcessStaking with fallback', async () => {
+		const amountST = new BigNumber(web3.toWei(1, "ether")),
+			amountUT = amountST * conversionRate;
+
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
-            await openSTValue.addCore(core.address, { from: registrar });
+          await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
 			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
-			await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
-			result = await openSTValue.stake(checkUuid, 1, accounts[0], { from: accounts[0] });
+			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
+			result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
 			stakingIntentHash = result.logs[0].args._stakingIntentHash;
 	    })
 
 		it('successfully processes by registrar', async () => {
 			var openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
 			var stakeBal = await valueToken.balanceOf.call(stake);
-			assert.equal(openSTValueBal.toNumber(), 1);
+			assert.equal(openSTValueBal.toNumber(), amountST);
 			assert.equal(stakeBal.toNumber(), 0);
 			result = await openSTValue.processStaking(stakingIntentHash, { from: registrar });
 
 			openSTValueBal = await valueToken.balanceOf.call(openSTValue.address);
 			stakeBal = await valueToken.balanceOf.call(stake);
 			assert.equal(openSTValueBal.toNumber(), 0);
-			assert.equal(stakeBal.toNumber(), 1);
-            await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], 1, 10);
+			assert.equal(stakeBal.toNumber(), amountST);
+            await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], amountST, amountUT);
 		})
 	})
 
@@ -517,7 +526,7 @@ contract('OpenSTValue', function(accounts) {
 
 			var staker = accounts[0];			
 			var owner  = accounts[1];
-			var amountST = 126;
+			var amountST = new BigNumber(web3.toWei(126, "ether"));
 			var amountUT = null;
 			var unlockHeight = null;
 
@@ -586,7 +595,7 @@ contract('OpenSTValue', function(accounts) {
 		context('Revert Staking After ProcessStaking', async () => {
 			var staker = accounts[0];			
 			var owner  = accounts[1];
-			var amountST = 126;
+			var amountST = new BigNumber(web3.toWei(126, "ether"));
 			var amountUT = null;
 			var unlockHeight = null;
 
@@ -645,8 +654,8 @@ contract('OpenSTValue', function(accounts) {
 		var redeemer 								= accounts[2];
 		var redemptionIntentHash 		= null;
 		var redemptionUnlockHeight 	= 80668;
-		var amountST 								= 1;
-		var amountUT 								= 1 * conversionRate;
+		var amountST 								= new BigNumber(web3.toWei(1, "ether"));
+		var amountUT 								= new BigNumber(amountST * conversionRate);
 		var externalUser 						= accounts[7];
 
 		context('Revert Unstaking before ProcessUnstaking ', async () => {
