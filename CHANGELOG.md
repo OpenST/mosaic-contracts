@@ -1,4 +1,8 @@
-## OpenST-protocol v0.9.1 December 19 2017
+## OpenST-protocol v0.9.2
+
+- Unit tests: Consistent use of Token units versus TokenWei units ([openst-protocol#82](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
+
+## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) December 19 2017
 
 OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
 activation of Simple Token to power the OpenST platform.  The OpenST platform
@@ -32,12 +36,6 @@ experience to build mainstream applications on Ethereum.
 ```
 
 Detailed changelog:
-
-## OpenST-protocol [v0.9.2] November 8 2017
-
-- Unit tests: Consistent use of Token units versus TokenWei units ([openst-protocol#1](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
-
-## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) November 8 2017
 
 - Generate documentation in /docs ([openst-protocol#78](https://github.com/OpenSTFoundation/openst-protocol/pull/78))
 - Unit tests for Owned, OpsManaged, SafeMath (carry over from SimpleTokenSale) ([openst-protocol#73](https://github.com/OpenSTFoundation/openst-protocol/pull/73))
