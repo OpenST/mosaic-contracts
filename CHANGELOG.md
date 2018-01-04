@@ -33,7 +33,12 @@ experience to build mainstream applications on Ethereum.
 
 Detailed changelog:
 
+## OpenST-protocol [v0.9.2] November 8 2017
+
 - Unit tests: Consistent use of Token units versus TokenWei units ([openst-protocol#1](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
+
+## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) November 8 2017
+
 - Generate documentation in /docs ([openst-protocol#78](https://github.com/OpenSTFoundation/openst-protocol/pull/78))
 - Unit tests for Owned, OpsManaged, SafeMath (carry over from SimpleTokenSale) ([openst-protocol#73](https://github.com/OpenSTFoundation/openst-protocol/pull/73))
 - Add mock ERC20 token for dryrun on Ethereum mainnet ([openst-protocol#71](https://github.com/OpenSTFoundation/openst-protocol/pull/71))

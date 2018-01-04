@@ -379,7 +379,7 @@ contract('OpenSTUtility', function(accounts) {
       // call block number is one less than send block number
       unlockHeight = redeemReturns[1].plus(1)
       var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemSTP, unlockHeight);
-      result = await openSTUtility.redeemSTPrime(redeemSTP.toNumber(), { from: redeemer, value: redeemSTP });
+      result = await openSTUtility.redeemSTPrime(redeemSTP, { from: redeemer, value: redeemSTP });
 
       await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
 				redeemer, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
