@@ -22,7 +22,7 @@ contract('MockToken', (accounts) => {
    const SYMBOL         = "MOCK"
    const NAME           = "Mock Token"
    const DECIMALS       = 18
-   const TOTAL_SUPPLY   = new BigNumber('800000000').mul(DECIMALSFACTOR)
+   const TOTAL_SUPPLY   = new BigNumber(web3.toWei(800000000, "ether"));
    const admin          = accounts[1];
 
 

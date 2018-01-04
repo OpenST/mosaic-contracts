@@ -34,7 +34,7 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const valueToken   	 = await SimpleToken.new();
 	const registrar    	 = await Registrar.new();
 	const staker	  	 = accounts[2];
-	const amountST		 = 2;
+	const amountST		 = new BigNumber(web3.toWei(2, "ether"));;
 
 	// Registrar is OpsManaged
 	await registrar.setOpsAddress(accounts[1]);

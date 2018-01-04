@@ -1,4 +1,8 @@
-## OpenST-protocol v0.9.1 December 19 2017
+## OpenST-protocol v0.9.2
+
+- Unit tests: Consistent use of Token units versus TokenWei units ([openst-protocol#82](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
+
+## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) December 19 2017
 
 OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
 activation of Simple Token to power the OpenST platform.  The OpenST platform

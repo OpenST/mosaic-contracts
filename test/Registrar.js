@@ -19,7 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils 		  = require('./lib/utils.js');
+const BigNumber 			= require('bignumber.js');
+const Utils 		  		= require('./lib/utils.js');
 const Registrar_utils = require('./Registrar_utils.js');
 
 ///
@@ -55,7 +56,7 @@ contract('Registrar', function(accounts) {
 	const symbol 			= "MCC";
 	const name 				= "Member Company Coin";
 	const conversionRate	= 10;
-	const amountST 			= 2;	
+	const amountST 			= new BigNumber(web3.toWei(2, "ether"));;	
 
 	describe('RegisterBrandedToken for utility chain', async() => {
 		var contracts 		= null;
