@@ -20,14 +20,11 @@ before_install:
   - sudo apt-get install nodejs 
   - sudo apt-get install npm
 install:
-  - pwd
-  - cd openst-protocol 
+  - pwd  
   - npm install
 before_script:
-  - pwd
-  - cd openst-protocol 
+  - pwd  
   - sh tools/runTestRpc.sh
 script:
-  - pwd
-  - cd openst-protocol 
+  - pwd  
   - truffle test
