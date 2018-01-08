@@ -14,13 +14,20 @@ notifications:
     on_success: always
     on_failure: always
 node_js:
-  - "8"
-  - "9"
+  - "8"  
 before_install:
-  - sudo apt-get update && sudo apt-get install nodejs && sudo apt-get install npm
+  - sudo apt-get update 
+  - sudo apt-get install nodejs 
+  - sudo apt-get install npm
 install:
-  - cd openst-protocol && npm install && cd ..
+  - pwd
+  - cd openst-protocol 
+  - npm install
 before_script:
-  - cd openst-protocol && sh tools/runTestRpc.sh
+  - pwd
+  - cd openst-protocol 
+  - sh tools/runTestRpc.sh
 script:
-  - cd openst-protocol && truffle test
+  - pwd
+  - cd openst-protocol 
+  - truffle test
