@@ -1,0 +1,26 @@
+dist: trusty
+language: node_js
+sudo: required
+branches:
+  only:
+  - master
+  - develop
+notifications:
+  email:
+    recipients:
+      - devops@pepo.com
+      - deepesh@pepo.com
+      - abhay@pepo.com
+    on_success: always
+    on_failure: always
+node_js:
+  - "8"
+  - "9"
+before_install:
+  - sudo apt-get update && sudo apt-get install nodejs && sudo apt-get install npm
+install:
+  - cd openst-protocol && npm install && cd ..
+before_script:
+  - cd openst-protocol && sh tools/runTestRpc.sh
+script:
+  - cd openst-protocol && truffle test
