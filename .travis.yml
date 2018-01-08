@@ -11,6 +11,7 @@ notifications:
       - devops@pepo.com
       - deepesh@pepo.com
       - abhay@pepo.com
+      - sunil@pepo.com
     on_success: always
     on_failure: always
 node_js:
