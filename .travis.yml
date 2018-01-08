@@ -18,12 +18,11 @@ node_js:
 before_install:
   - sudo apt-get update 
   - sudo apt-get install nodejs 
-  - sudo apt-get install npm
-install:
-  - pwd  
+  - sudo apt-get install npm  
+install: 
   - npm install
-before_script:
-  - pwd  
+  - npm install ethereumjs-testrpc
+before_script:  
   - sh tools/runTestRpc.sh
 script:
   - pwd  
