@@ -23,7 +23,9 @@ install:
   - npm install
   - npm install ethereumjs-testrpc
 before_script:  
-  - sh tools/runTestRpc.sh
+  - nohup ./tools/runTestRpc.sh </dev/null >/dev/null 2>&1 &
 script:
   - pwd  
   - truffle test
+after_script:
+  - kill $(ps aux | grep 'testrpc' | awk '{print $2}')
