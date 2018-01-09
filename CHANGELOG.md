@@ -1,5 +1,6 @@
 ## OpenST-protocol v0.9.2
 
+- Travis CI: Travis is configured to run unit tests on master and develop branch for every commit, merge and pull request ([openst-protocol#83](https://github.com/OpenSTFoundation/openst-protocol/issues/83))
 - Unit tests: Consistent use of Token units versus TokenWei units ([openst-protocol#82](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
 
 ## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) December 19 2017
