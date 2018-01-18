@@ -20,11 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-// const BigNumber = require('bignumber.js');
 const SolidityEvent = require("web3/lib/web3/event.js");
-
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
-// var SimpleStake = artifacts.require("./SimpleStake.sol");
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
@@ -77,19 +73,6 @@ module.exports.clearReceipts = () => {
   receipts.splice( 0, receipts.length );
 }
 
-
-/// @dev Deploy SimpleToken and other contracts
-///      to test full protocol
-// module.exports.deployContracts = async (artifacts, accounts) => {
-
-// 	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
-
-//   // to be extended
-
-// 	return {
-// 		token : token
-// 	}
-// }
 
 /*
  *  General event checks
