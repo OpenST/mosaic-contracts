@@ -53,6 +53,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		address beneficiary;
 		uint256 amount;
 		uint256 expirationHeight;
+		bytes32 hashLock;
 	}
 
 	struct Redemption {
@@ -60,7 +61,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		address redeemer;
 		uint256 amountUT;
 		uint256 unlockHeight;
+		// bytes32 hashLock;
 	}
+
 	/*
 	 *	Events
 	 */
@@ -327,6 +330,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
+		bytes32 _hashLock,
 		bytes32 _stakingIntentHash)
 		external
 		onlyRegistrar
@@ -351,7 +355,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			_beneficiary,
 			_amountST,
 			_amountUT,
-			_stakingUnlockHeight
+			_stakingUnlockHeight,
+			_hashLock
 		);
 
 		require(stakingIntentHash == _stakingIntentHash);
@@ -361,7 +366,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 			staker:           _staker,
 			beneficiary:      _beneficiary,
 			amount:           _amountUT,
-			expirationHeight: expirationHeight
+			expirationHeight: expirationHeight,
+			hashLock:         _hashLock
 		});
 
     	StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
@@ -371,14 +377,16 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
     function processMinting(
-    	bytes32 _stakingIntentHash)
+    	bytes32 _stakingIntentHash,
+    	bytes32 _unlockSecret)
     	external
     	returns (address tokenAddress)
     {
     	require(_stakingIntentHash != "");
 
     	Mint storage mint = mints[_stakingIntentHash];
-    	require(mint.staker == msg.sender);
+
+    	require(mint.hashLock == keccak256(_unlockSecret));
 
     	// as process minting results in a gain it needs to expire well before
     	// the escrow on the cost unlocks in OpenSTValue.processStake

@@ -88,6 +88,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 amountST;
     	uint256 amountUT;
     	uint256 unlockHeight;
+    	bytes32 hashLock;
     }
 
     struct Unstake {
@@ -97,6 +98,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	// @dev consider removal of amountUT
     	uint256 amountUT;
     	uint256 expirationHeight;
+    	// bytes32 hashLock;
     }
 
 	/*
@@ -116,7 +118,6 @@ contract OpenSTValue is OpsManaged, Hasher {
 	/// register the active stakes and unstakes
 	mapping(bytes32 /* hashStakingIntent */ => Stake) stakes;
 	mapping(bytes32 /* hashRedemptionIntent */ => Unstake) unstakes;
-
 
 	/*
 	 *  Modifiers
@@ -154,7 +155,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 	function stake(
 		bytes32 _uuid,
 		uint256 _amountST,
-		address _beneficiary)
+		address _beneficiary,
+		bytes32 _hashLock)
 		external
 		returns (
 		uint256 amountUT,
@@ -166,11 +168,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 		// OpenSTValue needs to be able to transfer the stake into its balance for
 		// keeping until the two-phase process is completed on both chains.
 		require(_amountST > 0);
-		// Consider the security risk of using tx.origin; at the same time an allowance
-		// needs to be set before calling stake over a potentially malicious contract at stakingAccount.
-		// The second protection is that the staker needs to check the intent hash before
-		// signing off on completing the two-phased process.
-		require(valueToken.allowance(tx.origin, address(this)) >= _amountST);
+		// TODO: include bounty that needs to be put forward during a staking process 
+		require(valueToken.allowance(msg.sender, address(this)) >= _amountST);
 
 		require(utilityTokens[_uuid].simpleStake != address(0));
 		require(_beneficiary != address(0));
@@ -179,44 +178,46 @@ contract OpenSTValue is OpsManaged, Hasher {
 
 		// if the staking account is set to a non-zero address,
 		// then all transactions have come (from/over) the staking account,
-		// whether this is an EOA or a contract; tx.origin is putting forward the funds
 		if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
-		require(valueToken.transferFrom(tx.origin, address(this), _amountST));
+		require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
 		amountUT = _amountST.mul(utilityToken.conversionRate);
 		unlockHeight = block.number + blocksToWaitLong();
 
-		nonces[tx.origin]++;
-		nonce = nonces[tx.origin];
+		nonces[msg.sender]++;
+		nonce = nonces[msg.sender];
 
 		stakingIntentHash = hashStakingIntent(
 			_uuid,
-			tx.origin,
+			msg.sender,
 			nonce,
 			_beneficiary,
 			_amountST,
 			amountUT,
-			unlockHeight
+			unlockHeight,
+			_hashLock
 		);
 
 		stakes[stakingIntentHash] = Stake({
 			uuid:         _uuid,
-			staker:       tx.origin,
+			staker:       msg.sender,
 			beneficiary:  _beneficiary,
 			nonce:        nonce,
 			amountST:     _amountST,
 			amountUT:     amountUT,
-			unlockHeight: unlockHeight
+			unlockHeight: unlockHeight,
+			hashLock:     _hashLock
 		});
     	
-    	StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
+    	StakingIntentDeclared(_uuid, msg.sender, nonce, _beneficiary,
     		_amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
     	return (amountUT, nonce, unlockHeight, stakingIntentHash);
 	}
 
 	function processStaking(
-		bytes32 _stakingIntentHash)
+		bytes32 _stakingIntentHash,
+		bytes32 _unlockSecret)
 		external
 		returns (address stakeAddress)
 	{
@@ -224,13 +225,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
 		Stake storage stake = stakes[_stakingIntentHash];
 
-		// note: as processStaking incurs a cost for the staker, we provide a fallback
-		// in v0.9 for registrar to process the staking on behalf of the staker,
-		// as the staker could fail to process the stake and avoid the cost of staking;
-		// this will be replaced with a signature carry-over implementation instead, where
-		// the signature of the intent hash suffices on value and utility chain, decoupling
-		// it from the transaction to processStaking and processMinting
-		require(stake.staker == msg.sender || registrar == msg.sender);
+		// present the secret to the hash lock
+		require(stake.hashLock == keccak256(_unlockSecret));
+
 		// as this bears the cost, there is no need to require
 		// that the stake.unlockHeight is not yet surpassed
 		// as is required on processMinting
