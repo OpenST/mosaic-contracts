@@ -25,7 +25,7 @@ const BigNumber = require('bignumber.js');
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
-/// @dev Deploy 
+/// @dev Deploy
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	const chainIdValue = 3;
 	const valueToken   = await SimpleToken.new();
@@ -148,7 +148,7 @@ module.exports.checkStakingIntentDeclaredEventProtocol = (event, _uuid, _staker,
 	assert.equal(event.args._chainIdUtility.toNumber(), _chainIdUtility.toNumber());
 }
 
-module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT) => {
+module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT, _unlockSecret) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -164,6 +164,7 @@ module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _st
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
@@ -212,7 +213,7 @@ module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecoded
 	assert.isAbove(_unlockHeight.toNumber(), 0);
 }
 
-module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _beneficiary, _amountST) => {
+module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _beneficiary, _amountST, _unlockSecret) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -224,6 +225,7 @@ module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHash, _staker, _amountST, _amountUT) => {

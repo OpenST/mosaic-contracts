@@ -55,7 +55,8 @@ contract Hasher {
 		address _beneficiary,
 		uint256 _amountST,
 		uint256 _amountUT,
-		uint256 _unlockHeight)
+		uint256 _unlockHeight,
+		bytes32 _hashLock)
 		public
 		pure
 		returns (bytes32)
@@ -67,7 +68,8 @@ contract Hasher {
 			_beneficiary,
 			_amountST,
 			_amountUT,
-			_unlockHeight);
+			_unlockHeight,
+			_hashLock);
 	}
 
 	function hashRedemptionIntent(
@@ -76,7 +78,8 @@ contract Hasher {
 		uint256 _accountNonce,
 		address _beneficiary,
 		uint256 _amountUT,
-		uint256 _unlockHeight)
+		uint256 _unlockHeight,
+		bytes32 _hashLock)
 		public
 		pure
 		returns (bytes32)
@@ -87,6 +90,7 @@ contract Hasher {
 			_accountNonce,
 			_beneficiary,
 			_amountUT,
-			_unlockHeight);
+			_unlockHeight,
+			_hashLock);
 	}
 }

@@ -29,7 +29,7 @@ import "./OpsManaged.sol";
 // utility chain contracts
 import "./STPrime.sol";
 import "./STPrimeConfig.sol";
-import "./BrandedToken.sol"; 
+import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 
@@ -37,7 +37,7 @@ import "./ProtocolVersioned.sol";
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
-    
+
     /*
      *  Structures
      */
@@ -52,6 +52,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         address beneficiary;
         uint256 amount;
         uint256 expirationHeight;
+        bytes32 hashLock;
     }
 
     struct Redemption {
@@ -60,6 +61,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         address beneficiary;
         uint256 amountUT;
         uint256 unlockHeight;
+        bytes32 hashLock;
     }
 
     /*
@@ -76,7 +78,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
-        address _staker, address _beneficiary, uint256 _amount);
+        address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
 
     event RevertedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
         address _beneficiary, uint256 _amountUT);
@@ -86,7 +88,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _chainIdValue);
 
     event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
-        address _redeemer, address _beneficiary, uint256 _amount);
+        address _redeemer, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
 
     event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address _redeemer, address _beneficiary, uint256 _amountUT);
@@ -111,7 +113,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     uint256 public chainIdUtility;
     address public registrar;
     bytes32[] public uuids;
-    /// registered branded tokens 
+    /// registered branded tokens
     mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
     /// name reservation is first come, first serve
     mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
@@ -194,6 +196,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _amountST,
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
+        bytes32 _hashLock,
         bytes32 _stakingIntentHash)
         external
         onlyRegistrar
@@ -218,7 +221,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _beneficiary,
             _amountST,
             _amountUT,
-            _stakingUnlockHeight
+            _stakingUnlockHeight,
+            _hashLock
         );
 
         require(stakingIntentHash == _stakingIntentHash);
@@ -228,7 +232,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             staker:           _staker,
             beneficiary:      _beneficiary,
             amount:           _amountUT,
-            expirationHeight: expirationHeight
+            expirationHeight: expirationHeight,
+            hashLock:         _hashLock
         });
 
         StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
@@ -238,14 +243,17 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     }
 
     function processMinting(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (address tokenAddress)
     {
         require(_stakingIntentHash != "");
 
         Mint storage mint = mints[_stakingIntentHash];
-        require(mint.staker == msg.sender);
+
+        // present secret to unlock hashlock and continue process
+        require(mint.hashLock == keccak256(_unlockSecret));
 
         // as process minting results in a gain it needs to expire well before
         // the escrow on the cost unlocks in OpenSTValue.processStake
@@ -258,7 +266,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(token.mint(mint.beneficiary, mint.amount));
 
         ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
-            mint.beneficiary, mint.amount);
+            mint.beneficiary, mint.amount, _unlockSecret);
 
         delete mints[_stakingIntentHash];
 
@@ -304,7 +312,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         bytes32 _uuid,
         uint256 _amountBT,
         uint256 _nonce,
-        address _beneficiary)
+        address _beneficiary,
+        bytes32 _hashLock)
         external
         returns (
         uint256 unlockHeight,
@@ -337,7 +346,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
                 _nonce,
                 _beneficiary,
                 _amountBT,
-                unlockHeight
+                unlockHeight,
+                _hashLock
         );
 
         redemptions[redemptionIntentHash] = Redemption({
@@ -345,7 +355,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             redeemer:     msg.sender,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
-            unlockHeight: unlockHeight
+            unlockHeight: unlockHeight,
+            hashLock:     _hashLock
         });
 
         RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
@@ -359,7 +370,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     ///      note: redemption will be done to beneficiary address
     function redeemSTPrime(
         uint256 _nonce,
-        address _beneficiary)
+        address _beneficiary,
+        bytes32 _hashLock)
         external
         payable
         returns (
@@ -385,7 +397,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
                 _nonce,
                 _beneficiary,
                 amountSTP,
-                unlockHeight
+                unlockHeight,
+                _hashLock
         );
 
         redemptions[redemptionIntentHash] = Redemption({
@@ -393,7 +406,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             redeemer:     msg.sender,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
-            unlockHeight: unlockHeight
+            unlockHeight: unlockHeight,
+            hashLock:     _hashLock
         });
 
         RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
@@ -403,7 +417,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     }
 
     function processRedeeming(
-        bytes32 _redemptionIntentHash)
+        bytes32 _redemptionIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (
         address tokenAddress)
@@ -412,13 +427,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         Redemption storage redemption = redemptions[_redemptionIntentHash];
 
-        // note: as processRedemption incurs a cost for the redeemer, we provide a fallback
-        // in v0.9 for registrar to process the redemption on behalf of the redeemer,
-        // as the redeemer could fail to process the redemption and avoid the cost of redeeming;
-        // this will be replaced with a signature carry-over implementation instead, where
-        // the signature of the intent hash suffices on value and utility chain, decoupling
-        // it from the transaction to processRedemption and processUnstaking
-        require(redemption.redeemer == msg.sender || registrar == msg.sender);
+        // present the secret to unlock the hashlock and continue process
+        require(redemption.hashLock == keccak256(_unlockSecret));
 
         // as process redemption bears the cost there is no need to require
         // the unlockHeight is not past, the same way as we do require for
@@ -434,7 +444,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(token.burn.value(value)(redemption.redeemer, redemption.amountUT));
 
         ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
-            redemption.redeemer, redemption.beneficiary, redemption.amountUT);
+            redemption.redeemer, redemption.beneficiary, redemption.amountUT, _unlockSecret);
 
         delete redemptions[_redemptionIntentHash];
 

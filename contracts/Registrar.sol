@@ -55,6 +55,7 @@ contract Registrar is OpsManaged {
     	address _beneficiary,
     	uint256 _amountUT,
     	uint256 _redemptionUnlockHeight,
+    	bytes32 _hashLock,
     	bytes32 _redemptionIntentHash)
     	external
     	onlyOps
@@ -69,6 +70,7 @@ contract Registrar is OpsManaged {
 	    	_beneficiary,
 	    	_amountUT,
 	    	_redemptionUnlockHeight,
+	    	_hashLock,
 	    	_redemptionIntentHash);
 
     	return (amountST, expirationHeight);
@@ -113,18 +115,21 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
+	// @dev this can be deprecated as anyone with the unlockSecret
+	//  can now call the processRedeeming function
 	function processStaking(
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
     	// OpenSTValue function:
-		bytes32 _stakingIntentHash)
+		bytes32 _stakingIntentHash,
+		bytes32 _unlockSecret)
 		external
 		onlyAdmin
 		returns (
 		address stakeAddress)
 	{
 		return _registry.processStaking(
-			_stakingIntentHash);
+			_stakingIntentHash, _unlockSecret);
 	}
 
 	/*
@@ -141,6 +146,7 @@ contract Registrar is OpsManaged {
 		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
+		bytes32 _hashLock,
 		bytes32 _stakingIntentHash)
 		external
 		onlyOps
@@ -155,6 +161,7 @@ contract Registrar is OpsManaged {
 			_amountST,
 			_amountUT,
 			_stakingUnlockHeight,
+			_hashLock,
 			_stakingIntentHash);
 	}
 
@@ -184,17 +191,20 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
+	// @dev this can be deprecated as anyone with the unlockSecret
+	//  can now call the processRedeeming function
     function processRedeeming(
     	// address of OpenSTUtility registry:
     	OpenSTUtilityInterface _registry,
     	// OpenSTUtility function:
-    	bytes32 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash,
+    	bytes32 _unlockSecret)
     	external
     	onlyAdmin
     	returns (
     	address tokenAddress)
     {
     	return _registry.processRedeeming(
-    		_redemptionIntentHash);
+    		_redemptionIntentHash, _unlockSecret);
     }
 }

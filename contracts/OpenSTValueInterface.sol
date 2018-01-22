@@ -14,7 +14,7 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Value chain: OpenST protocol interface
 //
@@ -27,7 +27,8 @@ import "./CoreInterface.sol";
 
 contract OpenSTValueInterface {
     function processStaking(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (address stakeAddress);
 
@@ -38,6 +39,7 @@ contract OpenSTValueInterface {
         address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
+        bytes32 _hashLock,
         bytes32 _redemptionIntentHash)
         external
         returns (
@@ -59,7 +61,7 @@ contract OpenSTValueInterface {
         address _stakingAccount,
         bytes32 _checkUuid)
         public
-        returns ( 
+        returns (
         bytes32 uuid);
 
     function stakes(

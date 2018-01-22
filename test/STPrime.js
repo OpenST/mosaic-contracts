@@ -21,6 +21,7 @@
 
 const BigNumber = require('bignumber.js');
 const Utils = require('./lib/utils.js');
+const HashLock = require('./lib/hash_lock.js');
 const STPrime_utils = require('./STPrime_utils.js');
 
 ///
@@ -42,7 +43,7 @@ const STPrime_utils = require('./STPrime_utils.js');
 contract('STPrime', function(accounts) {
 	const openSTProtocol = accounts[4];
 
-	const beneficiary = accounts[9]; // set to 0 balance in runTestRpc.sh
+	const beneficiary = accounts[19]; // set to 0 balance in runTestRpc.sh
 	const ST1		  = new BigNumber(web3.toWei(1, "ether"));
 	const ST2 		  = new BigNumber(web3.toWei(2, "ether"));
 	const ST800M	  = new BigNumber(web3.toWei(800000000, "ether"));
