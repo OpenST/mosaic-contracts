@@ -54,7 +54,8 @@ contract OpenSTValueInterface {
 		bytes32 uuid);
 
 	function processStaking(
-		bytes32 _stakingIntentHash)
+		bytes32 _stakingIntentHash,
+		bytes32 _unlockSecret)
 		external
 		returns (address stakeAddress);
 }

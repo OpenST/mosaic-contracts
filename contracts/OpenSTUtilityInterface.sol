@@ -44,6 +44,7 @@ contract OpenSTUtilityInterface {
 		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
+		bytes32 _hashLock,
 		bytes32 _stakingIntentHash)
 		external
 		returns (

@@ -113,14 +113,15 @@ contract Registrar is OpsManaged {
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
     	// OpenSTValue function:
-		bytes32 _stakingIntentHash)
+		bytes32 _stakingIntentHash,
+		bytes32 _unlockSecret)
 		external
 		onlyAdmin
 		returns (
 		address stakeAddress)
 	{
 		return _registry.processStaking(
-			_stakingIntentHash);
+			_stakingIntentHash, _unlockSecret);
 	}
 
 	/*
@@ -137,6 +138,7 @@ contract Registrar is OpsManaged {
 		uint256 _amountST,
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
+		bytes32 _hashLock,
 		bytes32 _stakingIntentHash)
 		external
 		onlyOps
@@ -151,6 +153,7 @@ contract Registrar is OpsManaged {
 			_amountST,
 			_amountUT,
 			_stakingUnlockHeight,
+			_hashLock,
 			_stakingIntentHash);
 	}
 
