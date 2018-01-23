@@ -55,7 +55,7 @@ const BigNumber = require('bignumber.js');
 /// Stake
 ///		when the staking account is null
 /// 		fails to stake when amount is not > 0
-/// 		fails to stake when tx.origin has not approved it to transfer at least the amount
+/// 		fails to stake when msg.sender has not approved it to transfer at least the amount
 /// 		fails to stake when the SimpleStake address for the given UUID is null
 ///			fails to stake when the beneficiary is null
 ///			successfully stakes
@@ -68,9 +68,6 @@ const BigNumber = require('bignumber.js');
 ///		fails to process when presented with wrong secret
 ///		successfully processes
 ///		fails to reprocess
-///
-/// ProcessStaking with fallback
-/// 	successfully processes by registrar
 ///
 /// ConfirmRedemptionIntent
 /// 		fails to confirm by non-registrar
@@ -228,7 +225,7 @@ contract('OpenSTValue', function(accounts) {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, 0, accounts[0], lock.l, { from: accounts[0] }));
 			})
 
-			it('fails to stake when tx.origin has not approved it to transfer at least the amount', async () => {
+			it('fails to stake when msg.sender has not approved it to transfer at least the amount', async () => {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, { from: accounts[0] }));
 			})
 
