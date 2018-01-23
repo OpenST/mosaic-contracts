@@ -51,7 +51,8 @@ contract OpenSTUtilityInterface {
 		uint256 expirationHeight);
 
     function processRedeeming(
-    	bytes32 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash,
+    	bytes32 _unlockSecret)
     	external
     	returns (
     	address tokenAddress);

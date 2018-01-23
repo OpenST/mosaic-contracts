@@ -75,7 +75,8 @@ contract Hasher {
 		address _account,
 		uint256 _accountNonce,
 		uint256 _amountUT,
-		uint256 _unlockHeight)
+		uint256 _unlockHeight,
+		bytes32 _hashLock)
 		public
 		pure
 		returns (bytes32)
@@ -85,6 +86,7 @@ contract Hasher {
 			_account,
 			_accountNonce,
 			_amountUT,
-			_unlockHeight);
+			_unlockHeight,
+			_hashLock);
 	}
 }

@@ -98,7 +98,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	// @dev consider removal of amountUT
     	uint256 amountUT;
     	uint256 expirationHeight;
-    	// bytes32 hashLock;
+    	bytes32 hashLock;
     }
 
 	/*
@@ -285,6 +285,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _redeemerNonce,
     	uint256 _amountUT,
     	uint256 _redemptionUnlockHeight,
+    	bytes32 _hashLock,
     	bytes32 _redemptionIntentHash)
     	external
     	onlyRegistrar
@@ -307,7 +308,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     		_redeemer,
     		nonces[_redeemer],
     		_amountUT,
-    		_redemptionUnlockHeight
+    		_redemptionUnlockHeight,
+    		_hashLock
     	);
 
     	require(_redemptionIntentHash == redemptionIntentHash);
@@ -322,11 +324,12 @@ contract OpenSTValue is OpsManaged, Hasher {
     	require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
     	unstakes[redemptionIntentHash] = Unstake({
-    		uuid:         _uuid,
-    		redeemer:     _redeemer,
-    		amountUT:     _amountUT,
-    		amountST:     amountST,
-    		expirationHeight: expirationHeight
+    		uuid:             _uuid,
+    		redeemer:         _redeemer,
+    		amountUT:         _amountUT,
+    		amountST:         amountST,
+    		expirationHeight: expirationHeight,
+    		hashLock:         _hashLock
     	});
 
 		RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
@@ -336,7 +339,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 	}
 
 	function processUnstaking(
-		bytes32 _redemptionIntentHash)
+		bytes32 _redemptionIntentHash,
+		bytes32 _unlockSecret)
 		external
 		returns (
 		address stakeAddress)
@@ -344,7 +348,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(_redemptionIntentHash != "");
 
 		Unstake storage unstake = unstakes[_redemptionIntentHash];
-		require(unstake.redeemer == msg.sender);
+
+		require(unstake.hashLock == keccak256(_unlockSecret));
 
 		// as the process unstake results in a gain for the caller
 		// it needs to expire well before the process redemption can

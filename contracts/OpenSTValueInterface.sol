@@ -30,6 +30,7 @@ contract OpenSTValueInterface {
     	uint256 _redeemerNonce,
     	uint256 _amountUT,
     	uint256 _redemptionUnlockHeight,
+    	bytes32 _hashLock,
     	bytes32 _redemptionIntentHash)
     	external
     	returns (

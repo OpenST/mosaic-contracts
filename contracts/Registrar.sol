@@ -54,6 +54,7 @@ contract Registrar is OpsManaged {
     	uint256 _redeemerNonce,
     	uint256 _amountUT,
     	uint256 _redemptionUnlockHeight,
+    	bytes32 _hashLock,
     	bytes32 _redemptionIntentHash)
     	external
     	onlyOps
@@ -67,6 +68,7 @@ contract Registrar is OpsManaged {
 	    	_redeemerNonce,
 	    	_amountUT,
 	    	_redemptionUnlockHeight,
+	    	_hashLock,
 	    	_redemptionIntentHash);
 
     	return (amountST, expirationHeight);
@@ -109,6 +111,8 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
+	// @dev this can be deprecated as anyone with the unlockSecret
+	//  can now call the processRedeeming function
 	function processStaking(
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
@@ -181,17 +185,20 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
+	// @dev this can be deprecated as anyone with the unlockSecret
+	//  can now call the processRedeeming function
     function processRedeeming(
     	// address of OpenSTUtility registry:
     	OpenSTUtilityInterface _registry,
     	// OpenSTUtility function:
-    	bytes32 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash,
+    	bytes32 _unlockSecret)
     	external
     	onlyAdmin
     	returns (
     	address tokenAddress)
     {
     	return _registry.processRedeeming(
-    		_redemptionIntentHash);
+    		_redemptionIntentHash, _unlockSecret);
     }
 }

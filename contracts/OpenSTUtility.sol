@@ -61,7 +61,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		address redeemer;
 		uint256 amountUT;
 		uint256 unlockHeight;
-		// bytes32 hashLock;
+		bytes32 hashLock;
 	}
 
 	/*
@@ -443,7 +443,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
     function redeem(
     	bytes32 _uuid,
     	uint256 _amountBT,
-    	uint256 _nonce)
+    	uint256 _nonce,
+    	bytes32 _hashLock)
     	external
     	returns (
     	uint256 unlockHeight,
@@ -474,14 +475,16 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		msg.sender,
     		_nonce,
     		_amountBT,
-    		unlockHeight
+    		unlockHeight,
+    		_hashLock
 		);
 
 		redemptions[redemptionIntentHash] = Redemption({
 			uuid:         _uuid,
 			redeemer:     msg.sender,
 			amountUT:     _amountBT,
-			unlockHeight: unlockHeight
+			unlockHeight: unlockHeight,
+			hashLock:     _hashLock
 		});
 
 		RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
@@ -493,7 +496,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
     /// @dev redeemer must send as value the amount STP to redeem
     ///      note: nonce must be queried from OpenSTValue contract
     function redeemSTPrime(
-    	uint256 _nonce)
+    	uint256 _nonce,
+    	bytes32 _hashLock)
     	external
     	payable
     	returns (
@@ -517,14 +521,16 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		msg.sender,
     		_nonce,
     		amountSTP,
-    		unlockHeight
+    		unlockHeight,
+    		_hashLock
 		);
 
 		redemptions[redemptionIntentHash] = Redemption({
 			uuid:         uuidSTPrime,
 			redeemer:     msg.sender,
 			amountUT:     amountSTP,
-			unlockHeight: unlockHeight
+			unlockHeight: unlockHeight,
+			hashLock:     _hashLock
 		});
 
 		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
@@ -534,7 +540,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
     function processRedeeming(
-    	bytes32 _redemptionIntentHash)
+    	bytes32 _redemptionIntentHash,
+    	bytes32 _unlockSecret)
     	external
     	returns (
     	address tokenAddress)
@@ -543,13 +550,8 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
     	Redemption storage redemption = redemptions[_redemptionIntentHash];
 
-    	// note: as processRedemption incurs a cost for the redeemer, we provide a fallback
-		// in v0.9 for registrar to process the redemption on behalf of the redeemer,
-		// as the redeemer could fail to process the redemption and avoid the cost of redeeming;
-		// this will be replaced with a signature carry-over implementation instead, where
-		// the signature of the intent hash suffices on value and utility chain, decoupling
-		// it from the transaction to processRedemption and processUnstaking
-    	require(redemption.redeemer == msg.sender || registrar == msg.sender);
+		// present the secret to the hash lock
+    	require(redemption.hashLock == keccak256(_unlockSecret));
 
     	// as process redemption bears the cost there is no need to require
     	// the unlockHeight is not past, the same way as we do require for
@@ -603,7 +605,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
 
 		delete redemptions[_redemptionIntentHash];
 
-		// fire event
 		RevertedRedemption(uuid, _redemptionIntentHash, redeemer, amountUT);
 
 		return (uuid, redeemer, amountUT);
