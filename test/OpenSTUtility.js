@@ -308,7 +308,10 @@ contract('OpenSTUtility', function(accounts) {
 
 		var brandedTokenContract = null;
 		const redeemAmountUT = new BigNumber(web3.toWei(1, "ether"));
+
 		const lock = HashLock.getHashLock();
+		// TODO: protocol#94 use lockR to redeem in unit tests.
+		const lockR = HashLock.getHashLock();
 
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
