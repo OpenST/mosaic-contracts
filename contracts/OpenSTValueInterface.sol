@@ -59,4 +59,26 @@ contract OpenSTValueInterface {
         public
         returns ( 
         bytes32 uuid);
+
+    function stakes(
+        bytes32 /* hashStakingIntent */)
+        public
+        returns (
+        bytes32, /* uuid */
+        address, /* staker */
+        address, /* beneficiary */
+        uint256, /* nonce */
+        uint256, /* amountST */
+        uint256, /* amountUT */
+        uint256 /* unlockHeight */);
+
+    function unstakes(
+        bytes32 /* hashRedemptionIntent */)
+        public
+        returns (
+        bytes32, /* uuid */
+        address, /* redeemer */
+        uint256, /* amountST */
+        uint256, /* amountUT */
+        uint256 /* expirationHeight */);
 }
