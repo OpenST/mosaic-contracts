@@ -121,7 +121,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	mapping(address /* (un)staker */ => uint256) nonces;
 	/// store the ongoing mints and redemptions
 	mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
-	mapping(bytes32 /* redemptionIntentHash*/ => Redemption) public redemptions;
+	mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
 
 	/*
 	 *  Modifiers
