@@ -111,6 +111,7 @@ contract('OpenSTUtility', function(accounts) {
 	const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 	const token 	 			  = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 	const redeemer 				= accounts[0];
+  const redeemBeneficiary = accounts[0];
 
 	var result 					= null;
 	var checkBtUuid 			= null;
@@ -313,38 +314,38 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when uuid is empty', async () => {
-            await Utils.expectThrow(openSTUtility.redeem("", redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem("", redeemAmountUT, 2, redeemBeneficiary, { from: redeemer }));
 		})
 
 		it('fails to redeem when amount is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, redeemBeneficiary, { from: redeemer }));
 		})
 
 		it('fails to redeem when nonce is not >= previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 0, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 0, redeemBeneficiary, { from: redeemer }));
 		})
 
 		it('fails to redeem when uuid is uuidSTPrime', async () => {
 			uuidSTPrime = await openSTUtility.uuidSTPrime.call();
-            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, redeemAmountUT, 2, redeemBeneficiary, { from: redeemer }));
 		})
 
 		it('fails to redeem if not approved to transfer the amount', async () => {
 			await brandedTokenContract.approve(openSTUtility.address, 0, { from: redeemer });
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, { from: redeemer }));
 			await brandedTokenContract.approve(openSTUtility.address, redeemAmountUT, { from: redeemer });
 		})
 
 		it('successfully redeems', async () => {
-			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
+			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, { from: redeemer });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[0].plus(1);
-            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemAmountUT, unlockHeight);
-            result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
+            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemBeneficiary, redeemAmountUT, unlockHeight);
+            result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, { from: redeemer });
 
             await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], checkBtUuid, checkRedemptionIntentHash, brandedToken,
-			redeemer, 2, redeemAmountUT, unlockHeight, chainIdValue);
+			redeemer, redeemBeneficiary, 2, redeemAmountUT, unlockHeight, chainIdValue);
 		})
 	})
 
@@ -366,23 +367,23 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when msg.value is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(redeemSTP.toNumber(), { from: redeemer, value: 0 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(redeemSTP.toNumber(), redeemBeneficiary, { from: redeemer, value: 0 }));
 		})
 
 		it('fails to redeem when nonce is not >= previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, { from: redeemer, value: 2 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, redeemBeneficiary, { from: redeemer, value: 2 }));
 		})
 
 		it('successfully redeems', async () => {
-			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), { from: redeemer, value: 2 });
+			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), redeemBeneficiary, { from: redeemer, value: 2 });
 
       // call block number is one less than send block number
       unlockHeight = redeemReturns[1].plus(1)
-      var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemSTP, unlockHeight);
-      result = await openSTUtility.redeemSTPrime(redeemSTP, { from: redeemer, value: redeemSTP });
+      var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemBeneficiary, redeemSTP, unlockHeight);
+      result = await openSTUtility.redeemSTPrime(redeemSTP, redeemBeneficiary, { from: redeemer, value: redeemSTP });
 
       await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
-				redeemer, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
+				redeemer, redeemBeneficiary, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
 		})
 	})
 
@@ -407,7 +408,7 @@ contract('OpenSTUtility', function(accounts) {
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(accounts[0]);
 				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
-	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, redeemBeneficiary, { from: redeemer });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
@@ -429,7 +430,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redeemBeneficiary, redemptionAmount);
 			})
 
 			it('fails to reprocess', async () => {
@@ -451,7 +452,7 @@ contract('OpenSTUtility', function(accounts) {
 	          await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
 	          await openSTUtility.processMinting(checkStakingIntentHash);
 						await stPrime.claim(accounts[0]);
-	          result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	          result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, { from: redeemer, value: redemptionAmount });
 	          redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
@@ -465,7 +466,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redeemBeneficiary, redemptionAmount);
 			})
 		})
 	})
@@ -491,7 +492,7 @@ contract('OpenSTUtility', function(accounts) {
 							brandedTokenContract = new BrandedToken(brandedToken);
 							await brandedTokenContract.claim(accounts[0]);
 							await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
-	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, redeemBeneficiary, { from: redeemer });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
@@ -506,7 +507,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redeemBeneficiary, redemptionAmount);
 			})
 		})
 
@@ -524,7 +525,7 @@ contract('OpenSTUtility', function(accounts) {
 	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash);
 				await stPrime.claim(accounts[0]);
-	            result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	            result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, { from: redeemer, value: redemptionAmount });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
@@ -539,7 +540,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redeemBeneficiary, redemptionAmount);
 			})
 		})
 
@@ -576,7 +577,7 @@ contract('OpenSTUtility', function(accounts) {
 				// redeemerForRevert is approved with 5 BT
 				await brandedTokenContract.approve(OpenSTUtility.address, redemptionAmountBT, { from: redeemerForRevert });
 				// After calling Redeem is left with 3 BT since redemptionAmountBT is 2 (5-2)
-				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, { from: redeemerForRevert });
+				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, redeemBeneficiary, { from: redeemerForRevert });
 				redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 
 			});
@@ -615,7 +616,7 @@ contract('OpenSTUtility', function(accounts) {
 
 				var revertRedemptionResult = await OpenSTUtility.revertRedemption(redemptionIntentHash, { from: redeemerForRevert });
 				OpenSTUtility_utils.checkRevertedRedemption(revertRedemptionResult.logs[0], checkBtUuid, redemptionIntentHash,
-						redeemerForRevert, redemptionAmountBT);
+						redeemerForRevert, redeemBeneficiary, redemptionAmountBT);
 
 			});
 

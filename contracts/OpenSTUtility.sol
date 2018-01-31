@@ -24,7 +24,6 @@ pragma solidity ^0.4.17;
 import "./SafeMath.sol";
 import "./Hasher.sol";
 import "./OpsManaged.sol";
-// import "./CoreInterface.sol";
 
 // utility chain contracts
 import "./STPrime.sol";
@@ -58,6 +57,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	struct Redemption {
 		bytes32 uuid;
 		address redeemer;
+		address beneficiary;
 		uint256 amountUT;
 		uint256 unlockHeight;
 	}
@@ -75,12 +75,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
 	event RevertedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
 		address _beneficiary, uint256 _amountUT);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
-		uint256 _chainIdValue);
+		address _token, address _redeemer, address _beneficiary, uint256 _nonce, uint256 _amount,
+		uint256 _unlockHeight, uint256 _chainIdValue);
 	event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
-		address _redeemer, uint256 _amount);
+		address _redeemer, address _beneficiary, uint256 _amount);
 	event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-		address _redeemer, uint256 _amountUT);
+		address _redeemer, address _beneficiary, uint256 _amountUT);
 
 	/*
 	 *  Constants
@@ -432,10 +432,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
     ///      as the spender so that the branded token can be taken into escrow by OpenSTUtility
     ///      note: for STPrime, call OpenSTUtility.redeemSTPrime as a payable function
     ///      note: nonce must be queried from OpenSTValue contract
+    ///      note: Redemption will be done to beneficiary address
     function redeem(
     	bytes32 _uuid,
     	uint256 _amountBT,
-    	uint256 _nonce)
+    	uint256 _nonce,
+    	address _beneficiary)
     	external
     	returns (
     	uint256 unlockHeight,
@@ -443,6 +445,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     {
     	require(_uuid != "");
     	require(_amountBT > 0);
+    	require(_beneficiary != address(0));
     	// on redemption allow the nonce to be re-used to cover for an unsuccessful
     	// previous redemption previously; as the nonce is strictly increasing plus
     	// one on the value chain; there is no gain on redeeming with the same nonce,
@@ -465,6 +468,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		_uuid,
     		msg.sender,
     		_nonce,
+    		_beneficiary,
     		_amountBT,
     		unlockHeight
 		);
@@ -472,20 +476,23 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		redemptions[redemptionIntentHash] = Redemption({
 			uuid:         _uuid,
 			redeemer:     msg.sender,
+			beneficiary:  _beneficiary,
 			amountUT:     _amountBT,
 			unlockHeight: unlockHeight
 		});
 
 		RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
-			msg.sender, _nonce, _amountBT, unlockHeight, chainIdValue);
+		msg.sender, _beneficiary, _nonce, _amountBT, unlockHeight, chainIdValue);
 
 		return (unlockHeight, redemptionIntentHash);
     }
 
     /// @dev redeemer must send as value the amount STP to redeem
     ///      note: nonce must be queried from OpenSTValue contract
+    ///      note: redemption will be done to beneficiary address
     function redeemSTPrime(
-    	uint256 _nonce)
+    	uint256 _nonce,
+    	address _beneficiary)
     	external
     	payable
     	returns (
@@ -494,6 +501,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	bytes32 redemptionIntentHash)
     {
     	require(msg.value > 0);
+    	require(_beneficiary != address(0));
     	// on redemption allow the nonce to be re-used to cover for an unsuccessful
     	// previous redemption previously; as the nonce is strictly increasing plus
     	// one on the value chain; there is no gain on redeeming with the same nonce,
@@ -508,6 +516,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     		uuidSTPrime,
     		msg.sender,
     		_nonce,
+    		_beneficiary,
     		amountSTP,
     		unlockHeight
 		);
@@ -515,12 +524,13 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		redemptions[redemptionIntentHash] = Redemption({
 			uuid:         uuidSTPrime,
 			redeemer:     msg.sender,
+			beneficiary:  _beneficiary,
 			amountUT:     amountSTP,
 			unlockHeight: unlockHeight
 		});
 
 		RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
-			msg.sender, _nonce, amountSTP, unlockHeight, chainIdValue);
+			msg.sender, _beneficiary, _nonce, amountSTP, unlockHeight, chainIdValue);
 
 		return (amountSTP, unlockHeight, redemptionIntentHash);
     }
@@ -557,7 +567,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(token.burn.value(value)(redemption.redeemer, redemption.amountUT));
 
 		ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
-			redemption.redeemer, redemption.amountUT);
+			redemption.redeemer, redemption.beneficiary, redemption.amountUT);
 
 		delete redemptions[_redemptionIntentHash];
 
@@ -570,6 +580,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		returns (
 		bytes32 uuid,
 		address redeemer,
+		address beneficiary,
 		uint256 amountUT)
 	{
 		require(_redemptionIntentHash != "");
@@ -583,6 +594,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		uuid = redemption.uuid;
 		amountUT = redemption.amountUT;
 		redeemer = redemption.redeemer;
+		beneficiary = redemption.beneficiary;
 
 		if (redemption.uuid == uuidSTPrime) {
 	        // transfer throws if insufficient funds
@@ -596,9 +608,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
 		delete redemptions[_redemptionIntentHash];
 
 		// fire event
-		RevertedRedemption(uuid, _redemptionIntentHash, redeemer, amountUT);
+		RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
 
-		return (uuid, redeemer, amountUT);
+		return (uuid, redeemer, beneficiary, amountUT);
 	}
 
 	/*

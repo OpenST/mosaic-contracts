@@ -61,6 +61,7 @@ contract('OpenST', function(accounts) {
 	const requester     = accounts[6];
 	const staker        = accounts[7];
 	const redeemer      = accounts[8];
+  const redeemBeneficiary = accounts[9];
 
 	const AMOUNT_ST = new BigNumber(web3.toWei(1000, "ether"));
 	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
