@@ -19,21 +19,29 @@
 //
 // ----------------------------------------------------------------------------
 
-const Assert = require('assert');
+const Assert 	= require('assert');
 const BigNumber = require('bignumber.js');
 
-var STPrime = artifacts.require("./STPrime.sol");
+var Hasher 			= artifacts.require("./Hasher.sol");
+var STPrimeConfig 	= artifacts.require("./STPrimeConfig.sol");
+var STPrime 		= artifacts.require("./STPrime.sol");
 
 /// @dev Deploy 
 module.exports.deploySTPrime = async (artifacts, accounts) => {
-   /// mock unique identifier for utility token
-   const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
-   /// mock OpenST protocol contract address with an external account
-   const openSTProtocol = accounts[4];
+	const hasher 				= await Hasher.new();
+	const stPrimeConfig 		= await STPrimeConfig.new();
+	/// mock OpenST protocol contract address with an external account
+	const openSTProtocol 		= accounts[4];
+	const conversionRate 		= 10;
+	const genesisChainIdValue 	= 3;
+	const genesisChainIdUtility = 1410;
+	const stPrimeSymbol			= await stPrimeConfig.TOKEN_SYMBOL.call();
+	const stPrimeName			= await stPrimeConfig.TOKEN_NAME.call();
+	const UUID 					= await hasher.hashUuid.call(stPrimeSymbol, stPrimeName, genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate);
 
-   const stPrime = await STPrime.new(openSTProtocol, UUID);
+	const stPrime = await STPrime.new(UUID, genesisChainIdValue, genesisChainIdUtility, conversionRate, { from: openSTProtocol });
 
-   return {
-      stPrime : stPrime
-   }
+	return {
+		stPrime : stPrime
+	}
 }

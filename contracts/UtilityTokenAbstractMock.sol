@@ -1,3 +1,4 @@
+/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -23,58 +24,75 @@ pragma solidity ^0.4.17;
 
 import "./UtilityTokenAbstract.sol";
 
-/// @title UtilityTokenAbstractMock
-/// @dev Implements mock claim, mint, and burn functions and wraps internal functions to enable testing UtilityTokenAbstract
-contract UtilityTokenAbstractMock is UtilityTokenAbstract {
-    function UtilityTokenAbstractMock(address _protocol, bytes32 _uuid)
-            UtilityTokenAbstract(_protocol, _uuid)
-        	ProtocolVersioned(_protocol)
-            public { }
 
-	/// @dev Mock claim function
+/// @title UtilityTokenAbstractMock
+/// @dev Implements mock claim, mint, and burn functions
+/// and wraps internal functions to enable testing UtilityTokenAbstract
+contract UtilityTokenAbstractMock is UtilityTokenAbstract {
+    function UtilityTokenAbstractMock(
+        bytes32 _uuid,
+        string _symbol,
+        string _name,
+        uint256 _chainIdValue,
+        uint256 _chainIdUtility,
+        uint256 _conversionRate)
+        public
+        UtilityTokenAbstract(
+        _uuid,
+        _symbol,
+        _name,
+        _chainIdValue,
+        _chainIdUtility,
+        _conversionRate)
+        ProtocolVersioned(msg.sender)
+        { }
+
+    /// @dev Mock claim function
     function claim(address _beneficiary) public returns (bool success) {
         _beneficiary;
         success = true;
     }
+
     /// @dev Mock mint function
     function mint(address _beneficiary, uint256 _amount) public returns (bool success) {
         _beneficiary;
         _amount;
         success = true;
     }
+
     /// @dev Mock burn function
     function burn(address _redeemer, uint256 _amount) public payable returns (bool success) {
         _redeemer;
         _amount;
         success = true;
     }
-   	
- 	/// @dev Public wrapper for claimInternal
- 	function claimInternalPublic(
-    	address _beneficiary)
-    	public
-    	returns (uint256 amount)
+       
+    /// @dev Public wrapper for claimInternal
+    function claimInternalPublic(
+        address _beneficiary)
+        public
+        returns (uint256 amount)
     {
-    	amount = claimInternal(_beneficiary);
+        amount = claimInternal(_beneficiary);
     }
 
     /// @dev Public wrapper for mintInternal
     function mintInternalPublic(
-    	address _beneficiary,
-    	uint256 _amount)
-    	public
-    	returns (bool /* success */)
+        address _beneficiary,
+        uint256 _amount)
+        public
+        returns (bool /* success */)
     {
-		return mintInternal(_beneficiary, _amount);    	
+        return mintInternal(_beneficiary, _amount);        
     }
 
     /// @dev Public wrapper for burnInternal
     function burnInternalPublic(
-    	address _redeemer,
-    	uint256 _amount)
-    	public
-    	returns (bool /* success */)
-	{
-		return burnInternal(_redeemer, _amount);
-	}
+        address _redeemer,
+        uint256 _amount)
+        public
+        returns (bool /* success */)
+    {
+        return burnInternal(_redeemer, _amount);
+    }
 }
