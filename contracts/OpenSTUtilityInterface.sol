@@ -54,4 +54,23 @@ contract OpenSTUtilityInterface {
     	external
     	returns (
     	address tokenAddress);
+
+    function mints(
+    	bytes32 /* stakingIntentHash */)
+    	public
+    	returns (
+		bytes32, /* uuid */
+		address, /* staker */
+		address, /* beneficiary */
+		uint256, /* amount */
+		uint256 /* expirationHeight */);
+
+    function redemptions(
+    	bytes32 /* redemptionIntentHash */)
+    	public
+    	returns (
+		bytes32, /* uuid */
+		address, /* redeemer */
+		uint256, /* amountUT */
+		uint256 /* unlockHeight */);
 }
