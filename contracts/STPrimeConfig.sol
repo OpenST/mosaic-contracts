@@ -1,3 +1,4 @@
+/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -21,12 +22,13 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
-
+/* solhint-disable-next-line two-lines-top-level-separator */
+/// @title STPrimeConfig
 contract STPrimeConfig {
-
-    string  public constant TOKEN_SYMBOL   = "STP";
-    string  public constant TOKEN_NAME     = "SimpleTokenPrime";
-    uint8   public constant TOKEN_DECIMALS = 18;
+    string  public constant STPRIME_SYMBOL          = "STP";
+    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
+    uint256 public constant STPRIME_CONVERSION_RATE = 1;
+    uint8   public constant TOKEN_DECIMALS          = 18;
 
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
     uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;

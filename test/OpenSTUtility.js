@@ -200,8 +200,11 @@ contract('OpenSTUtility', function(accounts) {
 		})
 
 		it('successfully registers', async () => {
+			assert.equal(await openSTUtility.getUuidsSize.call(), 1); // there is already 1 UUID in uuids for STPrime
 			assert.equal(await openSTUtility.registerBrandedToken.call(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar }), checkBtUuid);
             result = await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+			assert.equal(await openSTUtility.getUuidsSize.call(), 2);
+			assert.equal((await openSTUtility.registeredTokens.call(checkBtUuid))[2], symbol);
             await OpenSTUtility_utils.checkRegisteredBrandedTokenEvent(result.logs[0], registrar, brandedToken, checkBtUuid, symbol, name, conversionRate, accounts[0]);            
 		})
 	})

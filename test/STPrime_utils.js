@@ -35,8 +35,8 @@ module.exports.deploySTPrime = async (artifacts, accounts) => {
 	const conversionRate 		= 10;
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
-	const stPrimeSymbol			= await stPrimeConfig.TOKEN_SYMBOL.call();
-	const stPrimeName			= await stPrimeConfig.TOKEN_NAME.call();
+	const stPrimeSymbol			= await stPrimeConfig.STPRIME_SYMBOL.call();
+	const stPrimeName			= await stPrimeConfig.STPRIME_NAME.call();
 	const UUID 					= await hasher.hashUuid.call(stPrimeSymbol, stPrimeName, genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate);
 
 	const stPrime = await STPrime.new(UUID, genesisChainIdValue, genesisChainIdUtility, conversionRate, { from: openSTProtocol });

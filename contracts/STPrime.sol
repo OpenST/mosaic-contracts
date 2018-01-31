@@ -72,8 +72,8 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         public
         UtilityTokenAbstract(
         _uuid,
-        TOKEN_SYMBOL,
-        TOKEN_NAME,
+        STPRIME_SYMBOL,
+        STPRIME_NAME,
         _chainIdValue,
         _chainIdUtility,
         _conversionRate)

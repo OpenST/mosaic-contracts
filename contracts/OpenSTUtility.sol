@@ -35,7 +35,7 @@ import "./ProtocolVersioned.sol";
 
 
 /// @title OpenST Utility
-contract OpenSTUtility is Hasher, OpsManaged {
+contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
 
     /*
@@ -44,6 +44,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
     struct RegisteredToken {
         UtilityTokenInterface token;
         address registrar;
+        string symbol;
+        string name;
+        uint256 conversionRate;
     }
 
     struct Mint {
@@ -93,11 +96,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
     /*
      *  Constants
      */
-    string public constant STPRIME_SYMBOL = "STP";
-    string public constant STPRIME_NAME = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8 public constant TOKEN_DECIMALS = 18;
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
     // ~2 weeks, assuming ~15s per block
     uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
@@ -114,8 +112,9 @@ contract OpenSTUtility is Hasher, OpsManaged {
     /// chainId of the current utility chain
     uint256 public chainIdUtility;
     address public registrar;
-    /// registered branded tokens
-    mapping(bytes32 /* uuid */ => RegisteredToken) internal registeredTokens;
+    bytes32[] public uuids;
+    /// registered branded tokens 
+    mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
     /// name reservation is first come, first serve
     mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
     /// symbol reserved for unique API routes
@@ -170,10 +169,14 @@ contract OpenSTUtility is Hasher, OpsManaged {
             STPRIME_CONVERSION_RATE);
 
         registeredTokens[uuidSTPrime] = RegisteredToken({
-            token:     UtilityTokenInterface(simpleTokenPrime),
-            registrar: registrar
+            token:          UtilityTokenInterface(simpleTokenPrime),
+            registrar:      registrar,
+            symbol:         STPRIME_SYMBOL,
+            name:           STPRIME_NAME,
+            conversionRate: STPRIME_CONVERSION_RATE
         });
 
+        uuids.push(uuidSTPrime);
         // lock name and symbol route for ST'
         bytes32 hashName = keccak256(STPRIME_NAME);
         nameReservation[hashName] = registrar;
@@ -481,23 +484,6 @@ contract OpenSTUtility is Hasher, OpsManaged {
     }
 
     /*
-     *  External view functions
-     */
-    function registeredTokenProperties(
-        bytes32 _uuid)
-        external
-        view
-        returns (
-        address, /* token */
-        address /* registrar */)
-    {
-        RegisteredToken storage registeredToken = registeredTokens[_uuid];
-        return (
-            address(registeredToken.token),
-            registeredToken.registrar);
-    }
-
-    /*
      *  Public functions
      */
     /// @dev Congratulations on looking under the hood and obtaining ST' to call proposeBrandedToken;
@@ -571,6 +557,12 @@ contract OpenSTUtility is Hasher, OpsManaged {
         return false;
     }
 
+    /// @dev Returns size of uuids
+    /// @return size
+    function getUuidsSize() public view returns (uint256) {
+        return uuids.length;
+    }
+
     /*
      *  Registrar functions
      */
@@ -578,23 +570,23 @@ contract OpenSTUtility is Hasher, OpsManaged {
     ///      is not a required feature yet, so the core is simplified
     ///      to uint256 valueChainId as storage on construction
     // function addCore(
-    // 	CoreInterface _core)
-    // 	public
-    // 	onlyRegistrar
-    // 	returns (bool /* success */)
+    //  CoreInterface _core)
+    //  public
+    //  onlyRegistrar
+    //  returns (bool /* success */)
     // {
-    // 	require(address(_core) != address(0));
-    // 	// core constructed with same registrar
-    // 	require(registrar == _core.registrar());
-    // 	// on utility chain core only tracks a remote value chain
-    // 	uint256 coreChainIdValue = _core.chainIdRemote();
-    // 	require(chainIdUtility != 0);
-    // 	// cannot overwrite core for given chainId
-    // 	require(cores[coreChainIdValue] == address(0));
+    //  require(address(_core) != address(0));
+    //  // core constructed with same registrar
+    //  require(registrar == _core.registrar());
+    //  // on utility chain core only tracks a remote value chain
+    //  uint256 coreChainIdValue = _core.chainIdRemote();
+    //  require(chainIdUtility != 0);
+    //  // cannot overwrite core for given chainId
+    //  require(cores[coreChainIdValue] == address(0));
 
-    // 	cores[coreChainIdValue] = _core;
+    //  cores[coreChainIdValue] = _core;
 
-    // 	return true;
+    //  return true;
     // }
 
     /* solhint-disable-next-line separate-by-one-line-in-contract */
@@ -631,14 +623,18 @@ contract OpenSTUtility is Hasher, OpsManaged {
         assert(address(registeredTokens[registeredUuid].token) == address(0));
 
         registeredTokens[registeredUuid] = RegisteredToken({
-            token:     _brandedToken,
-            registrar: registrar
+            token:          _brandedToken,
+            registrar:      registrar,
+            symbol:         _symbol,
+            name:           _name,
+            conversionRate: _conversionRate
         });
 
         // register name to registrar
         nameReservation[hashName] = registrar;
         // register symbol
         symbolRoute[hashSymbol] = _brandedToken;
+        uuids.push(registeredUuid);
 
         RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
             _conversionRate, _requester);
