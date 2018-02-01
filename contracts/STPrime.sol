@@ -1,3 +1,4 @@
+/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -32,6 +33,7 @@ import "./SafeMath.sol";
 import "./UtilityTokenAbstract.sol";
 import "./STPrimeConfig.sol";
 
+
 /*
  *  @title STPrime
  *  @notice a freely tradable equivalent representation of Simple Token [ST]
@@ -41,7 +43,7 @@ import "./STPrimeConfig.sol";
  *       of the finite amount of base tokens on the utility chain
  */
 contract STPrime is UtilityTokenAbstract, STPrimeConfig {
-	using SafeMath for uint256;
+    using SafeMath for uint256;
 
 
     /*
@@ -63,13 +65,19 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      * Public functions
      */
     function STPrime(
-    	address _openSTProtocol,
-    	bytes32 _uuid)
-    	UtilityTokenAbstract(_openSTProtocol, _uuid)
-    	public
-	{
-
-	}
+        bytes32 _uuid,
+        uint256 _chainIdValue,
+        uint256 _chainIdUtility,
+        uint256 _conversionRate)
+        public
+        UtilityTokenAbstract(
+        _uuid,
+        TOKEN_SYMBOL,
+        TOKEN_NAME,
+        _chainIdValue,
+        _chainIdUtility,
+        _conversionRate)
+        { }
 
     /// On setup of the utility chain the base tokens need to be transfered
     /// in full to STPrime for the base tokens to be minted as ST'
@@ -84,7 +92,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         initialized = true;
     }
 
-	/// @dev transfer full claim to beneficiary
+    /// @dev transfer full claim to beneficiary
     ///      claim can be called publicly as the beneficiary
     ///      and amount are set, and this allows for reduced
     ///      steps on the user experience to complete the claim
@@ -93,13 +101,13 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     ///         has to be zero to deploy the contracts and accept the very
     ///         first staking of ST for ST' and its protocol executions.
     function claim(
-    	address _beneficiary)
-    	public
+        address _beneficiary)
+        public
         onlyInitialized
-    	returns (bool /* success */)
+        returns (bool /* success */)
     {
-    	uint256 amount = claimInternal(_beneficiary);
-		assert(this.balance >= amount);
+        uint256 amount = claimInternal(_beneficiary);
+        assert(this.balance >= amount);
 
         // transfer throws if insufficient funds
         _beneficiary.transfer(amount);
@@ -113,32 +121,32 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     ///      the protocol completion does not continue into
     ///      foreign contracts at _beneficiary.
     function mint(
-    	address _beneficiary,
-    	uint256 _amount)
-	    public
-	    onlyProtocol
+        address _beneficiary,
+        uint256 _amount)
+        public
+        onlyProtocol
         onlyInitialized
-	    returns (bool /* success */)
-	{		
-		// add the minted amount to the beneficiary's claim 
-		return mintInternal(_beneficiary, _amount);
+        returns (bool /* success */)
+    {
+        // add the minted amount to the beneficiary's claim 
+        return mintInternal(_beneficiary, _amount);
     }
 
     /// @dev Burn utility tokens after having redeemed them
     ///      through the protocol for the staked Simple Token
     function burn(
-    	address _burner,
-    	uint256 _amount)
-    	public
-    	onlyProtocol
+        address _burner,
+        uint256 _amount)
+        public
+        onlyProtocol
         onlyInitialized
-    	payable
-    	returns (bool /* success */)
-   	{
-   		// only accept the exact amount of base tokens to be returned
-   		// to the ST' minting contract
-   		require(msg.value == _amount);
+        payable
+        returns (bool /* success */)
+    {
+        // only accept the exact amount of base tokens to be returned
+        // to the ST' minting contract
+        require(msg.value == _amount);
 
-   		return burnInternal(_burner, _amount);
-   	}
+        return burnInternal(_burner, _amount);
+    }
 }

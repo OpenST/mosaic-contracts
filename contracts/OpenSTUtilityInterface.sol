@@ -1,3 +1,4 @@
+/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -24,53 +25,54 @@ pragma solidity ^0.4.17;
 // import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
 
-contract OpenSTUtilityInterface {
-	function registerBrandedToken(
-		string _symbol,
-		string _name,
-		uint256 _conversionRate,
-		address _requester,
-		UtilityTokenInterface _brandedToken,
-		bytes32 _checkUuid)
-		public
-		returns (
-		bytes32 registeredUuid);
 
-	function confirmStakingIntent(
-		bytes32 _uuid,
-		address _staker,
-		uint256 _stakerNonce,
-		address _beneficiary,
-		uint256 _amountST,
-		uint256 _amountUT,
-		uint256 _stakingUnlockHeight,
-		bytes32 _stakingIntentHash)
-		external
-		returns (
-		uint256 expirationHeight);
+contract OpenSTUtilityInterface {
+    function confirmStakingIntent(
+        bytes32 _uuid,
+        address _staker,
+        uint256 _stakerNonce,
+        address _beneficiary,
+        uint256 _amountST,
+        uint256 _amountUT,
+        uint256 _stakingUnlockHeight,
+        bytes32 _stakingIntentHash)
+        external
+        returns (
+        uint256 expirationHeight);
 
     function processRedeeming(
-    	bytes32 _redemptionIntentHash)
-    	external
-    	returns (
-    	address tokenAddress);
+        bytes32 _redemptionIntentHash)
+        external
+        returns (
+        address tokenAddress);
+
+    function registerBrandedToken(
+        string _symbol,
+        string _name,
+        uint256 _conversionRate,
+        address _requester,
+        UtilityTokenInterface _brandedToken,
+        bytes32 _checkUuid)
+        public
+        returns (
+        bytes32 registeredUuid);
 
     function mints(
-    	bytes32 /* stakingIntentHash */)
-    	public
-    	returns (
-		bytes32, /* uuid */
-		address, /* staker */
-		address, /* beneficiary */
-		uint256, /* amount */
-		uint256 /* expirationHeight */);
+        bytes32 /* stakingIntentHash */)
+        public
+        returns (
+        bytes32, /* uuid */
+        address, /* staker */
+        address, /* beneficiary */
+        uint256, /* amount */
+        uint256 /* expirationHeight */);
 
     function redemptions(
-    	bytes32 /* redemptionIntentHash */)
-    	public
-    	returns (
-		bytes32, /* uuid */
-		address, /* redeemer */
-		uint256, /* amountUT */
-		uint256 /* unlockHeight */);
+        bytes32 /* redemptionIntentHash */)
+        public
+        returns (
+        bytes32, /* uuid */
+        address, /* redeemer */
+        uint256, /* amountUT */
+        uint256 /* unlockHeight */);
 }
