@@ -386,11 +386,11 @@ contract('OpenST', function(accounts) {
 			it("call redeem", async() => {
 
 				nonce = await openSTValue.getNextNonce.call(redeemer);
-				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, redeemBeneficiary, { from: redeemer });
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash, brandedToken.address,
-						redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+						redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 				utils.logResponse(redeemResult, "OpenSTUtility.redeem");
 
 			});
@@ -398,12 +398,12 @@ contract('OpenST', function(accounts) {
 			it("confirm redemption intent", async() => {
 
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
-				redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
+				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
 				redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
-					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
+					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 
 				utils.logResponse(confirmRedemptionResult, "OpenSTValue.confirmRedemptionIntent");
 
@@ -414,7 +414,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+					brandedToken.address, redeemer, redeemBeneficiary, REDEEM_AMOUNT_BT)
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.processRedeeming");
 
@@ -425,7 +425,7 @@ contract('OpenST', function(accounts) {
 				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
 
 				openSTValueUtils.checkProcessedUnstakeEvent(processUnstakeResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					btSimpleStakeContractAddress, redeemer, redeemedAmountST);
+					btSimpleStakeContractAddress, redeemer, redeemBeneficiary, redeemedAmountST);
 
 				utils.logResponse(processUnstakeResult, "openSTValue.processUnstaking");
 
@@ -446,11 +446,11 @@ contract('OpenST', function(accounts) {
 			it("call redeem", async() => {
 
 				nonce = await openSTValue.getNextNonce.call(redeemer);
-				var redeemResult = await openSTUtility.redeemSTPrime(nonce, { from: redeemer, value: REDEEM_AMOUNT_STPRIME });
+				var redeemResult = await openSTUtility.redeemSTPrime(nonce, redeemBeneficiary, { from: redeemer, value: REDEEM_AMOUNT_STPRIME });
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], uuidSTP, redemptionIntentHash, stPrime.address,
-					redeemer, nonce, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
+					redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.STPrime.redeem");
 
@@ -458,13 +458,13 @@ contract('OpenST', function(accounts) {
 
 			it("confirm redemption intent", async() => {
 
-				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, uuidSTP, redeemer, nonce,
+				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, uuidSTP, redeemer, nonce, redeemBeneficiary,
 					REDEEM_AMOUNT_STPRIME, unlockHeight, redemptionIntentHash, { from: intercommVC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt,
 					openSTValue.address, openSTValueArtifacts.abi);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, uuidSTP,
-					redemptionIntentHash, redeemer, REDEEM_AMOUNT_STPRIME, REDEEM_AMOUNT_STPRIME);
+					redemptionIntentHash, redeemer, redeemBeneficiary, REDEEM_AMOUNT_STPRIME, REDEEM_AMOUNT_STPRIME);
 
 				utils.logResponse(confirmRedemptionResult, "OpenSTValue.STPrime.confirmRedemptionIntent");
 
@@ -475,7 +475,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], uuidSTP, redemptionIntentHash,
-					stPrime.address, redeemer, REDEEM_AMOUNT_STPRIME)
+					stPrime.address, redeemer, redeemBeneficiary, REDEEM_AMOUNT_STPRIME)
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.STPrime.processRedeeming");
 
@@ -487,7 +487,7 @@ contract('OpenST', function(accounts) {
 
 				var event = processUnstakeResult.logs[0];
 				openSTValueUtils.checkProcessedUnstakeEvent(event, uuidSTP, redemptionIntentHash,
-					stPrimeSimpleStakeContractAddress, redeemer, REDEEM_AMOUNT_STPRIME);
+					stPrimeSimpleStakeContractAddress, redeemer, redeemBeneficiary, REDEEM_AMOUNT_STPRIME);
 				utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
 
 			});
@@ -755,11 +755,11 @@ contract('OpenST', function(accounts) {
 				Assert.ok(approveResult);
 
 				nonce = await openSTValue.getNextNonce.call(redeemer);
-				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, redeemBeneficiary, { from: redeemer });
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertRedemption.redeem");
 
@@ -781,7 +781,7 @@ contract('OpenST', function(accounts) {
 
 				var revertResult = await openSTUtility.revertRedemption(redemptionIntentHash, { from: redeemer });
 				openSTUtilityUtils.checkRevertedRedemption(revertResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash, redeemer,
-					REDEEM_AMOUNT_BT);
+          redeemBeneficiary, REDEEM_AMOUNT_BT);
 
 				utils.logResponse(revertResult, "OpenSTUtility.redeem.revertRedemption");
 
@@ -817,11 +817,11 @@ contract('OpenST', function(accounts) {
 				Assert.ok(approveResult);
 
 				nonce = await openSTValue.getNextNonce.call(redeemer);
-				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, redeemBeneficiary, { from: redeemer });
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertUnstake.redeem");
 
@@ -831,11 +831,11 @@ contract('OpenST', function(accounts) {
 			it("calls confirmRedemptionIntent", async() => {
 
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
-					redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
+					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
 				redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
-					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
+					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
 
 			});
@@ -856,7 +856,7 @@ contract('OpenST', function(accounts) {
 
 				var revertRedemptionResult = await openSTUtility.revertRedemption(redemptionIntentHash, { from: redeemer });
 				openSTUtilityUtils.checkRevertedRedemption(revertRedemptionResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					redeemer, REDEEM_AMOUNT_BT);
+					redeemer, redeemBeneficiary, REDEEM_AMOUNT_BT);
 
 				utils.logResponse(revertRedemptionResult, "OpenSTUtility.revertUnstake.revertRedemption");
 
@@ -878,7 +878,7 @@ contract('OpenST', function(accounts) {
 
 				var revertUnstakingResult = await openSTValue.revertUnstaking(redemptionIntentHash, { from: redeemer });
 				openSTValueUtils.checkRevertedUnstake(revertUnstakingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					redeemer, redeemedAmountST);
+					redeemer, redeemBeneficiary, redeemedAmountST);
 				utils.logResponse(revertUnstakingResult, "OpenSTUtility.revertUnstake.revertUnstaking");
 
 			});
@@ -921,11 +921,11 @@ contract('OpenST', function(accounts) {
 				Assert.ok(approveResult);
 
 				nonce = await openSTValue.getNextNonce.call(redeemer);
-				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, { from: redeemer });
+				var redeemResult = await openSTUtility.redeem(registeredBrandedTokenUuid, REDEEM_AMOUNT_BT, nonce, redeemBeneficiary, { from: redeemer });
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertUnstake.redeem");
 
@@ -935,11 +935,11 @@ contract('OpenST', function(accounts) {
 			it("calls confirmRedemptionIntent", async() => {
 
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
-				redeemer, nonce, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
+				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
 				redeemedAmountST = (REDEEM_AMOUNT_BT/conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
-					redemptionIntentHash, redeemer, redeemedAmountST, REDEEM_AMOUNT_BT);
+					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
 
 			});
@@ -949,7 +949,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+					brandedToken.address, redeemer, redeemBeneficiary, REDEEM_AMOUNT_BT)
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.revertUnstake.processRedeeming");
 
@@ -995,7 +995,7 @@ contract('OpenST', function(accounts) {
 
 				var revertUnstakingResult = await openSTValue.revertUnstaking(redemptionIntentHash, { from: redeemer });
 				openSTValueUtils.checkRevertedUnstake(revertUnstakingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					redeemer, redeemedAmountST);
+					redeemer, redeemBeneficiary, redeemedAmountST);
 				utils.logResponse(revertUnstakingResult, "OpenSTUtility.revertUnstake.revertUnstaking");
 
 			});

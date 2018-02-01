@@ -189,7 +189,7 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionI
 	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
 }
 
-module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecodedEvents, uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT) => {
+module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecodedEvents, uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST, _amountUT) => {
 	var event = formattedDecodedEvents['RedemptionIntentConfirmed'];
 	assert.notEqual(event, null);
 
@@ -206,6 +206,7 @@ module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecoded
 	assert.equal(event._uuid, uuid);
 	assert.equal(event._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event._redeemer, _redeemer);
+  assert.equal(event._beneficiary, _beneficiary);
 	assert.equal(event._amountST, _amountST.toNumber());
 	assert.equal(event._amountUT, _amountUT.toNumber());
 	assert.isAbove(_unlockHeight.toNumber(), 0);

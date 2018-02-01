@@ -35,6 +35,7 @@ contract OpenSTValueInterface {
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
+        address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
         bytes32 _redemptionIntentHash)

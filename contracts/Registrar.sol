@@ -52,6 +52,7 @@ contract Registrar is OpsManaged {
     	bytes32 _uuid,
     	address _redeemer,
     	uint256 _redeemerNonce,
+    	address _beneficiary,
     	uint256 _amountUT,
     	uint256 _redemptionUnlockHeight,
     	bytes32 _redemptionIntentHash)
@@ -65,6 +66,7 @@ contract Registrar is OpsManaged {
     		_uuid,
 	    	_redeemer,
 	    	_redeemerNonce,
+	    	_beneficiary,
 	    	_amountUT,
 	    	_redemptionUnlockHeight,
 	    	_redemptionIntentHash);
