@@ -33,7 +33,7 @@ import "./ProtocolVersioned.sol";
 import "./SimpleStake.sol";
 
 
-/// @title OpenSTValue - value staking contract for OpenST 
+/// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
 
@@ -56,13 +56,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         address _staker, uint256 _amountST, uint256 _amountUT);
 
     event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
-        address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
+        address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 
     event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-        address stake, address _redeemer, uint256 _amountST);
+        address stake, address _redeemer, address _beneficiary, uint256 _amountST);
 
     event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-        address _redeemer, uint256 _amountST);
+        address _redeemer, address _beneficiary, uint256 _amountST);
 
     /*
      *  Constants
@@ -100,6 +100,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     struct Unstake {
         bytes32 uuid;
         address redeemer;
+        address beneficiary;
         uint256 amountST;
         // @dev consider removal of amountUT
         uint256 amountUT;
@@ -295,6 +296,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
+        address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
         bytes32 _redemptionIntentHash)
@@ -306,6 +308,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     {
         require(utilityTokens[_uuid].simpleStake != address(0));
         require(_amountUT > 0);
+        require(_beneficiary != address(0));
         // later core will provide a view on the block height of the
         // utility chain
         require(_redemptionUnlockHeight > 0);
@@ -318,6 +321,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             _uuid,
             _redeemer,
             nonces[_redeemer],
+            _beneficiary,
             _amountUT,
             _redemptionUnlockHeight
         );
@@ -336,13 +340,14 @@ contract OpenSTValue is OpsManaged, Hasher {
         unstakes[redemptionIntentHash] = Unstake({
             uuid:         _uuid,
             redeemer:     _redeemer,
+            beneficiary:  _beneficiary,
             amountUT:     _amountUT,
             amountST:     amountST,
             expirationHeight: expirationHeight
         });
 
         RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
-            amountST, _amountUT, expirationHeight);
+            _beneficiary, amountST, _amountUT, expirationHeight);
 
         return (amountST, expirationHeight);
     }
@@ -367,10 +372,10 @@ contract OpenSTValue is OpsManaged, Hasher {
         stakeAddress = address(utilityToken.simpleStake);
         require(stakeAddress != address(0));
 
-        require(utilityToken.simpleStake.releaseTo(unstake.redeemer, unstake.amountST));
+        require(utilityToken.simpleStake.releaseTo(unstake.beneficiary, unstake.amountST));
 
-        ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress, 
-            unstake.redeemer, unstake.amountST);
+        ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
+            unstake.redeemer, unstake.beneficiary, unstake.amountST);
 
         delete unstakes[_redemptionIntentHash];
 
@@ -383,6 +388,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (
         bytes32 uuid,
         address redeemer,
+        address beneficiary,
         uint256 amountST)
     {
         require(_redemptionIntentHash != "");
@@ -396,13 +402,14 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         uuid = unstake.uuid;
         redeemer = unstake.redeemer;
+        beneficiary = unstake.beneficiary;
         amountST = unstake.amountST;
 
         delete unstakes[_redemptionIntentHash];
 
-        RevertedUnstake(uuid, _redemptionIntentHash, redeemer, amountST);
+        RevertedUnstake(uuid, _redemptionIntentHash, redeemer, beneficiary, amountST);
 
-        return (uuid, redeemer, amountST);
+        return (uuid, redeemer, beneficiary, amountST);
     }
 
     function core(
@@ -528,7 +535,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             stakingAccount: _stakingAccount
         });
 
-        UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name, 
+        UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
             TOKEN_DECIMALS, _conversionRate, _chainIdUtility, _stakingAccount);
 
         return uuid;

@@ -53,6 +53,7 @@ contract('Registrar', function(accounts) {
 	const ops 		   		= accounts[1];
 	const admin 	   		= accounts[3];
 	const staker	  		= accounts[2];
+  const redeemBeneficiary = accounts[4];
 	const symbol 			= "MCC";
 	const name 				= "Member Company Coin";
 	const conversionRate	= 10;
@@ -210,17 +211,17 @@ contract('Registrar', function(accounts) {
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, { from: staker });
 			nonce = await openSTValue.getNextNonce.call(staker);
-			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, amountUTRedeemed, BLOCKS_TO_WAIT_LONG);
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG);
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash));
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: admin }));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: admin }));
 		})
 
 		it('successfully confirms', async () => {
 			var BLOCKS_TO_WAIT_SHORT = 240;
-            var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: ops });
+            var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: ops });
 
             assert.equal(confirmReturns[0], (amountUTRedeemed / conversionRate));
             assert.ok(confirmReturns[1] > BLOCKS_TO_WAIT_SHORT);

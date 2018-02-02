@@ -72,6 +72,7 @@ contract Hasher {
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
+		address _beneficiary,
 		uint256 _amountUT,
 		uint256 _escrowUnlockHeight)
 		public
@@ -82,6 +83,7 @@ contract Hasher {
 			_uuid,
 			_account,
 			_accountNonce,
+			_beneficiary,
 			_amountUT,
 			_escrowUnlockHeight);
 	}
