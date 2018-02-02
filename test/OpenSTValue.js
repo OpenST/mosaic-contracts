@@ -195,6 +195,7 @@ contract('OpenSTValue', function(accounts) {
 		})
 
 		it('successfully registers', async () => {
+			assert.equal(await openSTValue.getUuidsSize.call(), 0);
             assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }), checkUuid);
             result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
 
@@ -203,6 +204,8 @@ contract('OpenSTValue', function(accounts) {
             var simpleStake = new SimpleStake(result.logs[0].args.stake);
             assert.equal(await simpleStake.uuid.call(), checkUuid);
             assert.equal(await simpleStake.eip20Token.call(), valueToken.address);
+			assert.equal(await openSTValue.getUuidsSize.call(), 1);
+			assert.equal((await openSTValue.utilityTokens.call(checkUuid))[0], symbol);
 		})
 
 		it('fails to register if already exists', async () => {

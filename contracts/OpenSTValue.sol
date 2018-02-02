@@ -113,8 +113,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 public chainIdValue;
     EIP20Interface public valueToken;
     address public registrar;
+    bytes32[] public uuids;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
-    mapping(bytes32 /* uuid */ => UtilityToken) internal utilityTokens;
+    mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
     /// nonce makes the staking process atomic across the two-phased process
     /// and protects against replay attack on (un)staking proofs during the process.
     /// On the value chain nonces need to strictly increase by one; on the utility
@@ -422,34 +423,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     /*
-     *  External view functions
-     */
-    function utilityTokenProperties(
-        bytes32 _uuid)
-        external
-        view
-        returns (
-        string  symbol,
-        string  name,
-        uint256 conversionRate,
-        uint8   decimals,
-        uint256 chainIdUtility,
-        address simpleStake,
-        address stakingAccount
-        /* utility token struct */) // solhint-disable-line indent
-    {
-        UtilityToken storage utilityToken = utilityTokens[_uuid];
-        return (
-            utilityToken.symbol,
-            utilityToken.name,
-            utilityToken.conversionRate,
-            utilityToken.decimals,
-            utilityToken.chainIdUtility,
-            address(utilityToken.simpleStake),
-            utilityToken.stakingAccount);
-    }
-
-    /*
      *  Public view functions
      */
     function getNextNonce(
@@ -467,6 +440,12 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     function blocksToWaitShort() public pure returns (uint256) {
         return BLOCKS_TO_WAIT_SHORT;
+    }
+
+    /// @dev Returns size of uuids
+    /// @return size
+    function getUuidsSize() public view returns (uint256) {
+        return uuids.length;
     }
 
     /*
@@ -534,6 +513,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             simpleStake:    simpleStake,
             stakingAccount: _stakingAccount
         });
+        uuids.push(uuid);
 
         UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
             TOKEN_DECIMALS, _conversionRate, _chainIdUtility, _stakingAccount);

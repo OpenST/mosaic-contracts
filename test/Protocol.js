@@ -128,7 +128,7 @@ contract('OpenST', function(accounts) {
 
 				stPrimeSimpleStakeContractAddress = event.stake;
 
-				Assert.notEqual((await openSTValue.utilityTokenProperties.call(uuidSTP))[5], utils.NullAddress);
+				Assert.notEqual((await openSTValue.utilityTokens.call(uuidSTP))[5], utils.NullAddress);
 			});
 
 			// Initialize Transfer to ST' Contract Address
