@@ -390,7 +390,7 @@ contract('OpenST', function(accounts) {
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash, brandedToken.address,
-						redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+						redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 				utils.logResponse(redeemResult, "OpenSTUtility.redeem");
 
 			});
@@ -450,7 +450,7 @@ contract('OpenST', function(accounts) {
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], uuidSTP, redemptionIntentHash, stPrime.address,
-					redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
+					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_STPRIME, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.STPrime.redeem");
 
@@ -759,7 +759,7 @@ contract('OpenST', function(accounts) {
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertRedemption.redeem");
 
@@ -821,7 +821,7 @@ contract('OpenST', function(accounts) {
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertUnstake.redeem");
 
@@ -925,7 +925,7 @@ contract('OpenST', function(accounts) {
 				redemptionIntentHash = redeemResult.logs[0].args._redemptionIntentHash;
 				unlockHeight = redeemResult.logs[0].args._unlockHeight;
 				openSTUtilityUtils.checkRedemptionIntentDeclaredEvent(redeemResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, redeemBeneficiary, nonce, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
+					brandedToken.address, redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, CHAINID_VALUE);
 
 				utils.logResponse(redeemResult, "OpenSTUtility.revertUnstake.redeem");
 

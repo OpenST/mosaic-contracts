@@ -111,7 +111,7 @@ contract('OpenSTUtility', function(accounts) {
 	const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 	const token 	 			  = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 	const redeemer 				= accounts[0];
-  const redeemBeneficiary = accounts[0];
+	const redeemBeneficiary = accounts[2];
 
 	var result 					= null;
 	var checkBtUuid 			= null;
@@ -345,7 +345,7 @@ contract('OpenSTUtility', function(accounts) {
             result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, { from: redeemer });
 
             await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], checkBtUuid, checkRedemptionIntentHash, brandedToken,
-			redeemer, redeemBeneficiary, 2, redeemAmountUT, unlockHeight, chainIdValue);
+			redeemer, 2, redeemBeneficiary, redeemAmountUT, unlockHeight, chainIdValue);
 		})
 	})
 
@@ -383,7 +383,7 @@ contract('OpenSTUtility', function(accounts) {
       result = await openSTUtility.redeemSTPrime(redeemSTP, redeemBeneficiary, { from: redeemer, value: redeemSTP });
 
       await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
-				redeemer, redeemBeneficiary, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
+				redeemer, 2, redeemBeneficiary, redeemSTP.toNumber(), unlockHeight, chainIdValue);
 		})
 	})
 

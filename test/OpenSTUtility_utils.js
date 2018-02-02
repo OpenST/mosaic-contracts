@@ -164,7 +164,7 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _tok
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
 }
 
-module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _nonce, _amount, _unlockHeight, _chainIdValue) => {
+module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _beneficiary, _amount, _unlockHeight, _chainIdValue) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}

@@ -81,7 +81,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
         address _beneficiary, uint256 _amountUT);
 
     event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-        address _token, address _redeemer, address _beneficiary, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
+        address _token, address _redeemer, uint256 _nonce, address _beneficiary, uint256 _amount, uint256 _unlockHeight,
         uint256 _chainIdValue);
 
     event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
@@ -349,7 +349,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
         });
 
         RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
-            msg.sender, _beneficiary, _nonce, _amountBT, unlockHeight, chainIdValue);
+            msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
 
         return (unlockHeight, redemptionIntentHash);
     }
@@ -397,7 +397,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
         });
 
         RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
-            msg.sender, _beneficiary, _nonce, amountSTP, unlockHeight, chainIdValue);
+            msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
 
         return (amountSTP, unlockHeight, redemptionIntentHash);
     }
