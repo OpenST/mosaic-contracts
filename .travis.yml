@@ -8,7 +8,7 @@ branches:
 notifications:
   email:
     recipients:
-      - ci.report@simpletoken.org
+      - ci.report@ost.com
     on_success: always
     on_failure: always
 node_js:
