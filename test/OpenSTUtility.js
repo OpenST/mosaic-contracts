@@ -204,7 +204,7 @@ contract('OpenSTUtility', function(accounts) {
 			assert.equal(await openSTUtility.registerBrandedToken.call(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar }), checkBtUuid);
             result = await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 			assert.equal(await openSTUtility.getUuidsSize.call(), 2);
-			assert.equal((await openSTUtility.registeredTokens.call(checkBtUuid))[2], symbol);
+			assert.equal((await openSTUtility.registeredTokens.call(checkBtUuid))[0], brandedToken);
             await OpenSTUtility_utils.checkRegisteredBrandedTokenEvent(result.logs[0], registrar, brandedToken, checkBtUuid, symbol, name, conversionRate, accounts[0]);            
 		})
 	})

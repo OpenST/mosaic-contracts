@@ -44,9 +44,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     struct RegisteredToken {
         UtilityTokenInterface token;
         address registrar;
-        string symbol;
-        string name;
-        uint256 conversionRate;
     }
 
     struct Mint {
@@ -170,10 +167,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         registeredTokens[uuidSTPrime] = RegisteredToken({
             token:          UtilityTokenInterface(simpleTokenPrime),
-            registrar:      registrar,
-            symbol:         STPRIME_SYMBOL,
-            name:           STPRIME_NAME,
-            conversionRate: STPRIME_CONVERSION_RATE
+            registrar:      registrar
         });
 
         uuids.push(uuidSTPrime);
@@ -624,10 +618,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         registeredTokens[registeredUuid] = RegisteredToken({
             token:          _brandedToken,
-            registrar:      registrar,
-            symbol:         _symbol,
-            name:           _name,
-            conversionRate: _conversionRate
+            registrar:      registrar
         });
 
         // register name to registrar
