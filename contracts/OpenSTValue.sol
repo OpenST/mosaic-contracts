@@ -47,13 +47,13 @@ contract OpenSTValue is OpsManaged, Hasher {
     	uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
     	uint256 _chainIdUtility);
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-    	address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+    	address _stake, address _staker, uint256 _amountST, uint256 _amountUT, bytes32 _unlockSecret);
     event RevertedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _staker, uint256 _amountST, uint256 _amountUT);
 	event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
 		address _redeemer, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 	event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-		address stake, address _redeemer, uint256 _amountST);
+		address stake, address _redeemer, uint256 _amountST, bytes32 _unlockSecret);
     event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
     	address _redeemer, uint256 _amountST);
 
@@ -240,7 +240,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(valueToken.transfer(stakeAddress, stake.amountST));
 
     	ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
-    		stake.amountST, stake.amountUT);
+    		stake.amountST, stake.amountUT, _unlockSecret);
 
     	delete stakes[_stakingIntentHash];
 
@@ -363,7 +363,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 		require(utilityToken.simpleStake.releaseTo(unstake.redeemer, unstake.amountST));
 	
 		ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress, 
-			unstake.redeemer, unstake.amountST);
+			unstake.redeemer, unstake.amountST, _unlockSecret);
 
 		delete unstakes[_redemptionIntentHash];
 

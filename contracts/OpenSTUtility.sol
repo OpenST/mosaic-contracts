@@ -74,14 +74,14 @@ contract OpenSTUtility is Hasher, OpsManaged {
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
     	address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
-    	address _staker, address _beneficiary, uint256 _amount);
+    	address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
 	event RevertedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _staker,
 		address _beneficiary, uint256 _amountUT);
 	event RedemptionIntentDeclared(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address _token, address _redeemer, uint256 _nonce, uint256 _amount, uint256 _unlockHeight,
 		uint256 _chainIdValue);
 	event ProcessedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash, address _token,
-		address _redeemer, uint256 _amount);
+		address _redeemer, uint256 _amount, bytes32 _unlockSecret);
 	event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
 		address _redeemer, uint256 _amountUT);
 
@@ -399,7 +399,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(token.mint(mint.beneficiary, mint.amount));
 
 		ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
-			mint.beneficiary, mint.amount);
+			mint.beneficiary, mint.amount, _unlockSecret);
 
 		delete mints[_stakingIntentHash];
 
@@ -567,7 +567,7 @@ contract OpenSTUtility is Hasher, OpsManaged {
     	require(token.burn.value(value)(redemption.redeemer, redemption.amountUT));
 
 		ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
-			redemption.redeemer, redemption.amountUT);
+			redemption.redeemer, redemption.amountUT, _unlockSecret);
 
 		delete redemptions[_redemptionIntentHash];
 

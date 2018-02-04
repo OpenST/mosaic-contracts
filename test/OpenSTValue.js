@@ -329,7 +329,7 @@ contract('OpenSTValue', function(accounts) {
 			stakeBal = await valueToken.balanceOf.call(stake);
 			assert.equal(openSTValueBal.toNumber(), 0);
 			assert.equal(stakeBal.toNumber(), amountST);
-      		await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], amountST, amountUT);
+      		await OpenSTValue_utils.checkProcessedStakeEvent(result.logs[0], checkUuid, stakingIntentHash, stake, accounts[0], amountST, amountUT, lock.s);
 		})
 
 		it('fails to reprocess', async () => {
@@ -483,7 +483,7 @@ contract('OpenSTValue', function(accounts) {
 				redeemerBal = await valueToken.balanceOf.call(redeemer);
 				assert.equal(stakeBal.toNumber(), 0);
 				assert.equal(redeemerBal.toNumber(), 1);
-	            await OpenSTValue_utils.checkProcessedUnstakeEvent(result.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, 1);
+	            await OpenSTValue_utils.checkProcessedUnstakeEvent(result.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, 1, lockR.s);
 			})
 
 			it('fails to reprocess', async () => {
@@ -723,7 +723,7 @@ contract('OpenSTValue', function(accounts) {
 
 				// Successfull ProcessUnstaking				
 				processUnstakingResult = await openSTValue.processUnstaking(redemptionIntentHash, lockR.s, { from: notRedeemer });
-				await OpenSTValue_utils.checkProcessedUnstakeEvent(processUnstakingResult.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, amountST);
+				await OpenSTValue_utils.checkProcessedUnstakeEvent(processUnstakingResult.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, amountST, lockR.s);
 
 			});
 			

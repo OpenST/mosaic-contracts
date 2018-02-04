@@ -295,7 +295,7 @@ contract('OpenSTUtility', function(accounts) {
 			it('successfully mints', async () => {
 				assert.equal(await openSTUtility.processMinting.call(checkStakingIntentHash, lock.s), brandedToken);
 				result = await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
-				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, brandedToken, accounts[0], accounts[0], amountUT);
+				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, brandedToken, accounts[0], accounts[0], amountUT, lock.s);
 			})
 
 			it('fails to re-process a processed mint', async () => {
@@ -445,7 +445,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount, lockR.s);
 			})
 
 			it('fails to reprocess', async () => {
@@ -480,7 +480,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount, lockR.s);
 			})
 		})
 	})
@@ -524,7 +524,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount, lockR.s);
 			})
 		})
 
@@ -557,7 +557,7 @@ contract('OpenSTUtility', function(accounts) {
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount, lockR.s);
 			})
 		})
 	});

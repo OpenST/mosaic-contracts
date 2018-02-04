@@ -319,7 +319,7 @@ contract('OpenST', function(accounts) {
 				const result = await openSTValue.processStaking(stakingIntentHash, lockBT.s, { from: stakerVC });
 
 				openSTValueUtils.checkProcessedStakeEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
-					btSimpleStakeContractAddress, stakerVC, AMOUNT_ST, AMOUNT_BT);
+					btSimpleStakeContractAddress, stakerVC, AMOUNT_ST, AMOUNT_BT, lockBT.s);
 
 				utils.logResponse(result, "OpenSTValue.processStaking");
 
@@ -330,7 +330,7 @@ contract('OpenST', function(accounts) {
 				const result = await openSTUtility.processMinting(stakingIntentHash, lockBT.s, { from: stakerUC });
 
 				openSTUtilityUtils.checkProcessedMintEvent(result.logs[0], registeredBrandedTokenUuid, stakingIntentHash,
-					registeredBrandedToken, stakerVC, beneficiary, AMOUNT_BT);
+					registeredBrandedToken, stakerVC, beneficiary, AMOUNT_BT, lockBT.s);
 
 				utils.logResponse(result, "OpenSTValue.processminting");
 			});
@@ -424,7 +424,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, lockRedeem.s, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+					brandedToken.address, redeemer, REDEEM_AMOUNT_BT, lockRedeem.s)
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.processRedeeming");
 
@@ -435,7 +435,7 @@ contract('OpenST', function(accounts) {
 				var processUnstakeResult = await openSTValue.processUnstaking(redemptionIntentHash, lockRedeem.s, { from: redeemer });
 
 				openSTValueUtils.checkProcessedUnstakeEvent(processUnstakeResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					btSimpleStakeContractAddress, redeemer, redeemedAmountST);
+					btSimpleStakeContractAddress, redeemer, redeemedAmountST, lockRedeem.s);
 
 				utils.logResponse(processUnstakeResult, "openSTValue.processUnstaking");
 
@@ -485,7 +485,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, lockRedeem.s, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], uuidSTP, redemptionIntentHash,
-					stPrime.address, redeemer, REDEEM_AMOUNT_STPRIME)
+					stPrime.address, redeemer, REDEEM_AMOUNT_STPRIME, lockRedeem.s);
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.STPrime.processRedeeming");
 
@@ -497,7 +497,7 @@ contract('OpenST', function(accounts) {
 
 				var event = processUnstakeResult.logs[0];
 				openSTValueUtils.checkProcessedUnstakeEvent(event, uuidSTP, redemptionIntentHash,
-					stPrimeSimpleStakeContractAddress, redeemer, REDEEM_AMOUNT_STPRIME);
+					stPrimeSimpleStakeContractAddress, redeemer, REDEEM_AMOUNT_STPRIME, lockRedeem.s);
 				utils.logResponse(processUnstakeResult, "openSTValue.STPrime.processUnstaking");
 
 			});
@@ -953,7 +953,7 @@ contract('OpenST', function(accounts) {
 				var processRedeemingResult = await openSTUtility.processRedeeming(redemptionIntentHash, lockRedeem.s, { from: redeemer });
 
 				openSTUtilityUtils.checkProcessedRedemptionEvent(processRedeemingResult.logs[0], registeredBrandedTokenUuid, redemptionIntentHash,
-					brandedToken.address, redeemer, REDEEM_AMOUNT_BT)
+					brandedToken.address, redeemer, REDEEM_AMOUNT_BT, lockRedeem.s);
 
 				utils.logResponse(processRedeemingResult, "openSTUtility.revertUnstake.processRedeeming");
 
