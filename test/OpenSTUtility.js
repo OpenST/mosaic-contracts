@@ -60,8 +60,8 @@ const BigNumber = require('bignumber.js');
 ///
 /// ProcessMinting
 /// 	when expirationHeight is > block number
-///			fails if stakingIntentHash is empty
-///			fails if msg.sender != staker
+///			fails to process if stakingIntentHash is empty
+///			fails to process if hash of unlockSecret does not match hashlock
 ///			successfully mints
 /// 		fails to re-process a processed mint
 ///		when expirationHeight is < block number // TBD: how or where to test this practically
@@ -82,6 +82,7 @@ const BigNumber = require('bignumber.js');
 /// ProcessRedeeming
 ///		BrandedToken
 /// 		fails to process if redemptionIntentHash is empty
+/// 		fails to process if hash of unlockSecret does not match hashlock
 /// 		successfully processes
 /// 		fails to reprocess
 ///		STPrime
@@ -283,11 +284,11 @@ contract('OpenSTUtility', function(accounts) {
 	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 		    })
 
-			it('fails if stakingIntentHash is empty', async () => {
+			it('fails to process if stakingIntentHash is empty', async () => {
 	            await Utils.expectThrow(openSTUtility.processMinting("", lock.s));
 			})
 
-			it('fails when presented with a wrong secret', async () => {
+			it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 				const differentLock = HashLock.getHashLock();
 	            await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash, differentLock.s, { from: accounts[1] }));
 			})
@@ -433,6 +434,10 @@ contract('OpenSTUtility', function(accounts) {
 
 			it('fails to process if redemptionIntentHash is empty', async () => {
 	            await Utils.expectThrow(openSTUtility.processRedeeming("", lockR.s, { from: notRedeemer }));
+			})
+
+			it('fails to process if hash of unlockSecret does not match hashlock', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, "incorrect unlock secret", { from: notRedeemer }));
 			})
 
 			it('successfully processes', async () => {

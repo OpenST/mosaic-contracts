@@ -65,7 +65,7 @@ const BigNumber = require('bignumber.js');
 ///
 /// ProcessStaking
 ///		fails to process when stakingIntentHash is empty
-///		fails to process when presented with wrong secret
+///		fails to process if hash of unlockSecret does not match hashlock
 ///		successfully processes
 ///		fails to reprocess
 ///
@@ -85,6 +85,7 @@ const BigNumber = require('bignumber.js');
 /// ProcessUnstaking
 /// 	when expirationHeight is > block number
 /// 		fails to process when redemptionIntentHash is empty
+/// 		fails to process if hash of unlockSecret does not match hashlock
 /// 		fails to process when utility token does not have a simpleStake address
 ///			successfully processes
 ///			fails to reprocess
@@ -312,7 +313,7 @@ contract('OpenSTValue', function(accounts) {
             await Utils.expectThrow(openSTValue.processStaking("", lock.s, { from: accounts[0] }));
 		})
 
-		it('fails to process when presented with wrong secret', async () => {
+		it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 			const differentLock = HashLock.getHashLock();
 			// registrar can additionally as a fallback process staking in v0.9
             await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[5] }));
@@ -466,6 +467,10 @@ contract('OpenSTValue', function(accounts) {
 
 			it('fails to process when redemptionIntentHash is empty', async () => {
 	            await Utils.expectThrow(openSTValue.processUnstaking("", lockR.s, { from: notRedeemer }));
+			})
+
+			it('fails to process if hash of unlockSecret does not match hashlock', async () => {
+	            await Utils.expectThrow(openSTValue.processUnstaking(redemptionIntentHash, "incorrect unlock secret", { from: notRedeemer }));
 			})
 
 			it('fails to process when utility token does not have a simpleStake address', async () => {
