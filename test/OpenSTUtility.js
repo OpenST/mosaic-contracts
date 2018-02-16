@@ -60,8 +60,8 @@ const BigNumber = require('bignumber.js');
 ///
 /// ProcessMinting
 /// 	when expirationHeight is > block number
-///			fails if stakingIntentHash is empty
-///			fails if msg.sender != staker
+///			fails to process if stakingIntentHash is empty
+///			fails to process if hash of unlockSecret does not match hashlock
 ///			successfully mints
 /// 		fails to re-process a processed mint
 ///		when expirationHeight is < block number // TBD: how or where to test this practically
@@ -82,7 +82,7 @@ const BigNumber = require('bignumber.js');
 /// ProcessRedeeming
 ///		BrandedToken
 /// 		fails to process if redemptionIntentHash is empty
-/// 		fails to process if msg.sender is not redeemer or registrar
+/// 		fails to process if hash of unlockSecret does not match hashlock
 /// 		successfully processes
 /// 		fails to reprocess
 ///		STPrime
@@ -112,6 +112,7 @@ contract('OpenSTUtility', function(accounts) {
 	const requester  			= "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 	const token 	 			= "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 	const redeemer 				= accounts[0];
+	const notRedeemer			= accounts[5];
 
 	var result 					= null;
 	var checkBtUuid 			= null;
@@ -283,11 +284,11 @@ contract('OpenSTUtility', function(accounts) {
 	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 		    })
 
-			it('fails if stakingIntentHash is empty', async () => {
+			it('fails to process if stakingIntentHash is empty', async () => {
 	            await Utils.expectThrow(openSTUtility.processMinting("", lock.s));
 			})
 
-			it('fails when presented with a wrong secret', async () => {
+			it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 				const differentLock = HashLock.getHashLock();
 	            await Utils.expectThrow(openSTUtility.processMinting(checkStakingIntentHash, differentLock.s, { from: accounts[1] }));
 			})
@@ -295,7 +296,7 @@ contract('OpenSTUtility', function(accounts) {
 			it('successfully mints', async () => {
 				assert.equal(await openSTUtility.processMinting.call(checkStakingIntentHash, lock.s), brandedToken);
 				result = await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
-				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, brandedToken, accounts[0], accounts[0], amountUT);
+				await OpenSTUtility_utils.checkProcessedMintEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, brandedToken, accounts[0], accounts[0], amountUT, lock.s);
 			})
 
 			it('fails to re-process a processed mint', async () => {
@@ -310,7 +311,6 @@ contract('OpenSTUtility', function(accounts) {
 		const redeemAmountUT = new BigNumber(web3.toWei(1, "ether"));
 
 		const lock = HashLock.getHashLock();
-		// TODO: protocol#94 use lockR to redeem in unit tests.
 		const lockR = HashLock.getHashLock();
 
 		before(async () => {
@@ -330,35 +330,35 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when uuid is empty', async () => {
-            await Utils.expectThrow(openSTUtility.redeem("", redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem("", redeemAmountUT, 2, lockR.l, { from: redeemer }));
 		})
 
 		it('fails to redeem when amount is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, 0, 2, lockR.l, { from: redeemer }));
 		})
 
 		it('fails to redeem when nonce is not >= previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 0, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 0, lockR.l, { from: redeemer }));
 		})
 
 		it('fails to redeem when uuid is uuidSTPrime', async () => {
 			uuidSTPrime = await openSTUtility.uuidSTPrime.call();
-            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(uuidSTPrime, redeemAmountUT, 2, lockR.l, { from: redeemer }));
 		})
 
 		it('fails to redeem if not approved to transfer the amount', async () => {
 			await brandedTokenContract.approve(openSTUtility.address, 0, { from: redeemer });
-            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, { from: redeemer }));
+            await Utils.expectThrow(openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, lockR.l, { from: redeemer }));
 			await brandedTokenContract.approve(openSTUtility.address, redeemAmountUT, { from: redeemer });
 		})
 
 		it('successfully redeems', async () => {
-			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
+			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, lockR.l, { from: redeemer });
 
             // call block number is one less than send block number
             unlockHeight = redeemReturns[0].plus(1);
-            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemAmountUT, unlockHeight);
-            result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, { from: redeemer });
+            var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemAmountUT, unlockHeight, lockR.l);
+            result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, lockR.l, { from: redeemer });
 
             await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], checkBtUuid, checkRedemptionIntentHash, brandedToken,
 			redeemer, 2, redeemAmountUT, unlockHeight, chainIdValue);
@@ -369,6 +369,7 @@ contract('OpenSTUtility', function(accounts) {
 
 		const redeemSTP = new BigNumber(2);
 		const lock = HashLock.getHashLock();
+		const lockR = HashLock.getHashLock();
 
 		before(async () => {
 	        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
@@ -383,20 +384,20 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to redeem when msg.value is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(redeemSTP.toNumber(), { from: redeemer, value: 0 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(redeemSTP.toNumber(), lockR.l, { from: redeemer, value: 0 }));
 		})
 
 		it('fails to redeem when nonce is not >= previously', async () => {
-            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, { from: redeemer, value: 2 }));
+            await Utils.expectThrow(openSTUtility.redeemSTPrime(0, lockR.l, { from: redeemer, value: 2 }));
 		})
 
 		it('successfully redeems', async () => {
-			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), { from: redeemer, value: 2 });
+			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), lockR.l, { from: redeemer, value: 2 });
 
 			// call block number is one less than send block number
 			unlockHeight = redeemReturns[1].plus(1)
-			var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemSTP, unlockHeight);
-			result = await openSTUtility.redeemSTPrime(redeemSTP, { from: redeemer, value: redeemSTP });
+			var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemSTP, unlockHeight, lockR.l);
+			result = await openSTUtility.redeemSTPrime(redeemSTP, lockR.l, { from: redeemer, value: redeemSTP });
 
 			await OpenSTUtility_utils.checkRedemptionIntentDeclaredEvent(result.logs[0], uuidSTPrime, checkRedemptionIntentHash, stPrime.address,
 				redeemer, 2, redeemSTP.toNumber(), unlockHeight, chainIdValue);
@@ -409,6 +410,7 @@ contract('OpenSTUtility', function(accounts) {
 		var brandedTokenContract = null;
 
 		const lock = HashLock.getHashLock();
+		const lockR = HashLock.getHashLock();
 
 		context('BrandedToken', async () => {
 			var redemptionAmount = 3;
@@ -426,33 +428,33 @@ contract('OpenSTUtility', function(accounts) {
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(accounts[0]);
 				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
-	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, lockR.l, { from: redeemer });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
 			it('fails to process if redemptionIntentHash is empty', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming("", { from: redeemer }));
+	            await Utils.expectThrow(openSTUtility.processRedeeming("", lockR.s, { from: notRedeemer }));
 			})
 
-			it('fails to process if msg.sender is not redeemer or registrar', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: accounts[5] }));
+			it('fails to process if hash of unlockSecret does not match hashlock', async () => {
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, "incorrect unlock secret", { from: notRedeemer }));
 			})
 
 			it('successfully processes', async () => {
 				var openSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
 				var totalSupply = await brandedTokenContract.totalSupply.call();
-				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), brandedToken);
-				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, lockR.s, { from: notRedeemer }), brandedToken);
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, lockR.s, { from: notRedeemer });
 
 				var postProcessOpenSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount, lockR.s);
 			})
 
 			it('fails to reprocess', async () => {
-	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer }));
+	            await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, lockR.s, { from: notRedeemer }));
 			})
 		})
 
@@ -469,21 +471,21 @@ contract('OpenSTUtility', function(accounts) {
 				await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 				await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				await stPrime.claim(accounts[0]);
-				result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+				result = await openSTUtility.redeemSTPrime(redemptionAmount, lockR.l, { from: redeemer, value: redemptionAmount });
 				redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
 			it('successfully processes', async () => {
 				var stPrimeBal = await web3.eth.getBalance(stPrime.address);
 				var totalSupply = await stPrime.totalSupply.call();
-				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), stPrime.address);
-				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemer });
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, lockR.s, { from: notRedeemer }), stPrime.address);
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, lockR.s, { from: notRedeemer });
 
 				var postProcessStPrimeBal = await web3.eth.getBalance(stPrime.address);
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount, lockR.s);
 			})
 		})
 	})
@@ -494,6 +496,7 @@ contract('OpenSTUtility', function(accounts) {
 		var brandedTokenContract = null;
 
 		const lock = HashLock.getHashLock();
+		const lockR = HashLock.getHashLock();
 
 		context('BrandedToken', async () => {
 			var redemptionAmount = 3;
@@ -511,22 +514,22 @@ contract('OpenSTUtility', function(accounts) {
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(accounts[0]);
 				await brandedTokenContract.approve(openSTUtility.address, redemptionAmount, { from: redeemer });
-	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, { from: redeemer });
+	            result = await openSTUtility.redeem(checkBtUuid, redemptionAmount, 2, lockR.l, { from: redeemer });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
 			it('successfully processes by registrar', async () => {
 				var openSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
 				var totalSupply = await brandedTokenContract.totalSupply.call();
-				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), brandedToken);
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, lockR.s, { from: notRedeemer }), brandedToken);
 				// redemption is processed by Registrar
-				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, lockR.s, { from: registrar });
 
 				var postProcessOpenSTUtilityBal = await brandedTokenContract.balanceOf.call(openSTUtility.address);
 				var postProcessTotalSupply = await brandedTokenContract.totalSupply.call();
 				assert.equal(postProcessOpenSTUtilityBal.toNumber(), openSTUtilityBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], checkBtUuid, redemptionIntentHash, brandedToken, redeemer, redemptionAmount, lockR.s);
 			})
 		})
 
@@ -544,30 +547,31 @@ contract('OpenSTUtility', function(accounts) {
 	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				await stPrime.claim(accounts[0]);
-	            result = await openSTUtility.redeemSTPrime(redemptionAmount, { from: redeemer, value: redemptionAmount });
+	            result = await openSTUtility.redeemSTPrime(redemptionAmount, lockR.l, { from: redeemer, value: redemptionAmount });
 	            redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 		    })
 
 			it('successfully processes by registrar', async () => {
 				var stPrimeBal = await web3.eth.getBalance(stPrime.address);
 				var totalSupply = await stPrime.totalSupply.call();
-				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, { from: redeemer }), stPrime.address);
+				assert.equal(await openSTUtility.processRedeeming.call(redemptionIntentHash, lockR.s, { from: notRedeemer }), stPrime.address);
 				// redemption is processed by Registrar
-				result = await openSTUtility.processRedeeming(redemptionIntentHash, { from: registrar });
+				result = await openSTUtility.processRedeeming(redemptionIntentHash, lockR.s, { from: registrar });
 
 				var postProcessStPrimeBal = await web3.eth.getBalance(stPrime.address);
 				var postProcessTotalSupply = await stPrime.totalSupply.call();
 				assert.equal(postProcessStPrimeBal.toNumber(), stPrimeBal.minus(redemptionAmount).toNumber());
 				assert.equal(postProcessTotalSupply.toNumber(), totalSupply.minus(redemptionAmount).toNumber());
-	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount);
+	            await OpenSTUtility_utils.checkProcessedRedemptionEvent(result.logs[0], uuidSTPrime, redemptionIntentHash, stPrime.address, redeemer, redemptionAmount, lockR.s);
 			})
 		})
-
+	});
 
 	// Unit test cases for revert redemption
 	describe('revert redemption', async () => {
 
 		const lock = HashLock.getHashLock();
+		const lockR = HashLock.getHashLock();
 
 		context('revert redemption', async () => {
 
@@ -597,7 +601,7 @@ contract('OpenSTUtility', function(accounts) {
 				// redeemerForRevert is approved with 5 BT
 				await brandedTokenContract.approve(OpenSTUtility.address, redemptionAmountBT, { from: redeemerForRevert });
 				// After calling Redeem is left with 3 BT since redemptionAmountBT is 2 (5-2)
-				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, { from: redeemerForRevert });
+				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, lockR.l, { from: redeemerForRevert });
 				redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 			});
 
@@ -648,7 +652,7 @@ contract('OpenSTUtility', function(accounts) {
 
 			it('fails to processRedeeming after revert redemption', async () => {
 
-				await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, { from: redeemerForRevert }));
+				await Utils.expectThrow(openSTUtility.processRedeeming(redemptionIntentHash, lockR.l, { from: redeemerForRevert }));
 
 			});
 
@@ -700,7 +704,5 @@ contract('OpenSTUtility', function(accounts) {
 					accounts[0], AMOUNT_BT);
 			})
 		})
-	});
-	// where does this brace open?
 	});
 });
