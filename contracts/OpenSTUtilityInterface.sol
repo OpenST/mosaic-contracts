@@ -50,6 +50,7 @@ contract OpenSTUtilityInterface {
         string _symbol,
         string _name,
         uint256 _conversionRate,
+        uint256 _conversionRateDecimalFactor,
         address _requester,
         UtilityTokenInterface _brandedToken,
         bytes32 _checkUuid)

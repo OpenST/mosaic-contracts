@@ -35,7 +35,8 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         string _name,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint256 _conversionRateDecimalFactor)
         public
         UtilityTokenAbstract(
         _uuid,
@@ -43,7 +44,8 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         _name,
         _chainIdValue,
         _chainIdUtility,
-        _conversionRate)
+        _conversionRate,
+        _conversionRateDecimalFactor)
         ProtocolVersioned(msg.sender)
         { }
 

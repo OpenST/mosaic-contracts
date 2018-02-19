@@ -38,6 +38,8 @@ import "./ProtocolVersioned.sol";
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
 
+    uint8   public constant CONVERSION_RATE_TOKEN_DECIMALS = 5;
+    
     /*
      *  Structures
      */
@@ -66,10 +68,11 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *    Events
      */
     event ProposedBrandedToken(address indexed _requester, address indexed _token,
-        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate);
+        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, uint256 _conversionRateDecimalFactor);
 
     event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
-        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
+        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate,
+        uint256 _conversionRateDecimalFactor, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
         address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
@@ -157,13 +160,15 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _chainIdValue,
             _chainIdUtility,
             address(this),
-            STPRIME_CONVERSION_RATE);
+            STPRIME_CONVERSION_RATE,
+            CONVERSION_RATE_TOKEN_DECIMALS);
 
         simpleTokenPrime = new STPrime(
             uuidSTPrime,
             _chainIdValue,
             _chainIdUtility,
-            STPRIME_CONVERSION_RATE);
+            STPRIME_CONVERSION_RATE,
+            CONVERSION_RATE_TOKEN_DECIMALS);
 
         registeredTokens[uuidSTPrime] = RegisteredToken({
             token:          UtilityTokenInterface(simpleTokenPrime),
@@ -507,7 +512,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdValue,
             chainIdUtility,
             address(this),
-            _conversionRate);
+            _conversionRate,
+            CONVERSION_RATE_TOKEN_DECIMALS);
 
         BrandedToken proposedBT = new BrandedToken(
             btUuid,
@@ -516,13 +522,14 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             TOKEN_DECIMALS,
             chainIdValue,
             chainIdUtility,
-            _conversionRate);
+            _conversionRate,
+            CONVERSION_RATE_TOKEN_DECIMALS);
         // reserve name for sender under opt-in discretion of
         // registrar
         nameReservation[hashName] = msg.sender;
 
         ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
-            _symbol, _name, _conversionRate);
+            _symbol, _name, _conversionRate, CONVERSION_RATE_TOKEN_DECIMALS);
 
         return btUuid;
     }
@@ -609,7 +616,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdValue,
             chainIdUtility,
             address(this),
-            _conversionRate);
+            _conversionRate,
+            CONVERSION_RATE_TOKEN_DECIMALS);
 
         require(registeredUuid == _checkUuid);
         require(_brandedToken.uuid() == _checkUuid);
@@ -628,7 +636,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uuids.push(registeredUuid);
 
         RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
-            _conversionRate, _requester);
+            _conversionRate, CONVERSION_RATE_TOKEN_DECIMALS, _requester);
 
         return registeredUuid;
     }

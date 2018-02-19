@@ -94,6 +94,7 @@ contract Registrar is OpsManaged {
    		string _symbol,
 		string _name,
 		uint256 _conversionRate,
+    uint256 _conversionRateDecimalFactor,
 		uint256 _chainIdUtility,
 		address _stakingAccount,
 		bytes32 _checkUuid)
@@ -106,6 +107,7 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
+      _conversionRateDecimalFactor,
 			_chainIdUtility,
 			_stakingAccount,
 			_checkUuid);
@@ -163,6 +165,7 @@ contract Registrar is OpsManaged {
 		string _symbol,
 		string _name,
 		uint256 _conversionRate,
+    uint256 _conversionRateDecimalFactor,
 		address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
@@ -175,6 +178,7 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
+      _conversionRateDecimalFactor,
 			_requester,
 			_brandedToken,
 			_checkUuid);

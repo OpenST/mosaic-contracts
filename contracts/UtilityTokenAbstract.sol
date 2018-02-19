@@ -33,7 +33,7 @@ import "./UtilityTokenInterface.sol";
 /// @title UtilityToken abstract
 contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterface {
     using SafeMath for uint256;
-
+    
     /*
      *  Events
      */
@@ -55,7 +55,9 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     uint256 private totalTokenSupply;
     /// conversion rate for the utility token
     uint256 private tokenConversionRate;
-    /// tokenChainIdValue is an invariant in the tokenUuid calculation
+    /// conversion rate decimal factor
+    uint256 private tokenConversionRateDecimalFactor;
+    /// tokenChainIdValue is an invariant in the tokenUuid calculation    
     uint256 private tokenChainIdValue;
     /// tokenChainIdUtility is an invariant in the tokenUuid calculation
     uint256 private tokenChainIdUtility;
@@ -74,7 +76,8 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         string _name,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint256 _conversionRateDecimalFactor)
         public
         ProtocolVersioned(msg.sender)
     {
@@ -84,12 +87,14 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
             _chainIdValue,
             _chainIdUtility,
             msg.sender,
-            _conversionRate);
+            _conversionRate,
+            _conversionRateDecimalFactor);
 
         require(tokenUuid == _uuid);
 
         totalTokenSupply = 0;
         tokenConversionRate = _conversionRate;
+        tokenConversionRateDecimalFactor = _conversionRateDecimalFactor;
         tokenChainIdValue = _chainIdValue;
         tokenChainIdUtility = _chainIdUtility;
         tokenOpenSTUtility = msg.sender;
@@ -120,6 +125,15 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         returns (uint256 /* rate */)
     {
         return tokenConversionRate;
+    }
+
+    /// @dev Get conversion rate decimal factor for utility token
+    function conversionRateDecimalFactor() 
+        public 
+        view 
+        returns (uint256 /*conversionRateDecimalFactor*/)
+    {
+        return tokenConversionRateDecimalFactor;
     }
 
     /// @dev Get tokenChainIdValue as view so that child cannot edit
