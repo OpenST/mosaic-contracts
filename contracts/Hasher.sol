@@ -33,7 +33,7 @@ contract Hasher {
 		uint256 _chainIdUtility,
 		address _openSTUtility,
 		uint256 _conversionRate,
-		uint256 _conversionRateDecimalFactor)
+		uint8 _conversionRateDecimalFactor)
 		public
 		pure
 		returns (bytes32)

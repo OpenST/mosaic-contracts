@@ -53,7 +53,7 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         uint256 _conversionRate,
-        uint256 _conversionRateDecimalFactor)
+        uint8 _conversionRateDecimalFactor)
         public
         EIP20Token(_symbol, _name, _decimals)
         UtilityTokenAbstract(

@@ -41,7 +41,7 @@ contract OpenSTValue is OpsManaged, Hasher {
      *  Events
      */
     event UtilityTokenRegistered(bytes32 indexed _uuid, address indexed stake,
-        string _symbol, string _name, uint8 _decimals, uint256 _conversionRate, uint256 conversionRateDecimalFactor,
+        string _symbol, string _name, uint8 _decimals, uint256 _conversionRate, uint8 conversionRateDecimalFactor,
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
@@ -81,7 +81,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         string  symbol;
         string  name;
         uint256 conversionRate;
-        uint256 conversionRateDecimalFactor;
+        uint8 conversionRateDecimalFactor;
         uint8   decimals;
         uint256 chainIdUtility;
         SimpleStake simpleStake;
@@ -478,7 +478,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         string _symbol,
         string _name,
         uint256 _conversionRate,
-        uint256 _conversionRateDecimalFactor,
+        uint8 _conversionRateDecimalFactor,
         uint256 _chainIdUtility,
         address _stakingAccount,
         bytes32 _checkUuid)

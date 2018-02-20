@@ -69,7 +69,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         uint256 _conversionRate,
-        uint256 _conversionRateDecimalFactor)
+        uint8 _conversionRateDecimalFactor)
         public
         UtilityTokenAbstract(
         _uuid,

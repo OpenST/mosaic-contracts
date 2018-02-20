@@ -94,7 +94,7 @@ contract Registrar is OpsManaged {
    		string _symbol,
 		string _name,
 		uint256 _conversionRate,
-    uint256 _conversionRateDecimalFactor,
+    uint8 _conversionRateDecimalFactor,
 		uint256 _chainIdUtility,
 		address _stakingAccount,
 		bytes32 _checkUuid)

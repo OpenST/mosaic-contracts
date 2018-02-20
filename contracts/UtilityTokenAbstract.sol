@@ -56,7 +56,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /// conversion rate for the utility token
     uint256 private tokenConversionRate;
     /// conversion rate decimal factor
-    uint256 private tokenConversionRateDecimalFactor;
+    uint8 private tokenConversionRateDecimalFactor;
     /// tokenChainIdValue is an invariant in the tokenUuid calculation    
     uint256 private tokenChainIdValue;
     /// tokenChainIdUtility is an invariant in the tokenUuid calculation
@@ -77,7 +77,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         uint256 _conversionRate,
-        uint256 _conversionRateDecimalFactor)
+        uint8 _conversionRateDecimalFactor)
         public
         ProtocolVersioned(msg.sender)
     {
@@ -131,7 +131,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     function conversionRateDecimalFactor() 
         public 
         view 
-        returns (uint256 /*conversionRateDecimalFactor*/)
+        returns (uint8 /*conversionRateDecimalFactor*/)
     {
         return tokenConversionRateDecimalFactor;
     }

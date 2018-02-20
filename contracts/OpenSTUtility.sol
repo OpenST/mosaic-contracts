@@ -68,11 +68,11 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *    Events
      */
     event ProposedBrandedToken(address indexed _requester, address indexed _token,
-        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, uint256 _conversionRateDecimalFactor);
+        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, uint8 _conversionRateDecimalFactor);
 
     event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
         bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate,
-        uint256 _conversionRateDecimalFactor, address _requester);
+        uint8 _conversionRateDecimalFactor, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
         address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
