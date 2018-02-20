@@ -37,8 +37,6 @@ import "./ProtocolVersioned.sol";
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
-
-    uint8   public constant CONVERSION_RATE_TOKEN_DECIMALS = 5;
     
     /*
      *  Structures
@@ -155,7 +153,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         registrar = _registrar;
 
         uint256 stPrimeConversionRate = SafeMath.mul(STPRIME_CONVERSION_RATE,
-            uint256(10**uint256(CONVERSION_RATE_TOKEN_DECIMALS)));
+            uint256(10**uint256(STPRIME_CONVERSION_RATE_TOKEN_DECIMALS)));
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,
             STPRIME_NAME,
@@ -163,14 +161,14 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _chainIdUtility,
             address(this),
             stPrimeConversionRate,
-            CONVERSION_RATE_TOKEN_DECIMALS);
+            STPRIME_CONVERSION_RATE_TOKEN_DECIMALS);
 
         simpleTokenPrime = new STPrime(
             uuidSTPrime,
             _chainIdValue,
             _chainIdUtility,
             stPrimeConversionRate,
-            CONVERSION_RATE_TOKEN_DECIMALS);
+            STPRIME_CONVERSION_RATE_TOKEN_DECIMALS);
 
         registeredTokens[uuidSTPrime] = RegisteredToken({
             token:          UtilityTokenInterface(simpleTokenPrime),
@@ -496,13 +494,15 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     function proposeBrandedToken(
         string _symbol,
         string _name,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint8 _conversionRateDecimalFactor)
         public
         returns (bytes32)
     {
         require(bytes(_symbol).length > 0);
         require(bytes(_name).length > 0);
         require(_conversionRate > 0);
+        require(_conversionRateDecimalFactor <= 5);
 
         bytes32 hashSymbol = keccak256(_symbol);
         bytes32 hashName = keccak256(_name);
@@ -515,7 +515,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdUtility,
             address(this),
             _conversionRate,
-            CONVERSION_RATE_TOKEN_DECIMALS);
+            _conversionRateDecimalFactor);
 
         BrandedToken proposedBT = new BrandedToken(
             btUuid,
@@ -525,13 +525,13 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdValue,
             chainIdUtility,
             _conversionRate,
-            CONVERSION_RATE_TOKEN_DECIMALS);
+            _conversionRateDecimalFactor);
         // reserve name for sender under opt-in discretion of
         // registrar
         nameReservation[hashName] = msg.sender;
 
         ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
-            _symbol, _name, _conversionRate, CONVERSION_RATE_TOKEN_DECIMALS);
+            _symbol, _name, _conversionRate, _conversionRateDecimalFactor);
 
         return btUuid;
     }
@@ -597,6 +597,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         string _symbol,
         string _name,
         uint256 _conversionRate,
+        uint8 _conversionRateDecimalFactor,
         address _requester,
         UtilityTokenInterface _brandedToken,
         bytes32 _checkUuid)
@@ -607,6 +608,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(bytes(_symbol).length > 0);
         require(bytes(_name).length > 0);
         require(_conversionRate > 0);
+        require(_conversionRateDecimalFactor <= 5);
 
         bytes32 hashSymbol = keccak256(_symbol);
         bytes32 hashName = keccak256(_name);
@@ -619,7 +621,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdUtility,
             address(this),
             _conversionRate,
-            CONVERSION_RATE_TOKEN_DECIMALS);
+            _conversionRateDecimalFactor);
 
         require(registeredUuid == _checkUuid);
         require(_brandedToken.uuid() == _checkUuid);
@@ -638,7 +640,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uuids.push(registeredUuid);
 
         RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
-            _conversionRate, CONVERSION_RATE_TOKEN_DECIMALS, _requester);
+            _conversionRate, _conversionRateDecimalFactor, _requester);
 
         return registeredUuid;
     }

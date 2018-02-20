@@ -151,20 +151,20 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to propose when symbol is empty', async () => {
-            await Utils.expectThrow(openSTUtility.proposeBrandedToken("", name, conversionRate));
+            await Utils.expectThrow(openSTUtility.proposeBrandedToken("", name, conversionRate, conversionRateDecimalFactor));
 		})
 
 		it('fails to propose when name is empty', async () => {
-            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, "", conversionRate));
+            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, "", conversionRate, conversionRateDecimalFactor));
 		})
 
 		it('fails to propose when conversion rate is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, name, 0));
+            await Utils.expectThrow(openSTUtility.proposeBrandedToken(symbol, name, 0, conversionRateDecimalFactor));
 		})
 
 		it('successfully proposes', async () => {
-            assert.equal(await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate), checkBtUuid);
-            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+            assert.equal(await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimalFactor), checkBtUuid);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 
             // Token address is returned by ProposedBrandedToken but verified below rather than by checkProposedBrandedTokenEvent
             OpenSTUtility_utils.checkProposedBrandedTokenEvent(result.logs[0], accounts[0], checkBtUuid, symbol, name, conversionRate);
@@ -178,34 +178,34 @@ contract('OpenSTUtility', function(accounts) {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
             brandedToken = result.logs[0].args._token;
 	    })
 
 		it('fails to register by non-registrar', async () => {
-            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: accounts[0] }));
 		})
 
 		it('fails to register when symbol is empty', async () => {
-            await Utils.expectThrow(openSTUtility.registerBrandedToken("", name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
+            await Utils.expectThrow(openSTUtility.registerBrandedToken("", name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
 		})
 
 		it('fails to register when name is empty', async () => {
-            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, "", conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
+            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, "", conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
 		})
 
 		it('fails to register when conversion rate is not > 0', async () => {
-            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, 0, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
+            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, 0, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar }));
 		})
 
 		it('fails to register when UUIDs do not match', async () => {
-            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, "bad UUID", { from: registrar }));
+            await Utils.expectThrow(openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, "bad UUID", { from: registrar }));
 		})
 
 		it('successfully registers', async () => {
 			assert.equal(await openSTUtility.getUuidsSize.call(), 1); // there is already 1 UUID in uuids for STPrime
-			assert.equal(await openSTUtility.registerBrandedToken.call(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar }), checkBtUuid);
-            result = await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+			assert.equal(await openSTUtility.registerBrandedToken.call(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar }), checkBtUuid);
+            result = await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 			assert.equal(await openSTUtility.getUuidsSize.call(), 2);
 			assert.equal((await openSTUtility.registeredTokens.call(checkBtUuid))[0], brandedToken);
             await OpenSTUtility_utils.checkRegisteredBrandedTokenEvent(result.logs[0], registrar, brandedToken, checkBtUuid, symbol, name, conversionRate, accounts[0]);            
@@ -217,9 +217,9 @@ contract('OpenSTUtility', function(accounts) {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
             brandedToken = result.logs[0].args._token;
-            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668)
 	    })
 
@@ -271,9 +271,9 @@ contract('OpenSTUtility', function(accounts) {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 	            brandedToken = result.logs[0].args._token;
-	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668)
 	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
 		    })
@@ -307,9 +307,9 @@ contract('OpenSTUtility', function(accounts) {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
             brandedToken = result.logs[0].args._token;
-            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668)
             await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
             await openSTUtility.processMinting(checkStakingIntentHash);
@@ -405,9 +405,9 @@ contract('OpenSTUtility', function(accounts) {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 	            brandedToken = result.logs[0].args._token;
-	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668)
 	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash);
@@ -489,9 +489,9 @@ contract('OpenSTUtility', function(accounts) {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate,conversionRateDecimalFactor);
-	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 	            brandedToken = result.logs[0].args._token;
-	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668)
 	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, checkStakingIntentHash, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash);
@@ -568,9 +568,9 @@ contract('OpenSTUtility', function(accounts) {
 				// Use OpenSTUtility Contract to expire redeem soon
 				OpenSTUtility = contracts.openSTUtility;
 				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate, conversionRateDecimalFactor);
-				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 				brandedToken = result.logs[0].args._token;
-				await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
+				await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
 
 				escrowUnlockHeight = await OpenSTUtility.blocksToWaitLong.call();
 				// 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtility contract so that redeem expires
@@ -657,9 +657,9 @@ contract('OpenSTUtility', function(accounts) {
 					contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 					openSTUtility = contracts.openSTUtility;
 					checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
-					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
+					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor);
 					brandedToken = result.logs[0].args._token;
-					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, accounts[0], brandedToken, checkBtUuid, { from: registrar });
 					stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
 																AMOUNT_ST, AMOUNT_BT, 80668);
 					result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,

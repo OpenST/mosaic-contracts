@@ -210,7 +210,7 @@ contract('OpenST', function(accounts) {
 
 		    it("propose branded token for member company", async() => {
 
-		      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, {from: requester});
+		      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, {from: requester});
 		      var eventLog = result.logs[0];
 
 		      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
@@ -227,7 +227,7 @@ contract('OpenST', function(accounts) {
 		    it("register branded token on utility chain", async() => {
 
 		      const result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name,
-		        conversionRate, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
+		        conversionRate, conversionRateDecimalFactor, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
 
 		      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 

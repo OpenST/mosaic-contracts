@@ -165,6 +165,7 @@ contract Registrar is OpsManaged {
 		string _symbol,
 		string _name,
     uint256 _conversionRate,
+    uint8 _conversionRateDecimalFactor,
     address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
@@ -177,6 +178,7 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
+      _conversionRateDecimalFactor,
       _requester,
 			_brandedToken,
 			_checkUuid);
