@@ -102,8 +102,9 @@ contract('OpenSTValue', function(accounts) {
 
 	const symbol = "ST";
 	const name = "Simple Token";
-	const conversionRate = 10;
-
+	const conversionRateDecimalFactor = 5;
+	const conversionRate = new BigNumber(10 * 10**conversionRateDecimalFactor); // conversion rate => 10
+	
 	var valueToken  = null;
 	var openSTValue = null;
 	var core = null;
@@ -171,33 +172,33 @@ contract('OpenSTValue', function(accounts) {
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
           await openSTValue.addCore(core.address, { from: registrar });
-        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
 	    })
 
 		it('fails to register by non-registrar', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: accounts[0] }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: accounts[0] }));
 		})
 
 		it('fails to register when name is empty', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, "", conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, "", conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar }));
 		})
 
 		it('fails to register when symbol is empty', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken("", name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken("", name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar }));
 		})
 
 		it('fails to register when conversion rate is not > 0', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, 0, chainIdRemote, 0, checkUuid, { from: registrar }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, 0, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar }));
 		})
 
 		it('fails to register when the given UUID does not match the calculated hash', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, "bad checkUuid", { from: registrar }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, "bad checkUuid", { from: registrar }));
 		})
 
 		it('successfully registers', async () => {
 			assert.equal(await openSTValue.getUuidsSize.call(), 0);
-            assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }), checkUuid);
-            result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+            assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar }), checkUuid);
+            result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });
 
             // Stake address is returned by UtilityTokenRegistered but verified below rather than by checkUtilityTokenRegisteredEvent
             OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, symbol, name, 18, conversionRate, chainIdRemote, 0);
@@ -209,7 +210,7 @@ contract('OpenSTValue', function(accounts) {
 		})
 
 		it('fails to register if already exists', async () => {
-            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar }));
+            await Utils.expectThrow(openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar }));
 		})
 	})
 
@@ -238,8 +239,8 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('fails to stake when the beneficiary is null', async () => {
-	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });        	
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });        	
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, { from: accounts[0] }));
 			})
 
@@ -266,8 +267,8 @@ contract('OpenSTValue', function(accounts) {
 		        openSTValue = contracts.openSTValue;
 	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 	            await openSTValue.addCore(core.address, { from: registrar });
-	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-						await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, accounts[0], checkUuid, { from: registrar });
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+						await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, accounts[0], checkUuid, { from: registrar });
 						await valueToken.approve(openSTValue.address,amountST, { from: accounts[0] });
 		    })
 
@@ -293,15 +294,15 @@ contract('OpenSTValue', function(accounts) {
 
 	describe('ProcessStaking', async () => {
 		const amountST = new BigNumber(web3.toWei(1, "ether")),
-			amountUT = amountST * conversionRate;
+			amountUT = amountST.mul(new BigNumber(conversionRate)).div(new BigNumber(10**conversionRateDecimalFactor));
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
             await openSTValue.addCore(core.address, { from: registrar });
-        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
 			result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
@@ -338,7 +339,7 @@ contract('OpenSTValue', function(accounts) {
 
 	describe('ProcessStaking with fallback', async () => {
 		const amountST = new BigNumber(web3.toWei(1, "ether")),
-			amountUT = amountST * conversionRate;
+			amountUT = amountST.mul(new BigNumber(conversionRate)).div(new BigNumber(10**conversionRateDecimalFactor));
 
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
@@ -346,8 +347,8 @@ contract('OpenSTValue', function(accounts) {
 	        openSTValue = contracts.openSTValue;
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
           await openSTValue.addCore(core.address, { from: registrar });
-        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
 			result = await openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[0] });
@@ -375,7 +376,7 @@ contract('OpenSTValue', function(accounts) {
   	var redeemBeneficiary = accounts[3];
 		var redemptionIntentHash 	= null;
 		var redemptionUnlockHeight 	= 80668;
-		var amountUT 				= conversionRate;
+		var amountUT 				= conversionRate.div(new BigNumber(10**conversionRateDecimalFactor));
 
 		before(async () => {
 			contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
@@ -383,8 +384,8 @@ contract('OpenSTValue', function(accounts) {
 			openSTValue = contracts.openSTValue;
 			core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 			await openSTValue.addCore(core.address, { from: registrar });
-			checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+			checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			nonce = await openSTValue.getNextNonce.call(redeemer);
 		})
@@ -436,18 +437,20 @@ contract('OpenSTValue', function(accounts) {
 			result = await openSTValue.stake(checkUuid, 2, accounts[0], { from: accounts[0] });
 			stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, { from: accounts[0] });
+			
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight);			
 
-			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight);
 			var confirmReturns = await openSTValue.confirmRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar })
 			var amountST = confirmReturns[0];
-			assert.equal(amountST, amountUT / conversionRate);
-
+			assert.equal(amountST, (amountUT / conversionRate)*10**conversionRateDecimalFactor);
+			
       result = await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, redemptionIntentHash, { from: registrar });
-			var blocks_to_wait_short = await openSTValue.blocksToWaitShort.call();
-
+      var blocks_to_wait_short = await openSTValue.blocksToWaitShort.call();
+			
 			var blockNumber = web3.eth.blockNumber;
 			var expirationHeight = blockNumber + blocks_to_wait_short.toNumber();
-            await OpenSTValue_utils.checkRedemptionIntentConfirmedEvent(result.logs[0], checkUuid, redemptionIntentHash, redeemer, redeemBeneficiary, amountST, amountUT, expirationHeight);
+			      await OpenSTValue_utils.checkRedemptionIntentConfirmedEvent(result.logs[0], checkUuid, redemptionIntentHash, redeemer, redeemBeneficiary, amountST, amountUT, expirationHeight);
+
 		})
 
 		it('fails to confirm a replay', async () => {
@@ -470,7 +473,7 @@ contract('OpenSTValue', function(accounts) {
   	var redeemBeneficiary = accounts[3];
 		var redemptionIntentHash 	= null;
 		var redemptionUnlockHeight 	= 80668;
-		var amountUT 				= 1 * conversionRate;
+		var amountUT 				= conversionRate.div(new BigNumber(10**conversionRateDecimalFactor));
 
 		context('when expirationHeight is > block number', async () => {
 			before(async () => {
@@ -479,8 +482,8 @@ contract('OpenSTValue', function(accounts) {
 		        openSTValue = contracts.openSTValue;
 	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 	            await openSTValue.addCore(core.address, { from: registrar });
-	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, 0, checkUuid, { from: registrar });
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, 0, checkUuid, { from: registrar });
 				stake = result.logs[0].args.stake;
 				nonce = await openSTValue.getNextNonce.call(redeemer);
 				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
@@ -509,12 +512,12 @@ contract('OpenSTValue', function(accounts) {
 				assert.equal(stakeBal.toNumber(), 1);
 				assert.equal(redeemBeneficiaryBal.toNumber(), 0);
 				result = await openSTValue.processUnstaking(redemptionIntentHash, { from: redeemer });
-
+				
 				stakeBal = await valueToken.balanceOf.call(stake);
-  			redeemBeneficiaryBal = await valueToken.balanceOf.call(redeemBeneficiary);
-				assert.equal(stakeBal.toNumber(), 0);
+				redeemBeneficiaryBal = await valueToken.balanceOf.call(redeemBeneficiary);
+  			assert.equal(stakeBal.toNumber(), 0);
 				assert.equal(redeemBeneficiaryBal.toNumber(), 1);
-	            await OpenSTValue_utils.checkProcessedUnstakeEvent(result.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, redeemBeneficiary, 1);
+				      await OpenSTValue_utils.checkProcessedUnstakeEvent(result.logs[0], checkUuid, redemptionIntentHash, stake, redeemer, redeemBeneficiary, 1);	      
 			})
 
 			it('fails to reprocess', async () => {
@@ -541,8 +544,8 @@ contract('OpenSTValue', function(accounts) {
 				openSTValue = contracts.openSTValue;
 				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 				await openSTValue.addCore(core.address, { from: registrar });
-				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, staker, checkUuid, { from: registrar });
 				await valueToken.approve(openSTValue.address, amountST, { from: staker });        	
 
 				//Successfully Staking
@@ -610,8 +613,8 @@ contract('OpenSTValue', function(accounts) {
 				openSTValue = contracts.openSTValue;
 				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 				await openSTValue.addCore(core.address, { from: registrar });
-				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, staker, checkUuid, { from: registrar });
 				await valueToken.approve(openSTValue.address, amountST, { from: staker });        	
 
 				//Successfully Staking
@@ -661,7 +664,7 @@ contract('OpenSTValue', function(accounts) {
 		var redemptionIntentHash 		= null;
 		var redemptionUnlockHeight 	= 80668;
 		var amountST 								= new BigNumber(web3.toWei(1, "ether"));
-		var amountUT 								= new BigNumber(amountST * conversionRate);
+		var amountUT 								= (new BigNumber(amountST * conversionRate)).div(new BigNumber(10**conversionRateDecimalFactor));
 		var externalUser 						= accounts[7];
 
 		context('Revert Unstaking before ProcessUnstaking ', async () => {
@@ -672,8 +675,8 @@ contract('OpenSTValue', function(accounts) {
 				openSTValue = contracts.openSTValue;
 				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 				await openSTValue.addCore(core.address, { from: registrar });
-				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, staker, checkUuid, { from: registrar });
 				stake = result.logs[0].args.stake;
 				nonce = await openSTValue.getNextNonce.call(redeemer);
 				await valueToken.approve(openSTValue.address, amountST, { from: staker });
@@ -734,8 +737,8 @@ contract('OpenSTValue', function(accounts) {
 				openSTValue = contracts.openSTValue;
 				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
 				await openSTValue.addCore(core.address, { from: registrar });
-				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate);
-				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, chainIdRemote, staker, checkUuid, { from: registrar });
+				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimalFactor);
+				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimalFactor, chainIdRemote, staker, checkUuid, { from: registrar });
 				stake = result.logs[0].args.stake;
 				nonce = await openSTValue.getNextNonce.call(redeemer);
 				await valueToken.approve(openSTValue.address, amountST, { from: staker });

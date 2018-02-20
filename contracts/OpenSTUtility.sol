@@ -154,20 +154,22 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
 
+        uint256 stPrimeConversionRate = SafeMath.mul(STPRIME_CONVERSION_RATE,
+            uint256(10**uint256(CONVERSION_RATE_TOKEN_DECIMALS)));
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,
             STPRIME_NAME,
             _chainIdValue,
             _chainIdUtility,
             address(this),
-            STPRIME_CONVERSION_RATE,
+            stPrimeConversionRate,
             CONVERSION_RATE_TOKEN_DECIMALS);
 
         simpleTokenPrime = new STPrime(
             uuidSTPrime,
             _chainIdValue,
             _chainIdUtility,
-            STPRIME_CONVERSION_RATE,
+            stPrimeConversionRate,
             CONVERSION_RATE_TOKEN_DECIMALS);
 
         registeredTokens[uuidSTPrime] = RegisteredToken({

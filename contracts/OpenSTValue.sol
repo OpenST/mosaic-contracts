@@ -335,9 +335,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         // minimal precision to unstake 1 STWei
-        require(_amountUT >= utilityToken.conversionRate);
-        amountST = (_amountUT.div(utilityToken.conversionRate))
-            .mul(uint256(10**utilityToken.conversionRateDecimalFactor));
+        require(_amountUT >= (utilityToken.conversionRate.div(uint256(10**utilityToken.conversionRateDecimalFactor))));
+        amountST = (_amountUT
+            .mul(uint256(10**utilityToken.conversionRateDecimalFactor))).div(utilityToken.conversionRate);
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 

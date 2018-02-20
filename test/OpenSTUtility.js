@@ -101,9 +101,12 @@ contract('OpenSTUtility', function(accounts) {
 
 	const symbol 				= "MCC";
 	const name 					= "Member Company Coin";
-	const conversionRate 		= 5;
+	
+	const conversionRateDecimalFactor 		= 5;
+  const conversionRate    = new BigNumber(5 * (10**conversionRateDecimalFactor));
+
 	const amountST 					= new BigNumber(web3.toWei(1, "ether"));
-	const amountUT 					= new BigNumber(amountST * conversionRate);
+	const amountUT 					= (amountST.mul(conversionRate)).div(new BigNumber(10**conversionRateDecimalFactor));
 
 
 	const hashName 	 			= "hashName";
@@ -144,7 +147,7 @@ contract('OpenSTUtility', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
-        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
 	    })
 
 		it('fails to propose when symbol is empty', async () => {
@@ -174,7 +177,7 @@ contract('OpenSTUtility', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
-        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
             brandedToken = result.logs[0].args._token;
 	    })
@@ -213,7 +216,7 @@ contract('OpenSTUtility', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
-        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
             brandedToken = result.logs[0].args._token;
             await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
@@ -267,7 +270,7 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
-	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
@@ -303,7 +306,7 @@ contract('OpenSTUtility', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
-        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
             brandedToken = result.logs[0].args._token;
             await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
@@ -401,7 +404,7 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
-	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
@@ -485,7 +488,7 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
-	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate,conversionRateDecimalFactor);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
@@ -564,7 +567,7 @@ contract('OpenSTUtility', function(accounts) {
 				contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 				// Use OpenSTUtility Contract to expire redeem soon
 				OpenSTUtility = contracts.openSTUtility;
-				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate);
+				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate, conversionRateDecimalFactor);
 				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 				brandedToken = result.logs[0].args._token;
 				await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
@@ -653,7 +656,7 @@ contract('OpenSTUtility', function(accounts) {
 				before(async () => {
 					contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 					openSTUtility = contracts.openSTUtility;
-					checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate);
+					checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
 					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate);
 					brandedToken = result.logs[0].args._token;
 					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, accounts[0], brandedToken, checkBtUuid, { from: registrar });
