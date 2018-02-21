@@ -32,14 +32,15 @@ module.exports.deploySTPrime = async (artifacts, accounts) => {
 	const stPrimeConfig 		= await STPrimeConfig.new();
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol 		= accounts[4];
-	const conversionRate 		= 10;
+	const conversionRateDecimals	= 5;
+	const conversionRate 		= new BigNumber(10 * (10**conversionRateDecimals));	
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
 	const stPrimeSymbol			= await stPrimeConfig.STPRIME_SYMBOL.call();
 	const stPrimeName			= await stPrimeConfig.STPRIME_NAME.call();
-	const UUID 					= await hasher.hashUuid.call(stPrimeSymbol, stPrimeName, genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate);
+	const UUID 					= await hasher.hashUuid.call(stPrimeSymbol, stPrimeName, genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
 
-	const stPrime = await STPrime.new(UUID, genesisChainIdValue, genesisChainIdUtility, conversionRate, { from: openSTProtocol });
+	const stPrime = await STPrime.new(UUID, genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol });
 
 	return {
 		stPrime : stPrime

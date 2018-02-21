@@ -68,7 +68,8 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         bytes32 _uuid,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint8 _conversionRateDecimals)
         public
         UtilityTokenAbstract(
         _uuid,
@@ -76,7 +77,8 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         STPRIME_NAME,
         _chainIdValue,
         _chainIdUtility,
-        _conversionRate)
+        _conversionRate,
+        _conversionRateDecimals)
         { }
 
     /// On setup of the utility chain the base tokens need to be transfered

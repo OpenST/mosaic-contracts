@@ -36,12 +36,12 @@ import "./SimpleStake.sol";
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
-
+    
     /*
      *  Events
      */
     event UtilityTokenRegistered(bytes32 indexed _uuid, address indexed stake,
-        string _symbol, string _name, uint8 _decimals, uint256 _conversionRate,
+        string _symbol, string _name, uint8 _decimals, uint256 _conversionRate, uint8 _conversionRateDecimals,
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
@@ -81,6 +81,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         string  symbol;
         string  name;
         uint256 conversionRate;
+        uint8 conversionRateDecimals;
         uint8   decimals;
         uint256 chainIdUtility;
         SimpleStake simpleStake;
@@ -193,7 +194,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         require(valueToken.transferFrom(tx.origin, address(this), _amountST));
 
-        amountUT = _amountST.mul(utilityToken.conversionRate);
+        amountUT = (_amountST.mul(utilityToken.conversionRate))
+            .div(10**uint256(utilityToken.conversionRateDecimals));
         unlockHeight = block.number + blocksToWaitLong();
 
         nonces[tx.origin]++;
@@ -333,8 +335,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         // minimal precision to unstake 1 STWei
-        require(_amountUT >= utilityToken.conversionRate);
-        amountST = _amountUT.div(utilityToken.conversionRate);
+        require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
+        amountST = (_amountUT
+            .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
@@ -475,6 +478,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         string _symbol,
         string _name,
         uint256 _conversionRate,
+        uint8 _conversionRateDecimals,
         uint256 _chainIdUtility,
         address _stakingAccount,
         bytes32 _checkUuid)
@@ -485,6 +489,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(bytes(_name).length > 0);
         require(bytes(_symbol).length > 0);
         require(_conversionRate > 0);
+        require(_conversionRateDecimals <= 5);
 
         address openSTRemote = cores[_chainIdUtility].openSTRemote();
         require(openSTRemote != address(0));
@@ -495,7 +500,8 @@ contract OpenSTValue is OpsManaged, Hasher {
             chainIdValue,
             _chainIdUtility,
             openSTRemote,
-            _conversionRate);
+            _conversionRate,
+            _conversionRateDecimals);
 
         require(uuid == _checkUuid);
 
@@ -508,6 +514,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             symbol:         _symbol,
             name:           _name,
             conversionRate: _conversionRate,
+            conversionRateDecimals: _conversionRateDecimals,
             decimals:       TOKEN_DECIMALS,
             chainIdUtility: _chainIdUtility,
             simpleStake:    simpleStake,
@@ -516,7 +523,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uuids.push(uuid);
 
         UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
-            TOKEN_DECIMALS, _conversionRate, _chainIdUtility, _stakingAccount);
+            TOKEN_DECIMALS, _conversionRate, _conversionRateDecimals, _chainIdUtility, _stakingAccount);
 
         return uuid;
     }

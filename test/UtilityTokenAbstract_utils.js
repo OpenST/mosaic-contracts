@@ -19,6 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const BigNumber = require('bignumber.js');
 var Hasher = artifacts.require("./Hasher.sol");
 var UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");
 
@@ -27,11 +28,12 @@ module.exports.deployUtilityTokenAbstract = async (artifacts, accounts) => {
 	const hasher 				= await Hasher.new();
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol 		= accounts[4];
-	const conversionRate 		= 10;
+	const conversionRateDecimals = 5;
+	const conversionRate 		= new BigNumber(10*(10**conversionRateDecimals)); // conversaion rate => 10
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
-	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate);
-	const utilityTokenAbstract 	= await UtilityTokenAbstract.new(UUID, "symbol", "name", genesisChainIdValue, genesisChainIdUtility, conversionRate, { from: openSTProtocol });
+	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
+	const utilityTokenAbstract 	= await UtilityTokenAbstract.new(UUID, "symbol", "name", genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol });
 
 	return {
 		hasher : hasher,

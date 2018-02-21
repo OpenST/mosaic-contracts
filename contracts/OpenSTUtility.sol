@@ -37,7 +37,7 @@ import "./ProtocolVersioned.sol";
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
-
+    
     /*
      *  Structures
      */
@@ -66,10 +66,11 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *    Events
      */
     event ProposedBrandedToken(address indexed _requester, address indexed _token,
-        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate);
+        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, uint8 _conversionRateDecimals);
 
     event RegisteredBrandedToken(address indexed _registrar, address indexed _token,
-        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate, address _requester);
+        bytes32 _uuid, string _symbol, string _name, uint256 _conversionRate,
+        uint8 _conversionRateDecimals, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
         address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
@@ -157,13 +158,15 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _chainIdValue,
             _chainIdUtility,
             address(this),
-            STPRIME_CONVERSION_RATE);
+            STPRIME_CONVERSION_RATE,
+            STPRIME_CONVERSION_RATE_TOKEN_DECIMALS);
 
         simpleTokenPrime = new STPrime(
             uuidSTPrime,
             _chainIdValue,
             _chainIdUtility,
-            STPRIME_CONVERSION_RATE);
+            STPRIME_CONVERSION_RATE,
+            STPRIME_CONVERSION_RATE_TOKEN_DECIMALS);
 
         registeredTokens[uuidSTPrime] = RegisteredToken({
             token:          UtilityTokenInterface(simpleTokenPrime),
@@ -489,13 +492,15 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     function proposeBrandedToken(
         string _symbol,
         string _name,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint8 _conversionRateDecimals)
         public
         returns (bytes32)
     {
         require(bytes(_symbol).length > 0);
         require(bytes(_name).length > 0);
         require(_conversionRate > 0);
+        require(_conversionRateDecimals <= 5);
 
         bytes32 hashSymbol = keccak256(_symbol);
         bytes32 hashName = keccak256(_name);
@@ -507,7 +512,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdValue,
             chainIdUtility,
             address(this),
-            _conversionRate);
+            _conversionRate,
+            _conversionRateDecimals);
 
         BrandedToken proposedBT = new BrandedToken(
             btUuid,
@@ -516,13 +522,14 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             TOKEN_DECIMALS,
             chainIdValue,
             chainIdUtility,
-            _conversionRate);
+            _conversionRate,
+            _conversionRateDecimals);
         // reserve name for sender under opt-in discretion of
         // registrar
         nameReservation[hashName] = msg.sender;
 
         ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
-            _symbol, _name, _conversionRate);
+            _symbol, _name, _conversionRate, _conversionRateDecimals);
 
         return btUuid;
     }
@@ -588,6 +595,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         string _symbol,
         string _name,
         uint256 _conversionRate,
+        uint8 _conversionRateDecimals,
         address _requester,
         UtilityTokenInterface _brandedToken,
         bytes32 _checkUuid)
@@ -598,6 +606,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(bytes(_symbol).length > 0);
         require(bytes(_name).length > 0);
         require(_conversionRate > 0);
+        require(_conversionRateDecimals <= 5);
 
         bytes32 hashSymbol = keccak256(_symbol);
         bytes32 hashName = keccak256(_name);
@@ -609,7 +618,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             chainIdValue,
             chainIdUtility,
             address(this),
-            _conversionRate);
+            _conversionRate,
+            _conversionRateDecimals);
 
         require(registeredUuid == _checkUuid);
         require(_brandedToken.uuid() == _checkUuid);
@@ -628,7 +638,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uuids.push(registeredUuid);
 
         RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
-            _conversionRate, _requester);
+            _conversionRate, _conversionRateDecimals, _requester);
 
         return registeredUuid;
     }

@@ -94,6 +94,7 @@ contract Registrar is OpsManaged {
    		string _symbol,
 		string _name,
 		uint256 _conversionRate,
+    uint8 _conversionRateDecimals,
 		uint256 _chainIdUtility,
 		address _stakingAccount,
 		bytes32 _checkUuid)
@@ -106,6 +107,7 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
+      _conversionRateDecimals,
 			_chainIdUtility,
 			_stakingAccount,
 			_checkUuid);
@@ -162,8 +164,9 @@ contract Registrar is OpsManaged {
     	// OpenSTUtility function:
 		string _symbol,
 		string _name,
-		uint256 _conversionRate,
-		address _requester,
+    uint256 _conversionRate,
+    uint8 _conversionRateDecimals,
+    address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
@@ -175,7 +178,8 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-			_requester,
+      _conversionRateDecimals,
+      _requester,
 			_brandedToken,
 			_checkUuid);
 	}

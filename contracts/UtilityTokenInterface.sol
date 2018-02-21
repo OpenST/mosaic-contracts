@@ -38,4 +38,6 @@ contract UtilityTokenInterface {
     function uuid() public view returns (bytes32 getUuid);
     /// @dev Get conversion rate for utility token
     function conversionRate() public view returns (uint256 rate);
+    /// @dev Get conversion rate decimal factor for utility token
+    function conversionRateDecimals() public view returns (uint8 rateDecimal);
 }

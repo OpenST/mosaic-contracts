@@ -52,7 +52,8 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
         uint8 _decimals,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        uint256 _conversionRate)
+        uint256 _conversionRate,
+        uint8 _conversionRateDecimals)
         public
         EIP20Token(_symbol, _name, _decimals)
         UtilityTokenAbstract(
@@ -61,7 +62,8 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
         _name,
         _chainIdValue,
         _chainIdUtility,
-        _conversionRate)
+        _conversionRate,
+        _conversionRateDecimals)
         { }
 
     function claim(
