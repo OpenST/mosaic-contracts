@@ -29,7 +29,7 @@ contract STPrimeConfig {
     string  public constant STPRIME_NAME            = "SimpleTokenPrime";
     uint256 public constant STPRIME_CONVERSION_RATE = 1;
     uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 5;
+    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
 
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
     uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;

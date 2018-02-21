@@ -38,7 +38,7 @@ const CHAINID_UTILITY = new BigNumber(2002);
 
 contract('OpenST', function(accounts) {
 	
-	const conversionRateDecimalFactor = 5;
+	const conversionRateDecimals = 5;
 
 	const TOKEN_SYMBOL   = "ST";
 	const TOKEN_NAME     = "Simple Token";
@@ -47,12 +47,13 @@ contract('OpenST', function(accounts) {
 	
 	const STPRIME_SYMBOL          = "STP";
 	const STPRIME_NAME            = "SimpleTokenPrime";
-	const STPRIME_CONVERSION_RATE = new BigNumber(10**conversionRateDecimalFactor); // conversion rate => 1
+	const STPRIME_CONVERSION_RATE = 1;
+	const STPRIME_CONVERSION_RATE_DECIMALS = 0;
 
 	// Member Details
 	const symbol = "BT";
 	const name = "Branded Token";
-	const conversionRate = new BigNumber(10 * (10**conversionRateDecimalFactor));	// conversion rate => 10
+	const conversionRate = new BigNumber(10 * (10**conversionRateDecimals));	// conversion rate => 10
 
 	const deployMachine = accounts[0];
 	const owner         = accounts[1];
@@ -66,7 +67,7 @@ contract('OpenST', function(accounts) {
   const redeemBeneficiary = accounts[9];
 
 	const AMOUNT_ST = new BigNumber(web3.toWei(1000, "ether"));
-	const AMOUNT_BT = (AMOUNT_ST.mul(conversionRate)).div(new BigNumber(10**conversionRateDecimalFactor));
+	const AMOUNT_BT = (AMOUNT_ST.mul(conversionRate)).div(new BigNumber(10**conversionRateDecimals));
 	const REDEEM_AMOUNT_BT = new BigNumber(web3.toWei(5, "ether"));
 	const REDEEM_AMOUNT_STPRIME = new BigNumber(web3.toWei(15, "ether"));
 
@@ -119,7 +120,7 @@ contract('OpenST', function(accounts) {
 				Assert.notEqual(uuidSTP, "");
 
 				const o = await registrarVC.registerUtilityToken(openSTValue.address, STPRIME_SYMBOL, STPRIME_NAME,
-					STPRIME_CONVERSION_RATE, conversionRateDecimalFactor, CHAINID_UTILITY, 0, uuidSTP, { from: intercommVC });
+					STPRIME_CONVERSION_RATE, STPRIME_CONVERSION_RATE_DECIMALS, CHAINID_UTILITY, 0, uuidSTP, { from: intercommVC });
 				
 				utils.logResponse(o, "RegistrarVC.registerUtilityToken (STP)");
 
@@ -210,7 +211,7 @@ contract('OpenST', function(accounts) {
 
 		    it("propose branded token for member company", async() => {
 
-		      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, {from: requester});
+		      const result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, {from: requester});
 		      var eventLog = result.logs[0];
 
 		      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
@@ -227,7 +228,7 @@ contract('OpenST', function(accounts) {
 		    it("register branded token on utility chain", async() => {
 
 		      const result = await registrarUC.registerBrandedToken(openSTUtility.address, symbol, name,
-		        conversionRate, conversionRateDecimalFactor, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
+		        conversionRate, conversionRateDecimals, requester, registeredBrandedToken, registeredBrandedTokenUuid, { from: intercommUC });
 
 		      var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
@@ -241,7 +242,7 @@ contract('OpenST', function(accounts) {
 
 		    it("register utility token on value chain", async() => {
 
-		     	const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimalFactor,
+		     	const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals,
 		    		CHAINID_UTILITY, requester, registeredBrandedTokenUuid, { from: intercommVC });
 
 		    	var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTValue.address, openSTValueArtifacts.abi);
@@ -405,7 +406,7 @@ contract('OpenST', function(accounts) {
 				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimalFactor))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 
@@ -837,7 +838,7 @@ contract('OpenST', function(accounts) {
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimalFactor))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
@@ -941,7 +942,7 @@ contract('OpenST', function(accounts) {
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, redemptionIntentHash, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimalFactor))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");

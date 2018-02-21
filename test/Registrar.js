@@ -56,8 +56,8 @@ contract('Registrar', function(accounts) {
   const redeemBeneficiary = accounts[4];
 	const symbol 			= "MCC";
 	const name 				= "Member Company Coin";
-	const conversionRateDecimalFactor = 5;
-	const conversionRate	= new BigNumber(10 * (10**conversionRateDecimalFactor)); // Conversion rate => 10
+	const conversionRateDecimals = 5;
+	const conversionRate	= new BigNumber(10 * (10**conversionRateDecimals)); // Conversion rate => 10
 	const amountST 			= new BigNumber(web3.toWei(2, "ether"));;	
 
 	describe('RegisterBrandedToken for utility chain', async() => {
@@ -71,17 +71,17 @@ contract('Registrar', function(accounts) {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 			registrar 		= contracts.registrar;
 	        openSTUtility 	= contracts.openSTUtility;
-	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimalFactor, { from: staker });
-	        result 			= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, { from: staker });
+	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
+	        result 			= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        brandedToken 	= result.logs[0].args._token;
 		})
 
 		it('fails to register by non-adminOrOps', async () => {
-            await Utils.expectThrow(registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimalFactor, staker, brandedToken, uuid));
+            await Utils.expectThrow(registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid));
 		})
 
 		it('successfully resgisters', async () => {
-            assert.equal(await registrar.registerBrandedToken.call(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimalFactor, staker, brandedToken, uuid, { from: ops }), uuid);
+            assert.equal(await registrar.registerBrandedToken.call(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid, { from: ops }), uuid);
 		})
 	})
 
@@ -120,17 +120,17 @@ contract('Registrar', function(accounts) {
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
 	        core 			= contracts.core;
-	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
+	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 		})
 
 		it('fails to register if non-adminOrOps', async () => {
-            await Utils.expectThrow(registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimalFactor, chainIdUtility, staker, uuid));
+            await Utils.expectThrow(registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid));
 		})
 
 		it('successfully registers', async () => {
-            assert.equal(await registrar.registerUtilityToken.call(openSTValue.address, symbol, name, conversionRate, conversionRateDecimalFactor, chainIdUtility, staker, uuid, { from: ops }), uuid);
+            assert.equal(await registrar.registerUtilityToken.call(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops }), uuid);
 		})
 	})
 
@@ -155,13 +155,13 @@ contract('Registrar', function(accounts) {
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
 	        core 			= contracts.core;
-	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimalFactor, { from: staker });
-	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimalFactor, { from: staker });
+	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
+	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        brandedToken 	= result.logs[0].args._token;
 
-			await registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimalFactor, staker, brandedToken, uuid, { from: ops })
+			await registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid, { from: ops })
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
-	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimalFactor, chainIdUtility, staker, uuid, { from: ops });
+	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
 	        result = await openSTValue.stake(uuid, amountST, staker, { from: staker });
 	        nonce = result.logs[0].args._stakerNonce;
@@ -194,7 +194,7 @@ contract('Registrar', function(accounts) {
 		var nonce 				 	= null;
 		var redemptionIntentHash 	= null;
 		const BLOCKS_TO_WAIT_LONG	= 80667;
-		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimalFactor));
+		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));
 		
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
@@ -203,10 +203,10 @@ contract('Registrar', function(accounts) {
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
 	        core 			= contracts.core;
-	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimalFactor);
+	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
-	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimalFactor, chainIdUtility, staker, uuid, { from: ops });
+	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
 	        var result = await openSTValue.stake(uuid, amountST, staker, { from: staker });
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
@@ -224,7 +224,7 @@ contract('Registrar', function(accounts) {
 			var BLOCKS_TO_WAIT_SHORT = 240;
 
       var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: ops });      
-      assert.equal(confirmReturns[0], (amountUTRedeemed * (10**conversionRateDecimalFactor))/conversionRate);
+      assert.equal(confirmReturns[0], (amountUTRedeemed * (10**conversionRateDecimals))/conversionRate);
       assert.ok(confirmReturns[1] > BLOCKS_TO_WAIT_SHORT);
 		})
 	})

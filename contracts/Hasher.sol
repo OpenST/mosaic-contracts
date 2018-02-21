@@ -33,7 +33,7 @@ contract Hasher {
 		uint256 _chainIdUtility,
 		address _openSTUtility,
 		uint256 _conversionRate,
-		uint8 _conversionRateDecimalFactor)
+		uint8 _conversionRateDecimals)
 		public
 		pure
 		returns (bytes32)
@@ -45,7 +45,7 @@ contract Hasher {
 			_chainIdUtility,
 			_openSTUtility,
 			_conversionRate,
-			_conversionRateDecimalFactor);
+			_conversionRateDecimals);
 	}
 
 	function hashStakingIntent(

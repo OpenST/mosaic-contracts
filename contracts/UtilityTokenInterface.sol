@@ -39,5 +39,5 @@ contract UtilityTokenInterface {
     /// @dev Get conversion rate for utility token
     function conversionRate() public view returns (uint256 rate);
     /// @dev Get conversion rate decimal factor for utility token
-    function conversionRateDecimalFactor() public view returns (uint8 rateDecimalFactor);
+    function conversionRateDecimals() public view returns (uint8 rateDecimal);
 }

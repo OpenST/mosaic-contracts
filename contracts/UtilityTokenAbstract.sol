@@ -56,7 +56,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /// conversion rate for the utility token
     uint256 private tokenConversionRate;
     /// conversion rate decimal factor
-    uint8 private tokenConversionRateDecimalFactor;
+    uint8 private tokenConversionRateDecimals;
     /// tokenChainIdValue is an invariant in the tokenUuid calculation    
     uint256 private tokenChainIdValue;
     /// tokenChainIdUtility is an invariant in the tokenUuid calculation
@@ -77,7 +77,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         uint256 _conversionRate,
-        uint8 _conversionRateDecimalFactor)
+        uint8 _conversionRateDecimals)
         public
         ProtocolVersioned(msg.sender)
     {
@@ -88,13 +88,13 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
             _chainIdUtility,
             msg.sender,
             _conversionRate,
-            _conversionRateDecimalFactor);
+            _conversionRateDecimals);
 
         require(tokenUuid == _uuid);
 
         totalTokenSupply = 0;
         tokenConversionRate = _conversionRate;
-        tokenConversionRateDecimalFactor = _conversionRateDecimalFactor;
+        tokenConversionRateDecimals = _conversionRateDecimals;
         tokenChainIdValue = _chainIdValue;
         tokenChainIdUtility = _chainIdUtility;
         tokenOpenSTUtility = msg.sender;
@@ -128,12 +128,12 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     }
 
     /// @dev Get conversion rate decimal factor for utility token
-    function conversionRateDecimalFactor() 
+    function conversionRateDecimals() 
         public 
         view 
-        returns (uint8 /*conversionRateDecimalFactor*/)
+        returns (uint8 /*conversionRateDecimals*/)
     {
-        return tokenConversionRateDecimalFactor;
+        return tokenConversionRateDecimals;
     }
 
     /// @dev Get tokenChainIdValue as view so that child cannot edit

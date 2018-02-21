@@ -30,13 +30,13 @@ module.exports.deployBrandedToken = async (artifacts, accounts) => {
 	const hasher 				= await Hasher.new();
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol 		= accounts[4];	
-  const conversionRateDecimalFactor    = 5;
-  const conversionRate    = new BigNumber(10 * (10 ** conversionRateDecimalFactor));
+  const conversionRateDecimals    = 5;
+  const conversionRate    = new BigNumber(10 * (10 ** conversionRateDecimals));
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
-	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimalFactor);
+	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
 
-   const token = await BrandedToken.new(UUID, "symbol", "name", 18, genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimalFactor, { from: openSTProtocol });
+   const token = await BrandedToken.new(UUID, "symbol", "name", 18, genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol });
 
    return {
       token : token

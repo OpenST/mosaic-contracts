@@ -34,7 +34,7 @@ const UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol")
 /// Properties 
 /// 	has uuid
 /// 	has conversionRate
-///		has conversionRateDecimalFactor
+///		has conversionRateDecimals
 /// 	has genesisChainIdValue
 /// 	has genesisChainIdUtility
 /// 	has genesisOpenSTUtility
@@ -47,8 +47,8 @@ const UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol")
 
 contract('UtilityTokenAbstract', function(accounts) {
 	const openSTProtocol 		= accounts[4];
-	const conversionRateDecimalFactor = 5;
-	const conversionRate 		= new BigNumber(10 * (10**conversionRateDecimalFactor)); // conversion rate => 10
+	const conversionRateDecimals = 5;
+	const conversionRate 		= new BigNumber(10 * (10**conversionRateDecimals)); // conversion rate => 10
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
 	const beneficiary1   		= '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -69,7 +69,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 
 	describe ('Construction', async () => {
 		it('fails to deploy if UUID is bad', async () => {
-			await Utils.expectThrow(UtilityTokenAbstract.new("bad uuid", "symbol", "name", genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimalFactor, { from: openSTProtocol }));
+			await Utils.expectThrow(UtilityTokenAbstract.new("bad uuid", "symbol", "name", genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol }));
 		})
 	})
 
@@ -81,7 +81,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 		})
 		
 		it('has uuid', async () => {
-			uuid = await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimalFactor);
+			uuid = await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
 			assert.equal(await utilityTokenAbstract.uuid.call(), uuid);
 		})
 
@@ -90,9 +90,9 @@ contract('UtilityTokenAbstract', function(accounts) {
 			assert.equal(contractConversionRate.toNumber(), conversionRate.toNumber());
 		})
 
-		it ('has conversionRateDecimalFactor', async () => {
-			const contractConversionRateDecimalFactor = await utilityTokenAbstract.conversionRateDecimalFactor.call();			
-			assert.equal(contractConversionRateDecimalFactor, conversionRateDecimalFactor);
+		it ('has conversionRateDecimals', async () => {
+			const contractConversionRateDecimals = await utilityTokenAbstract.conversionRateDecimals.call();			
+			assert.equal(contractConversionRateDecimals, conversionRateDecimals);
 		})
 
 		it ('has genesisChainIdValue', async () => {
