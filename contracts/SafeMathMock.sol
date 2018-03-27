@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -16,21 +15,31 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Common: SafeMath Library Implementation
 //
 // http://www.simpletoken.org/
 //
+// Based on the SafeMath library by the OpenZeppelin team.
+// Copyright (c) 2016 Smart Contract Solutions, Inc.
+// https://github.com/OpenZeppelin/zeppelin-solidity
+// The MIT License.
 // ----------------------------------------------------------------------------
 
-/* solhint-disable-next-line two-lines-top-level-separator */
-/// @title STPrimeConfig
-contract STPrimeConfig {
-    string  public constant STPRIME_SYMBOL          = "STP";
-    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
+import "./SafeMath.sol";
 
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
+
+contract SafeMathMock {
+  uint256 public result;
+
+  function multiply(uint256 a, uint256 b) public {
+    result = SafeMath.mul(a, b);
+  }
+
+  function subtract(uint256 a, uint256 b) public {
+    result = SafeMath.sub(a, b);
+  }
+
+  function add(uint256 a, uint256 b) public {
+    result = SafeMath.add(a, b);
+  }
 }

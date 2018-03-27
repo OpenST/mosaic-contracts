@@ -97,7 +97,8 @@ contract('BrandedToken', function(accounts) {
 		})
 
 		it('fails to burn by openSTProtocol if msg.value != 0', async () => {
-            await Utils.expectThrow(token.burn(beneficiary, ST1, { from: openSTProtocol, value: 1 }));
+			const amountBT = new BigNumber(web3.toWei(1, "ether"));
+      			await Utils.expectThrow(token.burn(beneficiary, ST1, { from: openSTProtocol, value: amountBT }));
 		})
 
 		it('successfully burns', async () => {

@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.17;
 
 // Copyright 2017 OpenST Ltd.
@@ -16,21 +15,35 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Utility chain: OpenSTUtilityMock.sol
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-/* solhint-disable-next-line two-lines-top-level-separator */
-/// @title STPrimeConfig
-contract STPrimeConfig {
-    string  public constant STPRIME_SYMBOL          = "STP";
-    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
+import "./OpenSTUtility.sol";
 
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
+/// @title OpenSTUtilityMock
+/// @dev Overrides certain durational constants and getters to ease testing OpenSTUtility
+contract OpenSTUtilityMock is OpenSTUtility {
+	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
+	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+
+	/*
+	 *  Public functions
+	 */
+	function OpenSTUtilityMock(
+		uint256 _chainIdValue,
+		uint256 _chainIdUtility,
+		address _registrar)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar)
+		public { }
+
+	function blocksToWaitLong() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_LONG;
+	}
+
+	function blocksToWaitShort() public pure returns (uint256) {
+		return BLOCKS_TO_WAIT_SHORT;
+	}
 }

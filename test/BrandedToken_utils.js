@@ -19,19 +19,24 @@
 //
 // ----------------------------------------------------------------------------
 
-const Assert = require('assert');
+const Assert 	= require('assert');
 const BigNumber = require('bignumber.js');
 
+var Hasher 		 = artifacts.require("./Hasher.sol");
 var BrandedToken = artifacts.require("./BrandedToken.sol");
 
 /// @dev Deploy 
 module.exports.deployBrandedToken = async (artifacts, accounts) => {
-   /// mock unique identifier for utility token
-   const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
-   /// mock OpenST protocol contract address with an external account
-   const openSTProtocol = accounts[4];
+	const hasher 				= await Hasher.new();
+	/// mock OpenST protocol contract address with an external account
+	const openSTProtocol 		= accounts[4];	
+  const conversionRateDecimals    = 5;
+  const conversionRate    = new BigNumber(10 * (10 ** conversionRateDecimals));
+	const genesisChainIdValue 	= 3;
+	const genesisChainIdUtility = 1410;
+	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
 
-   const token = await BrandedToken.new(openSTProtocol, UUID, "SYMBOL", "Name", 18, { from: accounts[0], gas: 3500000 });
+   const token = await BrandedToken.new(UUID, "symbol", "name", 18, genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol });
 
    return {
       token : token

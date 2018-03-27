@@ -1,0 +1,27 @@
+dist: trusty
+language: node_js
+sudo: required
+branches:
+  only:
+  - master
+  - develop
+notifications:
+  email:
+    recipients:
+      - ci.report@ost.com
+    on_success: always
+    on_failure: always
+node_js:
+  - "8"
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install nodejs
+  - sudo apt-get install npm
+install:
+  - npm install
+before_script:
+  - nohup ./tools/runTestRpc.sh </dev/null >/dev/null 2>&1 &
+script:
+  - truffle test
+after_script:
+  - kill $(ps aux | grep 'testrpc' | awk '{print $2}')

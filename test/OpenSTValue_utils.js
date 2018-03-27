@@ -21,7 +21,8 @@
 
 const BigNumber = require('bignumber.js');
 
-var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+//var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 
 /// @dev Deploy 
@@ -118,38 +119,6 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._chainIdUtility, _chainIdUtility);
 }
 
-
-module.exports.checkStakingIntentDeclaredEventProtocol = (formattedDecodedEvents, _uuid, _staker, _stakerNonce, _beneficiary,
-  _amountST, _amountUT, _chainIdUtility) => {
-
-  var event = formattedDecodedEvents['StakingIntentDeclared'];
-
-  if (Number.isInteger(_stakerNonce)) {
-    _stakerNonce = new BigNumber(_stakerNonce);
-  }
-
-  if (Number.isInteger(_amountST)) {
-    _amountST = new BigNumber(_amountST);
-  }
-
-  if (Number.isInteger(_amountUT)) {
-    _amountUT = new BigNumber(_amountUT);
-  }
-
-  if (Number.isInteger(_chainIdUtility)) {
-    _chainIdUtility = new BigNumber(_chainIdUtility);
-  }
-
-  assert.equal(event.event, "StakingIntentDeclared");
-  assert.equal(event._uuid, _uuid);
-  assert.equal(event._staker, _staker);
-  assert.equal(event._stakerNonce, _stakerNonce.toNumber());
-  assert.equal(event._beneficiary, _beneficiary);
-  assert.equal(event._amountST, _amountST.toNumber());
-  assert.equal(event._amountUT, _amountUT.toNumber());
-  assert.equal(event._chainIdUtility, _chainIdUtility.toNumber());
-}
-
 module.exports.checkStakingIntentDeclaredEventProtocol = (event, _uuid, _staker, _stakerNonce, _beneficiary,
 	_amountST, _amountUT, _chainIdUtility) => {
 
@@ -197,7 +166,7 @@ module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _st
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 }
 
-module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT, _expirationHeight) => {
+module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -214,12 +183,13 @@ module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionI
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
 	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
 }
 
-module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecodedEvents, uuid, _redemptionIntentHash, _redeemer, _amountST, _amountUT) => {
+module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecodedEvents, uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST, _amountUT) => {
 	var event = formattedDecodedEvents['RedemptionIntentConfirmed'];
 	assert.notEqual(event, null);
 
@@ -236,12 +206,13 @@ module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecoded
 	assert.equal(event._uuid, uuid);
 	assert.equal(event._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event._redeemer, _redeemer);
+  assert.equal(event._beneficiary, _beneficiary);
 	assert.equal(event._amountST, _amountST.toNumber());
 	assert.equal(event._amountUT, _amountUT.toNumber());
 	assert.isAbove(_unlockHeight.toNumber(), 0);
 }
 
-module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _amountST) => {
+module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _beneficiary, _amountST) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -251,5 +222,39 @@ module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash
 	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event.args.stake, stake);
 	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+}
+
+module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHash, _staker, _amountST, _amountUT) => {
+
+  if (Number.isInteger(_amountUT)) {
+    _amountUT = new BigNumber(_amountUT);
+  }
+
+  if (Number.isInteger(_amountST)) {
+    _amountST = new BigNumber(_amountST);
+  }
+
+  assert.equal(event.event, "RevertedStake");
+  assert.equal(event.args._uuid, _uuid);
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+  assert.equal(event.args._amountST, _amountST.toNumber());
+  assert.equal(event.args._amountUT, _amountUT.toNumber());
+}
+
+module.exports.checkRevertedUnstake = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST) => {
+
+	if (Number.isInteger(_amountST)) {
+		_amountST = new BigNumber(_amountST);
+	}
+
+	assert.equal(event.event, "RevertedUnstake");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
+	assert.equal(event.args._amountST, _amountST.toNumber());
+
 }

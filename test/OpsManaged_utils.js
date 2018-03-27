@@ -1,6 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
-
 // Copyright 2017 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +11,28 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Test: OpsManaged_utils.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-/* solhint-disable-next-line two-lines-top-level-separator */
-/// @title STPrimeConfig
-contract STPrimeConfig {
-    string  public constant STPRIME_SYMBOL          = "STP";
-    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
+module.exports.checkAdminAddressChangedEventGroup = (result, _newAddress) => {
+   assert.equal(result.logs.length, 1)
 
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
+   const event = result.logs[0]
+
+   assert.equal(event.event, "AdminAddressChanged")
+   assert.equal(event.args._newAddress, _newAddress)
+}
+
+module.exports.checkOpsAddressChangedEventGroup = (result, _newAddress) => {
+   assert.equal(result.logs.length, 1)
+
+   const event = result.logs[0]
+
+   assert.equal(event.event, "OpsAddressChanged")
+   assert.equal(event.args._newAddress, _newAddress)
 }

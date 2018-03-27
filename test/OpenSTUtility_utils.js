@@ -21,14 +21,15 @@
 
 const BigNumber = require('bignumber.js');
 
-var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
+var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
 
-/// @dev Deploy 
+const chainIdValue   = 3;
+const chainIdUtility = 1410;
+
+/// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-	const chainIdValue   = 3;
-	const chainIdUtility = 1410;
-	const registrar      = accounts[1];
+  const registrar      = accounts[1];
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
@@ -163,7 +164,7 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _tok
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
 }
 
-module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _amount, _unlockHeight, _chainIdValue) => {
+module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _beneficiary, _amount, _unlockHeight, _chainIdValue) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -185,21 +186,47 @@ module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIn
 	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event.args._token, _token);
 	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._nonce.toNumber(), _nonce.toNumber());
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
 	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
 	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
 }
 
-module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _amount) => {
+module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
 
 	assert.equal(event.event, "ProcessedRedemption");
-	assert.equal(event.args._uuid, _uuid)
-	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash)
-	assert.equal(event.args._token, _token)
-	assert.equal(event.args._redeemer, _redeemer)
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber())
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args._token, _token);
+	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
+	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+}
+
+module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {
+	_amount = new BigNumber(_amount);
+
+
+  assert.equal(event.event, "RevertedMint");
+  assert.equal(event.args._uuid, _uuid);
+  assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._beneficiary, _beneficiary);
+  assert.equal(event.args._amountUT.toNumber(), _amount.toNumber());
+}
+
+module.exports.checkRevertedRedemption = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountUT) => {
+  _amountUT = new BigNumber(_amountUT);
+
+	assert.equal(event.event, "RevertedRedemption");
+	assert.equal(event.args._uuid, _uuid);
+	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
+	assert.equal(event.args._redeemer, _redeemer);
+  assert.equal(event.args._beneficiary, _beneficiary);
+	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+
 }
