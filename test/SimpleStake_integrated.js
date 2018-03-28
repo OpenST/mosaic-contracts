@@ -88,7 +88,7 @@ contract('SimpleStake', function(accounts) {
 			});
 
 			it("Protocol transfer wait blocktime", async() => {
-				Assert.equal(await simpleStake.PROTOCOL_TRANSFER_BLOCKS_TO_WAIT.call(),
+				Assert.equal(await simpleStake.blocksToWaitForProtocolTransfer.call(),
 					PROTOCOL_TRANSFER_BLOCKS_TO_WAIT);
 			});
 		});

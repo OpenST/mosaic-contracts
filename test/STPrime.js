@@ -109,7 +109,8 @@ contract('STPrime', function(accounts) {
 		})
 
 		it('fails to burn by openSTProtocol if msg.value != amount', async () => {
-            await Utils.expectThrow(stPrime.burn(beneficiary, ST2, { from: openSTProtocol, value: 1 }));
+			const STValue = new BigNumber(web3.toWei(1, "ether"));
+			await Utils.expectThrow(stPrime.burn(beneficiary, ST2, { from: openSTProtocol, value: STValue }));
 		})
 
 		it('successfully burns', async () => {

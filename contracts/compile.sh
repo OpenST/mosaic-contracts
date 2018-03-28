@@ -1,18 +1,16 @@
-#! /bin/sh
+#!/bin/sh
 
-mkdir -p "./bin"
-mkdir -p "./abi"
+CONTRACTDIR=./contracts/*.sol
+ABIDIRUTILITY=./contracts/abi
+BINDIRVALUE=./contracts/bin
 
-echo ""
-echo "Compiling Staking.sol"
-echo ""
+mkdir -p "$ABIDIRUTILITY"
+mkdir -p "$BINDIRVALUE"
 
-solc --combined-json=abi,bin Staking.sol > ./bin/Staking.json
-solc --abi Staking.sol > ./abi/Staking.json
-
-echo ""
-echo "Compiling UtilityToken.sol"
-echo ""
-
-solc --combined-json=abi,bin UtilityToken.sol > ./bin/UtilityToken.json
-solc --abi UtilityToken.sol > ./abi/UtilityToken.json
+for filename in $CONTRACTDIR; do
+    echo ""
+    echo "Compiling ${filename}"
+    echo ""
+    solc --abi --optimize --optimize-runs 200 --overwrite ${filename} -o $ABIDIRUTILITY
+    solc --bin --optimize --optimize-runs 200 --overwrite ${filename} -o $BINDIRVALUE
+done

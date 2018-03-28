@@ -23,11 +23,21 @@ const BigNumber = require('bignumber.js');
 const Utils = require('./lib/utils.js');
 const UtilityTokenAbstract_utils = require('./UtilityTokenAbstract_utils.js');
 
+const UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");
+
 ///
 /// Test stories
 /// 
+/// Construction
+/// 	fails to deploy if UUID is bad
+///
 /// Properties 
 /// 	has uuid
+/// 	has conversionRate
+///		has conversionRateDecimals
+/// 	has genesisChainIdValue
+/// 	has genesisChainIdUtility
+/// 	has genesisOpenSTUtility
 /// 
 /// MintInternal, ClaimInternal, and BurnInternal
 /// 	successfully mints
@@ -36,28 +46,65 @@ const UtilityTokenAbstract_utils = require('./UtilityTokenAbstract_utils.js');
 ///
 
 contract('UtilityTokenAbstract', function(accounts) {
-	const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
-	const openSTProtocol = accounts[4];
-	const beneficiary1 = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-	const beneficiary2 = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
-	const ST3 = new BigNumber(web3.toWei(3, "ether"));
-	const ST4 = new BigNumber(web3.toWei(4, "ether"));
+	const openSTProtocol 		= accounts[4];
+	const conversionRateDecimals = 5;
+	const conversionRate 		= new BigNumber(10 * (10**conversionRateDecimals)); // conversion rate => 10
+	const genesisChainIdValue 	= 3;
+	const genesisChainIdUtility = 1410;
+	const beneficiary1   		= '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+	const beneficiary2 	 		= '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+	const ST1 			 		= new BigNumber(web3.toWei(1, "ether"));
+	const ST2 			 		= new BigNumber(web3.toWei(2, "ether"));
+	const ST3 			 		= new BigNumber(web3.toWei(3, "ether"));
+	const ST4 			 		= new BigNumber(web3.toWei(4, "ether"));
 
-	var totalSupply = null;
-	var unclaimed = null;
-	var result = null;
-	var amount = null;
+	var contracts 			 = null;
+	var hasher 				 = null;
+	var utilityTokenAbstract = null;
+	var uuid 				 = null;
+	var totalSupply 		 = null;
+	var unclaimed 			 = null;
+	var result 				 = null;
+	var amount 				 = null;
+
+	describe ('Construction', async () => {
+		it('fails to deploy if UUID is bad', async () => {
+			await Utils.expectThrow(UtilityTokenAbstract.new("bad uuid", "symbol", "name", genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol }));
+		})
+	})
 
 	describe ('Properties', async () => {
 		before(async () => {
-	        contracts = await UtilityTokenAbstract_utils.deployUtilityTokenAbstract(artifacts, accounts);
+	        contracts 			 = await UtilityTokenAbstract_utils.deployUtilityTokenAbstract(artifacts, accounts);
+	        hasher 				 = contracts.hasher;
 	        utilityTokenAbstract = contracts.utilityTokenAbstract;
 		})
 		
 		it('has uuid', async () => {
-			assert.equal(await utilityTokenAbstract.uuid.call(), UUID);
+			uuid = await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
+			assert.equal(await utilityTokenAbstract.uuid.call(), uuid);
+		})
+
+		it ('has conversionRate', async () => {
+			const contractConversionRate = await utilityTokenAbstract.conversionRate.call();			
+			assert.equal(contractConversionRate.toNumber(), conversionRate.toNumber());
+		})
+
+		it ('has conversionRateDecimals', async () => {
+			const contractConversionRateDecimals = await utilityTokenAbstract.conversionRateDecimals.call();			
+			assert.equal(contractConversionRateDecimals, conversionRateDecimals);
+		})
+
+		it ('has genesisChainIdValue', async () => {
+			assert.equal(await utilityTokenAbstract.genesisChainIdValue.call(), genesisChainIdValue);
+		})
+
+		it ('has genesisChainIdUtility', async () => {
+			assert.equal(await utilityTokenAbstract.genesisChainIdUtility.call(), genesisChainIdUtility);
+		})
+
+		it ('has genesisOpenSTUtility', async () => {
+			assert.equal(await utilityTokenAbstract.genesisOpenSTUtility.call(), openSTProtocol);
 		})
 	})
 
@@ -81,7 +128,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 			unclaimed = await utilityTokenAbstract.unclaimed.call(beneficiary1);
 			assert.equal(totalSupply.toNumber(), ST2.toNumber());
 			assert.equal(unclaimed.toNumber(), ST2.toNumber());
-			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], UUID, beneficiary1, ST2, ST2, ST2);
+			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], uuid, beneficiary1, ST2, ST2, ST2);
 
 			// Mint again for beneficiary1
 			result = await utilityTokenAbstract.mintInternalPublic(beneficiary1, ST1);
@@ -90,7 +137,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 			unclaimed = await utilityTokenAbstract.unclaimed.call(beneficiary1);
 			assert.equal(totalSupply.toNumber(), ST3.toNumber());
 			assert.equal(unclaimed.toNumber(), ST3.toNumber());
-			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], UUID, beneficiary1, ST1, ST3, ST3);
+			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], uuid, beneficiary1, ST1, ST3, ST3);
 
 			unclaimed = await utilityTokenAbstract.unclaimed.call(beneficiary2);
 			assert.equal(unclaimed.toNumber(), 0);
@@ -103,7 +150,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 			unclaimed = await utilityTokenAbstract.unclaimed.call(beneficiary2);
 			assert.equal(totalSupply.toNumber(), ST4.toNumber());
 			assert.equal(unclaimed.toNumber(), ST1.toNumber());
-			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], UUID, beneficiary2, ST1, ST1, ST4);
+			UtilityTokenAbstract_utils.checkMintedEvent(result.logs[0], uuid, beneficiary2, ST1, ST1, ST4);
 		})
 
 		it('successfully claims', async () => {
@@ -141,7 +188,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 
 			var postBurnTotalSupply = await utilityTokenAbstract.totalSupply.call();
 			assert.equal(postBurnTotalSupply.toNumber(), totalSupply.minus(amount).toNumber());
-			UtilityTokenAbstract_utils.checkBurntEvent(result.logs[0], UUID, beneficiary1, amount, postBurnTotalSupply);			
+			UtilityTokenAbstract_utils.checkBurntEvent(result.logs[0], uuid, beneficiary1, amount, postBurnTotalSupply);
 
 			// Burn 7 for 0x0 to reflect that this function
 			// is only concerned with reducing totalTokenSupply
@@ -152,8 +199,7 @@ contract('UtilityTokenAbstract', function(accounts) {
 
 			postBurnTotalSupply = await utilityTokenAbstract.totalSupply.call();
 			assert.equal(postBurnTotalSupply.toNumber(), totalSupply.minus(amount).toNumber());
-			UtilityTokenAbstract_utils.checkBurntEvent(result.logs[0], UUID, 0, amount, postBurnTotalSupply);			
+			UtilityTokenAbstract_utils.checkBurntEvent(result.logs[0], uuid, 0, amount, postBurnTotalSupply);
 		})
-
 	})
 })

@@ -15,25 +15,27 @@ pragma solidity ^0.4.17;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimePayable.sol
+// Common: ProtocolVersionedMock.sol
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./STPrime.sol";
+import "./ProtocolVersioned.sol";
 
-/// @title STPrimePayable
-/// @dev Temporary payable implementation of STPrime--TO BE REMOVED ONCE STPRIME.SOL IS ENABLED TO RECEIVE BASE TOKENS
-contract STPrimePayable is STPrime {
+/// @title ProtocolVersionedMock
+/// @dev Overrides certain durational constants and getters to ease testing ProtocolVersioned
+contract ProtocolVersionedMock is ProtocolVersioned {
+    uint256 private constant PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 3;
+
     /*
-     * Public functions
+     *  Public functions
      */
-    function STPrimePayable(
-    	address _openSTProtocol,
-    	bytes32 _uuid)
-        STPrime(_openSTProtocol, _uuid)
-    	public { }
+    function ProtocolVersionedMock(address _protocol)
+        ProtocolVersioned(_protocol)
+        public { }
 
-    function() public payable { }
+    function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
+        return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
+    }
 }

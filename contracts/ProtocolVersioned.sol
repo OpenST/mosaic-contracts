@@ -38,7 +38,7 @@ contract ProtocolVersioned {
 	/// protocol if they disagree with the new proposed protocol
 	/// @dev from OpenST ^v1.0 this constant will be set to a significant value
 	/// ~ 1 week at 15 seconds per block
-	uint256 constant public PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
+	uint256 constant private PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 	
 	/*
 	 *  Storage
@@ -99,7 +99,7 @@ contract ProtocolVersioned {
 		require(_proposedProtocol != openSTProtocol);
 		require(proposedProtocol == address(0));
 
-		earliestTransferHeight = block.number + PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
+		earliestTransferHeight = block.number + blocksToWaitForProtocolTransfer();
         proposedProtocol = _proposedProtocol;
 
         ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
@@ -140,6 +140,10 @@ contract ProtocolVersioned {
 		ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
     	return true;
+    }
+
+    function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
+        return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
     }
 
 }
