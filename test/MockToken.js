@@ -27,7 +27,7 @@ contract('MockToken', (accounts) => {
 
 
    async function createToken() {
-      return await MockToken.new(SYMBOL, NAME, DECIMALS, TOTAL_SUPPLY, { from: accounts[0], gas: 3500000 })
+      return await MockToken.new({ from: accounts[0], gas: 3500000 })
    }
 
    describe('Basic properties', async () => {
