@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -111,7 +111,7 @@ contract Gate is ProtocolVersioned {
 
         StakeRequested(msg.sender, _amount, _beneficiary, 0);
 
-        return unlockHeight;
+        return true;
     }
 
     function revertStakeRequest()
@@ -149,7 +149,7 @@ contract Gate is ProtocolVersioned {
 
         // check if the stake request was not accepted
         require(stakeRequest.unlockHeight == 0);
-        
+
         // transfer the amount back
         require(EIP20Interface(openSTValue.valueToken).transfer(msg.sender, stakeRequest.amount));
 
