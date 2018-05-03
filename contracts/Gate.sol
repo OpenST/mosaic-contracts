@@ -109,7 +109,7 @@ contract Gate is ProtocolVersioned {
             unlockHeight: 0
             });
 
-        StakeRequested(msg.sender, _amount, _beneficiary, unlockHeight);
+        StakeRequested(msg.sender, _amount, _beneficiary, 0);
 
         return unlockHeight;
     }
@@ -139,7 +139,7 @@ contract Gate is ProtocolVersioned {
         returns (bool)
     {
         // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender));
+        require(workers.isWorker(msg.sender)); //TODO: revist this
 
         // check if the stake request was done.
         StakeRequest storage stakeRequest = stakeRequests[_staker];
@@ -147,6 +147,9 @@ contract Gate is ProtocolVersioned {
         // check if the state request exists
         require(address(stakeRequest.beneficiary) != address(0));
 
+        // check if the stake request was not accepted
+        require(stakeRequest.unlockHeight == 0);
+        
         // transfer the amount back
         require(EIP20Interface(openSTValue.valueToken).transfer(msg.sender, stakeRequest.amount));
 
