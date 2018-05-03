@@ -467,7 +467,7 @@ contract('OpenSTValue', function(accounts) {
 				await valueToken.approve(openSTValue.address, 1, { from: accounts[0] });
 				result = await openSTValue.stake(checkUuid, 1, accounts[0], lock.l, { from: accounts[0] });
 				stakingIntentHash = result.logs[0].args._stakingIntentHash;
-				await openSTValue.processStaking(stakingIntentHash, { from: accounts[0] });
+				await openSTValue.processStaking(stakingIntentHash, lock.s,{ from: accounts[0] });
 				redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l);
 	            await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, redemptionIntentHash, { from: registrar });
 		    })
