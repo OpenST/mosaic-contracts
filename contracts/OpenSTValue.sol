@@ -36,7 +36,7 @@ import "./SimpleStake.sol";
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
-    
+
     /*
      *  Events
      */
@@ -50,7 +50,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdUtility);
 
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+        address _stake, address _staker, uint256 _amountST, uint256 _amountUT, bytes32 _unlockSecret);
 
     event RevertedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
         address _staker, uint256 _amountST, uint256 _amountUT);
@@ -59,7 +59,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 
     event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-        address stake, address _redeemer, address _beneficiary, uint256 _amountST);
+        address stake, address _redeemer, address _beneficiary, uint256 _amountST, bytes32 _unlockSecret);
 
     event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address _redeemer, address _beneficiary, uint256 _amountST);
@@ -96,6 +96,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 amountST;
         uint256 amountUT;
         uint256 unlockHeight;
+        bytes32 hashLock;
     }
 
     struct Unstake {
@@ -106,6 +107,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // @dev consider removal of amountUT
         uint256 amountUT;
         uint256 expirationHeight;
+        bytes32 hashLock;
     }
 
     /*
@@ -163,7 +165,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     function stake(
         bytes32 _uuid,
         uint256 _amountST,
-        address _beneficiary)
+        address _beneficiary,
+        bytes32 _hashLock)
         external
         returns (
         uint256 amountUT,
@@ -177,48 +180,47 @@ contract OpenSTValue is OpsManaged, Hasher {
         // OpenSTValue needs to be able to transfer the stake into its balance for
         // keeping until the two-phase process is completed on both chains.
         require(_amountST > 0);
-        // Consider the security risk of using tx.origin; at the same time an allowance
-        // needs to be set before calling stake over a potentially malicious contract at stakingAccount.
-        // The second protection is that the staker needs to check the intent hash before
-        // signing off on completing the two-phased process.
-        require(valueToken.allowance(tx.origin, address(this)) >= _amountST);
 
         require(utilityTokens[_uuid].simpleStake != address(0));
         require(_beneficiary != address(0));
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
 
+        // TODO: introduce parameter _staker
+        address _staker = tx.origin;
+
         // if the staking account is set to a non-zero address,
-        // then all transactions have come (from/over) the staking account,
-        // whether this is an EOA or a contract; tx.origin is putting forward the funds
+        // then all transactions have come (from/over) the staking account
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
-        require(valueToken.transferFrom(tx.origin, address(this), _amountST));
+        require(valueToken.transferFrom(_staker, address(this), _amountST));
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
             .div(10**uint256(utilityToken.conversionRateDecimals));
         unlockHeight = block.number + blocksToWaitLong();
 
-        nonces[tx.origin]++;
-        nonce = nonces[tx.origin];
+        nonces[_staker]++;
+        nonce = nonces[_staker];
 
         stakingIntentHash = hashStakingIntent(
             _uuid,
-            tx.origin,
+            _staker,
             nonce,
             _beneficiary,
             _amountST,
             amountUT,
-            unlockHeight
+            unlockHeight,
+            _hashLock
         );
 
         stakes[stakingIntentHash] = Stake({
             uuid:         _uuid,
-            staker:       tx.origin,
+            staker:       _staker,
             beneficiary:  _beneficiary,
             nonce:        nonce,
             amountST:     _amountST,
             amountUT:     amountUT,
-            unlockHeight: unlockHeight
+            unlockHeight: unlockHeight,
+            hashLock:     _hashLock
         });
 
         StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
@@ -229,7 +231,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     function processStaking(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (address stakeAddress)
     {
@@ -237,13 +240,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         Stake storage stake = stakes[_stakingIntentHash];
 
-        // note: as processStaking incurs a cost for the staker, we provide a fallback
-        // in v0.9 for registrar to process the staking on behalf of the staker,
-        // as the staker could fail to process the stake and avoid the cost of staking;
-        // this will be replaced with a signature carry-over implementation instead, where
-        // the signature of the intent hash suffices on value and utility chain, decoupling
-        // it from the transaction to processStaking and processMinting
-        require(stake.staker == msg.sender || registrar == msg.sender);
+        // present the secret to unlock the hashlock and continue process
+    		require(stake.hashLock == keccak256(_unlockSecret));
+
         // as this bears the cost, there is no need to require
         // that the stake.unlockHeight is not yet surpassed
         // as is required on processMinting
@@ -256,7 +255,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(valueToken.transfer(stakeAddress, stake.amountST));
 
         ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
-            stake.amountST, stake.amountUT);
+            stake.amountST, stake.amountUT, _unlockSecret);
 
         delete stakes[_stakingIntentHash];
 
@@ -302,6 +301,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
+        bytes32 _hashLock,
         bytes32 _redemptionIntentHash)
         external
         onlyRegistrar
@@ -326,7 +326,8 @@ contract OpenSTValue is OpsManaged, Hasher {
             nonces[_redeemer],
             _beneficiary,
             _amountUT,
-            _redemptionUnlockHeight
+            _redemptionUnlockHeight,
+            _hashLock
         );
 
         require(_redemptionIntentHash == redemptionIntentHash);
@@ -342,12 +343,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
         unstakes[redemptionIntentHash] = Unstake({
-            uuid:         _uuid,
-            redeemer:     _redeemer,
-            beneficiary:  _beneficiary,
-            amountUT:     _amountUT,
-            amountST:     amountST,
-            expirationHeight: expirationHeight
+            uuid:             _uuid,
+            redeemer:         _redeemer,
+            beneficiary:      _beneficiary,
+            amountUT:         _amountUT,
+            amountST:         amountST,
+            expirationHeight: expirationHeight,
+            hashLock:         _hashLock
         });
 
         RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
@@ -357,7 +359,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     function processUnstaking(
-        bytes32 _redemptionIntentHash)
+        bytes32 _redemptionIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (
         address stakeAddress)
@@ -365,7 +368,9 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_redemptionIntentHash != "");
 
         Unstake storage unstake = unstakes[_redemptionIntentHash];
-        require(unstake.redeemer == msg.sender);
+
+        // present secret to unlock hashlock and proceed
+        require(unstake.hashLock == keccak256(_unlockSecret));
 
         // as the process unstake results in a gain for the caller
         // it needs to expire well before the process redemption can
@@ -379,7 +384,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(utilityToken.simpleStake.releaseTo(unstake.beneficiary, unstake.amountST));
 
         ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
-            unstake.redeemer, unstake.beneficiary, unstake.amountST);
+            unstake.redeemer, unstake.beneficiary, unstake.amountST, _unlockSecret);
 
         delete unstakes[_redemptionIntentHash];
 

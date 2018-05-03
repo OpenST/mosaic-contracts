@@ -150,7 +150,7 @@ module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEve
   assert.equal(event._amountUT, _amountUT.toNumber());
 }
 
-module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {
+module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -162,6 +162,7 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _tok
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _beneficiary, _amount, _unlockHeight, _chainIdValue) => {
@@ -193,7 +194,7 @@ module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIn
 	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
 }
 
-module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount) => {
+module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -205,6 +206,7 @@ module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentH
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {

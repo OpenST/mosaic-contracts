@@ -19,13 +19,14 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber 			= require('bignumber.js');
-const Utils 		  		= require('./lib/utils.js');
+const BigNumber       = require('bignumber.js');
+const Utils           = require('./lib/utils.js');
+const HashLock        = require('./lib/hash_lock.js');
 const Registrar_utils = require('./Registrar_utils.js');
 
 ///
 /// Test stories
-/// 
+///
 /// RegisterBrandedToken
 /// 	fails to register by non-adminOrOps
 /// 	successfully registers core
@@ -58,7 +59,7 @@ contract('Registrar', function(accounts) {
 	const name 				= "Member Company Coin";
 	const conversionRateDecimals = 5;
 	const conversionRate	= new BigNumber(10 * (10**conversionRateDecimals)); // Conversion rate => 10
-	const amountST 			= new BigNumber(web3.toWei(2, "ether"));;	
+	const amountST 			= new BigNumber(web3.toWei(2, "ether"));;
 
 	describe('RegisterBrandedToken for utility chain', async() => {
 		var contracts 		= null;
@@ -148,6 +149,8 @@ contract('Registrar', function(accounts) {
 		var unlockHeight 		= null;
 		var stakingIntentHash 	= null;
 
+		const lock = HashLock.getHashLock();
+
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
@@ -163,7 +166,7 @@ contract('Registrar', function(accounts) {
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
-	        result = await openSTValue.stake(uuid, amountST, staker, { from: staker });
+	        result = await openSTValue.stake(uuid, amountST, staker, lock.l, { from: staker });
 	        nonce = result.logs[0].args._stakerNonce;
 	        amountUT = result.logs[0].args._amountUT;
 	        unlockHeight = result.logs[0].args._unlockHeight;
@@ -171,13 +174,13 @@ contract('Registrar', function(accounts) {
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash));
-            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, { from: admin }));
+            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash));
+            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash, { from: admin }));
 		})
 
 		it('successfully confirms', async () => {
 			var BLOCKS_TO_WAIT_SHORT = 240;
-            var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, { from: ops });
+            var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash, { from: ops });
 
             assert.ok(expirationHeight > BLOCKS_TO_WAIT_SHORT);
 		})
@@ -195,7 +198,9 @@ contract('Registrar', function(accounts) {
 		var redemptionIntentHash 	= null;
 		const BLOCKS_TO_WAIT_LONG	= 80667;
 		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));
-		
+		const lock = HashLock.getHashLock();
+		const lockR = HashLock.getHashLock();
+
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
@@ -208,22 +213,22 @@ contract('Registrar', function(accounts) {
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
-	        var result = await openSTValue.stake(uuid, amountST, staker, { from: staker });
+	        var result = await openSTValue.stake(uuid, amountST, staker, lock.l, { from: staker });
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
-			await openSTValue.processStaking(stakingIntentHash, { from: staker });
+			await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
 			nonce = await openSTValue.getNextNonce.call(staker);
-			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG);
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l);
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash));
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: admin }));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash, { from: admin }));
 		})
 
 		it('successfully confirms', async () => {
 			var BLOCKS_TO_WAIT_SHORT = 240;
 
-      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, redemptionIntentHash, { from: ops });      
+      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash, { from: ops });
       assert.equal(confirmReturns[0], (amountUTRedeemed * (10**conversionRateDecimals))/conversionRate);
       assert.ok(confirmReturns[1] > BLOCKS_TO_WAIT_SHORT);
 		})
