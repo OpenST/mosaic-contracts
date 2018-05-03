@@ -251,7 +251,7 @@ contract('OpenST', function(accounts) {
 		    it("register utility token on value chain", async() => {
 
 		     	const result = await registrarVC.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals,
-		    		CHAINID_UTILITY, requester, registeredBrandedTokenUuid, { from: intercommVC });
+		    		CHAINID_UTILITY, stakerVC, registeredBrandedTokenUuid, { from: intercommVC });
 
 		    	var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTValue.address, openSTValueArtifacts.abi);
 
@@ -372,7 +372,7 @@ contract('OpenST', function(accounts) {
 			it("transfer STPrime to Redeemer", async() => {
 
 				var redeemerBalanceBeforeTransfer = await web3.eth.getBalance(redeemer).toNumber();
-				result = await web3.eth.sendTransaction({ from: staker, to: redeemer, value: FUND_AMOUNT_STPRIME ,gasPrice: '0x12A05F200' });
+				result = await web3.eth.sendTransaction({ from: stakerVC, to: redeemer, value: FUND_AMOUNT_STPRIME ,gasPrice: '0x12A05F200' });
 				var redeemerBalanceAfterTransfer = await web3.eth.getBalance(redeemer).toNumber();
 				Assert.equal((redeemerBalanceBeforeTransfer+(FUND_AMOUNT_STPRIME.toNumber())), redeemerBalanceAfterTransfer);
 
