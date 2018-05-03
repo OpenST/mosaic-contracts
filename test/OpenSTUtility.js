@@ -710,13 +710,7 @@ contract('OpenSTUtility', function(accounts) {
 					await OpenSTUtility_utils.checkRevertedMintEvent(result.logs[0], checkBtUuid, stakingIntentHash, accounts[0],
 						accounts[0], AMOUNT_BT);
 				})
-			})
-
-			it('successfully revert Minting', async () => {
-				var result = await openSTUtility.revertMinting(stakingIntentHash, { from: accounts[2] , gasPrice: '0x12A05F200'});
-				await OpenSTUtility_utils.checkRevertedMintEvent(result.logs[0], checkBtUuid, stakingIntentHash, accounts[0],
-					accounts[0], AMOUNT_BT);
-			})
 		})
-	});
+	})
+
 });
