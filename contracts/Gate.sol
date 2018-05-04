@@ -66,7 +66,7 @@ contract Gate is ProtocolVersioned {
     /*
      *  Public functions
      */
-    function Gate(
+    constructor(
         address _workers,
         uint256 _bounty,
         bytes32 _uuid,
@@ -110,7 +110,7 @@ contract Gate is ProtocolVersioned {
             unlockHeight: 0
         });
 
-        StakeRequested(msg.sender, _amount, _beneficiary);
+        emit StakeRequested(msg.sender, _amount, _beneficiary);
 
         return true;
     }
@@ -131,7 +131,7 @@ contract Gate is ProtocolVersioned {
 
         delete stakeRequests[msg.sender];
 
-        StakeRequestReverted(msg.sender, stakeRequest.amount);
+        emit StakeRequestReverted(msg.sender, stakeRequest.amount);
 
         return true;
     }
@@ -158,7 +158,7 @@ contract Gate is ProtocolVersioned {
         // delete the state request from the mapping storage
         delete stakeRequests[msg.sender];
 
-        StakeRequestRejected(_staker, stakeRequest.amount);
+        emit StakeRequestRejected(_staker, stakeRequest.amount);
 
         return true;
     }
