@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity ^0.4.23;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -60,7 +60,7 @@ contract Gate is ProtocolVersioned {
     bytes32 uuid;
 
     // OpenSTValue contract
-    address openSTValue;
+    OpenSTValue openSTValue;
 
     /*
      *  Public functions
@@ -83,7 +83,7 @@ contract Gate is ProtocolVersioned {
         workers = _workers;
         bounty = _bounty;
         uuid = _uuid;
-        openSTValue = _openSTValue;
+        openSTValue = OpenSTValue(_openSTValue);
     }
 
     function requestStake(
@@ -99,8 +99,8 @@ contract Gate is ProtocolVersioned {
         require(_beneficiary != address(0));
         require(address(stakeRequests[msg.sender].beneficiary) == address(0)); // check if the state request does not exists
 
-        require(EIP20Interface(openSTValue.valueToken).allowance(msg.sender, address(this)) >= _amount);
-        require(EIP20Interface(openSTValue.valueToken).transferFrom(msg.sender, address(this), _amount));
+        require(openSTValue.valueToken().allowance(msg.sender, address(this)) >= _amount);
+        require(openSTValue.valueToken().transferFrom(msg.sender, address(this), _amount));
 
         stakeRequests[msg.sender] = StakeRequest({
             amount: _amount,
@@ -109,12 +109,13 @@ contract Gate is ProtocolVersioned {
             unlockHeight: 0
             });
 
-        StakeRequested(msg.sender, _amount, _beneficiary, 0);
+        StakeRequested(msg.sender, _amount, _beneficiary);
 
         return true;
     }
 
     function revertStakeRequest()
+        external
         returns (bool)
     {
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
@@ -125,7 +126,7 @@ contract Gate is ProtocolVersioned {
         // check if the stake request was not accepted
         require(stakeRequest.unlockHeight == 0);
 
-        require(EIP20Interface(openSTValue.valueToken).transfer(msg.sender, stakeRequest.amount));
+        require(openSTValue.valueToken().transfer(msg.sender, stakeRequest.amount));
 
         delete stakeRequests[msg.sender];
 
@@ -136,10 +137,11 @@ contract Gate is ProtocolVersioned {
 
 
     function rejectRequest(address _staker)
+        external
         returns (bool)
     {
         // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender)); //TODO: revist this
+        //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
 
         // check if the stake request was done.
         StakeRequest storage stakeRequest = stakeRequests[_staker];
@@ -151,7 +153,7 @@ contract Gate is ProtocolVersioned {
         require(stakeRequest.unlockHeight == 0);
 
         // transfer the amount back
-        require(EIP20Interface(openSTValue.valueToken).transfer(msg.sender, stakeRequest.amount));
+        require(openSTValue.valueToken().transfer(msg.sender, stakeRequest.amount));
 
         // delete the state request from the mapping storage
         delete stakeRequests[msg.sender];
