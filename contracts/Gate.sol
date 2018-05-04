@@ -1,3 +1,4 @@
+/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
 
 // Copyright 2018 OpenST Ltd.
@@ -25,6 +26,7 @@ import "./ProtocolVersioned.sol";
 import "./OpenSTValue.sol";
 import "./EIP20Interface.sol";
 
+
 contract Gate is ProtocolVersioned {
 
     /*
@@ -33,7 +35,6 @@ contract Gate is ProtocolVersioned {
     event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
     event StakeRequestReverted(address _staker, uint256 _amount);
     event StakeRequestRejected(address _staker, uint256 _amount);
-
 
     /*
      *  Structures
@@ -54,13 +55,13 @@ contract Gate is ProtocolVersioned {
     mapping(address /*staker */ => StakeRequest) public stakeRequests;
 
     // bounty amount
-    uint256 bounty;
+    uint256 private bounty;
 
     // utility token UUID
-    bytes32 uuid;
+    bytes32 private uuid;
 
     // OpenSTValue contract
-    OpenSTValue openSTValue;
+    OpenSTValue private openSTValue;
 
     /*
      *  Public functions
@@ -77,7 +78,7 @@ contract Gate is ProtocolVersioned {
         require(_openSTValue != address(0));
         require(_uuid.length != 0);
 
-        // Should bounty with 0 amount be allowed ? commenting right now
+        // Should bounty with 0 amount be allowed ?
         //require(_bounty > 0);
 
         workers = _workers;
@@ -90,14 +91,14 @@ contract Gate is ProtocolVersioned {
         uint256 _amount,
         address _beneficiary)
         external
-        returns (
-            bool
-        )
+        returns ( bool /* success */)
     {
 
         require(_amount > 0);
         require(_beneficiary != address(0));
-        require(address(stakeRequests[msg.sender].beneficiary) == address(0)); // check if the state request does not exists
+
+        // check if the state request does not exists
+        require(address(stakeRequests[msg.sender].beneficiary) == address(0));
 
         require(openSTValue.valueToken().allowance(msg.sender, address(this)) >= _amount);
         require(openSTValue.valueToken().transferFrom(msg.sender, address(this), _amount));
@@ -107,7 +108,7 @@ contract Gate is ProtocolVersioned {
             beneficiary: _beneficiary,
             hashLock: 0,
             unlockHeight: 0
-            });
+        });
 
         StakeRequested(msg.sender, _amount, _beneficiary);
 
@@ -116,7 +117,7 @@ contract Gate is ProtocolVersioned {
 
     function revertStakeRequest()
         external
-        returns (bool)
+        returns (bool /* success */)
     {
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
 
@@ -135,10 +136,9 @@ contract Gate is ProtocolVersioned {
         return true;
     }
 
-
     function rejectRequest(address _staker)
         external
-        returns (bool)
+        returns (bool /* success */)
     {
         // check if the caller is whitelisted worker
         //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
