@@ -136,7 +136,7 @@ contract Gate is ProtocolVersioned {
         return true;
     }
 
-    function rejectRequest(address _staker)
+    function rejectStakeRequest(address _staker)
         external
         returns (bool /* success */)
     {
@@ -162,4 +162,5 @@ contract Gate is ProtocolVersioned {
 
         return true;
     }
+
 }
