@@ -97,8 +97,8 @@ contract Gate is ProtocolVersioned {
         require(_amount > 0);
         require(_beneficiary != address(0));
 
-        // check if the state request does not exists
-        require(address(stakeRequests[msg.sender].beneficiary) == address(0));
+        // check if the stake request does not exists
+        require(stakeRequests[msg.sender].beneficiary == address(0));
 
         require(openSTValue.valueToken().allowance(msg.sender, address(this)) >= _amount);
         require(openSTValue.valueToken().transferFrom(msg.sender, address(this), _amount));
@@ -121,8 +121,8 @@ contract Gate is ProtocolVersioned {
     {
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
 
-        // check if the state request exists for the msg.sender
-        require(address(stakeRequest.beneficiary) != address(0));
+        // check if the stake request exists for the msg.sender
+        require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
         require(stakeRequest.unlockHeight == 0);
@@ -143,19 +143,18 @@ contract Gate is ProtocolVersioned {
         // check if the caller is whitelisted worker
         //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
 
-        // check if the stake request was done.
         StakeRequest storage stakeRequest = stakeRequests[_staker];
 
-        // check if the state request exists
-        require(address(stakeRequest.beneficiary) != address(0));
+        // check if the stake request exists
+        require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
         require(stakeRequest.unlockHeight == 0);
 
         // transfer the amount back
-        require(openSTValue.valueToken().transfer(msg.sender, stakeRequest.amount));
+        require(openSTValue.valueToken().transfer(_staker, stakeRequest.amount));
 
-        // delete the state request from the mapping storage
+        // delete the stake request from the mapping storage
         delete stakeRequests[msg.sender];
 
         emit StakeRequestRejected(_staker, stakeRequest.amount);
