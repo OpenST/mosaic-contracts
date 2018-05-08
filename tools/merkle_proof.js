@@ -12,7 +12,7 @@ const blockHash = "d1d2effa9d957d373c5968064d318f271de34f7b5fc7c87089598eadb84c7
   , txHash = "0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a"
   , accountAddress = "cd0cea667d856e42083908e0ba5467c7cd5bb7c1"
   , chainDataPath = "/Users/Pepo/Documents/projects/openst-payments/mocha_test/scripts/st-poa/geth/chaindata_bkp"
-  , workerContractAddress = '0x6cdad399459fb1480e37fd1372f1f5c96152ddca'
+  , workerContractAddress = '6cdad399459fb1480e37fd1372f1f5c96152ddca'
 ;
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send;
 const epObjectWithoutChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"))
@@ -59,10 +59,21 @@ const merkleProof = {
   },
 
   storageProofWithChainData: function(){
-    epObjectWithChainData.getStorageProof(workerContractAddress, 0x0).then(function(proof){
+    epObjectWithChainData.getStorageProof(workerContractAddress, 0x0).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainData===========\n");
       console.log("\n===========storageProofWithChainData===========\n", proof);
       console.log("\n===========Ending storageProofWithChainData===========\n");
+      console.log("\n===========Starting verifyStorageProofWithChainData===========\n");
+      var verifyResult = await EP.storageAtIndex(
+        proof.storageIndex,
+        Buffer.from('00','hex'),
+        proof.storageParentNodes,
+        proof.address,
+        proof.accountParentNodes,
+        proof.header,
+        proof.blockHash);
+      console.log("verifyAccountProof Result:", verifyResult);
+      console.log("\n===========Ending verifyStorageProofWithChainData===========\n");
     });
   },
 
@@ -70,12 +81,12 @@ const merkleProof = {
   perform: function(){
     const oThis = this
     ;
-    oThis.transactionProofWithChainData();
-    oThis.receiptProofWithChainData();
-    oThis.logProofWithChainData();
-    oThis.transactionProofWithChainData();
-    oThis.accountProofWithChainData();
-    //oThis.storageProofWithChainData();
+    // oThis.transactionProofWithChainData();
+    // oThis.receiptProofWithChainData();
+    // oThis.logProofWithChainData();
+    // oThis.transactionProofWithChainData();
+    // oThis.accountProofWithChainData();
+    oThis.storageProofWithChainData();
   }
 
 
