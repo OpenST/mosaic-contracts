@@ -23,6 +23,7 @@ pragma solidity ^0.4.17;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
+import "./EIP20Interface.sol";
 
 
 contract OpenSTValueInterface {
@@ -83,4 +84,7 @@ contract OpenSTValueInterface {
         uint256, /* amountST */
         uint256, /* amountUT */
         uint256 /* expirationHeight */);
+
+    function valueToken()
+        returns (EIP20Interface /* value token address*/);
 }
