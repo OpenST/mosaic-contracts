@@ -81,7 +81,7 @@ contract Workers is ProtocolVersioned, Owned {
         require(_deactivationHeight >= block.number);
 
         workers[_worker] = _deactivationHeight;
-        uint256 remainingHeight = _deactivationHeight - block.number;
+        uint256 remainingHeight = sub(_deactivationHeight, block.number);
         //Event for worker set
         WorkerSet(_worker, _deactivationHeight, remainingHeight);
 
@@ -139,11 +139,9 @@ contract Workers is ProtocolVersioned, Owned {
         onlyOwner()
         returns (bool success)
     {
-        /// check if the allowance exists for spender address
-        require(eip20token.allowance(msg.sender, _spender) >= uint256(0));
         /// approve the spender for the amount
         require(eip20token.approve(_spender, _amount));
-        /// Emit Approval event    
+        /// emit Approval event    
         Approval(msg.sender, _spender, _amount);
 
         return true;
