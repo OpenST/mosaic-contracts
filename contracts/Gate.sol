@@ -75,7 +75,7 @@ contract Gate is ProtocolVersioned, Owned {
     {
         require(_workers != address(0));
         require(_openSTValue != address(0));
-        require(_uuid.length != bytes32(0));
+        require(_uuid.length != uint8(0));
 
         workers = _workers;
         bounty = _bounty;
