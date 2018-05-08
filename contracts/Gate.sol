@@ -23,11 +23,11 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./ProtocolVersioned.sol";
-import "./OpenSTValue.sol";
+import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
+import "./Owned.sol";
 
-
-contract Gate is ProtocolVersioned {
+contract Gate is ProtocolVersioned, Owned {
 
     /*
      * Events
@@ -60,8 +60,6 @@ contract Gate is ProtocolVersioned {
     // utility token UUID
     bytes32 private uuid;
 
-    // OpenSTValue contract
-    OpenSTValue private openSTValue;
 
     /*
      *  Public functions
@@ -72,19 +70,17 @@ contract Gate is ProtocolVersioned {
         bytes32 _uuid,
         address _openSTValue)
         public
+        Owned()
         ProtocolVersioned(_openSTValue)
     {
         require(_workers != address(0));
         require(_openSTValue != address(0));
         require(_uuid.length != 0);
 
-        // Should bounty with 0 amount be allowed ?
-        //require(_bounty > 0);
-
         workers = _workers;
         bounty = _bounty;
         uuid = _uuid;
-        openSTValue = OpenSTValue(_openSTValue);
+
     }
 
     function requestStake(
@@ -100,8 +96,7 @@ contract Gate is ProtocolVersioned {
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
 
-        require(openSTValue.valueToken().allowance(msg.sender, address(this)) >= _amount);
-        require(openSTValue.valueToken().transferFrom(msg.sender, address(this), _amount));
+        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), _amount));
 
         stakeRequests[msg.sender] = StakeRequest({
             amount: _amount,
@@ -115,23 +110,27 @@ contract Gate is ProtocolVersioned {
         return true;
     }
 
+
+    /// @dev In order to revert stake request the msg.sender should be the staker
     function revertStakeRequest()
         external
         returns (bool /* success */)
     {
+        // only staker can do revertStakeRequest, msg.sender == staker
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
 
         // check if the stake request exists for the msg.sender
         require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
-        require(stakeRequest.unlockHeight == 0);
+        require(stakeRequest.hashLock == 0);
 
-        require(openSTValue.valueToken().transfer(msg.sender, stakeRequest.amount));
+        require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, stakeRequest.amount));
 
+        uint256 stakeRequestAmount = stakeRequest.amount;
         delete stakeRequests[msg.sender];
 
-        emit StakeRequestReverted(msg.sender, stakeRequest.amount);
+        emit StakeRequestReverted(msg.sender, stakeRequestAmount);
 
         return true;
     }
@@ -149,15 +148,16 @@ contract Gate is ProtocolVersioned {
         require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
-        require(stakeRequest.unlockHeight == 0);
+        require(stakeRequest.hashLock == 0);
 
         // transfer the amount back
-        require(openSTValue.valueToken().transfer(_staker, stakeRequest.amount));
+        require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(_staker, stakeRequest.amount));
 
+        uint256 stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
         delete stakeRequests[msg.sender];
 
-        emit StakeRequestRejected(_staker, stakeRequest.amount);
+        emit StakeRequestRejected(_staker, stakeRequestAmount);
 
         return true;
     }
