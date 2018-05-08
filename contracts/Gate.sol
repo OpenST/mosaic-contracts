@@ -75,7 +75,7 @@ contract Gate is ProtocolVersioned, Owned {
     {
         require(_workers != address(0));
         require(_openSTValue != address(0));
-        require(_uuid.length != 0);
+        require(_uuid.length != bytes32(0));
 
         workers = _workers;
         bounty = _bounty;
@@ -90,7 +90,7 @@ contract Gate is ProtocolVersioned, Owned {
         returns ( bool /* success */)
     {
 
-        require(_amount > 0);
+        require(_amount > uint256(0));
         require(_beneficiary != address(0));
 
         // check if the stake request does not exists
@@ -123,7 +123,7 @@ contract Gate is ProtocolVersioned, Owned {
         require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
-        require(stakeRequest.hashLock == 0);
+        require(stakeRequest.hashLock == bytes32(0));
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, stakeRequest.amount));
 
@@ -148,7 +148,7 @@ contract Gate is ProtocolVersioned, Owned {
         require(stakeRequest.beneficiary != address(0));
 
         // check if the stake request was not accepted
-        require(stakeRequest.hashLock == 0);
+        require(stakeRequest.hashLock == bytes32(0));
 
         // transfer the amount back
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(_staker, stakeRequest.amount));
