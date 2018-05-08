@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -36,8 +36,6 @@ contract Workers is ProtocolVersioned, Owned {
      */
     /// workers are active up unto the deactivation height
     mapping(address => uint256 /* deactivation height */) public workers;
-    /// workers have token balances
-    mapping(address => uint256) balances;
 
     /*
      * Events
@@ -56,16 +54,14 @@ contract Workers is ProtocolVersioned, Owned {
     /// @dev    Constructor;
     ///         public method;    
     constructor(
-        address _eip20token,
-        address _protocol)
+        address _eip20token)
         public
         ProtocolVersioned(_protocol)
     {
-        require(_eip20token != 0);
+        require(_eip20token != address(0));
         require(_protocol != address(0));
         
         eip20token = _eip20token;
-        protocol = _protocol;
     }
 
     /// @dev    Takes _worker, _deactivationHeight;
@@ -144,7 +140,7 @@ contract Workers is ProtocolVersioned, Owned {
         returns (bool success)
     {
         /// check if the allowance exists for spender address
-        require(eip20token.allowance(msg.sender, _spender) >= 0);
+        require(eip20token.allowance(msg.sender, _spender) >= uint256(0));
         /// approve the spender for the amount
         require(eip20token.approve(_spender, _amount));
         /// Emit Approval event    
