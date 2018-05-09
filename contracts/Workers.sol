@@ -22,14 +22,14 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./SafeMath.sol";
-import "./EIP20TokenInterface.sol";
+import "./EIP20Interface.sol";
 import "./OpsManaged.sol";
 
 /// A set of authorised workers
 contract Workers is OpsManaged {
     using SafeMath for uint256;
     /// EIP20token address is private for now.
-    EIP20TokenInterface private eip20token;
+    EIP20Interface private eip20token;
     /*
      *  Storage
      */
@@ -79,7 +79,7 @@ contract Workers is OpsManaged {
         require(_deactivationHeight >= block.number);
 
         workers[_worker] = _deactivationHeight;
-        uint256 remainingHeight = sub(_deactivationHeight, block.number);
+        uint256 remainingHeight = _deactivationHeight.sub(block.number);
         //Event for worker set
         emit WorkerSet(_worker, _deactivationHeight, remainingHeight);
 
