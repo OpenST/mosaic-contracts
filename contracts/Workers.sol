@@ -59,7 +59,7 @@ contract Workers is OpsManaged {
     {
         require(_eip20token != address(0));
         
-        eip20token = _eip20token;
+        eip20token = EIP20Interface(_eip20token);
     }
 
     /// @dev    Takes _worker, _deactivationHeight;
