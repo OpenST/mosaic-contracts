@@ -52,7 +52,7 @@ contract('Storage', function(accounts) {
   it('getStorage from mapping for msg.sender key', async () => {
     index = '0000000000000000000000000000000000000000000000000000000000000001';
     var key = "0000000000000000000000"+accounts[0];
-    var newKey =  web3.sha3(key + index, {"encoding":"hex"});
+    var newKey = web3.sha3(key + index, {"encoding":"hex"});
     hexResult = await web3.eth.getStorageAt(storageContract.address, newKey);
     decimalResult = web3.toDecimal(hexResult);
     console.log('HEX RESULT: ', hexResult,  'DECIMAL RESULT', decimalResult);
