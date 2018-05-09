@@ -68,4 +68,16 @@ contract GateInterface {
     function acceptStakeRequest(address _staker, bytes32 _hashLock)
         external
         returns (bool /* success */);
+
+    function processStaking(
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret,
+        address _staker)
+        external
+        returns (bool /* success */);
+
+    function revertStaking(bytes32 _stakingIntentHash)
+        external
+        returns (bool /* success */);
+
 }

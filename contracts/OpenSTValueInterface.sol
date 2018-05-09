@@ -99,8 +99,17 @@ contract OpenSTValueInterface {
         address _staker)
         external
         returns (
-        uint256 amountUT,
-        uint256 nonce,
-        uint256 unlockHeight,
-        bytes32 stakingIntentHash);
+        uint256, /* amountUT*/
+        uint256, /* nonce*/
+        uint256, /* unlockHeight*/
+        bytes32 /* stakingIntentHash*/);
+
+    function revertStaking(
+        bytes32 _stakingIntentHash,
+        address _staker)
+        external
+        returns (
+        bytes32, /* uuid */
+        uint256, /* amountST */
+        address /* staker */);
 }

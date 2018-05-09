@@ -239,6 +239,9 @@ contract OpenSTValue is OpsManaged, Hasher {
         external
         returns (address stakeAddress)
     {
+        // check if the msg.sender is Gate contract
+        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
+
         require(_stakingIntentHash != "");
 
         Stake storage stake = stakes[_stakingIntentHash];
@@ -266,13 +269,17 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     function revertStaking(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        address _staker)
         external
         returns (
         bytes32 uuid,
         uint256 amountST,
         address staker)
     {
+        // check if the msg.sender is Gate contract
+        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
+
         require(_stakingIntentHash != "");
 
         Stake storage stake = stakes[_stakingIntentHash];
@@ -280,6 +287,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         // require that the stake is unlocked and exists
         require(stake.unlockHeight > 0);
         require(stake.unlockHeight <= block.number);
+
+        require(_staker == stake.staker);
 
         assert(valueToken.balanceOf(address(this)) >= stake.amountST);
         // revert the amount that was intended to be staked back to staker
