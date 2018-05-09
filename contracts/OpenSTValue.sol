@@ -32,6 +32,7 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
+import "./GateInterface.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -166,7 +167,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 _uuid,
         uint256 _amountST,
         address _beneficiary,
-        bytes32 _hashLock)
+        bytes32 _hashLock,
+        address _staker)
         external
         returns (
         uint256 amountUT,
@@ -179,20 +181,21 @@ contract OpenSTValue is OpsManaged, Hasher {
         // check the staking contract has been approved to spend the amount to stake
         // OpenSTValue needs to be able to transfer the stake into its balance for
         // keeping until the two-phase process is completed on both chains.
-        require(_amountST > 0);
+        require(_amountST > uint256(0));
 
         require(utilityTokens[_uuid].simpleStake != address(0));
         require(_beneficiary != address(0));
+        require(_staker != address(0));
+
+        // check if the msg.sender is Gate contract
+        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
 
-        // TODO: introduce parameter _staker
-        address _staker = tx.origin;
-
         // if the staking account is set to a non-zero address,
         // then all transactions have come (from/over) the staking account
-        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
-        require(valueToken.transferFrom(_staker, address(this), _amountST));
+        if (utilityToken.stakingAccount != address(0)) require(_staker == utilityToken.stakingAccount);
+        require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
             .div(10**uint256(utilityToken.conversionRateDecimals));
@@ -223,7 +226,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
-        StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
+        StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);

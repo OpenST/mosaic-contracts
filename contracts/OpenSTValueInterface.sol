@@ -88,5 +88,19 @@ contract OpenSTValueInterface {
         uint256 /* expirationHeight */);
 
     function valueToken()
+        public
         returns (EIP20Interface /* value token address*/);
+
+    function stake(
+        bytes32 _uuid,
+        uint256 _amountST,
+        address _beneficiary,
+        bytes32 _hashLock,
+        address _staker)
+        external
+        returns (
+        uint256 amountUT,
+        uint256 nonce,
+        uint256 unlockHeight,
+        bytes32 stakingIntentHash);
 }

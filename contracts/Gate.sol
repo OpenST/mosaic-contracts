@@ -26,15 +26,9 @@ import "./ProtocolVersioned.sol";
 import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
 import "./Owned.sol";
+import "./GateInterface.sol";
 
-contract Gate is ProtocolVersioned, Owned {
-
-    /*
-     * Events
-     */
-    event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
-    event StakeRequestReverted(address _staker, uint256 _amount);
-    event StakeRequestRejected(address _staker, uint256 _amount);
+contract Gate is GateInterface, ProtocolVersioned, Owned {
 
     /*
      *  Structures
@@ -49,16 +43,16 @@ contract Gate is ProtocolVersioned, Owned {
     /*
      *  Storage
      */
-    address public workers; //TODO: update type once workers contract and interfaces are added to the repo.
+    address private gateWorkers; //TODO: update type once workers contract and interfaces are added to the repo.
 
     // stake requests
-    mapping(address /*staker */ => StakeRequest) public stakeRequests;
+    mapping(address /*staker */ => StakeRequest) private gateStakeRequests;
 
     // bounty amount
-    uint256 private bounty;
+    uint256 private gateBounty;
 
     // utility token UUID
-    bytes32 private uuid;
+    bytes32 private gateUuid;
 
 
     /*
@@ -68,18 +62,17 @@ contract Gate is ProtocolVersioned, Owned {
         address _workers,
         uint256 _bounty,
         bytes32 _uuid,
-        address _openSTValue)
+        address _openSTProtocol)
         public
         Owned()
-        ProtocolVersioned(_openSTValue)
+        ProtocolVersioned(_openSTProtocol)
     {
         require(_workers != address(0));
-        require(_openSTValue != address(0));
         require(_uuid.length != uint8(0));
 
-        workers = _workers;
-        bounty = _bounty;
-        uuid = _uuid;
+        gateWorkers = _workers;
+        gateBounty = _bounty;
+        gateUuid = _uuid;
 
     }
 
@@ -94,11 +87,11 @@ contract Gate is ProtocolVersioned, Owned {
         require(_beneficiary != address(0));
 
         // check if the stake request does not exists
-        require(stakeRequests[msg.sender].beneficiary == address(0));
+        require(gateStakeRequests[msg.sender].beneficiary == address(0));
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), _amount));
 
-        stakeRequests[msg.sender] = StakeRequest({
+        gateStakeRequests[msg.sender] = StakeRequest({
             amount: _amount,
             beneficiary: _beneficiary,
             hashLock: 0,
@@ -117,7 +110,7 @@ contract Gate is ProtocolVersioned, Owned {
         returns (bool /* success */)
     {
         // only staker can do revertStakeRequest, msg.sender == staker
-        StakeRequest storage stakeRequest = stakeRequests[msg.sender];
+        StakeRequest storage stakeRequest = gateStakeRequests[msg.sender];
 
         // check if the stake request exists for the msg.sender
         require(stakeRequest.beneficiary != address(0));
@@ -128,7 +121,7 @@ contract Gate is ProtocolVersioned, Owned {
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, stakeRequest.amount));
 
         uint256 stakeRequestAmount = stakeRequest.amount;
-        delete stakeRequests[msg.sender];
+        delete gateStakeRequests[msg.sender];
 
         emit StakeRequestReverted(msg.sender, stakeRequestAmount);
 
@@ -140,9 +133,9 @@ contract Gate is ProtocolVersioned, Owned {
         returns (bool /* success */)
     {
         // check if the caller is whitelisted worker
-        //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
+        //require(gateWorkers.isWorker(msg.sender)); //TODO: revist this to add worker check
 
-        StakeRequest storage stakeRequest = stakeRequests[_staker];
+        StakeRequest storage stakeRequest = gateStakeRequests[_staker];
 
         // check if the stake request exists
         require(stakeRequest.beneficiary != address(0));
@@ -155,11 +148,85 @@ contract Gate is ProtocolVersioned, Owned {
 
         uint256 stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
-        delete stakeRequests[msg.sender];
+        delete gateStakeRequests[msg.sender];
 
         emit StakeRequestRejected(_staker, stakeRequestAmount);
 
         return true;
     }
 
+    /// @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
+    ///      This can be called only by whitelisted worker address
+    function acceptStakeRequest(address _staker, bytes32 _hashLock)
+        external
+        returns (bool /* success */)
+    {
+        // check if the caller is whitelisted worker
+        //require(gateWorkers.isWorker(msg.sender)); //TODO: revist this to add worker check
+
+        StakeRequest storage stakeRequest = gateStakeRequests[_staker];
+
+        // check if the stake request exists
+        require(stakeRequest.beneficiary != address(0));
+
+        // check if the stake request was not accepted
+        require(stakeRequest.hashLock == bytes32(0));
+
+        // check if _hashLock is not 0
+        require(_hashLock != bytes32(0));
+
+        // Transfer bounty amount form worker to gate contract
+        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), gateBounty));
+
+        // Approve OpenSTValue contract for stake amount
+        require(OpenSTValueInterface(openSTProtocol).valueToken().approve(openSTProtocol, stakeRequest.amount));
+
+
+        uint256 amountUT = 0;
+        uint256 nonce = 0;
+        uint256 unlockHeight = 0;
+        bytes32 stakingIntentHash = bytes32(0);
+
+        (amountUT, nonce, unlockHeight, stakingIntentHash) = OpenSTValueInterface(openSTProtocol).stake(
+            gateUuid,
+            stakeRequest.amount,
+            stakeRequest.beneficiary,
+            _hashLock,
+            _staker);
+
+        stakeRequest.unlockHeight = unlockHeight;
+        stakeRequest.hashLock = _hashLock;
+
+        //gateStakeRequests[_staker].unlockHeight = unlockHeight;
+        //gateStakeRequests[_staker].hashLock = _hashLock;
+
+        return true;
+    }
+    function workers()
+        external
+        returns (address)
+    {
+        return gateWorkers;
+    }
+
+    function bounty()
+        external
+        returns (uint256)
+    {
+        return gateBounty;
+    }
+
+    function uuid()
+        external
+        returns (bytes32)
+    {
+        return gateUuid;
+    }
+
+    function getOpenSTProtocol()
+        external
+        returns (address)
+    {
+        return openSTProtocol;
+    }
 }
