@@ -15,7 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: Workers
+// Value chain: Workers
 //
 // http://www.simpletoken.org/
 //
@@ -23,14 +23,13 @@ pragma solidity ^0.4.23;
 
 import "./SafeMath.sol";
 import "./EIP20TokenInterface.sol";
-import "./ProtocolVersioned.sol";
-import "./Owned.sol";
+import "./OpsManaged.sol";
 
 /// A set of authorised workers
-contract Workers is ProtocolVersioned, Owned {
+contract Workers is OpsManaged {
     using SafeMath for uint256;
     /// EIP20token address is private for now.
-    EIP20Token private eip20token;
+    EIP20TokenInterface private eip20token;
     /*
      *  Storage
      */
@@ -56,10 +55,9 @@ contract Workers is ProtocolVersioned, Owned {
     constructor(
         address _eip20token)
         public
-        ProtocolVersioned(_protocol)
+        OpsManaged()
     {
         require(_eip20token != address(0));
-        require(_protocol != address(0));
         
         eip20token = _eip20token;
     }
@@ -74,7 +72,7 @@ contract Workers is ProtocolVersioned, Owned {
         address _worker,
         uint256 _deactivationHeight)
         external
-        onlyOwner()
+        onlyOps()
         returns (uint256 /* remaining activation length */)
     {
         require(_worker != address(0));
@@ -83,7 +81,7 @@ contract Workers is ProtocolVersioned, Owned {
         workers[_worker] = _deactivationHeight;
         uint256 remainingHeight = sub(_deactivationHeight, block.number);
         //Event for worker set
-        WorkerSet(_worker, _deactivationHeight, remainingHeight);
+        emit WorkerSet(_worker, _deactivationHeight, remainingHeight);
 
         return (remainingHeight);
     }
@@ -96,14 +94,14 @@ contract Workers is ProtocolVersioned, Owned {
     function removeWorker(
         address _worker)
         external
-        onlyOwner()
+        onlyOps()
         returns (bool existed)
     {
         existed = (workers[_worker] > 0);
 
         delete workers[_worker];
         //Event for worker removed
-        WorkerRemoved(_worker, existed);
+        emit WorkerRemoved(_worker, existed);
 
         return existed;
     }
@@ -113,7 +111,7 @@ contract Workers is ProtocolVersioned, Owned {
     ///         only called by ops or admin;    
     function remove()
         external
-        onlyOwner()
+        onlyAdminOrOps()
     {
         selfdestruct(msg.sender);
     }
@@ -136,13 +134,11 @@ contract Workers is ProtocolVersioned, Owned {
         address _spender,
         uint256 _amount)
         external
-        onlyOwner()
+        onlyOps()
         returns (bool success)
     {
         /// approve the spender for the amount
         require(eip20token.approve(_spender, _amount));
-        /// emit Approval event    
-        Approval(msg.sender, _spender, _amount);
 
         return true;
     }
