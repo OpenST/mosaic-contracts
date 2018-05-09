@@ -26,45 +26,55 @@ var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
 
 /// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
-   const token = await EIP20Token.new("SYMBOL", "Name", 18, { from: accounts[0], gas: 3500000 });
+  const token = await EIP20Token.new("SYMBOL", "Name", 18, {from: accounts[0], gas: 3500000});
 
-   return {
-      token : token
-   }
+  return {
+    token: token
+  }
 }
 
 /// @dev Assert on Transfer event
 module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
-   Assert.equal(result.logs.length, 1);
+  Assert.equal(result.logs.length, 1);
 
-   const event = result.logs[0];
+  const event = result.logs[0];
 
-   module.exports.checkTransferEvent(event, _from, _to, _value);
+  module.exports.checkTransferEvent(event, _from, _to, _value);
 }
 
 
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
-   if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value);
-   }
-   Assert.equal(event.event, "Transfer");
-   Assert.equal(event.args._from, _from);
-   Assert.equal(event.args._to, _to);
-   Assert.equal(event.args._value.toNumber(), _value.toNumber());
+  let eventBody = event.args;
+  assertTransferEvent(event.event, eventBody._from, eventBody._to, eventBody._value.toNumber(), _from, _to, _value)
 }
 
+module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
+  let eventType = Object.keys(event)[0];
+  let eventBody = event[eventType];
+  assertTransferEvent(eventType, eventBody._from, eventBody._to, eventBody._value, _from, _to, _value)
+}
+
+assertTransferEvent = (eventType, actualFrom, actualTo, actualValue, expectedFrom, expectedTo, expectedValue) => {
+  if (Number.isInteger(_value)) {
+    _value = new BigNumber(_value);
+  }
+  Assert.equal(eventType, "Transfer");
+  Assert.equal(actualFrom, expectedFrom);
+  Assert.equal(actualTo, expectedTo);
+  Assert.equal(actualValue, expectedValue.toNumber());
+}
 
 module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
-   assert.equal(result.logs.length, 1)
+  assert.equal(result.logs.length, 1)
 
-   const event = result.logs[0]
+  const event = result.logs[0]
 
-   if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value)
-   }
+  if (Number.isInteger(_value)) {
+    _value = new BigNumber(_value)
+  }
 
-   assert.equal(event.event, "Approval")
-   assert.equal(event.args._owner, _owner)
-   assert.equal(event.args._spender, _spender)
-   assert.equal(event.args._value.toNumber(), _value.toNumber())
+  assert.equal(event.event, "Approval")
+  assert.equal(event.args._owner, _owner)
+  assert.equal(event.args._spender, _spender)
+  assert.equal(event.args._value.toNumber(), _value.toNumber())
 }
