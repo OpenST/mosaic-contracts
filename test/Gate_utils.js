@@ -87,5 +87,57 @@ module.exports.deployGate = async (artifacts, accounts) => {
     workers: workers,
     bounty: bounty
   }
+};
 
-}
+
+
+module.exports.checkRequestStakeEvent = (event, _staker, _amount, _beneficiary) => {
+  if (Number.isInteger(_amount)) {
+    _amount = new BigNumber(_amount);
+  }
+  assert.equal(event.event, "StakeRequested");
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._beneficiary, _beneficiary);
+};
+
+
+module.exports.checkStakeRequestRevertedEvent = (event, _staker, _amount) => {
+  if (Number.isInteger(_amount)) {
+    _amount = new BigNumber(_amount);
+  }
+  assert.equal(event.event, "StakeRequestReverted");
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+};
+
+module.exports.checkStakeRequestRejectedEvent = (event, _staker, _amount) => {
+  if (Number.isInteger(_amount)) {
+    _amount = new BigNumber(_amount);
+  }
+  assert.equal(event.event, "StakeRequestRejected");
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+};
+
+module.exports.checkStakeRequestAcceptedEvent = (event, _staker, _amount) => {
+  if (Number.isInteger(_amount)) {
+    _amount = new BigNumber(_amount);
+  }
+  assert.equal(event.event, "StakeRequestAccepted");
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+};
+
+module.exports.checkProcessedStakeEvent = (event, _staker, _amount) => {
+  if (Number.isInteger(_amount)) {
+    _amount = new BigNumber(_amount);
+  }
+  console.log("event: ",event);
+  assert.equal(event.event, "ProcessedStake");
+  assert.equal(event.args._staker, _staker);
+  assert.equal(event.args._amountST.toNumber(10), _amount.toNumber(10));
+};
+
+
+

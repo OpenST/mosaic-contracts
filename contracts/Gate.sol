@@ -35,6 +35,14 @@ contract Gate is ProtocolVersioned, Owned {
     event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
     event StakeRequestReverted(address _staker, uint256 _amount);
     event StakeRequestRejected(address _staker, uint256 _amount);
+    event StakeRequestAccepted(
+      address _staker,
+      uint256 _amount,
+      uint256 _amountUT,
+      uint256 _nonce,
+      uint256 _unlockHeight,
+      bytes32 _stakingIntentHash);
+
 
     /*
      *  Structures
@@ -206,6 +214,8 @@ contract Gate is ProtocolVersioned, Owned {
         stakeRequests[_staker].unlockHeight = unlockHeight;
         stakeRequests[_staker].hashLock = _hashLock;
 
+        emit StakeRequestAccepted(_staker, stakeRequest.amount, amountUT, nonce, unlockHeight, stakingIntentHash);
+
         return true;
     }
 
@@ -221,13 +231,9 @@ contract Gate is ProtocolVersioned, Owned {
 
     require(_stakingIntentHash != bytes32(0));
 
-    // we call processStaking for OpenSTValue and get the stakeAddress on succuess.
-    address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
+    address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
-    // check if the stake address is not 0
-    require(stakerAddress != address(0));
-
-    StakeRequest storage stakeRequest = stakeRequests[stakerAddress];
+    StakeRequest storage stakeRequest = stakeRequests[staker];
 
     // check if the stake request exists
     require(stakeRequest.beneficiary != address(0));
@@ -235,17 +241,24 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake request was accepted
     require(stakeRequest.hashLock != bytes32(0));
 
+    // we call processStaking for OpenSTValue and get the stakeAddress on success.
+    address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
+
+    // check if the stake address is not 0
+    require(stakerAddress != address(0));
+
     // Transfer bounty amount to the msg.sender account
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
 
     // delete the stake request from the mapping storage
-    delete stakeRequests[stakerAddress];
+    delete stakeRequests[staker];
 
     return true;
   }
 
 
-  function revertStaking(bytes32 _stakingIntentHash)
+  function revertStaking(
+    bytes32 _stakingIntentHash)
     external
     returns (bool /* success */)
   {
@@ -255,15 +268,9 @@ contract Gate is ProtocolVersioned, Owned {
 
     require(_stakingIntentHash != bytes32(0));
 
-    bytes32 uuidR = bytes32(0);
-    uint256 amountST = uint256(0);
-    address stakerAddress = address(0);
-    (uuidR, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash, msg.sender);
+    address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
-    // check if the stake address is not 0
-    require(stakerAddress != address(0));
-
-    StakeRequest storage stakeRequest = stakeRequests[msg.sender];
+    StakeRequest storage stakeRequest = stakeRequests[staker];
 
     // check if the stake request exists
     require(stakeRequest.beneficiary != address(0));
@@ -271,11 +278,20 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake request was accepted
     require(stakeRequest.hashLock != bytes32(0));
 
+
+    bytes32 uuidR = bytes32(0);
+    uint256 amountST = uint256(0);
+    address stakerAddress = address(0);
+    (uuidR, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash);
+
+    // check if the stake address is not 0
+    require(stakerAddress != address(0));
+
     // Transfer bounty amount to the msg.sender account
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
 
     // delete the stake request from the mapping storage
-    delete stakeRequests[stakerAddress];
+    delete stakeRequests[staker];
 
     return true;
   }

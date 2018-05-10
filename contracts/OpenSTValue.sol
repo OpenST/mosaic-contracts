@@ -222,7 +222,6 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
-        // msg.sender should also be included ?
         StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
@@ -561,5 +560,17 @@ contract OpenSTValue is OpsManaged, Hasher {
         _simpleStake.revokeProtocolTransfer();
 
         return true;
+    }
+
+    function getStakerAddress(
+        bytes32 _stakingIntentHash)
+        external
+        returns (address /* staker */)
+    {
+        require(_stakingIntentHash != "");
+        Stake storage stake = stakes[_stakingIntentHash];
+
+        return stake.staker;
+
     }
 }
