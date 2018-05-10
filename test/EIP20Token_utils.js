@@ -55,8 +55,8 @@ module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
 }
 
 assertTransferEvent = (eventType, actualFrom, actualTo, actualValue, expectedFrom, expectedTo, expectedValue) => {
-  if (Number.isInteger(_value)) {
-    _value = new BigNumber(_value);
+  if (Number.isInteger(expectedValue)) {
+    expectedValue = new BigNumber(expectedValue);
   }
   Assert.equal(eventType, "Transfer");
   Assert.equal(actualFrom, expectedFrom);
