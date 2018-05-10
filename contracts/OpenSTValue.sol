@@ -32,8 +32,6 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
-import "./GateInterface.sol";
-
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
@@ -187,14 +185,11 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_beneficiary != address(0));
         require(_staker != address(0));
 
-        // check if the msg.sender is Gate contract
-        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
-
         UtilityToken storage utilityToken = utilityTokens[_uuid];
 
         // if the staking account is set to a non-zero address,
         // then all transactions have come (from/over) the staking account
-        if (utilityToken.stakingAccount != address(0)) require(_staker == utilityToken.stakingAccount);
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
@@ -226,6 +221,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
+        // msg.sender should also be included ?
         StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
@@ -239,9 +235,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         external
         returns (address stakeAddress)
     {
-        // check if the msg.sender is Gate contract
-        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
-
         require(_stakingIntentHash != "");
 
         Stake storage stake = stakes[_stakingIntentHash];
@@ -277,9 +270,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 amountST,
         address staker)
     {
-        // check if the msg.sender is Gate contract
-        GateInterface(msg.sender).getOpenSTProtocol() == address(this);
-
         require(_stakingIntentHash != "");
 
         Stake storage stake = stakes[_stakingIntentHash];
