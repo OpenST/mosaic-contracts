@@ -32,6 +32,7 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
+
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
@@ -262,8 +263,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     function revertStaking(
-        bytes32 _stakingIntentHash,
-        address _staker)
+        bytes32 _stakingIntentHash)
         external
         returns (
         bytes32 uuid,
@@ -277,8 +277,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         // require that the stake is unlocked and exists
         require(stake.unlockHeight > 0);
         require(stake.unlockHeight <= block.number);
-
-        require(_staker == stake.staker);
 
         assert(valueToken.balanceOf(address(this)) >= stake.amountST);
         // revert the amount that was intended to be staked back to staker
