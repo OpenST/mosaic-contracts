@@ -222,12 +222,12 @@ contract Gate is ProtocolVersioned, Owned {
     require(_stakingIntentHash != bytes32(0));
 
     // we call processStaking for OpenSTValue and get the stakeAddress on succuess.
-    address stakeAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
+    address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
 
     // check if the stake address is not 0
-    require(stakeAddress != address(0));
+    require(stakerAddress != address(0));
 
-    StakeRequest storage stakeRequest = stakeRequests[stakeAddress];
+    StakeRequest storage stakeRequest = stakeRequests[stakerAddress];
 
     // check if the stake request exists
     require(stakeRequest.beneficiary != address(0));
@@ -239,7 +239,7 @@ contract Gate is ProtocolVersioned, Owned {
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
 
     // delete the stake request from the mapping storage
-    delete stakeRequests[stakeAddress];
+    delete stakeRequests[stakerAddress];
 
     return true;
   }
@@ -261,7 +261,7 @@ contract Gate is ProtocolVersioned, Owned {
     (uuidR, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash, msg.sender);
 
     // check if the stake address is not 0
-    require(stakeAddress != address(0));
+    require(stakerAddress != address(0));
 
     StakeRequest storage stakeRequest = stakeRequests[msg.sender];
 
@@ -275,7 +275,7 @@ contract Gate is ProtocolVersioned, Owned {
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
 
     // delete the stake request from the mapping storage
-    delete stakeRequests[stakeAddress];
+    delete stakeRequests[stakerAddress];
 
     return true;
   }

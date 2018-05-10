@@ -54,7 +54,7 @@ contract('OpenSTValue', function(accounts) {
     });
 
     it('has openSTProtocol', async () => {
-      assert.equal(await gate.getOpenSTProtocol.call(), openSTValue.address);
+      assert.equal(await gate.openSTProtocol.call(), openSTValue.address);
     });
   })
 
