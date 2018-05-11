@@ -78,12 +78,16 @@ contract('Gate', function(accounts) {
     await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
 
     let acceptStakeRequestResult = await gate.acceptStakeRequest.call(stakerAccount, lock.l, {from: workerAddress1});
-    assert.equal(acceptStakeRequestResult, true);
+    let amountUT = acceptStakeRequestResult[0];
+    let nonce = acceptStakeRequestResult[1];
+    let unlockHeight = acceptStakeRequestResult[2].plus(1);
+
+    let stakingIntentHash = await openSTValue.hashStakingIntent.call(uuid, stakerAccount, nonce, beneficiaryAccount, stakeAmount,
+      amountUT, unlockHeight, lock.l);
 
     let acceptStakeRequestResponse = await gate.acceptStakeRequest(stakerAccount, lock.l, {from: workerAddress1});
-    await Gate_utils.checkStakeRequestAcceptedEvent(acceptStakeRequestResponse.logs[0],stakerAccount, stakeAmount);
+    await Gate_utils.checkStakeRequestAcceptedEvent(acceptStakeRequestResponse.logs[0],stakerAccount, stakeAmount, amountUT, nonce, unlockHeight, stakingIntentHash);
 
-    const stakingIntentHash = acceptStakeRequestResponse.logs[0].args._stakingIntentHash;
     let finalworkerAddress1Balance = await valueToken.balanceOf.call(workerAddress1)
       , finalGateBalance = await valueToken.balanceOf.call(gate.address)
     ;

@@ -120,13 +120,27 @@ module.exports.checkStakeRequestRejectedEvent = (event, _staker, _amount) => {
   assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
 };
 
-module.exports.checkStakeRequestAcceptedEvent = (event, _staker, _amount) => {
-  if (Number.isInteger(_amount)) {
-    _amount = new BigNumber(_amount);
+
+module.exports.checkStakeRequestAcceptedEvent = (event, _staker, _amountST, _amountUT, _nonce, _unlockHeight, _stakingIntentHash) => {
+  if (Number.isInteger(_amountST)) {
+    _amount = new BigNumber(_amountST);
+  }
+  if (Number.isInteger(_amountUT)) {
+    _amount = new BigNumber(_amountUT);
+  }
+  if (Number.isInteger(_nonce)) {
+    _amount = new BigNumber(_nonce);
+  }
+  if (Number.isInteger(_unlockHeight)) {
+    _amount = new BigNumber(_unlockHeight);
   }
   assert.equal(event.event, "StakeRequestAccepted");
   assert.equal(event.args._staker, _staker);
-  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._amountST.toNumber(10), _amountST.toNumber(10));
+  assert.equal(event.args._amountUT.toNumber(10), _amountUT.toNumber(10));
+  assert.equal(event.args._nonce.toNumber(10), _nonce.toNumber(10));
+  assert.equal(event.args._unlockHeight.toNumber(10), _unlockHeight.toNumber(10));
+  assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
 };
 
 module.exports.checkProcessedStakeEvent = (event, _staker, _amount) => {
