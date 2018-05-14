@@ -138,7 +138,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         _;
     }
 
-    function OpenSTValue(
+    constructor(
         uint256 _chainIdValue,
         EIP20Interface _eip20token,
         address _registrar)

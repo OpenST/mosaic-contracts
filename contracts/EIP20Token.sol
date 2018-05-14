@@ -39,7 +39,7 @@ contract EIP20Token is EIP20Interface {
     mapping(address => mapping (address => uint256)) allowed;
 
 
-    function EIP20Token(string _symbol, string _name, uint8 _decimals) public
+    constructor(string _symbol, string _name, uint8 _decimals) public
     {
         tokenSymbol      = _symbol;
         tokenName        = _name;

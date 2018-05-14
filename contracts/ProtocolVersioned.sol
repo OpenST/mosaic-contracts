@@ -81,7 +81,7 @@ contract ProtocolVersioned {
 	 *  Public functions
 	 */
 	/// @dev Constructor set the OpenST Protocol
-	function ProtocolVersioned(address _protocol) 
+	constructor(address _protocol)
 		public
 		notNull(_protocol)
 	{

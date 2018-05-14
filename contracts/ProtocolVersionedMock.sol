@@ -31,7 +31,7 @@ contract ProtocolVersionedMock is ProtocolVersioned {
     /*
      *  Public functions
      */
-    function ProtocolVersionedMock(address _protocol)
+    constructor(address _protocol)
         ProtocolVersioned(_protocol)
         public { }
 

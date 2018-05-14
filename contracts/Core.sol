@@ -56,7 +56,7 @@ contract Core is CoreInterface {
 	/*
 	 *  Public functions
 	 */
-	function Core(
+	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,

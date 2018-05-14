@@ -32,7 +32,7 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	/*
 	 *  Public functions
 	 */
-	function OpenSTUtilityMock(
+	constructor(
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
 		address _registrar)

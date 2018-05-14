@@ -43,7 +43,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     event Finalized();
 
 
-    function SimpleToken() public
+    constructor() public
         ERC20Token(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
     {

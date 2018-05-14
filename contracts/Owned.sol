@@ -34,7 +34,7 @@ contract Owned {
     event OwnershipTransferCompleted(address indexed _newOwner);
 
 
-    function Owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 

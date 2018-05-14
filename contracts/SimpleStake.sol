@@ -51,7 +51,7 @@ contract SimpleStake is ProtocolVersioned {
 	/// @param _eip20Token EIP20 token that will be staked
 	/// @param _openSTProtocol OpenSTProtocol contract that governs staking
 	/// @param _uuid Unique Universal Identifier of the registered utility token
-	function SimpleStake(
+	constructor(
 		EIP20Interface _eip20Token,
 		address _openSTProtocol,
 		bytes32 _uuid)

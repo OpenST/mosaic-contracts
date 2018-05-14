@@ -36,7 +36,7 @@ contract OpsManaged is Owned {
     event OpsAddressChanged(address indexed _newAddress);
 
 
-    function OpsManaged() public
+    constructor() public
         Owned()
     {
     }

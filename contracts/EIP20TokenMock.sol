@@ -26,7 +26,8 @@ import "./EIP20Token.sol";
 /// @title EIP20TokenMock
 /// @dev Implements mock totalSupply function and wraps internal functions to enable testing EIP20Token
 contract EIP20TokenMock is EIP20Token {
-    function EIP20TokenMock(string _symbol, string _name, uint8 _decimals)
+
+    constructor(string _symbol, string _name, uint8 _decimals)
             EIP20Token(_symbol, _name, _decimals)
             public { }
 

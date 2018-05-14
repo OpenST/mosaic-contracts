@@ -139,7 +139,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         _;
     }
 
-    function OpenSTUtility(
+    constructor(
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         address _registrar)

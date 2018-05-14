@@ -32,7 +32,7 @@ contract OpenSTValueMock is OpenSTValue {
 	/*
 	 *  Public functions
 	 */
-	function OpenSTValueMock(
+	constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
 		address _registrar)

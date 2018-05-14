@@ -70,7 +70,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /*
      * Public functions
      */
-    function UtilityTokenAbstract(
+    constructor(
         bytes32 _uuid,
         string _symbol,
         string _name,

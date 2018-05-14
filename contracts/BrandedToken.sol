@@ -45,7 +45,7 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
     /*
      *  Public functions
      */
-    function BrandedToken(
+    constructor(
         bytes32 _uuid,
         string _symbol,
         string _name,

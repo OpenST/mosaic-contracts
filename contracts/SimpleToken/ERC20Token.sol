@@ -30,7 +30,7 @@ contract ERC20Token is ERC20Interface, Owned {
     mapping(address => mapping (address => uint256)) allowed;
 
 
-    function ERC20Token(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
+    constructor(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
         Owned()
     {
         tokenSymbol      = _symbol;

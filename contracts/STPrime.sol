@@ -64,7 +64,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     /*
      * Public functions
      */
-    function STPrime(
+    constructor(
         bytes32 _uuid,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,

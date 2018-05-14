@@ -22,7 +22,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     // Events
     event Finalized();
 
-    function MockToken() public
+    constructor() public
         ERC20Token("MOCK", "Mock Token", TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
         { }
