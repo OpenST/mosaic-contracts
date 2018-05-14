@@ -29,7 +29,6 @@ contract('Gate', function(accounts) {
   var stakerAccount = accounts[0]
     , stakeAmount = new BigNumber(web3.toWei(1000, "ether"))
     , beneficiaryAccount = accounts[6]
-    , workerAddress1 = accounts[7];
   ;
 
   const deployGate = async function() {
@@ -40,6 +39,7 @@ contract('Gate', function(accounts) {
     gate = result.gate;
     workers = result.workers;
     bounty = result.bounty;
+    workerAddress1 = result.workerAddress1;
   };
 
   const requestStake = async function () {
@@ -228,6 +228,7 @@ contract('Gate', function(accounts) {
     it('successfully processes', async () => {
 
       let initialworkerAddress1Balance = await valueToken.balanceOf.call(workerAddress1)
+        , initialWorkerBalance = await valueToken.balanceOf.call(workers)
         , initialGateBalance = await valueToken.balanceOf.call(gate.address)
         , bountyAmount = await gate.bounty.call()
       ;
@@ -240,10 +241,12 @@ contract('Gate', function(accounts) {
 
       let finalworkerAddress1Balance = await valueToken.balanceOf.call(workerAddress1)
         , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+        , finalWorkerBalance = await valueToken.balanceOf.call(workers)
       ;
 
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
+      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
+      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
 
       // request again should fail
@@ -265,6 +268,7 @@ contract('Gate', function(accounts) {
     it('successfully processes', async () => {
 
       let initialworkerAddress1Balance = await valueToken.balanceOf.call(workerAddress1)
+        , initialWorkerBalance = await valueToken.balanceOf.call(workers)
         , initialGateBalance = await valueToken.balanceOf.call(gate.address)
         , bountyAmount = await gate.bounty.call()
       ;
@@ -281,10 +285,12 @@ contract('Gate', function(accounts) {
 
       let finalworkerAddress1Balance = await valueToken.balanceOf.call(workerAddress1)
         , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+        , finalWorkerBalance = await valueToken.balanceOf.call(workers)
       ;
 
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
+      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
+      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
 
       // request again should fail

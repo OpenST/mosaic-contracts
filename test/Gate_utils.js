@@ -25,6 +25,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , Core = artifacts.require("./Core.sol")
   , SimpleStake = artifacts.require("./SimpleStake.sol")
   , Gate = artifacts.require("./Gate.sol")
+  , Workers = artifacts.require("./Workers.sol")
   ;
 
 const Assert 	= require('assert')
@@ -38,13 +39,14 @@ module.exports.deployGate = async (artifacts, accounts) => {
     , chainIdRemote = 1410
     , openSTRemote  = accounts[4]
     , valueToken   = await SimpleToken.new()
-    , registrar    = accounts[1]
     , symbol = "ST"
     , name = "Simple Token"
     , conversionRateDecimals = 5
     , conversionRate = new BigNumber(10 * 10**conversionRateDecimals) // conversion rate => 10
-    , workers = accounts[2]
     , bounty = 100
+    , admin = accounts[3]
+    , ops = accounts[1]
+    , registrar = accounts[5]
   ;
 
   var core = null
@@ -52,16 +54,21 @@ module.exports.deployGate = async (artifacts, accounts) => {
     , checkUuid = null
   ;
 
-
   // Set SimpleToken admin in order to finalize SimpleToken
-  await valueToken.setAdminAddress(accounts[1]);
+  await valueToken.setAdminAddress(admin);
   // SimpleToken must be finalized to permit certain transfers
-  assert.ok(await valueToken.finalize({ from: accounts[1] }));
+  assert.ok(await valueToken.finalize({ from: admin }));
   openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
-
 
   core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
   await openSTValue.addCore(core.address, { from: registrar });
+
+  // Deploy worker contract
+  const workers = await Workers.new(valueToken.address)
+    , worker1 = accounts[7];
+  await workers.setAdminAddress(admin);
+  await workers.setOpsAddress(ops);
+  await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 
@@ -77,15 +84,16 @@ module.exports.deployGate = async (artifacts, accounts) => {
   assert.equal(await openSTValue.getUuidsSize.call(), 1);
   assert.equal((await openSTValue.utilityTokens.call(checkUuid))[0], symbol);
 
-  const gate = await Gate.new(workers, bounty, checkUuid, openSTValue.address);
+  const gate = await Gate.new(workers.address, bounty, checkUuid, openSTValue.address);
 
   return {
     valueToken  : valueToken,
     openSTValue : openSTValue,
     uuid: checkUuid,
     gate: gate,
-    workers: workers,
-    bounty: bounty
+    workers: workers.address,
+    bounty: bounty,
+    workerAddress1: worker1
   }
 };
 

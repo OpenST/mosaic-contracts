@@ -26,6 +26,7 @@ import "./ProtocolVersioned.sol";
 import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
 import "./Owned.sol";
+import "./WorkersInterface.sol";
 
 contract Gate is ProtocolVersioned, Owned {
 
@@ -57,7 +58,7 @@ contract Gate is ProtocolVersioned, Owned {
     /*
      *  Storage
      */
-    address public workers; //TODO: update type once workers contract and interfaces are added to the repo.
+    WorkersInterface public workers;
 
     // stake requests
     mapping(address /*staker */ => StakeRequest) public stakeRequests;
@@ -84,7 +85,7 @@ contract Gate is ProtocolVersioned, Owned {
         require(_workers != address(0));
         require(_uuid.length != uint8(0));
 
-        workers = _workers;
+        workers = WorkersInterface(_workers);
         bounty = _bounty;
         uuid = _uuid;
 
@@ -147,7 +148,7 @@ contract Gate is ProtocolVersioned, Owned {
         returns (bool /* success */)
     {
         // check if the caller is whitelisted worker
-        //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
+        require(workers.isWorker(msg.sender));
 
         StakeRequest storage stakeRequest = stakeRequests[_staker];
 
@@ -180,7 +181,7 @@ contract Gate is ProtocolVersioned, Owned {
         bytes32 stakingIntentHash)
     {
         // check if the caller is whitelisted worker
-        //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
+        require(workers.isWorker(msg.sender));
 
         StakeRequest storage stakeRequest = stakeRequests[_staker];
 
@@ -226,7 +227,7 @@ contract Gate is ProtocolVersioned, Owned {
     returns (bool /* success */)
   {
     // check if the caller is whitelisted worker
-    //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
+    require(workers.isWorker(msg.sender));
 
     require(_stakingIntentHash != bytes32(0));
 
@@ -249,16 +250,15 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake address is not 0
     require(stakerAddress != address(0));
 
-    // TODO: revist this to add worker check
-    // If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
-    // else transfer the bounty to msg.sender.
-    //if (workers.isWorker(msg.sender)) {
-    //  // Transfer bounty amount to the workers contract address
-    //  require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
-    //} else {
-    // Transfer bounty amount to the msg.sender account
-    require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
-    //}
+    //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
+    //else transfer the bounty to msg.sender.
+    if (workers.isWorker(msg.sender)) {
+      // Transfer bounty amount to the workers contract address
+      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
+    } else {
+      //Transfer bounty amount to the msg.sender account
+      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
+    }
 
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
@@ -272,9 +272,6 @@ contract Gate is ProtocolVersioned, Owned {
     external
     returns (bool /* success */)
   {
-
-    // check if the caller is whitelisted worker
-    //require(workers.isWorker(msg.sender)); //TODO: revist this to add worker check
 
     require(_stakingIntentHash != bytes32(0));
 
@@ -300,16 +297,15 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake address is not 0
     require(stakerAddress != address(0));
 
-    // TODO: revist this to add worker check
-    // If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
-    // else transfer the bounty to msg.sender.
-    //if (workers.isWorker(msg.sender)) {
-    //  // Transfer bounty amount to the workers contract address
-    //  require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
-    //} else {
-    // Transfer bounty amount to the msg.sender account
-    require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
-    //}
+    //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
+    //else transfer the bounty to msg.sender.
+    if (workers.isWorker(msg.sender)) {
+      // Transfer bounty amount to the workers contract address
+      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
+    } else {
+     //Transfer bounty amount to the msg.sender account
+      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
+    }
 
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
