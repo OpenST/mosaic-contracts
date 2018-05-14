@@ -109,7 +109,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         returns (bool /* success */)
     {
         uint256 amount = claimInternal(_beneficiary);
-        assert(this.balance >= amount);
+        assert(address(this).balance >= amount);
 
         // transfer throws if insufficient funds
         _beneficiary.transfer(amount);
