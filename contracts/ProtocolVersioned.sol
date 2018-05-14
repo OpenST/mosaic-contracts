@@ -102,7 +102,7 @@ contract ProtocolVersioned {
 		earliestTransferHeight = block.number + blocksToWaitForProtocolTransfer();
         proposedProtocol = _proposedProtocol;
 
-        ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
+        emit ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
 
         return true;
     }
@@ -119,7 +119,7 @@ contract ProtocolVersioned {
         proposedProtocol = address(0);
     	earliestTransferHeight = 0;
 
-        ProtocolTransferCompleted(openSTProtocol);
+        emit ProtocolTransferCompleted(openSTProtocol);
 
         return true;
     }
@@ -137,7 +137,7 @@ contract ProtocolVersioned {
     	proposedProtocol = address(0);
     	earliestTransferHeight = 0;
 
-		ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
+		emit ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
     	return true;
     }

@@ -88,7 +88,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         tokenTotalSupply = tokenTotalSupply.sub(_value);
 
-        Burnt(msg.sender, _value);
+        emit Burnt(msg.sender, _value);
 
         return true;
     }
@@ -100,7 +100,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
         finalized = true;
 
-        Finalized();
+        emit Finalized();
 
         return true;
     }

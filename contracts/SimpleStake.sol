@@ -77,7 +77,7 @@ contract SimpleStake is ProtocolVersioned {
 		require(_to != address(0));
 		require(eip20Token.transfer(_to, _amount));
 		
-		ReleasedStake(msg.sender, _to, _amount);
+		emit ReleasedStake(msg.sender, _to, _amount);
 
 		return true;
 	}

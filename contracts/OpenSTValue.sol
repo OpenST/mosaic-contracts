@@ -223,7 +223,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
-        StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
+        emit StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
@@ -254,7 +254,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         assert(valueToken.balanceOf(address(this)) >= stake.amountST);
         require(valueToken.transfer(stakeAddress, stake.amountST));
 
-        ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
+        emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
 
         delete stakes[_stakingIntentHash];
@@ -286,7 +286,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         amountST = stake.amountST;
         staker = stake.staker;
 
-        RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
+        emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
 
         delete stakes[_stakingIntentHash];
@@ -352,7 +352,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:         _hashLock
         });
 
-        RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
+        emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
             _beneficiary, amountST, _amountUT, expirationHeight);
 
         return (amountST, expirationHeight);
@@ -383,7 +383,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(utilityToken.simpleStake.releaseTo(unstake.beneficiary, unstake.amountST));
 
-        ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
+        emit ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
             unstake.redeemer, unstake.beneficiary, unstake.amountST, _unlockSecret);
 
         delete unstakes[_redemptionIntentHash];
@@ -416,7 +416,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         delete unstakes[_redemptionIntentHash];
 
-        RevertedUnstake(uuid, _redemptionIntentHash, redeemer, beneficiary, amountST);
+        emit RevertedUnstake(uuid, _redemptionIntentHash, redeemer, beneficiary, amountST);
 
         return (uuid, redeemer, beneficiary, amountST);
     }
@@ -527,7 +527,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         });
         uuids.push(uuid);
 
-        UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
+        emit UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
             TOKEN_DECIMALS, _conversionRate, _conversionRateDecimals, _chainIdUtility, _stakingAccount);
 
         return uuid;
