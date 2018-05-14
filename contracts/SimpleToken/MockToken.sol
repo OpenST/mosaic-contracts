@@ -33,7 +33,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
         finalized = true;
 
-        Finalized();
+        emit Finalized();
 
         return true;
     }

@@ -37,7 +37,7 @@ contract Registrar is OpsManaged {
     /*
      *  Public functions
      */
-	constructor() public
+    function Registrar() public
         OpsManaged()
     {
     }
