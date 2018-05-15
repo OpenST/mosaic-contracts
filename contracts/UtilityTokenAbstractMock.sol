@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -29,7 +29,8 @@ import "./UtilityTokenAbstract.sol";
 /// @dev Implements mock claim, mint, and burn functions
 /// and wraps internal functions to enable testing UtilityTokenAbstract
 contract UtilityTokenAbstractMock is UtilityTokenAbstract {
-    function UtilityTokenAbstractMock(
+
+    constructor(
         bytes32 _uuid,
         string _symbol,
         string _name,

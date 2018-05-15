@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -56,7 +56,7 @@ contract Core is CoreInterface {
 	/*
 	 *  Public functions
 	 */
-	function Core(
+	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,

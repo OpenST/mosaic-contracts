@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -45,7 +45,7 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
     /*
      *  Public functions
      */
-    function BrandedToken(
+    constructor(
         bytes32 _uuid,
         string _symbol,
         string _name,

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // ----------------------------------------------------------------------------
 // Standard ERC20 Token Implementation
@@ -30,7 +30,7 @@ contract ERC20Token is ERC20Interface, Owned {
     mapping(address => mapping (address => uint256)) allowed;
 
 
-    function ERC20Token(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
+    constructor(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
         Owned()
     {
         tokenSymbol      = _symbol;
@@ -41,7 +41,7 @@ contract ERC20Token is ERC20Interface, Owned {
 
         // According to the ERC20 standard, a token contract which creates new tokens should trigger
         // a Transfer event and transfers of 0 values must also fire the event.
-        Transfer(0x0, owner, _totalSupply);
+        emit Transfer(0x0, owner, _totalSupply);
     }
 
 
@@ -82,7 +82,7 @@ contract ERC20Token is ERC20Interface, Owned {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
 
         return true;
     }
@@ -93,7 +93,7 @@ contract ERC20Token is ERC20Interface, Owned {
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
 
         return true;
     }
@@ -103,7 +103,7 @@ contract ERC20Token is ERC20Interface, Owned {
 
         allowed[msg.sender][_spender] = _value;
 
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
 
         return true;
     }

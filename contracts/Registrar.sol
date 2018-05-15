@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -37,7 +37,7 @@ contract Registrar is OpsManaged {
     /*
      *  Public functions
      */
-    function Registrar() public
+    constructor() public
         OpsManaged()
     {
     }

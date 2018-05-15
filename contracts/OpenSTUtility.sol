@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -139,7 +139,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         _;
     }
 
-    function OpenSTUtility(
+    constructor(
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         address _registrar)
@@ -236,7 +236,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             hashLock:         _hashLock
         });
 
-        StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
+        emit StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
                 _amountUT, expirationHeight);
 
         return expirationHeight;
@@ -265,7 +265,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         require(token.mint(mint.beneficiary, mint.amount));
 
-        ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
+        emit ProcessedMint(mint.uuid, _stakingIntentHash, tokenAddress, mint.staker,
             mint.beneficiary, mint.amount, _unlockSecret);
 
         delete mints[_stakingIntentHash];
@@ -298,7 +298,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         delete mints[_stakingIntentHash];
 
-        RevertedMint(uuid, _stakingIntentHash, staker, beneficiary, amount);
+        emit RevertedMint(uuid, _stakingIntentHash, staker, beneficiary, amount);
 
         return (uuid, staker, beneficiary, amount);
     }
@@ -359,7 +359,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             hashLock:     _hashLock
         });
 
-        RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
+        emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
 
         return (unlockHeight, redemptionIntentHash);
@@ -410,7 +410,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             hashLock:     _hashLock
         });
 
-        RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
+        emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
 
         return (amountSTP, unlockHeight, redemptionIntentHash);
@@ -443,7 +443,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         require(token.burn.value(value)(redemption.redeemer, redemption.amountUT));
 
-        ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
+        emit ProcessedRedemption(redemption.uuid, _redemptionIntentHash, token,
             redemption.redeemer, redemption.beneficiary, redemption.amountUT, _unlockSecret);
 
         delete redemptions[_redemptionIntentHash];
@@ -485,7 +485,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         delete redemptions[_redemptionIntentHash];
 
         // fire event
-        RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
+        emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
 
         return (uuid, redeemer, beneficiary, amountUT);
     }
@@ -538,7 +538,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // registrar
         nameReservation[hashName] = msg.sender;
 
-        ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
+        emit ProposedBrandedToken(msg.sender, address(proposedBT), btUuid,
             _symbol, _name, _conversionRate, _conversionRateDecimals);
 
         return btUuid;
@@ -647,7 +647,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         symbolRoute[hashSymbol] = _brandedToken;
         uuids.push(registeredUuid);
 
-        RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
+        emit RegisteredBrandedToken(registrar, _brandedToken, registeredUuid, _symbol, _name,
             _conversionRate, _conversionRateDecimals, _requester);
 
         return registeredUuid;

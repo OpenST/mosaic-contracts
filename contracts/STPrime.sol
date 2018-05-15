@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -64,7 +64,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     /*
      * Public functions
      */
-    function STPrime(
+    constructor(
         bytes32 _uuid,
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
@@ -109,7 +109,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         returns (bool /* success */)
     {
         uint256 amount = claimInternal(_beneficiary);
-        assert(this.balance >= amount);
+        assert(address(this).balance >= amount);
 
         // transfer throws if insufficient funds
         _beneficiary.transfer(amount);
