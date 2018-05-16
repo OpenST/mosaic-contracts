@@ -16,3 +16,13 @@ node_modules
 
 #Dont track idea file
 .idea/
+
+# LaTeX auxiliary files
+*.aux
+*.log
+## Build tool auxiliary files:
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
