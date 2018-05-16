@@ -166,7 +166,7 @@ contract('Registrar', function(accounts) {
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
-	        result = await openSTValue.stake(uuid, amountST, staker, lock.l, { from: staker });
+	        result = await openSTValue.stake(uuid, amountST, staker, lock.l, staker, { from: staker });
 	        nonce = result.logs[0].args._stakerNonce;
 	        amountUT = result.logs[0].args._amountUT;
 	        unlockHeight = result.logs[0].args._unlockHeight;
@@ -213,7 +213,7 @@ contract('Registrar', function(accounts) {
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
 	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
-	        var result = await openSTValue.stake(uuid, amountST, staker, lock.l, { from: staker });
+	        var result = await openSTValue.stake(uuid, amountST, staker, lock.l, staker, { from: staker });
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
 			nonce = await openSTValue.getNextNonce.call(staker);
