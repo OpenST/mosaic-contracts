@@ -119,13 +119,17 @@ module.exports.checkStakeRequestRevertedEvent = (event, _staker, _amount) => {
   assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
 };
 
-module.exports.checkStakeRequestRejectedEvent = (event, _staker, _amount) => {
+module.exports.checkStakeRequestRejectedEvent = (event, _staker, _amount, _reason) => {
   if (Number.isInteger(_amount)) {
     _amount = new BigNumber(_amount);
+  }
+  if (Number.isInteger(_reason)) {
+    _reason = new BigNumber(_reason);
   }
   assert.equal(event.event, "StakeRequestRejected");
   assert.equal(event.args._staker, _staker);
   assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._reason.toNumber(10), _reason.toNumber(10));
 };
 
 
