@@ -122,7 +122,7 @@ contract('Gate', function(accounts) {
     await Utils.expectThrow(gate.revertStakeRequest({from: staker}));
   };
 
-  const rejectStakeRequest = async function (staker, amount, messageSender, isSuccessCase) {
+  const rejectStakeRequest = async function (staker, amount, reason, messageSender, isSuccessCase) {
 
     // load intial account balance
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
@@ -131,14 +131,14 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
 
-      let rejectRequestStakeResult = await gate.rejectStakeRequest.call(staker, {from: messageSender});
+      let rejectRequestStakeResult = await gate.rejectStakeRequest.call(staker, reason, {from: messageSender});
       assert.equal(rejectRequestStakeResult, true);
 
-      let rejectRequestStakeResponse = await gate.rejectStakeRequest(staker, {from: messageSender});
-      await Gate_utils.checkStakeRequestRejectedEvent(rejectRequestStakeResponse.logs[0],staker, amount);
+      let rejectRequestStakeResponse = await gate.rejectStakeRequest(staker, reason, {from: messageSender});
+      await Gate_utils.checkStakeRequestRejectedEvent(rejectRequestStakeResponse.logs[0],staker, amount, reason);
 
     } else {
-      await Utils.expectThrow(gate.rejectStakeRequest(staker, {from: messageSender}));
+      await Utils.expectThrow(gate.rejectStakeRequest(staker, reason, {from: messageSender}));
     }
 
     // load balances after execution
@@ -157,7 +157,7 @@ contract('Gate', function(accounts) {
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.rejectStakeRequest(staker, {from: messageSender}));
+    await Utils.expectThrow(gate.rejectStakeRequest(staker, reason, {from: messageSender}));
   };
 
   const acceptStakeRequest = async function(staker, amount, lock, messageSender, isSuccessCase) {
@@ -396,6 +396,7 @@ contract('Gate', function(accounts) {
 
     let bountyAmount = null;
     let lock = null;
+    let rejectReason = 2;
 
     beforeEach (async () => {
       await deployGate();
@@ -405,11 +406,11 @@ contract('Gate', function(accounts) {
 
     it('successfully processes reject stake request', async () => {
       await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
-      await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, true);
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, true);
     });
 
     it('fails to processes reject stake request when staker account has not requested to stake before', async () => {
-      await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, false);
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
     });
 
     it('fails to processes reject stake request after stake request was accepted', async () => {
@@ -420,7 +421,7 @@ contract('Gate', function(accounts) {
 
       await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
 
-      await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, false);
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
     });
   });
 
@@ -582,7 +583,7 @@ contract('Gate', function(accounts) {
 
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
-        await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, true);
+        await rejectStakeRequest(stakerAccount, stakeAmount, 0,  workerAddress1, true);
         await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
 
       });
@@ -674,7 +675,7 @@ contract('Gate', function(accounts) {
 
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
-        await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, true);
+        await rejectStakeRequest(stakerAccount, stakeAmount, 0, workerAddress1, true);
         await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
       });
 

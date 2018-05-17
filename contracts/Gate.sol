@@ -35,7 +35,7 @@ contract Gate is ProtocolVersioned, Owned {
      */
     event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
     event StakeRequestReverted(address _staker, uint256 _amount);
-    event StakeRequestRejected(address _staker, uint256 _amount);
+    event StakeRequestRejected(address _staker, uint256 _amount, uint8 _reason);
     event StakeRequestAccepted(
       address _staker,
       uint256 _amountST,
@@ -143,7 +143,7 @@ contract Gate is ProtocolVersioned, Owned {
         return true;
     }
 
-    function rejectStakeRequest(address _staker)
+    function rejectStakeRequest(address _staker, uint8 _reason)
         external
         returns (bool /* success */)
     {
@@ -165,7 +165,7 @@ contract Gate is ProtocolVersioned, Owned {
         // delete the stake request from the mapping storage
         delete stakeRequests[msg.sender];
 
-        emit StakeRequestRejected(_staker, stakeRequestAmount);
+        emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
         return true;
     }
