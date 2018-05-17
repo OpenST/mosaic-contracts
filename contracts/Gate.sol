@@ -74,7 +74,7 @@ contract Gate is ProtocolVersioned, Owned {
      *  Public functions
      */
     constructor(
-        address _workers,
+        WorkersInterface _workers,
         uint256 _bounty,
         bytes32 _uuid,
         address _openSTProtocol)
@@ -85,7 +85,7 @@ contract Gate is ProtocolVersioned, Owned {
         require(_workers != address(0));
         require(_uuid.length != uint8(0));
 
-        workers = WorkersInterface(_workers);
+        workers = _workers;
         bounty = _bounty;
         uuid = _uuid;
 

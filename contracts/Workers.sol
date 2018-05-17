@@ -24,9 +24,10 @@ pragma solidity ^0.4.23;
 import "./SafeMath.sol";
 import "./EIP20Interface.sol";
 import "./OpsManaged.sol";
+import "./WorkersInterface.sol";
 
 /// A set of authorised workers
-contract Workers is OpsManaged {
+contract Workers is WorkersInterface, OpsManaged {
     using SafeMath for uint256;
     /// EIP20token address is private for now.
     EIP20Interface private eip20token;
