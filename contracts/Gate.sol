@@ -273,6 +273,9 @@ contract Gate is ProtocolVersioned, Owned {
     returns (bool /* success */)
   {
 
+    // check if the caller is whitelisted worker
+    require(workers.isWorker(msg.sender));
+
     require(_stakingIntentHash != bytes32(0));
 
     //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
@@ -297,15 +300,7 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake address is not 0
     require(stakerAddress != address(0));
 
-    //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
-    //else transfer the bounty to msg.sender.
-    if (workers.isWorker(msg.sender)) {
-      // Transfer bounty amount to the workers contract address
-      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
-    } else {
-     //Transfer bounty amount to the msg.sender account
-      require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
-    }
+    require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];

@@ -245,7 +245,7 @@ contract('Gate', function(accounts) {
     await Utils.expectThrow(gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
   };
 
-  const revertStaking = async function (stakingIntentHash, messageSender, isWhiteListedWorker, isSuccessCase) {
+  const revertStaking = async function (stakingIntentHash, messageSender, isSuccessCase) {
 
     let initialworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
       , initialWorkerBalance = await valueToken.balanceOf.call(workers)
@@ -274,13 +274,8 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       // check balances
-      if (isWhiteListedWorker) {
-        assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-        assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
-      } else {
-        assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
-        assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
-      }
+      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
+      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
 
     } else {
@@ -376,16 +371,16 @@ contract('Gate', function(accounts) {
       lock = HashLock.getHashLock();
     });
 
-    it('successfully processes revert request stake', async () => {
+    it('successfully processes revert stake request', async () => {
       await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
       await revertStakeRequest(stakerAccount, stakeAmount ,true);
     });
 
-    it('fails to processes revert request stake when staker account has not requested stake before', async () => {
+    it('fails to processes revert stake request when staker account has not requested stake before', async () => {
       await revertStakeRequest(stakerAccount, stakeAmount ,false);
     });
 
-    it('fails to processes revert request stake after accepting stake request', async () => {
+    it('fails to processes revert stake request after stake request was accepted', async () => {
       await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
       await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
@@ -408,16 +403,16 @@ contract('Gate', function(accounts) {
       lock = HashLock.getHashLock();
     });
 
-    it('successfully processes reject request stake', async () => {
+    it('successfully processes reject stake request', async () => {
       await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
       await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, true);
     });
 
-    it('fails to processes reject request stake when staker account has not requested stake before', async () => {
+    it('fails to processes reject stake request when staker account has not requested to stake before', async () => {
       await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, false);
     });
 
-    it('fails to processes reject request stake after accepting stake request', async () => {
+    it('fails to processes reject stake request after stake request was accepted', async () => {
       await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
       await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
@@ -443,7 +438,7 @@ contract('Gate', function(accounts) {
         lock = HashLock.getHashLock();
       });
 
-      it('successfully processes accept request stake', async () => {
+      it('successfully processes accept stake request', async () => {
 
         await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
@@ -454,7 +449,7 @@ contract('Gate', function(accounts) {
 
       });
 
-      it('fails to processes accept request stake when worker is not whitelisted address', async () => {
+      it('fails to processes accept stake request when worker is not whitelisted address', async () => {
 
         let workerAddress = accounts[10];
         await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
@@ -466,7 +461,7 @@ contract('Gate', function(accounts) {
 
       });
 
-      it('fails to processes accept request stake when staker address is blank', async () => {
+      it('fails to processes accept stake request when staker address is blank', async () => {
 
         await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
@@ -477,7 +472,7 @@ contract('Gate', function(accounts) {
 
       });
 
-      it('fails to processes accept request stake when hash lock is blank', async () => {
+      it('fails to processes accept stake request when hash lock is blank', async () => {
 
         await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
@@ -624,7 +619,7 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await revertStaking(stakingIntentHash,  workerAddress1, true, true);
+        await revertStaking(stakingIntentHash, workerAddress1, true);
 
       });
 
@@ -635,35 +630,35 @@ contract('Gate', function(accounts) {
 
         await processStaking(stakingIntentHash, lock.s, workerAddress1, true);
 
-        await revertStaking(stakingIntentHash,  workerAddress1, true, false);
+        await revertStaking(stakingIntentHash, workerAddress1, false);
 
       });
 
-      it('fails to process when already stakingIntentHash is 0', async () => {
+      it('fails to process when stakingIntentHash is 0', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await revertStaking(0,  workerAddress1, true, false);
+        await revertStaking(0, workerAddress1, false);
 
       });
 
-      it('fails to process when already stakingIntentHash is invalid', async () => {
+      it('fails to process when stakingIntentHash is invalid', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await revertStaking(beneficiaryAccount, workerAddress1, true, false);
+        await revertStaking(beneficiaryAccount, workerAddress1, false);
 
       });
 
-      it('successfully process when worker is not whitelisted', async () => {
+      it('fails to process when worker is not whitelisted', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
         let workerAddress = accounts[10];
-        await revertStaking(stakingIntentHash,  workerAddress, false, true);
+        await revertStaking(stakingIntentHash, workerAddress, false);
 
       });
 
@@ -671,7 +666,7 @@ contract('Gate', function(accounts) {
       it('fails to processes when stakeRequest was not accepted', async () => {
 
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
-        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, true, false);
+        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
 
       });
 
@@ -680,7 +675,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await rejectStakeRequest(stakerAccount, stakeAmount, workerAddress1, true);
-        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, true, false);
+        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
       });
 
       it('fails to processes when stakeRequest was reverted', async () => {
@@ -688,7 +683,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await revertStakeRequest(stakerAccount, stakeAmount ,true);
-        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, true, false);
+        await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
       });
 
     })
