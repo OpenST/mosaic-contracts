@@ -10,7 +10,7 @@ const rootPrefix = '../..'
 
 // Account Proof Data
 const blockHash = "5b930a33920b2d1c928b2d5ade80cf6d450f064f39d10399367b4cb546fac1d4"
-  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_bkp_1409/geth/chaindata"
+  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_backup_1409/geth/chaindata"
   , web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:8545")
   , epObjectWithoutChainData = new EP(web3Provider)
   , epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath)
