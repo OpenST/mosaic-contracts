@@ -9,10 +9,11 @@ const rootPrefix = '../..'
 //{"success":true,"data":{"transaction_uuid":"35b4cb6d-3697-4df6-806f-1de19f52f296","transaction_hash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transaction_receipt":{"blockHash":"0xd1d2effa9d957d373c5968064d318f271de34f7b5fc7c87089598eadb84c7a65","blockNumber":49,"contractAddress":"0x6cdaD399459fb1480E37FD1372f1F5c96152ddcA","cumulativeGasUsed":569731,"from":"0xb43190ee505e335a71ab46bf6057a8e023a55c11","gasUsed":569731,"logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","status":"0x1","to":null,"transactionHash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transactionIndex":0}}}
 
 // Account Proof Data
-const blockHash = "d1d2effa9d957d373c5968064d318f271de34f7b5fc7c87089598eadb84c7a65"
-  , txHash = "0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a"
-  , accountAddress = "cd0cea667d856e42083908e0ba5467c7cd5bb7c1"
-  , chainDataPath = "/Users/Pepo/Documents/projects/openst-payments/mocha_test/scripts/st-poa/geth/chaindata_090520181251PM"
+const blockHash = "5b930a33920b2d1c928b2d5ade80cf6d450f064f39d10399367b4cb546fac1d4"
+  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_bkp_1409/geth/chaindata"
+  , web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:8545")
+  , epObjectWithoutChainData = new EP(web3Provider)
+  , epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath)
 ;
 
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send;
@@ -20,10 +21,8 @@ Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.pr
 const merkleProof = {
 
   receiptProofWithChainData: function(){
-    const epObjectWithoutChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"))
-      , epObjectWithChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath)
+    const txHash = "0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a"
     ;
-
     epObjectWithChainData.getReceiptProof(txHash).then(function(proof){
       console.log("\n===========Starting receiptProofWithChainData===========\n");
       console.log("\n===========receiptProofWithChainData===========\n", proof);
@@ -32,10 +31,8 @@ const merkleProof = {
   },
 
   logProofWithChainData: function(){
-    const epObjectWithoutChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"))
-      , epObjectWithChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath)
+    const txHash = "0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a"
     ;
-
     epObjectWithChainData.getLogProof(txHash, 0).then(function(proof){
       console.log("\n===========Starting logProofWithChainData===========\n");
       console.log("\n===========logProofWithChainData===========\n", proof);
@@ -44,10 +41,8 @@ const merkleProof = {
   },
 
   transactionProofWithChainData: function(){
-    const epObjectWithoutChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"))
-      , epObjectWithChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath)
+    const txHash = "0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a"
     ;
-
     epObjectWithChainData.getTransactionProof(txHash).then(function(proof){
       console.log("\n===========Starting transactionProofWithChainData===========\n");
       console.log("\n===========transactionProofWithChainData===========\n", proof);
@@ -56,8 +51,7 @@ const merkleProof = {
   },
 
   accountProofWithChainData: function(){
-    const epObjectWithoutChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"))
-      , epObjectWithChainData = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath)
+    const accountAddress = "01dB94fdCa0FFeDc40A6965DE97790085d71b412"
     ;
 
     console.log("\nStarting accountProofWithChainData");
@@ -91,8 +85,7 @@ const merkleProof = {
       , position = 0x0
       , positionContractValue = 1234
     ;
-    var epObject = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath);
-    epObject.getStorageProof(storageContractAddress, position).then(async function(proof){
+    epObjectWithChainData.getStorageProof(storageContractAddress, position).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForVariableValue===========\n");
       console.log("\n===========storageProofWithChainData===========\n", proof);
       console.log("\n===========Ending storageProofWithChainDataForVariableValue===========\n");
@@ -127,8 +120,8 @@ const merkleProof = {
       , storageContractDeployerMappingKey = 'b43190ee505e335a71ab46bf6057a8e023a55c11'
       , position = '01'
     ;
-    var epObject = new EP(new Web3.providers.HttpProvider("http://127.0.0.1:9546"), blockHash, chainDataPath);
-    epObject.getStorageProof(storageContractAddress, position, storageContractDeployerMappingKey).then(async function(proof){
+
+    epObjectWithChainData.getStorageProof(storageContractAddress, position, storageContractDeployerMappingKey).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForMappingKey===========\n");
       console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
       console.log("\n===========Ending storageProofWithChainDataForMappingKey===========\n");
@@ -149,13 +142,13 @@ const merkleProof = {
   perform: function(){
     const oThis = this
     ;
-    oThis.transactionProofWithChainData();
-    oThis.receiptProofWithChainData();
-    oThis.logProofWithChainData();
-    oThis.transactionProofWithChainData();
-    oThis.accountProofWithChainData();
-    oThis.storageProofWithChainDataForVariableValue();
-    oThis.storageProofWithChainDataForMappingKey();
+    // oThis.transactionProofWithChainData();
+    // oThis.receiptProofWithChainData();
+    // oThis.logProofWithChainData();
+    // oThis.transactionProofWithChainData();
+     oThis.accountProofWithChainData();
+    // oThis.storageProofWithChainDataForVariableValue();
+    // oThis.storageProofWithChainDataForMappingKey();
   }
 
 
