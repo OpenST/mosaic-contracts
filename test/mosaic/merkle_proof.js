@@ -9,8 +9,8 @@ const rootPrefix = '../..'
 //{"success":true,"data":{"transaction_uuid":"35b4cb6d-3697-4df6-806f-1de19f52f296","transaction_hash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transaction_receipt":{"blockHash":"0xd1d2effa9d957d373c5968064d318f271de34f7b5fc7c87089598eadb84c7a65","blockNumber":49,"contractAddress":"0x6cdaD399459fb1480E37FD1372f1F5c96152ddcA","cumulativeGasUsed":569731,"from":"0xb43190ee505e335a71ab46bf6057a8e023a55c11","gasUsed":569731,"logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","status":"0x1","to":null,"transactionHash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transactionIndex":0}}}
 
 // Account Proof Data
-const blockHash = "5b930a33920b2d1c928b2d5ade80cf6d450f064f39d10399367b4cb546fac1d4"
-  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_backup_1409/geth/chaindata"
+const blockHash = "8d8e0c4e298796b33e38b511ed604632ab2c9274adc8d0db5826d9706dc4992a"
+  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_1409_backup"
   , web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:8545")
   , epObjectWithoutChainData = new EP(web3Provider)
   , epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath)
@@ -116,11 +116,13 @@ const merkleProof = {
   storageProofWithChainDataForMappingKey: function(){
     var storageContractAddress = 'dd0339b562f83209e2db7812abaad399d5059c67'
       , openstValueContractAddress = 'C0487285F176f520f5CD46720B686b6E46aEcd07'
+      , openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
+      , openstUtilityMintsMappingIndexPosition = '13'
       , storageContractDeployerMappingKey = 'b43190ee505e335a71ab46bf6057a8e023a55c11'
-      , position = '09'
+      , stakingIntentHash = '0x6e8f0819fdff87d9c4f36587d2e11f2ebf615f3b4446f681260fb671305acd06'
     ;
 
-    epObjectWithChainData.getStorageProof(openstValueContractAddress, position, storageContractDeployerMappingKey).then(async function(proof){
+    epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityMintsMappingIndexPosition, stakingIntentHash).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForMappingKey===========\n");
       console.log("\n===========storageProofWithChainDataForMappingKey===========\n", JSON.stringify(proof));
       console.log("\n===========Ending storageProofWithChainDataForMappingKey===========\n");
@@ -145,7 +147,7 @@ const merkleProof = {
     // oThis.receiptProofWithChainData();
     // oThis.logProofWithChainData();
     // oThis.transactionProofWithChainData();
-    // oThis.accountProofWithChainData();
+     oThis.accountProofWithChainData();
     // oThis.storageProofWithChainDataForVariableValue();
     oThis.storageProofWithChainDataForMappingKey();
   }
