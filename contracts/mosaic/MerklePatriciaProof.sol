@@ -18,7 +18,7 @@ library MerklePatriciaProof {
      * @param root The root hash of the trie.
      * @return The boolean validity of the proof.
      */
-    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool) {
+    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) public pure returns (bool) {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
