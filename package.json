@@ -19,10 +19,10 @@
     "web3": "1.0.0-beta.33"
   },
   "devDependencies": {
-    "truffle": "^4.0.1",
-    "ganache-cli": "^6.0.3",
+    "truffle": "^4.1.7",
     "abi-decoder": "^1.0.9",
-    "ethereumjs-testrpc": "^6.0.3"
+    "ethereumjs-testrpc": "^6.0.3",
+    "ganache-cli": "^6.0.3"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
