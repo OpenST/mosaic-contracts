@@ -6,9 +6,17 @@
     "assert": "^1.4.1",
     "bignumber": "^1.1.0",
     "bignumber.js": "^4.1.0",
+    "eth-proof": "^0.2.1",
+    "ethereumjs-account": "^2.0.5",
+    "ethereumjs-util": "^5.2.0",
+    "js-sha3": "^0.7.0",
     "keccak": "^1.4.0",
+    "leveldown": "^3.0.2",
+    "levelup": "^2.0.2",
+    "merkle-patricia-tree": "^2.3.1",
     "moment": "^2.19.2",
     "web3": "^1.0.0-beta.33"
+    "rlp": "^2.0.0",
   },
   "devDependencies": {
     "truffle": "^4.1.8",
