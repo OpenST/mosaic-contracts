@@ -57,7 +57,7 @@ const merkleProof = {
     console.log("\nStarting accountProofWithChainData");
     epObjectWithChainData.getAccountProof(accountAddress).then(async function(proof){
       console.log("\n===========Starting accountProofWithChainData===========\n");
-      console.log("\n===========accountProofWithChainData===========\n", proof);
+      console.log("\n===========accountProofWithChainData===========\n", JSON.stringify(proof));
       console.log("\n===========Ending accountProofWithChainData===========\n");
       console.log("\n===========Starting verifyAccountProofWithChainData===========\n");
       var verifyResult = await EP.account(proof.address, proof.value, proof.parentNodes, proof.header, proof.blockHash);
@@ -81,7 +81,6 @@ const merkleProof = {
   //   transactionIndex: 0 }
   storageProofWithChainDataForVariableValue: function(){
     var storageContractAddress = 'dd0339b562f83209e2db7812abaad399d5059c67'
-      , blockHash = 'af85800048e1aed4efd9665b5ae37329ee2eb72095cc8a8cfbd2c881f0e24210'
       , position = 0x0
       , positionContractValue = 1234
     ;
@@ -116,14 +115,14 @@ const merkleProof = {
   //   transactionIndex: 0 }
   storageProofWithChainDataForMappingKey: function(){
     var storageContractAddress = 'dd0339b562f83209e2db7812abaad399d5059c67'
-      , blockHash = 'af85800048e1aed4efd9665b5ae37329ee2eb72095cc8a8cfbd2c881f0e24210'
+      , openstValueContractAddress = 'C0487285F176f520f5CD46720B686b6E46aEcd07'
       , storageContractDeployerMappingKey = 'b43190ee505e335a71ab46bf6057a8e023a55c11'
-      , position = '01'
+      , position = '09'
     ;
 
-    epObjectWithChainData.getStorageProof(storageContractAddress, position, storageContractDeployerMappingKey).then(async function(proof){
+    epObjectWithChainData.getStorageProof(openstValueContractAddress, position, storageContractDeployerMappingKey).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForMappingKey===========\n");
-      console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
+      console.log("\n===========storageProofWithChainDataForMappingKey===========\n", JSON.stringify(proof));
       console.log("\n===========Ending storageProofWithChainDataForMappingKey===========\n");
       var verifyResult = await EP.storageMapping(
         proof.storageIndex,
@@ -146,9 +145,9 @@ const merkleProof = {
     // oThis.receiptProofWithChainData();
     // oThis.logProofWithChainData();
     // oThis.transactionProofWithChainData();
-     oThis.accountProofWithChainData();
+    // oThis.accountProofWithChainData();
     // oThis.storageProofWithChainDataForVariableValue();
-    // oThis.storageProofWithChainDataForMappingKey();
+    oThis.storageProofWithChainDataForMappingKey();
   }
 
 
