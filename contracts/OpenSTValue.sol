@@ -166,8 +166,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 _uuid,
         uint256 _amountST,
         address _beneficiary,
-        bytes32 _hashLock,
-        address _staker)
+        bytes32 _hashLock
+        )
         external
         returns (
         uint256 amountUT,
@@ -187,6 +187,9 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_staker != address(0));
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
+
+        // TODO: introduce parameter _staker
+        address _staker = tx.origin;
 
         // if the staking account is set to a non-zero address,
         // then all transactions have come (from/over) the staking account
