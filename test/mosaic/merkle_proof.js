@@ -114,18 +114,14 @@ const merkleProof = {
   //   transactionHash: '0x2f159e7ad8a1a06baadc00cfd4cb1fda398d86e8471c9a8c76d0e010a4df84bf',
   //   transactionIndex: 0 }
   storageProofWithChainDataForMappingKey: function(){
-    var storageContractAddress = 'dd0339b562f83209e2db7812abaad399d5059c67'
-      , openstValueContractAddress = 'C0487285F176f520f5CD46720B686b6E46aEcd07'
-      , openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
-      , openstUtilityMintsMappingIndexPosition = '13'
-      , storageContractDeployerMappingKey = 'b43190ee505e335a71ab46bf6057a8e023a55c11'
-      , stakingIntentHash = '0x6e8f0819fdff87d9c4f36587d2e11f2ebf615f3b4446f681260fb671305acd06'
+    var openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
+      , openstUtilityregisteredTokensIndexPosition = '9'
+      , tokenUUID = '0xe1bca40b7a2af3e5a6adea38dbe77d2a88d25bf37fbc512218d55022615520f3'
     ;
 
-    epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityMintsMappingIndexPosition, stakingIntentHash).then(async function(proof){
-      console.log("\n===========Starting storageProofWithChainDataForMappingKey===========\n");
-      console.log("\n===========storageProofWithChainDataForMappingKey===========\n", JSON.stringify(proof));
-      console.log("\n===========Ending storageProofWithChainDataForMappingKey===========\n");
+     epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityregisteredTokensIndexPosition, tokenUUID).then(async function(proof){
+      console.log("\n===========Index Position===========\n", i);
+      console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
       var verifyResult = await EP.storageMapping(
         proof.storageIndex,
         proof.mappings,
@@ -137,6 +133,7 @@ const merkleProof = {
         proof.blockHash);
       console.log("verifyAccountProof Result:", verifyResult);
     });
+
   },
 
 
@@ -147,7 +144,7 @@ const merkleProof = {
     // oThis.receiptProofWithChainData();
     // oThis.logProofWithChainData();
     // oThis.transactionProofWithChainData();
-     oThis.accountProofWithChainData();
+     //oThis.accountProofWithChainData();
     // oThis.storageProofWithChainDataForVariableValue();
     oThis.storageProofWithChainDataForMappingKey();
   }
