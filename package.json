@@ -15,14 +15,14 @@
     "levelup": "^2.0.2",
     "merkle-patricia-tree": "^2.3.1",
     "moment": "^2.19.2",
+    "web3": "^1.0.0-beta.33"
     "rlp": "^2.0.0",
-    "web3": "1.0.0-beta.33"
   },
   "devDependencies": {
-    "truffle": "^4.1.7",
+    "truffle": "^4.1.8",
+    "ganache-cli": "^6.0.3",
     "abi-decoder": "^1.0.9",
-    "ethereumjs-testrpc": "^6.0.3",
-    "ganache-cli": "^6.0.3"
+    "ethereumjs-testrpc": "^6.0.3"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"

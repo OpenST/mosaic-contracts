@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -32,7 +32,7 @@ contract OpenSTValueMock is OpenSTValue {
 	/*
 	 *  Public functions
 	 */
-	function OpenSTValueMock(
+	constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
 		address _registrar)

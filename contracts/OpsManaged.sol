@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -36,7 +36,7 @@ contract OpsManaged is Owned {
     event OpsAddressChanged(address indexed _newAddress);
 
 
-    function OpsManaged() public
+    constructor() public
         Owned()
     {
     }
@@ -89,7 +89,7 @@ contract OpsManaged is Owned {
 
         adminAddress = _adminAddress;
 
-        AdminAddressChanged(_adminAddress);
+        emit AdminAddressChanged(_adminAddress);
 
         return true;
     }
@@ -103,7 +103,7 @@ contract OpsManaged is Owned {
 
         opsAddress = _opsAddress;
 
-        OpsAddressChanged(_opsAddress);
+        emit OpsAddressChanged(_opsAddress);
 
         return true;
     }

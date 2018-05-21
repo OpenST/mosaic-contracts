@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -51,7 +51,7 @@ contract SimpleStake is ProtocolVersioned {
 	/// @param _eip20Token EIP20 token that will be staked
 	/// @param _openSTProtocol OpenSTProtocol contract that governs staking
 	/// @param _uuid Unique Universal Identifier of the registered utility token
-	function SimpleStake(
+	constructor(
 		EIP20Interface _eip20Token,
 		address _openSTProtocol,
 		bytes32 _uuid)
@@ -77,7 +77,7 @@ contract SimpleStake is ProtocolVersioned {
 		require(_to != address(0));
 		require(eip20Token.transfer(_to, _amount));
 		
-		ReleasedStake(msg.sender, _to, _amount);
+		emit ReleasedStake(msg.sender, _to, _amount);
 
 		return true;
 	}
