@@ -13,7 +13,6 @@ const rootPrefix = '../..'
 const blockHash = "1ea237eff72a3dab869fdcb22ee79cf55fb5de017c77016594afba1c133bb3bd"
   , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_1409_22_may_1pm/geth/chaindata"
   , web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:8545")
-  , epObjectWithoutChainData = new EP(web3Provider)
   , epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath)
 ;
 
