@@ -82,10 +82,10 @@ const merkleProof = {
   //   transactionIndex: 0 }
   storageProofWithChainDataForVariableValue: function(){
     var openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
-      , openstUtilityregisteredTokensIndexPosition = 0x03
+      , openstUtilityRegisteredTokensIndexPosition = 0x03
       , stPrimeContractAddress = '784A7a02CBBA9aD42FE0477E0B323C54CdF78D5A'
     ;
-    epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityregisteredTokensIndexPosition).then(async function(proof){
+    epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityRegisteredTokensIndexPosition).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForVariableValue===========\n");
       console.log("\n===========storageProofWithChainData===========\n", proof);
       console.log("\n===========Ending storageProofWithChainDataForVariableValue===========\n");
@@ -116,10 +116,12 @@ const merkleProof = {
   //   transactionIndex: 0 }
   // 1754
   storageProofWithChainDataForMappingKey: function(){
+    // Production Data
     var openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
-      , openstUtilityregisteredTokensIndexPosition = 0x00
+      , openstUtilityregisteredTokensIndexPosition = 0x08
       , tokenUUID = '2509198a8c357187595763a882728cadeb7300a0cd518d08cd93fb666a4de08c'
     ;
+
      epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityregisteredTokensIndexPosition, tokenUUID).then(async function(proof){
       console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
       var verifyResult = await EP.storageMapping(
@@ -145,8 +147,8 @@ const merkleProof = {
     // oThis.logProofWithChainData();
     // oThis.transactionProofWithChainData();
     // oThis.accountProofWithChainData();
-    oThis.storageProofWithChainDataForVariableValue();
-    //oThis.storageProofWithChainDataForMappingKey();
+    // oThis.storageProofWithChainDataForVariableValue();
+    oThis.storageProofWithChainDataForMappingKey();
   }
 
 
