@@ -14,7 +14,7 @@ const blockHash = "31a9757fe982ddcc4cb2aec34aef7721709528b00200421e31fa7f04d62ea
 ;
 
 // Variable Data
-const variableIndexPosition = 0x00
+const variableIndexPosition = '00'
   , value = 1234
 ;
 
@@ -42,37 +42,45 @@ Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.pr
 
 const storageMerkleProofLocalChain = {
 
-  storageProofWithChainDataForVariableValue: function(){
-
-    epObjectWithChainData.getStorageProof(storageContractAddress, value).then(async function(proof){
-      console.log("\n===========Starting storageProofWithChainDataForVariableValue===========\n");
-      console.log("\n===========storageProofWithChainData===========\n", proof);
-      console.log("\n===========Ending storageProofWithChainDataForVariableValue===========\n");
-      var verifyResult = await EP.storageAtIndex(
-        proof.storageIndex,
-        stPrimeContractAddress,//Buffer.from(stPrimeContractAddress,'hex'),
-        proof.storageParentNodes,
-        proof.address,
-        proof.accountParentNodes,
-        proof.header,
-        proof.blockHash);
-      console.log("storageProofWithChainDataForVariableValue verifyAccountProof Result:", verifyResult);
-    });
-  },
-
-  getStorageProof: function() {
+  getStorageVariableProof: function() {
     return new Promise(function(onResolve, onReject){
-      epObjectWithChainData.getStorageProof(storageContractAddress, mappingIndexPosition, senderDeployerAddress).then(async function(proof){
+      epObjectWithChainData.getStorageProof(storageContractAddress, variableIndexPosition).then(async function(proof){
+        console.log("\n===========storageProofWithChainData===========\n", proof);
         onResolve(proof);
       });
     });
   },
 
-  storageProofWithChainDataForMappingKey: async function(){
+  verifyStorageVariableProof: async function(proof) {
+    const verifyResult = await EP.storageAtIndex(
+      proof.storageIndex,
+      value,
+      proof.storageParentNodes,
+      proof.address,
+      proof.accountParentNodes,
+      proof.header,
+      proof.blockHash);
+    console.log("verifyStorageVariableProof Result:", verifyResult);
+    return verifyResult;
+  },
+
+  storageProofForVariableValue: async function() {
     const oThis = this
-      , proof = await oThis.getStorageProof()
+      , proof = await oThis.getStorageVariableProof()
+      , verifyProofResult = await oThis.verifyStorageVariableProof(proof)
     ;
-    console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
+  },
+
+  getStorageMappingKeyProof: function() {
+    return new Promise(function(onResolve, onReject){
+      epObjectWithChainData.getStorageProof(storageContractAddress, mappingIndexPosition, senderDeployerAddress).then(async function(proof){
+        console.log("\n===========storageProofForMappingKey===========\n", proof);
+        onResolve(proof);
+      });
+    });
+  },
+
+  verifyStorageMappingKeyProof: async function(proof) {
     var verifyResult = await EP.storageMapping(
       proof.storageIndex,
       proof.mappings,
@@ -83,13 +91,23 @@ const storageMerkleProofLocalChain = {
       proof.header,
       proof.blockHash);
     console.log("verifyAccountProof Result:", verifyResult);
+
+    return verifyResult;
+  },
+
+  storageProofForMappingKey: async function(){
+    const oThis = this
+      , proof = await oThis.getStorageMappingKeyProof()
+      , verifyResult = await oThis.verifyStorageMappingKeyProof(proof)
+    ;
   },
 
 
   perform: async function(){
     const oThis = this
     ;
-    await oThis.storageProofWithChainDataForMappingKey();
+    await oThis.storageProofForVariableValue();
+    await oThis.storageProofForMappingKey();
   }
 
 
