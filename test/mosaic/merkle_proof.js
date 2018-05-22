@@ -3,14 +3,15 @@
 const rootPrefix = '../..'
   , Web3 = require('web3')
   , EP  = require('eth-proof')
+  , sha3 = require('js-sha3').keccak_256
 ;
 
 // Worker contract deployment transaction
 //{"success":true,"data":{"transaction_uuid":"35b4cb6d-3697-4df6-806f-1de19f52f296","transaction_hash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transaction_receipt":{"blockHash":"0xd1d2effa9d957d373c5968064d318f271de34f7b5fc7c87089598eadb84c7a65","blockNumber":49,"contractAddress":"0x6cdaD399459fb1480E37FD1372f1F5c96152ddcA","cumulativeGasUsed":569731,"from":"0xb43190ee505e335a71ab46bf6057a8e023a55c11","gasUsed":569731,"logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","status":"0x1","to":null,"transactionHash":"0x7606ed6ac38254f15b485119ea44153f962af69b211bbaf00ca88e973753323a","transactionIndex":0}}}
 
 // Account Proof Data
-const blockHash = "8d8e0c4e298796b33e38b511ed604632ab2c9274adc8d0db5826d9706dc4992a"
-  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_1409_backup/geth/chaindata"
+const blockHash = "1ea237eff72a3dab869fdcb22ee79cf55fb5de017c77016594afba1c133bb3bd"
+  , chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_1409_22_may_1pm/geth/chaindata"
   , web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:8545")
   , epObjectWithoutChainData = new EP(web3Provider)
   , epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath)
@@ -80,17 +81,17 @@ const merkleProof = {
   //   transactionHash: '0x2f159e7ad8a1a06baadc00cfd4cb1fda398d86e8471c9a8c76d0e010a4df84bf',
   //   transactionIndex: 0 }
   storageProofWithChainDataForVariableValue: function(){
-    var storageContractAddress = 'dd0339b562f83209e2db7812abaad399d5059c67'
-      , position = 0x0
-      , positionContractValue = 1234
+    var openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
+      , openstUtilityregisteredTokensIndexPosition = 0x03
+      , stPrimeContractAddress = '784A7a02CBBA9aD42FE0477E0B323C54CdF78D5A'
     ;
-    epObjectWithChainData.getStorageProof(storageContractAddress, position).then(async function(proof){
+    epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityregisteredTokensIndexPosition).then(async function(proof){
       console.log("\n===========Starting storageProofWithChainDataForVariableValue===========\n");
       console.log("\n===========storageProofWithChainData===========\n", proof);
       console.log("\n===========Ending storageProofWithChainDataForVariableValue===========\n");
       var verifyResult = await EP.storageAtIndex(
         proof.storageIndex,
-        positionContractValue,
+        stPrimeContractAddress,//Buffer.from(stPrimeContractAddress,'hex'),
         proof.storageParentNodes,
         proof.address,
         proof.accountParentNodes,
@@ -113,14 +114,13 @@ const merkleProof = {
   //   to: null,
   //   transactionHash: '0x2f159e7ad8a1a06baadc00cfd4cb1fda398d86e8471c9a8c76d0e010a4df84bf',
   //   transactionIndex: 0 }
+  // 1754
   storageProofWithChainDataForMappingKey: function(){
     var openstUtilityContractAddress = '01dB94fdCa0FFeDc40A6965DE97790085d71b412'
-      , openstUtilityregisteredTokensIndexPosition = '9'
-      , tokenUUID = '0xe1bca40b7a2af3e5a6adea38dbe77d2a88d25bf37fbc512218d55022615520f3'
+      , openstUtilityregisteredTokensIndexPosition = 0x00
+      , tokenUUID = '2509198a8c357187595763a882728cadeb7300a0cd518d08cd93fb666a4de08c'
     ;
-
      epObjectWithChainData.getStorageProof(openstUtilityContractAddress, openstUtilityregisteredTokensIndexPosition, tokenUUID).then(async function(proof){
-      console.log("\n===========Index Position===========\n", i);
       console.log("\n===========storageProofWithChainDataForMappingKey===========\n", proof);
       var verifyResult = await EP.storageMapping(
         proof.storageIndex,
@@ -144,9 +144,9 @@ const merkleProof = {
     // oThis.receiptProofWithChainData();
     // oThis.logProofWithChainData();
     // oThis.transactionProofWithChainData();
-     //oThis.accountProofWithChainData();
-    // oThis.storageProofWithChainDataForVariableValue();
-    oThis.storageProofWithChainDataForMappingKey();
+    // oThis.accountProofWithChainData();
+    oThis.storageProofWithChainDataForVariableValue();
+    //oThis.storageProofWithChainDataForMappingKey();
   }
 
 
