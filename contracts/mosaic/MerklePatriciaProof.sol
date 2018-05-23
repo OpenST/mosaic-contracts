@@ -16,9 +16,11 @@ contract MerklePatriciaProof is Util{
      */
     function verify(bytes32 value, bytes addr, bytes rlpParentNodes, bytes32 root) public returns (bool) {
 
+        //Convert back RLP encoded parent Nodes to list of Nodes
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
+        //Sha3 of account address - used from traversing from root to desired node
         bytes memory encodedPath = bytes32ToBytes(keccak256(addr));
         bytes memory currentNode;
         RLP.RLPItem[] memory currentNodeList;
@@ -30,19 +32,24 @@ contract MerklePatriciaProof is Util{
         if (path.length == 0) {
             return false;
         }
+        //for each node in proof
         for (uint i = 0; i < parentNodes.length; i++) {
             if (pathPtr > path.length) {
                 return false;
             }
 
             currentNode = RLP.toBytes(parentNodes[i]);
+            //check address key for each node should be equal to sha3 of node
             if (nodeKey != keccak256(currentNode)) {
                 return false;
             }
             currentNodeList = RLP.toList(parentNodes[i]);
 
+            //check if node is branch node
             if (currentNodeList.length == 17) {
+                //check if whole path is traversed and reached to desired node
                 if (pathPtr == path.length) {
+                    //check if value of node is same as expected account value
                     if (keccak256(RLP.toBytes(currentNodeList[16])) == value) {
                         return true;
                     } else {
@@ -54,12 +61,14 @@ contract MerklePatriciaProof is Util{
                 if (nextPathNibble > 16) {
                     return false;
                 }
+                //select  next node key from branch
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
-            } else if (currentNodeList.length == 2) {
+            } else if (currentNodeList.length == 2) {// check if node is extension or leaf node
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if (pathPtr == path.length) {//leaf node
+                    //check if value of node is same as expected account value
                     if (keccak256(RLP.toData(currentNodeList[1])) == value) {
                         return true;
                     } else {
@@ -70,7 +79,7 @@ contract MerklePatriciaProof is Util{
                 if (_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
                     return (keccak256() == value);
                 }
-
+                //select next node key which is value of extension node
                 nodeKey = RLP.toBytes32(currentNodeList[1]);
             } else {
                 return false;
