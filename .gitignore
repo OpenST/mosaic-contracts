@@ -12,8 +12,8 @@ contracts/abi/
 
 # don't commit node_modules
 node_modules
-
-
+tools/testdb/
+build/
 #Dont track idea file
 .idea/
 
