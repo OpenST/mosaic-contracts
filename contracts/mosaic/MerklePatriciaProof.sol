@@ -1,10 +1,12 @@
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "./RLP.sol";
 import "./util.sol";
 
 contract MerklePatriciaProof is Util{
+
+    event TestEvent(uint location, uint index);
 
     /*
      * @dev Verifies a merkle patricia proof.
@@ -20,8 +22,9 @@ contract MerklePatriciaProof is Util{
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
+
         //Sha3 of account address - used from traversing from root to desired node
-        bytes memory encodedPath = bytes32ToBytes(keccak256(addr));
+        bytes memory encodedPath = addr;//bytes32ToBytes(addr);//bytes32ToBytes(keccak256(addr));
         bytes memory currentNode;
         RLP.RLPItem[] memory currentNodeList;
 
@@ -30,58 +33,79 @@ contract MerklePatriciaProof is Util{
 
         bytes memory path = _getNibbleArray2(encodedPath);
         if (path.length == 0) {
+            emit TestEvent(0, 11);
+
             return false;
         }
-        //for each node in proof
+
+
         for (uint i = 0; i < parentNodes.length; i++) {
             if (pathPtr > path.length) {
+                emit TestEvent(0, 12);
                 return false;
             }
 
             currentNode = RLP.toBytes(parentNodes[i]);
-            //check address key for each node should be equal to sha3 of node
+
+            //            //check address key for each node should be equal to sha3 of node
             if (nodeKey != keccak256(currentNode)) {
+                emit TestEvent(i, 0);
                 return false;
             }
+
             currentNodeList = RLP.toList(parentNodes[i]);
 
-            //check if node is branch node
+            //            //check if node is branch node
             if (currentNodeList.length == 17) {
+                //
                 //check if whole path is traversed and reached to desired node
                 if (pathPtr == path.length) {
                     //check if value of node is same as expected account value
                     if (keccak256(RLP.toBytes(currentNodeList[16])) == value) {
+                        emit TestEvent(i, 1);
                         return true;
                     } else {
+                        emit TestEvent(i, 2);
                         return false;
                     }
                 }
 
                 uint8 nextPathNibble = uint8(path[pathPtr]);
                 if (nextPathNibble > 16) {
+                    emit TestEvent(i, 3);
                     return false;
                 }
-                //select  next node key from branch
+
+                //                //select  next node key from branch
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
-            } else if (currentNodeList.length == 2) {// check if node is extension or leaf node
+                emit TestEvent(10, 10);
+                //
+            }
+
+            else if (currentNodeList.length == 2) {// check if node is extension or leaf node
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if (pathPtr == path.length) {//leaf node
                     //check if value of node is same as expected account value
                     if (keccak256(RLP.toData(currentNodeList[1])) == value) {
+                        emit TestEvent(i, 4);
                         return true;
                     } else {
+                        emit TestEvent(i, 5);
                         return false;
                     }
                 }
+
                 //extension node ... test if means that it is empty value
                 if (_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
+                    emit TestEvent(i, 6);
                     return (keccak256() == value);
                 }
                 //select next node key which is value of extension node
                 nodeKey = RLP.toBytes32(currentNodeList[1]);
             } else {
+                emit TestEvent(i, 7);
                 return false;
             }
         }
