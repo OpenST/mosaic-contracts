@@ -21,8 +21,8 @@ contract('Merkel Patricia Proff', function (accounts) {
       blockHash = block.hash.slice(2);
       stateRoot = block.stateRoot;
       //deploy contract
-      let mptContract = await merkleProffUtils.deployMerklePatriciaProof(artifacts, accounts);
-      contract = mptContract.merklePatriciaProof;
+      let verifyProof = await merkleProffUtils.deployVerifyProof(artifacts, accounts);
+      contract = verifyProof.verifyProof;
       //generate account Proof
       proof = await merkleProffUtils.accountProof(accountAddress, blockHash, chainDataPath);
     });
@@ -58,7 +58,7 @@ contract('Merkel Patricia Proff', function (accounts) {
       let proofNodes = proof.parentNodes;
       let value = getAHash(proof.value); // aHash
       let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
-      let actualResult = await contract.verify.call(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
+      let actualResult = await contract.accountInState.call(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
       assert.equal(actualResult, true);
     });
   })
