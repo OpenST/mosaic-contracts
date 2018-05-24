@@ -18,12 +18,10 @@ contract('Merkel Patricia Proff', function (accounts) {
 
     before(async () => {
 
-      let mptContract = await merkleProffUtils.deployMerklePatriciaProof(artifacts, accounts);
-      contract = mptContract.merklePatriciaProof;
-      //generate account Proof
+      let verifyProof = await merkleProffUtils.deployVerifyProof(artifacts, accounts);
+      contract = verifyProof.verifyProof;
       proof = await merkleProffUtils.getStorageMappingKeyProof(blockHash, chainDataPath, storageContractAddress,
         mappingIndexPosition, senderDeployerAddress);
-      //console.log(proof);
     });
 
     function hash(dta) {
@@ -67,7 +65,7 @@ contract('Merkel Patricia Proff', function (accounts) {
       let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
       let storageRoot = util.bufferToHex(proof.account);
 
-      let actualResult = await contract.verify.call(value, addr, rlpParentNodes, storageRoot, {from: accounts[0]});
+      let actualResult = await contract.storageInAccount.call(value, addr, rlpParentNodes, storageRoot, {from: accounts[0]});
       assert.equal(actualResult, true);
     });
   })

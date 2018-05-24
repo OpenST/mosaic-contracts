@@ -1,6 +1,7 @@
 let EP  = require('eth-proof');
 let Web3 = require('web3');
 const MerklePatriciaProof = artifacts.require("./mosaic/MerklePatriciaProof.sol");
+const VerifyProof = artifacts.require("./mosaic/VerifyProof.sol");
 
 /// deploy Contract
 module.exports.deployMerklePatriciaProof = async (artifacts, accounts) => {
@@ -9,6 +10,16 @@ module.exports.deployMerklePatriciaProof = async (artifacts, accounts) => {
   const merklePatriciaProof = await MerklePatriciaProof.new({from: openSTProtocol});
   return {
     merklePatriciaProof: merklePatriciaProof
+  }
+};
+
+/// deploy Contract
+module.exports.deployVerifyProof = async (artifacts, accounts) => {
+
+  const openSTProtocol = accounts[4];
+  const verifyProof = await VerifyProof.new({from: openSTProtocol});
+  return {
+    verifyProof: verifyProof
   }
 };
 

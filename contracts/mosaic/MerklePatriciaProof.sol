@@ -1,13 +1,15 @@
+/*
+ * @title MerklePatriciaVerifier
+ * @author Sam Mayo (sammayo888@gmail.com)
+ *
+ * @dev Library for verifing merkle patricia proofs.
+ */
 
 pragma solidity ^0.4.23;
 
 import "./RLP.sol";
-import "./util.sol";
 
-contract MerklePatriciaProof is Util{
-
-    event TestEvent(uint location, uint index);
-
+library MerklePatriciaProof {
     /*
      * @dev Verifies a merkle patricia proof.
      * @param value The terminating value in the trie.
@@ -16,15 +18,10 @@ contract MerklePatriciaProof is Util{
      * @param root The root hash of the trie.
      * @return The boolean validity of the proof.
      */
-    function verify(bytes32 value, bytes addr, bytes rlpParentNodes, bytes32 root) public returns (bool) {
-
-        //Convert back RLP encoded parent Nodes to list of Nodes
+    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool) {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
-
-        //Sha3 of account address - used from traversing from root to desired node
-        bytes memory encodedPath = addr;//bytes32ToBytes(addr);//bytes32ToBytes(keccak256(addr));
         bytes memory currentNode;
         RLP.RLPItem[] memory currentNodeList;
 
@@ -32,85 +29,116 @@ contract MerklePatriciaProof is Util{
         uint pathPtr = 0;
 
         bytes memory path = _getNibbleArray2(encodedPath);
-        if (path.length == 0) {
-            emit TestEvent(0, 11);
+        if(path.length == 0) {return false;}
 
-            return false;
-        }
-
-
-        for (uint i = 0; i < parentNodes.length; i++) {
-            if (pathPtr > path.length) {
-                emit TestEvent(0, 12);
-                return false;
-            }
+        for (uint i=0; i<parentNodes.length; i++) {
+            if(pathPtr > path.length) {return false;}
 
             currentNode = RLP.toBytes(parentNodes[i]);
-
-            //            //check address key for each node should be equal to sha3 of node
-            if (nodeKey != keccak256(currentNode)) {
-                emit TestEvent(i, 0);
-                return false;
-            }
-
+            if(nodeKey != keccak256(currentNode)) {return false;}
             currentNodeList = RLP.toList(parentNodes[i]);
 
-            //            //check if node is branch node
-            if (currentNodeList.length == 17) {
-                //
-                //check if whole path is traversed and reached to desired node
-                if (pathPtr == path.length) {
-                    //check if value of node is same as expected account value
-                    if (keccak256(RLP.toBytes(currentNodeList[16])) == value) {
-                        emit TestEvent(i, 1);
+            if(currentNodeList.length == 17) {
+                if(pathPtr == path.length) {
+                    if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
                         return true;
                     } else {
-                        emit TestEvent(i, 2);
                         return false;
                     }
                 }
 
                 uint8 nextPathNibble = uint8(path[pathPtr]);
-                if (nextPathNibble > 16) {
-                    emit TestEvent(i, 3);
-                    return false;
-                }
-
-                //                //select  next node key from branch
+                if(nextPathNibble > 16) {return false;}
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
-                emit TestEvent(10, 10);
-                //
-            }
-
-            else if (currentNodeList.length == 2) {// check if node is extension or leaf node
+            } else if(currentNodeList.length == 2) {
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
-                if (pathPtr == path.length) {//leaf node
-                    //check if value of node is same as expected account value
-                    if (keccak256(RLP.toData(currentNodeList[1])) == value) {
-                        emit TestEvent(i, 4);
+                if(pathPtr == path.length) {//leaf node
+                    if(keccak256(RLP.toData(currentNodeList[1])) == value) {
                         return true;
                     } else {
-                        emit TestEvent(i, 5);
                         return false;
                     }
                 }
-
                 //extension node ... test if means that it is empty value
-                if (_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
-                    emit TestEvent(i, 6);
+                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
                     return (keccak256() == value);
                 }
-                //select next node key which is value of extension node
+
                 nodeKey = RLP.toBytes32(currentNodeList[1]);
             } else {
-                emit TestEvent(i, 7);
                 return false;
             }
         }
     }
 
+    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool res, uint loc, bytes path_debug) {
+        RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
+        RLP.RLPItem[] memory parentNodes = RLP.toList(item);
+
+        bytes memory currentNode;
+        RLP.RLPItem[] memory currentNodeList;
+
+        bytes32 nodeKey = root;
+        uint pathPtr = 0;
+
+        bytes memory path = _getNibbleArray2(not_encodedPath);
+        path_debug = path;
+        if(path.length == 0) { loc = 0; res = false; return;}
+
+        for (uint i=0; i<parentNodes.length; i++) {
+            if(pathPtr > path.length) {loc = 1; res = false; return;}
+
+            currentNode = RLP.toBytes(parentNodes[i]);
+            if(nodeKey != keccak256(currentNode)) { res = false; loc = 100+i; return;}
+            currentNodeList = RLP.toList(parentNodes[i]);
+
+            loc = currentNodeList.length;
+
+            if(currentNodeList.length == 17) {
+                if(pathPtr == path.length) {
+                    if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
+                        res = true; return;
+                    } else {
+                        loc = 3;
+                        return;
+                    }
+                }
+
+                uint8 nextPathNibble = uint8(path[pathPtr]);
+                if(nextPathNibble > 16) {
+                    loc = 4;
+                    return; }
+                nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
+                pathPtr += 1;
+            } else if(currentNodeList.length == 2) {
+                pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
+
+                if(pathPtr == path.length) {//leaf node
+                    if(keccak256(RLP.toData(currentNodeList[1])) == value) {
+                        res = true; return;
+                    } else {
+                        loc = 5;
+                        return;
+                    }
+                }
+                //extension node
+                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
+                    loc = 6;
+                    res = (keccak256() == value);
+                    return;
+                }
+
+                nodeKey = RLP.toBytes32(currentNodeList[1]);
+            } else {
+                loc = 7;
+                return;
+            }
+        }
+        loc = 8;
+        return;
+    }
 
     function _nibblesToTraverse(bytes encodedPartialPath, bytes path, uint pathPtr) private pure returns (uint) {
         uint len;
