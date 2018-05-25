@@ -5,7 +5,7 @@
  * @dev Library for verifing merkle patricia proofs.
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "./RLP.sol";
 
@@ -43,7 +43,7 @@ library MerklePatriciaProof {
                     if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
                         return true;
                     } else {
-                      return false;
+                        return false;
                     }
                 }
 
@@ -52,7 +52,7 @@ library MerklePatriciaProof {
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
             } else if(currentNodeList.length == 2) {
-            pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
+                pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if(pathPtr == path.length) {//leaf node
                     if(keccak256(RLP.toData(currentNodeList[1])) == value) {
@@ -93,7 +93,7 @@ library MerklePatriciaProof {
             currentNode = RLP.toBytes(parentNodes[i]);
             if(nodeKey != keccak256(currentNode)) { res = false; loc = 100+i; return;}
             currentNodeList = RLP.toList(parentNodes[i]);
-            
+
             loc = currentNodeList.length;
 
             if(currentNodeList.length == 17) {
@@ -101,15 +101,15 @@ library MerklePatriciaProof {
                     if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
                         res = true; return;
                     } else {
-                      loc = 3;
-                      return;
+                        loc = 3;
+                        return;
                     }
                 }
 
                 uint8 nextPathNibble = uint8(path[pathPtr]);
                 if(nextPathNibble > 16) {
-                      loc = 4;
-                  return; }
+                    loc = 4;
+                    return; }
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
             } else if(currentNodeList.length == 2) {
@@ -119,24 +119,24 @@ library MerklePatriciaProof {
                     if(keccak256(RLP.toData(currentNodeList[1])) == value) {
                         res = true; return;
                     } else {
-                      loc = 5;
+                        loc = 5;
                         return;
                     }
                 }
                 //extension node
                 if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
-                      loc = 6;
-                      res = (keccak256() == value);
+                    loc = 6;
+                    res = (keccak256() == value);
                     return;
                 }
 
                 nodeKey = RLP.toBytes32(currentNodeList[1]);
             } else {
-                      loc = 7;
+                loc = 7;
                 return;
             }
         }
-                      loc = 8;
+        loc = 8;
         return;
     }
 

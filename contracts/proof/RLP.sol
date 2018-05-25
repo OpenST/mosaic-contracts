@@ -6,7 +6,7 @@
 * @author Andreas Olofsson (androlo1980@gmail.com)
 */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 library RLP {
 
