@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "truffle": "^4.1.8",
-    "ganache-cli": "^6.0.3",
+    "ganache-cli": "^6.1.0",
     "abi-decoder": "^1.0.9",
     "ethereumjs-testrpc": "^6.0.3"
   },
