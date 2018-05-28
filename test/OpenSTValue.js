@@ -250,8 +250,9 @@ contract('OpenSTValue', function(accounts) {
 	            nonce = stakeReturns[1].toNumber();
 
     			// call block number is one less than send block number
-	            var unlockHeight = stakeReturns[2].plus(1);
-	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], amountST,
+	            //var unlockHeight = stakeReturns[2].plus(1); --test commenting
+				var unlockHeight = stakeReturns[2];
+				stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], amountST,
 	            	amountUT, unlockHeight, lock.l);
 	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, { from: accounts[0] });
 
@@ -283,7 +284,8 @@ contract('OpenSTValue', function(accounts) {
 	            nonce = stakeReturns[1].toNumber();
 
     			    // call block number is one less than send block number
-	            var unlockHeight = stakeReturns[2].plus(1);
+				//var unlockHeight = stakeReturns[2].plus(1); --test commenting
+				var unlockHeight = stakeReturns[2];
 	            stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, accounts[0], nonce, accounts[0], amountST,
 	            	amountUT, unlockHeight, lock.l);
 	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, { from: accounts[0] });
@@ -534,7 +536,8 @@ contract('OpenSTValue', function(accounts) {
 				nonce = stakeReturns[1].toNumber();
 
 				// call block number is one less than send block number
-				unlockHeight = stakeReturns[2].plus(1);
+				//unlockHeight = stakeReturns[2].plus(1); --test commenting
+				unlockHeight = stakeReturns[2];
 				stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l);
 				result = await openSTValue.stake(checkUuid, amountST, staker, lock.l, { from: staker });
 				await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
@@ -603,7 +606,8 @@ contract('OpenSTValue', function(accounts) {
 				nonce = stakeReturns[1].toNumber();
 
 				// call block number is one less than send block number
-				unlockHeight = stakeReturns[2].plus(1);
+				//unlockHeight = stakeReturns[2].plus(1);
+				unlockHeight = stakeReturns[2];
 				stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, staker, nonce, staker, amountST,
 					amountUT, unlockHeight, lock.l);
 				result = await openSTValue.stake(checkUuid, amountST, staker, lock.l, { from: staker });
