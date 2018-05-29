@@ -57,7 +57,7 @@ const merkleProof = {
     console.log("\nStarting accountProofWithChainData");
     epObjectWithChainData.getAccountProof(accountAddress).then(async function(proof){
       console.log("\n===========Starting accountProofWithChainData===========\n");
-      console.log("\n===========accountProofWithChainData===========\n", JSON.stringify(proof));
+      console.log("\n===========accountProofWithChainData===========\n", proof);
       console.log("\n===========Ending accountProofWithChainData===========\n");
       console.log("\n===========Starting verifyAccountProofWithChainData===========\n");
       var verifyResult = await EP.account(proof.address, proof.value, proof.parentNodes, proof.header, proof.blockHash);

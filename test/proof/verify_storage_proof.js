@@ -1,7 +1,7 @@
 const util = require('ethereumjs-util');
 const RLP = require('rlp');
 const Web3 = require('web3');
-const merkleProffUtils = require('./verify_merkle_proff_utils.js');
+const merkleProffUtils = require('./verify_merkle_proof_utils.js');
 const web3 = new Web3("http://127.0.0.1:9545");
 contract('Merkel Patricia Proff', function (accounts) {
 

@@ -1,14 +1,14 @@
 const util = require('ethereumjs-util');
 const RLP = require('rlp');
 const Web3 = require('web3');
-const merkleProffUtils = require('./verify_merkle_proff_utils.js');
+const merkleProffUtils = require('./verify_merkle_proof_utils.js');
 const web3 = new Web3("http://127.0.0.1:9545");
 contract('Merkel Patricia Proff', function (accounts) {
 
   describe('Verify Merkel Patricia Proof', async () => {
 
-    const accountAddress = "2456F6369a9FCB3FE80a89Cd1Dd74108D86FA875";
-    const chainDataPath = "/Users/sarveshjain/workspace/prodgeth/uc_node_backup_1409/geth/chaindata";
+    const accountAddress = "01dB94fdCa0FFeDc40A6965DE97790085d71b412";
+    const chainDataPath = "/Users/Pepo/Documents/projects/production_chain/uc_node_1409_29_map_7am/geth/chaindata";
 
     let blockHash;
     let stateRoot;
@@ -25,6 +25,7 @@ contract('Merkel Patricia Proff', function (accounts) {
       contract = verifyProof.verifyProof;
       //generate account Proof
       proof = await merkleProffUtils.accountProof(accountAddress, blockHash, chainDataPath);
+      console.log("proof:", proof);
     });
 
     //sha3 of data
@@ -56,10 +57,17 @@ contract('Merkel Patricia Proff', function (accounts) {
     it('verify account proof ', async () => {
       let addr = "0x" + accountAddress;
       let proofNodes = proof.parentNodes;
+      for (var i=0; i< proofNodes.length; i++){
+        console.log("\nhash of i",i,"is: ", hash(proofNodes[i]));
+      }
       let value = getAHash(proof.value); // aHash
-      let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
+      let rlpParentNodes = rlpParentsNodes(proofNodes); // parentNodes
+      console.log("Verify Account Input Values");
+      console.log("\nvalue", value, "\naddr", addr, "\nhashed addr path", hash(addr),"\nrlpParentNodes", rlpParentNodes, "\nstateRoot", stateRoot);
       let actualResult = await contract.accountInState.call(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
       assert.equal(actualResult, true);
+      result = await contract.accountInState(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
+      console.log(result.receipt.logs);
     });
   })
 

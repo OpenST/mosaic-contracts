@@ -10,6 +10,9 @@ pragma solidity ^0.4.23;
 import "./RLP.sol";
 
 library MerklePatriciaProof {
+
+    event Test(uint i, bytes32 nodeKey);
+
     /*
      * @dev Verifies a merkle patricia proof.
      * @param value The terminating value in the trie.
@@ -18,7 +21,7 @@ library MerklePatriciaProof {
      * @param root The root hash of the trie.
      * @return The boolean validity of the proof.
      */
-    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool) {
+    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) internal returns (bool) {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
@@ -35,7 +38,10 @@ library MerklePatriciaProof {
             if(pathPtr > path.length) {return false;}
 
             currentNode = RLP.toBytes(parentNodes[i]);
-            if(nodeKey != keccak256(currentNode)) {return false;}
+            if(nodeKey != keccak256(currentNode)) {
+                return false;
+            }
+            emit Test(i,nodeKey);
             currentNodeList = RLP.toList(parentNodes[i]);
 
             if(currentNodeList.length == 17) {

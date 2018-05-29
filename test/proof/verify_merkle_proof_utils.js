@@ -1,6 +1,6 @@
 let EP  = require('eth-proof');
 let Web3 = require('web3');
-const VerifyProof = artifacts.require("./mosaic/VerifyProof.sol");
+const VerifyProof = artifacts.require("./proof/VerifyProof.sol");
 
 /// deploy Contract
 module.exports.deployVerifyProof = async (artifacts, accounts) => {
