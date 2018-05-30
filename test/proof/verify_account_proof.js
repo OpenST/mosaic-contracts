@@ -57,18 +57,26 @@ contract('Merkel Patricia Proff', function (accounts) {
     it('verify account proof ', async () => {
       let addr = "0x" + accountAddress;
       let proofNodes = proof.parentNodes;
-      for (var i=0; i< proofNodes.length; i++){
-        console.log("proofNodes[i]", i, proofNodes[i]);
-        console.log("\nhash of i",i,"is: ", await util.sha3(proofNodes[i]).toString('hex'));
+      for (i = 0; i < proofNodes.length; i++) {
+        //console.log("proofNodes[i]", i, proofNodes[i]);
+        console.log("\nhash of i", i, "is: ", await util.sha3(RLP.encode(proofNodes[i])).toString('hex'));
       }
       let value = getAHash(proof.value); // aHash
       let rlpParentNodes = rlpParentsNodes(proofNodes); // parentNodes
       console.log("Verify Account Input Values");
-      console.log("\nvalue", value, "\naddr", addr, "\nhashed addr path", hash(addr),"\nrlpParentNodes", rlpParentNodes, "\nstateRoot", stateRoot);
+      let hashedAddr = util.sha3(addr);
+      console.log("\nvalue", value, "\naddr", addr, "\nhashed addr path", hashedAddr, "\nstringify path", hashedAddr.toString('hex'), "\nstateRoot", stateRoot);
+
+      let selectedIndex = proofNodes[0][12].toString('hex');
+      let node2Sha3 = util.sha3(RLP.encode(proofNodes[1]));
+      let isHashSame = selectedIndex == node2Sha3;
+      console.log("is hash same ", isHashSame);
+      console.log("selected Index", selectedIndex);
+      console.log("node2Sha3", node2Sha3);
       let actualResult = await contract.accountInState.call(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
       assert.equal(actualResult, true);
-      result = await contract.accountInState(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
-      console.log(result.receipt.logs);
+      // result = await contract.accountInState(value, addr, rlpParentNodes, stateRoot, {from: accounts[0]});
+      // console.log(result.receipt.logs);
     });
   })
 
