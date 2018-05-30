@@ -58,7 +58,8 @@ contract('Merkel Patricia Proff', function (accounts) {
       let addr = "0x" + accountAddress;
       let proofNodes = proof.parentNodes;
       for (var i=0; i< proofNodes.length; i++){
-        console.log("\nhash of i",i,"is: ", hash(proofNodes[i]));
+        console.log("proofNodes[i]", i, proofNodes[i]);
+        console.log("\nhash of i",i,"is: ", await util.sha3(proofNodes[i]).toString('hex'));
       }
       let value = getAHash(proof.value); // aHash
       let rlpParentNodes = rlpParentsNodes(proofNodes); // parentNodes
