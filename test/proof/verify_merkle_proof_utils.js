@@ -30,11 +30,21 @@ module.exports.accountProof = function (accountAddress, blockHash, chainDataPath
   });
 };
 
-
-module.exports.getStorageMappingKeyProof = function (blockHash, chainDataPath, storageContractAddress, mappingIndexPosition, senderDeployerAddress) {
+/*
+     * @dev Construct Eth proof object
+     * @param block hash
+     * @param chainDataPath Path to chainData folder of geth
+     * @return epObjectWithChainData
+     */
+module.exports.getEthProofObject = function (blockHash, chainDataPath) {
   const web3Provider = new Web3.providers.HttpProvider("http://127.0.0.1:9546");
   Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send;
   const epObjectWithChainData = new EP(web3Provider, blockHash, chainDataPath);
+  return epObjectWithChainData;
+};
+
+
+module.exports.getStorageMappingKeyProof = function (epObjectWithChainData, storageContractAddress, mappingIndexPosition, senderDeployerAddress) {
   return epObjectWithChainData.getStorageProof(storageContractAddress, mappingIndexPosition, senderDeployerAddress).then(async function (proof) {
     return proof;
   });

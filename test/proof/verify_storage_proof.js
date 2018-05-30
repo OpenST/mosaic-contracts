@@ -1,27 +1,31 @@
 const util = require('ethereumjs-util');
 const RLP = require('rlp');
+let EP  = require('eth-proof');
 const Web3 = require('web3');
-const merkleProffUtils = require('./verify_merkle_proof_utils.js');
+const merkleProofUtils = require('./verify_merkle_proof_utils.js');
 const web3 = new Web3("http://127.0.0.1:9545");
-contract('Merkel Patricia Proff', function (accounts) {
+let epObjectWithChainData = null;
+
+contract('Merkel Patricia Proof', function (accounts) {
 
   describe('Verify Merkel Patricia Proof', async () => {
 
-    const chainDataPath = "/Users/sarveshjain/workspace/openst-payments/mocha_test/scripts/st-poa-backup/geth/chaindata";
-    const storageContractAddress = '10a023D13D45425aA6C1fB30ccAa75103FfD592e';
+    const chainDataPath = "/Users/Pepo/Documents/projects/openst-payments/mocha_test/scripts/st-poa/geth/chaindata_30may_2018_v1";
+    const storageContractAddress = '701F638A493Eb614aD9708c294414Ff5Bb3bdB5F';
     const mappingIndexPosition = '01';
-    const senderDeployerAddress = 'e701297b81e281800e4c3c7718afe5c05d1c3d1d';
-    const blockHash = "cbe1cb969bf317c4f718f78fb257d8386a46eed2d265c222eb22f59272ed7a64";
+    const stakingIntentHashObject = {
+      "14bb2bf372bbfc1de82d7a80510e8bf9c0735e1982c822f370f0882fc1d4f607": '5678',
+      "a20cef82a08a0952b1989262b53492c68a64dc230a885aff8c38dc9bd067a8d0": '5680'
+    };
+    const blockHash = "2dd7178d5fe6ebd6f6ab280e8d120e5d7f6e7146b0e523491a4c15ce3986add9";
     let contract;
     let proof;
-    let mappingValue = 5678;
 
     before(async () => {
-
-      let verifyProof = await merkleProffUtils.deployVerifyProof(artifacts, accounts);
+      let verifyProof = await merkleProofUtils.deployVerifyProof(artifacts, accounts);
       contract = verifyProof.verifyProof;
-      proof = await merkleProffUtils.getStorageMappingKeyProof(blockHash, chainDataPath, storageContractAddress,
-        mappingIndexPosition, senderDeployerAddress);
+
+      epObjectWithChainData = await merkleProofUtils.getEthProofObject(blockHash, chainDataPath);
     });
 
     function hash(dta) {
@@ -48,7 +52,7 @@ contract('Merkel Patricia Proff', function (accounts) {
 
     function getPath(storageIndex, mappings) {
 
-      let pathBuilder = Buffer.from(leftPad(storageIndex.toString('hex')), 'hex')
+      let pathBuilder = Buffer.from(leftPad(storageIndex.toString('hex')), 'hex');
       for (let i = 0; i < mappings.length; i++) {
         pathBuilder = Buffer.concat([Buffer.from(leftPad(mappings[i].toString('hex')), 'hex'), pathBuilder])
       }
@@ -59,14 +63,25 @@ contract('Merkel Patricia Proff', function (accounts) {
 
     it('verify storage account proof ', async () => {
 
-      let addr = getPath(proof.storageIndex, proof.mappings)//"0x" + storageContractAddress;
-      let proofNodes = proof.storageParentNodes;
-      let value = getAHash(proof.value); // aHash
-      let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
-      let storageRoot = util.bufferToHex(proof.account);
+      for(let stakingIntentHash in stakingIntentHashObject) {
+        console.log("stakingIntentHash:", stakingIntentHash);
+        let value = stakingIntentHashObject[stakingIntentHash];
+        //let proofBufferValue = Buffer.concat([Buffer.from(value, "hex"), new Buffer(32-value.length)]);
+        proof = await merkleProofUtils.getStorageMappingKeyProof(epObjectWithChainData, storageContractAddress,
+          mappingIndexPosition, stakingIntentHash);
+        let addr = getPath(proof.storageIndex, proof.mappings)//"0x" + storageContractAddress;
+        let proofNodes = proof.storageParentNodes;
+        let proofBufferValue = proof.value;
+        let hashedValue = getAHash(proofBufferValue); // aHash
+        console.log("\nproofBufferValue value:", proofBufferValue, "\nstring value:", proofBufferValue.toString());
+        console.log("\nproof.value value:", proof.value, "\nproof.value string value:", proof.value.toString());
+        let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
+        let storageRoot = util.bufferToHex(proof.account);
 
-      let actualResult = await contract.storageInAccount.call(value, addr, rlpParentNodes, storageRoot, {from: accounts[0]});
-      assert.equal(actualResult, true);
+        let actualResult = await contract.storageInAccount.call(hashedValue, addr, rlpParentNodes, storageRoot, {from: accounts[0]});
+        assert.equal(actualResult, true);
+      }
+
     });
   })
 
