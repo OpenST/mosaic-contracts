@@ -9,7 +9,7 @@ function getContract(result) {
   });
 }
 
-function checkElementType(element) {
+function checkElementDataType(element) {
   if (element.type === "EventDeclaration") {
     return 'event';
   }
@@ -33,35 +33,62 @@ function checkElementType(element) {
 
 }
 
+function isDataTypeDeclaredInContract(dataTypesInContract, currentDataType) {
+  return dataTypesInContract.indexOf(currentDataType) !== -1;
+}
+
+function getContracVariables(parsedFile) {
+
+  let contract = getContract(parsedFile);
+  return contract[0].body;
+}
+
+function getListOfDataTypesInContract(file,) {
+
+  let parsedFile = SolidityParser.parseFile(file.path);
+  let contractBody = getContracVariables(parsedFile);
+  return contractBody.map(element => checkElementDataType(element)).filter(t => t !== 'unknown');
+}
+
 describe('Contract Structure Test', async () => {
+
   let validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
-  let types;
-  before(async () => {
-    let result = SolidityParser.parseFile("./contracts/TestContract.sol");
-    let contract = getContract(result);
-    let contractBody = contract[0].body;
-    types = contractBody.map(element => checkElementType(element)).filter(t => t !== 'unknown');
-  });
-
-  for (let i = 0; i < validSequence.length; i++) {
-
-    it('Verify ' + validSequence[i] + ' is declared at right position', async () => {
-      let currentTypePosition = -1;
-      let nonCurrentTypePosition = -1;
-      for (let t = 0; t < types.length; t++) {
-        if (validSequence[i] === types[t]) {
-          currentTypePosition = t;
-        }
-        else if (validSequence.indexOf(types[t]) > i) {
-          nonCurrentTypePosition = t;
-        }
-
-        let message = types[nonCurrentTypePosition] + " is declared before " + types[currentTypePosition];
-        assert.equal(nonCurrentTypePosition > -1 && currentTypePosition == -1, false, message) //check if noncurrent type is defined but current type is not defined
-        assert.equal(nonCurrentTypePosition > currentTypePosition || nonCurrentTypePosition == -1, true, message)
-      }
-
-    });
+//todo We can extend this test for all the solidity contracts.
+  const files = [{
+    name: "OpenSTUtility.sol",
+    path: "./contracts/OpenSTUtility.sol"
   }
+    , {
+      name: "OpenSTValue.sol",
+      path: "./contracts/OpenSTValue.sol"
+    }
+  ];
+
+
+  files.map(file => {
+    let dataTypesInContract = getListOfDataTypesInContract(file);
+    for (let i = 0; i < validSequence.length; i++) {
+      it('In ' + file.name + ' verify ' + validSequence[i] + ' is declared at right position', async () => {
+        let currentDataType = validSequence[i];
+        if (isDataTypeDeclaredInContract(dataTypesInContract, currentDataType)) {
+          let currentDatatypePosition = -1;
+          let nonCurrentDataTypePosition = -1;
+          for (let t = 0; t < dataTypesInContract.length; t++) {
+            if (currentDataType === dataTypesInContract[t]) {
+              currentDatatypePosition = t;
+            }
+            else if (validSequence.indexOf(dataTypesInContract[t]) > i) {
+              nonCurrentDataTypePosition = t;
+            }
+            let message = `${dataTypesInContract[nonCurrentDataTypePosition]} is declared before ${currentDataType}`;
+            //check if non current datatype is not defined before current type
+            assert.equal(nonCurrentDataTypePosition > -1 && currentDatatypePosition === -1, false, message);
+            //non current data type should be defined after current data type
+            assert.equal(nonCurrentDataTypePosition > currentDatatypePosition || nonCurrentDataTypePosition === -1, true, message);
+          }
+        }
+      });
+    }
+  });
 
 });
