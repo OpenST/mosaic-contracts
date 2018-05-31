@@ -37,7 +37,7 @@ function isDataTypeDeclaredInContract(dataTypesInContract, currentDataType) {
   return dataTypesInContract.indexOf(currentDataType) !== -1;
 }
 
-function getContracVariables(parsedFile) {
+function getContractVariables(parsedFile) {
 
   let contract = getContract(parsedFile);
   return contract[0].body;
@@ -46,7 +46,7 @@ function getContracVariables(parsedFile) {
 function getListOfDataTypesInContract(file,) {
 
   let parsedFile = SolidityParser.parseFile(file.path);
-  let contractBody = getContracVariables(parsedFile);
+  let contractBody = getContractVariables(parsedFile);
   return contractBody.map(element => checkElementDataType(element)).filter(t => t !== 'unknown');
 }
 
