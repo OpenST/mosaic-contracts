@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -39,7 +39,7 @@ contract EIP20Token is EIP20Interface {
     mapping(address => mapping (address => uint256)) allowed;
 
 
-    function EIP20Token(string _symbol, string _name, uint8 _decimals) public
+    constructor(string _symbol, string _name, uint8 _decimals) public
     {
         tokenSymbol      = _symbol;
         tokenName        = _name;
@@ -79,7 +79,7 @@ contract EIP20Token is EIP20Interface {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
 
         return true;
     }
@@ -90,7 +90,7 @@ contract EIP20Token is EIP20Interface {
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
 
         return true;
     }
@@ -100,7 +100,7 @@ contract EIP20Token is EIP20Interface {
 
         allowed[msg.sender][_spender] = _value;
 
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
 
         return true;
     }
@@ -111,7 +111,7 @@ contract EIP20Token is EIP20Interface {
         balances[address(this)] = balances[address(this)].sub(_amount);
         balances[_beneficiary] = balances[_beneficiary].add(_amount);
 
-        Transfer(address(this), _beneficiary, _amount);
+        emit Transfer(address(this), _beneficiary, _amount);
 
         return true;
     }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // ----------------------------------------------------------------------------
 // Simple Token Contract
@@ -43,7 +43,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     event Finalized();
 
 
-    function SimpleToken() public
+    constructor() public
         ERC20Token(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
     {
@@ -88,7 +88,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         tokenTotalSupply = tokenTotalSupply.sub(_value);
 
-        Burnt(msg.sender, _value);
+        emit Burnt(msg.sender, _value);
 
         return true;
     }
@@ -100,7 +100,7 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
         finalized = true;
 
-        Finalized();
+        emit Finalized();
 
         return true;
     }

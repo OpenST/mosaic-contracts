@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -70,7 +70,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /*
      * Public functions
      */
-    function UtilityTokenAbstract(
+    constructor(
         bytes32 _uuid,
         string _symbol,
         string _name,
@@ -199,7 +199,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         totalTokenSupply = totalTokenSupply.add(_amount);
         claims[_beneficiary] = claims[_beneficiary].add(_amount);
 
-        Minted(tokenUuid, _beneficiary, _amount, claims[_beneficiary], totalTokenSupply);
+        emit Minted(tokenUuid, _beneficiary, _amount, claims[_beneficiary], totalTokenSupply);
 
         return true;
     }
@@ -214,7 +214,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     {
         totalTokenSupply = totalTokenSupply.sub(_amount);
 
-        Burnt(tokenUuid, _burner, _amount, totalTokenSupply);
+        emit Burnt(tokenUuid, _burner, _amount, totalTokenSupply);
 
         return true;
     }

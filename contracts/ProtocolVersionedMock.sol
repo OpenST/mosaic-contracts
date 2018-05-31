@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -31,7 +31,7 @@ contract ProtocolVersionedMock is ProtocolVersioned {
     /*
      *  Public functions
      */
-    function ProtocolVersionedMock(address _protocol)
+    constructor(address _protocol)
         ProtocolVersioned(_protocol)
         public { }
 

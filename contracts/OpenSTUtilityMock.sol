@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -32,7 +32,7 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	/*
 	 *  Public functions
 	 */
-	function OpenSTUtilityMock(
+	constructor(
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
 		address _registrar)

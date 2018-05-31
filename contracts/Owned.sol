@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -34,7 +34,7 @@ contract Owned {
     event OwnershipTransferCompleted(address indexed _newOwner);
 
 
-    function Owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 
@@ -53,7 +53,7 @@ contract Owned {
     function initiateOwnershipTransfer(address _proposedOwner) public onlyOwner returns (bool) {
         proposedOwner = _proposedOwner;
 
-        OwnershipTransferInitiated(_proposedOwner);
+        emit OwnershipTransferInitiated(_proposedOwner);
 
         return true;
     }
@@ -65,7 +65,7 @@ contract Owned {
         owner = proposedOwner;
         proposedOwner = address(0);
 
-        OwnershipTransferCompleted(owner);
+        emit OwnershipTransferCompleted(owner);
 
         return true;
     }

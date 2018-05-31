@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // ----------------------------------------------------------------------------
 // Mock Token Contract
@@ -22,7 +22,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     // Events
     event Finalized();
 
-    function MockToken() public
+    constructor() public
         ERC20Token("MOCK", "Mock Token", TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
         { }
@@ -33,7 +33,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
         finalized = true;
 
-        Finalized();
+        emit Finalized();
 
         return true;
     }
