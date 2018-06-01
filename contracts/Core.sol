@@ -29,29 +29,43 @@ import "./CoreInterface.sol";
 contract Core is CoreInterface {
 
 	/*
+    *    Events
+    */
+	event CommittedStateRoot(uint256 blockHeight, bytes32 stateRoot);
+
+	event CommittedStorageRoot(uint256 blockHeight, bytes32 storageRoot);
+
+	/** Mapping of block height to state root of the block.  */
+	mapping (uint /* block height */ => bytes32) public stateRoots;
+	/** Mapping of block height to storafe root of the block.  */
+	mapping (uint /* block height */ => bytes32) public storageRoots;
+
+	// mapping(bytes32 => address) stakeTokenTuple;
+
+	/*
+	 *  Storage
+	 */
+	/// chainIdOrigin stores the chainId this chain
+	uint256 private coreChainIdOrigin;
+	/// chainIdRemote stores the chainId of the remote chain
+	uint256 private coreChainIdRemote;
+	/// Latest block height of block which state root was committed.
+	uint256 public latestStateRootBlockHeight;
+	/// Latest block height of block which storage root was committed.
+	uint256 public latestStorageRootBlockHeight;
+	/// OpenST remote is the address of the OpenST contract
+	/// on the remote chain
+	address private coreOpenSTRemote;
+	/// registrar registers for the two chains
+	address private coreRegistrar;
+
+	/*
 	 *  Structures
 	 */
 	// struct stakeTokenTuple {
 	// 	address stake;
 	// 	address token;
 	// }
-
-
-	/*
-	 *  Storage
-	 */
-	/// registrar registers for the two chains
-	address private coreRegistrar;
-	/// chainIdOrigin stores the chainId this chain
-	uint256 private coreChainIdOrigin;
-	/// chainIdRemote stores the chainId of the remote chain
-	uint256 private coreChainIdRemote;
-	/// OpenST remote is the address of the OpenST contract
-	/// on the remote chain
-	address private coreOpenSTRemote;
-	// /// 
-	// mapping(bytes32 => address) stakeTokenTuple;
-
 
 	/*
 	 *  Public functions
@@ -71,6 +85,10 @@ contract Core is CoreInterface {
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
+
+        // Initialize
+		latestStateRootBlockHeight = 0;
+		latestStorageRootBlockHeight = 0;
 	}
 
 	/*
@@ -98,5 +116,43 @@ contract Core is CoreInterface {
 		returns (address /* OpenSTRemote */)
 	{
 		return coreOpenSTRemote;
+	}
+
+	/**
+     * Commit new state root for a block height
+     *
+     */
+	function commitStateRoot(
+		uint256 _blockHeight,
+		bytes32 _stateRoot)
+		external
+		returns(bytes32 stateRoot)
+	{
+		require(_blockHeight > latestStateRootBlockHeight, "Given Block height is lower than latestBlockHeight.");
+		stateRoots[_blockHeight] = _stateRoot;
+		latestStateRootBlockHeight = _blockHeight;
+
+		emit CommittedStateRoot(_blockHeight, _stateRoot);
+
+		return stateRoot;
+	}
+
+	/**
+     * Commit new storage root for a block height
+     *
+     */
+	function commitStorageRoot(
+		uint256 _blockHeight,
+		bytes32 _storageRoot)
+		external
+		returns(bytes32 storageRoot)
+	{
+		require(_blockHeight > latestStorageRootBlockHeight, "Given Block height is lower than latestBlockHeight.");
+		storageRoots[_blockHeight] = _storageRoot;
+		latestStorageRootBlockHeight = _blockHeight;
+
+		emit CommittedStorageRoot(_blockHeight, _storageRoot);
+
+		return _storageRoot;
 	}
 }
