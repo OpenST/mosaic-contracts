@@ -32,6 +32,11 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
+// proof libraries
+import "./proof/MerklePatriciaProof.sol";
+import "./proof/RLPEncode.sol";
+import "./proof/BytesLib.sol";
+
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -128,6 +133,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
+
+    constant private storageIndex = 3;
 
     /*
      *  Modifiers
@@ -293,6 +300,17 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (uuid, amountST, staker);
     }
 
+    function getStoragePath(
+        uint256 _index,
+        bytes32 _key)
+        returns(bytes32 path)
+    {
+        bytes memory indexBytes = bytes32ToBytes(bytes32(_index));
+        bytes memory keyBytes = bytes32ToBytes(_key);
+        bytes key = BytesLib.concat(indexBytes, keyBytes);
+        path = keccak256(key);
+        return path;
+    }
     function confirmRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
@@ -301,12 +319,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _redemptionIntentHash)
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
-        onlyRegistrar
         returns (
         uint256 amountST,
-        uint256 expirationHeight)
+        uint256 expirationHeight,
+        bytes32 storageRoot)
     {
         require(utilityTokens[_uuid].simpleStake != address(0));
         require(_amountUT > 0);
@@ -329,8 +348,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             _hashLock
         );
 
-        require(_redemptionIntentHash == redemptionIntentHash);
-
+        //require(_redemptionIntentHash == redemptionIntentHash);
         expirationHeight = block.number + blocksToWaitShort();
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
@@ -340,6 +358,18 @@ contract OpenSTValue is OpsManaged, Hasher {
             .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
+
+        storageRoot = cores[utilityTokens[_uuid].chainIdUtility].storageRoot(_blockHeight);
+
+        bytes32 key = keccak256(_redeemer, _redeemerNonce);
+        bytes32 keyPath = getStoragePath(3, key);
+
+        bytes memory path = bytes32ToBytes(keccak256(keyPath));
+        require(MerklePatriciaProof.verify(
+            keccak256(RLPEncode.encodeItem(redemptionIntentHash)),
+            path,
+            _rlpParentNodes,
+            storageRoot));
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
