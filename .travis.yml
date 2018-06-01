@@ -6,6 +6,7 @@ branches:
   - master
   - develop
   - gate/develop
+  - v0.9.3/develop
 notifications:
   email:
     recipients:
