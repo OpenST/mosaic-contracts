@@ -22,11 +22,13 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
+import "./proof/MerklePatriciaProof.sol";
+import "./proof/util.sol";
 
 
 /// @dev Core is a minimal stub that will become the anchoring and consensus point for
 ///      the utility chain to validate itself against
-contract Core is CoreInterface {
+contract Core is CoreInterface, Util {
 
 	/*
     *    Events
@@ -34,6 +36,8 @@ contract Core is CoreInterface {
 	event CommittedStateRoot(uint256 blockHeight, bytes32 stateRoot);
 
 	event CommittedStorageRoot(uint256 blockHeight, bytes32 storageRoot);
+
+	event AccountProved(uint256 blockHeight, bytes32 stateRoot, bytes encodedAddress);
 
 	/** Mapping of block height to state root of the block.  */
 	mapping (uint /* block height */ => bytes32) public stateRoots;
@@ -138,6 +142,7 @@ contract Core is CoreInterface {
 	}
 
 	/**
+	 *
      * Commit new storage root for a block height
      *
      */
@@ -154,5 +159,34 @@ contract Core is CoreInterface {
 		emit CommittedStorageRoot(_blockHeight, _storageRoot);
 
 		return _storageRoot;
+	}
+
+	/// @dev Verify account proof
+	/// @param _blockHeight block Number at which stake happened
+	/// @param _value rlpencoded => hashed account node value
+	/// @param _rlpParentNodes RLP encoded value of account proof parent nodes
+	function proveOpenST(
+		uint256 _blockHeight,
+		bytes32 _value,
+		bytes _rlpParentNodes)
+		external
+		returns(bool status)
+	{
+		require(_blockHeight != 0);
+		bytes32 stateRoot = stateRoots[_blockHeight];
+		// State root should be present for the block height
+		require(stateRoot != bytes32(0), "State root missing for given block height");
+
+		require(_value != bytes32(0), "Node values are missing");
+
+		// Encode remote address. Storage added because it was generating warning.
+		bytes memory encodedAddress = bytes32ToBytes(keccak256(coreOpenSTRemote));
+
+		// Verify proof using library contract
+		require(MerklePatriciaProof.verify(_value, encodedAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
+
+		emit AccountProved(_blockHeight, stateRoot, encodedAddress);
+
+		return true;
 	}
 }
