@@ -1,6 +1,17 @@
 let SolidityParser = require("solparse");
 
 
+//todo We can extend this test for all the solidity contracts. But it's out of scope for now
+const contracts = [{
+  name: "OpenSTUtility.sol",
+  path: "./contracts/OpenSTUtility.sol"
+}
+  , {
+    name: "OpenSTValue.sol",
+    path: "./contracts/OpenSTValue.sol"
+  }
+];
+
 function getContract(result) {
   return result.body.filter(e => {
     if (e.type === "ContractStatement") {
@@ -53,19 +64,8 @@ function getListOfDataTypesInContract(file,) {
 describe('Contract Structure Test', async () => {
 
   let validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
-//todo We can extend this test for all the solidity contracts.
-  const files = [{
-    name: "OpenSTUtility.sol",
-    path: "./contracts/OpenSTUtility.sol"
-  }
-    , {
-      name: "OpenSTValue.sol",
-      path: "./contracts/OpenSTValue.sol"
-    }
-  ];
 
-
-  files.map(file => {
+  contracts.map(file => {
     let dataTypesInContract = getListOfDataTypesInContract(file);
     for (let i = 0; i < validSequence.length; i++) {
       it('In ' + file.name + ' verify ' + validSequence[i] + ' is declared at right position', async () => {
