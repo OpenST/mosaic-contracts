@@ -32,7 +32,7 @@ import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
-
+import "./Core.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -75,7 +75,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint8 _conversionRateDecimals, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
+        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight,bytes32 blockHeight,bytes32 storageRoot);
 
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
         address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
@@ -112,6 +112,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// chainId of the current utility chain
     uint256 public chainIdUtility;
     address public registrar;
+    CoreInterface public core;
     bytes32[] public uuids;
     /// registered branded tokens
     mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
@@ -142,18 +143,19 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     constructor(
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        address _registrar)
+        address _registrar,
+        CoreInterface _core )
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
-
+        require(_core != address(0),"CoreInterface address cannot be null");
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
-
+        core = _core;
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,
             STPRIME_NAME,
@@ -185,6 +187,32 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // @dev read STPrime address and uuid from contract
     }
 
+     /*
+     *  Registrar functions
+     */
+    function addCore(
+        CoreInterface _core)
+        public
+        onlyRegistrar
+        returns (bool /* success */)
+    {
+        require(address(_core) != address(0));
+        // core constructed with same registrar
+        require(registrar == _core.registrar());
+        // on value chain core only tracks a remote utility chain
+        uint256 chainIdUtility = _core.chainIdRemote();
+        require(chainIdUtility != 0);
+        // cannot overwrite core for given chainId
+        require(cores[chainIdUtility] == address(0));
+
+        cores[chainIdUtility] = _core;
+
+        return true;
+    }
+
+
+
+
     /*
      *  External functions
      */
@@ -197,9 +225,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _blockHeight,
+        bytes rlpParentNodes)
         external
-        onlyRegistrar
         returns (uint256 expirationHeight)
     {
         require(address(registeredTokens[_uuid].token) != address(0));
@@ -211,9 +240,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_stakingUnlockHeight > 0);
         require(_stakingIntentHash != "");
 
+
         expirationHeight = block.number + blocksToWaitShort();
         nonces[_staker] = _stakerNonce;
-
         bytes32 stakingIntentHash = hashStakingIntent(
             _uuid,
             _staker,
@@ -225,7 +254,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _hashLock
         );
 
-        require(stakingIntentHash == _stakingIntentHash);
+         bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+         require(core.verify(stakingIntentHash,hash(staker,stakerNonce) ,rlpParentNodes,storageRoot));
 
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
@@ -237,7 +267,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         });
 
         emit StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
-                _amountUT, expirationHeight);
+                _amountUT, expirationHeight, _blockHeight ,storageRoot);
 
         return expirationHeight;
     }
