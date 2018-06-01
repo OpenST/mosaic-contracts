@@ -3,21 +3,22 @@ const RLP = require('rlp');
 let EP  = require('eth-proof');
 const Web3 = require('web3');
 const merkleProofUtils = require('./verify_merkle_proof_utils.js');
-const web3 = new Web3("http://127.0.0.1:9545");
+const web3 = new Web3("http://127.0.0.1:9546");
 let epObjectWithChainData = null;
+
 
 contract('Merkel Patricia Proof', function (accounts) {
 
   describe('Verify Merkel Patricia Proof', async () => {
 
-    const chainDataPath = "/Users/Pepo/Documents/projects/openst-payments/mocha_test/scripts/st-poa/geth/chaindata_30may_2018_v1";
-    const storageContractAddress = '701F638A493Eb614aD9708c294414Ff5Bb3bdB5F';
+    const chainDataPath = "/Users/sarveshjain/workspace/openst-payments/mocha_test/scripts/st-poa-backup/geth/chaindata";
+    const storageContractAddress = '17547293608ed3D723bE3C739fFb3bAB3f613570';
     const mappingIndexPosition = '01';
     const stakingIntentHashObject = {
       "14bb2bf372bbfc1de82d7a80510e8bf9c0735e1982c822f370f0882fc1d4f607": '5678',
-      "a20cef82a08a0952b1989262b53492c68a64dc230a885aff8c38dc9bd067a8d0": '5680'
+      "a20cef82a08a0952b1989262b53492c68a64dc230a885aff8c38dc9bd067a8d0": '5680803456'
     };
-    const blockHash = "2dd7178d5fe6ebd6f6ab280e8d120e5d7f6e7146b0e523491a4c15ce3986add9";
+    const blockHash = "aef770b488454554bd1c1439f086407a413e94e295fac550710038268b5c789e";
     let contract;
     let proof;
 
@@ -33,16 +34,15 @@ contract('Merkel Patricia Proof', function (accounts) {
       return util.sha3(from);
     }
 
-    function getAHash(acc_dta) {
-      acc_dta = RLP.encode(acc_dta);
-      let ahash = hash(acc_dta);
+    function getAHash(data) {
+      data = RLP.encode(data);
+      let ahash = hash(data);
       return "0x" + ahash.toString("hex");
     }
 
     // RLP Encoding proof
     function rlpParentsNodes(proof) {
       let proof_rlp = RLP.encode(proof);
-      console.log(proof_rlp);
       return "0x" + proof_rlp.toString("hex");
     }
 
@@ -56,33 +56,48 @@ contract('Merkel Patricia Proof', function (accounts) {
       for (let i = 0; i < mappings.length; i++) {
         pathBuilder = Buffer.concat([Buffer.from(leftPad(mappings[i].toString('hex')), 'hex'), pathBuilder])
       }
-      pathBuilder = Buffer.from(util.sha3(pathBuilder), 'hex')
+      pathBuilder = Buffer.from(util.sha3(pathBuilder), 'hex');
       let storagePath = Buffer.from(util.sha3(pathBuilder), 'hex');
       return util.bufferToHex(storagePath);
     }
 
-    it('verify storage account proof ', async () => {
+    function getFormatedLength(twiceLength) {
+      return parseInt(twiceLength).toString(16).length % 2 === 0 ?
+        parseInt(twiceLength).toString(16) :
+        '0' + parseInt(twiceLength).toString(16);
+    }
 
-      for(let stakingIntentHash in stakingIntentHashObject) {
-        console.log("stakingIntentHash:", stakingIntentHash);
+    function formatValue(value) {
+      let twiceLength = (2 * value.length);
+      let formatedLength = getFormatedLength(twiceLength);
+      let lowerBytesFromLength = Buffer.from(formatedLength, 'hex');
+      let valueBuffer = Buffer.from(value);
+      let padding = new Buffer(32 - lowerBytesFromLength.toString().length - valueBuffer.toString().length);
+      return Buffer.concat([valueBuffer, padding, lowerBytesFromLength]);
+    }
+
+    for (let stakingIntentHash in stakingIntentHashObject) {
+      it('verify storage account proof for intent ' + stakingIntentHash, async () => {
+
         let value = stakingIntentHashObject[stakingIntentHash];
-        //let proofBufferValue = Buffer.concat([Buffer.from(value, "hex"), new Buffer(32-value.length)]);
         proof = await merkleProofUtils.getStorageMappingKeyProof(epObjectWithChainData, storageContractAddress,
           mappingIndexPosition, stakingIntentHash);
+
+
         let addr = getPath(proof.storageIndex, proof.mappings)//"0x" + storageContractAddress;
         let proofNodes = proof.storageParentNodes;
-        let proofBufferValue = proof.value;
+
+        let proofBufferValue = formatValue(value);
         let hashedValue = getAHash(proofBufferValue); // aHash
-        console.log("\nproofBufferValue value:", proofBufferValue, "\nstring value:", proofBufferValue.toString());
-        console.log("\nproof.value value:", proof.value, "\nproof.value string value:", proof.value.toString());
         let rlpParentNodes = rlpParentsNodes(proofNodes); //parentNodes
         let storageRoot = util.bufferToHex(proof.account);
 
         let actualResult = await contract.storageInAccount.call(hashedValue, addr, rlpParentNodes, storageRoot, {from: accounts[0]});
         assert.equal(actualResult, true);
-      }
 
-    });
+
+      });
+    }
   })
 
 });
