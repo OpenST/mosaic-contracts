@@ -35,11 +35,9 @@ contract Core is CoreInterface, Util {
 	/*
     *    Events
     */
-	event CommittedStateRoot(uint256 blockHeight, bytes32 stateRoot);
+	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
-	event CommittedStorageRoot(uint256 blockHeight, bytes32 storageRoot);
-
-	event AccountProved(uint256 blockHeight, bytes32 stateRoot, bytes encodedAddress);
+	event AccountProved(uint256 blockHeight, bytes32 stateRoot, bytes encodedAddress, bytes32 storageRoot);
 
 	/*
 	 *  Storage
@@ -56,15 +54,15 @@ contract Core is CoreInterface, Util {
 	uint256 private coreChainIdOrigin;
 	/// chainIdRemote stores the chainId of the remote chain
 	uint256 private coreChainIdRemote;
-	/// Latest block height of block which state root was committed.
-	uint256 public latestStateRootBlockHeight;
-	/// Latest block height of block which storage root was committed.
-	uint256 public latestStorageRootBlockHeight;
 	/// OpenST remote is the address of the OpenST contract
 	/// on the remote chain
 	address private coreOpenSTRemote;
 	/// registrar registers for the two chains
 	address private coreRegistrar;
+    /// Latest block height of block which state root was committed.
+    uint256 public latestStateRootBlockHeight;
+    /// Latest block height of block which storage root was committed.
+    uint256 public latestStorageRootBlockHeight;
 	/// Workers contract address
 	WorkersInterface public workers;
 
@@ -137,6 +135,9 @@ contract Core is CoreInterface, Util {
      * Commit new state root for a block height
      *
      */
+	/// @dev Commit new state root for a block height
+	/// @param _blockHeight block Number for which stateRoots mapping needs to update
+	/// @param _stateRoot state root of input block height
 	function commitStateRoot(
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
@@ -153,49 +154,31 @@ contract Core is CoreInterface, Util {
 		stateRoots[_blockHeight] = _stateRoot;
 		latestStateRootBlockHeight = _blockHeight;
 
-		emit CommittedStateRoot(_blockHeight, _stateRoot);
+		emit StateRootCommitted(_blockHeight, _stateRoot);
 
 		return stateRoot;
 	}
 
-	/**
-	 *
-     * Commit new storage root for a block height
-     *
-     */
-	function commitStorageRoot(
-		uint256 _blockHeight,
-		bytes32 _storageRoot)
-		external
-		returns(bytes32 storageRoot)
-	{
-		// check if the caller is whitelisted worker
-		require(workers.isWorker(msg.sender), "Invalid worker address");
-		// Storage root should be valid
-		require(_storageRoot != bytes32(0), "Invalid storage root");
-		// Input block height should be valid
-		require(_blockHeight > latestStorageRootBlockHeight, "Given Block height is lower than latestBlockHeight.");
-
-		storageRoots[_blockHeight] = _storageRoot;
-		latestStorageRootBlockHeight = _blockHeight;
-
-		emit CommittedStorageRoot(_blockHeight, _storageRoot);
-
-		return _storageRoot;
-	}
-
-	/// @dev Verify account proof
+	/// @dev Verify account proof and update storageRoots mapping
 	/// @param _blockHeight block Number at which stake happened
-	/// @param _value rlpencoded => hashed account node value
+	/// @param _value rlpencoded => hashed account node object
 	/// @param _rlpParentNodes RLP encoded value of account proof parent nodes
+	/// @param _storageRoot storage root received from account proof
 	function proveOpenST(
 		uint256 _blockHeight,
 		bytes32 _value,
-		bytes _rlpParentNodes)
+		bytes _rlpParentNodes,
+		bytes32 _storageRoot)
 		external
 		returns(bool status)
 	{
-		require(_blockHeight != 0);
+		// check if the caller is whitelisted worker
+		require(workers.isWorker(msg.sender), "Invalid worker address");
+		// Check for block height
+		require(_blockHeight != 0, "Invalid block height");
+		// Storage root should be valid
+		require(_storageRoot != bytes32(0), "Invalid storage root");
+
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
 		require(stateRoot != bytes32(0), "State root missing for given block height");
@@ -208,7 +191,12 @@ contract Core is CoreInterface, Util {
 		// Verify proof using library contract
 		require(MerklePatriciaProof.verify(_value, encodedAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
 
-		emit AccountProved(_blockHeight, stateRoot, encodedAddress);
+		// After verification update storageRoots mapping
+		storageRoots[_blockHeight] = _storageRoot;
+		// Update latestStorageRootBlockHeight variable
+		latestStorageRootBlockHeight = _blockHeight;
+		// Emit event
+		emit AccountProved(_blockHeight, stateRoot, encodedAddress, _storageRoot);
 
 		return true;
 	}
