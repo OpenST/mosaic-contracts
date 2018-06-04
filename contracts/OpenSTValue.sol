@@ -35,11 +35,11 @@ import "./SimpleStake.sol";
 // proof libraries
 import "./proof/MerklePatriciaProof.sol";
 import "./proof/RLPEncode.sol";
-import "./proof/BytesLib.sol";
-
+import "./OpenSTUtils.sol";
+import "./proof/util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is OpsManaged, Hasher {
+contract OpenSTValue is OpsManaged, Hasher, Util {
     using SafeMath for uint256;
 
     /*
@@ -133,8 +133,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
-
-//    /constant private storageIndex = 3;
 
     /*
      *  Modifiers
@@ -300,17 +298,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (uuid, amountST, staker);
     }
 
-  /*  function getStoragePath(
-        uint256 _index,
-        bytes32 _key)
-        returns(bytes32 path)
-    {
-        bytes memory indexBytes = bytes32ToBytes(bytes32(_index));
-        bytes memory keyBytes = bytes32ToBytes(_key);
-        bytes key = BytesLib.concat(indexBytes, keyBytes);
-        path = keccak256(key);
-        return path;
-    }
     function confirmRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
@@ -333,7 +320,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         // later core will provide a view on the block height of the
         // utility chain
         require(_redemptionUnlockHeight > 0);
-        require(_redemptionIntentHash != "");
 
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
@@ -361,15 +347,13 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         storageRoot = cores[utilityTokens[_uuid].chainIdUtility].storageRoot(_blockHeight);
 
-        bytes32 key = keccak256(_redeemer, _redeemerNonce);
-        bytes32 keyPath = getStoragePath(storageIndex, key);
-
+        bytes32 keyPath = OpenSTUtils.storagePath("3", keccak256(_redeemer, _redeemerNonce));
         bytes memory path = bytes32ToBytes(keccak256(keyPath));
         require(MerklePatriciaProof.verify(
             keccak256(RLPEncode.encodeItem(redemptionIntentHash)),
             path,
             _rlpParentNodes,
-            storageRoot));
+            storageRoot), "Failed to verify storage path");
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
@@ -386,7 +370,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         return (amountST, expirationHeight);
     }
-*/
+
     function processUnstaking(
         bytes32 _redemptionIntentHash,
         bytes32 _unlockSecret)
