@@ -303,10 +303,10 @@ contract Gate is ProtocolVersioned, Owned {
 
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
-    uint256 stakeRequestAmount = stakeRequest.amount;
+    uint256 revertedAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
 
-    return stakeRequestAmount;
+    return revertedAmount;
   }
 }
