@@ -93,4 +93,16 @@ contract Hasher {
 			_unlockHeight,
 			_hashLock);
 	}
+
+	function hashIntentKey(
+		address _staker,
+		uint256 _nonce)
+		public
+		pure
+		returns (bytes32)
+	{
+		return keccak256(
+			_staker,
+			_nonce);
+	}
 }

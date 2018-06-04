@@ -32,9 +32,9 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
-
+/// Inherited contract Intents position should not be changed to maintain index position of intents mapping
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is OpsManaged, Hasher {
+contract OpenSTValue is Intents, OpsManaged, Hasher {
     using SafeMath for uint256;
 
     /*
@@ -221,6 +221,8 @@ contract OpenSTValue is OpsManaged, Hasher {
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+        ///Add intent hash to intents mapping
+        intents[hashIntentKey(_staker, nonce)] = stakingIntentHash;
 
         emit StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
@@ -257,6 +259,8 @@ contract OpenSTValue is OpsManaged, Hasher {
             stake.amountST, stake.amountUT, _unlockSecret);
 
         delete stakes[_stakingIntentHash];
+        ///Remove intent hash from intents mapping
+        delete intents[hashIntentKey(_staker, nonce)];
 
         return stakeAddress;
     }
