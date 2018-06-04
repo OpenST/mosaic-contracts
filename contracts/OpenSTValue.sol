@@ -258,10 +258,11 @@ contract OpenSTValue is HasIntents, OpsManaged, Hasher {
 
         emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
+        ///Remove intent hash from intents mapping
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];        
 
         delete stakes[_stakingIntentHash];
-        ///Remove intent hash from intents mapping
-        delete intents[hashIntentKey(_staker, nonce)];
+
 
         return stakeAddress;
     }
