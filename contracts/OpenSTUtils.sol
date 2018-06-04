@@ -24,5 +24,5 @@ library OpenSTUtils {
     bytes memory path = BytesLib.concat(keyBytes, indexBytes);
     return keccak256(keccak256(path));
   }
-  
+
 }

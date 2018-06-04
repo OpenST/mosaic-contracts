@@ -61,7 +61,8 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         address _staker, uint256 _amountST, uint256 _amountUT);
 
     event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
-        address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
+        address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight, uint256 _blockHeight,
+        bytes32 _storageRoot);
 
     event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address stake, address _redeemer, address _beneficiary, uint256 _amountST, bytes32 _unlockSecret);
@@ -334,7 +335,6 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
             _hashLock
         );
 
-        //require(_redemptionIntentHash == redemptionIntentHash);
         expirationHeight = block.number + blocksToWaitShort();
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
@@ -347,6 +347,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
 
         storageRoot = cores[utilityTokens[_uuid].chainIdUtility].storageRoot(_blockHeight);
 
+        //TODO: Update the code to get the Index.
         bytes32 keyPath = OpenSTUtils.storagePath("3", keccak256(_redeemer, _redeemerNonce));
         bytes memory path = bytes32ToBytes(keccak256(keyPath));
         require(MerklePatriciaProof.verify(
@@ -366,9 +367,9 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         });
 
         emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
-            _beneficiary, amountST, _amountUT, expirationHeight);
+            _beneficiary, amountST, _amountUT, expirationHeight, _blockHeight, storageRoot );
 
-        return (amountST, expirationHeight);
+        return (amountST, expirationHeight, storageRoot);
     }
 
     function processUnstaking(
