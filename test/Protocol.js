@@ -172,7 +172,7 @@ contract('OpenST', function(accounts) {
 				Assert.equal(nonceSTP, 1);
 				// staker calls OpenSTValue.stake to initiate the staking for ST' with uuidSTP
 				// with staker as the beneficiary
-				const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, beneficiary, lockSTP.l, { from: stakerVC });
+				const o = await openSTValue.stake(uuidSTP, AMOUNT_ST, beneficiary, lockSTP.l, stakerVC, { from: stakerVC });
 				utils.logResponse(o, "OpenSTValue.stake");
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, stakerVC, nonceSTP, beneficiary,
 					AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
@@ -293,7 +293,7 @@ contract('OpenST', function(accounts) {
 				Assert.equal(nonceBT, 2);
 				// stakerVC calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
 				// with beneficiary
-				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockBT.l, { from: stakerVC });
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockBT.l, stakerVC, { from: stakerVC });
 
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
@@ -532,7 +532,7 @@ contract('OpenST', function(accounts) {
 				nonceBT = await openSTValue.getNextNonce.call(stakerVC);
 				// stakerVC calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
 				// with beneficiary
-				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockR.l, { from: stakerVC });
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockR.l, stakerVC, { from: stakerVC });
 
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
@@ -575,7 +575,7 @@ contract('OpenST', function(accounts) {
 				nonceBT = await openSTValue.getNextNonce.call(stakerVC);
 				// requester calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
 				// with requester as the beneficiary
-				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockR.l, { from: stakerVC });
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockR.l, stakerVC, { from: stakerVC });
 
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
@@ -662,7 +662,7 @@ contract('OpenST', function(accounts) {
 				nonceBT = await openSTValue.getNextNonce.call(stakerVC);
 				// stakerVC calls OpenSTValue.stake to initiate the staking for Branded Token with registeredBrandedTokenUuid
 				// with stakerVC as the beneficiary
-				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockStake.l, { from: stakerVC });
+				var stakeResult = await openSTValue.stake(registeredBrandedTokenUuid, AMOUNT_ST, beneficiary, lockStake.l, stakerVC, { from: stakerVC });
 
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
