@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Common: Intents
+// Common: HasIntents
 //
 // http://www.simpletoken.org/
 //

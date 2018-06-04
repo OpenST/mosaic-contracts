@@ -28,13 +28,14 @@ import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
 import "./ProtocolVersioned.sol";
+import "./HasIntents.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
 
-/// Inherited contract Intents position should not be changed to maintain index position of intents mapping
+/// Inherited contract HasIntents position should not be changed to maintain index position of intents mapping at 0
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is Intents, OpsManaged, Hasher {
+contract OpenSTValue is HasIntents, OpsManaged, Hasher {
     using SafeMath for uint256;
 
     /*
