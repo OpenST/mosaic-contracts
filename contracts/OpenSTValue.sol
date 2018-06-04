@@ -134,7 +134,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
 
-    constant private storageIndex = 3;
+//    /constant private storageIndex = 3;
 
     /*
      *  Modifiers
@@ -300,7 +300,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (uuid, amountST, staker);
     }
 
-    function getStoragePath(
+  /*  function getStoragePath(
         uint256 _index,
         bytes32 _key)
         returns(bytes32 path)
@@ -362,7 +362,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         storageRoot = cores[utilityTokens[_uuid].chainIdUtility].storageRoot(_blockHeight);
 
         bytes32 key = keccak256(_redeemer, _redeemerNonce);
-        bytes32 keyPath = getStoragePath(3, key);
+        bytes32 keyPath = getStoragePath(storageIndex, key);
 
         bytes memory path = bytes32ToBytes(keccak256(keyPath));
         require(MerklePatriciaProof.verify(
@@ -386,7 +386,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         return (amountST, expirationHeight);
     }
-
+*/
     function processUnstaking(
         bytes32 _redemptionIntentHash,
         bytes32 _unlockSecret)

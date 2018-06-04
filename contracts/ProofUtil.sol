@@ -5,17 +5,17 @@ import "./proof/util.sol";
 
 contract ProofUtil is Util {
 
-  event StoragePath(uint256 index, address key, bytes indexBytes, bytes keyBytes, bytes k, bytes32 path);
+  event StoragePath(uint256 index, bytes32 key, bytes indexBytes, bytes keyBytes, bytes k, bytes32 path);
 
   constructor(){}
 
   function getStoragePath(
     uint256 _index,
-    address _key)
+    bytes32 _key)
   returns(bytes32 storagePath)
   {
     bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_index)));
-    bytes memory keyBytes = BytesLib.leftPad(addressToBytes(_key));
+    bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
     bytes memory k = BytesLib.concat(keyBytes, indexBytes);
     storagePath = keccak256(keccak256(k));
     emit StoragePath(_index, _key, indexBytes, keyBytes, k, storagePath);
