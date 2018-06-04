@@ -95,7 +95,7 @@ contract Gate is ProtocolVersioned, Owned {
         uint256 _amount,
         address _beneficiary)
         external
-        returns ( bool /* success */)
+        returns ( uint256 /* amount */)
     {
 
         require(_amount > uint256(0));
@@ -115,14 +115,14 @@ contract Gate is ProtocolVersioned, Owned {
 
         emit StakeRequested(msg.sender, _amount, _beneficiary);
 
-        return true;
+        return _amount;
     }
 
 
     /// @dev In order to revert stake request the msg.sender should be the staker
     function revertStakeRequest()
         external
-        returns (bool /* success */)
+        returns (uint256 /* amount */)
     {
         // only staker can do revertStakeRequest, msg.sender == staker
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
@@ -140,12 +140,12 @@ contract Gate is ProtocolVersioned, Owned {
 
         emit StakeRequestReverted(msg.sender, stakeRequestAmount);
 
-        return true;
+        return stakeRequestAmount;
     }
 
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
-        returns (bool /* success */)
+        returns (uint256 /* amount */)
     {
         // check if the caller is whitelisted worker
         require(workers.isWorker(msg.sender));
@@ -167,7 +167,7 @@ contract Gate is ProtocolVersioned, Owned {
 
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
-        return true;
+        return stakeRequestAmount;
     }
 
     /// @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
@@ -224,7 +224,7 @@ contract Gate is ProtocolVersioned, Owned {
     bytes32 _stakingIntentHash,
     bytes32 _unlockSecret)
     external
-    returns (bool /* success */)
+    returns (uint /* amount */)
   {
     // check if the caller is whitelisted worker
     require(workers.isWorker(msg.sender));
@@ -237,6 +237,7 @@ contract Gate is ProtocolVersioned, Owned {
     address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
     StakeRequest storage stakeRequest = stakeRequests[staker];
+
 
     // check if the stake request exists
     require(stakeRequest.beneficiary != address(0));
@@ -259,18 +260,18 @@ contract Gate is ProtocolVersioned, Owned {
       //Transfer bounty amount to the msg.sender account
       require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
     }
-
+      uint256 stakeProcessedAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
 
-    return true;
+    return stakeProcessedAmount;
   }
 
 
   function revertStaking(
     bytes32 _stakingIntentHash)
     external
-    returns (bool /* success */)
+    returns (uint256 /* amount */)
   {
 
     // check if the caller is whitelisted worker
@@ -302,9 +303,10 @@ contract Gate is ProtocolVersioned, Owned {
 
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
+    uint256 stakeRequestAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
 
-    return true;
+    return stakeRequestAmount;
   }
 }
