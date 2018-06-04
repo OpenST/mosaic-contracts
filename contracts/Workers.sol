@@ -29,7 +29,7 @@ import "./WorkersInterface.sol";
 /// A set of authorised workers
 contract Workers is WorkersInterface, OpsManaged {
     using SafeMath for uint256;
-    /// EIP20token address is private for now.
+    
     EIP20Interface private eip20token;
     /*
      *  Storage
@@ -130,7 +130,12 @@ contract Workers is WorkersInterface, OpsManaged {
     {
         return (workers[_worker] >= block.number);
     }
-
+    /// @dev Takes _spender and _amount;
+    ///      approves spender to spend amount;
+    ///      external method;
+    /// @param _spender spender;
+    ///        _amount amount;
+    /// @return (bool)
     function approve(
         address _spender,
         uint256 _amount)
@@ -138,7 +143,6 @@ contract Workers is WorkersInterface, OpsManaged {
         onlyOps()
         returns (bool success)
     {
-        /// approve the spender for the amount
         require(eip20token.approve(_spender, _amount));
 
         return true;
