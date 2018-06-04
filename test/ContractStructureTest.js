@@ -1,12 +1,13 @@
-let SolidityParser = require("solparse");
+const SolidityParser = require("solparse");
 
 
 //todo We can extend this test for all the solidity contracts. But it's out of scope for now
-const contracts = [{
+const contracts = [
+  {
   name: "OpenSTUtility.sol",
   path: "./contracts/OpenSTUtility.sol"
-}
-  , {
+  },
+  {
     name: "OpenSTValue.sol",
     path: "./contracts/OpenSTValue.sol"
   }
@@ -63,7 +64,7 @@ function getListOfDataTypesInContract(file,) {
 
 describe('Contract Structure Test', async () => {
 
-  let validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
+  const validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
 
   contracts.map(file => {
     let dataTypesInContract = getListOfDataTypesInContract(file);
