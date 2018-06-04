@@ -43,9 +43,9 @@ contract Core is CoreInterface, Util {
 	 *  Storage
 	 */
 	/** Mapping of block height to state root of the block.  */
-	mapping (uint /* block height */ => bytes32) public stateRoots;
+	mapping (uint /* block height */ => bytes32) private stateRoots;
 	/** Mapping of block height to storafe root of the block.  */
-	mapping (uint /* block height */ => bytes32) public storageRoots;
+	mapping (uint /* block height */ => bytes32) private storageRoots;
 
 	// TODO - Do we need below mapping?
 	// mapping(bytes32 => address) stakeTokenTuple;
@@ -60,9 +60,9 @@ contract Core is CoreInterface, Util {
 	/// registrar registers for the two chains
 	address private coreRegistrar;
     /// Latest block height of block which state root was committed.
-    uint256 public latestStateRootBlockHeight;
+    uint256 private latestStateRootBlockHeight;
     /// Latest block height of block which storage root was committed.
-    uint256 public latestStorageRootBlockHeight;
+    uint256 private latestStorageRootBlockHeight;
 	/// Workers contract address
 	WorkersInterface public workers;
 
@@ -107,6 +107,9 @@ contract Core is CoreInterface, Util {
 	/*
 	 *  Public view functions
 	 */
+
+	/// @dev public function registrar
+	/// @return address coreRegistrar
 	function registrar()
 		public
 		view
@@ -115,6 +118,8 @@ contract Core is CoreInterface, Util {
 		return coreRegistrar;
 	}
 
+	/// @dev public function chainIdRemote
+	/// @return uint256 coreChainIdRemote
 	function chainIdRemote()
 		public
 		view
@@ -123,12 +128,34 @@ contract Core is CoreInterface, Util {
 		return coreChainIdRemote;
 	}
 
+	/// @dev public function openSTRemote
+	/// @return address coreOpenSTRemote
 	function openSTRemote()
 		public
 		view
 		returns (address /* OpenSTRemote */)
 	{
 		return coreOpenSTRemote;
+	}
+
+	/// @dev public function getLatestStateRootBlockHeight
+	/// @return uint256 latestStateRootBlockHeight
+	function getLatestStateRootBlockHeight()
+		public
+		view
+		returns (uint256 /* latest state root block height */)
+	{
+		return latestStateRootBlockHeight;
+	}
+
+	/// @dev public function getLatestStorageRootBlockHeight
+	/// @return uint256 latestStorageRootBlockHeight
+	function getLatestStorageRootBlockHeight()
+		public
+		view
+		returns (uint256 /* latest storage root block height */)
+	{
+		return latestStorageRootBlockHeight;
 	}
 
 	/**
@@ -138,6 +165,7 @@ contract Core is CoreInterface, Util {
 	/// @dev Commit new state root for a block height
 	/// @param _blockHeight block Number for which stateRoots mapping needs to update
 	/// @param _stateRoot state root of input block height
+	/// @return bytes32 stateRoot
 	function commitStateRoot(
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
@@ -164,6 +192,7 @@ contract Core is CoreInterface, Util {
 	/// @param _value rlpencoded => hashed account node object
 	/// @param _rlpParentNodes RLP encoded value of account proof parent nodes
 	/// @param _storageRoot storage root received from account proof
+    /// @return bool status
 	function proveOpenST(
 		uint256 _blockHeight,
 		bytes32 _value,
@@ -200,4 +229,29 @@ contract Core is CoreInterface, Util {
 
 		return true;
 	}
+
+	/// @dev public function returns stateRoot for a blockHeight
+	/// @param _blockHeight block number
+	/// @return bytes32
+	function getStateRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* state root */)
+	{
+		return stateRoots[_blockHeight];
+	}
+
+	/// @dev public function returns storageRoot for a blockHeight
+	/// @param _blockHeight block number
+	/// @return bytes32
+	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return storageRoots[_blockHeight];
+	}
+
 }
