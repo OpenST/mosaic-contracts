@@ -22,8 +22,8 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
-import "./proof/MerklePatriciaProof.sol";
-import "./proof/util.sol";
+import "./MerklePatriciaProof.sol";
+import "./util.sol";
 import "./WorkersInterface.sol";
 
 
