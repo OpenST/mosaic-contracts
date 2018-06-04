@@ -74,15 +74,36 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
 
+
+    /// register the active stakes and unstakes
+    mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
+    mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
+    mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
+    /// nonce makes the staking process atomic across the two-phased process
+    /// and protects against replay attack on (un)staking proofs during the process.
+    /// On the value chain nonces need to strictly increase by one; on the utility
+    /// chain the nonce need to strictly increase (as one value chain can have multiple
+    /// utility chains)
+    mapping(address /* (un)staker */ => uint256) internal nonces;
+    mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
+
     /*
+     *  Storage
+     */
+    uint256 public chainIdValue;
+    EIP20Interface public valueToken;
+    address public registrar;
+    bytes32[] public uuids;
+
+  /*
      *  Structures
      */
     struct UtilityToken {
-        string  symbol;
-        string  name;
+        string symbol;
+        string name;
         uint256 conversionRate;
         uint8 conversionRateDecimals;
-        uint8   decimals;
+        uint8 decimals;
         uint256 chainIdUtility;
         SimpleStake simpleStake;
         address stakingAccount;
@@ -109,26 +130,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 expirationHeight;
         bytes32 hashLock;
     }
-
-    /*
-     *  Storage
-     */
-    uint256 public chainIdValue;
-    EIP20Interface public valueToken;
-    address public registrar;
-    bytes32[] public uuids;
-    mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
-    mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
-    /// nonce makes the staking process atomic across the two-phased process
-    /// and protects against replay attack on (un)staking proofs during the process.
-    /// On the value chain nonces need to strictly increase by one; on the utility
-    /// chain the nonce need to strictly increase (as one value chain can have multiple
-    /// utility chains)
-    mapping(address /* (un)staker */ => uint256) internal nonces;
-    /// register the active stakes and unstakes
-    mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
-    mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
-
     /*
      *  Modifiers
      */
