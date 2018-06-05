@@ -26,8 +26,10 @@ import "./OpenSTUtility.sol";
 /// @title OpenSTUtilityMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTUtility
 contract OpenSTUtilityMock is OpenSTUtility {
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+
+	uint256 private constant TIME_TO_WAIT_LONG = 16;
+	uint256 private constant TIME_TO_WAIT_MEDIUM = 14;
+	uint256 private constant TIME_TO_WAIT_SHORT = 10;
 
 	/*
 	 *  Public functions
@@ -35,15 +37,14 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	constructor(
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
-		address _registrar)
-		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar)
-		public { }
+		address _registrar,
+		uint256 _blockTime)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _blockTime)
+		public {
 
-	function blocksToWaitLong() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_LONG;
-	}
+		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
+		blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
+		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
-	function blocksToWaitShort() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_SHORT;
 	}
 }

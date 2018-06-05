@@ -96,10 +96,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /*
      *  Constants
      */
-    // ~2 weeks, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
+    // ~2 weeks
+    uint256 private constant TIME_TO_WAIT_LONG = 1209600;
+    // ~5Days
+    uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
+    // ~1hour
+    uint256 private constant TIME_TO_WAIT_SHORT = 3600;
+
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitMedium;
+    uint256 public blocksToWaitLong;
 
     /*
      *  Storage
@@ -142,13 +148,18 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     constructor(
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        address _registrar)
+        address _registrar,
+        uint256 _blockTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
+
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
+        blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
@@ -211,7 +222,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_stakingUnlockHeight > 0);
         require(_stakingIntentHash != "");
 
-        expirationHeight = block.number + blocksToWaitShort();
+        expirationHeight = block.number + blocksToWaitShort;
         nonces[_staker] = _stakerNonce;
 
         bytes32 stakingIntentHash = hashStakingIntent(
@@ -338,7 +349,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(token.allowance(msg.sender, address(this)) >= _amountBT);
         require(token.transferFrom(msg.sender, address(this), _amountBT));
 
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         redemptionIntentHash = hashRedemptionIntent(
                 _uuid,
@@ -389,7 +400,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         nonces[msg.sender] = _nonce;
 
         amountSTP = msg.value;
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         redemptionIntentHash = hashRedemptionIntent(
                 uuidSTPrime,
@@ -683,11 +694,4 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         return true;
     }
 
-    function blocksToWaitLong() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_LONG;
-    }
-
-    function blocksToWaitShort() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_SHORT;
-    }
 }

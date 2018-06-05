@@ -22,6 +22,10 @@
 const BigNumber = require('bignumber.js');
 const Assert = require('assert');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 
@@ -80,7 +84,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		"Registrar.completeOwnershipTransfer");
 
 	const openSTValue = await OpenSTValue.new(CHAINID_VALUE, simpleToken.address,
-		registrarVC.address);
+		registrarVC.address, constants.VALUE_CHAIN_BLOCK_TIME);
 	await utils.logTransaction(openSTValue.transactionHash, "OpenSTValue.new");
 	utils.logResponse(await openSTValue.initiateOwnershipTransfer(owner, { from: deployMachine }),
 		"OpenSTValue.initiateOwnershipTransfer");
@@ -88,7 +92,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		"OpenSTValue.completeOwnershipTransfer");
 
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
-		registrarUC.address, { from: deployMachine, gas: 8500000 });
+		registrarUC.address,constants.UTILITY_CHAIN_BLOCK_TIME, { from: deployMachine, gas: 8500000 });
 	await utils.logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new");
 	utils.logResponse(await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine }),
 		"OpenSTUtility.initiateOwnershipTransfer");

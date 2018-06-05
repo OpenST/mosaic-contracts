@@ -20,6 +20,9 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
 
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
@@ -31,7 +34,7 @@ const chainIdUtility = 1410;
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
   const registrar      = accounts[1];
 
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
+	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
 	const stPrime = new STPrime(stPrimeAddress);
 

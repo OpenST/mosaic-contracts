@@ -26,8 +26,9 @@ import "./OpenSTValue.sol";
 /// @title OpenSTValueMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTValue
 contract OpenSTValueMock is OpenSTValue {
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+	uint256 private constant TIME_TO_WAIT_LONG = 120;
+	uint256 private constant TIME_TO_WAIT_MEDIUM = 90;
+	uint256 private constant TIME_TO_WAIT_SHORT = 75;
 
 	/*
 	 *  Public functions
@@ -35,15 +36,14 @@ contract OpenSTValueMock is OpenSTValue {
 	constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
-		address _registrar)
-		OpenSTValue(_chainIdValue, _eip20token, _registrar)
-		public { }
+		address _registrar,
+		uint256 _blockTime)
+		OpenSTValue(_chainIdValue, _eip20token, _registrar, _blockTime)
+		public {
 
-	function blocksToWaitLong() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_LONG;
-	}
+		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
+		blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
+		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
-	function blocksToWaitShort() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_SHORT;
 	}
 }

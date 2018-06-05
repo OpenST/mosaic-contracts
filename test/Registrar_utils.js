@@ -21,6 +21,10 @@
 
 const BigNumber = require('bignumber.js');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
@@ -46,8 +50,8 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	await valueToken.finalize({ from: accounts[3] });
     await valueToken.transfer(staker, amountST);
 
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
-	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);
+	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
+	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address, constants.VALUE_CHAIN_BLOCK_TIME);
 	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address);
 
 	return {

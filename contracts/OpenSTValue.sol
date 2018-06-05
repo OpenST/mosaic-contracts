@@ -69,10 +69,16 @@ contract OpenSTValue is OpsManaged, Hasher {
      */
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    // ~2 weeks, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+    // ~2 weeks
+    uint256 private constant TIME_TO_WAIT_LONG = 1209600;
+    // ~5Days
+    uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
+    // ~1hour
+    uint256 private constant TIME_TO_WAIT_SHORT = 3600;
+
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitMedium;
+    uint256 public blocksToWaitLong;
 
     /*
      *  Structures
@@ -141,13 +147,18 @@ contract OpenSTValue is OpsManaged, Hasher {
     constructor(
         uint256 _chainIdValue,
         EIP20Interface _eip20token,
-        address _registrar)
+        address _registrar,
+        uint256 _blockTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_eip20token != address(0));
         require(_registrar != address(0));
+
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
+        blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
         chainIdValue = _chainIdValue;
         valueToken = _eip20token;
@@ -195,7 +206,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
             .div(10**uint256(utilityToken.conversionRateDecimals));
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         nonces[_staker]++;
         nonce = nonces[_staker];
@@ -331,7 +342,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(_redemptionIntentHash == redemptionIntentHash);
 
-        expirationHeight = block.number + blocksToWaitShort();
+        expirationHeight = block.number + blocksToWaitShort;
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         // minimal precision to unstake 1 STWei
@@ -439,14 +450,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (uint256 /* nextNonce */)
     {
         return (nonces[_account] + 1);
-    }
-
-    function blocksToWaitLong() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_LONG;
-    }
-
-    function blocksToWaitShort() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_SHORT;
     }
 
     /// @dev Returns size of uuids

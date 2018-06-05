@@ -28,6 +28,9 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , Workers = artifacts.require("./Workers.sol")
   ;
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
 const Assert 	= require('assert')
   , BigNumber = require('bignumber.js')
   ;
@@ -58,7 +61,7 @@ module.exports.deployGate = async (artifacts, accounts) => {
   await valueToken.setAdminAddress(admin);
   // SimpleToken must be finalized to permit certain transfers
   assert.ok(await valueToken.finalize({ from: admin }));
-  openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+  openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
   core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
   await openSTValue.addCore(core.address, { from: registrar });

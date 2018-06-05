@@ -21,6 +21,10 @@
 
 const BigNumber = require('bignumber.js');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
@@ -36,7 +40,7 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	// SimpleToken must be finalized to permit certain transfers
 	assert.ok(await valueToken.finalize({ from: accounts[1] }));
 
-	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
 	return {
 		valueToken  : valueToken,
