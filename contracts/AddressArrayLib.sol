@@ -35,17 +35,21 @@ library AddressArrayLib {
     }
     //@dev Remove element from array by value
     function removeByValue(AddressArray storage array, address value) internal view returns (uint) {
-        uint i = find(array, value);
-        removeByIndex(array, i);
+        uint index;
+        bool isElementPresent;
+        (isElementPresent, index) = find(array, value);
+        require(isElementPresent, "Element doesn't exist in Array");
+        removeByIndex(array, index);
         return array.addresses.length;
     }
     //@dev search element in array and return index
-    function find(AddressArray storage array, address value) internal view returns (uint) {
+    function find(AddressArray storage array, address value) internal view returns (bool, uint) {
         uint i = 0;
-        while (array.addresses[i] != value) {
+        bool isElementPresent = false;
+        while (!(isElementPresent = (array.addresses[i] == value)) && i < array.addresses.length) {
             i++;
         }
-        return i;
+        return (isElementPresent, i);
     }
     //@dev remove element for array using index
     function removeByIndex(AddressArray storage array, uint i) internal view {
