@@ -158,6 +158,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
+        require(_blockTime != 0);
 
         blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
         blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
