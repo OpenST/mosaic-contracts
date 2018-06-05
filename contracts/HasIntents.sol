@@ -24,7 +24,7 @@ pragma solidity ^0.4.23;
 
 
 contract HasIntents {
-    /*
+    /**
      * Mappings
      */
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
