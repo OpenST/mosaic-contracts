@@ -27,6 +27,6 @@ contract HasIntents {
     /*
      * Mappings
      */
-    mapping(bytes32 /* intentHash */ => bytes32) internal intents;
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
 
 }
