@@ -76,11 +76,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
-    uint256 public blocksToWaitShort;
-    uint256 public blocksToWaitMedium;
-    uint256 public blocksToWaitLong;
-
-
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
@@ -99,6 +94,10 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 public chainIdValue;
     EIP20Interface public valueToken;
     address public registrar;
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitMedium;
+    uint256 public blocksToWaitLong;
+    
     bytes32[] public uuids;
 
   /*
@@ -157,7 +156,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_eip20token != address(0));
         require(_registrar != address(0));
         require(_blockTime != 0);
-      
+
         blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
         blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
         blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);

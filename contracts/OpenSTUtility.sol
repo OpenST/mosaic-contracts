@@ -78,10 +78,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     // ~1hour
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
-    uint256 public blocksToWaitShort;
-    uint256 public blocksToWaitMedium;
-    uint256 public blocksToWaitLong;
-
     /*
      *  Storage
      */
@@ -110,8 +106,13 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// chainId of the current utility chain
     uint256 public chainIdUtility;
     address public registrar;
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitMedium;
+    uint256 public blocksToWaitLong;
 
     bytes32[] public uuids;
+
+
     /// registered branded tokens
     /*
      *  Structures
