@@ -96,7 +96,7 @@ contract('Gate', function(accounts) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
       , initialGateBalance = await valueToken.balanceOf.call(gate.address);
-    
+
     let initialStakeRequestCount = await gate.stakingRequestCount.call();
 
     if (isSuccessCase) {
