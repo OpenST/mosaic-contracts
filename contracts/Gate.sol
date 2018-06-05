@@ -27,9 +27,10 @@ import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
 import "./Owned.sol";
 import "./WorkersInterface.sol";
+import "./AddressArrayLib.sol";
 
 contract Gate is ProtocolVersioned, Owned {
-
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     /*
      * Events
      */
@@ -69,7 +70,7 @@ contract Gate is ProtocolVersioned, Owned {
     // utility token UUID
     bytes32 public uuid;
 
-
+    AddressArrayLib.AddressArray stakers;
     /*
      *  Public functions
      */
@@ -113,6 +114,8 @@ contract Gate is ProtocolVersioned, Owned {
             unlockHeight: 0
         });
 
+        stakers.add(msg.sender);
+
         emit StakeRequested(msg.sender, _amount, _beneficiary);
 
         return true;
@@ -137,7 +140,7 @@ contract Gate is ProtocolVersioned, Owned {
 
         uint256 stakeRequestAmount = stakeRequest.amount;
         delete stakeRequests[msg.sender];
-
+        stakers.removeByValue(msg.sender);
         emit StakeRequestReverted(msg.sender, stakeRequestAmount);
 
         return true;
@@ -164,7 +167,7 @@ contract Gate is ProtocolVersioned, Owned {
         uint256 stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
         delete stakeRequests[msg.sender];
-
+        stakers.removeByValue(_staker);
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
         return true;
@@ -262,6 +265,7 @@ contract Gate is ProtocolVersioned, Owned {
 
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
+    stakers.removeByValue(staker);
 
     return true;
   }
@@ -304,7 +308,12 @@ contract Gate is ProtocolVersioned, Owned {
 
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
+    stakers.removeByValue(staker);
 
     return true;
   }
+
+  function stakingRequestCount() external returns (uint){
+    return stakers.length();
+    }
 }

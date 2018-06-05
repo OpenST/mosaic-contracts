@@ -52,8 +52,9 @@ contract('Gate', function(accounts) {
   const requestStake = async function (amount, beneficiary, staker, isSuccessCase) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
-    ;
+      , initialGateBalance = await valueToken.balanceOf.call(gate.address);
+
+    let initialStakeRequestCount = await gate.stakingRequestCount.call();
 
     if (isSuccessCase) {
       // success case
@@ -74,6 +75,10 @@ contract('Gate', function(accounts) {
     ;
 
     if (isSuccessCase) {
+
+      let finalStakeRequestCount = await gate.stakingRequestCount.call();
+      assert.equal(initialStakeRequestCount.add(1).eq(finalStakeRequestCount), true);
+
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.sub(amount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.plus(amount)), true);
@@ -90,8 +95,9 @@ contract('Gate', function(accounts) {
   const revertStakeRequest = async function (staker, amount , isSuccessCase) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
-    ;
+      , initialGateBalance = await valueToken.balanceOf.call(gate.address);
+    
+    let initialStakeRequestCount = await gate.stakingRequestCount.call();
 
     if (isSuccessCase) {
       // success case steps
@@ -106,9 +112,11 @@ contract('Gate', function(accounts) {
     }
 
     let finalStakerAccountBalance = await valueToken.balanceOf.call(stakerAccount)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
-    ;
+      , finalGateBalance = await valueToken.balanceOf.call(gate.address);
     if (isSuccessCase) {
+
+      let finalStakeRequestCount = await gate.stakingRequestCount.call();
+      assert.equal(initialStakeRequestCount.sub(1).eq(finalStakeRequestCount), true);
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(amount)), true);
@@ -128,7 +136,7 @@ contract('Gate', function(accounts) {
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
       , initialGateBalance = await valueToken.balanceOf.call(gate.address)
     ;
-
+    let initialStakeRequestCount = await gate.stakingRequestCount.call();
     if (isSuccessCase) {
 
       let rejectRequestStakeResult = await gate.rejectStakeRequest.call(staker, reason, {from: messageSender});
@@ -147,6 +155,9 @@ contract('Gate', function(accounts) {
     ;
 
     if (isSuccessCase) {
+
+      let finalStakeRequestCount = await gate.stakingRequestCount.call();
+      assert.equal(initialStakeRequestCount.sub(1).eq(finalStakeRequestCount), true);
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(amount)), true);
@@ -212,12 +223,17 @@ contract('Gate', function(accounts) {
       , initialGateBalance = await valueToken.balanceOf.call(gate.address)
       , bountyAmount = await gate.bounty.call()
     ;
+    let initialStakeRequestCount = await gate.stakingRequestCount.call();
 
     if (isSuccessCase) {
       let processStakingResult = await gate.processStaking.call(stakingIntentHash, unlockSecret, {from: messageSender});
       assert.equal(processStakingResult, true);
 
       let processStakingResponse = await gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender});
+
+      let finalStakeRequestCount = await gate.stakingRequestCount.call();
+      assert.equal(initialStakeRequestCount.sub(1).eq(finalStakeRequestCount), true);
+
       //await Gate_utils.checkProcessedStakeEvent(processStakingResponse.logs[0],stakerAccount, stakeAmount);
     } else {
       await Utils.expectThrow(gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
@@ -252,6 +268,7 @@ contract('Gate', function(accounts) {
       , initialGateBalance = await valueToken.balanceOf.call(gate.address)
       , bountyAmount = await gate.bounty.call()
     ;
+    let initialStakeRequestCount = await gate.stakingRequestCount.call();
 
     var waitTime = await openSTValue.blocksToWaitLong.call();
     waitTime = waitTime.toNumber();
@@ -262,6 +279,9 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       let revertStakingResponse = await gate.revertStaking(stakingIntentHash, {from: messageSender});
+
+      let finalStakeRequestCount = await gate.stakingRequestCount.call();
+      assert.equal(initialStakeRequestCount.sub(1).eq(finalStakeRequestCount), true);
     } else {
       await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
     }
@@ -289,7 +309,6 @@ contract('Gate', function(accounts) {
     await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
 
   };
-
   const getStakingIntentHashParams = async function (staker, amount, lock, messageSender) {
     let acceptStakeRequestResult = await gate.acceptStakeRequest.call(staker, lock.l, {from: messageSender});
     let amountUT = acceptStakeRequestResult[0];
