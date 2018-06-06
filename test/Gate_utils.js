@@ -60,15 +60,15 @@ module.exports.deployGate = async (artifacts, accounts) => {
   assert.ok(await valueToken.finalize({ from: admin }));
   openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
 
-  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
-  await openSTValue.addCore(core.address, { from: registrar });
-
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
     , worker1 = accounts[7];
   await workers.setAdminAddress(admin);
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
+
+  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
+  await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 

@@ -51,12 +51,12 @@ contract Core is CoreInterface, Util {
 	/// chainIdOrigin stores the chainId this chain
 	uint256 public coreChainIdOrigin;
 	/// chainIdRemote stores the chainId of the remote chain
-	uint256 public coreChainIdRemote;
+	uint256 private coreChainIdRemote;
 	/// OpenST remote is the address of the OpenST contract
 	/// on the remote chain
-	address public coreOpenSTRemote;
+	address private coreOpenSTRemote;
 	/// registrar registers for the two chains
-	address public coreRegistrar;
+	address private coreRegistrar;
     /// Latest block height of block which state root was committed.
     uint256 public latestStateRootBlockHeight;
     /// Latest block height of block which storage root was committed.
@@ -91,6 +91,36 @@ contract Core is CoreInterface, Util {
 		workers = _workers;
 		// Encoded remote address.
 		encodedOpenSTRemoteAddress = bytes32ToBytes(keccak256(coreOpenSTRemote));
+	}
+
+	/// @dev public function registrar
+	/// @return address coreRegistrar
+	function registrar()
+		public
+		view
+		returns (address /* registrar */)
+	{
+		return coreRegistrar;
+	}
+
+	/// @dev public function chainIdRemote
+	/// @return uint256 coreChainIdRemote
+	function chainIdRemote()
+		public
+		view
+		returns (uint256 /* chainIdRemote */)
+	{
+		return coreChainIdRemote;
+	}
+
+	/// @dev public function openSTRemote
+	/// @return address coreOpenSTRemote
+	function openSTRemote()
+		public
+		view
+		returns (address /* OpenSTRemote */)
+	{
+		return coreOpenSTRemote;
 	}
 
 	/**
