@@ -52,7 +52,7 @@ library AddressArrayLib {
         return (isElementPresent, i);
     }
     //@dev remove element for array using index
-    function removeByIndex(AddressArray storage array, uint i) internal view {
+    function removeByIndex(AddressArray storage array, uint i) private view {
         while (i < array.addresses.length - 1) {
             array.addresses[i] = array.addresses[i + 1];
             i++;
