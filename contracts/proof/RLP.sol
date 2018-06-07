@@ -33,8 +33,8 @@ library RLP {
 
  function next(Iterator memory self) internal pure returns (RLPItem memory subItem) {
      require(hasNext(self));
-     uint256 ptr = self._unsafe_nextPtr;
-     uint256 itemLength = _itemLength(ptr);
+     uint ptr = self._unsafe_nextPtr;
+     uint itemLength = _itemLength(ptr);
      subItem._unsafe_memPtr = ptr;
      subItem._unsafe_length = itemLength;
      self._unsafe_nextPtr = ptr + itemLength;
@@ -163,7 +163,7 @@ library RLP {
  /// @param self The RLPItem.
  /// @return The bytes.
  function toBytes(RLPItem memory self) internal pure returns (bytes memory bts) {
-     uint256 len = self._unsafe_length;
+     uint len = self._unsafe_length;
      if (len == 0)
          return;
      bts = new bytes(len);
@@ -176,8 +176,8 @@ library RLP {
  /// @return The decoded string.
  function toData(RLPItem memory self) internal pure returns (bytes memory bts) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
@@ -189,7 +189,7 @@ library RLP {
  /// @return Array of RLPItems.
  function toList(RLPItem memory self) internal pure returns (RLPItem[] memory list) {
      require(isList(self));
-     uint256 numItems;
+     uint numItems;
      numItems = items(self);
      list = new RLPItem[](numItems);
      Iterator memory it = iterator(self);
@@ -206,8 +206,8 @@ library RLP {
  /// @return The decoded string.
  function toAscii(RLPItem memory self) internal pure returns (string memory str) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      bytes memory bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
@@ -220,8 +220,8 @@ library RLP {
  /// @return The decoded string.
  function toUint(RLPItem memory self) internal pure returns (uint data) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      if (len > 32 || len == 0)
          revert();
@@ -236,8 +236,8 @@ library RLP {
  /// @return The decoded string.
  function toBool(RLPItem memory self) internal pure returns (bool data) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      require(len == 1);
      uint temp;
@@ -254,8 +254,8 @@ library RLP {
  /// @return The decoded string.
  function toByte(RLPItem memory self) internal pure returns (byte data) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      require(len == 1);
      uint temp;
@@ -287,8 +287,8 @@ library RLP {
  /// @return The decoded string.
  function toAddress(RLPItem memory self) internal pure returns (address data) {
      require(isData(self));
-     uint256 rStartPos;
-     uint256 len;
+     uint rStartPos;
+     uint len;
      (rStartPos, len) = _decode(self);
      require (len == 20);
      assembly {
