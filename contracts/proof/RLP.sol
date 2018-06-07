@@ -189,8 +189,7 @@ library RLP {
  /// @return Array of RLPItems.
  function toList(RLPItem memory self) internal pure returns (RLPItem[] memory list) {
      require(isList(self));
-     uint numItems;
-     numItems = items(self);
+     uint numItems = items(self);
      list = new RLPItem[](numItems);
      Iterator memory it = iterator(self);
      uint idx;
