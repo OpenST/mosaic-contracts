@@ -28,38 +28,60 @@ library AddressArrayLib {
         address[] addresses;
     }
 
-    //@dev Add element to array
+    /*  @title -  Add element to array
+     *  @Param - array
+     *  @Param - value which will be added to array
+     *  @Returns: new length of array
+     */
     function add(AddressArray storage array, address value) internal view returns (uint){
         array.addresses.push(value);
         return array.addresses.length;
     }
-    //@dev Remove element from array by value
+
+    /*  @title -  Remove element from array by value
+     *  @Param - array
+     *  @Param - value which will be removed from
+     *  @Returns: new length of array
+     */
     function removeByValue(AddressArray storage array, address value) internal view returns (uint) {
-        uint index;
+        uint256 index;
         bool isElementPresent;
         (isElementPresent, index) = find(array, value);
         require(isElementPresent, "Element doesn't exist in Array");
         removeByIndex(array, index);
         return array.addresses.length;
     }
-    //@dev search element in array and return index
+
+    /*  @title - Search element in array
+     *  @Param - array
+     *  @Param - value which will be searched
+     *  @Returns - bool to check value exist in array
+     *  @Returns - index of element
+     */
     function find(AddressArray storage array, address value) internal view returns (bool, uint) {
-        uint i = 0;
+        uint256 i = 0;
         bool isElementPresent = false;
         while (!(isElementPresent = (array.addresses[i] == value)) && i < array.addresses.length) {
             i++;
         }
         return (isElementPresent, i);
     }
-    //@dev remove element for array using index
-    function removeByIndex(AddressArray storage array, uint i) private view {
+    /*  @title - Remove element in array by index
+     *  @Param - array
+     *  @Param - index of element
+     *  @Returns - new length of array
+     */
+    function removeByIndex(AddressArray storage array, uint256 i) private view {
         while (i < array.addresses.length - 1) {
             array.addresses[i] = array.addresses[i + 1];
             i++;
         }
         array.addresses.length--;
     }
-    //@dev return length of array
+    /*  @title - length of array
+     *  @Param - array
+     *  @Returns - length of array
+     */
     function length(AddressArray storage array) internal view returns(uint){
         return array.addresses.length;
     }
