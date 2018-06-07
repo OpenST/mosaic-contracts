@@ -30,7 +30,6 @@ import "./RLP.sol";
 
 /// @dev Core is a minimal stub that will become the anchoring and consensus point for
 ///      the utility chain to validate itself against
-// TODO - truffle test cases update
 contract Core is CoreInterface, Util {
 
 	/*
@@ -38,7 +37,7 @@ contract Core is CoreInterface, Util {
     */
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
-	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot);
+	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bytes32 hashedAccount);
 
 	/*
 	 *  Storage
@@ -154,15 +153,13 @@ contract Core is CoreInterface, Util {
 
 	/// @dev Verify account proof of OpenSTRemote and commit storage root at given block height
 	/// @param _blockHeight block height at which OpenST is to be proven
-    /// @param _value rlpencoded => hashed account node object
+    /// @param _rlpEncodedAccount rlpencoded account node object
     /// @param _rlpParentNodes RLP encoded value of account proof parent nodes
-    /// @param _storageRoot storage root received from account proof
     /// @return bool status
 	function proveOpenST(
 		uint256 _blockHeight,
-		bytes32 _value,
-		bytes _rlpParentNodes,
-		bytes32 _storageRoot)
+		bytes _rlpEncodedAccount,
+		bytes _rlpParentNodes)
 		external
 		returns(bool status)
 	{
@@ -171,23 +168,30 @@ contract Core is CoreInterface, Util {
 		// Check for block height
 		require(_blockHeight != 0, "Invalid block height");
 		// Storage root should be valid
-		require(_storageRoot != bytes32(0), "Invalid storage root");
+		require(_rlpEncodedAccount.length != 0, "Invalid rlp encoded account value");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
 		require(stateRoot != bytes32(0), "State root missing for given block height");
 
-		require(_value != bytes32(0), "Node values are missing");
+		// Decode RLP encoded account value
+		RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
+		// Convert to list
+		RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
+		// Array 3rd position is storage root
+		bytes32 storageRoot = RLP.toBytes32(accountArray[2]);
+		// Hash the rlpEncodedValue value
+		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
 
 		// Verify proof using library contract
-		require(MerklePatriciaProof.verify(_value, encodedOpenSTRemoteAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
+		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemoteAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
 
 		// After verification update storageRoots mapping
-		storageRoots[_blockHeight] = _storageRoot;
+		storageRoots[_blockHeight] = storageRoot;
 		// Update latestStorageRootBlockHeight variable
 		latestStorageRootBlockHeight = _blockHeight;
 		// Emit event
-		emit OpenSTProven(_blockHeight, _storageRoot);
+		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
 
 		return true;
 	}
