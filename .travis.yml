@@ -5,7 +5,6 @@ branches:
   only:
   - master
   - develop
-  - gate/develop
 notifications:
   email:
     recipients:
