@@ -28,14 +28,13 @@ import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
 import "./ProtocolVersioned.sol";
-import "./HasIntents.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
 
 /** Inherited contract HasIntents position should not be changed to maintain index position of intents mapping at 0 */ 
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is HasIntents, OpsManaged, Hasher {
+contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
 
     /*
@@ -118,6 +117,7 @@ contract OpenSTValue is HasIntents, OpsManaged, Hasher {
     EIP20Interface public valueToken;
     address public registrar;
     bytes32[] public uuids;
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
     mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
     /// nonce makes the staking process atomic across the two-phased process
@@ -129,6 +129,7 @@ contract OpenSTValue is HasIntents, OpsManaged, Hasher {
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
+    
 
     /*
      *  Modifiers
@@ -293,7 +294,8 @@ contract OpenSTValue is HasIntents, OpsManaged, Hasher {
 
         emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
-
+        /** Remove intent hash from intents mapping */
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];   
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
