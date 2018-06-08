@@ -32,7 +32,6 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
-/** Inherited contract HasIntents position should not be changed to maintain index position of intents mapping at 0 */ 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
