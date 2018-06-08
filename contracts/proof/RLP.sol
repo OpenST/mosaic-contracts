@@ -33,8 +33,8 @@ library RLP {
 
  function next(Iterator memory self) internal pure returns (RLPItem memory subItem) {
      require(hasNext(self));
-     var ptr = self._unsafe_nextPtr;
-     var itemLength = _itemLength(ptr);
+     uint ptr = self._unsafe_nextPtr;
+     uint itemLength = _itemLength(ptr);
      subItem._unsafe_memPtr = ptr;
      subItem._unsafe_length = itemLength;
      self._unsafe_nextPtr = ptr + itemLength;
@@ -47,7 +47,7 @@ library RLP {
  }
 
  function hasNext(Iterator memory self) internal pure returns (bool) {
-     var item = self._unsafe_item;
+     RLPItem memory item = self._unsafe_item;
      return self._unsafe_nextPtr < item._unsafe_memPtr + item._unsafe_length;
  }
 
@@ -73,7 +73,7 @@ library RLP {
  /// @param strict Will throw if the data is not RLP encoded.
  /// @return An RLPItem
  function toRLPItem(bytes memory self, bool strict) internal pure returns (RLPItem memory) {
-     var item = toRLPItem(self);
+     RLPItem memory item = toRLPItem(self);
      if(strict) {
          uint len = self.length;
          require(_payloadOffset(item) <= len);
@@ -163,7 +163,7 @@ library RLP {
  /// @param self The RLPItem.
  /// @return The bytes.
  function toBytes(RLPItem memory self) internal pure returns (bytes memory bts) {
-     var len = self._unsafe_length;
+     uint len = self._unsafe_length;
      if (len == 0)
          return;
      bts = new bytes(len);
@@ -176,7 +176,9 @@ library RLP {
  /// @return The decoded string.
  function toData(RLPItem memory self) internal pure returns (bytes memory bts) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
  }
@@ -187,9 +189,9 @@ library RLP {
  /// @return Array of RLPItems.
  function toList(RLPItem memory self) internal pure returns (RLPItem[] memory list) {
      require(isList(self));
-     var numItems = items(self);
+     uint numItems = items(self);
      list = new RLPItem[](numItems);
-     var it = iterator(self);
+     Iterator memory it = iterator(self);
      uint idx;
      while(hasNext(it)) {
          list[idx] = next(it);
@@ -203,7 +205,9 @@ library RLP {
  /// @return The decoded string.
  function toAscii(RLPItem memory self) internal pure returns (string memory str) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      bytes memory bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
      str = string(bts);
@@ -215,7 +219,9 @@ library RLP {
  /// @return The decoded string.
  function toUint(RLPItem memory self) internal pure returns (uint data) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      if (len > 32 || len == 0)
          revert();
      assembly {
@@ -229,7 +235,9 @@ library RLP {
  /// @return The decoded string.
  function toBool(RLPItem memory self) internal pure returns (bool data) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      require(len == 1);
      uint temp;
      assembly {
@@ -245,7 +253,9 @@ library RLP {
  /// @return The decoded string.
  function toByte(RLPItem memory self) internal pure returns (byte data) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      require(len == 1);
      uint temp;
      assembly {
@@ -276,7 +286,9 @@ library RLP {
  /// @return The decoded string.
  function toAddress(RLPItem memory self) internal pure returns (address data) {
      require(isData(self));
-     var (rStartPos, len) = _decode(self);
+     uint rStartPos;
+     uint len;
+     (rStartPos, len) = _decode(self);
      require (len == 20);
      assembly {
          data := div(mload(rStartPos), exp(256, 12))
