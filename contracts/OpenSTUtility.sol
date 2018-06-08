@@ -190,15 +190,13 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      /*
      *  Registrar functions
      */
-    function addCore(
+    function updateCore(
         CoreInterface _core)
         public
         onlyRegistrar
         returns (bool /* success */)
     {
         require(address(_core) != address(0));
-        // core constructed with same registrar
-        require(registrar == _core.registrar());
         // on value chain core only tracks a remote utility chain
         uint256 chainIdUtility = _core.chainIdRemote();
         require(chainIdUtility != 0);
@@ -610,25 +608,25 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// @dev for v0.9.1 tracking Ethereum mainnet on the utility chain
     ///      is not a required feature yet, so the core is simplified
     ///      to uint256 valueChainId as storage on construction
-    // function addCore(
-    //  CoreInterface _core)
-    //  public
-    //  onlyRegistrar
-    //  returns (bool /* success */)
-    // {
-    //  require(address(_core) != address(0));
-    //  // core constructed with same registrar
-    //  require(registrar == _core.registrar());
-    //  // on utility chain core only tracks a remote value chain
-    //  uint256 coreChainIdValue = _core.chainIdRemote();
-    //  require(chainIdUtility != 0);
+     function addCore(
+      CoreInterface _core)
+      public
+      onlyRegistrar
+      returns (bool /* success */)
+     {
+      require(address(_core) != address(0));
+      // core constructed with same registrar
+      require(registrar == _core.registrar());
+      // on utility chain core only tracks a remote value chain
+      uint256 coreChainIdValue = _core.chainIdRemote();
+      require(chainIdUtility != 0);
     //  // cannot overwrite core for given chainId
-    //  require(cores[coreChainIdValue] == address(0));
+      require(cores[coreChainIdValue] == address(0));
 
-    //  cores[coreChainIdValue] = _core;
+      cores[coreChainIdValue] = _core;
 
-    //  return true;
-    // }
+      return true;
+     }
 
     /* solhint-disable-next-line separate-by-one-line-in-contract */
     function registerBrandedToken(
