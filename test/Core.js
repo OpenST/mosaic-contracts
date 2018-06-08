@@ -21,6 +21,9 @@
 
 const Core_utils = require('./Core_utils.js');
 const Utils = require('./lib/utils.js');
+const accountProof = require('./data/AccountProof');
+const ethutil = require('ethereumjs-util');
+const BigNumber = require('bignumber.js');
 
 ///
 /// Test stories
@@ -34,12 +37,17 @@ const Utils = require('./lib/utils.js');
 contract('Core', function(accounts) {
 	const registrar = accounts[1];
 	const chainIdRemote = 1410;
-	const openSTRemote = accounts[4];
+  const openSTRemote = '0x01db94fdca0ffedc40a6965de97790085d71b412';
 
 	describe('Properties', async () => {
 		before(async () => {
-	        contracts = await Core_utils.deployCore(artifacts, accounts);
-	        core = contracts.core;
+      contracts = await Core_utils.deployCore(artifacts, accounts);
+      core = contracts.core;
+      workercontract = contracts.workercontract;
+      worker = contracts.worker;
+      await core.commitStateRoot(5, accountProof.stateRoot, {from: worker});
+      await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
+
     });
 
 		it('has coreRegistrar', async () => {
@@ -52,7 +60,27 @@ contract('Core', function(accounts) {
 
 		it('has coreOpenSTRemote', async () => {
 			assert.equal(await core.openSTRemote.call(), openSTRemote);
-		})
+    });
+
+    it('has encodedOpenSTRemoteAddress', async () => {
+      let expectedEncodedAddress = '0x' + ethutil.sha3(openSTRemote).toString('hex');
+      assert.equal(await core.encodedOpenSTRemoteAddress.call(), expectedEncodedAddress);
+    });
+
+    it('has worker', async () => {
+      assert.equal(await core.workers.call(), workercontract.address);
+    });
+
+    it('has latestStateRootBlockHeight', async () => {
+      let actualBlockHeight = await core.latestStateRootBlockHeight.call();
+      assert.equal(actualBlockHeight.eq(new BigNumber(5)), true);
+    });
+
+    it('has latestStorageRootBlockHeight', async () => {
+      let actualBlockHeight = await core.latestStorageRootBlockHeight.call();
+      assert.equal(actualBlockHeight.eq(new BigNumber(5)), true);
+    });
+
   });
 
 
@@ -69,6 +97,9 @@ contract('Core', function(accounts) {
       assert.equal(reciept.logs[0].event, 'StateRootCommitted');
     });
 
+    it('should not be able to commit state root of block height if non worker commits root', async () => {
+      await Utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: accounts[0]}));
+    });
     it('should not be able to commit state root of block height which is already commited', async () => {
       await Utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: worker}));
     });
@@ -77,6 +108,52 @@ contract('Core', function(accounts) {
       await core.commitStateRoot(4, '0x45675567897545535535365', {from: worker});
       await Utils.expectThrow(core.commitStateRoot(3, '0x4567897545535535365', {from: worker}));
     });
+  });
 
-  })
+  describe('Prove OpenSt', async () => {
+    before(async () => {
+
+      contracts = await Core_utils.deployCore(artifacts, accounts);
+      core = contracts.core;
+      worker = contracts.worker;
+      await core.commitStateRoot(5, accountProof.stateRoot, {from: worker});
+    });
+
+    it('should be able to verify proof for account', async () => {
+
+      let reciept = await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
+      assert.equal(reciept.logs.length, 1);
+      assert.equal(reciept.logs[0].event, 'OpenSTProven');
+
+    });
+
+    it('should be able to verify proof for account if its called by non worker ', async () => {
+
+      await Utils.expectThrow(core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: accounts[0]}));
+
+    });
+
+    it('should not be able to verify proof for account if block state root is not committed', async () => {
+
+      await Utils.expectThrow(core.proveOpenST(6, accountProof.value, accountProof.RLPparentNodes, {from: worker}));
+
+    });
+
+    it('should not be able to verify proof for account if wrong value is passed', async () => {
+
+      await Utils.expectThrow(core.proveOpenST(5, '0x346abcdef45363678578322467885654422353665', accountProof.RLPparentNodes, {from: worker}));
+    });
+
+    it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
+
+      let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde'
+      await Utils.expectThrow(core.proveOpenST(5, accountProof.value, wrongRLPNodes, {from: worker}));
+    });
+});
+
+
+
+
+
+
 });
