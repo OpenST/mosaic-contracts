@@ -95,7 +95,7 @@ contract Gate is ProtocolVersioned, Owned {
         uint256 _amount,
         address _beneficiary)
         external
-    returns (uint256 stakeRequestAmount)
+        returns (bool isSuccess)
     {
 
         require(_amount > uint256(0));
@@ -106,7 +106,6 @@ contract Gate is ProtocolVersioned, Owned {
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), _amount));
 
-        stakeRequestAmount = _amount;
         stakeRequests[msg.sender] = StakeRequest({
             amount: _amount,
             beneficiary: _beneficiary,
@@ -116,13 +115,14 @@ contract Gate is ProtocolVersioned, Owned {
 
         emit StakeRequested(msg.sender, _amount, _beneficiary);
 
+        return true;
     }
 
 
     /// @dev In order to revert stake request the msg.sender should be the staker
     function revertStakeRequest()
         external
-    returns (uint256 stakeRequestAmount)
+        returns (uint256 stakeRequestAmount)
     {
         // only staker can do revertStakeRequest, msg.sender == staker
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
@@ -139,6 +139,8 @@ contract Gate is ProtocolVersioned, Owned {
         delete stakeRequests[msg.sender];
 
         emit StakeRequestReverted(msg.sender, stakeRequestAmount);
+
+        return stakeRequestAmount;
     }
 
     function rejectStakeRequest(address _staker, uint8 _reason)
@@ -164,6 +166,8 @@ contract Gate is ProtocolVersioned, Owned {
         delete stakeRequests[msg.sender];
 
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
+
+        return stakeRequestAmount;
     }
 
     /// @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
@@ -258,6 +262,8 @@ contract Gate is ProtocolVersioned, Owned {
     stakeRequestAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
+
+    return stakeRequestAmount;
   }
 
 
@@ -298,5 +304,7 @@ contract Gate is ProtocolVersioned, Owned {
     stakeRequestAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
+
+    return stakeRequestAmount;
   }
 }
