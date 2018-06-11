@@ -57,8 +57,8 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       // success case
-      let requestStakeResult = await gate.requestStake.call(amount, beneficiary, {from: staker});
-      assert.equal(amount.eq(requestStakeResult), true);
+      let isSuccess = await gate.requestStake.call(amount, beneficiary, {from: staker});
+      assert.equal(isSuccess, true);
 
       let requestStakeResponse = await gate.requestStake(amount, beneficiary, {from: staker});
       await Gate_utils.checkRequestStakeEvent(requestStakeResponse.logs[0],staker, amount, beneficiary);
