@@ -114,7 +114,7 @@ contract Gate is ProtocolVersioned, Owned {
             unlockHeight: 0
         });
 
-        stakers.add(msg.sender);
+        stakers.push(msg.sender);
 
         emit StakeRequested(msg.sender, _amount, _beneficiary);
 

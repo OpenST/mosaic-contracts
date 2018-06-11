@@ -33,21 +33,21 @@ contract AddressArrayLibMock {
     AddressArrayLib.AddressArray addressArray;
 
 
-    function add(address value) public returns (uint){
-        return addressArray.add(value);
+    function add(address value) public returns (uint256 length){
+        return addressArray.push(value);
     }
 
-    function removeByValue(address value) public returns (uint) {
+    function removeByValue(address value) public returns (bool isSuccess) {
 
         return addressArray.removeByValue(value);
     }
 
-    function find(address value) public returns (bool, uint) {
+    function find(address value) public returns (bool isElementPresent, uint256 index) {
 
         return addressArray.find(value);
     }
 
-    function length() public returns (uint){
+    function length() public returns (uint256 length){
         return addressArray.length();
     }
 

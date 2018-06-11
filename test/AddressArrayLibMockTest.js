@@ -84,17 +84,15 @@ contract('AddressArrayLib', function (accounts) {
     });
 
     it('Should be able to remove item in array', async () => {
-      let initialLength = await contract.length.call();
-      let finalLength = await contract.removeByValue.call('0x4547575565566');
-      assert.equal(initialLength.sub(1).eq(finalLength), true);
+      let isSuccess = await contract.removeByValue.call('0x4547575565566');
+      assert.equal(isSuccess, true);
 
     });
 
     it('Should be able to remove first occurrence  array if value exist many times', async () => {
       await contract.add('0x4547575565566');
-      let initialLength = await contract.length.call();
-      let finalLength = await contract.removeByValue.call('0x4547575565566');
-      assert.equal(initialLength.sub(1).eq(finalLength), true);
+      let isSuccess = await contract.removeByValue.call('0x4547575565566');
+      assert.equal(isSuccess, true);
       let findResult = await contract.find.call('0x4547575565566');
       assert.equal(findResult[0], true);
     });
