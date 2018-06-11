@@ -10,8 +10,13 @@ const contracts = [
   {
     name: "OpenSTValue.sol",
     path: "./contracts/OpenSTValue.sol"
+  },
+  {
+    name: "Gate.sol",
+    path: "./contracts/Gate.sol"
   }
 ];
+const validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
 
 function getContract(result) {
   return result.body.filter(e => {
@@ -59,12 +64,11 @@ function getListOfDataTypesInContract(file,) {
 
   let parsedFile = SolidityParser.parseFile(file.path);
   let contractBody = getContractVariables(parsedFile);
+
   return contractBody.map(element => checkElementDataType(element)).filter(t => t !== 'unknown');
 }
 
 describe('Contract Structure Test', async () => {
-
-  const validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
 
   contracts.map(file => {
     let dataTypesInContract = getListOfDataTypesInContract(file);

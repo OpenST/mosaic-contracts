@@ -29,10 +29,6 @@ contract('AddressArrayLib', function (accounts) {
       assert.equal(initialLength.add(3).eq(finalLength), true);
     });
 
-    it('Should be able to add  invalid item to array', async () => {
-      await Utils.expectThrow(contract.add(0));
-    });
-
   });
 
 
@@ -57,10 +53,6 @@ contract('AddressArrayLib', function (accounts) {
     it('Should return false if element doesnot exist in the array', async () => {
       let findResult = await contract.find.call('0x470503050550');
       assert.equal(findResult[0], false);
-    });
-
-    it('Should return false if invalid element is passed in find operation', async () => {
-      await Utils.expectThrow(contract.find.call(0));
     });
 
     it('Should return false if  element is passed in find operation in an empty array', async () => {
@@ -98,17 +90,15 @@ contract('AddressArrayLib', function (accounts) {
     });
 
     it('Should throw exception if values is not in array', async () => {
-      await Utils.expectThrow(contract.removeByValue.call('0x123456789'));
+      let result = await contract.removeByValue.call('0x123456789');
+      assert.equal(result, false);
+
     });
 
     it('Should throw exception if array is blank', async () => {
       let blankArray = await AddressArrayLibMock.new();
-      await Utils.expectThrow(blankArray.removeByValue.call('0x123456789'));
-    });
-
-    it('Should throw exception if invalid value is passed', async () => {
-      let blankArray = await AddressArrayLibMock.new();
-      await Utils.expectThrow(blankArray.removeByValue.call(0));
+      let result = await contract.removeByValue.call('0x123456789');
+      assert.equal(result, false);
     });
 
   })

@@ -46,6 +46,18 @@ contract Gate is ProtocolVersioned, Owned {
       bytes32 _stakingIntentHash);
 
 
+
+
+    // stake requests
+    mapping(address /*staker */ => StakeRequest) public stakeRequests;
+    WorkersInterface public workers;
+    // bounty amount
+    uint256 public bounty;
+
+    // utility token UUID
+    bytes32 public uuid;
+    AddressArrayLib.AddressArray stakers;
+
     /*
      *  Structures
      */
@@ -55,22 +67,6 @@ contract Gate is ProtocolVersioned, Owned {
         address beneficiary;
         bytes32 hashLock;
     }
-
-    /*
-     *  Storage
-     */
-    WorkersInterface public workers;
-
-    // stake requests
-    mapping(address /*staker */ => StakeRequest) public stakeRequests;
-
-    // bounty amount
-    uint256 public bounty;
-
-    // utility token UUID
-    bytes32 public uuid;
-
-    AddressArrayLib.AddressArray stakers;
     /*
      *  Public functions
      */
