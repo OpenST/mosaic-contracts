@@ -24,6 +24,7 @@ const Utils = require('./lib/utils.js');
 const accountProof = require('./data/AccountProof');
 const ethutil = require('ethereumjs-util');
 const BigNumber = require('bignumber.js');
+const web3EventsDecoder = require('./lib/event_decoder.js');
 
 ///
 /// Test stories
@@ -92,9 +93,15 @@ contract('Core', function(accounts) {
     });
 
     it('should be able to commit state root for give block height', async () => {
-      let reciept = await core.commitStateRoot(1, '0x4567897545535535365', {from: worker});
-      assert.equal(reciept.logs.length, 1);
-      assert.equal(reciept.logs[0].event, 'StateRootCommitted');
+      let stateRoot = '0x4567897545535535365000000000000000000000000000000000000000000000';
+      let response = await core.commitStateRoot(1, stateRoot, {from: worker});
+
+      let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+      let event = formattedDecodedEvents['StateRootCommitted'];
+
+      assert.equal(event !== null, true);
+      assert.equal(event["blockHeight"], 1);
+      assert.equal(event["stateRoot"], stateRoot);
     });
 
     it('should not be able to commit state root of block height if non worker commits root', async () => {
@@ -121,10 +128,21 @@ contract('Core', function(accounts) {
 
     it('should be able to verify proof for account', async () => {
 
-      let reciept = await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
-      assert.equal(reciept.logs.length, 1);
-      assert.equal(reciept.logs[0].event, 'OpenSTProven');
+      let parentNodes = ethutil.rlp.decode(accountProof.RLPparentNodes);
+      let accountNode = parentNodes[parentNodes.length - 1];
+      let accountValue = ethutil.rlp.decode(accountNode[1]);
+      let storageRoot = '0x' + accountValue[2].toString('hex');
+      let hashedAccountValue = '0x'+ethutil.sha3(accountProof.value).toString('hex');
 
+      let response = await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
+
+      let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+      let event = formattedDecodedEvents['OpenSTProven'];
+
+      assert.equal(event !== null, true);
+      assert.equal(event["blockHeight"], 5);
+      assert.equal(event["storageRoot"], storageRoot);
+      assert.equal(event["hashedAccount"], hashedAccountValue);
     });
 
     it('should be able to verify proof for account if its called by non worker ', async () => {
@@ -150,10 +168,5 @@ contract('Core', function(accounts) {
       await Utils.expectThrow(core.proveOpenST(5, accountProof.value, wrongRLPNodes, {from: worker}));
     });
 });
-
-
-
-
-
 
 });
