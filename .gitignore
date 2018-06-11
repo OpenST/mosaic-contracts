@@ -13,7 +13,6 @@ contracts/abi/
 # don't commit node_modules
 node_modules
 
-
 #Dont track idea file
 .idea/
 
@@ -26,3 +25,4 @@ node_modules
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
