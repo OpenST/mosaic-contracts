@@ -175,8 +175,6 @@ contract('Gate', function(accounts) {
       let amountUT = stakingIntentHashParams.amountUT;
       let nonce = stakingIntentHashParams.nonce;
       let unlockHeight = stakingIntentHashParams.unlockHeight;
-      console.log("AcceptStakeRequest",unlockHeight);
-
       stakingIntentHash = stakingIntentHashParams.stakingIntentHash;
 
       let acceptStakeRequestResponse = await gate.acceptStakeRequest(staker, lock.l, {from: messageSender});
