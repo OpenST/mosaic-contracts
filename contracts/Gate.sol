@@ -95,7 +95,7 @@ contract Gate is ProtocolVersioned, Owned {
         uint256 _amount,
         address _beneficiary)
         external
-        returns (bool isSuccess)
+        returns (bool /* success */)
     {
 
         require(_amount > uint256(0));
