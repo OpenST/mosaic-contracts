@@ -39,32 +39,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     using SafeMath for uint256;
 
     /*
-     *  Structures
-     */
-    struct RegisteredToken {
-        UtilityTokenInterface token;
-        address registrar;
-    }
-
-    struct Mint {
-        bytes32 uuid;
-        address staker;
-        address beneficiary;
-        uint256 amount;
-        uint256 expirationHeight;
-        bytes32 hashLock;
-    }
-
-    struct Redemption {
-        bytes32 uuid;
-        address redeemer;
-        address beneficiary;
-        uint256 amountUT;
-        uint256 unlockHeight;
-        bytes32 hashLock;
-    }
-
-    /*
      *    Events
      */
     event ProposedBrandedToken(address indexed _requester, address indexed _token,
@@ -93,9 +67,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     event RevertedRedemption(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address _redeemer, address _beneficiary, uint256 _amountUT);
 
+
     /*
-     *  Constants
-     */
+  *  Constants
+  */
     // ~2 weeks, assuming ~15s per block
     uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
@@ -104,17 +79,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /*
      *  Storage
      */
-    /// store address of Simple Token Prime
-    address public simpleTokenPrime;
-    bytes32 public uuidSTPrime;
-    /// restrict (for now) to a single value chain
-    uint256 public chainIdValue;
-    /// chainId of the current utility chain
-    uint256 public chainIdUtility;
-    address public registrar;
-    CoreInterface public core;
-    bytes32[] public uuids;
-    /// registered branded tokens
+
+    /// store the ongoing mints and redemptions
+    mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
+    mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
     mapping(bytes32 /* uuid */ => RegisteredToken) public registeredTokens;
     /// name reservation is first come, first serve
     mapping(bytes32 /* hashName */ => address /* requester */) public nameReservation;
@@ -127,10 +95,46 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// chain the nonce need to strictly increase (as one value chain can have multiple
     /// utility chains)
     mapping(address /* (un)staker */ => uint256) internal nonces;
-    /// store the ongoing mints and redemptions
-    mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
-    mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
 
+    /// store address of Simple Token Prime
+    address public simpleTokenPrime;
+    bytes32 public uuidSTPrime;
+    /// restrict (for now) to a single value chain
+    uint256 public chainIdValue;
+    /// chainId of the current utility chain
+    uint256 public chainIdUtility;
+    address public registrar;
+
+    CoreInterface public core;
+
+
+    bytes32[] public uuids;
+    /// registered branded tokens
+    /*
+     *  Structures
+     */
+    struct RegisteredToken {
+        UtilityTokenInterface token;
+        address registrar;
+    }
+
+    struct Mint {
+        bytes32 uuid;
+        address staker;
+        address beneficiary;
+        uint256 amount;
+        uint256 expirationHeight;
+        bytes32 hashLock;
+    }
+
+    struct Redemption {
+        bytes32 uuid;
+        address redeemer;
+        address beneficiary;
+        uint256 amountUT;
+        uint256 unlockHeight;
+        bytes32 hashLock;
+    }
     /*
      *  Modifiers
      */
@@ -241,6 +245,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         expirationHeight = block.number + blocksToWaitShort();
         nonces[_staker] = _stakerNonce;
+
         bytes32 stakingIntentHash = hashStakingIntent(
             _uuid,
             _staker,
@@ -608,25 +613,25 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// @dev for v0.9.1 tracking Ethereum mainnet on the utility chain
     ///      is not a required feature yet, so the core is simplified
     ///      to uint256 valueChainId as storage on construction
-     function addCore(
-      CoreInterface _core)
-      public
-      onlyRegistrar
-      returns (bool /* success */)
-     {
-      require(address(_core) != address(0));
-      // core constructed with same registrar
-      require(registrar == _core.registrar());
-      // on utility chain core only tracks a remote value chain
-      uint256 coreChainIdValue = _core.chainIdRemote();
-      require(chainIdUtility != 0);
+    // function addCore(
+    //  CoreInterface _core)
+    //  public
+    //  onlyRegistrar
+    //  returns (bool /* success */)
+    // {
+    //  require(address(_core) != address(0));
+    //  // core constructed with same registrar
+    //  require(registrar == _core.registrar());
+    //  // on utility chain core only tracks a remote value chain
+    //  uint256 coreChainIdValue = _core.chainIdRemote();
+    //  require(chainIdUtility != 0);
     //  // cannot overwrite core for given chainId
-      require(cores[coreChainIdValue] == address(0));
+    //  require(cores[coreChainIdValue] == address(0));
 
-      cores[coreChainIdValue] = _core;
+    //  cores[coreChainIdValue] = _core;
 
-      return true;
-     }
+    //  return true;
+    // }
 
     /* solhint-disable-next-line separate-by-one-line-in-contract */
     function registerBrandedToken(
