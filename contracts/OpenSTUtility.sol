@@ -33,6 +33,7 @@ import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 import "./Core.sol";
+import "./MerklePatriciaProof.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -257,8 +258,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _hashLock
         );
 
-         bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-         require(core.verify(stakingIntentHash,hash(staker,stakerNonce) ,rlpParentNodes,storageRoot));
+         bytes32 storageRoot = core.storageRoots(_blockHeight);
+
+         require(MerklePatriciaProof.verify(keccak256(stakingIntentHash),OpenSTUtils.storagePath(5, keccak256(staker,stakerNonce)) ,rlpParentNodes,storageRoot));
 
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,

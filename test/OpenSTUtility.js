@@ -229,7 +229,8 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to confirm by non-registrar', async () => {
-            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: accounts[0] }));
+            let blockNumber = await web3.eth.getBlockNumber();
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash,blockNumber, { from: accounts[0] }));
 		})
 
 		it('fails to confirm when token is not registered', async () => {
@@ -273,6 +274,11 @@ contract('OpenSTUtility', function(accounts) {
 			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 			await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
 		})
+
+		it('Storage proof',async() => {
+
+		})
+
 	})
 
 	describe('ProcessMinting', async () => {
