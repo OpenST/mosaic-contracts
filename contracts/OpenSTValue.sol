@@ -328,6 +328,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_redemptionUnlockHeight > 0);
         require(_redemptionIntentHash != "");
 
+        require(cores[utilityTokens[_uuid].chainIdUtility].safeUnlockTime() < _redemptionUnlockHeight);
+
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
 
@@ -343,10 +345,6 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(_redemptionIntentHash == redemptionIntentHash);
 
-        // TODO:
-        // 1. get latest block height from Core, blockNumber.
-        // 2. get block time from Core, blockTime.
-        // 3. expirationHeight = blockNumber + TIME_TO_WAIT_MEDIUM.div(blockTime)
         expirationHeight = block.number + blocksToWaitShort;
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
@@ -390,7 +388,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         // as the process unstake results in a gain for the caller
         // it needs to expire well before the process redemption can
         // be reverted in OpenSTUtility
-        // TODO: get blockNumber from core.
         require(unstake.expirationHeight > block.number);
 
         UtilityToken storage utilityToken = utilityTokens[unstake.uuid];
@@ -423,7 +420,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         // require that the unstake has expired and that the redeemer has not
         // processed the unstaking, ie unstake has not been deleted
         require(unstake.expirationHeight > 0);
-        // TODO: get blockNumber from core.
         require(unstake.expirationHeight <= block.number);
 
         uuid = unstake.uuid;

@@ -226,10 +226,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_stakingUnlockHeight > 0);
         require(_stakingIntentHash != "");
 
-        // TODO:
-        // 1. get latest block height from Core, blockNumber.
-        // 2. get block time from Core, blockTime.
-        // 3. expirationHeight = blockNumber + TIME_TO_WAIT_MEDIUM.div(blockTime)
+        require(core.safeUnlockTime() < _stakingUnlockHeight);
+
         expirationHeight = block.number + blocksToWaitShort;
         nonces[_staker] = _stakerNonce;
 
@@ -276,7 +274,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         // as process minting results in a gain it needs to expire well before
         // the escrow on the cost unlocks in OpenSTValue.processStake
-        // TODO: get blockNumber from core.
         require(mint.expirationHeight > block.number);
 
         UtilityTokenInterface token = registeredTokens[mint.uuid].token;
@@ -309,7 +306,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // require that the mint has expired and that the staker has not
         // processed the minting, ie mint has not been deleted
         require(mint.expirationHeight > 0);
-        // TODO: get blockNumber from core.
         require(mint.expirationHeight <= block.number);
 
         uuid = mint.uuid;

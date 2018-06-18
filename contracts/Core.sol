@@ -53,6 +53,13 @@ contract Core is CoreInterface {
 	// mapping(bytes32 => address) stakeTokenTuple;
 
 
+	// ~5Days
+	uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
+
+	uint256 public remoteBlockTime;
+
+	uint256 public blocksToWaitMedium;
+
 	/*
 	 *  Public functions
 	 */
@@ -98,5 +105,13 @@ contract Core is CoreInterface {
 		returns (address /* OpenSTRemote */)
 	{
 		return coreOpenSTRemote;
+	}
+
+	function safeUnlockTime()
+		external
+		view
+		returns (uint256 unlockTime)
+	{
+		return blocksToWaitMedium + block.number;
 	}
 }
