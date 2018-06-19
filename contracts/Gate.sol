@@ -33,9 +33,17 @@ contract Gate is ProtocolVersioned, Owned {
     /*
      * Events
      */
+
+    /** event triggered after successful execution of requestStake */
     event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
+
+    /** event triggered after successful execution of revertStakeRequest */
     event StakeRequestReverted(address _staker, uint256 _amount);
+
+    /** event triggered after successful execution of rejectStakeRequest */
     event StakeRequestRejected(address _staker, uint256 _amount, uint8 _reason);
+
+    /** event triggered after successful execution of acceptStakeRequest */
     event StakeRequestAccepted(
       address _staker,
       uint256 _amountST,
@@ -45,15 +53,16 @@ contract Gate is ProtocolVersioned, Owned {
       bytes32 _stakingIntentHash);
 
 
-
-
-    // stake requests
+    /** Storing stake requests */
     mapping(address /*staker */ => StakeRequest) public stakeRequests;
+
+    /** Storing workers contract address */
     WorkersInterface public workers;
-    // bounty amount
+
+    /** Storing bounty amount that will be used while accepting stake */
     uint256 public bounty;
 
-    // utility token UUID
+    /** Storing utility token UUID */
     bytes32 public uuid;
 
     /*
@@ -65,9 +74,20 @@ contract Gate is ProtocolVersioned, Owned {
         address beneficiary;
         bytes32 hashLock;
     }
-    /*
-     *  Public functions
+
+  /*
+   *  Public functions
+   */
+
+  /**
+     * @dev Contract constructor.
+     *
+     * @param _workers worker contract address.
+     * @param _bounty bounty amount that worker address stakes while accepting stake request.
+     * @param _uuid UUID of utility token.
+     * @param _openSTProtocol OpenSTProtocol contract that governs staking.
      */
+
     constructor(
         WorkersInterface _workers,
         uint256 _bounty,
@@ -86,6 +106,17 @@ contract Gate is ProtocolVersioned, Owned {
 
     }
 
+  /**
+     * @dev Request stake.
+     *      In order to request stake the staker needs to approve gate contract for stake amount.
+     *      This can be called by staker
+     *      Staked amount is transferred from staker address to Gate contract
+     *
+     * @param _amount staking amount.
+     * @param _beneficiary beneficiary address.
+     *
+     * @return success, boolean that specifies status of the execution.
+     */
     function requestStake(
         uint256 _amount,
         address _beneficiary)
@@ -113,8 +144,13 @@ contract Gate is ProtocolVersioned, Owned {
         return true;
     }
 
-
-    /// @dev In order to revert stake request the msg.sender should be the staker
+  /**
+   * @dev Revert stake request.
+   *      This can be called only by staker
+   *      Staked amount is transferred back to staker address from Gate contract
+   *
+   * @return stakeRequestAmount staking amount.
+   */
     function revertStakeRequest()
         external
         returns (uint256 stakeRequestAmount)
@@ -138,6 +174,16 @@ contract Gate is ProtocolVersioned, Owned {
         return stakeRequestAmount;
     }
 
+  /**
+   * @dev Reject stake request.
+   *      This can be called only by whitelisted worker address
+   *      Staked amount is transferred back to staker address from Gate contract
+   *
+   * @param _staker staker address.
+   * @param _reason reason for rejection.
+   *
+   * @return stakeRequestAmount staking amount.
+   */
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
         returns (uint256 stakeRequestAmount)
@@ -165,8 +211,21 @@ contract Gate is ProtocolVersioned, Owned {
         return stakeRequestAmount;
     }
 
-    /// @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
-    ///      This can be called only by whitelisted worker address
+  /**
+   * @dev Accept stake request.
+   *      In order to accept stake the staker needs to approve gate contract for bounty amount.
+   *      This can be called only by whitelisted worker address
+   *      OpenSTProtocol is approved for staking amount by Gate contract.
+   *      Bounty amount is transferred from msg.sender to Gate contract
+   *
+   * @param _staker staker address.
+   * @param _hashLock hash lock.
+   *
+   * @return amountUT branded token amount.
+   * @return nonce staker nonce count.
+   * @return unlockHeight height till what the amount is locked.
+   * @return stakingIntentHash staking intent hash.
+   */
     function acceptStakeRequest(address _staker, bytes32 _hashLock)
         external
         returns (
@@ -214,16 +273,22 @@ contract Gate is ProtocolVersioned, Owned {
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
     }
 
-
+  /**
+   * @dev Process staking.
+   *      Bounty amount is to msg.sender if its not whitelisted worker
+   *      Bounty amount is to workers contract if msg.sender is whitelisted worker
+   *
+   * @param _stakingIntentHash staking intent hash.
+   * @param _unlockSecret unlock secret.
+   *
+   * @return stakeRequestAmount stake amount.
+   */
   function processStaking(
     bytes32 _stakingIntentHash,
     bytes32 _unlockSecret)
     external
     returns (uint256 stakeRequestAmount)
   {
-    // check if the caller is whitelisted worker
-    require(workers.isWorker(msg.sender));
-
     require(_stakingIntentHash != bytes32(0));
 
     //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
@@ -261,7 +326,16 @@ contract Gate is ProtocolVersioned, Owned {
     return stakeRequestAmount;
   }
 
-
+  /**
+   * @dev Revert staking.
+   *      Caller must be the whitelisted worker.
+   *      Staked amount is transferred the staker address.
+   *      Bounty amount is to workers contract.
+   *
+   * @param _stakingIntentHash staking intent hash.
+   *
+   * @return stakeRequestAmount staking amount.
+   */
   function revertStaking(
     bytes32 _stakingIntentHash)
     external
