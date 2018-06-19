@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "./proof/BytesLib.sol";
-import "./proof/util.sol";
+import "./BytesLib.sol";
+import "./util.sol";
 
 contract ProofUtil is Util {
 

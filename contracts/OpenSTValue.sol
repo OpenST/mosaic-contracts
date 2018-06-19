@@ -33,10 +33,10 @@ import "./ProtocolVersioned.sol";
 import "./SimpleStake.sol";
 
 // proof libraries
-import "./proof/MerklePatriciaProof.sol";
-import "./proof/RLPEncode.sol";
+import "./MerklePatriciaProof.sol";
+import "./RLPEncode.sol";
 import "./OpenSTUtils.sol";
-import "./proof/util.sol";
+import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher, Util {

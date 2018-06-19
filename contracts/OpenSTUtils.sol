@@ -1,6 +1,6 @@
 pragma solidity ^0.4.0;
 
-import "./proof/BytesLib.sol";
+import "./BytesLib.sol";
 
 library OpenSTUtils {
 
