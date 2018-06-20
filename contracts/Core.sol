@@ -22,35 +22,49 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
+import "./MerklePatriciaProof.sol";
+import "./util.sol";
+import "./WorkersInterface.sol";
+import "./RLP.sol";
 
 
 /// @dev Core is a minimal stub that will become the anchoring and consensus point for
 ///      the utility chain to validate itself against
-contract Core is CoreInterface {
+contract Core is CoreInterface, Util {
 
 	/*
-	 *  Structures
-	 */
-	// struct stakeTokenTuple {
-	// 	address stake;
-	// 	address token;
-	// }
+    *    Events
+    */
+	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
+	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bytes32 hashedAccount);
 
 	/*
 	 *  Storage
 	 */
-	/// registrar registers for the two chains
-	address private coreRegistrar;
+	/** Mapping of block height to state root of the block.  */
+	mapping (uint256 /* block height */ => bytes32) public stateRoots;
+	/** Mapping of block height to storafe root of the block.  */
+	mapping (uint256 /* block height */ => bytes32) public storageRoots;
+
 	/// chainIdOrigin stores the chainId this chain
-	uint256 private coreChainIdOrigin;
+	uint256 public coreChainIdOrigin;
 	/// chainIdRemote stores the chainId of the remote chain
 	uint256 private coreChainIdRemote;
 	/// OpenST remote is the address of the OpenST contract
 	/// on the remote chain
 	address private coreOpenSTRemote;
-	// /// 
-	// mapping(bytes32 => address) stakeTokenTuple;
+	/// registrar registers for the two chains
+	address private coreRegistrar;
+    /// Latest block height of block which state root was committed.
+    uint256 public latestStateRootBlockHeight;
+    /// Latest block height of block which storage root was committed.
+    uint256 public latestStorageRootBlockHeight;
+	/// Workers contract address
+	WorkersInterface public workers;
+	/// OpenSTRemote encode address. sha3 => bytes32 to bytes
+	/// Kept in end because it's dynamic in size
+	bytes public encodedOpenSTRemoteAddress;
 
 
 	/*
@@ -60,22 +74,26 @@ contract Core is CoreInterface {
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
-		address _openSTRemote)
+		address _openSTRemote,
+		WorkersInterface _workers)
 		public
 	{
-		require(_registrar != address(0));
-		require(_chainIdOrigin != 0);
-		require(_chainIdRemote != 0);
-		require(_openSTRemote != 0);
+		require(_registrar != address(0), "Registrar should be valid address");
+		require(_chainIdOrigin != 0, "Invalid origin chain ID");
+		require(_chainIdRemote != 0, "Invalid remote chain ID");
+		require(_openSTRemote != address(0), "Invalid openSTRemote contract address");
+		require(_workers != address(0), "Workers should be valid contract address");
 		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
+		workers = _workers;
+		// Encoded remote address.
+		encodedOpenSTRemoteAddress = bytes32ToBytes(keccak256(coreOpenSTRemote));
 	}
 
-	/*
-	 *  Public view functions
-	 */
+	/// @dev public function registrar
+	/// @return address coreRegistrar
 	function registrar()
 		public
 		view
@@ -84,6 +102,8 @@ contract Core is CoreInterface {
 		return coreRegistrar;
 	}
 
+	/// @dev public function chainIdRemote
+	/// @return uint256 coreChainIdRemote
 	function chainIdRemote()
 		public
 		view
@@ -92,6 +112,8 @@ contract Core is CoreInterface {
 		return coreChainIdRemote;
 	}
 
+	/// @dev public function openSTRemote
+	/// @return address coreOpenSTRemote
 	function openSTRemote()
 		public
 		view
@@ -99,4 +121,79 @@ contract Core is CoreInterface {
 	{
 		return coreOpenSTRemote;
 	}
+
+	/**
+     * Commit new state root for a block height
+     *
+     */
+	/// @dev Commit new state root for a block height
+	/// @param _blockHeight block height for which stateRoots mapping needs to update
+	/// @param _stateRoot state root of input block height
+	/// @return bytes32 stateRoot
+	function commitStateRoot(
+		uint256 _blockHeight,
+		bytes32 _stateRoot)
+		external
+		returns(bytes32 stateRoot)
+	{
+		// check if the caller is whitelisted worker
+		require(workers.isWorker(msg.sender), "Invalid worker address");
+		// State root should be valid
+		require(_stateRoot != bytes32(0), "Invalid state root");
+		// Input block height should be valid
+		require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
+
+		stateRoots[_blockHeight] = _stateRoot;
+		latestStateRootBlockHeight = _blockHeight;
+
+		emit StateRootCommitted(_blockHeight, _stateRoot);
+
+		return stateRoot;
+	}
+
+	/// @dev Verify account proof of OpenSTRemote and commit storage root at given block height
+	/// @param _blockHeight block height at which OpenST is to be proven
+    /// @param _rlpEncodedAccount rlpencoded account node object
+    /// @param _rlpParentNodes RLP encoded value of account proof parent nodes
+    /// @return bool status
+	function proveOpenST(
+		uint256 _blockHeight,
+		bytes _rlpEncodedAccount,
+		bytes _rlpParentNodes)
+		external
+		returns(bool status)
+	{
+		// check if the caller is whitelisted worker
+		require(workers.isWorker(msg.sender), "Invalid worker address");
+		// Check for block height
+		require(_blockHeight != 0, "Invalid block height");
+		// Storage root should be valid
+		require(_rlpEncodedAccount.length != 0, "Invalid rlp encoded account value");
+
+		bytes32 stateRoot = stateRoots[_blockHeight];
+		// State root should be present for the block height
+		require(stateRoot != bytes32(0), "State root missing for given block height");
+
+		// Decode RLP encoded account value
+		RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
+		// Convert to list
+		RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
+		// Array 3rd position is storage root
+		bytes32 storageRoot = RLP.toBytes32(accountArray[2]);
+		// Hash the rlpEncodedValue value
+		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
+
+		// Verify proof using library contract
+		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemoteAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
+
+		// After verification update storageRoots mapping
+		storageRoots[_blockHeight] = storageRoot;
+		// Update latestStorageRootBlockHeight variable
+		latestStorageRootBlockHeight = _blockHeight;
+		// Emit event
+		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
+
+		return true;
+	}
+
 }
