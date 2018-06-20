@@ -44,7 +44,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const ops           = accounts[3];
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
-  const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
 
 	var res = null;
 
