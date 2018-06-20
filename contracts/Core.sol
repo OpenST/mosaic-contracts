@@ -47,25 +47,33 @@ contract Core is CoreInterface, Util {
 	/** Mapping of block height to storafe root of the block.  */
 	mapping (uint256 /* block height */ => bytes32) public storageRoots;
 
-	/// chainIdOrigin stores the chainId this chain
+	/** chainIdOrigin stores the chainId this chain */
 	uint256 public coreChainIdOrigin;
-	/// chainIdRemote stores the chainId of the remote chain
+	/** chainIdRemote stores the chainId of the remote chain */
 	uint256 private coreChainIdRemote;
-	/// OpenST remote is the address of the OpenST contract
-	/// on the remote chain
+	/** OpenST remote is the address of the OpenST contract */
+	/** on the remote chain */
 	address private coreOpenSTRemote;
-	/// registrar registers for the two chains
+	/** registrar registers for the two chains */
 	address private coreRegistrar;
-    /// Latest block height of block which state root was committed.
-    uint256 public latestStateRootBlockHeight;
-    /// Latest block height of block which storage root was committed.
-    uint256 public latestStorageRootBlockHeight;
-	/// Workers contract address
+	/** Latest block height of block which state root was committed. */
+	uint256 public latestStateRootBlockHeight;
+	/** Workers contract address */
 	WorkersInterface public workers;
-	/// OpenSTRemote encode address. sha3 => bytes32 to bytes
-	/// Kept in end because it's dynamic in size
-	bytes public encodedOpenSTRemoteAddress;
+	/** OpenSTRemote encode address. sha3 => bytes32 to bytes */
+	/** Kept in end because it's dynamic in size */
+	bytes public encodedOpenSTRemotePath;
 
+	/*
+    *  Modifiers
+    */
+
+	/** only worker modifier */
+	modifier onlyWorker() {
+		// msg.sender should be worker only
+		require(workers.isWorker(msg.sender), "Invalid worker address");
+		_;
+	}
 
 	/*
 	 *  Public functions
@@ -88,8 +96,8 @@ contract Core is CoreInterface, Util {
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
-		// Encoded remote address.
-		encodedOpenSTRemoteAddress = bytes32ToBytes(keccak256(coreOpenSTRemote));
+		// Encoded remote path.
+		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
 	}
 
 	/// @dev public function registrar
@@ -134,10 +142,9 @@ contract Core is CoreInterface, Util {
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
 		external
+		onlyWorker
 		returns(bytes32 stateRoot)
 	{
-		// check if the caller is whitelisted worker
-		require(workers.isWorker(msg.sender), "Invalid worker address");
 		// State root should be valid
 		require(_stateRoot != bytes32(0), "Invalid state root");
 		// Input block height should be valid
@@ -161,14 +168,12 @@ contract Core is CoreInterface, Util {
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 		external
-		returns(bool status)
+		returns(bool /* success */)
 	{
-		// check if the caller is whitelisted worker
-		require(workers.isWorker(msg.sender), "Invalid worker address");
 		// Check for block height
 		require(_blockHeight != 0, "Invalid block height");
 		// Storage root should be valid
-		require(_rlpEncodedAccount.length != 0, "Invalid rlp encoded account value");
+		require(_rlpEncodedAccount.length != 0, "Check length of RLP encoded account is not zero");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
@@ -183,13 +188,11 @@ contract Core is CoreInterface, Util {
 		// Hash the rlpEncodedValue value
 		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
 
-		// Verify proof using library contract
-		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemoteAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
+		// Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
+		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, _rlpParentNodes, stateRoot), "Account proof not verified.");
 
 		// After verification update storageRoots mapping
 		storageRoots[_blockHeight] = storageRoot;
-		// Update latestStorageRootBlockHeight variable
-		latestStorageRootBlockHeight = _blockHeight;
 		// Emit event
 		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
 
