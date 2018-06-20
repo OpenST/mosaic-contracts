@@ -187,7 +187,7 @@ contract Core is CoreInterface, Util {
 
 		emit StateRootCommitted(_blockHeight, _stateRoot);
 
-		return stateRoot;
+		return _stateRoot;
 	}
 
 	/**
