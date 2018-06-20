@@ -28,45 +28,59 @@ import "./WorkersInterface.sol";
 import "./RLP.sol";
 
 
-/// @dev Core is a minimal stub that will become the anchoring and consensus point for
-///      the utility chain to validate itself against
+/**
+*	@dev Core is a minimal stub that will become the anchoring and consensus point for
+*      the utility chain to validate itself against
+*/
 contract Core is CoreInterface, Util {
 
-	/*
-    *    Events
-    */
+	/**
+	*    Events
+	*/
+
+	/** event StateRootCommitted on successful execution of commitStateRoot */
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
+	/** event OpenSTProven on successful execution of proveOpenST */
 	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bytes32 hashedAccount);
 
-	/*
+	/**
 	 *  Storage
 	 */
+
 	/** Mapping of block height to state root of the block.  */
 	mapping (uint256 /* block height */ => bytes32) public stateRoots;
+
 	/** Mapping of block height to storafe root of the block.  */
 	mapping (uint256 /* block height */ => bytes32) public storageRoots;
 
 	/** chainIdOrigin stores the chainId this chain */
 	uint256 public coreChainIdOrigin;
+
 	/** chainIdRemote stores the chainId of the remote chain */
 	uint256 private coreChainIdRemote;
-	/** OpenST remote is the address of the OpenST contract */
-	/** on the remote chain */
+
+	/** OpenST remote is the address of the OpenST contract on the remote chain */
 	address private coreOpenSTRemote;
+
 	/** registrar registers for the two chains */
 	address private coreRegistrar;
+
 	/** Latest block height of block which state root was committed. */
 	uint256 public latestStateRootBlockHeight;
+
 	/** Workers contract address */
 	WorkersInterface public workers;
-	/** OpenSTRemote encode address. sha3 => bytes32 to bytes */
-	/** Kept in end because it's dynamic in size */
+
+	/**
+	*  OpenSTRemote encode address. sha3 => bytes32 to bytes
+	*  Kept in end because it's dynamic in size
+	*/
 	bytes public encodedOpenSTRemotePath;
 
-	/*
-    *  Modifiers
-    */
+	/**
+	*  Modifiers
+	*/
 
 	/** only worker modifier */
 	modifier onlyWorker() {
@@ -75,9 +89,18 @@ contract Core is CoreInterface, Util {
 		_;
 	}
 
-	/*
+	/**
 	 *  Public functions
 	 */
+
+	/**
+	* @dev Contract constructor
+	*
+	* @param _registrar registrar address
+	* @param _chainIdOrigin origin chain id
+	* @param _chainIdRemote remote chain id
+	* @param _openSTRemote remote openSTUtility/openSTValue contract address
+	*/
 	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
@@ -100,8 +123,11 @@ contract Core is CoreInterface, Util {
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
 	}
 
-	/// @dev public function registrar
-	/// @return address coreRegistrar
+	/**
+	*	@dev public function registrar
+	*
+	*	@return address coreRegistrar
+	*/
 	function registrar()
 		public
 		view
@@ -110,8 +136,11 @@ contract Core is CoreInterface, Util {
 		return coreRegistrar;
 	}
 
-	/// @dev public function chainIdRemote
-	/// @return uint256 coreChainIdRemote
+	/**
+	*	@dev public function chainIdRemote
+	*
+	*	@return uint256 coreChainIdRemote
+	*/
 	function chainIdRemote()
 		public
 		view
@@ -120,8 +149,11 @@ contract Core is CoreInterface, Util {
 		return coreChainIdRemote;
 	}
 
-	/// @dev public function openSTRemote
-	/// @return address coreOpenSTRemote
+	/**
+	*	@dev public function openSTRemote
+	*
+	*	@return address coreOpenSTRemote
+	*/
 	function openSTRemote()
 		public
 		view
@@ -131,19 +163,19 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-     * Commit new state root for a block height
-     *
-     */
-	/// @dev Commit new state root for a block height
-	/// @param _blockHeight block height for which stateRoots mapping needs to update
-	/// @param _stateRoot state root of input block height
-	/// @return bytes32 stateRoot
+	*	@dev Commit new state root for a block height
+	*
+	*	@param _blockHeight block height for which stateRoots mapping needs to update
+	*	@param _stateRoot state root of input block height
+	*
+	*	@return bytes32 stateRoot
+	*/
 	function commitStateRoot(
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
 		external
 		onlyWorker
-		returns(bytes32 stateRoot)
+		returns(bytes32 /* stateRoot */)
 	{
 		// State root should be valid
 		require(_stateRoot != bytes32(0), "Invalid state root");
@@ -158,11 +190,15 @@ contract Core is CoreInterface, Util {
 		return stateRoot;
 	}
 
-	/// @dev Verify account proof of OpenSTRemote and commit storage root at given block height
-	/// @param _blockHeight block height at which OpenST is to be proven
-    /// @param _rlpEncodedAccount rlpencoded account node object
-    /// @param _rlpParentNodes RLP encoded value of account proof parent nodes
-    /// @return bool status
+	/**
+	*	@dev Verify account proof of OpenSTRemote and commit storage root at given block height
+	*
+	*	@param _blockHeight block height at which OpenST is to be proven
+	*	@param _rlpEncodedAccount rlpencoded account node object
+	*	@param _rlpParentNodes RLP encoded value of account proof parent nodes
+	*
+	*	@return bool status
+	*/
 	function proveOpenST(
 		uint256 _blockHeight,
 		bytes _rlpEncodedAccount,
