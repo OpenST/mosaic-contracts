@@ -28,24 +28,26 @@ library AddressArrayLib {
         address[] addresses;
     }
 
-    /** @dev    add element to array
+    /**
+     *  @notice Adds element into the array
      *
-     *  @param  array of address
-     *  @param  value which will be added to array
+     *  @param  array Array of address to add new elements
+     *  @param  value New element to be added into array
      *
-     *  @return new length of array
+     *  @return length  of array after adding the element
      */
-    function push(AddressArray storage array, address value) internal  returns (uint256 length){
+    function push(AddressArray storage array, address value) internal returns (uint256 length){
 
         return array.addresses.push(value);
     }
 
-    /** @dev     remove first occurrence of element from array by value
+    /**
+     *  @notice  Remove first occurrence of element from array by value
      *
-     *  @param   array of address
-     *  @param   value which will be removed from
+     *  @param   array Array of address from which element is removed
+     *  @param   value element which will be removed from the array
      *
-     *  @return  new length of array
+     *  @return  length of array after removing the element
      */
     function removeByValue(AddressArray storage array, address value) internal returns (bool isElementPresent) {
 
@@ -59,13 +61,14 @@ library AddressArrayLib {
         return isElementPresent;
     }
 
-    /** @dev     search first occurrence of element in array
+    /**
+     *   @notice  Search first occurrence of element from the array
      *
-     *  @param   array of address
-     *  @param   value which will be searched
+     *  @param   array Array of address from which element is searched
+     *  @param   value element which will be searched from the array
      *
-     *  @return  bool to check value exist in array
-     *  @return  index of element
+     *  @return  bool return true if element exists in the array else false
+     *  @return  index position of value in the array
      */
     function find(AddressArray storage array, address value) internal view returns (bool isElementPresent, uint256 index) {
 
@@ -76,9 +79,9 @@ library AddressArrayLib {
     }
 
     /**
-     *  @dev     length of array
+     *  @notice  Length of array
      *
-     *  @param   array of address
+     *  @param   array Array of address
      *
      *  @return  length of array
      */
@@ -87,12 +90,13 @@ library AddressArrayLib {
         return array.addresses.length;
     }
 
-    /** @dev     remove element in array by index
+    /**
+     *  @notice  Remove element in array by index
      *
-     *  @param   array of address
-     *  @param   index of element
+     *  @param   array Array of address from which element is removed
+     *  @param   index index which will be removed from the array
      *
-     *  @return  new length of array
+     *  @return  length of array after removing the element
      */
     function removeByIndex(AddressArray storage array, uint256 index) private  {
         
