@@ -73,9 +73,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
     
-    /** capture intents */ 
+    // storage for staking intent hash of active staking intents
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
-    /// register the active stakes and unstakes
+    // register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
     mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
@@ -95,7 +95,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     address public registrar;
     bytes32[] public uuids;
 
-  /*
+    /*
      *  Structures
      */
     struct UtilityToken {
@@ -223,7 +223,9 @@ contract OpenSTValue is OpsManaged, Hasher {
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
-        /** Add intent hash to intents mapping */
+
+        // store the staking intent hash directly in storage of OpenSTValue 
+        // so that a Merkle proof can be generated for active staking intents
         intents[hashIntentKey(_staker, nonce)] = stakingIntentHash;
 
         emit StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
@@ -259,11 +261,10 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
-        /** Remove intent hash from intents mapping */
+        
+        // remove intent hash from intents mapping 
         delete intents[hashIntentKey(stake.staker, stake.nonce)];        
-
         delete stakes[_stakingIntentHash];
-
 
         return stakeAddress;
     }
@@ -294,7 +295,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
-        /** Remove intent hash from intents mapping */
+
+        // remove intent hash from intents mapping 
         delete intents[hashIntentKey(stake.staker, stake.nonce)];   
         delete stakes[_stakingIntentHash];
 
