@@ -49,10 +49,10 @@ contract Core is CoreInterface, Util {
 	 */
 
 	/** Mapping of block height to state root of the block.  */
-	mapping (uint256 /* block height */ => bytes32) public stateRoots;
+	mapping (uint256 /* block height */ => bytes32) private stateRoots;
 
 	/** Mapping of block height to storafe root of the block.  */
-	mapping (uint256 /* block height */ => bytes32) public storageRoots;
+	mapping (uint256 /* block height */ => bytes32) private storageRoots;
 
 	/** chainIdOrigin stores the chainId this chain */
 	uint256 public coreChainIdOrigin;
@@ -67,7 +67,7 @@ contract Core is CoreInterface, Util {
 	address private coreRegistrar;
 
 	/** Latest block height of block which state root was committed. */
-	uint256 public latestStateRootBlockHeight;
+	uint256 private latestStateRootBlockHeight;
 
 	/** Workers contract address */
 	WorkersInterface public workers;
@@ -76,7 +76,7 @@ contract Core is CoreInterface, Util {
 	*  OpenSTRemote encode address. sha3 => bytes32 to bytes
 	*  Kept in end because it's dynamic in size
 	*/
-	bytes public encodedOpenSTRemotePath;
+	bytes private encodedOpenSTRemotePath;
 
 	/**
 	*  Modifiers
@@ -124,7 +124,7 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	*	@dev public function registrar
+	*	@dev public view function registrar
 	*
 	*	@return address coreRegistrar
 	*/
@@ -137,7 +137,7 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	*	@dev public function chainIdRemote
+	*	@dev public view function chainIdRemote
 	*
 	*	@return uint256 coreChainIdRemote
 	*/
@@ -150,7 +150,7 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	*	@dev public function openSTRemote
+	*	@dev public view function openSTRemote
 	*
 	*	@return address coreOpenSTRemote
 	*/
@@ -224,6 +224,17 @@ contract Core is CoreInterface, Util {
 		// Hash the rlpEncodedValue value
 		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
 
+		// If account already proven for block height
+		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+		if (provenStorageRoot != bytes32(0)) {
+			// Check extracted storage root is matching with existing stored storage root
+			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
+			// Emit OpenSTProven event
+			emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
+			// return true
+			return true;
+		}
+
 		// Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
 		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, _rlpParentNodes, stateRoot), "Account proof not verified.");
 
@@ -233,6 +244,51 @@ contract Core is CoreInterface, Util {
 		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
 
 		return true;
+	}
+
+	/**
+	*	@dev public view function getStateRoot
+	*
+	*	@param _blockHeight block height for which state root is needed
+	*
+	*	@return bytes32 state root
+	*/
+	function getStateRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* state root */)
+	{
+		return stateRoots[_blockHeight];
+	}
+
+	/**
+	*	@dev public view function getStorageRoot
+	*
+	*	@param _blockHeight block height for which storage root is needed
+	*
+	*	@return bytes32 storage root
+	*/
+	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return storageRoots[_blockHeight];
+	}
+
+	/**
+	*	@dev public function getLatestStateRootBlockHeight
+	*
+	*	@return uint256 latest state root block height
+	*/
+	function getLatestStateRootBlockHeight()
+		public
+		view
+		returns (uint256 /* block height */)
+	{
+		return latestStateRootBlockHeight;
 	}
 
 }
