@@ -28,20 +28,24 @@ library AddressArrayLib {
         address[] addresses;
     }
 
-    /*  @title -  Add element to array
-     *  @Param - array
-     *  @Param - value which will be added to array
-     *  @Returns: new length of array
+    /** @dev    add element to array
+     *
+     *  @param  array of address
+     *  @param  value which will be added to array
+     *
+     *  @return new length of array
      */
     function push(AddressArray storage array, address value) internal view returns (uint256 length){
 
         return array.addresses.push(value);
     }
 
-    /*  @title -  Remove first occurrence of element from array by value
-     *  @Param - array
-     *  @Param - value which will be removed from
-     *  @Returns: new length of array
+    /**  @dev     remove first occurrence of element from array by value
+     *
+     *   @param   array of address
+     *   @param   value which will be removed from
+     *
+     *   @return  new length of array
      */
     function removeByValue(AddressArray storage array, address value) internal view returns (bool isElementPresent) {
 
@@ -55,11 +59,13 @@ library AddressArrayLib {
         return isElementPresent;
     }
 
-    /*  @title - Search first occurrence of element in array
-     *  @Param - array
-     *  @Param - value which will be searched
-     *  @Returns - bool to check value exist in array
-     *  @Returns - index of element
+    /**  @dev     search first occurrence of element in array
+     *
+     *   @param   array of address
+     *   @param   value which will be searched
+     *
+     *   @return  bool to check value exist in array
+     *   @return  index of element
      */
     function find(AddressArray storage array, address value) internal view returns (bool isElementPresent, uint256 index) {
 
@@ -69,19 +75,24 @@ library AddressArrayLib {
         return (isElementPresent, index);
     }
 
-    /*  @title - length of array
-     *  @Param - array
-     *  @Returns - length of array
+    /**
+     *    @dev     length of array
+     *
+     *   @param   array of address
+     *
+     *   @return  length of array
      */
     function length(AddressArray storage array) internal view returns (uint256 length){
 
         return array.addresses.length;
     }
 
-    /*  @title - Remove element in array by index
-     *  @Param - array
-     *  @Param - index of element
-     *  @Returns - new length of array
+    /**  @dev     remove element in array by index
+     *
+     *   @param   array of address
+     *   @param   index of element
+     *
+     *   @return  new length of array
      */
     function removeByIndex(AddressArray storage array, uint256 index) private view {
         
