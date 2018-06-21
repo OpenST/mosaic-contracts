@@ -80,6 +80,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *  Storage
      */
 
+    // storage for staking intent hash of active staking intents
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
     mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
@@ -127,6 +130,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     struct Redemption {
         bytes32 uuid;
         address redeemer;
+        uint256 nonce;
         address beneficiary;
         uint256 amountUT;
         uint256 unlockHeight;
@@ -355,11 +359,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         _uuid,
             redeemer:     msg.sender,
+            nonce:  _nonce,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -406,6 +415,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         uuidSTPrime,
             redeemer:     msg.sender,
+            nonce:  _nonce,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
             unlockHeight: unlockHeight,
@@ -449,6 +459,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             redemption.redeemer, redemption.beneficiary, redemption.amountUT, _unlockSecret);
 
         delete redemptions[_redemptionIntentHash];
+
+        // remove intent hash from intents mapping
+        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         return tokenAddress;
     }

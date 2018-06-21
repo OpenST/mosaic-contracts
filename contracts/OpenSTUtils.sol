@@ -13,7 +13,7 @@ library OpenSTUtils {
   }
 
   function storagePath(
-    uint256 _index,
+    uint8 _index,
     bytes32 _key)
     internal
     pure

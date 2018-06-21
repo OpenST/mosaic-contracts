@@ -79,7 +79,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
     uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
-
+    uint8 private constant INTENT_INDEX = 3;
 
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
@@ -346,13 +346,14 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
-        storageRoot = cores[utilityTokens[_uuid].chainIdUtility].storageRoot(_blockHeight);
+        CoreInterface core = cores[utilityTokens[_uuid].chainIdUtility];
+        storageRoot = core.getStorageRoots(_blockHeight);
 
         //TODO: Update the code to get the Index.
-        bytes32 keyPath = OpenSTUtils.storagePath("3", keccak256(_redeemer, _redeemerNonce));
+        bytes32 keyPath = OpenSTUtils.storagePath(INTENT_INDEX, keccak256(_redeemer, _redeemerNonce));
         bytes memory path = bytes32ToBytes(keccak256(keyPath));
         require(MerklePatriciaProof.verify(
-            keccak256(RLPEncode.encodeItem(redemptionIntentHash)),
+            keccak256(RLPEncode.encodeItem(bytes32ToBytes(redemptionIntentHash))),
             path,
             _rlpParentNodes,
             storageRoot), "Failed to verify storage path");
@@ -373,6 +374,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         return (amountST, expirationHeight, storageRoot);
     }
 
+    function
     function processUnstaking(
         bytes32 _redemptionIntentHash,
         bytes32 _unlockSecret)

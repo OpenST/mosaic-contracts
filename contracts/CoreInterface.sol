@@ -27,4 +27,5 @@ contract CoreInterface {
 
 	function chainIdRemote() public view returns (uint256 /* chainIdRemote */);
 	function openSTRemote() public view returns (address /* OpenSTRemote */);
+	function getStorageRoots(uint256 _blockHeight) public view returns (bytes32);
 }

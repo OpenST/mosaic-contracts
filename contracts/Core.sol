@@ -235,4 +235,11 @@ contract Core is CoreInterface, Util {
 		return true;
 	}
 
+	function getStorageRoots(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32){
+		return storageRoots[_blockHeight];
+	}
 }
