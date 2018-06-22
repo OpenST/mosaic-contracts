@@ -32,9 +32,6 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
-// proof libraries
-import "./MerklePatriciaProof.sol";
-import "./RLPEncode.sol";
 import "./OpenSTUtils.sol";
 import "./util.sol";
 
@@ -61,8 +58,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         address _staker, uint256 _amountST, uint256 _amountUT);
 
     event RedemptionIntentConfirmed(bytes32 indexed _uuid, bytes32 _redemptionIntentHash,
-        address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight, uint256 _blockHeight,
-        bytes32 _storageRoot);
+        address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 
     event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address stake, address _redeemer, address _beneficiary, uint256 _amountST, bytes32 _unlockSecret);
@@ -313,10 +309,9 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         external
         returns (
         uint256 amountST,
-        uint256 expirationHeight,
-        bytes32 storageRoot)
+        uint256 expirationHeight)
     {
-        require(utilityTokens[_uuid].simpleStake != address(0));
+
         require(_amountUT > 0);
         require(_beneficiary != address(0));
         // later core will provide a view on the block height of the
@@ -326,37 +321,23 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
 
-        bytes32 redemptionIntentHash = hashRedemptionIntent(
+        bytes32 redemptionIntentHash;
+        (amountST, expirationHeight, redemptionIntentHash) = getAmountSTExpirationAndRedemptionHash(
             _uuid,
             _redeemer,
-            nonces[_redeemer],
             _beneficiary,
             _amountUT,
             _redemptionUnlockHeight,
-            _hashLock
-        );
+            _hashLock);
 
-        expirationHeight = block.number + blocksToWaitShort();
-
-        UtilityToken storage utilityToken = utilityTokens[_uuid];
-        // minimal precision to unstake 1 STWei
-        require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
-        amountST = (_amountUT
-            .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
-
-        require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
-
-        CoreInterface core = cores[utilityTokens[_uuid].chainIdUtility];
-        storageRoot = core.getStorageRoots(_blockHeight);
-
-        //TODO: Update the code to get the Index.
-        bytes32 keyPath = OpenSTUtils.storagePath(INTENT_INDEX, keccak256(_redeemer, _redeemerNonce));
-        bytes memory path = bytes32ToBytes(keccak256(keyPath));
-        require(MerklePatriciaProof.verify(
-            keccak256(RLPEncode.encodeItem(bytes32ToBytes(redemptionIntentHash))),
-            path,
-            _rlpParentNodes,
-            storageRoot), "Failed to verify storage path");
+        bytes32 storageRoot = getStorageRoot(_uuid, _blockHeight);
+        require(OpenSTUtils.verifyIntentStorage(
+                INTENT_INDEX,
+                _redeemer,
+                _redeemerNonce,
+                storageRoot,
+                redemptionIntentHash,
+                _rlpParentNodes));
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
@@ -366,15 +347,60 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
             amountST:         amountST,
             expirationHeight: expirationHeight,
             hashLock:         _hashLock
-        });
+            });
 
         emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
-            _beneficiary, amountST, _amountUT, expirationHeight, _blockHeight, storageRoot );
+            _beneficiary, amountST, _amountUT, expirationHeight);
 
-        return (amountST, expirationHeight, storageRoot);
+        return (amountST, expirationHeight);
+
     }
 
-    function
+    function getStorageRoot(
+        bytes32 _uuid,
+        uint256 _blockHeight)
+        internal
+        returns (bytes32)
+    {
+        return CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoots(_blockHeight);
+    }
+    function getAmountSTExpirationAndRedemptionHash(
+        bytes32 _uuid,
+        address _redeemer,
+        address _beneficiary,
+        uint256 _amountUT,
+        uint256 _redemptionUnlockHeight,
+        bytes32 _hashLock)
+        private
+        returns (uint256 amountST,
+        uint256 expirationHeight,
+        bytes32 redemptionIntentHash)
+    {
+        require(utilityTokens[_uuid].simpleStake != address(0));
+        expirationHeight = block.number + blocksToWaitShort();
+
+        UtilityToken storage utilityToken = utilityTokens[_uuid];
+        // minimal precision to unstake 1 STWei
+        require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
+        amountST = (_amountUT
+        .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
+
+        require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
+
+        redemptionIntentHash = hashRedemptionIntent(
+            _uuid,
+            _redeemer,
+            nonces[_redeemer],
+            _beneficiary,
+            _amountUT,
+            _redemptionUnlockHeight,
+            _hashLock
+        );
+
+        return (amountST, expirationHeight, redemptionIntentHash);
+    }
+
+
     function processUnstaking(
         bytes32 _redemptionIntentHash,
         bytes32 _unlockSecret)
