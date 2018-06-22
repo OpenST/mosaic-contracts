@@ -21,30 +21,30 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
+/**
+ *  @title CoreInterface
+ *
+ *	@notice provide interface for core contract
+ */
 contract CoreInterface {
 
-	/** registrar public function */
 	function registrar() public view returns (address /* registrar */);
 
-	/** chainID remote public function */
 	function chainIdRemote() public view returns (uint256 /* chainIdRemote */);
 
-	/** openST remote public function */
 	function openSTRemote() public view returns (address /* OpenSTRemote */);
 
-	/** commitStateRoot external function */
+	/** commitStateRoot external function to be called by game process */
 	function commitStateRoot(uint256 _blockHeight, bytes32 _stateRoot) external returns (bytes32 /* stateRoot */);
 
-	/** proveOpenST external function */
+	/** It's called whenever account proof needs to be verified */
 	function proveOpenST(uint256 _blockHeight, bytes _rlpEncodedAccount, bytes _rlpParentNodes) external returns (bool /* success */);
 
-	/** get latest state root block height public function */
+	/** get highest state root block height for which state root is committed. */
 	function getLatestStateRootBlockHeight() public view returns (uint256 /* latest state root block height */);
 
-	/** get state root public function */
 	function getStateRoot(uint256 _blockHeight) public view returns (bytes32 /* state root */);
 
-	/** get storage root public function */
 	function getStorageRoot(uint256 _blockHeight) public view returns (bytes32 /* storage root */);
 
 }
