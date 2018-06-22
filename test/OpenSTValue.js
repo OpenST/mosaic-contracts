@@ -103,16 +103,18 @@ contract('OpenSTValue', function(accounts) {
 	const conversionRateDecimals = 5;
 	const conversionRate = new BigNumber(10 * 10**conversionRateDecimals); // conversion rate => 10
 
-	var valueToken  = null;
-	var openSTValue = null;
-	var core = null;
-	var checkUuid = null;
-	var result = null;
-	var hasher = null;
-	var stakingIntentHash = null;
-	var hashIntentKey = null;
-	var stake = null;
-	var nonce = null;
+	var valueToken  = null
+		, openSTValue = null
+		, core = null
+		, checkUuid = null
+		,result = null
+		, hasher = null
+		, stakingIntentHash
+		, hashIntentKey = null;
+		, stake = null
+		, nonce = null
+		, workers = null
+	;
 
 	describe('Properties', async () => {
 		before(async () => {

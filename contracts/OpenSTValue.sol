@@ -44,7 +44,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
-        uint256 _stakerNonce, bytes32 _hashIntentKey, address _beneficiary, uint256 _amountST,
+        uint256 _stakerNonce, bytes32 _intentKeyHash, address _beneficiary, uint256 _amountST,
         uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
         uint256 _chainIdUtility);
 
@@ -226,10 +226,10 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         // store the staking intent hash directly in storage of OpenSTValue 
         // so that a Merkle proof can be generated for active staking intents
-        _hashIntentKey = hashIntentKey(_staker, nonce);
-        intents[_hashIntentKey] = stakingIntentHash;
+        bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
+        intents[intentKeyHash] = stakingIntentHash;
 
-        emit StakingIntentDeclared(_uuid, _staker, nonce, _hashIntentKey, _beneficiary,
+        emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
