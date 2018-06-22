@@ -94,6 +94,7 @@ contract('OpenST', function(accounts) {
 		var nonceBT = null;
 		var uuidSTP = null;
 		var nonceSTP = null;
+		var hashIntentKey = null;
 		var stakingIntentHash = null;
 		var unlockHeight = null;
 		var redemptionIntentHash = null;
@@ -176,6 +177,8 @@ contract('OpenST', function(accounts) {
 				utils.logResponse(o, "OpenSTValue.stake");
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, stakerVC, nonceSTP, beneficiary,
 					AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
+
+				hashIntentKey = o.logs[0].args._hashIntentKey;
 				stakingIntentHash = o.logs[0].args._stakingIntentHash;
 				unlockHeight = o.logs[0].args._unlockHeight;
 			});
@@ -298,6 +301,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
@@ -537,6 +541,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 
 			});
@@ -580,6 +585,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
@@ -667,6 +673,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
