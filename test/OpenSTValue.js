@@ -109,8 +109,8 @@ contract('OpenSTValue', function(accounts) {
 		, checkUuid = null
 		,result = null
 		, hasher = null
-		, stakingIntentHash
-		, hashIntentKey = null;
+		, stakingIntentHash 
+		, hashIntentKey = null
 		, stake = null
 		, nonce = null
 		, workers = null
@@ -121,6 +121,7 @@ contract('OpenSTValue', function(accounts) {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
+	        workers = contracts.workers;
 	    })
 
 		it('has chainIdValue', async () => {
@@ -140,7 +141,7 @@ contract('OpenSTValue', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        openSTValue = contracts.openSTValue;
-        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 	    })
 
 		it('fails to add core by non-registrar', async () => {
@@ -149,11 +150,6 @@ contract('OpenSTValue', function(accounts) {
 
 		it('fails to add core by registrar when core is null', async () => {
       await Utils.expectThrow(openSTValue.addCore(0, { from: registrar }));
-		})
-
-		it('fails to add core when registrar != core.registrar', async () => {
-			var badCore = await Core.new(accounts[0], chainIdValue, chainIdRemote, openSTRemote);
-            await Utils.expectThrow(openSTValue.addCore(badCore.address, { from: registrar }));
 		})
 
 		it('successfully adds core', async () => {
@@ -171,7 +167,7 @@ contract('OpenSTValue', function(accounts) {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
-        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
           await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 	    })
@@ -224,7 +220,7 @@ contract('OpenSTValue', function(accounts) {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 		        valueToken  = contracts.valueToken;
 		        openSTValue = contracts.openSTValue;
-	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 	            await openSTValue.addCore(core.address, { from: registrar });
 		    })
 
@@ -269,7 +265,7 @@ contract('OpenSTValue', function(accounts) {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 		        valueToken  = contracts.valueToken;
 		        openSTValue = contracts.openSTValue;
-	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 	            await openSTValue.addCore(core.address, { from: registrar });
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 						await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, accounts[0], checkUuid, { from: registrar });
@@ -306,7 +302,7 @@ contract('OpenSTValue', function(accounts) {
 	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 	        valueToken  = contracts.valueToken;
 	        openSTValue = contracts.openSTValue;
-        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
             await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
@@ -360,7 +356,7 @@ contract('OpenSTValue', function(accounts) {
 			contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 			valueToken  = contracts.valueToken;
 			openSTValue = contracts.openSTValue;
-			core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+			core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 			await openSTValue.addCore(core.address, { from: registrar });
 			checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
@@ -461,7 +457,7 @@ contract('OpenSTValue', function(accounts) {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 		        valueToken  = contracts.valueToken;
 		        openSTValue = contracts.openSTValue;
-	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 	            await openSTValue.addCore(core.address, { from: registrar });
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
@@ -525,7 +521,7 @@ contract('OpenSTValue', function(accounts) {
 				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 				valueToken  = contracts.valueToken;
 				openSTValue = contracts.openSTValue;
-				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 				await openSTValue.addCore(core.address, { from: registrar });
 				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, staker, checkUuid, { from: registrar });
@@ -594,7 +590,7 @@ contract('OpenSTValue', function(accounts) {
 				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 				valueToken  = contracts.valueToken;
 				openSTValue = contracts.openSTValue;
-				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 				await openSTValue.addCore(core.address, { from: registrar });
 				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, staker, checkUuid, { from: registrar });
@@ -660,7 +656,7 @@ contract('OpenSTValue', function(accounts) {
 				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 				valueToken  = contracts.valueToken;
 				openSTValue = contracts.openSTValue;
-				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 				await openSTValue.addCore(core.address, { from: registrar });
 				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, staker, checkUuid, { from: registrar });
@@ -722,7 +718,7 @@ contract('OpenSTValue', function(accounts) {
 				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 				valueToken  = contracts.valueToken;
 				openSTValue = contracts.openSTValue;
-				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 				await openSTValue.addCore(core.address, { from: registrar });
 				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, staker, checkUuid, { from: registrar });

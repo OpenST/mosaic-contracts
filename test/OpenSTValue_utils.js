@@ -24,12 +24,17 @@ const BigNumber = require('bignumber.js');
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var Workers = artifacts.require("./Workers.sol");
 
 /// @dev Deploy
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
-	const chainIdValue = 3;
-	const valueToken   = await SimpleToken.new();
-	const registrar    = accounts[1]
+	const chainIdValue = 3
+		, valueToken   = await SimpleToken.new()
+		, registrar    = accounts[1]
+		, admin = accounts[2]
+		, ops = accounts[3]
+		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+	;
 
 	// Set SimpleToken admin in order to finalize SimpleToken
 	await valueToken.setAdminAddress(accounts[1]);
@@ -38,9 +43,20 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
 
+  //Set SimpleToken admin in order to finalize SimpleToken
+  await valueToken.setAdminAddress(admin);
+
+  // Deploy worker contract
+  const workers = await Workers.new(valueToken.address)
+    , worker1 = accounts[7];
+  await workers.setAdminAddress(admin);
+  await workers.setOpsAddress(ops);
+  await workers.setWorker(worker1, deactivationHeight, {from:ops});
+
 	return {
 		valueToken  : valueToken,
-		openSTValue : openSTValue
+		openSTValue : openSTValue,
+		workers: workers
 	}
 }
 
