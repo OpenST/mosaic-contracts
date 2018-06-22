@@ -36,7 +36,7 @@
     \umlcontrol[class=SK]{OpenSTValue}
     \umlobject[class=SK]{SimpleStake}
     \umlobject[class=SK]{CoreUC}
-    \umlcontrol[class=SK]{RegistrarVC}||
+    \umlcontrol[class=SK]{RegistrarVC}
     \umlboundary[class=Web3]{Value Chain}
     \umlactor[class=Worker, fill=purple!40]{Foundation}
     \umlboundary[class=Web3, fill=blue!40]{Utility Chain}
@@ -356,7 +356,7 @@
       \end{umlcall}
     \end{umlfragment}
     \umlnote[x=1, y=-47, width=100]{phasetwo}{With both value chain and utility chain configured correctly for StakingIntentHash, Facilitator can proceed by revealing the unlock secret, or revert by awaiting the unlock height }
-    \umlnote[x=40, y=-100, width=120]{phasetwo}{Only a facilitator can call revertStaking and then bounty is returned to the facilitator}
+    \umlnote[x=40, y=-100, width=120]{phasetwo}{Any actor can call revertStaking and the bounty is returned to the facilitator}
 
   \end{umlseqdiag}
 \end{tikzpicture}
