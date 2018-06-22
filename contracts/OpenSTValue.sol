@@ -392,7 +392,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         require(_redeemer !=  address(0));
         require(_redemptionIntentHash !=  bytes32(0));
 
-        bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoots(_blockHeight);
+        bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
         require(OpenSTUtils.verifyIntentStorage(
                 INTENT_INDEX,
                 _redeemer,
