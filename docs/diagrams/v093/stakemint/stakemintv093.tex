@@ -90,7 +90,7 @@
         \end{umlcall}
         
         % Gate calls on to OpenSTValue to stake (later abstract to library call)
-        \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)}]{Branded Token Gate}{OpenSTValue} % return={amountUT, nonce, unlockHeight, stakingIntentHash}
+        \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)},return={amountUT, nonce, unlockHeight, StakingIntentHash}]{Branded Token Gate}{OpenSTValue} % 
           % check stakingAccount 
           \begin{umlcallself}[op={require(msg.sender = gate = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
           \end{umlcallself}
@@ -98,17 +98,17 @@
           % its OST account balance
           \begin{umlcall}[dt=4, op={: transferFrom(gate, OpenSTValue, amountST)}, fill=green!20, return=<<OST(amountST)>>]{OpenSTValue}{OST}
             % pull OST for pre-fund amount from Facilitator
-            \begin{umlcall}[dt=20, fill=green!20, type=return]{Branded Token Gate}{OST}
+            \begin{umlcall}[dt=20, fill=green!20, type ={return},op ={<<OST(amountST)>>}]{Branded Token Gate}{OST}
             \end{umlcall}
           \end{umlcall}
           % store StakingIntentHash in contract storage
           \begin{umlcallself}[op={store StakingIntentHash},]{OpenSTValue}
           \end{umlcallself}
           % HTLC(facilitator, amount+bounty)Facilitator
-          %\begin{umlcallself}[dt=0, op={HTLC(staker, amount)},]{OpenSTValue}
+         % \begin{umlcallself}[dt=0, op={HTLC(staker, amount)},]{OpenSTValue}
           %\end{umlcallself}
           % emit StakingIntentDeclared
-          \begin{umlcall}[type=return, op={emit StakingIntentDeclared(nonce, unlockHeight, StakingIntentHash)}]{OpenSTValue}{Facilitator}
+          \begin{umlcall}[type=return, op={emit StakingIntentDeclared(nonce, amountUT, unlockHeight, StakingIntentHash)}]{OpenSTValue}{Facilitator}
           \end{umlcall}
         \end{umlcall}
         % HTLC(facilitator, bounty)
@@ -141,7 +141,7 @@
       % staker reverts Stake Request after timeout
       \begin{umlcall}[dt=12, op={: revertStakeRequest()}, fill=green!20]{Staker}{Branded Token Gate}
         % gate checks amount is not locked under HTLC or time-lock is not yet expired
-        \begin{umlcallself}[op={require(msg.sender=staker \&\& no HTLC)}]{Branded Token Gate}
+        \begin{umlcallself}[op={require(msg.sender=staker \&\& no hashLock)}]{Branded Token Gate}
         \end{umlcallself}
         % transfer amount back to staker
         \begin{umlcall}[fill=green!20, op={: transfer(staker, amountST)}]{Branded Token Gate}{OST}
