@@ -359,7 +359,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         _uuid,
             redeemer:     msg.sender,
-            nonce:  _nonce,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
             unlockHeight: unlockHeight,
@@ -415,7 +415,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         uuidSTPrime,
             redeemer:     msg.sender,
-            nonce:  _nonce,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
             unlockHeight: unlockHeight,
