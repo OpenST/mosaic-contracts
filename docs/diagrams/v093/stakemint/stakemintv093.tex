@@ -189,32 +189,44 @@
     %%%
     
     % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
-    \begin{umlcall}[dt=15, op={: claimStakingIntentHash(StakingIntentHash, merkleProof[], committedBlockHeight)}, return={emit ValidatedStakingIntentHash(StakingIntentHash)}]{Facilitator}{OpenSTUtility}
+    %\begin{umlcall}[dt=15, op={: claimStakingIntentHash(StakingIntentHash, merkleProof[], committedBlockHeight)}, return={emit ValidatedStakingIntentHash(StakingIntentHash)}]{Facilitator}{OpenSTUtility}
       % OpenSTUtility checks StakingIntentHash against committed state root
-      \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
-      \end{umlcall}
+      %\begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
+     % \end{umlcall}
       % OpenSTUtility validate merkle proof
-      \begin{umlcallself}[op={validate proof}]{OpenSTUtility}
-      \end{umlcallself}
+      %\begin{umlcallself}[op={validate proof}]{OpenSTUtility}
+      %\end{umlcallself}
       % OpenSTUtility store valid StakingIntentHash
-      \begin{umlcallself}[op={store valid StakingIntentHash}]{OpenSTUtility}
-      \end{umlcallself}
-    \end{umlcall}
+      %\begin{umlcallself}[op={store valid StakingIntentHash}]{OpenSTUtility}
+      %\end{umlcallself}
+    %\end{umlcall}
     
     % Facilitator submits pre-image data for StakingIntentHash
-    \begin{umlcall}[dt=5, op={: ConfirmStakingIntent(StakingIntentHash, uuid, hashLock, amountST, amountUT, stakingProcessor, stakingProcessorNonce, tokenHolder, unlockHeight)}, return={emit StakingIntentConfirmed(StakingIntentHash, nonce, unlockHeight, expirationHeight)}]{Facilitator}{OpenSTUtility}
+    \begin{umlcall}[dt=15, op={: confirmStakingIntent(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock, StakingIntentHash)}, return={emit StakingIntentConfirmed(stakingIntentHash,  expirationHeight)}]{Facilitator}{OpenSTUtility}
+	% check stake nonces of staker is less than staker nonce      
+      %\begin{umlcallself}[op={require(nonces[staker] < stakerNonce)}]{OpenSTUtility}
+      %\end{umlcallself} 
+     % check stakingUnlockHeight is greater than 0
+      \begin{umlcallself}[op={require(stakingUnlockHeight > 0)}]{OpenSTUtility}
+      \end{umlcallself}   
+     % calculate the stakingIntentHash
+      % \begin{umlcallself}[op={stakingIntentHash = H(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock)}]{OpenSTUtility}
+      %\end{umlcallself}         
+     % check calculated stakingIntentHash is equal to provided stakingIntentHash
+      \begin{umlcallself}[op={require(stakingIntentHash = StakingIntentHash)}]{OpenSTUtility}
+      \end{umlcallself}         
       % OpenSTUtility asserts valid pre-image data for StakingIntentHash
-      \begin{umlcallself}[op={assert valid pre-image data}]{OpenSTUtility}
-      \end{umlcallself}
+      %\begin{umlcallself}[op={assert valid pre-image data}]{OpenSTUtility}
+      %\end{umlcallself}
       % OpenSTUtility checks StakingIntentHash against committed state root
-      \begin{umlcall}[op={: getLatestHeight()}, return={latestHeight}]{OpenSTUtility}{CoreVC}
-      \end{umlcall}
+      %\begin{umlcall}[op={: getLatestHeight()}, return={latestHeight}]{OpenSTUtility}{CoreVC}
+      %\end{umlcall}
       % OpenSTUtility asserts grace period before unlockHeight
-      \begin{umlcallself}[op={assert grace period before unlockHeight}]{OpenSTUtility}
-      \end{umlcallself}
+      %\begin{umlcallself}[op={assert grace period before unlockHeight}]{OpenSTUtility}
+      %\end{umlcallself}
       % OpenSTUtility store mint object with StakingIntentHash and expiration Height
-      \begin{umlcallself}[op={store mint with expirationHeight}]{OpenSTUtility}
-      \end{umlcallself}
+      %\begin{umlcallself}[op={store mint with expirationHeight}]{OpenSTUtility}
+      %\end{umlcallself}
     \end{umlcall}
     
     %%%
@@ -224,7 +236,7 @@
     
     % Correctly initialised staking information on both systems
     \begin{umlfragment}[type=alt, label=proceed, name=phasetwo, inner xsep=1.5]
-      \begin{umlcall}[dt=6, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Facilitator}{Branded Token Gate}
+      \begin{umlcall}[dt=8, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Facilitator}{Branded Token Gate}
         % check hashlock 
         \begin{umlcallself}[op={require(hashLock =/= 0)}]{Branded Token Gate}
         \end{umlcallself}
