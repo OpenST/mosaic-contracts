@@ -58,7 +58,7 @@ contract OpenSTValueMock is OpenSTValue {
 		view
 		returns (bool)
 	{
-		bytes memory mockedValidValue = bytes32ToBytes(keccak256(1));
+		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(1));
 		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
 	}
 
@@ -70,10 +70,10 @@ contract OpenSTValueMock is OpenSTValue {
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = bytes32ToBytes(keccak256(1));
+			bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(1));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = bytes32ToBytes(keccak256(0));
+		bytes memory mockedInvalidValue = OpenSTUtils.bytes32ToBytes(keccak256(0));
 		return mockedInvalidValue;
 	}
 

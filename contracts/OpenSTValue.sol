@@ -33,10 +33,10 @@ import "./ProtocolVersioned.sol";
 import "./SimpleStake.sol";
 
 import "./OpenSTUtils.sol";
-import "./util.sol";
+//import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is OpsManaged, Hasher, Util {
+contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
 
     /*
