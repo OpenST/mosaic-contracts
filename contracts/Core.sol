@@ -26,6 +26,7 @@ import "./MerklePatriciaProof.sol";
 import "./util.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
+import "./SafeMath.sol";
 
 /**
  *	@title Core contract which implements CoreInterface
@@ -34,6 +35,7 @@ import "./RLP.sol";
  *      the utility chain to validate itself against
  */
 contract Core is CoreInterface, Util {
+	using SafeMath for uint256;
 
 	/* Events */
 
@@ -83,11 +85,11 @@ contract Core is CoreInterface, Util {
 	}
 
 	// ~5Days
-	uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
+	uint256 private constant TIME_TO_WAIT = 432000;
 
-	uint256 public remoteBlockTime;
+	uint256 private remoteBlockTime;
 
-	uint256 public blocksToWaitMedium;
+	uint256 private blocksToWait;
 
 	/*
 	 *  Public functions
@@ -108,6 +110,7 @@ contract Core is CoreInterface, Util {
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
+		uint256 _blockTimeRemote,
 		WorkersInterface _workers)
 		public
 	{
@@ -116,11 +119,14 @@ contract Core is CoreInterface, Util {
 		require(_chainIdRemote != 0, "Remote chain Id is 0");
 		require(_openSTRemote != address(0), "OpenSTRemote address is 0");
 		require(_workers != address(0), "Workers contract address is 0");
+		require(_blockTimeRemote != uint256(0), "Remote block time is 0");
 		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
+		remoteBlockTime = _blockTimeRemote;
+		blocksToWait = TIME_TO_WAIT.div(_blockTimeRemote);
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
 	}
@@ -164,12 +170,12 @@ contract Core is CoreInterface, Util {
 		return coreOpenSTRemote;
 	}
 
-	function safeUnlockTime()
+	function safeUnlockHeight()
 		external
 		view
-		returns (uint256 unlockTime)
+		returns (uint256 safeUnlockHeight)
 	{
-		return blocksToWaitMedium + block.number;
+		return blocksToWait + latestStateRootBlockHeight;
 	}
 
 	/**

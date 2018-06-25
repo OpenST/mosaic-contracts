@@ -47,4 +47,6 @@ contract CoreInterface {
 
 	function getStorageRoot(uint256 _blockHeight) public view returns (bytes32 /* storage root */);
 
+	function safeUnlockHeight() external view returns (uint256 /* safeUnlockHeight */);
+
 }

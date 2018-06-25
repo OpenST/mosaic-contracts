@@ -28,7 +28,6 @@ import "./OpenSTUtility.sol";
 contract OpenSTUtilityMock is OpenSTUtility {
 
 	uint256 private constant TIME_TO_WAIT_LONG = 16;
-	uint256 private constant TIME_TO_WAIT_MEDIUM = 14;
 	uint256 private constant TIME_TO_WAIT_SHORT = 10;
 
 	/*
@@ -43,7 +42,6 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		public {
 
 		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-		blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
 		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
 	}

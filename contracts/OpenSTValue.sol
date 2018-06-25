@@ -71,8 +71,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
     // ~2 weeks
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~5Days
-    uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
     // ~1hour
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
@@ -95,7 +93,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     EIP20Interface public valueToken;
     address public registrar;
     uint256 public blocksToWaitShort;
-    uint256 public blocksToWaitMedium;
     uint256 public blocksToWaitLong;
 
     bytes32[] public uuids;
@@ -158,7 +155,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_blockTime != 0);
 
         blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-        blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
         blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
         chainIdValue = _chainIdValue;
@@ -328,7 +324,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_redemptionUnlockHeight > 0);
         require(_redemptionIntentHash != "");
 
-        require(cores[utilityTokens[_uuid].chainIdUtility].safeUnlockTime() < _redemptionUnlockHeight);
+        require(cores[utilityTokens[_uuid].chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
 
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;

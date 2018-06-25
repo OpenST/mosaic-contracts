@@ -73,8 +73,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      */
     // ~2 weeks
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~5Days
-    uint256 private constant TIME_TO_WAIT_MEDIUM = 432000;
     // ~1hour
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
@@ -107,7 +105,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     uint256 public chainIdUtility;
     address public registrar;
     uint256 public blocksToWaitShort;
-    uint256 public blocksToWaitMedium;
     uint256 public blocksToWaitLong;
 
     bytes32[] public uuids;
@@ -162,7 +159,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_blockTime != 0);
 
         blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-        blocksToWaitMedium = TIME_TO_WAIT_MEDIUM.div(_blockTime);
         blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
         chainIdValue = _chainIdValue;
@@ -226,7 +222,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_stakingUnlockHeight > 0);
         require(_stakingIntentHash != "");
 
-        require(core.safeUnlockTime() < _stakingUnlockHeight);
+        require(core.safeUnlockHeight() < _stakingUnlockHeight);
 
         expirationHeight = block.number + blocksToWaitShort;
         nonces[_staker] = _stakerNonce;
