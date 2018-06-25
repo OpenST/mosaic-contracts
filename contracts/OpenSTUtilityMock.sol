@@ -35,8 +35,9 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	constructor(
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
-		address _registrar)
-		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar)
+		address _registrar,
+		CoreInterface _core)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core)
 		public { }
 
 	function blocksToWaitLong() public pure returns (uint256) {

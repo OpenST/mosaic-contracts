@@ -34,6 +34,7 @@ import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 import "./Core.sol";
 import "./MerklePatriciaProof.sol";
+import "./OpenSTUtils.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -50,7 +51,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint8 _conversionRateDecimals, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight,bytes32 blockHeight,bytes32 storageRoot);
+        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight,uint256 blockHeight,bytes32 storageRoot);
 
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
         address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
@@ -210,7 +211,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _stakingUnlockHeight,
         bytes32 _hashLock,
         bytes32 _stakingIntentHash,
-        bytes32 _blockHeight,
+        uint256 _blockHeight,
         bytes rlpParentNodes)
         external
         returns (uint256 expirationHeight)
@@ -240,9 +241,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         );
 
         require(stakingIntentHash == _stakingIntentHash);
-         bytes32 storageRoot = core.storageRoots(_blockHeight);
-
-         require(MerklePatriciaProof.verify(keccak256(stakingIntentHash),OpenSTUtils.storagePath(5, keccak256(staker,stakerNonce)) ,rlpParentNodes,storageRoot));
+        bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+        bytes memory encodedPathToMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
+        require(MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathToMerkle,rlpParentNodes,storageRoot));
 
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
@@ -258,6 +259,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         return expirationHeight;
     }
+
 
     function processMinting(
         bytes32 _stakingIntentHash,
