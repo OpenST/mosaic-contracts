@@ -1,0 +1,28 @@
+# OSX
+.DS_Store
+
+# Vagrant
+.vagrant/
+ubuntu-xenial-16.04-cloudimg-console.log
+
+# don't commit contract binaries in protocol
+# we do commit the contract binaries in platform
+contracts/bin/
+contracts/abi/
+
+# don't commit node_modules
+node_modules
+
+#Dont track idea file
+.idea/
+
+# LaTeX auxiliary files
+*.aux
+*.log
+## Build tool auxiliary files:
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
