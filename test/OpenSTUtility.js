@@ -359,7 +359,7 @@ contract('OpenSTUtility', function(accounts) {
 		it('successfully redeems', async () => {
 			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, lockR.l, { from: redeemer });
 
-            // call block number is one less than send block number
+            
 			unlockHeight = redeemReturns[0];
             var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemBeneficiary, redeemAmountUT, unlockHeight, lockR.l);
             result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, lockR.l, { from: redeemer });
