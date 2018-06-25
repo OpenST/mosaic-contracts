@@ -42,7 +42,8 @@ library OpenSTUtils {
     *	@param _intentIndex Index of variable
     *	@param _address Account address
     *	@param _addressNonce Nonce for account address
-    *	@param _blockHeight Block height at which the Merkle proof was generated
+    *	@param _storageRoot Storage root
+    * @param _intentHash Intent hash
     *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
     *
     *	@return bool status if the storage of intent hash was verified
