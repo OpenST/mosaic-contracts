@@ -31,9 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-
 import "./OpenSTUtils.sol";
-//import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -296,6 +294,26 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (uuid, amountST, staker);
     }
 
+    /**
+      *	@notice Confirm redemption intent on value chain.
+      *
+      * @dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
+      *      is passed in this function along with rpl encoded parent nodes of merkle pactritia tree proof
+      *      for RedemptionIntentHash.
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _beneficiary Beneficiary address
+      *	@param _amountUT Amount of utility token
+      *	@param _redemptionUnlockHeight Unlock height for redemption
+      *	@param _hashLock Hash lock
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return bytes32 amount of OST
+      *	@return uint256 expiration height
+      */
     function confirmRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
@@ -311,7 +329,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 amountST,
         uint256 expirationHeight)
     {
-
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         require(utilityToken.simpleStake != address(0));
         require(_amountUT > 0);
@@ -342,7 +359,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
-        require(verifyIntentStorage(
+        require(verifyRedemptionIntentHashStorage(
                 _uuid,
                 _redeemer,
                 _redeemerNonce,
@@ -366,7 +383,18 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (amountST, expirationHeight);
     }
 
-    function verifyIntentStorage(
+    /**
+      *	@notice Verify storage of redemption intent hash
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return bool status if the storage of intent hash was verified
+      */
+    function verifyRedemptionIntentHashStorage(
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -375,9 +403,12 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes _rlpParentNodes)
         internal
         view
-        returns (bool)
+        returns (bool /* verification status */)
     {
+        // get storageRoot from core for the given block height
         bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
+
+        // storageRoot cannot be 0
         require(storageRoot !=  bytes32(0));
 
         require(OpenSTUtils.verifyIntentStorage(

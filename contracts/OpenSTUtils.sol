@@ -15,12 +15,20 @@ library OpenSTUtils {
     return res;
   }
 
+  /**
+    *	@notice Get the storage path of the variable
+    *
+    *	@param _index Index of variable
+    *	@param _key Key of variable incase of mapping
+    *
+    *	@return bytes32 Storage path of the variable
+    */
   function storagePath(
     uint8 _index,
     bytes32 _key)
     internal
     pure
-    returns(bytes32)
+    returns(bytes32 /* storage path */)
   {
     bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_index)));
     bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
@@ -28,6 +36,17 @@ library OpenSTUtils {
     return keccak256(keccak256(path));
   }
 
+  /**
+    *	@notice Verify storage of intent hash
+    *
+    *	@param _intentIndex Index of variable
+    *	@param _address Account address
+    *	@param _addressNonce Nonce for account address
+    *	@param _blockHeight Block height at which the Merkle proof was generated
+    *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+    *
+    *	@return bool status if the storage of intent hash was verified
+    */
   function verifyIntentStorage(
     uint8 _intentIndex,
     address _address,
@@ -37,7 +56,7 @@ library OpenSTUtils {
     bytes _rlpParentNodes)
     internal
     pure
-    returns (bool)
+    returns (bool /* verification status */)
   {
     bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
     bytes memory path = bytes32ToBytes(keccak256(keyPath));
