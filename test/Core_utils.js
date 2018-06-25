@@ -19,17 +19,37 @@
 //
 // ----------------------------------------------------------------------------
 
-var Core = artifacts.require("./Core.sol");
+const Core = artifacts.require("./Core.sol")
+	, SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+	, Workers = artifacts.require("./Workers.sol")
+;
+
+const BigNumber = require('bignumber.js')
+;
+
 
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
-	const registrar = accounts[1];
-	const chainIdOrigin = 3;
-	const chainIdRemote = 1410;
-	const openSTRemote = accounts[4];
+	const registrar = accounts[1]
+		, admin = accounts[2]
+		, ops = accounts[3]
+		, openSTRemote = accounts[4]
+		, chainIdOrigin = 3
+		, chainIdRemote = 1410
+		, valueToken   = await SimpleToken.new()
+		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+	;
 
-	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote);
+	//Set SimpleToken admin in order to finalize SimpleToken
+	await valueToken.setAdminAddress(admin);
 
+	// Deploy worker contract
+	const workers = await Workers.new(valueToken.address)
+		, worker1 = accounts[7];
+	await workers.setAdminAddress(admin);
+	await workers.setOpsAddress(ops);
+	await workers.setWorker(worker1, deactivationHeight, {from:ops});
+	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from:accounts[0]});
 	return {
 		core : core
 	}

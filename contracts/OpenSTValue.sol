@@ -471,8 +471,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (bool /* success */)
     {
         require(address(_core) != address(0));
-        // core constructed with same registrar
-        require(registrar == _core.registrar());
         // on value chain core only tracks a remote utility chain
         uint256 chainIdUtility = _core.chainIdRemote();
         require(chainIdUtility != 0);
