@@ -109,7 +109,8 @@ contract('OpenSTValue', function(accounts) {
 		, checkUuid = null
 		,result = null
 		, hasher = null
-		, stakingIntentHash
+		, stakingIntentHash 
+		, hashIntentKey = null
 		, stake = null
 		, nonce = null
 		, workers = null
@@ -255,7 +256,7 @@ contract('OpenSTValue', function(accounts) {
 	            	amountUT, unlockHeight, lock.l);
 	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0],
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, hashIntentKey, accounts[0],
 								amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
 		})
@@ -288,7 +289,7 @@ contract('OpenSTValue', function(accounts) {
 	            	amountUT, unlockHeight, lock.l);
 	            result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 
-	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0],
+	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, hashIntentKey, accounts[0],
 								amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 			})
 		})
@@ -540,7 +541,7 @@ contract('OpenSTValue', function(accounts) {
 				unlockHeight = stakeReturns[2];
 				stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l);
 				result = await openSTValue.stake(checkUuid, amountST, staker, lock.l, staker, { from: staker });
-				await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
+				await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, staker, nonce, hashIntentKey, staker, amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 
 			});
 
@@ -610,7 +611,7 @@ contract('OpenSTValue', function(accounts) {
 				stakingIntentHash = await openSTValue.hashStakingIntent.call(checkUuid, staker, nonce, staker, amountST,
 					amountUT, unlockHeight, lock.l);
 				result = await openSTValue.stake(checkUuid, amountST, staker, lock.l, staker, { from: staker });
-				await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
+				await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, staker, nonce, hashIntentKey, staker, amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
 
 				// Process Staking
 				await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
