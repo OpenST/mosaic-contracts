@@ -229,8 +229,7 @@ contract('OpenSTUtility', function(accounts) {
 	    })
 
 		it('fails to confirm by non-registrar', async () => {
-            let blockNumber = await web3.eth.getBlockNumber();
-            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash,blockNumber, { from: accounts[0] }));
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: accounts[0] }));
 		})
 
 		it('fails to confirm when token is not registered', async () => {

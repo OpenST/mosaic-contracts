@@ -81,6 +81,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *  Storage
      */
 
+    // storage for staking intent hash of active staking intents
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
     mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
@@ -131,6 +134,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     struct Redemption {
         bytes32 uuid;
         address redeemer;
+        uint256 nonce;
         address beneficiary;
         uint256 amountUT;
         uint256 unlockHeight;
@@ -161,6 +165,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
         core = _core;
+
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,
             STPRIME_NAME,
@@ -191,30 +196,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         // @dev read STPrime address and uuid from contract
     }
-
-     /*
-     *  Registrar functions
-     */
-    function updateCore(
-        CoreInterface _core)
-        public
-        onlyRegistrar
-        returns (bool /* success */)
-    {
-        require(address(_core) != address(0));
-        // on value chain core only tracks a remote utility chain
-        uint256 chainIdUtility = _core.chainIdRemote();
-        require(chainIdUtility != 0);
-        // cannot overwrite core for given chainId
-        require(cores[chainIdUtility] == address(0));
-
-        cores[chainIdUtility] = _core;
-
-        return true;
-    }
-
-
-
 
     /*
      *  External functions
@@ -258,6 +239,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _hashLock
         );
 
+        require(stakingIntentHash == _stakingIntentHash);
          bytes32 storageRoot = core.storageRoots(_blockHeight);
 
          require(MerklePatriciaProof.verify(keccak256(stakingIntentHash),OpenSTUtils.storagePath(5, keccak256(staker,stakerNonce)) ,rlpParentNodes,storageRoot));
@@ -388,11 +370,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         _uuid,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -439,6 +426,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         uuidSTPrime,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
             unlockHeight: unlockHeight,
@@ -482,6 +470,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             redemption.redeemer, redemption.beneficiary, redemption.amountUT, _unlockSecret);
 
         delete redemptions[_redemptionIntentHash];
+
+        // remove intent hash from intents mapping
+        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         return tokenAddress;
     }
@@ -609,31 +600,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         return uuids.length;
     }
 
-    /*
-     *  Registrar functions
-     */
-    /// @dev for v0.9.1 tracking Ethereum mainnet on the utility chain
-    ///      is not a required feature yet, so the core is simplified
-    ///      to uint256 valueChainId as storage on construction
-    // function addCore(
-    //  CoreInterface _core)
-    //  public
-    //  onlyRegistrar
-    //  returns (bool /* success */)
-    // {
-    //  require(address(_core) != address(0));
-    //  // core constructed with same registrar
-    //  require(registrar == _core.registrar());
-    //  // on utility chain core only tracks a remote value chain
-    //  uint256 coreChainIdValue = _core.chainIdRemote();
-    //  require(chainIdUtility != 0);
-    //  // cannot overwrite core for given chainId
-    //  require(cores[coreChainIdValue] == address(0));
-
-    //  cores[coreChainIdValue] = _core;
-
-    //  return true;
-    // }
 
     /* solhint-disable-next-line separate-by-one-line-in-contract */
     function registerBrandedToken(

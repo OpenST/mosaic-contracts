@@ -32,9 +32,11 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
+import "./OpenSTUtils.sol";
+import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is OpsManaged, Hasher {
+contract OpenSTValue is OpsManaged, Hasher, Util {
     using SafeMath for uint256;
 
     /*
@@ -73,7 +75,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
-
+    uint8 private constant INTENT_INDEX = 3;
 
     /// register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
@@ -302,45 +304,50 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _redemptionIntentHash)
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
-        onlyRegistrar
         returns (
         uint256 amountST,
         uint256 expirationHeight)
     {
-        require(utilityTokens[_uuid].simpleStake != address(0));
+
+        UtilityToken storage utilityToken = utilityTokens[_uuid];
+        require(utilityToken.simpleStake != address(0));
         require(_amountUT > 0);
         require(_beneficiary != address(0));
         // later core will provide a view on the block height of the
         // utility chain
         require(_redemptionUnlockHeight > 0);
-        require(_redemptionIntentHash != "");
 
-        require(nonces[_redeemer] + 1 == _redeemerNonce);
-        nonces[_redeemer]++;
+        require(validateAndIncrementNonce(_redeemer, _redeemerNonce));
 
         bytes32 redemptionIntentHash = hashRedemptionIntent(
             _uuid,
             _redeemer,
-            nonces[_redeemer],
+            _redeemerNonce,
             _beneficiary,
             _amountUT,
             _redemptionUnlockHeight,
             _hashLock
         );
 
-        require(_redemptionIntentHash == redemptionIntentHash);
-
         expirationHeight = block.number + blocksToWaitShort();
 
-        UtilityToken storage utilityToken = utilityTokens[_uuid];
         // minimal precision to unstake 1 STWei
         require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
         amountST = (_amountUT
             .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
+
+        require(verifyIntentStorage(
+                _uuid,
+                _redeemer,
+                _redeemerNonce,
+                _blockHeight,
+                redemptionIntentHash,
+                _rlpParentNodes));
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
@@ -356,6 +363,44 @@ contract OpenSTValue is OpsManaged, Hasher {
             _beneficiary, amountST, _amountUT, expirationHeight);
 
         return (amountST, expirationHeight);
+    }
+
+    function validateAndIncrementNonce(
+        address _accountAddress,
+        uint256 _accountNonce)
+        internal
+        returns (bool)
+    {
+        require(_accountAddress !=  address(0));
+        require(nonces[_accountAddress] + 1 == _accountNonce);
+        nonces[_accountAddress]++;
+        return true;
+    }
+
+    function verifyIntentStorage(
+        bytes32 _uuid,
+        address _redeemer,
+        uint256 _redeemerNonce,
+        uint256 _blockHeight,
+        bytes32 _redemptionIntentHash,
+        bytes _rlpParentNodes)
+        internal
+        view
+        returns (bool)
+    {
+        require(utilityTokens[_uuid].simpleStake != address(0));
+        require(_redeemer !=  address(0));
+        require(_redemptionIntentHash !=  bytes32(0));
+
+        bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
+        require(OpenSTUtils.verifyIntentStorage(
+                INTENT_INDEX,
+                _redeemer,
+                _redeemerNonce,
+                storageRoot,
+                _redemptionIntentHash,
+                _rlpParentNodes));
+        return true;
     }
 
     function processUnstaking(
