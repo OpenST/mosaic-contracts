@@ -36,11 +36,11 @@
     \umlcontrol[class=SK]{OpenSTValue}
     \umlobject[class=SK]{SimpleStake}
     \umlobject[class=SK]{CoreUC}
-    \umlcontrol[class=SK]{RegistrarVC}
+    %\umlcontrol[class=SK]{RegistrarVC}
     \umlboundary[class=Web3]{Value Chain}
-    \umlactor[class=Worker, fill=purple!40]{Foundation}
+    \umlactor[class=Worker, fill=purple!40]{OstDotCom}
     \umlboundary[class=Web3, fill=blue!40]{Utility Chain}
-    \umlcontrol[class=SK, fill=blue!40]{RegistrarUC}
+    %\umlcontrol[class=SK, fill=blue!40]{RegistrarUC}
     \umlobject[class=SK, fill=blue!40]{CoreVC}
     \umlcontrol[class=SK, fill=blue!40]{OpenSTUtility}
     \umlboundary[class=ERC20, fill=blue!40]{Branded Token}
@@ -153,15 +153,15 @@
     \end{umlfragment}
     
     %%%
-    %%%  OpenST Mosaic (Foundation reports respective state root of )
+    %%%  OpenST Mosaic (OstDotCom reports respective state root of )
     %%%
     
     \begin{umlfragment}[type=loop, name=mosaic]
       
-      \begin{umlcall}[dt=193, op={new block(blockHeight, stateRoot)}]{Utility Chain}{Foundation}
-        % Foundation report state root of Utility chain on CoreUC on value chain
-        %\begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{Foundation}{RegistrarVC}
-          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{Foundation}{CoreUC}
+      \begin{umlcall}[dt=193, op={new block(blockHeight, stateRoot)}]{Utility Chain}{OstDotCom}
+        % OstDotCom report state root of Utility chain on CoreUC on value chain
+        %\begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{OstDotCom}{RegistrarVC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{OstDotCom}{CoreUC}
             % state root of utility chain got reported on value chain
             \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreUC}{Facilitator}
             \end{umlcall}
@@ -169,11 +169,11 @@
         %\end{umlcall}
       \end{umlcall}
           
-      % Foundation report state root of Value chain on CoreVC on utility chain
-      \begin{umlcall}[dt=205, op={new block(blockHeight, stateRoot)}]{Value Chain}{Foundation}
-        %\begin{umlcall}[op={: report(VC, blockHeight, stateRoot}]{Foundation}{RegistrarUC}
+      % OstDotCom report state root of Value chain on CoreVC on utility chain
+      \begin{umlcall}[dt=205, op={new block(blockHeight, stateRoot)}]{Value Chain}{OstDotCom}
+        %\begin{umlcall}[op={: report(VC, blockHeight, stateRoot}]{OstDotCom}{RegistrarUC}
           % reporting through registrar is instant commit
-          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{Foundation}{CoreVC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{OstDotCom}{CoreVC}
             % state root of value chain got reported on utility chain
             \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreVC}{Facilitator}
             \end{umlcall}
@@ -189,15 +189,15 @@
     %%%
     
     % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
-    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeight, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeight, storageRoot, hashedAccount)}]{Facilitator}{OpenSTUtility}
+    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeight, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeight, storageRoot, hashedAccount)}]{Facilitator}{CoreVC}
       % OpenSTUtility checks StakingIntentHash against committed state root
      % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
      %\end{umlcall}
       % OpenSTUtility validate merkle proof
-      %\begin{umlcallself}[op={require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRoot))}]{CoreVC}
-     %\end{umlcallself}
+      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRoot))}]{CoreVC}
+     \end{umlcallself}
       % OpenSTUtility store valid StakingIntentHash
-      \begin{umlcallself}[op={store valid storageRoot}]{OpenSTUtility}
+      \begin{umlcallself}[op={store valid storageRoot}]{CoreVC}
       \end{umlcallself}
     \end{umlcall}
     
