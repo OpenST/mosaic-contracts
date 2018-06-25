@@ -46,4 +46,35 @@ contract OpenSTValueMock is OpenSTValue {
 	function blocksToWaitShort() public pure returns (uint256) {
 		return BLOCKS_TO_WAIT_SHORT;
 	}
+
+	function verifyIntentStorage(
+		bytes32 _uuid,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _blockHeight,
+		bytes32 _redemptionIntentHash,
+		bytes _rlpParentNodes)
+		internal
+		view
+		returns (bool)
+	{
+		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(1));
+		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
+	}
+
+	// mock function for testing only
+	function getMockRLPParentNodes(
+		bool isValid)
+		external
+		view
+		returns (bytes /* mock RLP encoded parent nodes*/)
+	{
+		if(isValid) {
+			bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(1));
+			return mockedValidValue;
+		}
+		bytes memory mockedInvalidValue = OpenSTUtils.bytes32ToBytes(keccak256(0));
+		return mockedInvalidValue;
+	}
+
 }

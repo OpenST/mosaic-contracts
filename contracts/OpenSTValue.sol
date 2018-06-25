@@ -33,10 +33,10 @@ import "./ProtocolVersioned.sol";
 import "./SimpleStake.sol";
 
 import "./OpenSTUtils.sol";
-import "./util.sol";
+//import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
-contract OpenSTValue is OpsManaged, Hasher, Util {
+contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
 
     /*
@@ -320,7 +320,8 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         // utility chain
         require(_redemptionUnlockHeight > 0);
 
-        require(validateAndIncrementNonce(_redeemer, _redeemerNonce));
+        require(nonces[_redeemer] + 1 == _redeemerNonce);
+        nonces[_redeemer]++;
 
         bytes32 redemptionIntentHash = hashRedemptionIntent(
             _uuid,
@@ -365,18 +366,6 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         return (amountST, expirationHeight);
     }
 
-    function validateAndIncrementNonce(
-        address _accountAddress,
-        uint256 _accountNonce)
-        internal
-        returns (bool)
-    {
-        require(_accountAddress !=  address(0));
-        require(nonces[_accountAddress] + 1 == _accountNonce);
-        nonces[_accountAddress]++;
-        return true;
-    }
-
     function verifyIntentStorage(
         bytes32 _uuid,
         address _redeemer,
@@ -388,11 +377,9 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
         view
         returns (bool)
     {
-        require(utilityTokens[_uuid].simpleStake != address(0));
-        require(_redeemer !=  address(0));
-        require(_redemptionIntentHash !=  bytes32(0));
-
         bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
+        require(storageRoot !=  bytes32(0));
+
         require(OpenSTUtils.verifyIntentStorage(
                 INTENT_INDEX,
                 _redeemer,
@@ -400,6 +387,7 @@ contract OpenSTValue is OpsManaged, Hasher, Util {
                 storageRoot,
                 _redemptionIntentHash,
                 _rlpParentNodes));
+
         return true;
     }
 
