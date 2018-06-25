@@ -160,25 +160,25 @@
       
       \begin{umlcall}[dt=193, op={new block(blockHeight, stateRoot)}]{Utility Chain}{Foundation}
         % Foundation report state root of Utility chain on CoreUC on value chain
-        \begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{Foundation}{RegistrarVC}
-          \begin{umlcall}[op={: commit(blockHeight, stateRoot)}]{RegistrarVC}{CoreUC}
+        %\begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{Foundation}{RegistrarVC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{Foundation}{CoreUC}
             % state root of utility chain got reported on value chain
-            \begin{umlcall}[dt=10, type=return, op={emit CommittedStateRoot(UC, blockHeight, stateRoot)}]{CoreUC}{Facilitator}
+            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreUC}{Facilitator}
             \end{umlcall}
           \end{umlcall}
-        \end{umlcall}
+        %\end{umlcall}
       \end{umlcall}
           
       % Foundation report state root of Value chain on CoreVC on utility chain
       \begin{umlcall}[dt=205, op={new block(blockHeight, stateRoot)}]{Value Chain}{Foundation}
-        \begin{umlcall}[op={: report(VC, blockHeight, stateRoot}]{Foundation}{RegistrarUC}
+        %\begin{umlcall}[op={: report(VC, blockHeight, stateRoot}]{Foundation}{RegistrarUC}
           % reporting through registrar is instant commit
-          \begin{umlcall}[op={: commit(blockHeight, stateRoot)}]{RegistrarUC}{CoreVC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{Foundation}{CoreVC}
             % state root of value chain got reported on utility chain
-            \begin{umlcall}[dt=10, type=return, op={emit CommittedStateRoot(VC, blockHeight, stateRoot)}]{CoreVC}{Facilitator}
+            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreVC}{Facilitator}
             \end{umlcall}
           \end{umlcall}
-        \end{umlcall}
+        %\end{umlcall}
       \end{umlcall}
       
     \end{umlfragment}
@@ -189,17 +189,17 @@
     %%%
     
     % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
-    %\begin{umlcall}[dt=15, op={: claimStakingIntentHash(StakingIntentHash, merkleProof[], committedBlockHeight)}, return={emit ValidatedStakingIntentHash(StakingIntentHash)}]{Facilitator}{OpenSTUtility}
+    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeight, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeight, storageRoot, hashedAccount)}]{Facilitator}{OpenSTUtility}
       % OpenSTUtility checks StakingIntentHash against committed state root
-      %\begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
-     % \end{umlcall}
+     % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
+     %\end{umlcall}
       % OpenSTUtility validate merkle proof
-      %\begin{umlcallself}[op={validate proof}]{OpenSTUtility}
-      %\end{umlcallself}
+      %\begin{umlcallself}[op={require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRoot))}]{CoreVC}
+     %\end{umlcallself}
       % OpenSTUtility store valid StakingIntentHash
-      %\begin{umlcallself}[op={store valid StakingIntentHash}]{OpenSTUtility}
-      %\end{umlcallself}
-    %\end{umlcall}
+      \begin{umlcallself}[op={store valid storageRoot}]{OpenSTUtility}
+      \end{umlcallself}
+    \end{umlcall}
     
     % Facilitator submits pre-image data for StakingIntentHash
     \begin{umlcall}[dt=15, op={: confirmStakingIntent(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock, StakingIntentHash)}, return={emit StakingIntentConfirmed(stakingIntentHash,  expirationHeight)}]{Facilitator}{OpenSTUtility}
