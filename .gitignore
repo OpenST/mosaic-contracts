@@ -26,6 +26,3 @@ node_modules
 *.synctex.gz(busy)
 *.pdfsync
 
-# don't commit package-lock.json file
-package-lock.json
-

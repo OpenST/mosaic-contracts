@@ -27,48 +27,72 @@ import "./util.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
 
-
-/// @dev Core is a minimal stub that will become the anchoring and consensus point for
-///      the utility chain to validate itself against
+/**
+ *	@title Core contract which implements CoreInterface
+ *
+ *	@notice Core is a minimal stub that will become the anchoring and consensus point for
+ *      the utility chain to validate itself against
+ */
 contract Core is CoreInterface, Util {
 
-	/*
-    *    Events
-    */
+	/* Events */
+
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
 	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bytes32 hashedAccount);
 
-	/*
-	 *  Storage
-	 */
-	/** Mapping of block height to state root of the block.  */
-	mapping (uint256 /* block height */ => bytes32) public stateRoots;
-	/** Mapping of block height to storafe root of the block.  */
-	mapping (uint256 /* block height */ => bytes32) public storageRoots;
+	/** Below event emitted to differentiate replay call of proveOpenST function for same block height */
+	event ProofVerificationSkipped(uint256 blockHeight, bytes32 storageRoot);
 
-	/// chainIdOrigin stores the chainId this chain
+	/*  Storage */
+
+	mapping (uint256 /* block height */ => bytes32) private stateRoots;
+
+	mapping (uint256 /* block height */ => bytes32) private storageRoots;
+
+	/** chainIdOrigin is the origin chain id where core contract is deployed  */
 	uint256 public coreChainIdOrigin;
-	/// chainIdRemote stores the chainId of the remote chain
+
+	/** chainIdRemote is the remote chain id where core contract is deployed */
 	uint256 private coreChainIdRemote;
-	/// OpenST remote is the address of the OpenST contract
-	/// on the remote chain
+
+	/** It is the address of the openSTUtility/openSTValue contract on the remote chain */
 	address private coreOpenSTRemote;
-	/// registrar registers for the two chains
+
 	address private coreRegistrar;
-    /// Latest block height of block which state root was committed.
-    uint256 public latestStateRootBlockHeight;
-    /// Latest block height of block which storage root was committed.
-    uint256 public latestStorageRootBlockHeight;
-	/// Workers contract address
+
+	/** Latest block height of block for which state root was committed. */
+	uint256 private latestStateRootBlockHeight;
+
+	/** Workers contract address */
 	WorkersInterface public workers;
-	/// OpenSTRemote encode address. sha3 => bytes32 to bytes
-	/// Kept in end because it's dynamic in size
-	bytes public encodedOpenSTRemoteAddress;
 
+	/**
+	 *  OpenSTRemote encoded path. Constructed with below flow:
+	 *  coreOpenSTRemote => sha3 => bytes32 => bytes
+	 */
+	bytes private encodedOpenSTRemotePath;
 
-	/*
-	 *  Public functions
+	/* Modifiers */
+
+	/** only worker modifier */
+	modifier onlyWorker() {
+		// msg.sender should be worker only
+		require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
+		_;
+	}
+
+	/*  Public functions */
+
+	/**
+	 * @notice Contract constructor
+	 *
+	 * @dev bytes32ToBytes is util contract method
+	 *
+	 * @param _registrar registrar address
+	 * @param _chainIdOrigin origin chain id
+	 * @param _chainIdRemote remote chain id
+	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
 	 */
 	constructor(
 		address _registrar,
@@ -78,22 +102,25 @@ contract Core is CoreInterface, Util {
 		WorkersInterface _workers)
 		public
 	{
-		require(_registrar != address(0), "Registrar should be valid address");
-		require(_chainIdOrigin != 0, "Invalid origin chain ID");
-		require(_chainIdRemote != 0, "Invalid remote chain ID");
-		require(_openSTRemote != address(0), "Invalid openSTRemote contract address");
-		require(_workers != address(0), "Workers should be valid contract address");
+		require(_registrar != address(0), "Registrar address is 0");
+		require(_chainIdOrigin != 0, "Origin chain Id is 0");
+		require(_chainIdRemote != 0, "Remote chain Id is 0");
+		require(_openSTRemote != address(0), "OpenSTRemote address is 0");
+		require(_workers != address(0), "Workers contract address is 0");
 		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
-		// Encoded remote address.
-		encodedOpenSTRemoteAddress = bytes32ToBytes(keccak256(coreOpenSTRemote));
+		// Encoded remote path.
+		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
 	}
 
-	/// @dev public function registrar
-	/// @return address coreRegistrar
+	/**
+	 *	@notice public view function registrar
+	 *
+	 *	@return address coreRegistrar
+	 */
 	function registrar()
 		public
 		view
@@ -102,8 +129,11 @@ contract Core is CoreInterface, Util {
 		return coreRegistrar;
 	}
 
-	/// @dev public function chainIdRemote
-	/// @return uint256 coreChainIdRemote
+	/**
+	 *	@notice public view function chainIdRemote
+	 *
+	 *	@return uint256 coreChainIdRemote
+	 */
 	function chainIdRemote()
 		public
 		view
@@ -112,8 +142,11 @@ contract Core is CoreInterface, Util {
 		return coreChainIdRemote;
 	}
 
-	/// @dev public function openSTRemote
-	/// @return address coreOpenSTRemote
+	/**
+	 *	@notice public view function openSTRemote
+	 *
+	 *	@return address coreOpenSTRemote
+	 */
 	function openSTRemote()
 		public
 		view
@@ -123,23 +156,24 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-     * Commit new state root for a block height
-     *
-     */
-	/// @dev Commit new state root for a block height
-	/// @param _blockHeight block height for which stateRoots mapping needs to update
-	/// @param _stateRoot state root of input block height
-	/// @return bytes32 stateRoot
+	 *	@notice Commit new state root for a block height
+	 *
+	 *  @dev commitStateRoot called from game process
+	 *
+	 *	@param _blockHeight block height for which stateRoots mapping needs to update
+	 *	@param _stateRoot state root of input block height
+	 *
+	 *	@return bytes32 stateRoot
+	 */
 	function commitStateRoot(
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
 		external
-		returns(bytes32 stateRoot)
+		onlyWorker
+		returns(bytes32 /* stateRoot */)
 	{
-		// check if the caller is whitelisted worker
-		require(workers.isWorker(msg.sender), "Invalid worker address");
 		// State root should be valid
-		require(_stateRoot != bytes32(0), "Invalid state root");
+		require(_stateRoot != bytes32(0), "State root is 0");
 		// Input block height should be valid
 		require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
 
@@ -148,31 +182,35 @@ contract Core is CoreInterface, Util {
 
 		emit StateRootCommitted(_blockHeight, _stateRoot);
 
-		return stateRoot;
+		return _stateRoot;
 	}
 
-	/// @dev Verify account proof of OpenSTRemote and commit storage root at given block height
-	/// @param _blockHeight block height at which OpenST is to be proven
-    /// @param _rlpEncodedAccount rlpencoded account node object
-    /// @param _rlpParentNodes RLP encoded value of account proof parent nodes
-    /// @return bool status
+	/**
+	 *	@notice Verify account proof of OpenSTRemote and commit storage root at given block height
+	 *
+	 *  @dev ProofVerificationSkipped event needed to identify replay calls for same block height
+	 *
+	 *	@param _blockHeight block height at which OpenST is to be proven
+	 *	@param _rlpEncodedAccount rlpencoded account node object
+	 *	@param _rlpParentNodes RLP encoded value of account proof parent nodes
+	 *
+	 *	@return bool status
+	 */
 	function proveOpenST(
 		uint256 _blockHeight,
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 		external
-		returns(bool status)
+		returns(bool /* success */)
 	{
-		// check if the caller is whitelisted worker
-		require(workers.isWorker(msg.sender), "Invalid worker address");
 		// Check for block height
-		require(_blockHeight != 0, "Invalid block height");
+		require(_blockHeight != 0, "Given block height is 0");
 		// Storage root should be valid
-		require(_rlpEncodedAccount.length != 0, "Invalid rlp encoded account value");
+		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
-		require(stateRoot != bytes32(0), "State root missing for given block height");
+		require(stateRoot != bytes32(0), "State root is 0");
 
 		// Decode RLP encoded account value
 		RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
@@ -183,17 +221,72 @@ contract Core is CoreInterface, Util {
 		// Hash the rlpEncodedValue value
 		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
 
-		// Verify proof using library contract
-		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemoteAddress, _rlpParentNodes, stateRoot), "Account proof not verified.");
+		// If account already proven for block height
+		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+		if (provenStorageRoot != bytes32(0)) {
+			// Check extracted storage root is matching with existing stored storage root
+			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
+			emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
+			// Below event needed to differentiate single call VS multiple call of proveOpenST function for same block height
+			emit ProofVerificationSkipped(_blockHeight, storageRoot);
+			// return true
+			return true;
+		}
+
+		// Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
+		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, _rlpParentNodes, stateRoot), "Account proof is not verified.");
 
 		// After verification update storageRoots mapping
 		storageRoots[_blockHeight] = storageRoot;
-		// Update latestStorageRootBlockHeight variable
-		latestStorageRootBlockHeight = _blockHeight;
 		// Emit event
 		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
 
 		return true;
+	}
+
+	/**
+	 *	@notice public view function getStateRoot
+	 *
+	 *	@param _blockHeight block height for which state root is needed
+	 *
+	 *	@return bytes32 state root
+	 */
+	function getStateRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* state root */)
+	{
+		return stateRoots[_blockHeight];
+	}
+
+	/**
+	 *	@notice public view function getStorageRoot
+	 *
+	 *	@param _blockHeight block height for which storage root is needed
+	 *
+	 *	@return bytes32 storage root
+	 */
+	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return storageRoots[_blockHeight];
+	}
+
+	/**
+	 *	@notice public function getLatestStateRootBlockHeight
+	 *
+	 *	@return uint256 latest state root block height
+	 */
+	function getLatestStateRootBlockHeight()
+		public
+		view
+		returns (uint256 /* block height */)
+	{
+		return latestStateRootBlockHeight;
 	}
 
 }
