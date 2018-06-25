@@ -154,10 +154,10 @@ contract('Registrar', function(accounts) {
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
-			registrar 		= contracts.registrar;
+					registrar 		= contracts.registrar;
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
-	        core 			= contracts.core;
+      		core 			= contracts.core;
 	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        brandedToken 	= result.logs[0].args._token;
@@ -179,7 +179,7 @@ contract('Registrar', function(accounts) {
 		})
 
 		it('successfully confirms', async () => {
-			var BLOCKS_TO_WAIT_SHORT = 240;
+			var BLOCKS_TO_WAIT_SHORT = 5;
             var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash, { from: ops });
 
             assert.ok(expirationHeight > BLOCKS_TO_WAIT_SHORT);
@@ -196,7 +196,9 @@ contract('Registrar', function(accounts) {
 		var uuid 				 	= null;
 		var nonce 				 	= null;
 		var redemptionIntentHash 	= null;
-		const BLOCKS_TO_WAIT_LONG	= 80667;
+    var validRLPParentNodes = null;
+
+		const BLOCKS_TO_WAIT_LONG	= 8;
 		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
@@ -204,10 +206,12 @@ contract('Registrar', function(accounts) {
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
-			registrar 		= contracts.registrar;
+					registrar 		= contracts.registrar;
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
-	        core 			= contracts.core;
+		      validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+
+    		  core 			= contracts.core;
 	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
@@ -221,14 +225,14 @@ contract('Registrar', function(accounts) {
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash));
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash, { from: admin }));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes, { from: admin }));
 		})
 
 		it('successfully confirms', async () => {
-			var BLOCKS_TO_WAIT_SHORT = 240;
+			var BLOCKS_TO_WAIT_SHORT = 5;
 
-      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, redemptionIntentHash, { from: ops });
+      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes, { from: ops });
       assert.equal(confirmReturns[0], (amountUTRedeemed * (10**conversionRateDecimals))/conversionRate);
       assert.ok(confirmReturns[1] > BLOCKS_TO_WAIT_SHORT);
 		})
