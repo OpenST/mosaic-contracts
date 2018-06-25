@@ -406,9 +406,9 @@ contract('OpenSTValue', function(accounts) {
             await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, 0, validRLPParentNodes, { from: registrar }));
 		})
 
-    it('fails to confirm when RLPParentNodes are invalid', async () => {
-      await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce.minus(1), redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, 0, invalidRLPParentNodes, { from: registrar }));
-    })
+        it('fails to confirm when RLPParentNodes are invalid', async () => {
+            await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce.minus(1), redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, 0, invalidRLPParentNodes, { from: registrar }));
+        })
 
 		it('successfully confirms', async () => {
 			await valueToken.approve(openSTValue.address, 2, { from: accounts[0] });
@@ -421,8 +421,8 @@ contract('OpenSTValue', function(accounts) {
 			var amountST = confirmReturns[0];
 			assert.equal(amountST, (amountUT / conversionRate)*10**conversionRateDecimals);
 
-      result = await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, 0, validRLPParentNodes, { from: registrar });
-      var blocks_to_wait_short = await openSTValue.blocksToWaitShort.call();
+            result = await openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, redemptionUnlockHeight, lockR.l, 0, validRLPParentNodes, { from: registrar });
+            var blocks_to_wait_short = await openSTValue.blocksToWaitShort.call();
 
 			var blockNumber = web3.eth.blockNumber;
 			var expirationHeight = blockNumber + blocks_to_wait_short.toNumber();
@@ -447,7 +447,7 @@ contract('OpenSTValue', function(accounts) {
 
 	describe('ProcessUnstaking', async () => {
 		var redeemer 				= accounts[2];
-  	var redeemBeneficiary = accounts[3];
+  	    var redeemBeneficiary = accounts[3];
 		var notRedeemer				= accounts[5];
 		var redemptionIntentHash 	= null;
 		var redemptionUnlockHeight 	= 80668;
@@ -661,7 +661,7 @@ contract('OpenSTValue', function(accounts) {
 				contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 				valueToken  = contracts.valueToken;
 				openSTValue = contracts.openSTValue;
-        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 				core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
 				await openSTValue.addCore(core.address, { from: registrar });
 				checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);

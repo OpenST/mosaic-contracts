@@ -72,8 +72,8 @@ contract Registrar is OpsManaged {
 	    	_amountUT,
 	    	_redemptionUnlockHeight,
 	    	_hashLock,
-				_blockHeight,
-				_rlpParentNodes);
+			_blockHeight,
+			_rlpParentNodes);
 
     	return (amountST, expirationHeight);
     }
