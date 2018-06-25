@@ -57,8 +57,8 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       // success case
-      let requestStakeResult = await gate.requestStake.call(amount, beneficiary, {from: staker});
-      assert.equal(requestStakeResult, isSuccessCase);
+      let isSuccess = await gate.requestStake.call(amount, beneficiary, {from: staker});
+      assert.equal(isSuccess, true);
 
       let requestStakeResponse = await gate.requestStake(amount, beneficiary, {from: staker});
       await Gate_utils.checkRequestStakeEvent(requestStakeResponse.logs[0],staker, amount, beneficiary);
@@ -96,7 +96,7 @@ contract('Gate', function(accounts) {
     if (isSuccessCase) {
       // success case steps
       let revertRequestStakeResult = await gate.revertStakeRequest.call({from: staker});
-      assert.equal(revertRequestStakeResult, true);
+      assert.equal(revertRequestStakeResult.eq(amount), true);
 
       let revertRequestStakeResponse = await gate.revertStakeRequest({from: staker});
       await Gate_utils.checkStakeRequestRevertedEvent(revertRequestStakeResponse.logs[0],staker, amount);
@@ -132,7 +132,7 @@ contract('Gate', function(accounts) {
     if (isSuccessCase) {
 
       let rejectRequestStakeResult = await gate.rejectStakeRequest.call(staker, reason, {from: messageSender});
-      assert.equal(rejectRequestStakeResult, true);
+      assert.equal(rejectRequestStakeResult.eq(amount), true);
 
       let rejectRequestStakeResponse = await gate.rejectStakeRequest(staker, reason, {from: messageSender});
       await Gate_utils.checkStakeRequestRejectedEvent(rejectRequestStakeResponse.logs[0],staker, amount, reason);
@@ -214,7 +214,7 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       let processStakingResult = await gate.processStaking.call(stakingIntentHash, unlockSecret, {from: messageSender});
-      assert.equal(processStakingResult, true);
+      assert.equal(stakeAmount.eq(processStakingResult), true);
 
       let processStakingResponse = await gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender});
       //await Gate_utils.checkProcessedStakeEvent(processStakingResponse.logs[0],stakerAccount, stakeAmount);
@@ -252,15 +252,16 @@ contract('Gate', function(accounts) {
       , bountyAmount = await gate.bounty.call()
     ;
 
-    var waitTime = await openSTValue.blocksToWaitLong.call();
+    let waitTime = await openSTValue.blocksToWaitLong.call();
     waitTime = waitTime.toNumber();
     // Wait time less 1 block for preceding test case and 1 block because condition is <=
-    for (var i = 0; i < waitTime-2 ; i++) {
+    for (let i = 0; i < waitTime - 2; i++) {
       await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
     }
 
     if (isSuccessCase) {
       let revertStakingResponse = await gate.revertStaking(stakingIntentHash, {from: messageSender});
+      assert.equal(revertStakingResponse.receipt.status, 1);
     } else {
       await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
     }
@@ -310,7 +311,6 @@ contract('Gate', function(accounts) {
       hashLock: lock.l
     }
   };
-
   describe('Properties', async () => {
 
     before (async () => {
@@ -597,7 +597,6 @@ contract('Gate', function(accounts) {
       });
 
     });
-
 
     describe('revertStaking', async () => {
 
