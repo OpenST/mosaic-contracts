@@ -32,7 +32,7 @@ import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
-import "./Core.sol";
+import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
 import "./OpenSTUtils.sol";
 
@@ -198,6 +198,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // @dev read STPrime address and uuid from contract
     }
 
+
     /*
      *  External functions
      */
@@ -210,7 +211,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _stakingIntentHash,
         uint256 _blockHeight,
         bytes rlpParentNodes)
         external
@@ -223,8 +223,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_amountUT > 0);
         // stakingUnlockheight needs to be checked against the core that tracks the value chain
         require(_stakingUnlockHeight > 0);
-        require(_stakingIntentHash != "");
-
 
         expirationHeight = block.number + blocksToWaitShort();
         nonces[_staker] = _stakerNonce;
@@ -239,12 +237,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _stakingUnlockHeight,
             _hashLock
         );
-
-        require(stakingIntentHash == _stakingIntentHash);
-        bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-        bytes memory encodedPathToMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
-        require(MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathToMerkle,rlpParentNodes,storageRoot));
-
+        //bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+       // bytes memory encodedPathToMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
+        //require(MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathToMerkle,rlpParentNodes,storageRoot));
+        require(merkleVerificationOfStake(_staker, _stakerNonce, stakingIntentHash, rlpParentNodes, core.getStorageRoot(_blockHeight)));
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
             staker:           _staker,
@@ -255,11 +251,20 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         });
 
         emit StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
-                _amountUT, expirationHeight, _blockHeight ,storageRoot);
+                _amountUT, expirationHeight, _blockHeight ,core.getStorageRoot(_blockHeight));
 
         return expirationHeight;
     }
 
+
+    function merkleVerificationOfStake(address _staker, uint256 _stakerNonce, bytes32 stakingIntentHash, bytes rlpParentNodes, bytes32 storageRoot) private returns(bool /* MerkleProofStatus*/){
+
+        bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
+        return MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathInMerkle,rlpParentNodes,storageRoot);
+
+
+
+    }
 
     function processMinting(
         bytes32 _stakingIntentHash,
