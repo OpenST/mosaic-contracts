@@ -97,9 +97,9 @@ contract Hasher {
 	function hashIntentKey(
 		address _account,
 		uint256 _nonce)
-	public
-	pure
-	returns (bytes32)
+		public
+		pure
+		returns (bytes32)
 	{
 		return keccak256(
 			_account,

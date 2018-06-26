@@ -267,9 +267,6 @@ contract('OpenSTUtility', function(accounts) {
 
 		it('successfully confirms', async () => {
 			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
-
-			// call block number is one less than send block number
-			expirationHeight = expirationHeight.plus(1)
 			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
 			await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
 		})
@@ -367,8 +364,8 @@ contract('OpenSTUtility', function(accounts) {
 		it('successfully redeems', async () => {
 			var redeemReturns = await openSTUtility.redeem.call(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, lockR.l, { from: redeemer });
 
-            // call block number is one less than send block number
-            unlockHeight = redeemReturns[0].plus(1);
+            
+			unlockHeight = redeemReturns[0];
             var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(checkBtUuid, accounts[0], 2, redeemBeneficiary, redeemAmountUT, unlockHeight, lockR.l);
             result = await openSTUtility.redeem(checkBtUuid, redeemAmountUT, 2, redeemBeneficiary, lockR.l, { from: redeemer });
 
@@ -407,7 +404,7 @@ contract('OpenSTUtility', function(accounts) {
 			var redeemReturns = await openSTUtility.redeemSTPrime.call(redeemSTP.toNumber(), redeemBeneficiary, lockR.l, { from: redeemer, value: 2 });
 
       // call block number is one less than send block number
-      unlockHeight = redeemReturns[1].plus(1)
+	  unlockHeight = redeemReturns[1];
       var checkRedemptionIntentHash = await openSTUtility.hashRedemptionIntent.call(uuidSTPrime, redeemer, 2, redeemBeneficiary, redeemSTP, unlockHeight, lockR.l);
       result = await openSTUtility.redeemSTPrime(redeemSTP, redeemBeneficiary, lockR.l, { from: redeemer, value: redeemSTP });
 

@@ -31,9 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-
 import "./OpenSTUtils.sol";
-//import "./util.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -47,7 +45,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
-        uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
+        uint256 _stakerNonce, bytes32 _intentKeyHash, address _beneficiary, uint256 _amountST,
         uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
         uint256 _chainIdUtility);
 
@@ -75,9 +73,12 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+
     uint8 private constant INTENT_INDEX = 3;
 
-    /// register the active stakes and unstakes
+    // storage for staking intent hash of active staking intents
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    // register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
     mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
@@ -97,7 +98,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     address public registrar;
     bytes32[] public uuids;
 
-  /*
+    /*
      *  Structures
      */
     struct UtilityToken {
@@ -132,6 +133,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 expirationHeight;
         bytes32 hashLock;
     }
+
     /*
      *  Modifiers
      */
@@ -225,7 +227,12 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
-        emit StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
+        // store the staking intent hash directly in storage of OpenSTValue 
+        // so that a Merkle proof can be generated for active staking intents
+        bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
+        intents[intentKeyHash] = stakingIntentHash;
+
+        emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
@@ -258,7 +265,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
-
+        
+        // remove intent hash from intents mapping 
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];        
         delete stakes[_stakingIntentHash];
 
         return stakeAddress;
@@ -291,11 +300,33 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
 
+        // remove intent hash from intents mapping 
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];   
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
     }
 
+    /**
+      *	@notice Confirm redemption intent on value chain.
+      *
+      * @dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
+      *      is passed in this function along with rpl encoded parent nodes of merkle pactritia tree proof
+      *      for RedemptionIntentHash.
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _beneficiary Beneficiary address
+      *	@param _amountUT Amount of utility token
+      *	@param _redemptionUnlockHeight Unlock height for redemption
+      *	@param _hashLock Hash lock
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return bytes32 amount of OST
+      *	@return uint256 expiration height
+      */
     function confirmRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
@@ -311,7 +342,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 amountST,
         uint256 expirationHeight)
     {
-
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         require(utilityToken.simpleStake != address(0));
         require(_amountUT > 0);
@@ -342,13 +372,13 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
-        require(verifyIntentStorage(
+        require(verifyRedemptionIntentHashStorage(
                 _uuid,
                 _redeemer,
                 _redeemerNonce,
                 _blockHeight,
                 redemptionIntentHash,
-                _rlpParentNodes));
+                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
@@ -366,7 +396,18 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (amountST, expirationHeight);
     }
 
-    function verifyIntentStorage(
+    /**
+      *	@notice Verify storage of redemption intent hash
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return bool status if the storage of intent hash was verified
+      */
+    function verifyRedemptionIntentHashStorage(
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -375,10 +416,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes _rlpParentNodes)
         internal
         view
-        returns (bool)
+        returns (bool /* verification status */)
     {
+        // get storageRoot from core for the given block height
         bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
-        require(storageRoot !=  bytes32(0));
+
+        // storageRoot cannot be 0
+        require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
         require(OpenSTUtils.verifyIntentStorage(
                 INTENT_INDEX,
@@ -386,7 +430,7 @@ contract OpenSTValue is OpsManaged, Hasher {
                 _redeemerNonce,
                 storageRoot,
                 _redemptionIntentHash,
-                _rlpParentNodes));
+                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
 
         return true;
     }

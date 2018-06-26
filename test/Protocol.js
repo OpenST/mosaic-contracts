@@ -94,11 +94,12 @@ contract('OpenST', function(accounts) {
 		var nonceBT = null;
 		var uuidSTP = null;
 		var nonceSTP = null;
+		var hashIntentKey = null;
 		var stakingIntentHash = null;
 		var unlockHeight = null;
 		var redemptionIntentHash = null;
 		var redeemedAmountST = null;
-    var validRLPParentNodes = null;
+        var validRLPParentNodes = null;
 
 		before(async () => {
 			var contracts = await ProtocolUtils.deployOpenSTProtocol(artifacts, accounts);
@@ -177,6 +178,8 @@ contract('OpenST', function(accounts) {
 				utils.logResponse(o, "OpenSTValue.stake");
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(o.logs[0], uuidSTP, stakerVC, nonceSTP, beneficiary,
 					AMOUNT_ST, AMOUNT_ST, CHAINID_UTILITY);
+
+				hashIntentKey = o.logs[0].args._hashIntentKey;
 				stakingIntentHash = o.logs[0].args._stakingIntentHash;
 				unlockHeight = o.logs[0].args._unlockHeight;
 			});
@@ -299,6 +302,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
@@ -412,7 +416,7 @@ contract('OpenST', function(accounts) {
 			});
 
 			it("confirm redemption intent", async() => {
-        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				  redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
@@ -474,7 +478,7 @@ contract('OpenST', function(accounts) {
 			});
 
 			it("confirm redemption intent", async() => {
-        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, uuidSTP, redeemer, nonce, redeemBeneficiary,
 					REDEEM_AMOUNT_STPRIME, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 
@@ -539,6 +543,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 
 			});
@@ -582,6 +587,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
@@ -669,6 +675,7 @@ contract('OpenST', function(accounts) {
 				openSTValueUtils.checkStakingIntentDeclaredEventProtocol(stakeResult.logs[0], registeredBrandedTokenUuid, stakerVC, nonceBT,
 					beneficiary, AMOUNT_ST, AMOUNT_BT, CHAINID_UTILITY);
 
+				hashIntentKey = stakeResult.logs[0].args._hashIntentKey;
 				stakingIntentHash = stakeResult.logs[0].args._stakingIntentHash;
 				unlockHeight = stakeResult.logs[0].args._unlockHeight;
 				nonceBT = stakeResult.logs[0].args._stakerNonce;
@@ -840,7 +847,7 @@ contract('OpenST', function(accounts) {
 
 			// Call confirmRedemptionIntent
 			it("calls confirmRedemptionIntent", async() => {
-        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
@@ -944,7 +951,7 @@ contract('OpenST', function(accounts) {
 
 			// Call confirmRedemptionIntent
 			it("calls confirmRedemptionIntent", async() => {
-        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);

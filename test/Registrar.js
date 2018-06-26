@@ -154,7 +154,7 @@ contract('Registrar', function(accounts) {
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
-					registrar 		= contracts.registrar;
+			registrar 		= contracts.registrar;
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
       		core 			= contracts.core;
@@ -196,7 +196,7 @@ contract('Registrar', function(accounts) {
 		var uuid 				 	= null;
 		var nonce 				 	= null;
 		var redemptionIntentHash 	= null;
-    var validRLPParentNodes = null;
+        var validRLPParentNodes     = null;
 
 		const BLOCKS_TO_WAIT_LONG	= 8;
 		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));
@@ -206,12 +206,11 @@ contract('Registrar', function(accounts) {
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
-					registrar 		= contracts.registrar;
+			registrar 		= contracts.registrar;
 	        openSTUtility 	= contracts.openSTUtility;
 	        openSTValue 	= contracts.openSTValue;
-		      validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
-
-    		  core 			= contracts.core;
+	        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+            core 			= contracts.core;
 	        uuid 			= await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });

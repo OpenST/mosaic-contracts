@@ -57,7 +57,7 @@ contract Registrar is OpsManaged {
     	uint256 _redemptionUnlockHeight,
     	bytes32 _hashLock,
     	uint256 _blockHeight,
-			bytes _rlpParentNodes)
+		bytes _rlpParentNodes)
     	external
     	onlyOps
     	returns (
@@ -72,8 +72,8 @@ contract Registrar is OpsManaged {
 	    	_amountUT,
 	    	_redemptionUnlockHeight,
 	    	_hashLock,
-				_blockHeight,
-				_rlpParentNodes);
+			_blockHeight,
+			_rlpParentNodes);
 
     	return (amountST, expirationHeight);
     }
