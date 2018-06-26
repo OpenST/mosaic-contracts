@@ -196,7 +196,7 @@ contract('Registrar', function(accounts) {
 		var uuid 				 	= null;
 		var nonce 				 	= null;
 		var redemptionIntentHash 	= null;
-        var validRLPParentNodes = null;
+        var validRLPParentNodes     = null;
 
 		const BLOCKS_TO_WAIT_LONG	= 8;
 		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));

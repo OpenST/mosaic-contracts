@@ -5,7 +5,6 @@ branches:
   only:
   - master
   - develop
-  - deepesh/MOSA-68
 notifications:
   email:
     recipients:

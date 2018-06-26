@@ -365,7 +365,7 @@ contract('OpenSTValue', function(accounts) {
 			stake = result.logs[0].args.stake;
 			nonce = await openSTValue.getNextNonce.call(redeemer);
 			validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
-      invalidRLPParentNodes = await openSTValue.getMockRLPParentNodes(false);
+            invalidRLPParentNodes = await openSTValue.getMockRLPParentNodes(false);
 		})
 
 		it('fails to confirm by non-registrar', async () => {
@@ -447,7 +447,7 @@ contract('OpenSTValue', function(accounts) {
 
 	describe('ProcessUnstaking', async () => {
 		var redeemer 				= accounts[2];
-  	    var redeemBeneficiary = accounts[3];
+  	    var redeemBeneficiary       = accounts[3];
 		var notRedeemer				= accounts[5];
 		var redemptionIntentHash 	= null;
 		var redemptionUnlockHeight 	= 80668;

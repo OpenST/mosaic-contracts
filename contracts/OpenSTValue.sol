@@ -378,7 +378,7 @@ contract OpenSTValue is OpsManaged, Hasher {
                 _redeemerNonce,
                 _blockHeight,
                 redemptionIntentHash,
-                _rlpParentNodes));
+                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
 
         unstakes[redemptionIntentHash] = Unstake({
             uuid:             _uuid,
@@ -422,7 +422,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
 
         // storageRoot cannot be 0
-        require(storageRoot !=  bytes32(0));
+        require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
         require(OpenSTUtils.verifyIntentStorage(
                 INTENT_INDEX,
@@ -430,7 +430,7 @@ contract OpenSTValue is OpsManaged, Hasher {
                 _redeemerNonce,
                 storageRoot,
                 _redemptionIntentHash,
-                _rlpParentNodes));
+                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
 
         return true;
     }

@@ -47,6 +47,7 @@ contract OpenSTValueMock is OpenSTValue {
 		return BLOCKS_TO_WAIT_SHORT;
 	}
 
+	// mocked verifyRedemptionIntentHashStorage function for testing only
 	function verifyRedemptionIntentHashStorage(
 		bytes32 _uuid,
 		address _redeemer,
@@ -62,7 +63,7 @@ contract OpenSTValueMock is OpenSTValue {
 		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
 	}
 
-	// mock function for testing only
+	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
 		external

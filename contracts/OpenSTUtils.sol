@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.23;
 
 import "./BytesLib.sol";
 import "./MerklePatriciaProof.sol";
@@ -7,6 +7,13 @@ import "./RLPEncode.sol";
 
 library OpenSTUtils {
 
+  /**
+    *	@notice Convert bytes32 to bytes
+    *
+    *	@param a bytes32 value
+    *
+    *	@return bytes value
+    */
   function bytes32ToBytes(bytes32 a) internal pure returns (bytes) {
     bytes memory res = new bytes(32);
     assembly {
@@ -43,7 +50,7 @@ library OpenSTUtils {
     *	@param _address Account address
     *	@param _addressNonce Nonce for account address
     *	@param _storageRoot Storage root
-    * @param _intentHash Intent hash
+    *   @param _intentHash Intent hash
     *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
     *
     *	@return bool status if the storage of intent hash was verified
@@ -61,11 +68,12 @@ library OpenSTUtils {
   {
     bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
     bytes memory path = bytes32ToBytes(keccak256(keyPath));
-    require(MerklePatriciaProof.verify(
-        keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash))),
-        path,
-        _rlpParentNodes,
-        _storageRoot), "Failed to verify storage path");
+
+    return MerklePatriciaProof.verify(
+      keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash))),
+      path,
+      _rlpParentNodes,
+      _storageRoot);
   }
 
 }
