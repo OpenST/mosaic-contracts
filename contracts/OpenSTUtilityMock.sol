@@ -37,8 +37,9 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
 		address _registrar,
+		CoreInterface _core,
 		uint256 _blockTime)
-		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _blockTime)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core, _blockTime)
 		public {
 
 		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);

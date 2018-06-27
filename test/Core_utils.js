@@ -26,6 +26,9 @@ const Core = artifacts.require("./Core.sol")
 
 const BigNumber = require('bignumber.js')
 ;
+const rootPrefix = ".."
+    , constants = require(rootPrefix + '/test/lib/constants')
+;
 
 
 /// @dev Deploy 
@@ -49,7 +52,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
 	await workers.setAdminAddress(admin);
 	await workers.setOpsAddress(ops);
 	await workers.setWorker(worker1, deactivationHeight, {from:ops});
-	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from:accounts[0]});
+	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address, {from:accounts[0]});
 	return {
 		core : core
 	}

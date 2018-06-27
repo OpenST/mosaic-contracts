@@ -29,8 +29,8 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
-var Core 		= artifacts.require("./Core.sol");
-var Workers = artifacts.require("./Workers.sol")
+var CoreMock 		= artifacts.require("./CoreMock.sol");
+var Workers = artifacts.require("./Workers.sol");
 
 /// @dev Deploy 
 module.exports.deployRegistrar = async (artifacts, accounts) => {
@@ -61,10 +61,10 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	await workers.setOpsAddress(ops);
 	await workers.setWorker(worker1, deactivationHeight, {from:ops});
 
-  const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
-  const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address, constants.VALUE_CHAIN_BLOCK_TIME);
-	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, workers.address);
-
+    const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address, constants.VALUE_CHAIN_BLOCK_TIME);
+	const coreForOpenSTUtility   = await CoreMock.new(registrar.address, chainIdUtility, chainIdValue, openSTValue.address, constants.VALUE_CHAIN_BLOCK_TIME, workers.address);
+	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, coreForOpenSTUtility.address ,constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
+	const core 		  	 = await CoreMock.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address);
 	return {
 		valueToken  	: valueToken,
 		registrar 		: registrar,

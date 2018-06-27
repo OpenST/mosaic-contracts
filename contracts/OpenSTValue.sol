@@ -70,9 +70,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
 
-    // ~2 weeks
+    // ~2 weeks in seconds
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~1hour
+    // ~1hour in seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     uint8 private constant INTENT_INDEX = 3;
@@ -359,7 +359,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // utility chain
         require(_redemptionUnlockHeight > 0);
 
-        require(cores[utilityTokens[_uuid].chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
+        require(cores[utilityToken.chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
 
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;

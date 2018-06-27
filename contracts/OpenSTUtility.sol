@@ -32,6 +32,7 @@ import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
+import "./CoreInterface.sol";
 
 
 /// @title OpenST Utility
@@ -68,17 +69,13 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         address _redeemer, address _beneficiary, uint256 _amountUT);
 
 
-    /*
-     *  Constants
-     */
-    // ~2 weeks
+    /* Constants */
+    // ~2 weeks in seconds
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~1hour
+    // ~1hour in seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
-    /*
-     *  Storage
-     */
+    /* Storage */
 
     // storage for staking intent hash of active staking intents
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
@@ -107,12 +104,11 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// chainId of the current utility chain
     uint256 public chainIdUtility;
     address public registrar;
+    CoreInterface public core;
     uint256 public blocksToWaitShort;
     uint256 public blocksToWaitLong;
 
     bytes32[] public uuids;
-
-
     /// registered branded tokens
     /*
      *  Structures
@@ -153,6 +149,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         address _registrar,
+        CoreInterface _core,
         uint256 _blockTime)
         public
         OpsManaged()
@@ -160,6 +157,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
+        require(_core != address(0), "Core address cannot be null");
         require(_blockTime != 0);
 
         blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
@@ -168,6 +166,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
+        core = _core;
 
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,

@@ -110,7 +110,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 
 	// only setup a core for the Value Chain to track the Utility Chain for v0.9.1
 	const coreVC = await Core.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
-		openSTUtility.address, workers.address);
+		openSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address);
 	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();

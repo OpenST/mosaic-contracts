@@ -84,16 +84,14 @@ contract Core is CoreInterface, Util {
 		_;
 	}
 
-	// ~5Days
+	// ~5Days in seconds
 	uint256 private constant TIME_TO_WAIT = 432000;
 
-	uint256 private remoteBlockTime;
+	uint256 public remoteBlockTime;
 
-	uint256 private blocksToWait;
+	uint256 public blocksToWait;
 
-	/*
-	 *  Public functions
-	 */
+	/*  Public functions */
 
 	/**
 	 * @notice Contract constructor
@@ -170,10 +168,15 @@ contract Core is CoreInterface, Util {
 		return coreOpenSTRemote;
 	}
 
+	/**
+	 *	@notice Get safe unlock height
+	 *
+	 *	@return uint256 safeUnlockHeight
+	 */
 	function safeUnlockHeight()
 		external
 		view
-		returns (uint256 safeUnlockHeight)
+		returns (uint256 /* safeUnlockHeight */)
 	{
 		return blocksToWait + latestStateRootBlockHeight;
 	}

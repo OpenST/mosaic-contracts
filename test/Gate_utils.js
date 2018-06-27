@@ -70,7 +70,7 @@ module.exports.deployGate = async (artifacts, accounts) => {
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
-  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
+  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address);
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
