@@ -244,14 +244,13 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('successfully checks index position of intents mapping', async () => {
-	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
+	 			await openSTValue.testIntentsMapping.call();
 
 	            var intentsMappingStoredValue = await openSTValue._eth.getStorageAt(openSTValue.address, openSTValue.intentsMappingStorageKey.call());
-	            assert.equal((await openSTValue.intentsMappingValue.call(), intentsMappingStoredValue);
+
+	            assert.equal(await openSTValue.intentsMappingValue.call(), intentsMappingStoredValue);
 
 			})
-
-
 
 			it('successfully stakes', async () => {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
@@ -284,7 +283,7 @@ contract('OpenSTValue', function(accounts) {
 
 			it('fails to stake when msg.sender is not the stakingAccount', async () => {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[1], { from: accounts[1] }));
-			})
+			})		
 
 			it('successfully stakes', async () => {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
