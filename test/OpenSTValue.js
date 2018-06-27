@@ -243,6 +243,16 @@ contract('OpenSTValue', function(accounts) {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, lock.l, accounts[0], { from: accounts[0] }));
 			})
 
+			it('successfully checks index position of intents mapping', async () => {
+	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
+
+	            var intentsMappingStoredValue = await openSTValue._eth.getStorageAt(openSTValue.address, openSTValue.intentsMappingStorageKey.call());
+	            assert.equal((await openSTValue.intentsMappingValue.call(), intentsMappingStoredValue);
+
+			})
+
+
+
 			it('successfully stakes', async () => {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 	            var amountUT = stakeReturns[0].toNumber();
