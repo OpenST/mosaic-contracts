@@ -237,9 +237,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _stakingUnlockHeight,
             _hashLock
         );
-        //bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-       // bytes memory encodedPathToMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
-        //require(MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathToMerkle,rlpParentNodes,storageRoot));
         require(merkleVerificationOfStake(_staker, _stakerNonce, stakingIntentHash, rlpParentNodes, core.getStorageRoot(_blockHeight)));
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,

@@ -27,7 +27,7 @@ const openSTValueUtils = require("./OpenSTValue_utils.js");
 
 var SimpleToken   = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
-var Core          = artifacts.require("./Core.sol");
+var CoreMock          = artifacts.require("./CoreMock.sol");
 var OpenSTValue   = artifacts.require("./OpenSTValueMock.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime       = artifacts.require("./STPrime.sol");
@@ -47,7 +47,9 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
 
 	var res = null;
-
+    const coreVC = await CoreMock.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
+        openSTUtility.address, workers.address);
+    await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 	const simpleToken = await SimpleToken.new({ from: deployMachine });
 	await utils.logTransaction(simpleToken.transactionHash, "SimpleToken.new");
 	// finalize the tokens
@@ -90,7 +92,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		"OpenSTValue.completeOwnershipTransfer");
 
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
-		registrarUC.address, { from: deployMachine, gas: 8500000 });
+		registrarUC.address, coreVC,{ from: deployMachine, gas: 8500000 });
 	await utils.logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new");
 	utils.logResponse(await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine }),
 		"OpenSTUtility.initiateOwnershipTransfer");
@@ -105,9 +107,6 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
   await workers.setWorker(worker1, workerDeactivationHeight, {from:ops});
 
 	// only setup a core for the Value Chain to track the Utility Chain for v0.9.1
-	const coreVC = await Core.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
-		openSTUtility.address, workers.address);
-	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
 	Assert.notEqual(stpContractAddress, utils.NullAddress);

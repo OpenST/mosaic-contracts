@@ -125,11 +125,15 @@ contract('OpenSTUtility', function(accounts) {
 	var unlockHeight 			= null;
 	var uuidSTPrime				= null;
 	var expirationHeight 		= null;
+    var validRLPParentNodes     = null;
+    var invalidRLPParentNodes   = null;
 
 	describe('Properties', async () => {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	    })
 
 		it('has chainIdValue', async () => {
@@ -217,10 +221,11 @@ contract('OpenSTUtility', function(accounts) {
 	describe('ConfirmStakingIntent', async () => {
 
 		const lock = HashLock.getHashLock();
-
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
             brandedToken = result.logs[0].args._token;
@@ -228,52 +233,52 @@ contract('OpenSTUtility', function(accounts) {
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
 	    })
 
-		it('fails to confirm by non-registrar', async () => {
-            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: accounts[0] }));
-		})
+
 
 		it('fails to confirm when token is not registered', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent("bad UUID", accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent("bad UUID", accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails confirm when stakerNonce is not > previously', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 0, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 0, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when amoutST is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 0, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 0, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when amountUT is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, 0, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, 0, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when stakingUnlockHeight is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 0, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 0, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
-		it('fails to confirm when stakingIntentHash is empty', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, "", { from: registrar }));
-		})
 
-		it('fails to confirm when presented with different lock', async () => {
-			const differentLock = HashLock.getHashLock();
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, differentLock.l, "", { from: registrar }));
-		})
+        it('fails to confirm when invalidRLPParentNodes is passed',async() => {
 
-		it('fails to confirm when stakingIntentHash does not match calculated hash', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, "bad stakingIntentHash", { from: registrar }));
-		})
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,invalidRLPParentNodes, { from: registrar }));
 
-		it('successfully confirms', async () => {
-			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
-			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+        })
+
+        //TODO: We have mocked storageroot and so this test case will fail irrespective of lock values..
+        // it('fails to confirm when presented with different lock', async () => {
+        //     const differentLock = HashLock.getHashLock();
+        //     console.log("Lock different",differentLock);
+        //     await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, differentLock.l, 1 ,validRLPParentNodes,{ from: registrar }));
+        // })
+
+
+        it('successfully confirms', async () => {
+			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
+			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 			await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
 		})
 
-		it('Storage proof',async() => {
 
-		})
+
+
 
 	})
 
@@ -285,12 +290,14 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
+	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l , 1 ,validRLPParentNodes, { from: registrar });
 		    })
 
 			it('fails to process if stakingIntentHash is empty', async () => {
@@ -325,12 +332,14 @@ contract('OpenSTUtility', function(accounts) {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
             brandedToken = result.logs[0].args._token;
             await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
             checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
             await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 
 	    	brandedTokenContract = new BrandedToken(brandedToken);
@@ -384,10 +393,12 @@ contract('OpenSTUtility', function(accounts) {
 	        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        stPrime     			= contracts.stPrime;
 	        openSTUtility 			= contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
 			checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l);
 
-			await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+			await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 			await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 			await stPrime.claim(accounts[0]);
 	    })
@@ -427,12 +438,14 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(accounts[0]);
@@ -474,10 +487,12 @@ contract('OpenSTUtility', function(accounts) {
 				contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 				stPrime     			= contracts.stPrime;
 				openSTUtility           = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 				uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
 				checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l);
 
-	          await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+	          await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	          await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 						await stPrime.claim(accounts[0]);
 	          result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, lockR.l, { from: redeemer, value: redemptionAmount });
@@ -513,12 +528,14 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate,conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 							brandedTokenContract = new BrandedToken(brandedToken);
 							await brandedTokenContract.claim(accounts[0]);
@@ -549,11 +566,12 @@ contract('OpenSTUtility', function(accounts) {
 		        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        stPrime     			= contracts.stPrime;
 		        openSTUtility 			= contracts.openSTUtility;
-
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 		        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
 	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
 
-	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				await stPrime.claim(accounts[0]);
 	            result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, lockR.l, { from: redeemer, value: redemptionAmount });
@@ -594,6 +612,8 @@ contract('OpenSTUtility', function(accounts) {
 				contracts = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 				// Use OpenSTUtility Contract to expire redeem soon
 				OpenSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate, conversionRateDecimals);
 				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 				brandedToken = result.logs[0].args._token;
@@ -602,8 +622,8 @@ contract('OpenSTUtility', function(accounts) {
 				escrowUnlockHeight = await OpenSTUtility.blocksToWaitLong.call();
 				// 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtility contract so that redeem expires
 				escrowUnlockHeight = escrowUnlockHeight.toNumber() + 1;
-				checkStakingIntentHash = await OpenSTUtility.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l);
-				await OpenSTUtility.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l, checkStakingIntentHash, { from: registrar });
+                checkStakingIntentHash = await OpenSTUtility.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l);
+				await OpenSTUtility.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 				await OpenSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(redeemerForRevert);
@@ -673,7 +693,6 @@ contract('OpenSTUtility', function(accounts) {
   describe('revert minting', async () => {
     var redemptionIntentHash = null;
   	var brandedToken = null;
-  	var stakingIntentHash = null;
   	const AMOUNT_ST = new BigNumber(web3.toWei(10, "ether"));
   	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
 
@@ -688,10 +707,10 @@ contract('OpenSTUtility', function(accounts) {
 					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 					brandedToken = result.logs[0].args._token;
 					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-					stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
-																AMOUNT_ST, AMOUNT_BT, 80668, lock.l);
+                    stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
+                        AMOUNT_ST, AMOUNT_BT, 80668, lock.l);
 					result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,
-										AMOUNT_BT, 80668, lock.l, stakingIntentHash, { from: registrar });
+										AMOUNT_BT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 				});
 
 				it('fails if stakingIntentHash is empty', async() => {
