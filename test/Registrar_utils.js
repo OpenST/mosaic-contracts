@@ -65,11 +65,12 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const coreForOpenSTUtility   = await CoreMock.new(registrar.address, chainIdUtility, chainIdValue, openSTValue.address, constants.VALUE_CHAIN_BLOCK_TIME, workers.address);
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, coreForOpenSTUtility.address ,constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
 	const core 		  	 = await CoreMock.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address);
+
 	return {
 		valueToken  	: valueToken,
 		registrar 		: registrar,
 		openSTUtility 	: openSTUtility,
 		openSTValue 	: openSTValue,
-		core 			: core
+		core 			: coreVC
 	}
 }

@@ -40,10 +40,42 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		CoreInterface _core,
 		uint256 _blockTime)
 		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core, _blockTime)
-		public {
+		public
+	{
 
 		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
 		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
 	}
+
+	// mock function for testing only to verify storage proof
+	function merkleVerificationOfStake(
+		address _staker,
+		uint256 _stakerNonce,
+		bytes32 stakingIntentHash,
+		bytes rlpParentNodes,
+		bytes32 storageRoot)
+	    private
+	    returns(bool /* MerkleProofStatus*/)
+	{
+		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
+	}
+
+	// mock function for testing only to get parent nodes
+	function getMockRLPParentNodes(
+		bool isValid)
+	external
+	view
+	returns (bytes /* mock RLP encoded parent nodes*/)
+	{
+		if(isValid) {
+			bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+			return mockedValidValue;
+		}
+		bytes memory mockedInvalidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(0)));
+		return mockedInvalidValue;
+	}
+
+
 }

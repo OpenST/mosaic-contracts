@@ -41,10 +41,8 @@ contract Core is CoreInterface, Util {
 
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
-	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bytes32 hashedAccount);
-
-	/** Below event emitted to differentiate replay call of proveOpenST function for same block height */
-	event ProofVerificationSkipped(uint256 blockHeight, bytes32 storageRoot);
+	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
+	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bool wasAlreadyProved);
 
 	/*  Storage */
 
@@ -252,9 +250,8 @@ contract Core is CoreInterface, Util {
 		if (provenStorageRoot != bytes32(0)) {
 			// Check extracted storage root is matching with existing stored storage root
 			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
-			emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
-			// Below event needed to differentiate single call VS multiple call of proveOpenST function for same block height
-			emit ProofVerificationSkipped(_blockHeight, storageRoot);
+			// wasAlreadyProved is true here since proveOpenST is replay call for same block height
+			emit OpenSTProven(_blockHeight, storageRoot, true);
 			// return true
 			return true;
 		}
@@ -264,8 +261,8 @@ contract Core is CoreInterface, Util {
 
 		// After verification update storageRoots mapping
 		storageRoots[_blockHeight] = storageRoot;
-		// Emit event
-		emit OpenSTProven(_blockHeight, storageRoot, hashedAccount);
+		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
+		emit OpenSTProven(_blockHeight, storageRoot, false);
 
 		return true;
 	}
