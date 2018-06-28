@@ -25,7 +25,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js');
 const Core = artifacts.require("./Core.sol");
 const SimpleStake = artifacts.require("./SimpleStake.sol");
 const BigNumber = require('bignumber.js');
-const Web3 = require('web3');
+
 
 ///
 /// Test stories
@@ -248,6 +248,8 @@ contract('OpenSTValue', function(accounts) {
 	 			//await openSTValue.testIntentsMapping.call(1);
 	            //var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 	 			
+	            const Web3 = require('web3');
+	            const web3new = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 	 			var intentsMappingKey1 = await openSTValue.intentsMappingKey.call();
 	 			var intentsMappingValue1 = await openSTValue.intentsMappingValue.call();
@@ -297,7 +299,7 @@ contract('OpenSTValue', function(accounts) {
 
 	 			//var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex));
 
-	 			var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex) );
+	 			var actualStoredValue = await web3new.eth.getStorageAt(String(address), String(storageKeyHex) );
 
 	 			//console.log("getting storage value from contract using calculated key", actualStoredValue);
 
