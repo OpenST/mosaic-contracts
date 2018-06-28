@@ -6,8 +6,6 @@ contract CoreMock is Core{
     /**
      * @notice Contract constructor
      *
-     * @dev bytes32ToBytes is util contract method
-     *
      * @param _registrar registrar address
      * @param _chainIdOrigin origin chain id
      * @param _chainIdRemote remote chain id
@@ -24,6 +22,8 @@ contract CoreMock is Core{
     /**
 	 *	@notice public view function getStorageRoot
 	 *
+	 *  @dev this is for testing only
+	 *
 	 *	@param _blockHeight block height for which storage root is needed
 	 *
 	 *	@return bytes32 storage root
@@ -36,8 +36,4 @@ contract CoreMock is Core{
     {
         return keccak256(_blockHeight);
     }
-
-
-
-
 }

@@ -48,14 +48,18 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		return BLOCKS_TO_WAIT_SHORT;
 	}
 
-	function merkleVerificationOfStake(address _staker, uint256 _stakerNonce, bytes32 stakingIntentHash, bytes rlpParentNodes, bytes32 storageRoot) private returns(bool /* MerkleProofStatus*/){
-
-//		bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
-//		return MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathInMerkle,rlpParentNodes,storageRoot);
+	// mock function for testing only to verify storage proof
+	function merkleVerificationOfStake(
+		address _staker,
+		uint256 _stakerNonce,
+		bytes32 stakingIntentHash,
+		bytes rlpParentNodes,
+		bytes32 storageRoot)
+	    private
+	    returns(bool /* MerkleProofStatus*/)
+	{
 		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
 		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
-
-
 	}
 
 	// mock function for testing only to get parent nodes

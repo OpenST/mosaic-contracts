@@ -47,6 +47,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
 
 	var res = null;
+
 	const simpleToken = await SimpleToken.new({ from: deployMachine });
 	await utils.logTransaction(simpleToken.transactionHash, "SimpleToken.new");
 	// finalize the tokens
@@ -60,14 +61,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	utils.logResponse(await simpleToken.completeOwnershipTransfer({ from: owner }),
 		"SimpleToken.completeOwnershipTransfer");
 
-    // Deploy worker contract
-    const workers = await Workers.new(simpleToken.address)
-        , worker1 = accounts[7];
-    await workers.setAdminAddress(admin);
-    await workers.setOpsAddress(ops);
-    await workers.setWorker(worker1, workerDeactivationHeight, {from:ops});
-
-    const registrarVC = await Registrar.new({ from: deployMachine });
+	const registrarVC = await Registrar.new({ from: deployMachine });
 	await utils.logTransaction(registrarVC.transactionHash, "RegistrarVC.new");
 	// set Ops of registrar to Intercom account on value chain
 	utils.logResponse(await registrarVC.setOpsAddress(intercommVC, { from: deployMachine }),
@@ -94,6 +88,14 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		"OpenSTValue.initiateOwnershipTransfer");
 	utils.logResponse(await openSTValue.completeOwnershipTransfer({ from: owner }),
 		"OpenSTValue.completeOwnershipTransfer");
+
+    // Deploy worker contract
+    const workers = await Workers.new(simpleToken.address)
+        , worker1 = accounts[7];
+    await workers.setAdminAddress(admin);
+    await workers.setOpsAddress(ops);
+    await workers.setWorker(worker1, workerDeactivationHeight, {from:ops});
+
 
     const coreUC = await CoreMock.new(registrarVC.address, CHAINID_UTILITY, CHAINID_VALUE,
         openSTValue.address, workers.address);

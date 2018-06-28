@@ -257,29 +257,14 @@ contract('OpenSTUtility', function(accounts) {
 
 
         it('fails to confirm when invalidRLPParentNodes is passed',async() => {
-
             await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,invalidRLPParentNodes, { from: registrar }));
-
         })
-
-        //TODO: We have mocked storageroot and so this test case will fail irrespective of lock values..
-        // it('fails to confirm when presented with different lock', async () => {
-        //     const differentLock = HashLock.getHashLock();
-        //     console.log("Lock different",differentLock);
-        //     await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, differentLock.l, 1 ,validRLPParentNodes,{ from: registrar }));
-        // })
-
 
         it('successfully confirms', async () => {
 			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 			await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
 		})
-
-
-
-
-
 	})
 
 	describe('ProcessMinting', async () => {

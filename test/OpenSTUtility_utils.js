@@ -29,7 +29,6 @@ const chainIdUtility = 1410;
 
 /// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-
     const registrar      = accounts[1];
     const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], accounts[11]);
     const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, { gas: 10000000 });

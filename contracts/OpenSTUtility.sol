@@ -198,18 +198,23 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // @dev read STPrime address and uuid from contract
     }
 
-
     /*
-     *  @notice It is used for confirming the stake.
-     *  @param _uuid Unique hashed id for each branded token
-     *  @param _staker Address of the entity/person whose resources will be staked
-     *  @param _stakerNonce Nonce of staker address
-     *  @param _beneficiary Address at the Utility chain to which minted tokens will be credited
-     *  @param _amountST Amount to be stake
-     *  @param _amountUT Branded Token corresponding to amountST
-     *  @param _stakingUnlockHeight  Height at which stake will be maintained at Value chain.
-     *  @param _hashLock hashlock for that branded token.
-     *  @param rlpParentNodes RLP of the all the nodes at which staking is done.
+     *  @notice Confirm staking intent on utility chain
+     *
+     *  @dev  StakingIntentHash is generated in value chain, the parameters that were used for hash generation is passed
+     *        in this function along with rpl encoded parent nodes of merkle pactritia tree proof.
+     *
+     *  @param _uuid UUID of utility token
+     *  @param _staker address of the account whose resources will be staked
+     *  @param _stakerNonce nonce of staker address
+     *  @param _beneficiary address where the branded tokens will be transferred
+     *  @param _amountST amount to be stake
+     *  @param _amountUT utility token amount
+     *  @param _stakingUnlockHeight  height till which stake will be locked at Value chain.
+     *  @param _hashLock hash lock
+     *  @param rlpParentNodes RLP encoded parent nodes for proof verification.
+     *
+     *	@return uint256 expiration height
      */
     function confirmStakingIntent(
         bytes32 _uuid,
@@ -246,7 +251,13 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _stakingUnlockHeight,
             _hashLock
         );
-        require(merkleVerificationOfStake(_staker, _stakerNonce, stakingIntentHash, _rlpParentNodes, core.getStorageRoot(_blockHeight)));
+        require(merkleVerificationOfStake(
+                _staker,
+                _stakerNonce,
+                stakingIntentHash,
+                _rlpParentNodes,
+                core.getStorageRoot(_blockHeight)));
+
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
             staker:           _staker,
@@ -262,20 +273,34 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         return expirationHeight;
     }
 
-
     /*
-    * @notice It is used to calculate encoded path in merkle and pass the required parameters to MerklePatriciaProof for verifying the storage proof.
-    * @dev _staker It is the address whose proof is to be verified.
-    * @dev _stakerNonce Nonce of the staker.
-    * @dev stakingIntentHash Hashed value for the staker.
-    * @dev rlpParentNodes RLP of the all the nodes at which staking is done.
-    * @dev storageRoot It is the value at the particular block height.
-    */
-    function merkleVerificationOfStake(address _staker, uint256 _stakerNonce, bytes32 stakingIntentHash, bytes rlpParentNodes, bytes32 storageRoot) private returns(bool /* MerkleProofStatus*/){
+     * @notice Verify storage of staking intent hash.
+     *
+     * @param _staker staker account address
+     * @param _stakerNonce nonce of the staker address.
+     * @param stakingIntentHash staking intent hash
+     * @param rlpParentNodes RLP encoded parent nodes for proof verification
+     * @param storageRoot storage root for proof verification
+     *
+     *	@return bool status if the storage of intent hash was verified
+     */
+    function merkleVerificationOfStake(
+        address _staker,
+        uint256 _stakerNonce,
+        bytes32 stakingIntentHash,
+        bytes rlpParentNodes,
+        bytes32 storageRoot)
+        private
+        returns(bool /* MerkleProofStatus*/)
+    {
+        bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(
+            OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
 
-        bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
-        return MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathInMerkle,rlpParentNodes,storageRoot);
-
+        return MerklePatriciaProof.verify(
+            keccak256(stakingIntentHash),
+            encodedPathInMerkle,
+            rlpParentNodes,
+            storageRoot);
     }
 
     function processMinting(
