@@ -25,8 +25,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js');
 const Core = artifacts.require("./Core.sol");
 const SimpleStake = artifacts.require("./SimpleStake.sol");
 const BigNumber = require('bignumber.js');
-const Web3 = require('Web3');
-
+const Web3 = require('web3');
 
 ///
 /// Test stories
@@ -249,26 +248,34 @@ contract('OpenSTValue', function(accounts) {
 	 			//await openSTValue.testIntentsMapping.call(1);
 	            //var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 	 			
+
 	 			var intentsMappingKey1 = await openSTValue.intentsMappingKey.call();
 	 			var intentsMappingValue1 = await openSTValue.intentsMappingValue.call();
 	 			//var intentsIndexPosition = await openSTValue.intentsIndexPosition.call();
 
-	 			console.log(intentsMappingKey1,intentsMappingValue1);
+	 			var intentsIndexPosition = "0000000000000000000000000000000000000000000000000000000000000004";
+	 			console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
+
+	 			//var intentsMappingKey = web3.sha3("1",{encoding: 'hex'});
+	 			//var intentsMappingValue = web3.sha3("2",{encoding: 'hex'});
 
 	 			var intentsMappingKey = Web3.utils.soliditySha3("1");
 	 			var intentsMappingValue = Web3.utils.soliditySha3("2");
 
-	 			var fullKey = intentsMappingKey+"0000000000000000000000000000000000000000000000000000000000000004";
+	 			//assert(intentsMappingKey, intentsMappingKey1);
+	 			//assert(intentsMappingValue, intentsMappingValue1);
+
+	 			var fullKey = intentsMappingKey + intentsIndexPosition;
 
 	 			console.log("full concatenated key", fullKey);
 
-	 			var storageKeyHex = Web3.utils.soliditySha3(String(fullKey), {"encoding":"hex"});
+	 			var storageKeyHex = web3.sha3(fullKey, {"encoding" : "hex"} );
 
-	 			var storageKey = Web3.utils.soliditySha3(String(fullKey));
+	 			// var storageKey = web3.utils.soliditySha3(fullKey);
 
 	 			console.log(intentsMappingKey, intentsMappingValue);
 
-	 			console.log("storage key and storage key hex", storageKey, storageKeyHex);
+	 			console.log("storage key hex", storageKeyHex);
 
 	 			var address = openSTValue.address;
 
@@ -276,11 +283,9 @@ contract('OpenSTValue', function(accounts) {
 
 	 			//concateValue = await openSTValue.concateValue.call();
 	 			//intentsMappingStorageKey = await openSTValue.intentsMappingStorageKey.call();
-	 			//intentsMappingStorageKey = Web3.utils.soliditySha3(intentsMappingKey+intentsMappingValue);
+	 			//intentsMappingStorageKey = web3.utils.soliditySha3(intentsMappingKey+intentsMappingValue);
 
-	 			intentValue = await openSTValue.intents.call(intentsMappingKey);
-
-	 			actualStoredValue = await web3.eth.getStorageAt(String(address), storageKey)
+	 			var intentValue = await openSTValue.intents.call(intentsMappingKey);
 
 	 			// console.log("actul mock mapping Key", intentsMappingKey);
 
@@ -288,11 +293,13 @@ contract('OpenSTValue', function(accounts) {
 
 	 			// console.log("concatenated string for key", concateValue)
 
-	 			console.log("calculated mock storage key", storageKey);
-
 	 			console.log("value determined directly from intents mapping", intentValue);
 
-	 			console.log("getting storage value from contract using calculated key", actualStoredValue );
+	 			//var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex));
+
+	 			var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex) );
+
+	 			console.log("getting storage value from contract using calculated key", actualStoredValue);
 
 	            // var intentsMappingStoredValue = await web3.eth.getStorageAt(openSTValue.address, intentsMappingStorageKey);
 
