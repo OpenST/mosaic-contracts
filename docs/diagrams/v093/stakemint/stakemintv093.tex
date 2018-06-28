@@ -10,7 +10,7 @@
 
 \geometry{
   paperwidth=65cm,
-  paperheight=110cm,
+  paperheight=112cm,
   margin=1cm
 }
 
@@ -120,7 +120,7 @@
       \umlfpart[reject]
       \begin{umlcall}[dt=5, op={: rejectStakeRequest(staker, reason)}]{Facilitator}{Branded Token Gate}
         % gate checks msg.sender == whitelister worker address and there is no hashlock
-        \begin{umlcallself}[op={require(msg.sender=worker \&\& no hashLock)}]{Branded Token Gate}
+        \begin{umlcallself}[op={require(msg.sender=worker \&\& no HTLC)}]{Branded Token Gate}
         \end{umlcallself}      
         % transfer amount back to staker
         \begin{umlcall}[fill=green!20, op={: transfer(staker, amountST)}]{Branded Token Gate}{OST}
@@ -141,7 +141,7 @@
       % staker reverts Stake Request after timeout
       \begin{umlcall}[dt=12, op={: revertStakeRequest()}, fill=green!20]{Staker}{Branded Token Gate}
         % gate checks amount is not locked under HTLC or time-lock is not yet expired
-        \begin{umlcallself}[op={require(msg.sender=staker \&\& no hashLock)}]{Branded Token Gate}
+        \begin{umlcallself}[op={require(msg.sender=staker \&\& no HTLC)}]{Branded Token Gate}
         \end{umlcallself}
         % transfer amount back to staker
         \begin{umlcall}[fill=green!20, op={: transfer(staker, amountST)}]{Branded Token Gate}{OST}
@@ -194,7 +194,7 @@
       \end{umlcall}
       
     \end{umlfragment}
-    \umlnote[x=33, y=-27, width=180]{mosaic}{Placeholder for OpenST Mosaic game}
+    \umlnote[x=31, y=-28, width=180]{mosaic}{Placeholder for OpenST Mosaic game}
     
     %%%
     %%% Facilitator has observed a committed state root that includes the StakingIntentHash
@@ -250,7 +250,7 @@
     \begin{umlfragment}[type=alt, label=proceed, name=phasetwo, inner xsep=1.5]
       \begin{umlcall}[dt=8, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Facilitator}{Branded Token Gate}
         % check hashlock 
-        \begin{umlcallself}[op={require(hashLock =/= 0)}]{Branded Token Gate}
+        \begin{umlcallself}[op={require(H(unlockSecret = hashLock)}]{Branded Token Gate}
         \end{umlcallself}
         % check msg.sender = worker
         \begin{umlcallself}[op={require(msg.sender = worker)}]{Branded Token Gate}
@@ -312,7 +312,7 @@
         % process staking on gate
         \begin{umlcall}[dt=20, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Hunter}{Branded Token Gate}
         % check hashlock 
-        \begin{umlcallself}[op={require(hashLock =/= 0)}]{Branded Token Gate}
+        \begin{umlcallself}[op={require(H(unlockSecret=hashLock)}]{Branded Token Gate}
         \end{umlcallself}
         % check msg.sender = worker
         \begin{umlcallself}[op={require(msg.sender = worker)}]{Branded Token Gate}
@@ -340,14 +340,14 @@
           \end{umlcall}
         \end{umlcall}
       \end{umlfragment}
-      \umlnote[x=12, y=-64, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
+      \umlnote[x=12, y=-66, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
 
       \umlfpart[revert]
      
       \begin{umlcall}[dt=20, fill=green!20, op={: revertStaking(StakingIntentHash)}]{Facilitator}{Branded Token Gate}
         % check unlockHeight is in the past
-        %\begin{umlcallself}[op={require(unlockHeight <= block.number)}]{Branded Token Gate}
-        %\end{umlcallself}
+        \begin{umlcallself}[op={require(unlockHeight <= block.number)}]{Branded Token Gate}
+        \end{umlcallself}
            check msg.sender = worker
           \begin{umlcallself}[op={require(msg.sender = worker)}]{Branded Token Gate}
           \end{umlcallself}        
@@ -383,7 +383,7 @@
       \end{umlcall}
     \end{umlfragment}
     \umlnote[x=1, y=-47, width=100]{phasetwo}{With both value chain and utility chain configured correctly for StakingIntentHash, Facilitator can proceed by revealing the unlock secret, or revert by awaiting the unlock height }
-    \umlnote[x=35, y=-95, width=120]{phasetwo}{Any actor can call revertStaking and the bounty is returned to the facilitator}
+    \umlnote[x=35, y=-102, width=120]{phasetwo}{Any actor can call revertStaking and the bounty is returned to the facilitator}
 
   \end{umlseqdiag}
 \end{tikzpicture}
