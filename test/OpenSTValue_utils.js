@@ -40,7 +40,6 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	await valueToken.setAdminAddress(accounts[1]);
 	// SimpleToken must be finalized to permit certain transfers
 	assert.ok(await valueToken.finalize({ from: accounts[1] }));
-	console.log("ValidTOkenAddress",valueToken.address);
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
 
   //Set SimpleToken admin in order to finalize SimpleToken

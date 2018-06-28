@@ -34,65 +34,16 @@ const chainIdUtility = 1410;
 
 /// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-/*    const registrar      = accounts[1];
-    const staker	  	 = accounts[2];
-    const amountST		 = new BigNumber(web3.toWei(2, "ether"));
-    const admin = accounts[3];
-    const ops = accounts[2];
-    const deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
-    console.log("Before SimpleToken Creation");
-    const valueToken   = await SimpleToken.new();
-    console.log("After SimpleToken Creation");
-    console.log("Before Workers Creation");
-    const workers = await Workers.new(valueToken.address)
-        , worker1 = accounts[7];
-    console.log("After Workers Creation");
-    await workers.setAdminAddress(admin);
 
-    await workers.setOpsAddress(ops);
-    await workers.setWorker(worker1, deactivationHeight, {from:ops});
-    console.log("After workers initialization");
-    console.log("valueToken",valueToken.address);
-    await valueToken.setAdminAddress(accounts[3]);
-    // SimpleToken must be finalized to permit certain transfers
-    await valueToken.finalize({ from: accounts[3] });
-    await valueToken.transfer(staker, amountST);
-    console.log("Before openstvalueinstance");
-    const openSTValueInstance = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
-    console.log("After openstvalueinstance");
-    const coreObject = await Core.new(registrar, chainIdValue, chainIdUtility, openSTValueInstance.address, workers.address);
-    console.log("After Core object",coreObject.address);
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, "", { gas: 20000000 });
-	console.log("After openSTUtility initialization");
-    const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
-	const stPrime = new STPrime(stPrimeAddress);
-
-	await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
-    console.log("After st prime initilization");
-	return {
-		stPrime       : stPrime,
-		openSTUtility : openSTUtility
-	}
-	*/
 
     const registrar      = accounts[1];
-
-
     const coreForOpenSTUtility 		  	 = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], accounts[11]);
-
-
     const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, { gas: 10000000 });
-
-
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
-
-
     const stPrime = new STPrime(stPrimeAddress);
     console.log("stPrime: ",stPrime.address);
-
     await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
 
-    console.log("1");
     return {
         stPrime       : stPrime,
         openSTUtility : openSTUtility

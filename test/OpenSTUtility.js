@@ -225,7 +225,7 @@ contract('OpenSTUtility', function(accounts) {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
             validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
-            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false);
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
             brandedToken = result.logs[0].args._token;

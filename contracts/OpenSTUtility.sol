@@ -200,7 +200,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
 
     /*
-     *  External functions
+     *  @notice It is used for confirming the stake.
+     *  @param _uuid Unique hashed id for each branded token
+     *  @param _staker Address of the entity/person whose resources will be staked
+     *  @param _stakerNonce Nonce of staker address
+     *  @param _beneficiary Address at the Utility chain to which minted tokens will be credited
+     *  @param _amountST Amount to be stake
+     *  @param _amountUT Branded Token corresponding to amountST
+     *  @param _stakingUnlockHeight  Height at which stake will be maintained at Value chain.
+     *  @param _hashLock hashlock for that branded token.
+     *  @param rlpParentNodes RLP of the all the nodes at which staking is done.
      */
     function confirmStakingIntent(
         bytes32 _uuid,
@@ -212,7 +221,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _stakingUnlockHeight,
         bytes32 _hashLock,
         uint256 _blockHeight,
-        bytes rlpParentNodes)
+        bytes _rlpParentNodes)
         external
         returns (uint256 expirationHeight)
     {
@@ -237,7 +246,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _stakingUnlockHeight,
             _hashLock
         );
-        require(merkleVerificationOfStake(_staker, _stakerNonce, stakingIntentHash, rlpParentNodes, core.getStorageRoot(_blockHeight)));
+        require(merkleVerificationOfStake(_staker, _stakerNonce, stakingIntentHash, _rlpParentNodes, core.getStorageRoot(_blockHeight)));
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
             staker:           _staker,
@@ -254,12 +263,18 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     }
 
 
+    /*
+    * @notice It is used to calculate encoded path in merkle and pass the required parameters to MerklePatriciaProof for verifying the storage proof.
+    * @dev _staker It is the address whose proof is to be verified.
+    * @dev _stakerNonce Nonce of the staker.
+    * @dev stakingIntentHash Hashed value for the staker.
+    * @dev rlpParentNodes RLP of the all the nodes at which staking is done.
+    * @dev storageRoot It is the value at the particular block height.
+    */
     function merkleVerificationOfStake(address _staker, uint256 _stakerNonce, bytes32 stakingIntentHash, bytes rlpParentNodes, bytes32 storageRoot) private returns(bool /* MerkleProofStatus*/){
 
         bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
         return MerklePatriciaProof.verify(keccak256(stakingIntentHash), encodedPathInMerkle,rlpParentNodes,storageRoot);
-
-
 
     }
 
