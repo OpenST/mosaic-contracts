@@ -47,9 +47,6 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
 
 	var res = null;
-    const coreVC = await CoreMock.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
-        openSTUtility.address, workers.address);
-    await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 	const simpleToken = await SimpleToken.new({ from: deployMachine });
 	await utils.logTransaction(simpleToken.transactionHash, "SimpleToken.new");
 	// finalize the tokens
@@ -63,7 +60,14 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	utils.logResponse(await simpleToken.completeOwnershipTransfer({ from: owner }),
 		"SimpleToken.completeOwnershipTransfer");
 
-	const registrarVC = await Registrar.new({ from: deployMachine });
+    // Deploy worker contract
+    const workers = await Workers.new(simpleToken.address)
+        , worker1 = accounts[7];
+    await workers.setAdminAddress(admin);
+    await workers.setOpsAddress(ops);
+    await workers.setWorker(worker1, workerDeactivationHeight, {from:ops});
+
+    const registrarVC = await Registrar.new({ from: deployMachine });
 	await utils.logTransaction(registrarVC.transactionHash, "RegistrarVC.new");
 	// set Ops of registrar to Intercom account on value chain
 	utils.logResponse(await registrarVC.setOpsAddress(intercommVC, { from: deployMachine }),
@@ -91,22 +95,22 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	utils.logResponse(await openSTValue.completeOwnershipTransfer({ from: owner }),
 		"OpenSTValue.completeOwnershipTransfer");
 
+    const coreUC = await CoreMock.new(registrarVC.address, CHAINID_UTILITY, CHAINID_VALUE,
+        openSTValue.address, workers.address);
+    await utils.logTransaction(coreUC.transactionHash, "CoreVC.new");
+
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
-		registrarUC.address, coreVC,{ from: deployMachine, gas: 8500000 });
+		registrarUC.address, coreUC.address,{ from: deployMachine, gas: 8500000 });
 	await utils.logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new");
 	utils.logResponse(await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine }),
 		"OpenSTUtility.initiateOwnershipTransfer");
 	utils.logResponse(await openSTUtility.completeOwnershipTransfer({ from: owner }),
 		"OpenSTUtility.completeOwnershipTransfer");
 
-  // Deploy worker contract
-  const workers = await Workers.new(simpleToken.address)
-    , worker1 = accounts[7];
-  await workers.setAdminAddress(admin);
-  await workers.setOpsAddress(ops);
-  await workers.setWorker(worker1, workerDeactivationHeight, {from:ops});
-
 	// only setup a core for the Value Chain to track the Utility Chain for v0.9.1
+	const coreVC = await CoreMock.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
+		openSTUtility.address, workers.address);
+	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
 	Assert.notEqual(stpContractAddress, utils.NullAddress);
