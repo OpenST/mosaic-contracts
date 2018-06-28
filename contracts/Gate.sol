@@ -221,9 +221,6 @@ contract Gate is ProtocolVersioned, Owned {
     external
     returns (uint256 stakeRequestAmount)
   {
-    // check if the caller is whitelisted worker
-    require(workers.isWorker(msg.sender));
-
     require(_stakingIntentHash != bytes32(0));
 
     //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
