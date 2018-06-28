@@ -254,7 +254,7 @@ contract('OpenSTValue', function(accounts) {
 	 			//var intentsIndexPosition = await openSTValue.intentsIndexPosition.call();
 
 	 			var intentsIndexPosition = "0000000000000000000000000000000000000000000000000000000000000004";
-	 			console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
+	 			//console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
 
 	 			//var intentsMappingKey = web3.sha3("1",{encoding: 'hex'});
 	 			//var intentsMappingValue = web3.sha3("2",{encoding: 'hex'});
@@ -267,19 +267,19 @@ contract('OpenSTValue', function(accounts) {
 
 	 			var fullKey = intentsMappingKey + intentsIndexPosition;
 
-	 			console.log("full concatenated key", fullKey);
+	 			//console.log("full concatenated key", fullKey);
 
 	 			var storageKeyHex = web3.sha3(fullKey, {"encoding" : "hex"} );
 
 	 			// var storageKey = web3.utils.soliditySha3(fullKey);
 
-	 			console.log(intentsMappingKey, intentsMappingValue);
+	 			//console.log(intentsMappingKey, intentsMappingValue);
 
-	 			console.log("storage key hex", storageKeyHex);
+	 			//console.log("storage key hex", storageKeyHex);
 
 	 			var address = openSTValue.address;
 
-	 			console.log("address", address);
+	 			//console.log("address", address);
 
 	 			//concateValue = await openSTValue.concateValue.call();
 	 			//intentsMappingStorageKey = await openSTValue.intentsMappingStorageKey.call();
@@ -293,13 +293,13 @@ contract('OpenSTValue', function(accounts) {
 
 	 			// console.log("concatenated string for key", concateValue)
 
-	 			console.log("value determined directly from intents mapping", intentValue);
+	 			//console.log("value determined directly from intents mapping", intentValue);
 
 	 			//var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex));
 
 	 			var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex) );
 
-	 			console.log("getting storage value from contract using calculated key", actualStoredValue);
+	 			//console.log("getting storage value from contract using calculated key", actualStoredValue);
 
 	            // var intentsMappingStoredValue = await web3.eth.getStorageAt(openSTValue.address, intentsMappingStorageKey);
 
