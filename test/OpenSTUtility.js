@@ -270,6 +270,38 @@ contract('OpenSTUtility', function(accounts) {
 		})
 	})
 
+    describe('ConfirmStakingIntent when block number exceeds safe unlockHeight', async () => {
+
+        const lock = HashLock.getHashLock();
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
+        before(async () => {
+            contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+            openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false);
+            checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
+            brandedToken = result.logs[0].args._token;
+            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+            stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+        })
+
+        it('fails to confirm when block number is equal to safe unlockHeight',async() => {
+        	// blockToWaitLong = 110
+			// blockToWaitMedium = 60
+			// blockToWaitLong-blockToWaitMedium = 50; so the value 49
+            for (var i=0; i<49; i++){
+        	    await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,invalidRLPParentNodes, { from: registrar }));
+			}
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
+        })
+        it('fails to confirm when block number is greater to safe unlockHeight',async() => {
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
+        })
+
+    })
+
 	describe('ProcessMinting', async () => {
 
 		const lock = HashLock.getHashLock();
