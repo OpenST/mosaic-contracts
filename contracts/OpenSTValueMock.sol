@@ -31,7 +31,6 @@ contract OpenSTValueMock is OpenSTValue {
 	bytes32 public intentsIndexPosition = 4; 
 	bytes32 public intentsMappingKey = keccak256(abi.encodePacked(uint256(1))); 
 	bytes32 public intentsMappingValue = keccak256(abi.encodePacked(uint256(2)));
-
 	
 	//bytes32 public concateValue = intentsMappingKey + intentsIndexPosition;
 	//bytes32 public intentsMappingStorageKey = keccak256(abi.encodePacked(intentsMappingKey, intentsIndexPosition));
@@ -45,7 +44,7 @@ contract OpenSTValueMock is OpenSTValue {
 		address _registrar)
 		OpenSTValue(_chainIdValue, _eip20token, _registrar)
 		public { 
-		intents[intentsMappingKey] = intentsMappingValue;
+		//intents[intentsMappingKey] = intentsMappingValue;
 	}
 
     // function stake(
@@ -120,13 +119,15 @@ contract OpenSTValueMock is OpenSTValue {
     //     /* solhint-enable avoid-tx-origin */
     // }
 
-	//function testIntentsMapping(uint256 number) public {
-	//	intents[keccak256(abi.encodePacked(number))] = keccak256(abi.encodePacked(number+1));
-	//}	
+	function testIntentsMapping() public returns (bytes32 intentsMappingValue){
+		intents[intentsMappingKey] = intentsMappingValue;
+		return intentsMappingValue;
+	}	
 
-	// function deleteIntentsMapping() public {
-	// 	delete intents[intentsMappingKey]; 
-	// }
+	function deleteIntentsMapping() public returns (bytes32 value){
+		delete intents[intentsMappingKey]; 
+		return intents[intentsMappingKey];
+	}
 
 	function blocksToWaitLong() public pure returns (uint256) {
 		return BLOCKS_TO_WAIT_LONG;

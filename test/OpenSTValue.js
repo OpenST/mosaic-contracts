@@ -245,7 +245,7 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('successfully checks index position of intents mapping', async () => {
-	 			//await openSTValue.testIntentsMapping.call(1);
+	 			await openSTValue.testIntentsMapping.call({from: accounts[0], gas: 1000000});
 	            //var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
 	 			
 	            const Web3 = require('web3');
@@ -253,10 +253,10 @@ contract('OpenSTValue', function(accounts) {
 
 	 			var intentsMappingKey1 = await openSTValue.intentsMappingKey.call();
 	 			var intentsMappingValue1 = await openSTValue.intentsMappingValue.call();
-	 			//var intentsIndexPosition = await openSTValue.intentsIndexPosition.call();
+	 			var intentsIndexPosition = await openSTValue.intentsIndexPosition.call();
 
-	 			var intentsIndexPosition = "0000000000000000000000000000000000000000000000000000000000000004";
-	 			//console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
+	 			//var intentsIndexPosition = "0000000000000000000000000000000000000000000000000000000000000004";
+	 			console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
 
 	 			//var intentsMappingKey = web3.sha3("1",{encoding: 'hex'});
 	 			//var intentsMappingValue = web3.sha3("2",{encoding: 'hex'});
@@ -264,12 +264,12 @@ contract('OpenSTValue', function(accounts) {
 	 			var intentsMappingKey = Web3.utils.soliditySha3("1");
 	 			var intentsMappingValue = Web3.utils.soliditySha3("2");
 
-	 			//assert(intentsMappingKey, intentsMappingKey1);
-	 			//assert(intentsMappingValue, intentsMappingValue1);
+	 			assert(intentsMappingKey, intentsMappingKey1);
+	 			assert(intentsMappingValue, intentsMappingValue1);
 
 	 			var fullKey = intentsMappingKey + intentsIndexPosition;
 
-	 			//console.log("full concatenated key", fullKey);
+	 			console.log("full concatenated key", fullKey);
 
 	 			var storageKeyHex = web3.sha3(fullKey, {"encoding" : "hex"} );
 
@@ -306,6 +306,8 @@ contract('OpenSTValue', function(accounts) {
 	            // var intentsMappingStoredValue = await web3.eth.getStorageAt(openSTValue.address, intentsMappingStorageKey);
 
 	            assert.equal(await intentValue, actualStoredValue);
+
+	            await openSTValue.deleteIntentsMapping.call({ from: accounts[0], gas: 1000000 });
 
 			})
 
