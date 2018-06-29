@@ -23,12 +23,23 @@ pragma solidity ^0.4.23;
 
 import "./Hasher.sol";
 
-/// @title HasherMock
-/// @dev Implements a keccak256 hashing function for OpenSTValueMock.sol
+/**
+ *	@title HasherMock which implements Hasher
+ *
+ *	@notice Implements a keccak256 hashing function for OpenSTValueMock.sol
+ */
 contract HasherMock is Hasher {
 
+	/* Public pure functions */
+
 	/**
-	 *  Public pure functions
+	 *	@notice mapping storage key hasher
+	 *
+	 *	@dev mapStorageKey called from the OpenSTValueMock contract for testing
+	 *	@param _key key of the mapping value
+	 *	@param _position position of the mapping in the index of storage
+	 *
+	 *	@return bytes32 key to the mapping value in contract storage
 	 */
 	function mapStorageKey(
 		bytes32 _key,
