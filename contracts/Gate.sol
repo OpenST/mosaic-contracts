@@ -221,9 +221,6 @@ contract Gate is ProtocolVersioned, Owned {
     external
     returns (uint256 stakeRequestAmount)
   {
-    // check if the caller is whitelisted worker
-    require(workers.isWorker(msg.sender));
-
     require(_stakingIntentHash != bytes32(0));
 
     //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
@@ -240,10 +237,10 @@ contract Gate is ProtocolVersioned, Owned {
     require(stakeRequest.hashLock != bytes32(0));
 
     // we call processStaking for OpenSTValue and get the stakeAddress on success.
-    address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
+    address stakeAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
 
     // check if the stake address is not 0
-    require(stakerAddress != address(0));
+    require(stakeAddress != address(0));
 
     //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
     //else transfer the bounty to msg.sender.
