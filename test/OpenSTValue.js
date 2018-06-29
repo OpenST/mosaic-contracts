@@ -26,7 +26,6 @@ const Core = artifacts.require("./Core.sol");
 const SimpleStake = artifacts.require("./SimpleStake.sol");
 const BigNumber = require('bignumber.js');
 
-
 ///
 /// Test stories
 ///
@@ -59,6 +58,7 @@ const BigNumber = require('bignumber.js');
 /// 		fails to stake when msg.sender has not approved it to transfer at least the amount
 /// 		fails to stake when the SimpleStake address for the given UUID is null
 ///			fails to stake when the beneficiary is null
+///			checks index position of intents mapping in storage
 ///			successfully stakes
 ///		when the staking account is not null
 ///			fails to stake when msg.sender is not the stakingAccount
@@ -244,71 +244,13 @@ contract('OpenSTValue', function(accounts) {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, lock.l, accounts[0], { from: accounts[0] }));
 			})
 
-			it('successfully checks index position of intents mapping', async () => {
-	 			await openSTValue.testIntentsMapping.call({from: accounts[0], gas: 1000000});
-	            //var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
-	 			
-	            const Web3 = require('web3');
-	            const web3new = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+			it('checks the index position of intents mapping in storage', async () => {
+	 			var storageKey = await openSTValue.calculateStorageTestKey.call(); 
+	 			var storageValue = await web3.eth.getStorageAt(openSTValue.address, storageKey);
+	 			var intentsMapTestKey = await openSTValue.intentsMapTestKey.call();
+	 			var intentsMapTestValue = await openSTValue.intents.call(intentsMapTestKey);
 
-	 			var intentsMappingKey1 = await openSTValue.intentsMappingKey.call();
-	 			var intentsMappingValue1 = await openSTValue.intentsMappingValue.call();
-	 			var intentsIndexPosition = await openSTValue.intentsIndexPosition.call();
-
-	 			//var intentsIndexPosition = "0000000000000000000000000000000000000000000000000000000000000004";
-	 			console.log(intentsMappingKey1,intentsMappingValue1, intentsIndexPosition);
-
-	 			//var intentsMappingKey = web3.sha3("1",{encoding: 'hex'});
-	 			//var intentsMappingValue = web3.sha3("2",{encoding: 'hex'});
-
-	 			var intentsMappingKey = Web3.utils.soliditySha3("1");
-	 			var intentsMappingValue = Web3.utils.soliditySha3("2");
-
-	 			assert(intentsMappingKey, intentsMappingKey1);
-	 			assert(intentsMappingValue, intentsMappingValue1);
-
-	 			var fullKey = intentsMappingKey + intentsIndexPosition;
-
-	 			console.log("full concatenated key", fullKey);
-
-	 			var storageKeyHex = web3.sha3(fullKey, {"encoding" : "hex"} );
-
-	 			// var storageKey = web3.utils.soliditySha3(fullKey);
-
-	 			//console.log(intentsMappingKey, intentsMappingValue);
-
-	 			//console.log("storage key hex", storageKeyHex);
-
-	 			var address = openSTValue.address;
-
-	 			//console.log("address", address);
-
-	 			//concateValue = await openSTValue.concateValue.call();
-	 			//intentsMappingStorageKey = await openSTValue.intentsMappingStorageKey.call();
-	 			//intentsMappingStorageKey = web3.utils.soliditySha3(intentsMappingKey+intentsMappingValue);
-
-	 			var intentValue = await openSTValue.intents.call(intentsMappingKey);
-
-	 			// console.log("actul mock mapping Key", intentsMappingKey);
-
-	 			// console.log("actual mock mapping value from mock contract", intentsMappingValue);
-
-	 			// console.log("concatenated string for key", concateValue)
-
-	 			//console.log("value determined directly from intents mapping", intentValue);
-
-	 			//var actualStoredValue = await web3.eth.getStorageAt(String(address), String(storageKeyHex));
-
-	 			var actualStoredValue = await web3new.eth.getStorageAt(String(address), String(storageKeyHex) );
-
-	 			//console.log("getting storage value from contract using calculated key", actualStoredValue);
-
-	            // var intentsMappingStoredValue = await web3.eth.getStorageAt(openSTValue.address, intentsMappingStorageKey);
-
-	            assert.equal(await intentValue, actualStoredValue);
-
-	            await openSTValue.deleteIntentsMapping.call({ from: accounts[0], gas: 1000000 });
-
+	 			assert.equal(intentsMapTestValue, storageValue);
 			})
 
 			it('successfully stakes', async () => {
@@ -342,7 +284,7 @@ contract('OpenSTValue', function(accounts) {
 
 			it('fails to stake when msg.sender is not the stakingAccount', async () => {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[1], { from: accounts[1] }));
-			})		
+			})
 
 			it('successfully stakes', async () => {
 	            var stakeReturns = await openSTValue.stake.call(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
