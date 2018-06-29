@@ -244,11 +244,11 @@ contract('OpenSTValue', function(accounts) {
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, lock.l, accounts[0], { from: accounts[0] }));
 			})
 
-			it('checks the index position of intents mapping in storage', async () => {
-				var intentsMapTestKey = await openSTValue.intentsMapTestKey.call();
-	 			var intentsMapTestValue = await openSTValue.intents.call(intentsMapTestKey);
-	 			var storageKey = await openSTValue.calculateStorageTestKey.call();
-	 			var storageValue = await web3.eth.getStorageAt(openSTValue.address, storageKey);
+			it('checks index position of intents mapping in storage', async () => {
+				const intentsMapTestKey = await openSTValue.intentsMapTestKey.call();
+	 			const intentsMapTestValue = await openSTValue.intents.call(intentsMapTestKey);
+	 			const storageKey = await openSTValue.testHashStoragePath.call();
+	 			const storageValue = await web3.eth.getStorageAt(openSTValue.address, storageKey);
 
 	 			assert.equal(intentsMapTestValue, storageValue);
 			})

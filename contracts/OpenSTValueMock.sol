@@ -22,21 +22,21 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./OpenSTValue.sol";
+import "./HasherMock.sol";
 
 /// @title OpenSTValueMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTValue
-contract OpenSTValueMock is OpenSTValue {
+contract OpenSTValueMock is OpenSTValue, HasherMock {
 	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
 	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
-	uint256 private constant intentsMapIndexPosition = 4; 
 	uint256 private constant testStakerNonce = 1;
 	address private constant testStakerAddress = 0x87FCA9F4CC0D439163235c2C33abe8e4bA203580;
 	bytes32 private constant testStakingIntentHash = 0xf61ea4fb6316d5ecdd2299b49ef9f07c49077c8a7d105fecc100e453742e0727;
 	
 	bytes32 public intentsMapTestKey = hashIntentKey(testStakerAddress, testStakerNonce);
-	bytes32 public calculateStorageTestKey = mapStorageKey(intentsMapTestKey,intentsMapIndexPosition);
+	bytes32 public testHashStoragePath = mapStorageKey(intentsMapTestKey,intentsMappingStorageIndexPosition);
 		
-	/*
+	/**
 	 *  Public functions
 	 */
 	constructor(

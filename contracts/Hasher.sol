@@ -105,17 +105,4 @@ contract Hasher {
 			_account,
 			_nonce);
 	}
-
-	function mapStorageKey(
-		bytes32 _key,
-		uint256 _position)
-		public
-		pure
-		returns (bytes32)
-	{
-		return keccak256(
-			_key,
-			_position);
-	}
-
 }

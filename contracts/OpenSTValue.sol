@@ -72,6 +72,8 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+    // index position of intents mapping in storage
+    uint256 internal constant intentsMappingStorageIndexPosition = 4; 
     
     // storage for staking intent hash of active staking intents
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
