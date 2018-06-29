@@ -29,8 +29,8 @@ contract OpenSTValueMock is OpenSTValue {
 	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
 	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
 	uint256 private constant intentsMapIndexPosition = 4; 
-	bytes32 public intentsMapTestKey = keccak256(abi.encodePacked(uint256(1))); 
-	bytes32 public calculateStorageTestKey = keccak256(abi.encodePacked(bytes32(intentsMapTestKey),uint256(intentsMapIndexPosition))); 
+	bytes32 public intentsMapTestKey = keccak256(uint256(1));
+	bytes32 public calculateStorageTestKey = keccak256(intentsMapTestKey,intentsMapIndexPosition);
 
 	/*
 	 *  Public functions
@@ -41,7 +41,7 @@ contract OpenSTValueMock is OpenSTValue {
 		address _registrar)
 		OpenSTValue(_chainIdValue, _eip20token, _registrar)
 		public { 
-			intents[intentsMapTestKey] = keccak256(abi.encodePacked(uint256(2)));
+			intents[intentsMapTestKey] = keccak256(uint256(2));
 		}
 
 	function blocksToWaitLong() public pure returns (uint256) {

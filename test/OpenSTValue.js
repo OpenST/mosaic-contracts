@@ -245,9 +245,9 @@ contract('OpenSTValue', function(accounts) {
 			})
 
 			it('checks the index position of intents mapping in storage', async () => {
-	 			var storageKey = await openSTValue.calculateStorageTestKey.call(); 
-	 			var storageValue = await web3.eth.getStorageAt(openSTValue.address, storageKey);
-	 			var intentsMapTestKey = await openSTValue.intentsMapTestKey.call();
+	 			var storageKey 			= await openSTValue.calculateStorageTestKey.call(); 
+	 			var storageValue		= await web3.eth.getStorageAt(openSTValue.address, storageKey);
+	 			var intentsMapTestKey 	= await openSTValue.intentsMapTestKey.call();
 	 			var intentsMapTestValue = await openSTValue.intents.call(intentsMapTestKey);
 
 	 			assert.equal(intentsMapTestValue, storageValue);
