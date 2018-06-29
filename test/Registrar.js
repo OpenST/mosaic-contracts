@@ -161,6 +161,7 @@ contract('Registrar', function(accounts) {
 	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        brandedToken 	= result.logs[0].args._token;
+
 			await registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid, { from: ops })
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
@@ -179,7 +180,7 @@ contract('Registrar', function(accounts) {
 		})
 
 		it('successfully confirms', async () => {
-			var BLOCKS_TO_WAIT_SHORT = 5;
+			var BLOCKS_TO_WAIT_SHORT = 10;
             var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, 0, validRLPParentNodes, { from: ops });
 
             assert.ok(expirationHeight > BLOCKS_TO_WAIT_SHORT);
@@ -197,8 +198,9 @@ contract('Registrar', function(accounts) {
 		var nonce 				 	= null;
 		var redemptionIntentHash 	= null;
         var validRLPParentNodes     = null;
+        var unlockHeight 			= null;
 
-		const BLOCKS_TO_WAIT_LONG	= 8;
+		const BLOCKS_TO_WAIT_LONG	= 110;
 		const amountUTRedeemed 	 	= (conversionRate / (10**conversionRateDecimals));
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
@@ -220,18 +222,19 @@ contract('Registrar', function(accounts) {
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
 			nonce = await openSTValue.getNextNonce.call(staker);
-			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l);
+            unlockHeight = new BigNumber(BLOCKS_TO_WAIT_LONG).plus(web3.eth.blockNumber);
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, unlockHeight, lockR.l);
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes));
-            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes, { from: admin }));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, unlockHeight, lockR.l, 0, validRLPParentNodes));
+            await Utils.expectThrow(registrar.confirmRedemptionIntent(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, unlockHeight, lockR.l, 0, validRLPParentNodes, { from: admin }));
 		})
 
 		it('successfully confirms', async () => {
-			var BLOCKS_TO_WAIT_SHORT = 5;
+			var BLOCKS_TO_WAIT_SHORT = 10;
 
-      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, BLOCKS_TO_WAIT_LONG, lockR.l, 0, validRLPParentNodes, { from: ops });
+      var confirmReturns = await registrar.confirmRedemptionIntent.call(openSTValue.address, uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, unlockHeight, lockR.l, 0, validRLPParentNodes, { from: ops });
       assert.equal(confirmReturns[0], (amountUTRedeemed * (10**conversionRateDecimals))/conversionRate);
       assert.ok(confirmReturns[1] > BLOCKS_TO_WAIT_SHORT);
 		})

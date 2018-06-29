@@ -27,8 +27,8 @@ import "./OpenSTUtility.sol";
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTUtility
 contract OpenSTUtilityMock is OpenSTUtility {
 
-	uint256 private constant TIME_TO_WAIT_LONG = 16;
-	uint256 private constant TIME_TO_WAIT_SHORT = 10;
+	uint256 private constant TIME_TO_WAIT_LONG = 220;
+	uint256 private constant TIME_TO_WAIT_SHORT = 20;
 
 	/*
 	 *  Public functions

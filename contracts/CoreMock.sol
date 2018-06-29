@@ -30,8 +30,7 @@ import "./Core.sol";
  */
 contract CoreMock is Core {
 
-	// ~5Days in seconds
-	uint256 private constant TIME_TO_WAIT = 6;
+	uint256 private constant TIME_TO_WAIT = 120;
 
 	/*  Public functions */
 
@@ -66,7 +65,7 @@ contract CoreMock is Core {
 		view
 		returns (uint256 /* safeUnlockHeight */)
 	{
-		return blocksToWait + block.number;
+		return  block.number + blocksToWait;
 	}
 
 	/**
