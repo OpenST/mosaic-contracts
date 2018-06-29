@@ -28,7 +28,7 @@ import "./OpenSTValue.sol";
 contract OpenSTValueMock is OpenSTValue {
 	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
 	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
-	uint256 public intentsMapIndexPosition = 4; 
+	uint256 private constant intentsMapIndexPosition = 4; 
 	bytes32 public intentsMapTestKey = keccak256(abi.encodePacked(uint256(1))); 
 	bytes32 public calculateStorageTestKey = keccak256(abi.encodePacked(bytes32(intentsMapTestKey),uint256(intentsMapIndexPosition))); 
 
