@@ -36,9 +36,9 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const registrar    	 = await Registrar.new();
 	const staker	  	 = accounts[2];
 	const amountST		 = new BigNumber(web3.toWei(2, "ether"));
-  const deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
-  const admin = accounts[3];
-  const ops = accounts[2];
+	const deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const admin = accounts[3];
+	const ops = accounts[2];
 
 	// Registrar is OpsManaged
 	await registrar.setOpsAddress(accounts[1]);
@@ -50,12 +50,12 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	await valueToken.finalize({ from: accounts[3] });
     await valueToken.transfer(staker, amountST);
 
-  // Deploy worker contract
-  const workers = await Workers.new(valueToken.address)
-    , worker1 = accounts[7];
-  await workers.setAdminAddress(admin);
-  await workers.setOpsAddress(ops);
-  await workers.setWorker(worker1, deactivationHeight, {from:ops});
+	// Deploy worker contract
+	const workers = await Workers.new(valueToken.address)
+		, worker1 = accounts[7];
+	await workers.setAdminAddress(admin);
+	await workers.setOpsAddress(ops);
+	await workers.setWorker(worker1, deactivationHeight, {from:ops});
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
 	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);

@@ -90,7 +90,7 @@ contract Gate is ProtocolVersioned, Owned {
         uint256 _amount,
         address _beneficiary)
         external
-        returns ( bool /* success */)
+        returns (bool /* success */)
     {
 
         require(_amount > uint256(0));
@@ -117,7 +117,7 @@ contract Gate is ProtocolVersioned, Owned {
     /// @dev In order to revert stake request the msg.sender should be the staker
     function revertStakeRequest()
         external
-        returns (bool /* success */)
+        returns (uint256 stakeRequestAmount)
     {
         // only staker can do revertStakeRequest, msg.sender == staker
         StakeRequest storage stakeRequest = stakeRequests[msg.sender];
@@ -130,17 +130,17 @@ contract Gate is ProtocolVersioned, Owned {
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, stakeRequest.amount));
 
-        uint256 stakeRequestAmount = stakeRequest.amount;
+        stakeRequestAmount = stakeRequest.amount;
         delete stakeRequests[msg.sender];
 
         emit StakeRequestReverted(msg.sender, stakeRequestAmount);
 
-        return true;
+        return stakeRequestAmount;
     }
 
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
-        returns (bool /* success */)
+        returns (uint256 stakeRequestAmount)
     {
         // check if the caller is whitelisted worker
         require(workers.isWorker(msg.sender));
@@ -156,13 +156,13 @@ contract Gate is ProtocolVersioned, Owned {
         // transfer the amount back
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(_staker, stakeRequest.amount));
 
-        uint256 stakeRequestAmount = stakeRequest.amount;
+        stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
         delete stakeRequests[msg.sender];
 
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
-        return true;
+        return stakeRequestAmount;
     }
 
     /// @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
@@ -219,11 +219,8 @@ contract Gate is ProtocolVersioned, Owned {
     bytes32 _stakingIntentHash,
     bytes32 _unlockSecret)
     external
-    returns (bool /* success */)
+    returns (uint256 stakeRequestAmount)
   {
-    // check if the caller is whitelisted worker
-    require(workers.isWorker(msg.sender));
-
     require(_stakingIntentHash != bytes32(0));
 
     //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
@@ -240,10 +237,10 @@ contract Gate is ProtocolVersioned, Owned {
     require(stakeRequest.hashLock != bytes32(0));
 
     // we call processStaking for OpenSTValue and get the stakeAddress on success.
-    address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
+    address stakeAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
 
     // check if the stake address is not 0
-    require(stakerAddress != address(0));
+    require(stakeAddress != address(0));
 
     //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
     //else transfer the bounty to msg.sender.
@@ -254,18 +251,18 @@ contract Gate is ProtocolVersioned, Owned {
       //Transfer bounty amount to the msg.sender account
       require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
     }
-
+    stakeRequestAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
 
-    return true;
+    return stakeRequestAmount;
   }
 
 
   function revertStaking(
     bytes32 _stakingIntentHash)
     external
-    returns (bool /* success */)
+    returns (uint256 stakeRequestAmount)
   {
 
     // check if the caller is whitelisted worker
@@ -286,7 +283,6 @@ contract Gate is ProtocolVersioned, Owned {
     // check if the stake request was accepted
     require(stakeRequest.hashLock != bytes32(0));
 
-
     bytes32 uuidR = bytes32(0);
     uint256 amountST = uint256(0);
     address stakerAddress = address(0);
@@ -297,9 +293,10 @@ contract Gate is ProtocolVersioned, Owned {
 
     require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
+    stakeRequestAmount = stakeRequest.amount;
     // delete the stake request from the mapping storage
     delete stakeRequests[staker];
 
-    return true;
+    return stakeRequestAmount;
   }
 }

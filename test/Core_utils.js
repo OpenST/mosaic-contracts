@@ -20,8 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const Core = artifacts.require("./Core.sol")
-  , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
-  , Workers = artifacts.require("./Workers.sol")
+	, SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+	, Workers = artifacts.require("./Workers.sol")
 ;
 
 const BigNumber = require('bignumber.js')
@@ -31,29 +31,28 @@ const BigNumber = require('bignumber.js')
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
 	const registrar = accounts[1]
+		, admin = accounts[2]
+		, ops = accounts[3]
+		, openSTRemote = '0x01db94fdca0ffedc40a6965de97790085d71b412'
 		, chainIdOrigin = 3
 		, chainIdRemote = 1410
-		, openSTRemote = '0x01db94fdca0ffedc40a6965de97790085d71b412'
 		, valueToken   = await SimpleToken.new()
-    , admin = accounts[2]
-    , ops = accounts[3]
 		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
 	;
 
-  //Set SimpleToken admin in order to finalize SimpleToken
-  await valueToken.setAdminAddress(admin);
+	//Set SimpleToken admin in order to finalize SimpleToken
+	await valueToken.setAdminAddress(admin);
 
-  // Deploy worker contract
-  const workers = await Workers.new(valueToken.address)
-    , worker1 = accounts[7];
-  await workers.setAdminAddress(admin);
-  await workers.setOpsAddress(ops);
-  await workers.setWorker(worker1, deactivationHeight, {from:ops});
-
+	// Deploy worker contract
+	const workers = await Workers.new(valueToken.address)
+		, worker1 = accounts[7];
+	await workers.setAdminAddress(admin);
+	await workers.setOpsAddress(ops);
+	await workers.setWorker(worker1, deactivationHeight, {from:ops});
 	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from:accounts[0]});
 	return {
-    core: core,
-		workercontract : workers,
-    worker: worker1
-  }
-};
+		core : core,
+        workercontract: workers
+        worker: worker1
+	}
+}
