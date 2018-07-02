@@ -3,13 +3,13 @@ pragma solidity ^0.4.23;
 import "./MerklePatriciaProof.sol";
 import "./util.sol";
 
-    /**
-      *	@title This contract is an mock contract for MerklePatriciaProof library contract.
-      *
-      *	@notice It passes the parameters which it receives from test cases.
-      *
-      */
-    contract MerklePatriciaProofMock is Util{
+/**
+  *	@title This contract is an mock contract for MerklePatriciaProof library contract.
+  *
+  *	@notice It passes the parameters which it receives from test cases.
+  *
+  */
+contract MerklePatriciaProofMock is Util{
 
      /**
 	   * @notice Contract constructor
