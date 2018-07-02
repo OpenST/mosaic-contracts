@@ -3,9 +3,7 @@ const accountProofJson =  require("./data/AccountProof.json");
 const storageProofJson =  require("./data/StorageProof.json");
 var ethutil = require ("ethereumjs-util");
 
-
 contract('MerklePatriciaProof', function(accounts) {
-
 
     var merkle= null;
 
@@ -45,9 +43,7 @@ contract('MerklePatriciaProof', function(accounts) {
         })
     })
 
-
     describe('Test Cases for Account proof', async () => {
-
 
         it('Storage Proof for an variable successful',async () =>{
 
