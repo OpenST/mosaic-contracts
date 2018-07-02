@@ -498,6 +498,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         }
 
         delete redemptions[_redemptionIntentHash];
+        // remove intent hash from intents mapping
+        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         // fire event
         emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
