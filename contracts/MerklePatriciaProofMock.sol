@@ -11,10 +11,6 @@ import "./util.sol";
  */
 contract MerklePatriciaProofMock is Util{
 
-    /**
-	 * @notice Contract constructor
-	 *
-	 */
     function MerklePatriciaProofMock(){
 
     }
