@@ -203,8 +203,10 @@ contract Core is CoreInterface, Util {
 	{
 		// Check for block height
 		require(_blockHeight != 0, "Given block height is 0");
-		// Storage root should be valid
+		// _rlpEncodedAccount should be valid
 		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		// _rlpParentNodes should be valid
+		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height

@@ -20,39 +20,55 @@
 // ----------------------------------------------------------------------------
 
 const Core = artifacts.require("./Core.sol")
-	, SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
-	, Workers = artifacts.require("./Workers.sol")
+    , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+    , Workers = artifacts.require("./Workers.sol")
+    , accountProof = require('./data/AccountProof');
 ;
 
 const BigNumber = require('bignumber.js')
 ;
 
-
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
-	const registrar = accounts[1]
-		, admin = accounts[2]
-		, ops = accounts[3]
-		, openSTRemote = '0x01db94fdca0ffedc40a6965de97790085d71b412'
-		, chainIdOrigin = 3
-		, chainIdRemote = 1410
-		, valueToken   = await SimpleToken.new()
-		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
-	;
+    const registrar = accounts[1]
+        , admin = accounts[2]
+        , ops = accounts[3]
+        , openSTRemote = accountProof.openSTRemoteAddress
+        , chainIdOrigin = 3
+        , chainIdRemote = 1410
+        , valueToken = await SimpleToken.new()
+        , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+        , worker1 = accounts[7]
+    ;
 
-	//Set SimpleToken admin in order to finalize SimpleToken
-	await valueToken.setAdminAddress(admin);
+    //Set SimpleToken admin in order to finalize SimpleToken
+    await valueToken.setAdminAddress(admin);
 
-	// Deploy worker contract
-	const workers = await Workers.new(valueToken.address)
-		, worker1 = accounts[7];
-	await workers.setAdminAddress(admin);
-	await workers.setOpsAddress(ops);
-	await workers.setWorker(worker1, deactivationHeight, {from:ops});
-	const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from:accounts[0]});
-	return {
-		core : core,
-        workercontract: workers
-        worker: worker1
-	}
-}
+    // Deploy worker contract
+    const workers = await Workers.new(valueToken.address);
+    await workers.setAdminAddress(admin);
+    await workers.setOpsAddress(ops);
+    await workers.setWorker(worker1, deactivationHeight, {from: ops});
+    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from: accounts[0]});
+    return {
+        core: core,
+        workerContract: workers,
+        worker: worker1,
+        registrar: registrar,
+        chainIdRemote: chainIdRemote,
+        chainIdOrigin: chainIdOrigin
+    };
+};
+
+module.exports.checkOpenSTProvenEvent = (event, _blockHeight, _storageRoot, wasAlreadyProved) => {
+    assert.equal(event !== null, true);
+    assert.equal(event["blockHeight"], _blockHeight);
+    assert.equal(event["storageRoot"], _storageRoot);
+    assert.equal(event["wasAlreadyProved"], wasAlreadyProved);
+};
+
+module.exports.checkStateRootCommittedEvent = (event, _blockHeight, _stateRoot) => {
+    assert.equal(event !== null, true);
+    assert.equal(event["blockHeight"], _blockHeight);
+    assert.equal(event["stateRoot"], _stateRoot);
+};

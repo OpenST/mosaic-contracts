@@ -14,7 +14,8 @@
     "truffle": "^4.1.8",
     "ganache-cli": "^6.0.3",
     "abi-decoder": "^1.0.9",
-    "solparse": "^2.2.5"
+    "solparse": "^2.2.5",
+    "ethereumjs-util": "^5.2.0"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"

@@ -19,154 +19,167 @@
 //
 // ----------------------------------------------------------------------------
 
-const Core_utils = require('./Core_utils.js');
-const Utils = require('./lib/utils.js');
-const accountProof = require('./data/AccountProof');
-const ethutil = require('ethereumjs-util');
-const BigNumber = require('bignumber.js');
-const web3EventsDecoder = require('./lib/event_decoder.js');
+const coreUtils = require('./Core_utils.js')
+    , utils = require('./lib/utils.js')
+    , accountProof = require('./data/AccountProof')
+    , ethUtil = require('ethereumjs-util')
+    , BigNumber = require('bignumber.js')
+    , web3EventsDecoder = require('./lib/event_decoder.js')
+;
 
-///
-/// Test stories
-/// 
-/// Properties
-/// 	has coreRegistrar
-/// 	has coreChainIdRemote
-/// 	has coreOpenSTRemote
-/// 
+contract('Core', function (accounts) {
+    const openSTRemote = accountProof.openSTRemoteAddress
+        , blockHeight = new BigNumber(5)
+    ;
 
-contract('Core', function(accounts) {
-	const registrar = accounts[1];
-	const chainIdRemote = 1410;
-  const openSTRemote = '0x01db94fdca0ffedc40a6965de97790085d71b412';
+    describe('Properties', async () => {
+        before(async () => {
+            contractsData = await coreUtils.deployCore(artifacts, accounts);
+            core = contractsData.core;
+            workerContract = contractsData.workerContract;
+            worker = contractsData.worker;
+            registrar = contractsData.registrar;
+            chainIdRemote = contractsData.chainIdRemote;
+            chainIdOrigin = contractsData.chainIdOrigin;
+            await core.commitStateRoot(blockHeight.toNumber(), accountProof.stateRoot, {from: worker});
+            await core.proveOpenST(blockHeight.toNumber(), accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: worker});
+        });
 
-	describe('Properties', async () => {
-		before(async () => {
-      contracts = await Core_utils.deployCore(artifacts, accounts);
-      core = contracts.core;
-      workercontract = contracts.workercontract;
-      worker = contracts.worker;
-      await core.commitStateRoot(5, accountProof.stateRoot, {from: worker});
-      await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
+        it('has coreRegistrar', async () => {
+            assert.equal(await core.registrar.call(), registrar);
+        });
 
-    });
+        it('has coreChainIdRemote', async () => {
+            assert.equal(await core.chainIdRemote.call(), chainIdRemote);
+        });
 
-		it('has coreRegistrar', async () => {
-			assert.equal(await core.registrar.call(), registrar);
-    });
+        it('has coreChainIdOrigin', async () => {
+            assert.equal(await core.coreChainIdOrigin.call(), chainIdOrigin);
+        });
 
-		it('has coreChainIdRemote', async () => {
-			assert.equal(await core.chainIdRemote.call(), chainIdRemote);
-    });
+        it('has coreOpenSTRemote', async () => {
+            assert.equal(await core.openSTRemote.call(), openSTRemote);
+        });
 
-		it('has coreOpenSTRemote', async () => {
-			assert.equal(await core.openSTRemote.call(), openSTRemote);
-    });
+        // it('has encodedOpenSTRemotePath', async () => {
+        //   let expectedEncodedAddress = '0x' + ethUtil.sha3(openSTRemote).toString('hex');
+        //   assert.equal(await core.encodedOpenSTRemotePath.call(), expectedEncodedAddress);
+        // });
 
-    it('has encodedOpenSTRemoteAddress', async () => {
-      let expectedEncodedAddress = '0x' + ethutil.sha3(openSTRemote).toString('hex');
-      assert.equal(await core.encodedOpenSTRemoteAddress.call(), expectedEncodedAddress);
-    });
+        it('has worker', async () => {
+            assert.equal(await core.workers.call(), workerContract.address);
+        });
 
-    it('has worker', async () => {
-      assert.equal(await core.workers.call(), workercontract.address);
-    });
-
-    it('has latestStateRootBlockHeight', async () => {
-      let actualBlockHeight = await core.latestStateRootBlockHeight.call();
-      assert.equal(actualBlockHeight.eq(new BigNumber(5)), true);
-    });
-
-    it('has latestStorageRootBlockHeight', async () => {
-      let actualBlockHeight = await core.latestStorageRootBlockHeight.call();
-      assert.equal(actualBlockHeight.eq(new BigNumber(5)), true);
-    });
-
-  });
-
-
-  describe('commitStateRoot', async () => {
-    before(async () => {
-      contracts = await Core_utils.deployCore(artifacts, accounts);
-      core = contracts.core;
-      worker = contracts.worker;
-    });
-
-    it('should be able to commit state root for give block height', async () => {
-      let stateRoot = '0x4567897545535535365000000000000000000000000000000000000000000000';
-      let response = await core.commitStateRoot(1, stateRoot, {from: worker});
-
-      let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
-      let event = formattedDecodedEvents['StateRootCommitted'];
-
-      assert.equal(event !== null, true);
-      assert.equal(event["blockHeight"], 1);
-      assert.equal(event["stateRoot"], stateRoot);
-    });
-
-    it('should not be able to commit state root of block height if non worker commits root', async () => {
-      await Utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: accounts[0]}));
-    });
-    it('should not be able to commit state root of block height which is already commited', async () => {
-      await Utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: worker}));
-    });
-
-    it('should not be able to commit state root of block height less than latest block height', async () => {
-      await core.commitStateRoot(4, '0x45675567897545535535365', {from: worker});
-      await Utils.expectThrow(core.commitStateRoot(3, '0x4567897545535535365', {from: worker}));
-    });
-  });
-
-  describe('Prove OpenSt', async () => {
-    before(async () => {
-
-      contracts = await Core_utils.deployCore(artifacts, accounts);
-      core = contracts.core;
-      worker = contracts.worker;
-      await core.commitStateRoot(5, accountProof.stateRoot, {from: worker});
-    });
-
-    it('should be able to verify proof for account', async () => {
-
-      let parentNodes = ethutil.rlp.decode(accountProof.RLPparentNodes);
-      let accountNode = parentNodes[parentNodes.length - 1];
-      let accountValue = ethutil.rlp.decode(accountNode[1]);
-      let storageRoot = '0x' + accountValue[2].toString('hex');
-      let hashedAccountValue = '0x'+ethutil.sha3(accountProof.value).toString('hex');
-
-      let response = await core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: worker});
-
-      let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
-      let event = formattedDecodedEvents['OpenSTProven'];
-
-      assert.equal(event !== null, true);
-      assert.equal(event["blockHeight"], 5);
-      assert.equal(event["storageRoot"], storageRoot);
-      assert.equal(event["hashedAccount"], hashedAccountValue);
-    });
-
-    it('should be able to verify proof for account if its called by non worker ', async () => {
-
-      await Utils.expectThrow(core.proveOpenST(5, accountProof.value, accountProof.RLPparentNodes, {from: accounts[0]}));
+        it('has latestStateRootBlockHeight', async () => {
+            let actualBlockHeight = await core.getLatestStateRootBlockHeight.call();
+            assert.equal(actualBlockHeight.eq(blockHeight), true);
+        });
 
     });
 
-    it('should not be able to verify proof for account if block state root is not committed', async () => {
 
-      await Utils.expectThrow(core.proveOpenST(6, accountProof.value, accountProof.RLPparentNodes, {from: worker}));
+    describe('commitStateRoot', async () => {
+        // Before All
+        before(async () => {
+            contractsData = await coreUtils.deployCore(artifacts, accounts);
+            core = contractsData.core;
+            worker = contractsData.worker;
+        });
+
+        it('should be able to commit state root for give block height', async () => {
+            let stateRoot = '0x4567897545535535365000000000000000000000000000000000000000000000'
+                , blockHeight = 1
+            ;
+            let response = await core.commitStateRoot(blockHeight, stateRoot, {from: worker});
+
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['StateRootCommitted'];
+
+            await coreUtils.checkStateRootCommittedEvent(event, blockHeight, stateRoot);
+        });
+
+        it('should not be able to commit state root of block height if non worker commits root', async () => {
+            await utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: accounts[0]}));
+        });
+
+        it('should not be able to commit state root of block height which is already commited', async () => {
+            await utils.expectThrow(core.commitStateRoot(1, '0x4567897545535535365', {from: worker}));
+        });
+
+        it('should not be able to commit state root of block height less than latest block height', async () => {
+            await core.commitStateRoot(4, '0x45675567897545535535365', {from: worker});
+            await utils.expectThrow(core.commitStateRoot(3, '0x4567897545535535365', {from: worker}));
+        });
+
+        it('should not be able to commit state root of when state root is 0x', async () => {
+            await utils.expectThrow(core.commitStateRoot(5, '0x', {from: worker}));
+        });
 
     });
 
-    it('should not be able to verify proof for account if wrong value is passed', async () => {
+    describe('proveOpenST', async () => {
+        let blockHeight = 5
+            , parentNodes = ethUtil.rlp.decode(accountProof.rlpParentNodes)
+            , accountNode = parentNodes[parentNodes.length - 1]
+            , accountValue = ethUtil.rlp.decode(accountNode[1])
+            , storageRoot = '0x' + accountValue[2].toString('hex')
+        ;
 
-      await Utils.expectThrow(core.proveOpenST(5, '0x346abcdef45363678578322467885654422353665', accountProof.RLPparentNodes, {from: worker}));
+        before(async () => {
+
+            contractsData = await coreUtils.deployCore(artifacts, accounts);
+            core = contractsData.core;
+            worker = contractsData.worker;
+
+            await core.commitStateRoot(blockHeight, accountProof.stateRoot, {from: worker});
+        });
+
+        it('should not be able to verify proof for account if block height is 0', async () => {
+            await utils.expectThrow(core.proveOpenST(0, accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: worker}));
+        });
+
+        it('should not be able to verify proof for account if rlpEncodedAccount value is 0x', async () => {
+            await utils.expectThrow(core.proveOpenST(blockHeight, '0x', accountProof.rlpParentNodes, {from: worker}));
+        });
+
+        it('should not be able to verify proof for account if rlpEncodedAccount value is 0x', async () => {
+            await utils.expectThrow(core.proveOpenST(blockHeight, accountProof.rlpEncodedAccount, '0x', {from: worker}));
+        });
+
+        it('should be able to verify proof for account with wasAlreadyProved = false ', async () => {
+            let response = await core.proveOpenST(blockHeight, accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: worker});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, blockHeight, storageRoot, false);
+        });
+
+        it('should be able to verify proof for account with wasAlreadyProved = true', async () => {
+            let response = await core.proveOpenST(blockHeight, accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: worker});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, blockHeight, storageRoot, true);
+        });
+
+        it('should be able to verify proof for account if called by non worker', async () => {
+            let response = await core.proveOpenST(blockHeight, accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: accounts[0]});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, blockHeight, storageRoot, true);
+        });
+
+        it('should not be able to verify proof for account if block state root is not committed for a blockHeight', async () => {
+            await utils.expectThrow(core.proveOpenST(6, accountProof.rlpEncodedAccount, accountProof.rlpParentNodes, {from: worker}));
+        });
+
+        it('should not be able to verify proof for account if wrong rlp encoded account value is passed', async () => {
+            await utils.expectThrow(core.proveOpenST(blockHeight, '0x346abcdef45363678578322467885654422353665', accountProof.rlpParentNodes, {from: worker}));
+        });
+
+        it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
+            let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde';
+            await utils.expectThrow(core.proveOpenST(blockHeight, accountProof.rlpEncodedAccount, wrongRLPNodes, {from: worker}));
+
+        });
     });
-
-    it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
-
-      let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde'
-      await Utils.expectThrow(core.proveOpenST(5, accountProof.value, wrongRLPNodes, {from: worker}));
-    });
-});
 
 });
