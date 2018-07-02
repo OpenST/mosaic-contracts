@@ -310,7 +310,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     /**
       *	@notice Confirm redemption intent on value chain.
       *
-      * @dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
+      *	@dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
       *      is passed in this function along with rpl encoded parent nodes of merkle pactritia tree proof
       *      for RedemptionIntentHash.
       *
