@@ -388,6 +388,74 @@
   \end{umlseqdiag}
 \end{tikzpicture}
 
+\begin{minipage}[b]{0.55\linewidth}
+\Huge \color{NavyBlue} \textbf{OpenST Protocol v0.9.3 } \color{Black}\\ % Title
+\huge\textit{sequence diagrams for redeem and unstake - Benjamin Bollen \& Pranay Valson, last edit \today}\\[1cm] % Subtitle
+\end{minipage}
 
+\begin{tikzpicture}
+  \begin{umlseqdiag}
+     \umlactor[class=Address]{Beneficiary}
+   % \umlactor[class=Worker]{Facilitator}
+   % \umlactor[class=Worker]{Hunter}
+    \umlboundary[class=ERC20]{OST} 
+    %\umlboundary[class=SK]{Branded Token Gate}
+    \umlcontrol[class=SK]{OpenSTValue}
+    \umlobject[class=SK]{SimpleStake}
+    \umlobject[class=SK]{CoreUC}
+    %\umlcontrol[class=SK]{RegistrarVC}
+    \umlboundary[class=Web3]{Value Chain}
+   % \umlactor[class=Worker, fill=purple!40]{OstDotCom}
+    \umlboundary[class=Web3, fill=blue!40]{Utility Chain}
+    %\umlcontrol[class=SK, fill=blue!40]{RegistrarUC}
+    \umlobject[class=SK, fill=blue!40]{CoreVC}
+    \umlcontrol[class=SK, fill=blue!40]{OpenSTUtility}
+    \umlboundary[class=ERC20, fill=blue!40]{Branded Token}
+   \umlactor[class=Address, fill=blue!40]{Redeemer} %Token Holder contract in v0.9.4
+  
+   %%%
+    %%%  Staker initiates stake
+    %%% 
+    
+    % redeemer sets allowance for branded token with OpenSTUtility
+    \begin{umlcall}[dt =7, op={: allowance(brandedToken, openSTUtility)}]{Redeemer}{Branded Token}  
+    \end{umlcall}
+    % redeemer calls redeem on OpenSTUtility 
+    \begin{umlcall}[dt=10, op={: redeem(uuid, amountUT, beneficiary, hashLock)}]{Redeemer}{OpenSTUtility}
+    % transferfrom is called from openstutility on branded token
+   \begin{umlcall}[dt =12, fill=green!20, op={: transferFrom(redeemer, OpenSTUtility, amountUT)}]{OpenSTUtility}{Branded Token}
+   % ut is taken from redeemer to branded token
+   \begin{umlcall}[dt=15, fill=green!20, type=return, op={<<UT(amountUT)>>}]{Redeemer}{Branded Token}
+   % ut is the then transfferred to openstutility from branded token (which keeps balance)
+   \begin{umlcall}[dt =17, fill=green!25,  type=return, op={<<UT(amountUT)>>}]{Branded Token}{OpenSTUtility}
+   % event is emitted with redemptionintentHash which the beneficiary can listen to
+    \begin{umlcall}[dt= 19, type=return, op={emit RedemptionIntentDeclared(redemptionIntentHash, brandedToken, beneficiary, amountUT, unlockHeight)}]{OpenSTUtility}{Beneficiary}
+  \end{umlcall}
+  \end{umlcall}
+   \end{umlcall}   
+    \end{umlcall}
+    \end{umlcall}
+     
+     % beneficiary on VC side calls confirm redemption intent on openstvalue
+    \begin{umlcall}[op={: confirmRedemptionIntent(uuid, redeemer, redeemerNonce, beneficiary, amountUT, unlockHeight, hashLock)}]{Beneficiary}{OpenSTValue}
+    %require redemption unlock height > 0
+     \begin{umlcallself}[op={require(expirationHeight <= block.number)}]{OpenSTValue}
+        \end{umlcallself}
+	%require that the redeemer nonce +1 == redeemer nonce passed 
+     \begin{umlcallself}[op={require(nonces[redeemer] +1  = redeemerNonce)}]{OpenSTValue}
+	\end{umlcallself}     
+     %require verify  Redemption hash storage
+     \begin{umlcallself}[op={require(verifyRedemptionIntentHashStorage(uuid, redeemer, redeemerNonce, blockHeight, redemptionIntenHash, rlpParentNodes)}]{OpenSTValue}
+	\end{umlcallself}    
+      % store the unstakes in the unstakes strcut with the redemptionhash as key 
+     \begin{umlcallself}[op={store unstakes[redemptionIntentHash]}]{OpenSTValue}
+	\end{umlcallself}     
+     %emit the remeption Intent confirmed event 
+     \begin{umlcall}[op={: RedemptionIntentConfirmed(redemptionIntentHash, redeemer, beneificary, amountST, amountUT, expirationHeight )}]{OpenSTValue}{Beneficiary}
+  \end{umlcall}
+\end{umlcall}
+     
+   \end{umlseqdiag}
+\end{tikzpicture}
 \end{document}
 
