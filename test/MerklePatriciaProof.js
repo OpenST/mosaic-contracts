@@ -68,7 +68,7 @@ contract('MerklePatriciaProof', function(accounts) {
         it('Storage Proof for an variable unsuccessful because encoded path is incorrect',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[0].value).toString('hex');
-            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[0].path, "0xd05cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", storageProofJson[0].root);
+            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e562", storageProofJson[0].rlpParentNodes, storageProofJson[0].root);
             assert.equal(proofStatus,false);
         })
 
@@ -97,28 +97,29 @@ contract('MerklePatriciaProof', function(accounts) {
         it('Storage Proof for an mapping unsuccessful becoz encoded value is incorrect',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[1].value).toString('hex');
-            let proofStatus = await merkleMock.verifyStorage.call("0x468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7c", storageProofJson[0].path, storageProofJson[0].rlpParentNodes, storageProofJson[0].root);
+            let proofStatus = await merkleMock.verifyStorage.call("0x468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7c", storageProofJson[1].path, storageProofJson[1].rlpParentNodes, storageProofJson[1].root);
             assert.equal(proofStatus,false);
         })
 
         it('Storage Proof for an mapping unsuccessful because encoded path is incorrect',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[1].value).toString('hex');
-            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[0].path, "0xd05cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", storageProofJson[0].root);
+            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, "0xe950028b2db7b1add5e94e63cac32ed35a09df16f7765865b09d4d973d51bb23", storageProofJson[1].rlpParentNodes, storageProofJson[1].root);
             assert.equal(proofStatus,false);
         })
 
         it('Storage Proof for an mapping unsuccessful because rlp parent nodes is incorrect',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[1].value).toString('hex');
-            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[0].path, "0xf9ope08cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", storageProofJson[0].root);
+            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[1].path, "0xf9e08cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", storageProofJson[1].root);
             assert.equal(proofStatus,false);
+            console.log("something something",proofStatus);
         })
 
         it('Storage Proof for an mapping unsuccessful because storage root is incorrect',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[1].value).toString('hex');
-            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[0].path, storageProofJson[0].rlpParentNodes, "0xa078cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426");
+            let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[1].path, storageProofJson[1].rlpParentNodes, "0xa078cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426");
             assert.equal(proofStatus,false);
         })
 
