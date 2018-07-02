@@ -15,7 +15,6 @@ contract MerklePatriciaProofMock is Util{
 
     }
 
-
     /**
      * @dev This method is used for Account proof
      * @param value The terminating value in the trie.
@@ -39,7 +38,6 @@ contract MerklePatriciaProofMock is Util{
      * @param root The root hash of the trie.
      * @return The boolean validity of the proof.
      */
-
     function verifyStorage(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) returns (bool){
 
         return MerklePatriciaProof.verify(value,encodedPath,rlpParentNodes,root);
