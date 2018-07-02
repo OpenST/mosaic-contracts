@@ -43,8 +43,6 @@ contract('MerklePatriciaProof', function(accounts) {
             let proofStatus = await merkleMock.verifyAccount.call("0xf8468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7c", accountProofJson.encodedPath, accountProofJson.rlpParentNodes, accountProofJson.stateRoot);
             assert.equal(proofStatus,false);
         })
-
-
     })
 
 
@@ -86,8 +84,6 @@ contract('MerklePatriciaProof', function(accounts) {
             assert.equal(proofStatus,false);
         })
 
-
-
         it('Storage Proof for an mapping successful',async () =>{
 
             let encodedValue = '0x'+ethutil.sha3(storageProofJson[1].value).toString('hex');
@@ -122,8 +118,5 @@ contract('MerklePatriciaProof', function(accounts) {
             let proofStatus = await merkleMock.verifyStorage.call(encodedValue, storageProofJson[1].path, storageProofJson[1].rlpParentNodes, "0xa078cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426");
             assert.equal(proofStatus,false);
         })
-
-
     })
-
 })
