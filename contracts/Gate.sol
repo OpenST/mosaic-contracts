@@ -33,7 +33,7 @@ import "./WorkersInterface.sol";
  *
  *	@notice Gate contract is staking gate that seperates the concerns of staker and staking processor.
  *      Stake process is executed through Gate contract rather than directly with the protocol contract.
- *      The Gate contract will server the role of staking account rather than an external account.
+ *      The Gate contract will serve the role of staking account rather than an external account.
  */
 contract Gate is ProtocolVersioned, Owned {
 
@@ -57,7 +57,6 @@ contract Gate is ProtocolVersioned, Owned {
       uint256 _unlockHeight,
       bytes32 _stakingIntentHash);
 
-
     /*  Storage */
 
     /** Storing stake requests */
@@ -73,6 +72,7 @@ contract Gate is ProtocolVersioned, Owned {
     bytes32 public uuid;
 
     /* Structures */
+
     struct StakeRequest {
         uint256 amount;
         uint256 unlockHeight;
@@ -83,7 +83,7 @@ contract Gate is ProtocolVersioned, Owned {
     /* Public functions */
 
     /**
-      * @notice Contract constructor.
+      * @notice Contract constructor
       *
       * @param _workers worker contract address.
       * @param _bounty bounty amount that worker address stakes while accepting stake request.
@@ -112,7 +112,6 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function requestStake
       *
       * @dev In order to request stake the staker needs to approve gate contract for stake amount.
-      *      This can be called by staker
       *      Staked amount is transferred from staker address to Gate contract
       *
       * @param _amount staking amount.
@@ -219,10 +218,9 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function to accept requested stake.
       *
-      * @dev In order to accept stake the staker needs to approve gate contract for bounty amount.
-      *      This can be called only by whitelisted worker address
-      *      OpenSTProtocol is approved for staking amount by Gate contract.
+      * @dev This can be called only by whitelisted worker address
       *      Bounty amount is transferred from msg.sender to Gate contract
+      *      openSTProtocol is approved for staking amount by Gate contract.
       *
       * @param _staker staker address.
       * @param _hashLock hash lock.
@@ -254,7 +252,7 @@ contract Gate is ProtocolVersioned, Owned {
         // check if _hashLock is not 0
         require(_hashLock != bytes32(0));
 
-        // Transfer bounty amount form worker to gate contract
+        // Transfer bounty amount from worker to gate contract
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), bounty));
 
         // Approve OpenSTValue contract for stake amount
@@ -282,23 +280,21 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function to process staking.
       *
-      * @dev Bounty amount is to msg.sender if its not whitelisted worker
-      *      Bounty amount is to workers contract if msg.sender is whitelisted worker
+      * @dev Bounty amount is transferred to msg.sender if it's not whitelisted worker
+      *      Bounty amount is transferred to workers contract if msg.sender is whitelisted worker
       *
       * @param _stakingIntentHash staking intent hash.
       * @param _unlockSecret unlock secret.
       *
       * @return stakeRequestAmount stake amount.
       */
-    function processStaking(
+
+      function processStaking(
         bytes32 _stakingIntentHash,
         bytes32 _unlockSecret)
         external
         returns (uint256 stakeRequestAmount)
       {
-        // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender));
-
         require(_stakingIntentHash != bytes32(0));
 
         //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
@@ -340,8 +336,8 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to revert staking.
       *
       * @dev Caller must be the whitelisted worker.
-      *      Staked amount is transferred the staker address.
-      *      Bounty amount is to workers contract.
+      *      Staked amount is transferred to the staker address.
+      *      Bounty amount is transferred to workers contract.
       *
       * @param _stakingIntentHash staking intent hash.
       *

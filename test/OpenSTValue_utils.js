@@ -24,12 +24,17 @@ const BigNumber = require('bignumber.js');
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var Workers = artifacts.require("./Workers.sol");
 
 /// @dev Deploy
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
-	const chainIdValue = 3;
-	const valueToken   = await SimpleToken.new();
-	const registrar    = accounts[1]
+	const chainIdValue = 3
+		, valueToken   = await SimpleToken.new()
+		, registrar    = accounts[1]
+		, admin = accounts[2]
+		, ops = accounts[3]
+		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+	;
 
 	// Set SimpleToken admin in order to finalize SimpleToken
 	await valueToken.setAdminAddress(accounts[1]);
@@ -38,9 +43,20 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
 
+  //Set SimpleToken admin in order to finalize SimpleToken
+  await valueToken.setAdminAddress(admin);
+
+  // Deploy worker contract
+  const workers = await Workers.new(valueToken.address)
+    , worker1 = accounts[7];
+  await workers.setAdminAddress(admin);
+  await workers.setOpsAddress(ops);
+  await workers.setWorker(worker1, deactivationHeight, {from:ops});
+
 	return {
 		valueToken  : valueToken,
-		openSTValue : openSTValue
+		openSTValue : openSTValue,
+		workers: workers
 	}
 }
 
@@ -90,7 +106,7 @@ module.exports.checkUtilityTokenRegisteredEventOnProtocol = (formattedDecodedEve
   assert.equal(event._stakingAccount, _stakingAccount);
 }
 
-module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
+module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _hashIntentKey, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
 	if (Number.isInteger(_stakerNonce)) {
 		_stakerNonce = new BigNumber(_stakerNonce);
 	}
@@ -111,6 +127,7 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._stakerNonce.toNumber(), _stakerNonce.toNumber());
+	assert.equal(event.args._hashIntentKey, _hashIntentKey);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());

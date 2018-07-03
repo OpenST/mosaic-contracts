@@ -32,7 +32,6 @@ import "./ProtocolVersioned.sol";
 // value chain contracts
 import "./SimpleStake.sol";
 
-
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
@@ -45,7 +44,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
-        uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
+        uint256 _stakerNonce, bytes32 _intentKeyHash, address _beneficiary, uint256 _amountST,
         uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
         uint256 _chainIdUtility);
 
@@ -73,9 +72,10 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
-
-
-    /// register the active stakes and unstakes
+    
+    // storage for staking intent hash of active staking intents
+    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    // register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
     mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
@@ -95,7 +95,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     address public registrar;
     bytes32[] public uuids;
 
-  /*
+    /*
      *  Structures
      */
     struct UtilityToken {
@@ -130,6 +130,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 expirationHeight;
         bytes32 hashLock;
     }
+
     /*
      *  Modifiers
      */
@@ -223,7 +224,12 @@ contract OpenSTValue is OpsManaged, Hasher {
             hashLock:     _hashLock
         });
 
-        emit StakingIntentDeclared(_uuid, _staker, nonce, _beneficiary,
+        // store the staking intent hash directly in storage of OpenSTValue 
+        // so that a Merkle proof can be generated for active staking intents
+        bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
+        intents[intentKeyHash] = stakingIntentHash;
+
+        emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
@@ -256,7 +262,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
-
+        
+        // remove intent hash from intents mapping 
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];        
         delete stakes[_stakingIntentHash];
 
         return stakeAddress;
@@ -289,6 +297,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
 
+        // remove intent hash from intents mapping 
+        delete intents[hashIntentKey(stake.staker, stake.nonce)];   
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
@@ -466,8 +476,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (bool /* success */)
     {
         require(address(_core) != address(0));
-        // core constructed with same registrar
-        require(registrar == _core.registrar());
         // on value chain core only tracks a remote utility chain
         uint256 chainIdUtility = _core.chainIdRemote();
         require(chainIdUtility != 0);
