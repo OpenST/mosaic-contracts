@@ -7,7 +7,6 @@
     "openSTRemoteAddress": "0x01db94fdca0ffedc40a6965de97790085d71b412"
   },
   "storage": {
-
     "variable":{
       "storageRoot": "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
       "valueAtStorage": "0xa03132333400000000000000000000000000000000000000000000000000000008",
