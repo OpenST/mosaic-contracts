@@ -22,7 +22,7 @@
 const Core = artifacts.require("./Core.sol")
     , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
     , Workers = artifacts.require("./Workers.sol")
-    , accountProof = require('./data/AccountProof');
+    , proof = require('./data/proof');
 ;
 
 const BigNumber = require('bignumber.js')
@@ -33,7 +33,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     const registrar = accounts[1]
         , admin = accounts[2]
         , ops = accounts[3]
-        , openSTRemote = accountProof.openSTRemoteAddress
+        , openSTRemote = proof.account.openSTRemoteAddress
         , chainIdOrigin = 3
         , chainIdRemote = 1410
         , valueToken = await SimpleToken.new()
