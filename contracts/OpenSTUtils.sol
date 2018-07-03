@@ -67,13 +67,70 @@ library OpenSTUtils {
     returns (bool /* verification status */)
   {
     bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
-    bytes memory path = bytes32ToBytes(keccak256(keyPath));
+    //bytes memory path = bytes32ToBytes(keccak256(keyPath));
+    bytes memory path = bytes32ToBytes(keyPath);
+    bytes32 encodedData = keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash)));
 
     return MerklePatriciaProof.verify(
-      keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash))),
+      encodedData,
       path,
       _rlpParentNodes,
       _storageRoot);
+  }
+
+  function verifyDebugIntentStorage(
+    uint8 _intentIndex,
+    address _address,
+    uint256 _addressNonce,
+    bytes32 _storageRoot,
+    bytes32 _intentHash,
+    bytes _rlpParentNodes)
+  internal
+  pure
+  returns (bool res, uint loc, bytes path_debug /* verification status */)
+  {
+    bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
+    bytes memory path = bytes32ToBytes(keccak256(keyPath));
+    bytes32 encodedData = keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash)));
+
+    return MerklePatriciaProof.verifyDebug(
+      encodedData,
+      path,
+      _rlpParentNodes,
+      _storageRoot);
+  }
+
+  function getPath(
+    uint8 _intentIndex,
+    address _address,
+    uint256 _addressNonce,
+    bytes32 _storageRoot,
+    bytes32 _intentHash,
+    bytes _rlpParentNodes)
+  internal
+  pure
+    //returns (bool /* verification status */)
+  returns (bytes32, bytes, bytes32 /* verification status */)
+  {
+    bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
+    bytes memory path = bytes32ToBytes(keyPath);
+
+    bytes32 encodedData = keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash)));
+    bytes memory ed = RLPEncode.encodeItem(bytes32ToBytes(_intentHash));
+    return (keyPath, ed, encodedData);
+  }
+
+
+  function temp1(
+    uint8 _intentIndex,
+    address _address,
+    uint256 _addressNonce
+    )
+  internal
+  pure
+  returns (bytes32 /* verification status */)
+  {
+    return storagePath(_intentIndex, keccak256(_address, _addressNonce));
   }
 
 }
