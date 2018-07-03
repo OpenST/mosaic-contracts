@@ -1,6 +1,4 @@
 const MerklePatriciaProofMock = artifacts.require("./MerklePatriciaProofMock.sol");
-const accountProofJson =  require("./data/AccountProof.json");
-const storageProofJson =  require("./data/StorageProof.json");
 const proofJson =  require("./data/proof.json");
 const ethutil = require ("ethereumjs-util");
 contract('MerklePatriciaProof', function(accounts) {
@@ -10,7 +8,6 @@ contract('MerklePatriciaProof', function(accounts) {
     describe('Test Cases for Account proof', async () => {
         before(async () => {
             merkleMock = await MerklePatriciaProofMock.new();
-            console.log(merkleMock);
         })
 
         it('Account Proof Successful', async () => {
