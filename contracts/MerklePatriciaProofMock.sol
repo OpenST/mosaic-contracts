@@ -13,7 +13,7 @@ contract MerklePatriciaProofMock is Util{
 
 
     /**
-     * @dev This method is used for Account proof.
+     * @notice This method is used for Account proof.
      *
      * @param value The terminating value in the trie.
      * @param encodedPath The path in the trie leading to value.
@@ -35,7 +35,7 @@ contract MerklePatriciaProofMock is Util{
     }
 
     /**
-     * @dev This method is used for Storage proof
+     * @notice This method is used for Storage proof.
      *
      * @param value The terminating value in the trie.
      * @param encodedPath The path in the trie leading to value.
