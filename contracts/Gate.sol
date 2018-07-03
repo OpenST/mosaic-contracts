@@ -288,8 +288,7 @@ contract Gate is ProtocolVersioned, Owned {
       *
       * @return stakeRequestAmount stake amount.
       */
-
-      function processStaking(
+    function processStaking(
         bytes32 _stakingIntentHash,
         bytes32 _unlockSecret)
         external
