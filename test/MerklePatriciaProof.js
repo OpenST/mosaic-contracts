@@ -1,6 +1,5 @@
 const MerklePatriciaProofMock = artifacts.require("./MerklePatriciaProofMock.sol");
 const proofJson =  require("./data/proof.json");
-const ethUtil = require ("ethereumjs-util");
 contract('MerklePatriciaProof', function(accounts) {
 
     let merkleMock= null;
