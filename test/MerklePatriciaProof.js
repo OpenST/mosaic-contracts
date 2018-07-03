@@ -66,7 +66,7 @@ contract('MerklePatriciaProof', function(accounts) {
 
         it('Should fail for variable storage when rlp parent nodes is incorrect',async () =>{
 
-            let encodedValue = '0x'+ethutil.sha3(proofJson.storage.variable.valueAtStorage).toString('hex');
+            let encodedValue = '0x'+ethUtil.sha3(proofJson.storage.variable.valueAtStorage).toString('hex');
             let proofStatus = await merkleMock.verifyStorage.call(encodedValue, proofJson.storage.variable.path, "0xf908cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", proofJson.storage.variable.storageRoot);
             assert.equal(proofStatus,false);
         })
@@ -93,7 +93,7 @@ contract('MerklePatriciaProof', function(accounts) {
 
         it('Should fail for mapping proof when encoded path is incorrect',async () =>{
 
-            let encodedValue = '0x'+ethutil.sha3(proofJson.storage.mapping.valueAtStorage).toString('hex');
+            let encodedValue = '0x'+ethUtil.sha3(proofJson.storage.mapping.valueAtStorage).toString('hex');
             let proofStatus = await merkleMock.verifyStorage.call(encodedValue, "0x4d6e9a4b1a3576f692c1333198a77a5fb8b72c326f2a4c35eeeaab187773da7a", proofJson.storage.mapping.rlpParentNodes, proofJson.storage.mapping.storageRoot);
             assert.equal(proofStatus,false);
         })
