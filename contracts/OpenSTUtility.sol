@@ -80,7 +80,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *  Storage
      */
 
-    // storage for staking intent hash of active staking intents
+    // storage for redemption intent hash
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
 
     /// store the ongoing mints and redemptions
@@ -421,6 +421,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
