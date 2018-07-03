@@ -396,16 +396,16 @@
 \begin{tikzpicture}
   \begin{umlseqdiag}
      \umlactor[class=Address]{Beneficiary}
-   % \umlactor[class=Worker]{Facilitator}
-   % \umlactor[class=Worker]{Hunter}
+   \umlactor[class=Worker]{Facilitator}
+   \umlactor[class=Worker]{Hunter}
     \umlboundary[class=ERC20]{OST} 
-    %\umlboundary[class=SK]{Branded Token Gate}
+    \umlboundary[class=SK]{Branded Token Gate}
     \umlcontrol[class=SK]{OpenSTValue}
     \umlobject[class=SK]{SimpleStake}
     \umlobject[class=SK]{CoreUC}
     %\umlcontrol[class=SK]{RegistrarVC}
     \umlboundary[class=Web3]{Value Chain}
-   % \umlactor[class=Worker, fill=purple!40]{OstDotCom}
+    \umlactor[class=Worker, fill=purple!40]{OstDotCom}
     \umlboundary[class=Web3, fill=blue!40]{Utility Chain}
     %\umlcontrol[class=SK, fill=blue!40]{RegistrarUC}
     \umlobject[class=SK, fill=blue!40]{CoreVC}
@@ -418,66 +418,127 @@
     %%% 
     %start with redeem process on the VC side
     % redeemer sets allowance for branded token with OpenSTUtility
-    \begin{umlcall}[dt =7, op={: allowance(brandedToken, openSTUtility)}]{Redeemer}{Branded Token}  
+    \begin{umlcall}[dt =7, op={: allowance(brandedToken, OpenSTUtility)}]{Redeemer}{Branded Token}  
     \end{umlcall}
     % redeemer calls redeem on OpenSTUtility 
-    \begin{umlcall}[op={: redeem(uuid, amountUT, beneficiary, hashLock)}]{Redeemer}{OpenSTUtility}
+    \begin{umlcall}[dt=8, op={: redeem(uuid, amountUT, nonce, beneficiary, hashLock)}]{Redeemer}{OpenSTUtility}
+    %require that  allowance is there for OSTU for amount UT
+    \begin{umlcallself}[op={require (allowance(redeemer, OpenSTUtility) >= amountUT)}]{OpenSTUtility}
+    \end{umlcallself}
     % transferfrom is called from openstutility on branded token
-   \begin{umlcall}[dt=9,fill=green!20, op={: transferFrom(redeemer, OpenSTUtility, amountUT)}]{OpenSTUtility}{Branded Token}
+   \begin{umlcall}[fill=green!20, op={: transferFrom(redeemer, OpenSTUtility, amountUT)}]{OpenSTUtility}{Branded Token}
    % ut is taken from redeemer to branded token
-   \begin{umlcall}[dt= 12,fill=green!20, type=return, op={<<UT(amountUT)>>}]{Redeemer}{Branded Token}
+   \begin{umlcall}[dt=13,fill=green!20, type=return, op={<<UT(amountUT)>>}]{Redeemer}{Branded Token}
+     \end{umlcall}
    % ut is the then transfferred to openstutility from branded token (which keeps balance)
    \begin{umlcall}[dt=14,fill=green!25,  type=return, op={<<UT(amountUT)>>}]{Branded Token}{OpenSTUtility}
+   % store the intents in the storage
+   \begin{umlcallself}[dt=15, op={store intents[H(redeemer, nonce)] = redemptionIntentHash}]{OpenSTUtility}
+   \end{umlcallself}
    % event is emitted with redemptionintentHash which the beneficiary can listen to
-    \begin{umlcall}[type=return, op={emit RedemptionIntentDeclared(redemptionIntentHash, brandedToken, beneficiary, amountUT, unlockHeight)}]{OpenSTUtility}{Beneficiary}
-  \end{umlcall}
-  \end{umlcall}
+    \begin{umlcall}[type=return, op={emit RedemptionIntentDeclared(uuid, redemptionIntentHash, brandedToken, redeemer, nonce, beneficiary, amountUT, unlockHeight)}]{OpenSTUtility}{OstDotCom}
+     \end{umlcall}
+    %event can be heard by beneficiary 
+    %\begin{umlcall}[type=return]{OstDotCom}{Beneficiary}
+    %event can be heard by beneficiary 
+  %\end{umlcall}
+
+
    \end{umlcall}   
     \end{umlcall}
     \end{umlcall}
      
      % confirm redemption intent begins on UC side
      % beneficiary on VC side calls confirm redemption intent on openstvalue
-    \begin{umlcall}[dt= 16, op={: confirmRedemptionIntent(uuid, redeemer, redeemerNonce, beneficiary, amountUT, unlockHeight, hashLock)}]{Beneficiary}{OpenSTValue}
+    \begin{umlcall}[dt= 20, op={: confirmRedemptionIntent(redeemer, redeemerNonce, beneficiary, amountUT, redemptionUnlockHeight, blockHeight, hashLock, rlpParentNodes)}]{OstDotCom}{OpenSTValue}
     %require redemption unlock height > 0
      \begin{umlcallself}[op={require(expirationHeight <= block.number)}]{OpenSTValue}
-        \end{umlcallself}
+       \end{umlcallself}
 	%require that the redeemer nonce +1 == redeemer nonce passed 
-     \begin{umlcallself}[op={require(nonces[redeemer] +1  = redeemerNonce)}]{OpenSTValue}
-	\end{umlcallself}     
+    % \begin{umlcallself}[op={require(nonces[redeemer] +1  = redeemerNonce)}]{OpenSTValue}
+	%\end{umlcallself}     
+	%calculate amountST from amountUT
+     \begin{umlcallself}[op={calculate amountST = (amountUT*conversionRate)}]{OpenSTValue}
+	\end{umlcallself}     	
+	%make sure there is more balance than what is calculated
+     %\begin{umlcallself}[op= {require balanceOf(UT.SimpleStake)>= amountST}]{OpenSTValue}
+	%\end{umlcallself}     	
      %require verify  Redemption hash storage
-     \begin{umlcallself}[op={require(verifyRedemptionIntentHashStorage(uuid, redeemer, redeemerNonce, blockHeight, redemptionIntenHash, rlpParentNodes)}]{OpenSTValue}
-	\end{umlcallself}    
-      % store the unstakes in the unstakes strcut with the redemptionhash as key 
+     \begin{umlcallself}[op={require verifyRedemptionIntentHashStorage(uuid, redeemer, redeemerNonce, blockHeight, redemptionIntenHash, rlpParentNodes)}]{OpenSTValue}
+     \end{umlcallself}
+	% get storage root from UC side
+	\begin{umlcall}[op= {: getStorageRoot(blockHeight)}, return = {storageRoot}]{OpenSTValue}{CoreVC}
+	\end{umlcall}
+	%verify intent storage on VC side
+	\begin{umlcallself}[op= {require verifyIntentStorage(redeemer, redeemerNonce,  storageRoot, redemptionIntentHash, rlpParentNodes)}]{OpenSTValue}
+	\end{umlcallself}      
+	% store the unstakes in the unstakes struct with the redemptionhash as key 
      \begin{umlcallself}[op={store unstakes[redemptionIntentHash]}]{OpenSTValue}
 	\end{umlcallself}     
      %emit the remeption Intent confirmed event 
-     \begin{umlcall}[op={: RedemptionIntentConfirmed(redemptionIntentHash, redeemer, beneificary, amountST, amountUT, expirationHeight )}]{OpenSTValue}{Redeemer}
+     \begin{umlcall}[type= return, op={emit RedemptionIntentConfirmed(redemptionIntentHash, redeemer, beneificary, amountST, amountUT, expirationHeight )}]{OpenSTValue}{OstDotCom}
+      %emit the remeption Intent confirmed event 
+     %\begin{umlcall}[type= return]{OpenSTValue}{Utility Chain}
+      %\end{umlcall} 
   \end{umlcall}
   \end{umlcall}
 
-	%process redeem should begin now on UC side
+ 
+
+	% process redeem should begin now on UC side
 	% redeemer calls on process redeeming on openstutility 
-    \begin{umlcall}[dt= 19,op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
-    % require hashlock is euqal to hash of unlock secret
+    \begin{umlcall}[dt= 60,op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
+    % require hashlock is equal to hash of unlock secret
     \begin{umlcallself}[op={: require(hashLock = H(unlockSecret))}]{OpenSTUtility}
     \end{umlcallself}
     % burn the UT tokens 
     \begin{umlcall}[op={: burn(redeemer, amountUT)}]{OpenSTUtility}{Branded Token}
      %emit the process Redemption event
-    \begin{umlcall}[op={emit ProcessedRedemption(uuid, brandedToken, redeemer, beneficiary, amountUT, unlockSecret)}]{OpenSTUtility}{Beneficiary} 
+    \begin{umlcall}[type= return, op={emit ProcessedRedemption(uuid, brandedToken, redeemer, beneficiary, amountUT, unlockSecret)}]{OpenSTUtility}{OstDotCom} 
     %delete the redemptions struct from storage
-    \begin{umlcallself}[op={delete(redemptions[redemptionIntentHash])}]{OpenSTUtility}
+    \begin{umlcallself}[op={delete redemptions[redemptionIntentHash])}]{OpenSTUtility}
     \end{umlcallself}
+    %delete the redemptions struct from storage
+    \begin{umlcallself}[op={delete intents[H(redeemer, nonce)]}]{OpenSTUtility}
+    \end{umlcallself}    
   \end{umlcall}
   \end{umlcall}
   \end{umlcall}
   
-  	%process unstaking should now begin on VC side
+    	%revert unstaking could be initiatied from the redeemer side
 	% beneficiary calls on processUnstaking with redempition intent hash
-	\begin{umlcall}[dt= 22, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{Beneficiary}{OpenSTValue}
+	\begin{umlcall}[dt= 25, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{OstDotCom}{OpenSTValue}
 	% require that the hashlock is the same
-	\begin{umlcallself}[op={require hashLock = H(unlockSecret)}]{OpenSTValue}
+	\begin{umlcallself}[op={require H(unlockSecret)=  hashLock}]{OpenSTValue}
+	\end{umlcallself}
+	%expiraton height reqiure
+	\begin{umlcallself}[op={require unstake expirationHeight > block number} ]{OpenSTValue}
+	\end{umlcallself}
+   %call on simple stake from openSTValue to relase funds
+	\begin{umlcall}[op={: releaseTo(beneficiary, amountST)}]{OpenSTValue}{SimpleStake}
+	%release to transfers funds to Beneficiary
+	\begin{umlcallself}[op={: transfer(beneficiary, amountST)}]{SimpleStake}
+	\end{umlcallself}
+	%transfer the amount
+   \begin{umlcall}[type=return, fill=green!20, op={<<OST(amountST)>>}]{SimpleStake}{Beneficiary}
+        \end{umlcall} 
+   %emit event Processed Unstake
+   \begin{umlcall}[dt= 21, type=return, op={emit ProcessedUnstake(uuid, redemptionIntentHash, stakeAddress, redeemer, beneficiary, amountST, unlockSecret)}]{OpenSTValue}{OstDotCom}
+  	 \end{umlcall}
+
+   %delete the storage for unstakes
+   \begin{umlcallself}[op={delete unstakes [redemptionIntentHash]}]{OpenSTValue}
+	\end{umlcallself}
+  \end{umlcall}
+  \end{umlcall}
+  %\end{umlcall}
+  
+  
+    	%revert unstaking could be initiatied from the redeemer side
+	% beneficiary calls on processUnstaking with redempition intent hash
+	\begin{umlcall}[dt= 60, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{OstDotCom}{OpenSTValue}
+	% require that the hashlock is the same
+	\begin{umlcallself}[op={require H(unlockSecret)=  hashLock}]{OpenSTValue}
 	\end{umlcallself}
 	%expiraton height reqiure
 	\begin{umlcallself}[op={require unstake expirationHeight > block number} ]{OpenSTValue}
@@ -487,20 +548,18 @@
 	%release to transfers funds to Beneficiary
 	%\begin{umlcall}[dt=16, op={: transfer(beneficiary, amountST)}]{OpenSTValue}{SimpleStake}
 	%transfer the amount
-	 \end{umlcall}
-     \end{umlcall}
    \begin{umlcall}[type=return, fill=green!20, op={<<OST(amountST)>>}]{SimpleStake}{Beneficiary}
    %emit event Processed Unstake
    \begin{umlcall}[dt= 21, op={emit ProcessedUnstake(uuid, redemptionIntentHash, stakeAddress, redeemer, beneficiary, amountST, unlockSecret)}]{OpenSTValue}{Beneficiary}
+  	 \end{umlcall}
+     \end{umlcall} 
    %delete the storage for unstakes
    \begin{umlcallself}[op={delete unstakes [redemptionIntentHash]}]{OpenSTValue}
 	\end{umlcallself}
   \end{umlcall}
   \end{umlcall}
   %\end{umlcall}
-
-
-     
+  
    \end{umlseqdiag}
 \end{tikzpicture}
 \end{document}
