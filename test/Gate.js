@@ -427,6 +427,13 @@ contract('Gate', function(accounts) {
 
       await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
     });
+
+    it('fails to process reject stake request if reject stake request already processed', async () => {
+      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, true);
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
+    });
   });
 
 

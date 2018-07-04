@@ -208,7 +208,7 @@ contract Gate is ProtocolVersioned, Owned {
 
         stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
-        delete stakeRequests[msg.sender];
+        delete stakeRequests[_staker];
 
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
