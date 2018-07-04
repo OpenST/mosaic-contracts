@@ -138,11 +138,19 @@ contract('Core', function (accounts) {
             await utils.expectThrow(core.proveOpenST(0, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker}));
         });
 
+        it('should not be able to verify proof for account if rlpEncodedAccount value is blank', async () => {
+            await utils.expectThrow(core.proveOpenST(blockHeight, '', proof.account.rlpParentNodes, {from: worker}));
+        });
+
         it('should not be able to verify proof for account if rlpEncodedAccount value is 0x', async () => {
             await utils.expectThrow(core.proveOpenST(blockHeight, '0x', proof.account.rlpParentNodes, {from: worker}));
         });
 
-        it('should not be able to verify proof for account if rlpEncodedAccount value is 0x', async () => {
+        it('should not be able to verify proof for account if rlpParentNodes value is blank', async () => {
+            await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '', {from: worker}));
+        });
+
+        it('should not be able to verify proof for account if rlpParentNodes value is 0x', async () => {
             await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '0x', {from: worker}));
         });
 
@@ -175,12 +183,38 @@ contract('Core', function (accounts) {
             await utils.expectThrow(core.proveOpenST(blockHeight, '0x346abcdef45363678578322467885654422353665', proof.account.rlpParentNodes, {from: worker}));
         });
 
-        it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
+        it('should be able to verify proof for account even if wrong parentNodes are passed in replay call i.e. wasAlreadyProven', async () => {
             let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde';
             let response = await core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, wrongRLPNodes, {from: worker});
             let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
             let event = formattedDecodedEvents['OpenSTProven'];
             await coreUtils.checkOpenSTProvenEvent(event, blockHeight, storageRoot, true);
+
+        });
+
+        it('should verify proveOpenST in order of blockHeight 6, 10, 8 means proveOpenST should work for any blockHeight irrespective of any order', async () => {
+            // commitStateRoot needs to be in order
+            await core.commitStateRoot(6, proof.account.stateRoot, {from: worker});
+            await core.commitStateRoot(8, proof.account.stateRoot, {from: worker});
+            await core.commitStateRoot(10, proof.account.stateRoot, {from: worker});
+
+            // Verification for block Height 6
+            let response = await core.proveOpenST(6, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, 6, storageRoot, false);
+
+            // Verification for block Height 10
+            response = await core.proveOpenST(10, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker});
+            formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, 10, storageRoot, false);
+
+            // Verification for block Height 8
+            response = await core.proveOpenST(8, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker});
+            formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, 8, storageRoot, false);
 
         });
     });
