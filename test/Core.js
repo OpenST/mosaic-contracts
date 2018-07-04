@@ -175,11 +175,14 @@ contract('Core', function (accounts) {
             await utils.expectThrow(core.proveOpenST(blockHeight, '0x346abcdef45363678578322467885654422353665', proof.account.rlpParentNodes, {from: worker}));
         });
 
-        // it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
-        //     let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde';
-        //     await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, wrongRLPNodes, {from: worker}));
-        //
-        // });
+        it('should not be able to verify proof for account if wrong parentNodes are passed', async () => {
+            let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde';
+            let response = await core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, wrongRLPNodes, {from: worker});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, blockHeight, storageRoot, true);
+
+        });
     });
 
 });
