@@ -8,7 +8,7 @@ contract('MerklePatriciaProof', function(accounts) {
         before(async () => {
             merkleMock = await MerklePatriciaProofMock.new();
         })
-        let encodedValueForRlpEncodedAccount = '0x'+ ethUtil.sha3(proofJson.account.rlpEncodedAccount).toString('hex');
+        //let encodedValueForRlpEncodedAccount = '0x'+ web3.sha3(proofJson.account.rlpEncodedAccount).toString('hex');
         it('Should pass', async () => {
             let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.path, proofJson.account.rlpParentNodes, proofJson.account.stateRoot);
             assert.equal(proofStatus,true);
