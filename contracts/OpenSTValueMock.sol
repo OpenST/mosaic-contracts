@@ -22,7 +22,7 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./OpenSTValue.sol";
-import "./HasherMock.sol";
+import "./TestUtils.sol";
 
 /**
  *	@title OpenSTValueMock which implements the OpenSTValue contract
@@ -31,7 +31,9 @@ import "./HasherMock.sol";
  *			and creates temp variables to ease testing OpenSTValue
  */
 
-contract OpenSTValueMock is OpenSTValue, HasherMock {
+contract OpenSTValueMock is OpenSTValue {
+	using TestUtils for bytes32;
+
 	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
 	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
 	uint256 private constant testStakerNonce = 1;
@@ -39,7 +41,7 @@ contract OpenSTValueMock is OpenSTValue, HasherMock {
 	bytes32 private constant testStakingIntentHash = 0xf61ea4fb6316d5ecdd2299b49ef9f07c49077c8a7d105fecc100e453742e0727;
 	
 	bytes32 public intentsMapTestKey = hashIntentKey(testStakerAddress, testStakerNonce);
-	bytes32 public testHashStoragePath = mapStorageKey(intentsMapTestKey,intentsMappingStorageIndexPosition);
+	bytes32 public testHashStoragePath = TestUtils.mapStorageKey(intentsMapTestKey,intentsMappingStorageIndexPosition);
 		
 	/* Public functions */
 

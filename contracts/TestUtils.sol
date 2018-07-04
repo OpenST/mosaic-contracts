@@ -15,22 +15,18 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Common: HasherMock
+// Common: TestingUtils
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./Hasher.sol";
-
 /**
- *	@title HasherMock which implements Hasher
+ *	@title TestingUtils 
  *
- *	@notice Implements a keccak256 hashing function for OpenSTValueMock.sol
+ *	@notice contains functions used for testing on Mock contracts. 
  */
-contract HasherMock is Hasher {
-
-	/* Public pure functions */
+library TestUtils {
 
 	/**
 	 *	@notice mapping storage key hasher
@@ -41,15 +37,16 @@ contract HasherMock is Hasher {
 	 *
 	 *	@return bytes32 key to the mapping value in contract storage
 	 */
+
 	function mapStorageKey(
 		bytes32 _key,
 		uint256 _position)
-		public
+		internal
 		pure
 		returns (bytes32)
 	{
-		return keccak256(
+		return keccak256(abi.encode(
 			_key,
-			_position);
+			_position));
 	}
 }
