@@ -204,7 +204,7 @@ contract('Gate', function(accounts) {
     return {lock: lock, stakingIntentHash: stakingIntentHash} ;
   };
 
-  const processStaking = async function (stakingIntentHash, unlockSecret, messageSender, isSuccessCase) {
+  const processStaking = async function (stakingIntentHash, unlockSecret, messageSender, isSuccessCase, isWhitelistedWorker) {
 
     let initialworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
       , initialWorkerBalance = await valueToken.balanceOf.call(workers)
@@ -230,8 +230,13 @@ contract('Gate', function(accounts) {
 
     if (isSuccessCase) {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
+      if(isWhitelistedWorker){
+          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
+          assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
+      } else {
+          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
+          assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
+      }
       assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
     } else {
       // check balances
@@ -422,6 +427,13 @@ contract('Gate', function(accounts) {
 
       await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
     });
+
+    it('fails to process reject stake request if reject stake request already processed', async () => {
+      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, true);
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
+    });
   });
 
 
@@ -525,31 +537,31 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, lock.s, workerAddress1, true);
+        await processStaking(stakingIntentHash, lock.s, workerAddress1, true, true);
 
       });
 
-      it('fails to processes when the worker address is not whitelisted', async () => {
+      it('successfully processes when the worker address is not whitelisted', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
         let workerAddress = accounts[10];
-        await processStaking(stakingIntentHash, lock.s, workerAddress, false);
+        await processStaking(stakingIntentHash, lock.s, workerAddress, true, false);
 
       });
 
       it('fails to processes when stakingIntentHash is 0', async () => {
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        await processStaking(0, lock.s, workerAddress1, false);
+        await processStaking(0, lock.s, workerAddress1, false, true);
 
       });
 
       it('fails to processes when stakingIntentHash is invalid', async () => {
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        await processStaking(beneficiaryAccount, lock.s, workerAddress1, false);
+        await processStaking(beneficiaryAccount, lock.s, workerAddress1, false, true);
 
       });
 
@@ -558,7 +570,7 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, 0, workerAddress1, false);
+        await processStaking(stakingIntentHash, 0, workerAddress1, false, true);
 
       });
 
@@ -567,14 +579,14 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, beneficiaryAccount, workerAddress1, false);
+        await processStaking(stakingIntentHash, beneficiaryAccount, workerAddress1, false, true);
 
       });
 
       it('fails to processes when stakeRequest was not accepted', async () => {
 
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -583,7 +595,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await rejectStakeRequest(stakerAccount, stakeAmount, 0,  workerAddress1, true);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -592,7 +604,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await revertStakeRequest(stakerAccount, stakeAmount ,true);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -627,7 +639,7 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, lock.s, workerAddress1, true);
+        await processStaking(stakingIntentHash, lock.s, workerAddress1, true, true);
 
         await revertStaking(stakingIntentHash, workerAddress1, false);
 
