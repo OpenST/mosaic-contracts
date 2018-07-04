@@ -86,7 +86,7 @@ contract('Core', function (accounts) {
             worker = contractsData.worker;
         });
 
-        it('should be able to commit state root for give block height', async () => {
+        it('should be able to commit state root and getStateRoot for give block height', async () => {
             let stateRoot = '0x4567897545535535365000000000000000000000000000000000000000000000'
                 , blockHeight = 1
             ;
@@ -96,6 +96,7 @@ contract('Core', function (accounts) {
             let event = formattedDecodedEvents['StateRootCommitted'];
 
             await coreUtils.checkStateRootCommittedEvent(event, blockHeight, stateRoot);
+            assert.equal(await core.getStateRoot(blockHeight), stateRoot);
         });
 
         it('should not be able to commit state root of block height if non worker commits root', async () => {
