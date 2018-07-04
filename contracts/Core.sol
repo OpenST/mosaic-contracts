@@ -188,7 +188,7 @@ contract Core is CoreInterface, Util {
 	 *
 	 *  @dev proveOpenST can be called by anyone to verify merkle proof of OpenSTRemote contract address. OpenSTRemote is OpenSTUtility
 	 *		 contract address on utility chain and OpenSTValue contract address on value chain.
-	 *       Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
+	 *		 Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
 	 *		 which is a trusted decentralized system running separately.
 	 * 		 It's important to note that in replay calls of proveOpenST bytes _rlpParentNodes variable is not validated. In this case
 	 *		 input storage root is verified with stored storage root of the first method call.
