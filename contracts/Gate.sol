@@ -31,9 +31,9 @@ import "./WorkersInterface.sol";
 /**
  *	@title Gate contract which implements ProtocolVersioned, Owned
  *
- *	@notice Gate contract is staking gate that seperates the concerns of staker and staking processor.
- *      Stake process is executed through Gate contract rather than directly with the protocol contract.
- *      The Gate contract will serve the role of staking account rather than an external account.
+ *	@notice Gate contract is staking gate that seperates the concerns of staker and staking processor
+ *      Stake process is executed through Gate contract rather than directly with the protocol contract
+ *      The Gate contract will serve the role of staking account rather than an external account
  */
 contract Gate is ProtocolVersioned, Owned {
 
@@ -57,7 +57,7 @@ contract Gate is ProtocolVersioned, Owned {
       uint256 _unlockHeight,
       bytes32 _stakingIntentHash);
 
-    /*  Storage */
+    /* Storage */
 
     /** Storing stake requests */
     mapping(address /*staker */ => StakeRequest) public stakeRequests;
@@ -85,10 +85,10 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice Contract constructor
       *
-      * @param _workers worker contract address.
-      * @param _bounty bounty amount that worker address stakes while accepting stake request.
-      * @param _uuid UUID of utility token.
-      * @param _openSTProtocol OpenSTProtocol contract that governs staking.
+      * @param _workers worker contract address
+      * @param _bounty bounty amount that worker address stakes while accepting stake request
+      * @param _uuid UUID of utility token
+      * @param _openSTProtocol OpenSTProtocol contract that governs staking
       */
     constructor(
         WorkersInterface _workers,
@@ -111,13 +111,13 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function requestStake
       *
-      * @dev In order to request stake the staker needs to approve gate contract for stake amount.
+      * @dev In order to request stake the staker needs to approve gate contract for stake amount
       *      Staked amount is transferred from staker address to Gate contract
       *
-      * @param _amount staking amount.
-      * @param _beneficiary beneficiary address.
+      * @param _amount staking amount
+      * @param _beneficiary beneficiary address
       *
-      * @return success, boolean that specifies status of the execution.
+      * @return success, boolean that specifies status of the execution
       */
     function requestStake(
         uint256 _amount,
@@ -147,12 +147,12 @@ contract Gate is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to revert requested stake.
+      * @notice external function to revert requested stake
       *
       * @dev This can be called only by staker
       *      Staked amount is transferred back to staker address from Gate contract
       *
-      * @return stakeRequestAmount staking amount.
+      * @return stakeRequestAmount staking amount
       */
     function revertStakeRequest()
         external
@@ -178,15 +178,15 @@ contract Gate is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to reject requested stake.
+      * @notice external function to reject requested stake
       *
       * @dev This can be called only by whitelisted worker address
       *      Staked amount is transferred back to staker address from Gate contract
       *
-      * @param _staker staker address.
-      * @param _reason reason for rejection.
+      * @param _staker staker address
+      * @param _reason reason for rejection
       *
-      * @return stakeRequestAmount staking amount.
+      * @return stakeRequestAmount staking amount
       */
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
@@ -216,19 +216,19 @@ contract Gate is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to accept requested stake.
+      * @notice external function to accept requested stake
       *
       * @dev This can be called only by whitelisted worker address
       *      Bounty amount is transferred from msg.sender to Gate contract
-      *      openSTProtocol is approved for staking amount by Gate contract.
+      *      openSTProtocol is approved for staking amount by Gate contract
       *
-      * @param _staker staker address.
-      * @param _hashLock hash lock.
+      * @param _staker staker address
+      * @param _hashLock hash lock
       *
-      * @return amountUT branded token amount.
-      * @return nonce staker nonce count.
-      * @return unlockHeight height till what the amount is locked.
-      * @return stakingIntentHash staking intent hash.
+      * @return amountUT branded token amount
+      * @return nonce staker nonce count
+      * @return unlockHeight height till what the amount is locked
+      * @return stakingIntentHash staking intent hash
       */
     function acceptStakeRequest(address _staker, bytes32 _hashLock)
         external
@@ -278,15 +278,15 @@ contract Gate is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to process staking.
+      * @notice external function to process staking
       *
       * @dev Bounty amount is transferred to msg.sender if it's not whitelisted worker
       *      Bounty amount is transferred to workers contract if msg.sender is whitelisted worker
       *
-      * @param _stakingIntentHash staking intent hash.
-      * @param _unlockSecret unlock secret.
+      * @param _stakingIntentHash staking intent hash
+      * @param _unlockSecret unlock secret
       *
-      * @return stakeRequestAmount stake amount.
+      * @return stakeRequestAmount stake amount
       */
     function processStaking(
         bytes32 _stakingIntentHash,
@@ -332,15 +332,15 @@ contract Gate is ProtocolVersioned, Owned {
       }
 
     /**
-      * @notice external function to revert staking.
+      * @notice external function to revert staking
       *
-      * @dev Caller must be the whitelisted worker.
-      *      Staked amount is transferred to the staker address.
-      *      Bounty amount is transferred to workers contract.
+      * @dev Caller must be the whitelisted worker
+      *      Staked amount is transferred to the staker address
+      *      Bounty amount is transferred to workers contract
       *
-      * @param _stakingIntentHash staking intent hash.
+      * @param _stakingIntentHash staking intent hash
       *
-      * @return stakeRequestAmount staking amount.
+      * @return stakeRequestAmount staking amount
       */
     function revertStaking(
         bytes32 _stakingIntentHash)
