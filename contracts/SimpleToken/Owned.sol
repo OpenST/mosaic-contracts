@@ -9,10 +9,11 @@ pragma solidity ^0.4.23;
 // The MIT Licence.
 // ----------------------------------------------------------------------------
 
-
-//
-// Implements basic ownership with 2-step transfers.
-//
+/**
+ *  @title Owned contract 
+ *
+ *  @notice Implements basic ownership with 2-step transfers
+ */
 contract Owned {
 
     address public owner;

@@ -9,7 +9,11 @@ pragma solidity ^0.4.23;
 // The MIT Licence.
 // ----------------------------------------------------------------------------
 
-
+/**
+ *  @title SimpleTokenConfig
+ *
+ *  @notice Contains public constants utilized by the SimpleToken contract
+ */
 contract SimpleTokenConfig {
 
     string  public constant TOKEN_SYMBOL   = "ST";

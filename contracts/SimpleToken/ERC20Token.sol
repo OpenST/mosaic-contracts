@@ -13,10 +13,11 @@ import "./ERC20Interface.sol";
 import "./Owned.sol";
 import "./SafeMath.sol";
 
-
-//
-// Standard ERC20 implementation, with ownership.
-//
+/**
+ *  @title ERC20Token which implements ERC20Interface and Owned
+ *
+ *  @notice Standard ERC20 implementation, with ownership
+ */
 contract ERC20Token is ERC20Interface, Owned {
 
     using SafeMath for uint256;
@@ -39,8 +40,10 @@ contract ERC20Token is ERC20Interface, Owned {
         tokenTotalSupply = _totalSupply;
         balances[owner]  = _totalSupply;
 
-        // According to the ERC20 standard, a token contract which creates new tokens should trigger
-        // a Transfer event and transfers of 0 values must also fire the event.
+        /** 
+         * According to the ERC20 standard, a token contract which creates new tokens should trigger
+         * a Transfer event and transfers of 0 values must also fire the event.
+         */
         emit Transfer(0x0, owner, _totalSupply);
     }
 
@@ -76,9 +79,11 @@ contract ERC20Token is ERC20Interface, Owned {
 
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        // According to the EIP20 spec, "transfers of 0 values MUST be treated as normal
-        // transfers and fire the Transfer event".
-        // Also, should throw if not enough balance. This is taken care of by SafeMath.
+        /** 
+         * According to the EIP20 spec, "transfers of 0 values MUST be treated as normal
+         * transfers and fire the Transfer event".Also, should throw if not enough balance. 
+         * This is taken care of by SafeMath.
+         */
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 

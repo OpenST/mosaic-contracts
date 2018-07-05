@@ -24,9 +24,10 @@ pragma solidity ^0.4.23;
 import "./Owned.sol";
 
 /**
-   @title OpsManaged
-   @notice Implements OpenST ownership and permission model
-*/
+ *  @title OpsManaged which implements Owned
+ *
+ *  @notice Implements OpenST ownership and permission model
+ */
 contract OpsManaged is Owned {
 
     address public opsAddress;
@@ -81,7 +82,7 @@ contract OpsManaged is Owned {
     }
 
 
-    // Owner and Admin can change the admin address. Address can also be set to 0 to 'disable' it.
+    /** Owner and Admin can change the admin address. Address can also be set to 0 to 'disable' it. */
     function setAdminAddress(address _adminAddress) external onlyOwnerOrAdmin returns (bool) {
         require(_adminAddress != owner);
         require(_adminAddress != address(this));
@@ -95,7 +96,7 @@ contract OpsManaged is Owned {
     }
 
 
-    // Owner and Admin can change the operations address. Address can also be set to 0 to 'disable' it.
+    /** Owner and Admin can change the operations address. Address can also be set to 0 to 'disable' it. */
     function setOpsAddress(address _opsAddress) external onlyOwnerOrAdmin returns (bool) {
         require(_opsAddress != owner);
         require(_opsAddress != address(this));

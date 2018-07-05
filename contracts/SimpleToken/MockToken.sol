@@ -9,17 +9,21 @@ pragma solidity ^0.4.23;
 // The MIT Licence.
 // ----------------------------------------------------------------------------
 
-
 import "./ERC20Token.sol";
 import "./SimpleTokenConfig.sol";
 import "./OpsManaged.sol";
 
+/**
+ *  @title MockToken which implements ERC20Token, OpsManaged and SimpleTokenConfig
+ *
+ *  @notice provides an ERC20Token mock to facilitate testing
+ */
 contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
     bool public finalized;
 
-
-    // Events
+    /* Events */
+    
     event Finalized();
 
     constructor() public
@@ -27,7 +31,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         OpsManaged()
         { }
 
-    // Finalize functionality retained because it is expected by platform scripts
+    /** Finalize functionality retained because it is expected by platform scripts */
     function finalize() external onlyAdmin returns (bool success) {
         require(!finalized);
 

@@ -15,6 +15,11 @@ pragma solidity ^0.4.23;
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 // ----------------------------------------------------------------------------
 
+/**
+ *  @title ERC20Interface which implements ERC20Interface and Owned
+ *
+ *  @notice Standard ERC20 implementation, with ownership
+ */
 contract ERC20Interface {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
