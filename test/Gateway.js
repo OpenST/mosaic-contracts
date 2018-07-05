@@ -634,7 +634,16 @@ contract('Gateway', function(accounts) {
 
       });
 
-      it('fails to process when already processStake is called', async () => {
+      it('successfully processes called by any account', async () => {
+
+          let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
+          let stakingIntentHash = stakeResult['stakingIntentHash'];
+
+          await revertStaking(stakingIntentHash, accounts[10], true);
+
+      });
+
+        it('fails to process when already processStake is called', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
@@ -662,17 +671,6 @@ contract('Gateway', function(accounts) {
         await revertStaking(beneficiaryAccount, workerAddress1, false);
 
       });
-
-      it('fails to process when worker is not whitelisted', async () => {
-
-        let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        let stakingIntentHash = stakeResult['stakingIntentHash'];
-
-        let workerAddress = accounts[10];
-        await revertStaking(stakingIntentHash, workerAddress, false);
-
-      });
-
 
       it('fails to processes when stakeRequest was not accepted', async () => {
 
