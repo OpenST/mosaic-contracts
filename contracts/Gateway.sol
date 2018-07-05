@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Value chain: Gate
+// Value chain: Gateway
 //
 // http://www.simpletoken.org/
 //
@@ -29,13 +29,13 @@ import "./Owned.sol";
 import "./WorkersInterface.sol";
 
 /**
- *	@title Gate contract which implements ProtocolVersioned, Owned
+ *	@title Gateway contract which implements ProtocolVersioned, Owned
  *
- *	@notice Gate contract is staking gate that seperates the concerns of staker and staking processor
- *      Stake process is executed through Gate contract rather than directly with the protocol contract
- *      The Gate contract will serve the role of staking account rather than an external account
+ *	@notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor
+ *      Stake process is executed through Gateway contract rather than directly with the protocol contract
+ *      The Gateway contract will serve the role of staking account rather than an external account
  */
-contract Gate is ProtocolVersioned, Owned {
+contract Gateway is ProtocolVersioned, Owned {
 
     /* Events */
 
@@ -111,8 +111,8 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function requestStake
       *
-      * @dev In order to request stake the staker needs to approve gate contract for stake amount
-      *      Staked amount is transferred from staker address to Gate contract
+      * @dev In order to request stake the staker needs to approve Gateway contract for stake amount
+      *      Staked amount is transferred from staker address to Gateway contract
       *
       * @param _amount staking amount
       * @param _beneficiary beneficiary address
@@ -150,7 +150,7 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to revert requested stake
       *
       * @dev This can be called only by staker
-      *      Staked amount is transferred back to staker address from Gate contract
+      *      Staked amount is transferred back to staker address from Gateway contract
       *
       * @return stakeRequestAmount staking amount
       */
@@ -181,7 +181,7 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to reject requested stake
       *
       * @dev This can be called only by whitelisted worker address
-      *      Staked amount is transferred back to staker address from Gate contract
+      *      Staked amount is transferred back to staker address from Gateway contract
       *
       * @param _staker staker address
       * @param _reason reason for rejection
@@ -219,8 +219,8 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to accept requested stake
       *
       * @dev This can be called only by whitelisted worker address
-      *      Bounty amount is transferred from msg.sender to Gate contract
-      *      openSTProtocol is approved for staking amount by Gate contract
+      *      Bounty amount is transferred from msg.sender to Gateway contract
+      *      openSTProtocol is approved for staking amount by Gateway contract
       *
       * @param _staker staker address
       * @param _hashLock hash lock
@@ -252,7 +252,7 @@ contract Gate is ProtocolVersioned, Owned {
         // check if _hashLock is not 0
         require(_hashLock != bytes32(0));
 
-        // Transfer bounty amount from worker to gate contract
+        // Transfer bounty amount from worker to Gateway contract
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), bounty));
 
         // Approve OpenSTValue contract for stake amount
@@ -296,8 +296,8 @@ contract Gate is ProtocolVersioned, Owned {
       {
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
-        //but all staking stateful information will move to the gate contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
@@ -349,8 +349,8 @@ contract Gate is ProtocolVersioned, Owned {
 
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
-        //but all staking stateful information will move to the gate contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
