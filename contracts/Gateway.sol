@@ -31,7 +31,7 @@ import "./WorkersInterface.sol";
 /**
  *	@title Gateway contract which implements ProtocolVersioned, Owned
  *
- *	@notice Gateway contract is staking gateway that separate the concerns of staker and staking processor
+ *	@notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor
  *      Stake process is executed through Gateway contract rather than directly with the protocol contract
  *      The Gateway contract will serve the role of staking account rather than an external account
  */
@@ -296,8 +296,8 @@ contract Gateway is ProtocolVersioned, Owned {
       {
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gateway contract in v0.9.3;
-        //but all staking stateful information will move to the gateway contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
@@ -353,8 +353,8 @@ contract Gateway is ProtocolVersioned, Owned {
 
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gateway contract in v0.9.3;
-        //but all staking stateful information will move to the gateway contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
