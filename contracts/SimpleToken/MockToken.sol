@@ -16,7 +16,7 @@ import "./OpsManaged.sol";
 /**
  *  @title MockToken which implements ERC20Token, OpsManaged and SimpleTokenConfig
  *
- *  @notice provides an ERC20Token mock to facilitate testing
+ *  @notice initializes an ERC20Token mock with arguments to facilitate testing
  */
 contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
@@ -26,12 +26,22 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     
     event Finalized();
 
+    /**
+     *  @notice Contract constructor
+     * 
+     *  @dev passes arguments to ERC20Token contract constructor
+     */       
     constructor() public
         ERC20Token("MOCK", "Mock Token", TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
         { }
 
-    /** Finalize functionality retained because it is expected by platform scripts */
+    /**
+     *  @notice external function finalize
+     *
+     *  @return bool true for finalized set to true, false otherwise
+     */
+    // Finalize functionality retained because it is expected by platform scripts
     function finalize() external onlyAdmin returns (bool success) {
         require(!finalized);
 
@@ -42,6 +52,11 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         return true;
     }
 
+    /**
+     *  @notice public function remove
+     *
+     *  @dev destroys the current contract, sending its funds to function caller
+     */
     function remove() public onlyOwner {
         selfdestruct(msg.sender);
     }    
