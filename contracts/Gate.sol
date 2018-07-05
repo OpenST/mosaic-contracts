@@ -344,7 +344,7 @@ contract Gate is ProtocolVersioned, Owned {
     function revertStaking(
         bytes32 _stakingIntentHash)
         external
-        returns (uint256 stakeRequestAmount)
+        returns (uint256 amountST)
       {
 
         require(_stakingIntentHash != bytes32(0));
@@ -362,14 +362,13 @@ contract Gate is ProtocolVersioned, Owned {
         // check if the stake request was accepted
         require(stakeRequest.hashLock != bytes32(0));
 
-        uint256 amountST = uint256(0);
         address stakerAddress = address(0);
         (, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash);
 
         // check if the stake address is correct
-        require(stakerAddress == staker);
+        assert(stakerAddress == staker);
 
-        require(amountST == stakeRequest.amount);
+        assert(amountST == stakeRequest.amount);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
