@@ -10,9 +10,9 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title Owned contract 
+ *  @title Owned contract
  *
- *  @notice Implements basic ownership with 2-step transfers
+ *  @notice Implements basic ownership with 2-step transfers.
  */
 contract Owned {
 
@@ -22,23 +22,45 @@ contract Owned {
     event OwnershipTransferInitiated(address indexed _proposedOwner);
     event OwnershipTransferCompleted(address indexed _newOwner);
 
-
+    /**
+     *  @notice Contract constructor
+     *
+     *  @dev sets constructor caller to owner
+     */
     constructor() public {
         owner = msg.sender;
     }
 
-
+    /**
+     *  @notice modifier onlyOwner
+     * 
+     *  @dev checks if modifier caller isOwner
+     */
     modifier onlyOwner() {
         require(isOwner(msg.sender));
         _;
     }
 
-
+    /**
+     *  @notice internal view function isOwner
+     * 
+     *  @param _address address to be checked
+     *
+     *  @return bool true if address passed is owner address, false otherwise
+     */
     function isOwner(address _address) internal view returns (bool) {
         return (_address == owner);
     }
 
-
+    /**
+     *  @notice public function initiateOwnershipTransfer
+     * 
+     *  @dev sets _proposedOwner as proposedOwner
+     *
+     *  @param _proposedOwner address of proposed owner
+     *
+     *  @return bool true if ownership transfer is successful, false otherwise
+     */
     function initiateOwnershipTransfer(address _proposedOwner) public onlyOwner returns (bool) {
         proposedOwner = _proposedOwner;
 
@@ -47,7 +69,14 @@ contract Owned {
         return true;
     }
 
-
+    /**
+     *  @notice public function completeOwnershipTransfer
+     * 
+     *  @dev only callable by proposedOwner, sets function caller as Owner 
+     *       and proposedOwner to 0 address.
+     *
+     *  @return bool true if complete ownership transfer is successful, false otherwise
+     */
     function completeOwnershipTransfer() public returns (bool) {
         require(msg.sender == proposedOwner);
 
