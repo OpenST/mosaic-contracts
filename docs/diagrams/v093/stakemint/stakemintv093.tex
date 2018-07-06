@@ -10,7 +10,7 @@
 
 \geometry{
   paperwidth=65cm,
-  paperheight=115cm,
+  paperheight=112cm,
   margin=1cm
 }
 
@@ -201,18 +201,6 @@
     %%% Facilitator has observed a committed state root that includes the StakingIntentHash
     %%%
     
-    % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
-    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeightUC, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeightUC, storageRootUC, hashedAccount)}]{Facilitator}{CoreUC}
-    % OpenSTUtility checks StakingIntentHash against committed state root
-     % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
-     %\end{umlcall}
-      % OpenSTUtility validate merkle proof
-      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRootUC))}]{CoreUC}
-     \end{umlcallself}
-      % OpenSTUtility store valid StakingIntentHash
-      \begin{umlcallself}[op={store latest valid storageRootUC}]{CoreUC}
-      \end{umlcallself}
-    \end{umlcall}
     
        % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
     \begin{umlcall}[dt=15, op={: proveOpenST(blockHeightVC, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeightVC, storageRootVC, hashedAccount)}]{Facilitator}{CoreVC}
@@ -359,7 +347,7 @@
           \end{umlcall}
         \end{umlcall}
       \end{umlfragment}
-      \umlnote[x=12, y=-72, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
+      \umlnote[x=12, y=-66, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
 
       \umlfpart[revert]
      
@@ -468,10 +456,23 @@
   %\end{umlcall}
   \end{umlcall}   
     \end{umlcall}
-     \end{umlfragment}
+     \end{umlfragment}    % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
+     
+    \begin{umlcall}[dt=90, op={: proveOpenST(blockHeightUC, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeightUC, storageRootUC, hashedAccount)}]{Facilitator}{CoreUC}
+    % OpenSTUtility checks StakingIntentHash against committed state root
+     % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
+     %\end{umlcall}
+      % OpenSTUtility validate merkle proof
+      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRootUC))}]{CoreUC}
+     \end{umlcallself}
+      % OpenSTUtility store valid StakingIntentHash
+      \begin{umlcallself}[op={store latest valid storageRootUC}]{CoreUC}
+      \end{umlcallself}
+    \end{umlcall}
+     
      % confirm redemption intent begins on UC side
      % beneficiary on VC side calls confirm redemption intent on openstvalue
-    \begin{umlcall}[dt= 15, op={: confirmRedemptionIntent(redeemer, redeemerNonce, beneficiary, amountUT, redemptionUnlockHeight, blockHeight, hashLock, rlpParentNodes)}]{OstDotCom}{OpenSTValue}
+    \begin{umlcall}[dt= 45, op={: confirmRedemptionIntent(redeemer, redeemerNonce, beneficiary, amountUT, redemptionUnlockHeight, blockHeight, hashLock, rlpParentNodes)}]{OstDotCom}{OpenSTValue}
     %require redemption unlock height > 0
      \begin{umlcallself}[op={require(expirationHeight <= block.number)}]{OpenSTValue}
        \end{umlcallself}
@@ -510,7 +511,7 @@
     \begin{umlfragment}[type=alt, label=proceed, name=policy, inner xsep=2]
 	% process redeem should begin now on UC side
 	% redeemer calls on process redeeming on openstutility 
-    \begin{umlcall}[dt=73, op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
+    \begin{umlcall}[dt=100, op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
 
     % require hashlock is equal to hash of unlock secret
     \begin{umlcallself}[op={require(hashLock = H(unlockSecret))}]{OpenSTUtility}
