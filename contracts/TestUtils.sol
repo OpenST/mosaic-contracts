@@ -29,24 +29,22 @@ pragma solidity ^0.4.23;
 library TestUtils {
 
 	/**
-	 *	@notice mapping storage key hasher
+	 *	@notice internal pure function getStoragePath
 	 *
-	 *	@dev mapStorageKey called from the OpenSTValueMock contract for testing
-	 *	@param _key key of the mapping value
-	 *	@param _position position of the mapping in the index of storage
+	 *	@param _mappingKey key of the mapping value
+	 *	@param _indexPosition index position of the mapping in contract storage
 	 *
-	 *	@return bytes32 key to the mapping value in contract storage
+	 *	@return bytes32 path to the mapping value in contract storage
 	 */
-
-	function mapStorageKey(
-		bytes32 _key,
-		uint256 _position)
+	function getStoragePath(
+		bytes32 _mappingKey,
+		uint256 _indexPosition)
 		internal
 		pure
 		returns (bytes32)
 	{
 		return keccak256(abi.encode(
-			_key,
-			_position));
+			_mappingKey,
+			_indexPosition));
 	}
 }

@@ -36,12 +36,20 @@ contract OpenSTValueMock is OpenSTValue {
 
 	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
 	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+	// test staker nonce required for confirming the intents mapping index position
 	uint256 private constant testStakerNonce = 1;
+	// test staker address required for confirming the intents mapping index position
 	address private constant testStakerAddress = 0x87FCA9F4CC0D439163235c2C33abe8e4bA203580;
+	// test staking intent hash required for confirming the intents mapping index position
 	bytes32 private constant testStakingIntentHash = 0xf61ea4fb6316d5ecdd2299b49ef9f07c49077c8a7d105fecc100e453742e0727;
 	
-	bytes32 public intentsMapTestKey = hashIntentKey(testStakerAddress, testStakerNonce);
-	bytes32 public testHashStoragePath = TestUtils.mapStorageKey(intentsMapTestKey,intentsMappingStorageIndexPosition);
+	// the following public state variables do not alter the index position of intents mapping
+	// as storage in a contract if filled with inherited contract's variables first, ordered left to right 
+	// test intents key calculated to store the test staking intent hash in intents mapping
+	bytes32 public testIntentsKey = hashIntentKey(testStakerAddress, testStakerNonce);
+	// storage path to the test staking intent hash in the intents mapping
+	// calculated from the intentsMappingStorageIndexPosition constant in OpenSTValue
+	bytes32 public testStoragePath = TestUtils.getStoragePath(testIntentsKey,intentsMappingStorageIndexPosition);
 		
 	/* Public functions */
 
@@ -51,8 +59,9 @@ contract OpenSTValueMock is OpenSTValue {
 		address _registrar)
 		OpenSTValue(_chainIdValue, _eip20token, _registrar)
 		public 
-	{ 
-		intents[intentsMapTestKey] = testStakingIntentHash;
+	{
+		//inserting the intents mapping with the test staking intent hash against calculated testIntentsKey
+		intents[testIntentsKey] = testStakingIntentHash;
 	}
 
 	function blocksToWaitLong() public pure returns (uint256) {

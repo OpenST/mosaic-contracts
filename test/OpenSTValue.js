@@ -33,7 +33,7 @@ const BigNumber = require('bignumber.js');
 /// 	has chainIdValue
 /// 	has valueToken
 /// 	has registrar
-///
+/// 	confirms intents mapping index position
 /// AddCore
 /// 	fails to add core by non-registrar
 /// 	fails to add core by registrar when core is null
@@ -58,7 +58,6 @@ const BigNumber = require('bignumber.js');
 /// 		fails to stake when msg.sender has not approved it to transfer at least the amount
 /// 		fails to stake when the SimpleStake address for the given UUID is null
 ///			fails to stake when the beneficiary is null
-///			checks index position of intents mapping in storage
 ///			successfully stakes
 ///		when the staking account is not null
 ///			fails to stake when msg.sender is not the stakingAccount
@@ -136,6 +135,19 @@ contract('OpenSTValue', function(accounts) {
 		it('has registrar', async () => {
 			assert.equal(await openSTValue.registrar.call(), registrar);
 		})
+
+		it('confirms intents mapping index position', async () => {
+			const testIntentsKey = await openSTValue.testIntentsKey.call();
+	 		const testIntentsMappingValue = await openSTValue.intents.call(testIntentsKey);
+	 		const storagePath = await openSTValue.testStoragePath.call();
+	 		// getStorageAt gets the value directly from contract storage
+	 		// by passing a parameter determined from the indentified index position of the mapping
+	 		const storageValue = await web3.eth.getStorageAt(openSTValue.address, storagePath);
+			
+			// test confirms correct identification of the index of intents mapping in contract storage
+	 		// will raise a flag if the index position of the mapping changes for any reason in OpenSTValue
+	 		assert.equal(testIntentsMappingValue, storageValue);
+		})		
 	})
 
 	describe('AddCore', async () => {
@@ -242,15 +254,6 @@ contract('OpenSTValue', function(accounts) {
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
 	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, 0, lock.l, accounts[0], { from: accounts[0] }));
-			})
-
-			it('checks index position of intents mapping in storage', async () => {
-				const intentsMapTestKey = await openSTValue.intentsMapTestKey.call();
-	 			const intentsMapTestValue = await openSTValue.intents.call(intentsMapTestKey);
-	 			const storageKey = await openSTValue.testHashStoragePath.call();
-	 			const storageValue = await web3.eth.getStorageAt(openSTValue.address, storageKey);
-
-	 			assert.equal(intentsMapTestValue, storageValue);
 			})
 
 			it('successfully stakes', async () => {
