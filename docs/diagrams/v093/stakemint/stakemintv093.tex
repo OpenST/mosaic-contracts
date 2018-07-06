@@ -10,7 +10,7 @@
 
 \geometry{
   paperwidth=65cm,
-  paperheight=112cm,
+  paperheight=115cm,
   margin=1cm
 }
 
@@ -108,7 +108,7 @@
          % \begin{umlcallself}[dt=0, op={HTLC(staker, amount)},]{OpenSTValue}
           %\end{umlcallself}
           % emit StakingIntentDeclared
-          \begin{umlcall}[type=return, op={emit StakingIntentDeclared(nonce, amountUT, unlockHeight, StakingIntentHash)}]{OpenSTValue}{Facilitator}
+          \begin{umlcall}[type=return, op={emit StakingIntentDeclared(uuid, staker, nonce, intentKeyHash, beneficiary, amountST, amountUT, unlockHeight, StakingIntentHash, chainId)}]{OpenSTValue}{Facilitator}
           \end{umlcall}
         \end{umlcall}
         % HTLC(facilitator, bounty)
@@ -127,7 +127,7 @@
           % return OST to staker
           \begin{umlcall}[type=return, fill=green!20, op=<<OST(amountST)>>]{OST}{Staker}
           % emit stake request rejected 
-          \begin{umlcall}[dt=10, type=return, op={emit StakeRequestRejected(amountST, reason)}]{Branded Token Gateway}{Staker}
+          \begin{umlcall}[dt=10, type=return, op={emit StakeRequestRejected(staker, amountST, reason)}]{Branded Token Gateway}{Facilitator}
           \end{umlcall}
         \end{umlcall}
       \end{umlcall}
@@ -148,6 +148,9 @@
           % return OST to staker
           \begin{umlcall}[type=return, fill=green!20, op=<<OST(amountST)>>]{OST}{Staker}
           \end{umlcall}
+          % emit rejectStakeRequest event
+          \begin{umlcall}[type=return, op={: emit StakeRequestReverted(staker, OST(amountST))}]{OST}{Facilitator}
+          \end{umlcall}          
         \end{umlcall}
       \end{umlcall}
     \end{umlfragment}
@@ -158,63 +161,76 @@
     
     \begin{umlfragment}[type=loop, name=mosaic]
       
-      \begin{umlcall}[dt=193, op={new block(blockHeight, stateRoot)}]{Utility Chain}{OstDotCom}
+      \begin{umlcall}[dt=198, op={new block(blockHeightUC, stateRootUC)}]{Utility Chain}{OstDotCom}
         % OstDotCom report state root of Utility chain on CoreUC on value chain
         %\begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{OstDotCom}{RegistrarVC}
-          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{OstDotCom}{CoreUC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeightUC, stateRootUC)}]{OstDotCom}{CoreUC}
           % make sure block height is greater than the lastestStateRootBlockHeight previously stored
-          \begin{umlcallself}[op={require(blockHeight > latestSateRootBlockHeight)}]{CoreUC}
+          \begin{umlcallself}[op={require(blockHeightUC > latestSateRootBlockHeightUC)}]{CoreUC}
           \end{umlcallself}
           % store the state root in the contract's mapping
-          \begin{umlcallself}[op={store stateRoot}]{CoreUC}
+          \begin{umlcallself}[dt=4,op={store latest valid stateRootUC}]{CoreUC}
           \end{umlcallself}
             % state root of utility chain got reported on value chain
-            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreUC}{Facilitator}
+            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeightUC, stateRootUC)}]{CoreUC}{Facilitator}
             \end{umlcall}
           \end{umlcall}
         %\end{umlcall}
       \end{umlcall}
           
       % OstDotCom report state root of Value chain on CoreVC on utility chain
-      \begin{umlcall}[dt=212, op={new block(blockHeight, stateRoot)}]{Value Chain}{OstDotCom}
+      \begin{umlcall}[dt=212, op={new block(blockHeightVC, stateRootVC)}]{Value Chain}{OstDotCom}
         %\begin{umlcall}[op={: report(VC, blockHeight, stateRoot}]{OstDotCom}{RegistrarUC}
           % reporting through registrar is instant commit
-          \begin{umlcall}[op={: commitStateRoot(blockHeight, stateRoot)}]{OstDotCom}{CoreVC}
+          \begin{umlcall}[op={: commitStateRoot(blockHeightVC, stateRootVC)}]{OstDotCom}{CoreVC}
           % make sure block height is greater than the lastestStateRootBlockHeight previously stored
-          \begin{umlcallself}[op={require(blockHeight > latestSateRootBlockHeight)}]{CoreVC}
+          \begin{umlcallself}[op={require(blockHeightVC > latestSateRootBlockHeightVC)}]{CoreVC}
           \end{umlcallself}
           % store the state root in the contract's mapping
-          \begin{umlcallself}[op={store stateRoot}]{CoreVC}
+          \begin{umlcallself}[op={store latest valid stateRootVC}]{CoreVC}
           \end{umlcallself}          
             % state root of value chain got reported on utility chain
-            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeight, stateRoot)}]{CoreVC}{Facilitator}
+            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeightVC, stateRootVC)}]{CoreVC}{Facilitator}
             \end{umlcall}
           \end{umlcall}
         %\end{umlcall}
       \end{umlcall}
-      
-    \end{umlfragment}
-    \umlnote[x=31, y=-28, width=180]{mosaic}{Placeholder for OpenST Mosaic game}
+       \end{umlfragment}
     
     %%%
     %%% Facilitator has observed a committed state root that includes the StakingIntentHash
     %%%
     
     % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
-    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeight, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeight, storageRoot, hashedAccount)}]{Facilitator}{CoreUC}
+    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeightUC, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeightUC, storageRootUC, hashedAccount)}]{Facilitator}{CoreUC}
     % OpenSTUtility checks StakingIntentHash against committed state root
      % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
      %\end{umlcall}
       % OpenSTUtility validate merkle proof
-      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRoot))}]{CoreUC}
+      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRootUC))}]{CoreUC}
      \end{umlcallself}
       % OpenSTUtility store valid StakingIntentHash
-      \begin{umlcallself}[op={store valid storageRoot}]{CoreUC}
+      \begin{umlcallself}[op={store latest valid storageRootUC}]{CoreUC}
       \end{umlcallself}
     \end{umlcall}
     
+       % Facilitator submits claim for StakingIntentHash by presenting Merkle proof
+    \begin{umlcall}[dt=15, op={: proveOpenST(blockHeightVC, rlpEncodedAccount, rlpParentNodes)}, return={emit OpenSTProven(blockHeightVC, storageRootVC, hashedAccount)}]{Facilitator}{CoreVC}
+    % OpenSTUtility checks StakingIntentHash against committed state root
+     % \begin{umlcall}[op={: getStateRoot(blockHeight)}, return={stateRoot @ blockHeight}]{OpenSTUtility}{CoreVC}
+     %\end{umlcall}
+      % OpenSTUtility validate merkle proof
+      \begin{umlcallself}[op={require(verify(hashedAccount, encodedOpenSTRemotePath, rlpParentNodes, stateRootVC))}]{CoreVC}
+     \end{umlcallself}
+      % OpenSTUtility store valid StakingIntentHash
+      \begin{umlcallself}[op={store latest valid storageRootVC}]{CoreVC}
+      \end{umlcallself}
+    \end{umlcall}
+
+  
+      \umlnote[x=31, y=-28, width=180]{mosaic}{Placeholder for OpenST Mosaic game}
     % Facilitator submits pre-image data for StakingIntentHash
-    \begin{umlcall}[dt=15, op={: confirmStakingIntent(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock, StakingIntentHash)}, return={emit StakingIntentConfirmed(stakingIntentHash,  expirationHeight)}]{Facilitator}{OpenSTUtility}
+    \begin{umlcall}[dt=15, op={: confirmStakingIntent(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock, rlpParentNodes)}, return={emit StakingIntentConfirmed(stakingIntentHash, staker, beneficiary, amountST, amountUT, expirationHeight, blockHeight, storageRootVC)}]{Facilitator}{OpenSTUtility}
 	% check stake nonces of staker is less than staker nonce      
      % \begin{umlcallself}[op={require(nonces[staker] < stakerNonce)}]{OpenSTUtility}
      % \end{umlcallself} 
@@ -225,8 +241,8 @@
       %\begin{umlcallself}[op={stakingIntentHash = H(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock)}]{OpenSTUtility}
       %\end{umlcallself}         
      % check calculated stakingIntentHash is equal to provided stakingIntentHash
-      \begin{umlcallself}[op={require(stakingIntentHash = StakingIntentHash)}]{OpenSTUtility}
-      \end{umlcallself}         
+      \begin{umlcallself}[op={require(merkleVerificationOfStake(stakerNonce, StakingIntentHash, rlpParentNodes, storageRoot)}]{OpenSTUtility}
+      \end{umlcallself}       
       %store the mints struct
       \begin{umlcallself}[op={store mints[stakingIntentHash]}]{OpenSTUtility}
       \end{umlcallself}
@@ -271,7 +287,7 @@
             \begin{umlcall}[dt=5, fill=green!20, type=return, op={<<OST(amountST)>>}]{OST}{SimpleStake}
             \end{umlcall}
           \end{umlcall}
-          \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, unlockSecret)}]{OpenSTValue}{Hunter}
+          \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, staker, amountST, amountUT, unlockSecret)}]{OpenSTValue}{Hunter}
           \end{umlcall}
         \end{umlcall}
         % transfer bounty from gate to facilitator
@@ -297,7 +313,7 @@
           \begin{umlcallself}[op={store claim}]{Branded Token}
           \end{umlcallself}
         \end{umlcall}
-        \begin{umlcall}[type=return, op={emit ProcessedMint(StakingIntentHash, tokenAddress, unlockSecret)}]{OpenSTUtility}{Hunter}
+        \begin{umlcall}[type=return, op={emit ProcessedMint(StakingIntentHash, tokenAddress, staker, beneficiary, amountUT, unlockSecret)}]{OpenSTUtility}{Hunter}
         \end{umlcall}
       \end{umlcall}
       
@@ -333,7 +349,7 @@
               \begin{umlcall}[dt=5, fill=green!20, type=return, op={<<OST(amountST)>>}]{OST}{SimpleStake}
               \end{umlcall}
             \end{umlcall}
-            \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, simpleStake, unlockSecret)}]{OpenSTValue}{Facilitator}
+            \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, simpleStake, staker, amountST, amountUT, unlockSecret)}]{OpenSTValue}{Facilitator}
             \end{umlcall}
           \end{umlcall}
           % transfer bounty from gate to facilitator
@@ -343,7 +359,7 @@
           \end{umlcall}
         \end{umlcall}
       \end{umlfragment}
-      \umlnote[x=12, y=-66, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
+      \umlnote[x=12, y=-72, width=150]{bounty}{If stake was left unprocessed, unlock secret is known through mint. Bounty is always transferred to msg.sender of processStaking()}
 
       \umlfpart[revert]
      
@@ -366,6 +382,8 @@
           \begin{umlcall}[fill=green!20, op={: transfer(staker, amountST)}]{OpenSTValue}{OST}
             \begin{umlcall}[fill=green!20, type=return, op={<<OST(amountST)>>}]{OST}{Staker}
             \end{umlcall}
+           \begin{umlcall}[dt=10, type=return, op={emit RevertedStake(StakingIntentHash, staker, amountST, amountUT)}]{OpenSTValue}{Facilitator}
+            \end{umlcall}   
           \end{umlcall}
         \end{umlcall}
         % transfer bounty from gate to facilitator
@@ -385,7 +403,7 @@
         \end{umlcallself}
       \end{umlcall}
     \end{umlfragment}
-    \umlnote[x=1, y=-47, width=100]{phasetwo}{With both value chain and utility chain configured correctly for StakingIntentHash, Facilitator can proceed by revealing the unlock secret, or revert by awaiting the unlock height }
+    \umlnote[x=1, y=-55, width=100]{phasetwo}{With both value chain and utility chain configured correctly for StakingIntentHash, Facilitator can proceed by revealing the unlock secret, or revert by awaiting the unlock height }
     \umlnote[x=35, y=-102, width=120]{phasetwo}{Any actor can call revertStaking and the bounty is returned to the facilitator}
 
   \end{umlseqdiag}
@@ -425,7 +443,7 @@
     \end{umlcall}
     % redeemer calls redeem on OpenSTUtility 
     
-   \begin{umlfragment}[type=alt, label=redeem, name=policy, inner xsep=2]
+   \begin{umlfragment}[type=alt, label=redeem, name=policy]
     \begin{umlcall}[dt=10, op={: redeem(uuid, amountUT, nonce, beneficiary, hashLock)}]{Redeemer}{OpenSTUtility}
     %require that  allowance is there for OSTU for amount UT
     \begin{umlcallself}[op={require (allowance(redeemer, OpenSTUtility) >= amountUT)}]{OpenSTUtility}
@@ -446,11 +464,11 @@
     \begin{umlcall}[type=return, op={emit RedemptionIntentDeclared(uuid, redemptionIntentHash, brandedToken, redeemer, nonce, beneficiary, amountUT, unlockHeight)}]{OpenSTUtility}{OstDotCom}
      \end{umlcall}
     %event can be heard by Redeemer 
-    \begin{umlcall}[type=return, op={emit RedemptionIntentDeclared}]{OpenSTUtility}{Redeemer}
-  \end{umlcall}
+    %\begin{umlcall}[type=return, op={emit RedemptionIntentDeclared}]{OpenSTUtility}{Redeemer}
+  %\end{umlcall}
   \end{umlcall}   
     \end{umlcall}
-     
+     \end{umlfragment}
      % confirm redemption intent begins on UC side
      % beneficiary on VC side calls confirm redemption intent on openstvalue
     \begin{umlcall}[dt= 15, op={: confirmRedemptionIntent(redeemer, redeemerNonce, beneficiary, amountUT, redemptionUnlockHeight, blockHeight, hashLock, rlpParentNodes)}]{OstDotCom}{OpenSTValue}
@@ -489,10 +507,10 @@
              \end{umlcall}
 
  
-  \umlfpart[process]
+    \begin{umlfragment}[type=alt, label=proceed, name=policy, inner xsep=2]
 	% process redeem should begin now on UC side
 	% redeemer calls on process redeeming on openstutility 
-    \begin{umlcall}[dt=65, op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
+    \begin{umlcall}[dt=73, op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
 
     % require hashlock is equal to hash of unlock secret
     \begin{umlcallself}[op={require(hashLock = H(unlockSecret))}]{OpenSTUtility}
@@ -511,12 +529,12 @@
     \begin{umlcallself}[op={delete intents[H(redeemer, nonce)]}]{OpenSTUtility}
     \end{umlcallself}    
   \end{umlcall}
-\end{umlfragment}
 
-    \begin{umlfragment}[type=alt, label=unstake, name=policy, inner xsep=2]
+
+
     	%revert unstaking could be initiatied from the redeemer side
 	% beneficiary calls on processUnstaking with redempition intent hash
-	\begin{umlcall}[dt= 35, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{OstDotCom}{OpenSTValue}
+	\begin{umlcall}[dt= 38, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{OstDotCom}{OpenSTValue}
 	% require that the hashlock is the same
 	\begin{umlcallself}[op={require H(unlockSecret)=  hashLock}]{OpenSTValue}
 	\end{umlcallself}
@@ -535,8 +553,8 @@
    %emit event Processed Unstake
    \begin{umlcall}[dt= 21, type=return, op={emit ProcessedUnstake(uuid, redemptionIntentHash, stakeAddress, redeemer, beneficiary, amountST, unlockSecret)}]{OpenSTValue}{OstDotCom}
   	 \end{umlcall}
-  \begin{umlcall}[type=return, op={emit ProcessedUnstake}]{OpenSTValue}{Beneficiary}
-\end{umlcall}
+  %\begin{umlcall}[type=return, op={emit ProcessedUnstake}]{OpenSTValue}{Beneficiary}
+%\end{umlcall}
    %delete the storage for unstakes
    \begin{umlcallself}[op={delete unstakes [redemptionIntentHash]}]{OpenSTValue}
 	\end{umlcallself}
@@ -567,8 +585,8 @@
    %emit event Processed Unstake
    \begin{umlcall}[type=return, dt= 10, op={emit RevertedUnstake(uuid, redemptionIntentHash, redeemer, beneficiary, amountST)}]{OpenSTValue}{OstDotCom}
   	 \end{umlcall}
-    \begin{umlcall}[type=return, dt= 10, op={emit RevertedUnstake}]{OpenSTValue}{Beneficiary}
-  	 \end{umlcall} 	 
+    %\begin{umlcall}[type=return, dt= 10, op={emit RevertedUnstake}]{OpenSTValue}{OstDotCom}
+  	 %\end{umlcall} 	 
      %\end{umlcall} 
   \end{umlcall}
   \end{umlfragment}
