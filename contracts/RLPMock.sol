@@ -1,39 +1,37 @@
-pragma experimental ABIEncoderV2;
-
+pragma solidity ^0.4.23;
 import "./RLP.sol";
 
 contract RLPMock  {
-    function RLPMock(){
+    constructor(){
 
     }
 
     /** @notice Creates an RLPItem from an array of RLP encoded bytes.
      *
-     *  @param rlpParentNodes The RLP encoded bytes.
+     *  @param rlpEncodedData The RLP encoded bytes.
      *
      *  @return length and memory pointer of the rlp.
      */
-    function toRLPItem(bytes memory rlpParentNodes) public returns(uint,uint){
+    function toRLPItem(bytes memory rlpEncodedData) public returns(uint,uint){
 
-        RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
+        RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         return (item._unsafe_length,item._unsafe_memPtr);
-
 
     }
 
-    /**  @notice Creates an RLPItem from an array of RLP encoded bytes.
+    /**  @notice Creates an RLPItem from an array of RLP encoded bytes having .
      *
-     *   @param rlpParentNodes The RLP encoded bytes.
+     *   @param rlpEncodedData The RLP encoded bytes.
      *   @param strict Will throw if the data is not RLP encoded.
      *
      *   @return An RLPItem
      */
     function toRLPItemStrict(
-        bytes memory rlpParentNodes,
+        bytes memory rlpEncodedData,
         bool strict)
     public returns(uint, uint){
 
-        RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes,strict);
+        RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
         return(item._unsafe_length,item._unsafe_memPtr);
 
     }
@@ -47,10 +45,10 @@ contract RLPMock  {
      * @return length of list.
      */
     function toList(bytes memory rlpEncodedData) public returns(uint) {
+
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         RLP.RLPItem[] memory list =  RLP.toList(item);
         return list.length;
-
 
     }
 
@@ -63,7 +61,6 @@ contract RLPMock  {
     function toBytes(bytes memory rlpEncodedData) public returns(bytes toBytes){
 
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,true);
-
         toBytes= RLP.toBytes(item);
 
     }
@@ -72,7 +69,7 @@ contract RLPMock  {
      *
      *  @param rlpEncodedData The RLPItem encoded bytes.
      *
-      *  @return The decoded string in bytes format.
+     *  @return The decoded string in bytes format.
      */
     function toData(bytes memory rlpEncodedData) public returns(bytes toData){
 

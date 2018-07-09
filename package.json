@@ -6,6 +6,7 @@
     "assert": "^1.4.1",
     "bignumber": "^1.1.0",
     "bignumber.js": "^4.1.0",
+
     "keccak": "^1.4.0",
     "moment": "^2.19.2",
     "solparse": "^2.2.5",
@@ -14,7 +15,8 @@
   "devDependencies": {
     "truffle": "^4.1.8",
     "ganache-cli": "^6.1.0",
-    "abi-decoder": "^1.0.9"
+    "abi-decoder": "^1.0.9",
+    "ethereumjs-util": "^5.2.0"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
