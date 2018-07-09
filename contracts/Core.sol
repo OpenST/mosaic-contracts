@@ -191,7 +191,7 @@ contract Core is CoreInterface, Util {
 	 *		 Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
 	 *		 which is a trusted decentralized system running separately.
 	 * 		 It's important to note that in replay calls of proveOpenST bytes _rlpParentNodes variable is not validated. In this case
-	 *		 input storage root is verified with stored storage root of the first method call.
+	 *		 input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
 	 *		 OpenSTProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
 	 *
 	 *	@param _blockHeight block height at which OpenST is to be proven
