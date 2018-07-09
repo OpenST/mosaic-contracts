@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const Core = artifacts.require("./Core.sol")
-    , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+    , MockToken = artifacts.require("./SimpleToken/MockToken.sol")
     , Workers = artifacts.require("./Workers.sol")
     , proof = require('./data/proof');
 ;
@@ -36,7 +36,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
         , openSTRemote = proof.account.openSTRemoteAddress
         , chainIdOrigin = 3
         , chainIdRemote = 1410
-        , valueToken = await SimpleToken.new()
+        , valueToken = await MockToken.new()
         , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
         , worker1 = accounts[7]
     ;
@@ -52,7 +52,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, {from: accounts[0]});
     return {
         core: core,
-        workerContract: workers,
+        workersContract: workers,
         worker: worker1,
         registrar: registrar,
         chainIdRemote: chainIdRemote,
