@@ -9,14 +9,13 @@ contract('RLP library', function(accounts) {
         rlpMock = await RLP.new();
 
     });
-    let data =['2','5','6'];
+    let dataArray =['2','5','6'];
     describe('Test Cases ', async () => {
 
 
          it('should pass when RLP data is correct', async () => {
 
-            let data = ['2','5','6'],
-                dataInNibbles = ethUtil.rlp.encode(data).toString('hex'),
+                dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex'),
                 result = await rlpMock.toRLPItem.call('0x'+ dataInNibbles),
                 lengthInBytes = dataInNibbles.length;
             assert.equal((lengthInBytes/2),result[0].toString(10)); //2257
@@ -34,21 +33,21 @@ contract('RLP library', function(accounts) {
 
         it('should fail when RLP is incorrect with option strict as true', async () => {
 
-            await Utils.expectThrow(rlpMock.toRLPItemStrict.call(data,true));
+            await Utils.expectThrow(rlpMock.toRLPItemStrict.call(dataArray,true));
 
         })
 
         it('should pass when RLP list is correct', async () => {
 
-            let dataInNibbles = ethUtil.rlp.encode(data).toString('hex'),
+            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex'),
                 lengthOfList = await rlpMock.toList.call('0x'+ dataInNibbles);
-            assert.equal(data.length,lengthOfList);
+            assert.equal(dataArray.length,lengthOfList);
 
         })
 
         it('should pass when toBytes is passed with correct rlp data ', async () =>{
 
-            let dataInNibbles = ethUtil.rlp.encode(data).toString('hex'),
+            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex'),
                 result = await rlpMock.toBytes.call('0x'+ dataInNibbles);
             assert.equal(result.replace("0x",""),dataInNibbles);
 
@@ -66,7 +65,7 @@ contract('RLP library', function(accounts) {
 
         it('should fail when toData is passed with array of rlp data', async() => {
 
-            let dataInNibbles = ethUtil.rlp.encode(data).toString('hex');
+            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex');
             await Utils.expectThrow(rlpMock.toData.call('0x'+ dataInNibbles));
 
 
