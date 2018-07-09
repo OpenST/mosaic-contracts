@@ -28,7 +28,7 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
     /**
      *  @notice Contract constructor
-     * 
+     *
      *  @dev passes arguments to ERC20Token contract constructor
      */       
     constructor() public

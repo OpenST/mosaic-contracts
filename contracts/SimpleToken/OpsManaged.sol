@@ -38,7 +38,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice Contract constructor
-     * 
+     *
      *  @dev only callable by Owned
      */
     constructor() public
@@ -48,7 +48,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice modifier onlyAdmin
-     * 
+     *
      *  @dev checks if modifier caller isAdmin
      */
     modifier onlyAdmin() {
@@ -58,7 +58,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice modifier onlyAdminOrOps
-     * 
+     *
      *  @dev checks if modifier caller isAdmin or isOps
      */
     modifier onlyAdminOrOps() {
@@ -68,7 +68,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice modifier onlyOwnerOrAdmin
-     * 
+     *
      *  @dev checks if modifier caller isOwner or isAdmin
      */
     modifier onlyOwnerOrAdmin() {
@@ -78,7 +78,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice modifier onlyOps
-     * 
+     *
      *  @dev checks if modifier caller isOps
      */
     modifier onlyOps() {
@@ -88,7 +88,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice internal view function isAdmin
-     * 
+     *
      *  @param _address address to be checked
      *
      *  @return bool true if address passed is adminAddress, false otherwise
@@ -99,7 +99,7 @@ contract OpsManaged is Owned {
 
     /**
      *  @notice internal view function isOps
-     * 
+     *
      *  @param _address address to be checked
      *
      *  @return bool true if address passed is opsAddress, false otherwise

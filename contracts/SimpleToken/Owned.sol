@@ -33,7 +33,7 @@ contract Owned {
 
     /**
      *  @notice modifier onlyOwner
-     * 
+     *
      *  @dev checks if modifier caller isOwner
      */
     modifier onlyOwner() {
@@ -43,7 +43,7 @@ contract Owned {
 
     /**
      *  @notice internal view function isOwner
-     * 
+     *
      *  @param _address address to be checked
      *
      *  @return bool true if address passed is owner address, false otherwise
@@ -54,7 +54,7 @@ contract Owned {
 
     /**
      *  @notice public function initiateOwnershipTransfer
-     * 
+     *
      *  @dev sets _proposedOwner as proposedOwner
      *
      *  @param _proposedOwner address of proposed owner
@@ -71,7 +71,7 @@ contract Owned {
 
     /**
      *  @notice public function completeOwnershipTransfer
-     * 
+     *
      *  @dev only callable by proposedOwner, sets function caller as Owner 
      *       and proposedOwner to 0 address.
      *

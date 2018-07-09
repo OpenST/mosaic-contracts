@@ -23,7 +23,7 @@ library SafeMath {
 
     /**
      *  @notice internal pure function mul
-     * 
+     *
      *  @param a unsigned integer multiplicand
      *  @param b unsigned integer multiplier
      *
@@ -39,7 +39,7 @@ library SafeMath {
 
     /**
      *  @notice internal pure function div
-     * 
+     *
      *  @param a unsigned integer dividend
      *  @param b unsigned integer divisor
      *
@@ -55,7 +55,7 @@ library SafeMath {
 
     /**
      *  @notice internal pure function sub
-     * 
+     *
      *  @param a unsigned integer minuend
      *  @param b unsigned integer subtrahend 
      *
@@ -69,7 +69,7 @@ library SafeMath {
 
     /**
      *  @notice internal pure function add
-     * 
+     *
      *  @param a unsigned integer augend
      *  @param b unsigned integer addend
      *
