@@ -229,7 +229,7 @@
       %\begin{umlcallself}[op={stakingIntentHash = H(uuid, staker, stakerNonce, beneficiary, amountST, amountUT, stakingUnlockHeight, hashLock)}]{OpenSTUtility}
       %\end{umlcallself}         
      % check calculated stakingIntentHash is equal to provided stakingIntentHash
-      \begin{umlcallself}[op={require(merkleVerificationOfStake(stakerNonce, StakingIntentHash, rlpParentNodes, storageRoot)}]{OpenSTUtility}
+      \begin{umlcallself}[op={require(merkleVerificationOfStake(StakingIntentHash, rlpParentNodes, storageRoot)}]{OpenSTUtility}
       \end{umlcallself}       
       %store the mints struct
       \begin{umlcallself}[op={store mints[stakingIntentHash]}]{OpenSTUtility}
@@ -257,7 +257,7 @@
     \begin{umlfragment}[type=alt, label=proceed, name=phasetwo, inner xsep=1.5]
       \begin{umlcall}[dt=8, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Facilitator}{Branded Token Gateway}
         % check hashlock 
-        \begin{umlcallself}[op={require(H(unlockSecret = hashLock)}]{Branded Token Gateway}
+        \begin{umlcallself}[op={require(H(unlockSecret) = hashLock)}]{Branded Token Gateway}
         \end{umlcallself}
         % check msg.sender = worker
         %\begin{umlcallself}[op={require(msg.sender = worker)}]{Branded Token Gateway}
@@ -319,7 +319,7 @@
         % process staking on gate
         \begin{umlcall}[dt=20, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Hunter}{Branded Token Gateway}
         % check hashlock 
-        \begin{umlcallself}[op={require(H(unlockSecret=hashLock)}]{Branded Token Gateway}
+        \begin{umlcallself}[op={require(H(unlockSecret = hashLock)}]{Branded Token Gateway}
         \end{umlcallself}
         % check msg.sender = worker
        % \begin{umlcallself}[op={require(msg.sender = worker)}]{Branded Token Gateway}
@@ -386,9 +386,12 @@
       \begin{umlcall}[op={: revertMinting(StakingIntentHash)}]{Facilitator}{OpenSTUtility}
         % require mint not yet expired
         \begin{umlcallself}[op={require(expirationHeight <= block.number)}]{OpenSTUtility}
+                \end{umlcallself}
+           \begin{umlcallself}[op={delete mints[StakingIntentHash]}]{OpenSTUtility}
+                \end{umlcallself}
           \begin{umlcall}[dt=5, type=return, op={emit RevertedMint(uuid, staker, beneficiary, amountUT)}]{OpenSTUtility}{Facilitator}
           \end{umlcall}
-        \end{umlcallself}
+
       \end{umlcall}
     \end{umlfragment}
     \umlnote[x=1, y=-55, width=100]{phasetwo}{With both value chain and utility chain configured correctly for StakingIntentHash, Facilitator can proceed by revealing the unlock secret, or revert by awaiting the unlock height }
@@ -514,7 +517,7 @@
     \begin{umlcall}[dt=100, op={: processRedeeming(redemptionIntentHash, unlockSecret)}]{Redeemer}{OpenSTUtility}
 
     % require hashlock is equal to hash of unlock secret
-    \begin{umlcallself}[op={require(hashLock = H(unlockSecret))}]{OpenSTUtility}
+    \begin{umlcallself}[op={require (hashLock = H(unlockSecret))}]{OpenSTUtility}
     \end{umlcallself}
     
     % burn the UT tokens 
@@ -537,7 +540,7 @@
 	% beneficiary calls on processUnstaking with redempition intent hash
 	\begin{umlcall}[dt= 38, op={: processUnstaking(redemptionIntentHash, unlockSecret)}]{OstDotCom}{OpenSTValue}
 	% require that the hashlock is the same
-	\begin{umlcallself}[op={require H(unlockSecret)=  hashLock}]{OpenSTValue}
+	\begin{umlcallself}[op={require(H(unlockSecret)=  hashLock)}]{OpenSTValue}
 	\end{umlcallself}
 	%expiraton height reqiure
 	\begin{umlcallself}[op={require unstake expirationHeight > block number}]{OpenSTValue}
