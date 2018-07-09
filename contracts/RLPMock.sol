@@ -3,10 +3,9 @@ import "./RLP.sol";
 
 
 /**
- *	@title Core contract which implements CoreInterface
+ *	@title RLPMock contract is for RLP library contract
  *
- *	@notice Core is a minimal stub that will become the anchoring and consensus point for
- *         the utility chain to validate itself against
+ *	@notice It is used to test methods in RLP library contract
  */
 contract RLPMock  {
 
@@ -17,11 +16,12 @@ contract RLPMock  {
      *
      *  @param rlpEncodedData The RLP encoded bytes
      *
-     *  @return length and memory pointer of the rlp data
+     *  @return length of the rlp data
+     *  @return memory pointer at which rlp data is present
      */
     function toRLPItem(bytes memory rlpEncodedData)
         public
-        returns(uint,uint)
+        returns(uint/*length*/, uint/*memory_pointer*/)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         return (item._unsafe_length,item._unsafe_memPtr);
@@ -33,13 +33,14 @@ contract RLPMock  {
      *   @param rlpEncodedData The RLP encoded bytes
      *   @param strict Will throw if the data is not RLP encoded
      *
-     *   @return length and memory pointer of the rlp data
+     *   @return length of the rlp data
+     *   @return memory pointer at which rlp data is present
      */
     function toRLPItemStrict(
         bytes memory rlpEncodedData,
         bool strict)
         public
-        returns(uint, uint)
+        returns(uint/*length*/, uint/*memory_pointer*/)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
         return(item._unsafe_length,item._unsafe_memPtr);
@@ -64,11 +65,11 @@ contract RLPMock  {
         return list.length;
     }
 
-    /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
+    /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list
      *
-     *    @param rlpEncodedData The RLPItem encoded bytes.
+     *    @param rlpEncodedData The RLPItem encoded bytes
      *
-     *    @return The decoded string.
+     *    @return toBytes decoded value in the form of bytes
      */
     function toBytes(
         bytes memory rlpEncodedData)
@@ -84,7 +85,7 @@ contract RLPMock  {
      *
      *  @param rlpEncodedData The RLPItem encoded bytes.
      *
-     *  @return The decoded string in bytes format.
+     *  @return toData The decoded string in bytes format.
      */
     function toData(
         bytes memory rlpEncodedData)
