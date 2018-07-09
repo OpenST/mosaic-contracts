@@ -33,7 +33,7 @@ const BigNumber = require('bignumber.js');
 /// 	has chainIdValue
 /// 	has valueToken
 /// 	has registrar
-///
+/// 	confirms intents mapping index position
 /// AddCore
 /// 	fails to add core by non-registrar
 /// 	fails to add core by registrar when core is null
@@ -137,6 +137,19 @@ contract('OpenSTValue', function(accounts) {
 		it('has registrar', async () => {
 			assert.equal(await openSTValue.registrar.call(), registrar);
 		})
+
+		it('confirms intents mapping index position', async () => {
+			const testIntentsKey = await openSTValue.testIntentsKey.call();
+	 		const testIntentsMappingValue = await openSTValue.intents.call(testIntentsKey);
+	 		const storagePath = await openSTValue.testStoragePath.call();
+	 		// getStorageAt gets the value directly from contract storage
+	 		// by passing a parameter determined from the indentified index position of the mapping
+	 		const storageValue = await web3.eth.getStorageAt(openSTValue.address, storagePath);
+			
+			// test confirms correct identification of the index of intents mapping in contract storage
+	 		// will raise a flag if the index position of the mapping changes for any reason in OpenSTValue
+	 		assert.equal(testIntentsMappingValue, storageValue);
+		})		
 	})
 
 	describe('AddCore', async () => {

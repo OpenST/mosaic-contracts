@@ -74,7 +74,10 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
 
-    uint8 private constant INTENT_INDEX = 5;
+    // indentified index position of intents mapping in storage (in OpenSTUtility)
+    // positions 0-3 are occupied by public state variables in OpsManaged and Owned
+    // private constants do not occupy the storage of a contract 
+    uint8 internal constant intentsMappingStorageIndexPosition = 4;
 
     // storage for staking intent hash of active staking intents
     mapping(bytes32 /* intentHash */ => bytes32) public intents;
@@ -425,7 +428,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
         require(OpenSTUtils.verifyIntentStorage(
-                INTENT_INDEX,
+                intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,
                 storageRoot,
