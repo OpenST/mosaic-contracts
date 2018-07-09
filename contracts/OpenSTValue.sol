@@ -251,7 +251,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         Stake storage stake = stakes[_stakingIntentHash];
 
         // present the secret to unlock the hashlock and continue process
-    		require(stake.hashLock == keccak256(_unlockSecret));
+    		require(stake.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as this bears the cost, there is no need to require
         // that the stake.unlockHeight is not yet surpassed
@@ -384,7 +384,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         Unstake storage unstake = unstakes[_redemptionIntentHash];
 
         // present secret to unlock hashlock and proceed
-        require(unstake.hashLock == keccak256(_unlockSecret));
+        require(unstake.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as the process unstake results in a gain for the caller
         // it needs to expire well before the process redemption can
@@ -577,6 +577,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     function getStakerAddress(
         bytes32 _stakingIntentHash)
+        view
         external
         returns (address /* staker */)
     {
