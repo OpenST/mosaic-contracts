@@ -58,7 +58,7 @@ contract Gateway is ProtocolVersioned, Owned {
       bytes32 _stakingIntentHash);
 
     /** Below event is emitted after successful execution of setWorkers */
-    event WorkersSet(bytes32 _uuid, WorkersInterface _workers);
+    event WorkersSet(WorkersInterface _workers);
 
     /* Storage */
 
@@ -399,7 +399,7 @@ contract Gateway is ProtocolVersioned, Owned {
         workers = _workers;
 
         //Event for workers set
-        emit WorkersSet(uuid, _workers);
+        emit WorkersSet(_workers);
 
         return true;
     }

@@ -169,10 +169,9 @@ module.exports.checkProcessedStakeEvent = (event, _staker, _amount) => {
 };
 
 
-module.exports.checkWorkersSetEvent = (event, _workerAddress, _uuid) => {
+module.exports.checkWorkersSetEvent = (event, _workersAddress) => {
   assert.equal(event.event, "WorkersSet");
-  assert.equal(event.args._workers, _workerAddress);
-  assert.equal(event.args._uuid, _uuid);
+  assert.equal(event.args._workers, _workersAddress);
 };
 
 

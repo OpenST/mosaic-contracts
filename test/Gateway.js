@@ -327,9 +327,9 @@ contract('Gateway', function(accounts) {
       assert.equal(response, isSuccessCase);
 
       let result = await gateway.setWorkers(workersAddress, {from: messageSender});
-      await Gateway_utils.checkWorkersSetEvent(result.logs[0], workersAddress, uuid);
+      await Gateway_utils.checkWorkersSetEvent(result.logs[0], workersAddress);
 
-      let workersFromContract = await  gateway.workers.call();
+      let workersFromContract = await gateway.workers.call();
       assert.equal(workersFromContract, workersAddress);
 
     } else {
@@ -725,11 +725,11 @@ contract('Gateway', function(accounts) {
         });
 
         it('fails to set workers when caller is not owner', async () => {
-            await setWorkers(accounts[8], accounts[2], false)
+            await setWorkers(accounts[8], accounts[2], false);
         });
 
         it('sucessfully sets workers when caller is owner', async () => {
-            await setWorkers(accounts[8], ownerAddress, true)
+            await setWorkers(accounts[8], ownerAddress, true);
         });
 
     });
