@@ -24,32 +24,36 @@ pragma solidity ^0.4.23;
 import "./Owned.sol";
 
 /**
- *  @title OpsManaged which implements Owned
+ *  @title OpsManaged contract which implements Owned.
  *
- *  @notice Implements OpenST ownership and permission model
+ *  @notice Implements OpenST ownership and permission model.
  */
 contract OpsManaged is Owned {
+
+    /** Events */
+    
+    event AdminAddressChanged(address indexed _newAddress);
+    event OpsAddressChanged(address indexed _newAddress);
+
+    /** Storage */
 
     address public opsAddress;
     address public adminAddress;
 
-    event AdminAddressChanged(address indexed _newAddress);
-    event OpsAddressChanged(address indexed _newAddress);
-
     /**
-     *  @notice Contract constructor
-     *
-     *  @dev only callable by Owned
+     *  @notice Contract constructor.
      */
     constructor() public
         Owned()
     {
     }
 
+    /** Modifiers */
+
     /**
-     *  @notice modifier onlyAdmin
+     *  @notice Modifier onlyAdmin.
      *
-     *  @dev checks if modifier caller isAdmin
+     *  @dev Checks if called by Admin to proceed.
      */
     modifier onlyAdmin() {
         require(isAdmin(msg.sender));
@@ -57,9 +61,9 @@ contract OpsManaged is Owned {
     }
 
     /**
-     *  @notice modifier onlyAdminOrOps
+     *  @notice Modifier onlyAdminOrOps.
      *
-     *  @dev checks if modifier caller isAdmin or isOps
+     *  @dev Checks if called by Admin or Ops to proceed.
      */
     modifier onlyAdminOrOps() {
         require(isAdmin(msg.sender) || isOps(msg.sender));
@@ -67,9 +71,9 @@ contract OpsManaged is Owned {
     }
 
     /**
-     *  @notice modifier onlyOwnerOrAdmin
+     *  @notice Modifier onlyOwnerOrAdmin.
      *
-     *  @dev checks if modifier caller isOwner or isAdmin
+     *  @dev Checks if called by Owner or Admin to proceed.
      */
     modifier onlyOwnerOrAdmin() {
         require(isOwner(msg.sender) || isAdmin(msg.sender));
@@ -77,56 +81,60 @@ contract OpsManaged is Owned {
     }
 
     /**
-     *  @notice modifier onlyOps
+     *  @notice Modifier onlyOps.
      *
-     *  @dev checks if modifier caller isOps
+     *  @dev Checks if called by Ops to proceed.
      */
     modifier onlyOps() {
         require(isOps(msg.sender));
         _;
     }
 
+    /** Internal Functions */
+
     /**
-     *  @notice internal view function isAdmin
+     *  @notice Internal view function isAdmin.
      *
-     *  @param _address address to be checked
+     *  @param _address Address to check.
      *
-     *  @return bool true if address passed is adminAddress, false otherwise
+     *  @return bool True if Admin's address, false otherwise.
      */
     function isAdmin(address _address) internal view returns (bool) {
         return (adminAddress != address(0) && _address == adminAddress);
     }
 
     /**
-     *  @notice internal view function isOps
+     *  @notice Internal view function isOps.
      *
-     *  @param _address address to be checked
+     *  @param _address Address to check.
      *
-     *  @return bool true if address passed is opsAddress, false otherwise
+     *  @return bool True if Ops's address, false otherwise.
      */
     function isOps(address _address) internal view returns (bool) {
         return (opsAddress != address(0) && _address == opsAddress);
     }
 
     /**
-     *  @notice internal view function isOwnerOrOps
+     *  @notice Internal view function isOwnerOrOps.
      * 
-     *  @param _address address to be checked
+     *  @param _address Address to check.
      *
-     *  @return bool true if address passed isOwner or isOps, false otherwise
+     *  @return bool True if Owner's or Ops address, false otherwise.
      */
     function isOwnerOrOps(address _address) internal view returns (bool) {
         return (isOwner(_address) || isOps(_address));
     }
 
+    /** External Functions */
+
     /**
-     *  @notice external function setAdminAddress
+     *  @notice External function setAdminAddress.
      * 
-     *  @dev function callable by onlyOwnerOrAdmin, address can also be set to 0 to 'disable' it
+     *  @dev Only callable by Owner or Admin, address can also be set to 0 to 'disable' it.
      * 
-     *  @param _adminAddress address to be set
+     *  @param _adminAddress Address to set.
      *
-     *  @return bool true if address passed is set as adminAddress, false otherwise
+     *  @return bool True if set as Admin's address, false otherwise.
      */
     function setAdminAddress(address _adminAddress) external onlyOwnerOrAdmin returns (bool) {
         require(_adminAddress != owner);
@@ -141,13 +149,13 @@ contract OpsManaged is Owned {
     }
 
     /**
-     *  @notice external function setOpsAddress
+     *  @notice External function setOpsAddress.
      * 
-     *  @dev function callable by onlyOwnerOrAdmin, address can also be set to 0 to 'disable' it
+     *  @dev Only callable by Owner or Admin, address can also be set to 0 to 'disable' it.
      * 
-     *  @param _opsAddress address to be set
+     *  @param _opsAddress Address to set.
      *
-     *  @return bool true if address passed is set as opsAddress, false otherwise
+     *  @return bool True if set as Ops's address, false otherwise.
      */
     function setOpsAddress(address _opsAddress) external onlyOwnerOrAdmin returns (bool) {
         require(_opsAddress != owner);

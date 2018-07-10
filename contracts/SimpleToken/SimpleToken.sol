@@ -34,23 +34,25 @@ import "./OpsManaged.sol";
 //
 
 /**
- *  @title SimpleToken which implements ERC20Token, OpsManaged, SimpleTokenConfig
+ *  @title SimpleToken contract which implements ERC20Token, OpsManaged, SimpleTokenConfig.
  *
- *  @notice Implments ERC20Token with added functionality
+ *  @notice Implments ERC20Token with added functionality.
  */
 contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
-    bool public finalized;
+    /** Events */
 
-
-    // Events
     event Burnt(address indexed _from, uint256 _amount);
     event Finalized();
 
+    /** Storage */
+    
+    bool public finalized;
+
     /**
-     *  @notice Contract constructor
-     * 
-     *  @dev only callable by OpsManaged
+     *  @notice Contract constructor.
+     *
+     *  @dev Sets finalized to false.
      */
     constructor() public
         ERC20Token(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, TOKENS_MAX)
@@ -59,23 +61,52 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         finalized = false;
     }
 
-
-    // Implementation of the standard transfer method that takes into account the finalize flag.
+    /**
+     *  @notice Public function transfer.
+     *
+     *  @dev Fires the transfer event, throws if, _from account does not have enough
+     *       tokens to spend. Implementation of the standard transfer method that takes 
+     *       into account the finalize flag.
+     *
+     *  @param _to Address to which tokens are transferred.
+     *  @param _value Amount of tokens to be transferred.
+     *
+     *  @return bool True for a successful transfer, false otherwise.
+     */
     function transfer(address _to, uint256 _value) public returns (bool success) {
         checkTransferAllowed(msg.sender, _to);
 
         return super.transfer(_to, _value);
     }
 
-
-    // Implementation of the standard transferFrom method that takes into account the finalize flag.
+    /**
+     *  @notice Public function transferFrom.
+     *
+     *  @dev Allows a contract to transfer tokens on behalf of _from address to _to address,
+     *       the function caller has to be pre-authorized for multiple transfers up to the 
+     *       total of _value amount by the _from address. Implementation of the standard 
+     *       transferFrom method that takes into account the finalize flag.
+     *
+     *  @param _from Address from which tokens are transferred.
+     *  @param _to Address to which tokens are transferred.
+     *  @param _value Amount of tokens transferred.
+     *
+     *  @return bool True for a successful transfer, false otherwise.
+     */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         checkTransferAllowed(msg.sender, _to);
 
         return super.transferFrom(_from, _to, _value);
     }
 
-
+    /**
+     *  @notice Private view function checkTransferAllowed.
+     *
+     *  @dev Checks if _sender address is Owner or Ops, or if _to address is Owner, throws otherwise.
+     *
+     *  @param _sender Address of the sender.
+     *  @param _to Address to check, if transfer is allowed to.
+     */
     function checkTransferAllowed(address _sender, address _to) private view {
         if (finalized) {
             // Everybody should be ok to transfer once the token is finalized.
@@ -89,8 +120,16 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         require(isOwnerOrOps(_sender) || _to == owner);
     }
 
-    // Implement a burn function to permit msg.sender to reduce its balance
-    // which also reduces tokenTotalSupply
+    /**
+     *  @notice Public function burn.
+     *
+     *  @dev Implements a burn function to permit msg.sender to reduce its balance,
+     *       which also reduces tokenTotalSupply.
+     *
+     *  @param _value Amount of tokens to burn.
+     *
+     *  @return True if burn is successful, false otherwise.
+     */
     function burn(uint256 _value) public returns (bool success) {
         require(_value <= balances[msg.sender]);
 
@@ -102,8 +141,14 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
         return true;
     }
 
-
-    // Finalize method marks the point where token transfers are finally allowed for everybody.
+    /**
+     *  @notice External function onlyAdmin.
+     *
+     *  @dev Only callable by Admin. Finalize method marks the point where 
+     *       token transfers are finally allowed for everybody.
+     *
+     *  @return True if finalized is set to true, false otherwise.
+     */    
     function finalize() external onlyAdmin returns (bool success) {
         require(!finalized);
 

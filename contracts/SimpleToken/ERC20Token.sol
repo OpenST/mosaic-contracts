@@ -14,13 +14,15 @@ import "./Owned.sol";
 import "./SafeMath.sol";
 
 /**
- *  @title ERC20Token which implements ERC20Interface and Owned
+ *  @title ERC20Token contract which implements ERC20Interface and Owned.
  *
- *  @notice Standard ERC20 implementation, with ownership
+ *  @notice Standard ERC20 implementation, with ownership.
  */
 contract ERC20Token is ERC20Interface, Owned {
 
     using SafeMath for uint256;
+
+    /** Storage */
 
     string  private tokenName;
     string  private tokenSymbol;
@@ -31,13 +33,13 @@ contract ERC20Token is ERC20Interface, Owned {
     mapping(address => mapping (address => uint256)) allowed;
 
     /**
-     *  @notice Contract constructor
+     *  @notice Contract constructor.
      *
-     *  @param _symbol symbol of the token
-     *  @param _name name of the token 
-     *  @param _decimals number of decimal places the token uses
-     *  @param _totalSupply total token supply
-     */    
+     *  @param _symbol Symbol of the token.
+     *  @param _name Name of the token.
+     *  @param _decimals Decimal places of the token.
+     *  @param _totalSupply Total supply of the token.
+     */
     constructor(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
         Owned()
     {
@@ -53,74 +55,74 @@ contract ERC20Token is ERC20Interface, Owned {
     }
 
     /**
-     *  @notice public view function name
+     *  @notice Public view function name.
      *
-     *  @return string Name of the token
+     *  @return string Name of the token.
      */
     function name() public view returns (string) {
         return tokenName;
     }
 
     /**
-     *  @notice public view function symbol
+     *  @notice Public view function symbol.
      *
-     *  @return string Symbol of the token
+     *  @return string Symbol of the token.
      */
     function symbol() public view returns (string) {
         return tokenSymbol;
     }
 
     /**
-     *  @notice public view function decimals
+     *  @notice Public view function decimals.
      *
-     *  @return uint8 number of decimals the token uses
+     *  @return uint8 Decimal places of the token.
      */
     function decimals() public view returns (uint8) {
         return tokenDecimals;
     }
 
     /**
-     *  @notice public view function totalSupply
+     *  @notice Public view function totalSupply.
      *
-     *  @return uint256 Total supply of the token
+     *  @return uint256 Total supply of the token.
      */
     function totalSupply() public view returns (uint256) {
         return tokenTotalSupply;
     }
 
     /**
-     *  @notice public view function balanceOf
+     *  @notice Public view function balanceOf.
      *
-     *  @param _owner account address of the owner 
+     *  @param _owner Address of the owner account.
      *
-     *  @return uint256 account balance of the owner address
+     *  @return uint256 Account balance of the owner account.
      */
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
     }
 
     /**
-     *  @notice public view function allowance
+     *  @notice Public view function allowance.
      *
-     *  @param _owner account address of the owner 
-     *  @param _spender account address of the spender
+     *  @param _owner Address of the owner account.
+     *  @param _spender Address of the spender account.
      *
-     *  @return uint256 remaining allowance for spender to spend from owners account
+     *  @return uint256 Remaining allowance for the spender to spend from owner's account.
      */
     function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
         return allowed[_owner][_spender];
     }
 
     /**
-     *  @notice public function transfer
+     *  @notice Public function transfer.
      *
-     *  @dev fires the transfer event, throws if _from account does not have enough
+     *  @dev Fires the transfer event, throws if, _from account does not have enough
      *       tokens to spend.
      *
-     *  @param _to account address to which token(s) are to be transferred  
-     *  @param _value amount value of token(s) to be transferred
+     *  @param _to Address to which tokens are transferred.
+     *  @param _value Amount of tokens to be transferred.
      *
-     *  @return bool true for a successful transfer, false otherwise
+     *  @return bool True for a successful transfer, false otherwise.
      */
     function transfer(address _to, uint256 _value) public returns (bool success) {
         // According to the EIP20 spec, "transfers of 0 values MUST be treated as normal
@@ -135,17 +137,17 @@ contract ERC20Token is ERC20Interface, Owned {
     }
 
     /**
-     *  @notice public function transferFrom
+     *  @notice Public function transferFrom.
      *
-     *  @dev allows a contract to transfer tokens on behalf of _from account address to _to account address, 
-     *       the function caller has to be pre-authorized for transfers up to the total of _value amount 
-     *       by the _from account address
+     *  @dev Allows a contract to transfer tokens on behalf of _from address to _to address,
+     *       the function caller has to be pre-authorized for multiple transfers up to the 
+     *       total of _value amount by the _from address.
      *
-     *  @param _from account address from which token(s) are to be transferred
-     *  @param _to account address to which token(s) are to be transferred  
-     *  @param _value amount value of the token(s) to be transferred
+     *  @param _from Address from which tokens are transferred.
+     *  @param _to Address to which tokens are transferred.
+     *  @param _value Amount of tokens transferred.
      *
-     *  @return bool true for a successful transfer, false otherwise
+     *  @return bool True for a successful transfer, false otherwise.
      */
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         balances[_from] = balances[_from].sub(_value);
@@ -158,13 +160,16 @@ contract ERC20Token is ERC20Interface, Owned {
     }
 
     /**
-     *  @notice public function approve
+     *  @notice Public function approve.
      *
-     *  @param _spender account address to be authorized to spend from the account address 
-     *         of the function caller 
-     *  @param _value amount value upto which spender is authorized to spend
+     *  @dev Allows _spender address to withdraw from function caller's account, multiple times up 
+     *       to the _value amount, if this function is called again 
+     *       it overwrites the current allowance with _value.
      *
-     *  @return bool true for a successful approval, false otherwise
+     *  @param _spender Address authorized to spend from the function caller's address.
+     *  @param _value Amount upto which spender is authorized to spend.
+     *
+     *  @return bool True for a successful approval, false otherwise.
      */
     function approve(address _spender, uint256 _value) public returns (bool success) {
 

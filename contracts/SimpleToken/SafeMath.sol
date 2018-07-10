@@ -15,19 +15,21 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title Safemath library
+ *  @title Safemath library.
  *
  *  @notice Based on the SafeMath library by the OpenZeppelin team.
  */
 library SafeMath {
 
+    /** Internal Functions */
+
     /**
-     *  @notice internal pure function mul
+     *  @notice Internal pure function mul.
      *
-     *  @param a unsigned integer multiplicand
-     *  @param b unsigned integer multiplier
+     *  @param a Unsigned integer multiplicand.
+     *  @param b Unsigned integer multiplier.
      *
-     *  @return uint256 product
+     *  @return uint256 Product.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a * b;
@@ -38,12 +40,12 @@ library SafeMath {
     }
 
     /**
-     *  @notice internal pure function div
+     *  @notice Internal pure function div.
      *
-     *  @param a unsigned integer dividend
-     *  @param b unsigned integer divisor
+     *  @param a Unsigned integer dividend.
+     *  @param b Unsigned integer divisor.
      *
-     *  @return uint256 quotient
+     *  @return uint256 Quotient.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
         // Solidity automatically throws when dividing by 0 
@@ -54,12 +56,12 @@ library SafeMath {
     }
 
     /**
-     *  @notice internal pure function sub
+     *  @notice Internal pure function sub.
      *
-     *  @param a unsigned integer minuend
-     *  @param b unsigned integer subtrahend 
+     *  @param a Unsigned integer minuend.
+     *  @param b Unsigned integer subtrahend.
      *
-     *  @return uint256 difference
+     *  @return uint256 Difference.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         assert(b <= a);
@@ -68,12 +70,12 @@ library SafeMath {
     }
 
     /**
-     *  @notice internal pure function add
+     *  @notice Internal pure function add.
      *
-     *  @param a unsigned integer augend
-     *  @param b unsigned integer addend
+     *  @param a Unsigned integer augend.
+     *  @param b Unsigned integer addend.
      *
-     *  @return uint256 sum
+     *  @return uint256 Sum.
      */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;

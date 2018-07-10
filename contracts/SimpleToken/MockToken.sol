@@ -14,32 +14,36 @@ import "./SimpleTokenConfig.sol";
 import "./OpsManaged.sol";
 
 /**
- *  @title MockToken which implements ERC20Token, OpsManaged and SimpleTokenConfig
+ *  @title MockToken contract which implements ERC20Token, OpsManaged and SimpleTokenConfig.
  *
- *  @notice initializes an ERC20Token mock with arguments to facilitate testing
+ *  @notice Initializes an ERC20Token mock with arguments to facilitate testing.
  */
 contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
-    bool public finalized;
-
-    /* Events */
+    /** Events */
     
     event Finalized();
 
+    /** Storage */
+
+    bool public finalized;
+
     /**
-     *  @notice Contract constructor
+     *  @notice Contract constructor.
      *
-     *  @dev passes arguments to ERC20Token contract constructor
-     */       
+     *  @dev Inputs testing parameters to ERC20Token contract constructor.
+     */
     constructor() public
         ERC20Token("MOCK", "Mock Token", TOKEN_DECIMALS, TOKENS_MAX)
         OpsManaged()
         { }
 
     /**
-     *  @notice external function finalize
+     *  @notice External function finalize.
      *
-     *  @return bool true for finalized set to true, false otherwise
+     *  @dev Only callable by Admin.
+     *
+     *  @return bool True for finalized set to true, false otherwise.
      */
     // Finalize functionality retained because it is expected by platform scripts
     function finalize() external onlyAdmin returns (bool success) {
@@ -53,11 +57,12 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
     }
 
     /**
-     *  @notice public function remove
+     *  @notice Public function remove.
      *
-     *  @dev destroys the current contract, sending its funds to function caller
+     *  @dev Only callable by Owner. Destroys the current contract, 
+     *       sending its funds to function caller's address.
      */
     function remove() public onlyOwner {
         selfdestruct(msg.sender);
-    }    
+    }
 }

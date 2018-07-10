@@ -10,56 +10,66 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title Owned contract
+ *  @title Owned contract.
  *
  *  @notice Implements basic ownership with 2-step transfers.
  */
 contract Owned {
 
-    address public owner;
-    address public proposedOwner;
-
+    /** Events */
+    
     event OwnershipTransferInitiated(address indexed _proposedOwner);
     event OwnershipTransferCompleted(address indexed _newOwner);
 
+    /** Storage */
+
+    address public owner;
+    address public proposedOwner;
+
     /**
-     *  @notice Contract constructor
+     *  @notice Contract constructor.
      *
-     *  @dev sets constructor caller to owner
+     *  @dev Sets caller to owner.
      */
     constructor() public {
         owner = msg.sender;
     }
 
+    /** Modifiers */
+
     /**
-     *  @notice modifier onlyOwner
+     *  @notice Modifier onlyOwner.
      *
-     *  @dev checks if modifier caller isOwner
+     *  @dev Checks if called by Owner to proceed.
      */
     modifier onlyOwner() {
         require(isOwner(msg.sender));
         _;
     }
 
+    /** Internal Functions */
+
     /**
-     *  @notice internal view function isOwner
+     *  @notice Internal view function isOwner.
      *
-     *  @param _address address to be checked
+     *  @param _address Address to check.
      *
-     *  @return bool true if address passed is owner address, false otherwise
+     *  @return bool True if Owner's address, false otherwise.
      */
     function isOwner(address _address) internal view returns (bool) {
         return (_address == owner);
     }
 
+    /** Public Functions */
+
     /**
-     *  @notice public function initiateOwnershipTransfer
+     *  @notice Public function initiateOwnershipTransfer.
      *
-     *  @dev sets _proposedOwner as proposedOwner
+     *  @dev Sets _proposedOwner address to proposedOwner.
      *
-     *  @param _proposedOwner address of proposed owner
+     *  @param _proposedOwner Address of new proposed owner.
      *
-     *  @return bool true if ownership transfer is successful, false otherwise
+     *  @return bool True if initiating ownership transfer is successful, false otherwise.
      */
     function initiateOwnershipTransfer(address _proposedOwner) public onlyOwner returns (bool) {
         proposedOwner = _proposedOwner;
@@ -70,12 +80,12 @@ contract Owned {
     }
 
     /**
-     *  @notice public function completeOwnershipTransfer
+     *  @notice Public function completeOwnershipTransfer.
      *
-     *  @dev only callable by proposedOwner, sets function caller as Owner 
+     *  @dev Only callable by proposed Owner, sets caller to Owner 
      *       and proposedOwner to 0 address.
      *
-     *  @return bool true if complete ownership transfer is successful, false otherwise
+     *  @return bool True if complete ownership transfer is successful, false otherwise.
      */
     function completeOwnershipTransfer() public returns (bool) {
         require(msg.sender == proposedOwner);
