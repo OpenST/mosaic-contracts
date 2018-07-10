@@ -134,16 +134,8 @@ contract('Core', function (accounts) {
             await utils.expectThrow(core.proveOpenST(blockHeight, '', proof.account.rlpParentNodes, {from: worker}));
         });
 
-        it('should not be able to verify proof for account if rlpEncodedAccount value is 0x', async () => {
-            await utils.expectThrow(core.proveOpenST(blockHeight, '0x', proof.account.rlpParentNodes, {from: worker}));
-        });
-
         it('should not be able to verify proof for account if rlpParentNodes value is blank', async () => {
             await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '', {from: worker}));
-        });
-
-        it('should not be able to verify proof for account if rlpParentNodes value is 0x', async () => {
-            await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '0x', {from: worker}));
         });
 
         it('should be able to verify proof for account when called for the first time ', async () => {
