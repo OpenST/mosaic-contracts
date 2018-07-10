@@ -28,7 +28,7 @@ import "./Hasher.sol";
   *
   *	@dev For testing of OpenSTUtils function
   */
-contract MockUtils is Hasher {
+contract MockUtils {
 
     constructor(){}
 
