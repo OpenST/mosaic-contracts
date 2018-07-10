@@ -61,7 +61,7 @@ contract OpenSTValueMock is OpenSTValue {
 		public 
 	{
 		//inserting the intents mapping with the test staking intent hash against calculated testIntentsKey
-		intents[testIntentsKey] = testStakingIntentHash;
+		stakingIntents[testIntentsKey] = testStakingIntentHash;
 	}
 
 	function blocksToWaitLong() public pure returns (uint256) {
@@ -84,7 +84,7 @@ contract OpenSTValueMock is OpenSTValue {
 		view
 		returns (bool)
 	{
-		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
 		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
 	}
 
@@ -96,10 +96,10 @@ contract OpenSTValueMock is OpenSTValue {
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
 		return mockedInvalidValue;
 	}
 

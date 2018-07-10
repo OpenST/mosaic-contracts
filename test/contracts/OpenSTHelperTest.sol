@@ -20,20 +20,19 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./OpenSTUtils.sol";
-import "./Hasher.sol";
+import "../../contracts/OpenSTHelper.sol";
 
 /**
-  *	@title MockUtils
+  *	@title OpenSTHelperTest
   *
-  *	@dev For testing of OpenSTUtils function
+  *	@dev For testing of OpenSTHelper library
   */
-contract MockUtils {
+contract OpenSTHelperTest {
 
     constructor(){}
 
 /**
-  *	@notice Calls  storagePath of OpenSTUtils
+  *	@notice Calls storagePath of OpenSTHelper
   *
   *	@dev For testing only
   *
@@ -49,7 +48,7 @@ contract MockUtils {
         pure
         returns(bytes32 /* storage path */)
     {
-        return OpenSTUtils.storagePath(_index, _key);
+        return OpenSTHelper.storagePath(_index, _key);
     }
 
 
@@ -78,7 +77,7 @@ contract MockUtils {
         pure
         returns (bool /* verification status */)
     {
-        require(OpenSTUtils.verifyIntentStorage(
+        require(OpenSTHelper.verifyIntentStorage(
                 _intentIndex,
                 _address,
                 _addressNonce,

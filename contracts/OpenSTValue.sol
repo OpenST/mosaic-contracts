@@ -31,7 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-import "./OpenSTUtils.sol";
+import "./OpenSTHelper.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -80,7 +80,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint8 internal constant intentsMappingStorageIndexPosition = 4;
 
     // storage for staking intent hash of active staking intents
-    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* stakingIntentHash */) public stakingIntents;
     // register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
@@ -233,7 +233,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // store the staking intent hash directly in storage of OpenSTValue 
         // so that a Merkle proof can be generated for active staking intents
         bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
-        intents[intentKeyHash] = stakingIntentHash;
+        stakingIntents[intentKeyHash] = stakingIntentHash;
 
         emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
@@ -269,8 +269,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
             stake.amountST, stake.amountUT, _unlockSecret);
         
-        // remove intent hash from intents mapping 
-        delete intents[hashIntentKey(stake.staker, stake.nonce)];        
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stake.staker, stake.nonce)];
         delete stakes[_stakingIntentHash];
 
         return stakeAddress;
@@ -303,8 +303,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
             stake.amountST, stake.amountUT);
 
-        // remove intent hash from intents mapping 
-        delete intents[hashIntentKey(stake.staker, stake.nonce)];   
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stake.staker, stake.nonce)];
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
@@ -427,7 +427,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // storageRoot cannot be 0
         require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
-        require(OpenSTUtils.verifyIntentStorage(
+        require(OpenSTHelper.verifyIntentStorage(
                 intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,

@@ -81,7 +81,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      */
 
     // storage for redemption intent hash
-    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* redemptionIntentHash */) public redemptionIntents;
 
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
@@ -368,7 +368,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         // store the Redemption intent hash directly in storage of OpenSTUtility
         // so that a Merkle proof can be generated for active redemption intents
-        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -424,7 +424,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         // store the Redemption intent hash directly in storage of OpenSTUtility
         // so that a Merkle proof can be generated for active redemption intents
-        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
@@ -464,8 +464,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         delete redemptions[_redemptionIntentHash];
 
-        // remove intent hash from intents mapping
-        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         return tokenAddress;
     }
@@ -502,8 +502,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         }
 
         delete redemptions[_redemptionIntentHash];
-        // remove intent hash from intents mapping
-        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         // fire event
         emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);

@@ -140,7 +140,7 @@ contract('OpenSTValue', function(accounts) {
 
 		it('confirms intents mapping index position', async () => {
 			const testIntentsKey = await openSTValue.testIntentsKey.call();
-	 		const testIntentsMappingValue = await openSTValue.intents.call(testIntentsKey);
+	 		const testIntentsMappingValue = await openSTValue.stakingIntents.call(testIntentsKey);
 	 		const storagePath = await openSTValue.testStoragePath.call();
 	 		// getStorageAt gets the value directly from contract storage
 	 		// by passing a parameter determined from the indentified index position of the mapping
