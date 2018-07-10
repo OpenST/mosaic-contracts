@@ -386,20 +386,20 @@ contract Gateway is ProtocolVersioned, Owned {
       *
       * @dev only owner can call this
       *
-      * @param _worker workers contract address
+      * @param _workers workers contract address
       *
       * @return success, boolean that specifies status of the execution
       */
-    function setWorkers(WorkersInterface _worker)
+    function setWorkers(WorkersInterface _workers)
         external
         onlyOwner()
         returns (bool /* success */)
     {
-        require(_worker != address(0));
-        workers = _worker;
+        require(_workers != address(0));
+        workers = _workers;
 
         //Event for workers set
-        emit WorkersSet(uuid, _worker);
+        emit WorkersSet(uuid, _workers);
 
         return true;
     }

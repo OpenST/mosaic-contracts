@@ -329,6 +329,9 @@ contract('Gateway', function(accounts) {
       let result = await gateway.setWorkers(workersAddress, {from: messageSender});
       await Gateway_utils.checkWorkersSetEvent(result.logs[0], workersAddress, uuid);
 
+      let workersFromContract = await  gateway.workers.call();
+      assert.equal(workersFromContract, workersAddress);
+
     } else {
       await Utils.expectThrow(gateway.setWorkers(workersAddress, {from: messageSender}));
     }
