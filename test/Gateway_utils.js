@@ -47,6 +47,7 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     , admin = accounts[3]
     , ops = accounts[1]
     , registrar = accounts[5]
+    , ownerAddress = accounts[12]
   ;
 
   var core = null
@@ -72,7 +73,7 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 
-  const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address);
+  const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address, {from:ownerAddress});
 
   assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar }), checkUuid);
   const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar });
@@ -95,7 +96,8 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     gateway: gateway,
     workers: workers.address,
     bounty: bounty,
-    workerAddress1: worker1
+    workerAddress1: worker1,
+    ownerAddress: ownerAddress
   }
 };
 
@@ -161,11 +163,16 @@ module.exports.checkProcessedStakeEvent = (event, _staker, _amount) => {
   if (Number.isInteger(_amount)) {
     _amount = new BigNumber(_amount);
   }
-  console.log("event: ",event);
   assert.equal(event.event, "ProcessedStake");
   assert.equal(event.args._staker, _staker);
   assert.equal(event.args._amountST.toNumber(10), _amount.toNumber(10));
 };
 
+
+module.exports.checkWorkersSetEvent = (event, _workerAddress, _uuid) => {
+  assert.equal(event.event, "WorkersSet");
+  assert.equal(event.args._workers, _workerAddress);
+  assert.equal(event.args._uuid, _uuid);
+};
 
 

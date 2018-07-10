@@ -57,6 +57,9 @@ contract Gateway is ProtocolVersioned, Owned {
       uint256 _unlockHeight,
       bytes32 _stakingIntentHash);
 
+    /** Below event is emitted after successful execution of setWorkers */
+    event WorkersSet(bytes32 _uuid, WorkersInterface _workers);
+
     /* Storage */
 
     /** Storing stake requests */
@@ -377,4 +380,27 @@ contract Gateway is ProtocolVersioned, Owned {
 
         return amountST;
       }
+
+    /**
+      * @notice external function to set workers
+      *
+      * @dev only owner can call this
+      *
+      * @param _worker workers contract address
+      *
+      * @return success, boolean that specifies status of the execution
+      */
+    function setWorkers(WorkersInterface _worker)
+        external
+        onlyOwner()
+        returns (bool /* success */)
+    {
+        require(_worker != address(0));
+        workers = _worker;
+
+        //Event for workers set
+        emit WorkersSet(uuid, _worker);
+
+        return true;
+    }
 }
