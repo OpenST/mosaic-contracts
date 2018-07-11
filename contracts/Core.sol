@@ -91,7 +91,6 @@ contract Core is CoreInterface, Util {
 	 * @param _chainIdOrigin origin chain id
 	 * @param _chainIdRemote remote chain id
 	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
-	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
 	 * @param genesisStateRoot genesis block height state root
 	 */
 	constructor(
