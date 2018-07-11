@@ -9,7 +9,7 @@ import "./RLP.sol";
  */
 contract RLPMock  {
 
-    constructor(){}
+    constructor() public{}
 
     /**
      *  @notice Creates an RLPItem from an array of RLP encoded bytes
@@ -19,9 +19,12 @@ contract RLPMock  {
      *  @return length of the rlp data
      *  @return memory pointer at which rlp data is present
      */
-    function toRLPItem(bytes memory rlpEncodedData)
+    function toRLPItem(bytes rlpEncodedData)
         public
-        returns(uint/*length*/, uint/*memory_pointer*/)
+        pure
+        returns
+        (uint /*length*/,
+        uint /*memory_pointer*/)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         return (item._unsafe_length,item._unsafe_memPtr);
@@ -37,10 +40,13 @@ contract RLPMock  {
      *   @return memory pointer at which rlp data is present
      */
     function toRLPItemStrict(
-        bytes memory rlpEncodedData,
+        bytes rlpEncodedData,
         bool strict)
         public
-        returns(uint/*length*/, uint/*memory_pointer*/)
+        pure
+        returns
+        (uint /*length*/,
+        uint /*memory_pointer*/)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
         return(item._unsafe_length,item._unsafe_memPtr);
@@ -56,7 +62,8 @@ contract RLPMock  {
      * @return length of list
      */
     function toList(
-        bytes memory rlpEncodedData)
+        bytes rlpEncodedData)
+        pure
         public
         returns(uint)
     {
@@ -72,12 +79,13 @@ contract RLPMock  {
      *    @return toBytes decoded value in the form of bytes
      */
     function toBytes(
-        bytes memory rlpEncodedData)
+        bytes rlpEncodedData)
+        pure
         public
-        returns(bytes toBytes)
+        returns(bytes)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,true);
-        toBytes= RLP.toBytes(item);
+        return RLP.toBytes(item);
     }
 
     /**
@@ -88,11 +96,12 @@ contract RLPMock  {
      *  @return toData The decoded string in bytes format.
      */
     function toData(
-        bytes memory rlpEncodedData)
+        bytes rlpEncodedData)
+        pure
         public
-        returns(bytes toData)
+        returns(bytes)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
-        toData = RLP.toData(item);
+        return RLP.toData(item);
     }
 }
