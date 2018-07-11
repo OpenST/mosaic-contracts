@@ -42,7 +42,7 @@ contract Hasher {
      *  @param _conversionRate Conversion rate of the token.
      *  @param _conversionRateDecimals Decimal places of conversion rate of token.
 	 *
-	 *	@return bytes32 Keccak256 hashUuid. 
+	 *	@return bytes32 Keccak256 uuid hash. 
 	 */
 	function hashUuid(
 		string _symbol,
@@ -78,7 +78,7 @@ contract Hasher {
 	 *	@param _unlockHeight Block height upto which staking is locked.
 	 *	@param _hashLock Hash lock for the stake request. 
 	 *
-	 *	@return bytes32 Keccak256 hashStakingIntent.
+	 *	@return bytes32 Keccak256 staking intent hash.
 	 */
 	function hashStakingIntent(
 		bytes32 _uuid,
@@ -115,7 +115,7 @@ contract Hasher {
 	 *	@param _unlockHeight Block height upto which redeeming is locked.
 	 *	@param _hashLock Hash lock for the redemption request. 
 	 *
-	 *	@return bytes32 Keccak256 hashRedemptionIntent.
+	 *	@return bytes32 Keccak256 redemption intent hash.
 	 */
 	function hashRedemptionIntent(
 		bytes32 _uuid,
@@ -145,7 +145,7 @@ contract Hasher {
 	 *	@param _account Address of the hashing account.
 	 *	@param _nonce Nonce of the hashing account.
 	 *
-	 *	@return bytes32 Keccak256 hashIntentKey.
+	 *	@return bytes32 Keccak256 intent key hash.
 	 */
 	function hashIntentKey(
 		address _account,
