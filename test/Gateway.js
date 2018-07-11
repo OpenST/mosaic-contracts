@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Gate.js
+// Test: Gateway.js
 //
 // http://www.simpletoken.org/
 //
@@ -21,30 +21,33 @@
 
 const Utils = require('./lib/utils.js');
 const BigNumber = require('bignumber.js');
-const Gate_utils = require('./Gate_utils.js');
+const Gateway_utils = require('./Gateway_utils.js');
 const HashLock = require('./lib/hash_lock.js');
 
-contract('Gate', function(accounts) {
+contract('Gateway', function(accounts) {
 
   var stakerAccount = accounts[0]
     , stakeAmount = new BigNumber(web3.toWei(1000, "ether"))
     , beneficiaryAccount = accounts[6]
   ;
 
-  const deployGate = async function() {
-    result   = await Gate_utils.deployGate(artifacts, accounts);
+  var result, valueToken, openSTValue, uuid, gateway, workers, bounty, workerAddress1, ownerAddress;
+
+  const deployGateway = async function() {
+    result   = await Gateway_utils.deployGateway(artifacts, accounts);
     valueToken  = result.valueToken;
     openSTValue = result.openSTValue;
     uuid = result.uuid;
-    gate = result.gate;
+    gateway = result.gateway;
     workers = result.workers;
     bounty = result.bounty;
     workerAddress1 = result.workerAddress1;
+    ownerAddress = result.ownerAddress;
   };
 
-  const approveGateAndRequestStake = async function (amount, beneficiary, staker, isSuccessCase) {
-    // approve gate contract
-    await valueToken.approve(gate.address, amount, { from: staker });
+  const approveGatewayAndRequestStake = async function (amount, beneficiary, staker, isSuccessCase) {
+    // approve Gateway contract
+    await valueToken.approve(gateway.address, amount, { from: staker });
     // call the request stake
     return requestStake(amount, beneficiary, staker, isSuccessCase);
   };
@@ -52,119 +55,119 @@ contract('Gate', function(accounts) {
   const requestStake = async function (amount, beneficiary, staker, isSuccessCase) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
       // success case
-      let isSuccess = await gate.requestStake.call(amount, beneficiary, {from: staker});
+      let isSuccess = await gateway.requestStake.call(amount, beneficiary, {from: staker});
       assert.equal(isSuccess, true);
 
-      let requestStakeResponse = await gate.requestStake(amount, beneficiary, {from: staker});
-      await Gate_utils.checkRequestStakeEvent(requestStakeResponse.logs[0],staker, amount, beneficiary);
+      let requestStakeResponse = await gateway.requestStake(amount, beneficiary, {from: staker});
+      await Gateway_utils.checkRequestStakeEvent(requestStakeResponse.logs[0],staker, amount, beneficiary);
 
     } else {
       // fail case
-      await Utils.expectThrow(gate.requestStake(amount, beneficiary, {from: staker}));
+      await Utils.expectThrow(gateway.requestStake(amount, beneficiary, {from: staker}));
     }
 
     // account balances after execution
     let finalStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.sub(amount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.plus(amount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(amount)), true);
     } else {
       // check balances for failed case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.requestStake(amount, beneficiary, {from: staker}));
+    await Utils.expectThrow(gateway.requestStake(amount, beneficiary, {from: staker}));
   };
 
   const revertStakeRequest = async function (staker, amount , isSuccessCase) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
       // success case steps
-      let revertRequestStakeResult = await gate.revertStakeRequest.call({from: staker});
+      let revertRequestStakeResult = await gateway.revertStakeRequest.call({from: staker});
       assert.equal(revertRequestStakeResult.eq(amount), true);
 
-      let revertRequestStakeResponse = await gate.revertStakeRequest({from: staker});
-      await Gate_utils.checkStakeRequestRevertedEvent(revertRequestStakeResponse.logs[0],staker, amount);
+      let revertRequestStakeResponse = await gateway.revertStakeRequest({from: staker});
+      await Gateway_utils.checkStakeRequestRevertedEvent(revertRequestStakeResponse.logs[0],staker, amount);
     } else {
       // fail case steps
-      await Utils.expectThrow(gate.revertStakeRequest({from: staker}));
+      await Utils.expectThrow(gateway.revertStakeRequest({from: staker}));
     }
 
     let finalStakerAccountBalance = await valueToken.balanceOf.call(stakerAccount)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
     if (isSuccessCase) {
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.sub(amount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(amount)), true);
     } else {
       // check balances for failed case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.revertStakeRequest({from: staker}));
+    await Utils.expectThrow(gateway.revertStakeRequest({from: staker}));
   };
 
   const rejectStakeRequest = async function (staker, amount, reason, messageSender, isSuccessCase) {
 
     // load intial account balance
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
 
-      let rejectRequestStakeResult = await gate.rejectStakeRequest.call(staker, reason, {from: messageSender});
+      let rejectRequestStakeResult = await gateway.rejectStakeRequest.call(staker, reason, {from: messageSender});
       assert.equal(rejectRequestStakeResult.eq(amount), true);
 
-      let rejectRequestStakeResponse = await gate.rejectStakeRequest(staker, reason, {from: messageSender});
-      await Gate_utils.checkStakeRequestRejectedEvent(rejectRequestStakeResponse.logs[0],staker, amount, reason);
+      let rejectRequestStakeResponse = await gateway.rejectStakeRequest(staker, reason, {from: messageSender});
+      await Gateway_utils.checkStakeRequestRejectedEvent(rejectRequestStakeResponse.logs[0],staker, amount, reason);
 
     } else {
-      await Utils.expectThrow(gate.rejectStakeRequest(staker, reason, {from: messageSender}));
+      await Utils.expectThrow(gateway.rejectStakeRequest(staker, reason, {from: messageSender}));
     }
 
     // load balances after execution
     let finalStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
       // check balances for success case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.sub(amount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(amount)), true);
     } else {
       // check balances for failed case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.rejectStakeRequest(staker, reason, {from: messageSender}));
+    await Utils.expectThrow(gateway.rejectStakeRequest(staker, reason, {from: messageSender}));
   };
 
   const acceptStakeRequest = async function(staker, amount, lock, messageSender, isSuccessCase) {
 
     let initialworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
-      , bountyAmount = await gate.bounty.call()
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
+      , bountyAmount = await gateway.bounty.call()
     ;
 
     let stakingIntentHash = null;
@@ -177,98 +180,103 @@ contract('Gate', function(accounts) {
       let unlockHeight = stakingIntentHashParams.unlockHeight;
       stakingIntentHash = stakingIntentHashParams.stakingIntentHash;
 
-      let acceptStakeRequestResponse = await gate.acceptStakeRequest(staker, lock.l, {from: messageSender});
-      await Gate_utils.checkStakeRequestAcceptedEvent(acceptStakeRequestResponse.logs[0],staker, amount, amountUT, nonce, unlockHeight, stakingIntentHash);
+      let acceptStakeRequestResponse = await gateway.acceptStakeRequest(staker, lock.l, {from: messageSender});
+      await Gateway_utils.checkStakeRequestAcceptedEvent(acceptStakeRequestResponse.logs[0],staker, amount, amountUT, nonce, unlockHeight, stakingIntentHash);
     } else {
-      await Utils.expectThrow(gate.acceptStakeRequest(staker, lock.l, {from: messageSender}));
+      await Utils.expectThrow(gateway.acceptStakeRequest(staker, lock.l, {from: messageSender}));
     }
 
     let finalworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
     ;
 
     if (isSuccessCase) {
       // check balances
       assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.sub(bountyAmount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.plus(bountyAmount).sub(amount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(bountyAmount).sub(amount)), true);
 
     } else {
       // check balances
       assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.acceptStakeRequest(staker, lock.l, {from: messageSender}));
+    await Utils.expectThrow(gateway.acceptStakeRequest(staker, lock.l, {from: messageSender}));
 
     return {lock: lock, stakingIntentHash: stakingIntentHash} ;
   };
 
-  const processStaking = async function (stakingIntentHash, unlockSecret, messageSender, isSuccessCase) {
+  const processStaking = async function (stakingIntentHash, unlockSecret, messageSender, isSuccessCase, isWhitelistedWorker) {
 
     let initialworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
       , initialWorkerBalance = await valueToken.balanceOf.call(workers)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
-      , bountyAmount = await gate.bounty.call()
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
+      , bountyAmount = await gateway.bounty.call()
     ;
 
     if (isSuccessCase) {
-      let processStakingResult = await gate.processStaking.call(stakingIntentHash, unlockSecret, {from: messageSender});
+      let processStakingResult = await gateway.processStaking.call(stakingIntentHash, unlockSecret, {from: messageSender});
       assert.equal(stakeAmount.eq(processStakingResult), true);
 
-      let processStakingResponse = await gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender});
-      //await Gate_utils.checkProcessedStakeEvent(processStakingResponse.logs[0],stakerAccount, stakeAmount);
+      let processStakingResponse = await gateway.processStaking(stakingIntentHash, unlockSecret, {from: messageSender});
+      //await Gateway_utils.checkProcessedStakeEvent(processStakingResponse.logs[0],stakerAccount, stakeAmount);
     } else {
-      await Utils.expectThrow(gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
+      await Utils.expectThrow(gateway.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
     }
 
 
     let finalworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
       , finalWorkerBalance = await valueToken.balanceOf.call(workers)
     ;
 
     if (isSuccessCase) {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
+      if(isWhitelistedWorker){
+          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
+          assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
+      } else {
+          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
+          assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
+      }
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(bountyAmount)), true);
     } else {
       // check balances
       assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
       assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
+    await Utils.expectThrow(gateway.processStaking(stakingIntentHash, unlockSecret, {from: messageSender}));
   };
 
   const revertStaking = async function (stakingIntentHash, messageSender, isSuccessCase) {
 
     let initialworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
       , initialWorkerBalance = await valueToken.balanceOf.call(workers)
-      , initialGateBalance = await valueToken.balanceOf.call(gate.address)
-      , bountyAmount = await gate.bounty.call()
+      , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
+      , bountyAmount = await gateway.bounty.call()
     ;
 
     let waitTime = await openSTValue.blocksToWaitLong.call();
     waitTime = waitTime.toNumber();
     // Wait time less 1 block for preceding test case and 1 block because condition is <=
     for (let i = 0; i < waitTime - 2; i++) {
-      await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
+      await Utils.expectThrow(gateway.revertStaking(stakingIntentHash, {from: messageSender}));
     }
 
     if (isSuccessCase) {
-      let revertStakingResponse = await gate.revertStaking(stakingIntentHash, {from: messageSender});
+      let revertStakingResponse = await gateway.revertStaking(stakingIntentHash, {from: messageSender});
       assert.equal(revertStakingResponse.receipt.status, 1);
     } else {
-      await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
+      await Utils.expectThrow(gateway.revertStaking(stakingIntentHash, {from: messageSender}));
     }
 
 
     let finalworkerAddress1Balance = await valueToken.balanceOf.call(messageSender)
-      , finalGateBalance = await valueToken.balanceOf.call(gate.address)
+      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
       , finalWorkerBalance = await valueToken.balanceOf.call(workers)
     ;
 
@@ -276,22 +284,22 @@ contract('Gate', function(accounts) {
       // check balances
       assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
       assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance.sub(bountyAmount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(bountyAmount)), true);
 
     } else {
       // check balances
       assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
       assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
-      assert.equal(finalGateBalance.equals(initialGateBalance), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
     }
 
     // request again should fail
-    await Utils.expectThrow(gate.revertStaking(stakingIntentHash, {from: messageSender}));
+    await Utils.expectThrow(gateway.revertStaking(stakingIntentHash, {from: messageSender}));
 
   };
 
   const getStakingIntentHashParams = async function (staker, amount, lock, messageSender) {
-    let acceptStakeRequestResult = await gate.acceptStakeRequest.call(staker, lock.l, {from: messageSender});
+    let acceptStakeRequestResult = await gateway.acceptStakeRequest.call(staker, lock.l, {from: messageSender});
     let amountUT = acceptStakeRequestResult[0];
     let nonce = acceptStakeRequestResult[1];
     let unlockHeight = acceptStakeRequestResult[2];
@@ -311,49 +319,67 @@ contract('Gate', function(accounts) {
       hashLock: lock.l
     }
   };
+
+  const setWorkers = async function (workersAddress, messageSender, isSuccessCase) {
+
+    if (isSuccessCase){
+      let response = await gateway.setWorkers.call(workersAddress, {from: messageSender});
+      assert.equal(response, isSuccessCase);
+
+      let result = await gateway.setWorkers(workersAddress, {from: messageSender});
+      await Gateway_utils.checkWorkersSetEvent(result.logs[0], workersAddress);
+
+      let workersFromContract = await gateway.workers.call();
+      assert.equal(workersFromContract, workersAddress);
+
+    } else {
+      await Utils.expectThrow(gateway.setWorkers(workersAddress, {from: messageSender}));
+    }
+  };
+
   describe('Properties', async () => {
 
     before (async () => {
-      await deployGate();
+      await deployGateway();
     });
 
     it('has workers', async () => {
-      assert.equal(await gate.workers.call(), workers);
+      assert.equal(await gateway.workers.call(), workers);
     });
 
     it('has bounty', async () => {
-      let bountyValue = await gate.bounty.call();
+      let bountyValue = await gateway.bounty.call();
       assert.equal(bountyValue.toNumber(), bounty);
     });
 
     it('has uuid', async () => {
-      let gateUUID = await gate.uuid.call();
-      assert.equal(gateUUID, uuid);
+      let gatewayUUID = await gateway.uuid.call();
+      assert.equal(gatewayUUID, uuid);
     });
 
     it('has openSTProtocol', async () => {
-      assert.equal(await gate.openSTProtocol.call(), openSTValue.address);
+      assert.equal(await gateway.openSTProtocol.call(), openSTValue.address);
     });
   });
 
   describe('requestStake', async () => {
     beforeEach (async () => {
-      await deployGate();
+      await deployGateway();
     });
 
     it('successfully processes request stake', async () => {
-      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
     });
 
     it('fails to processes request stake when stake amount is 0', async () => {
-      await approveGateAndRequestStake(new BigNumber(0), beneficiaryAccount, stakerAccount, false);
+      await approveGatewayAndRequestStake(new BigNumber(0), beneficiaryAccount, stakerAccount, false);
     });
 
     it('fails to processes request stake when beneficiary account is 0', async () => {
-      await approveGateAndRequestStake(stakeAmount, 0, stakerAccount, false);
+      await approveGatewayAndRequestStake(stakeAmount, 0, stakerAccount, false);
     });
 
-    it('fails to processes request stake when staker account has not approved gate contract', async () => {
+    it('fails to processes request stake when staker account has not approved Gateway contract', async () => {
       await requestStake(stakeAmount, beneficiaryAccount, stakerAccount, false);
     });
   });
@@ -365,13 +391,13 @@ contract('Gate', function(accounts) {
     let lock = null;
 
     beforeEach (async () => {
-      await deployGate();
-      bountyAmount = await gate.bounty.call();
+      await deployGateway();
+      bountyAmount = await gateway.bounty.call();
       lock = HashLock.getHashLock();
     });
 
     it('successfully processes revert stake request', async () => {
-      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
       await revertStakeRequest(stakerAccount, stakeAmount ,true);
     });
 
@@ -380,10 +406,10 @@ contract('Gate', function(accounts) {
     });
 
     it('fails to processes revert stake request after stake request was accepted', async () => {
-      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
       await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-      await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+      await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
 
       await revertStakeRequest(stakerAccount, stakeAmount ,false);
@@ -398,13 +424,13 @@ contract('Gate', function(accounts) {
     let rejectReason = 2;
 
     beforeEach (async () => {
-      await deployGate();
-      bountyAmount = await gate.bounty.call();
+      await deployGateway();
+      bountyAmount = await gateway.bounty.call();
       lock = HashLock.getHashLock();
     });
 
     it('successfully processes reject stake request', async () => {
-      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
       await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, true);
     });
 
@@ -413,13 +439,20 @@ contract('Gate', function(accounts) {
     });
 
     it('fails to processes reject stake request after stake request was accepted', async () => {
-      await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
       await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-      await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+      await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
       await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
 
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
+    });
+
+    it('fails to process reject stake request if reject stake request already processed', async () => {
+      await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+
+      await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, true);
       await rejectStakeRequest(stakerAccount, stakeAmount, rejectReason, workerAddress1, false);
     });
   });
@@ -432,18 +465,18 @@ contract('Gate', function(accounts) {
 
       beforeEach (async () => {
 
-        await deployGate();
+        await deployGateway();
 
-        bountyAmount = await gate.bounty.call();
+        bountyAmount = await gateway.bounty.call();
         lock = HashLock.getHashLock();
       });
 
       it('successfully processes accept stake request', async () => {
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
 
@@ -452,10 +485,10 @@ contract('Gate', function(accounts) {
       it('fails to processes accept stake request when worker is not whitelisted address', async () => {
 
         let workerAddress = accounts[10];
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
         await valueToken.transfer(workerAddress, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress });
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress, false);
 
@@ -463,10 +496,10 @@ contract('Gate', function(accounts) {
 
       it('fails to processes accept stake request when staker address is blank', async () => {
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
 
@@ -474,10 +507,10 @@ contract('Gate', function(accounts) {
 
       it('fails to processes accept stake request when hash lock is blank', async () => {
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
         lock.l = 0;
         lock.s = 0;
@@ -487,15 +520,15 @@ contract('Gate', function(accounts) {
 
       it('fails to processes accept stake request when worker address has insufficient balance', async () => {
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
 
       });
 
-      it('fails to processes accept stake request when worker address has not approved gate contract', async () => {
+      it('fails to processes accept stake request when worker address has not approved Gateway contract', async () => {
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
 
@@ -510,14 +543,14 @@ contract('Gate', function(accounts) {
       let lock = null;
 
       beforeEach (async () => {
-        await deployGate();
-        bountyAmount = await gate.bounty.call();
+        await deployGateway();
+        bountyAmount = await gateway.bounty.call();
         lock = HashLock.getHashLock();
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       });
 
       it('successfully processes', async () => {
@@ -525,31 +558,31 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, lock.s, workerAddress1, true);
+        await processStaking(stakingIntentHash, lock.s, workerAddress1, true, true);
 
       });
 
-      it('fails to processes when the worker address is not whitelisted', async () => {
+      it('successfully processes when the worker address is not whitelisted', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
         let workerAddress = accounts[10];
-        await processStaking(stakingIntentHash, lock.s, workerAddress, false);
+        await processStaking(stakingIntentHash, lock.s, workerAddress, true, false);
 
       });
 
       it('fails to processes when stakingIntentHash is 0', async () => {
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        await processStaking(0, lock.s, workerAddress1, false);
+        await processStaking(0, lock.s, workerAddress1, false, true);
 
       });
 
       it('fails to processes when stakingIntentHash is invalid', async () => {
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        await processStaking(beneficiaryAccount, lock.s, workerAddress1, false);
+        await processStaking(beneficiaryAccount, lock.s, workerAddress1, false, true);
 
       });
 
@@ -558,7 +591,7 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, 0, workerAddress1, false);
+        await processStaking(stakingIntentHash, 0, workerAddress1, false, true);
 
       });
 
@@ -567,14 +600,14 @@ contract('Gate', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, beneficiaryAccount, workerAddress1, false);
+        await processStaking(stakingIntentHash, beneficiaryAccount, workerAddress1, false, true);
 
       });
 
       it('fails to processes when stakeRequest was not accepted', async () => {
 
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -583,7 +616,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await rejectStakeRequest(stakerAccount, stakeAmount, 0,  workerAddress1, true);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -592,7 +625,7 @@ contract('Gate', function(accounts) {
         let stakingIntentHashParams = await getStakingIntentHashParams(stakerAccount, stakeAmount, lock, workerAddress1);
 
         await revertStakeRequest(stakerAccount, stakeAmount ,true);
-        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false);
+        await processStaking(stakingIntentHashParams.stakingIntentHash, stakingIntentHashParams.hashLock, workerAddress1, false, true);
 
       });
 
@@ -604,13 +637,13 @@ contract('Gate', function(accounts) {
       let lock = null;
 
       beforeEach (async () => {
-        await deployGate();
-        bountyAmount = await gate.bounty.call();
+        await deployGateway();
+        bountyAmount = await gateway.bounty.call();
         lock = HashLock.getHashLock();
 
-        await approveGateAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+        await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
-        await valueToken.approve(gate.address, bountyAmount, { from: workerAddress1 });
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       });
 
       it('successfully processes', async () => {
@@ -622,12 +655,21 @@ contract('Gate', function(accounts) {
 
       });
 
-      it('fails to process when already processStake is called', async () => {
+      it('successfully processes called by any account', async () => {
+
+          let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
+          let stakingIntentHash = stakeResult['stakingIntentHash'];
+
+          await revertStaking(stakingIntentHash, accounts[10], true);
+
+      });
+
+        it('fails to process when already processStake is called', async () => {
 
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, lock.s, workerAddress1, true);
+        await processStaking(stakingIntentHash, lock.s, workerAddress1, true, true);
 
         await revertStaking(stakingIntentHash, workerAddress1, false);
 
@@ -650,17 +692,6 @@ contract('Gate', function(accounts) {
         await revertStaking(beneficiaryAccount, workerAddress1, false);
 
       });
-
-      it('fails to process when worker is not whitelisted', async () => {
-
-        let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        let stakingIntentHash = stakeResult['stakingIntentHash'];
-
-        let workerAddress = accounts[10];
-        await revertStaking(stakingIntentHash, workerAddress, false);
-
-      });
-
 
       it('fails to processes when stakeRequest was not accepted', async () => {
 
@@ -685,7 +716,23 @@ contract('Gate', function(accounts) {
         await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
       });
 
-    })
+    });
+
+    describe('setWorkers', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to set workers when caller is not owner', async () => {
+            await setWorkers(accounts[8], accounts[2], false);
+        });
+
+        it('sucessfully sets workers when caller is owner', async () => {
+            await setWorkers(accounts[8], ownerAddress, true);
+        });
+
+    });
 
 });
 

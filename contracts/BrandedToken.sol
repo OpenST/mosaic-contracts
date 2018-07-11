@@ -52,6 +52,15 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
      *
      *  @dev Creates an EIP20Token and a UtilityTokenAbstract contract with arguments 
      *       passed in the contract constructor
+     *  
+     *  @param _uuid Uuid of the token.
+     *  @param _symbol Symbol of the token. 
+     *  @param _name Name of the token.
+     *  @param _decimals Decimal places of the token.
+     *  @param _chainIdValue Chain id of value chain.
+     *  @param _chainIdUtility Chain id of utility chain.
+     *  @param _conversionRate Conversion rate of the token.
+     *  @param _conversionRateDecimals Decimal places of conversion rate of token.
      */
     constructor(
         bytes32 _uuid,

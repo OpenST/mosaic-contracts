@@ -179,7 +179,7 @@ contract EIP20Token is EIP20Interface {
      *  @param _beneficiary Address of tokens beneificary.
      *  @param _amount Amount of tokens claimed for beneficiary.
      *
-     *  @return True if claim of tokens for beneficiary address is successful, 
+     *  @return bool True if claim of tokens for beneficiary address is successful, 
      *          false otherwise.
      */
     function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {
@@ -199,7 +199,7 @@ contract EIP20Token is EIP20Interface {
      *
      *  @param _amount Amount of tokens to mint.
      *
-     *  @return True if mint is successful, false otherwise.
+     *  @return bool True if mint is successful, false otherwise.
      */
     function mintEIP20(uint256 _amount) internal returns (bool /* success */) {
         // mint EIP20 tokens in contract address for them to be claimed
@@ -215,7 +215,7 @@ contract EIP20Token is EIP20Interface {
      *
      *  @param _amount Amount of tokens to burn.
      *
-     *  @return True if burn is successful, false otherwise.
+     *  @return bool True if burn is successful, false otherwise.
      */
     function burnEIP20(uint256 _amount) internal returns (bool /* success */) {
         balances[msg.sender] = balances[msg.sender].sub(_amount);
