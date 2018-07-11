@@ -47,8 +47,6 @@ import "./UtilityTokenAbstract.sol";
 contract BrandedToken is EIP20Token, UtilityTokenAbstract {
     using SafeMath for uint256;
 
-    /* Public functions */
-
     /**
      *  @notice Contract Constructor. 
      *
@@ -75,6 +73,8 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
         _conversionRate,
         _conversionRateDecimals)
         { }
+
+    /* Public functions */
 
     /**
      *  @notice Public function claim
@@ -126,7 +126,8 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
      *  @dev Only callable by openSTProtocol contract. Implements a burn function to permit 
      *       msg.sender to reduce its balance, which also reduces tokenTotalSupply.
      *
-     *  @param _value Amount of tokens to burn.
+     *  @param _burner Address of token burner. 
+     *  @param _amount Amount of tokens to burn.
      *
      *  @return True if burn is successful, false otherwise.
      */
