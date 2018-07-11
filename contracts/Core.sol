@@ -91,13 +91,16 @@ contract Core is CoreInterface, Util {
 	 * @param _chainIdOrigin origin chain id
 	 * @param _chainIdRemote remote chain id
 	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
+	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
+	 * @param genesisStateRoot genesis block height state root
 	 */
 	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
-		WorkersInterface _workers)
+		WorkersInterface _workers,
+		bytes32 genesisStateRoot)
 		public
 	{
 		require(_registrar != address(0), "Registrar address is 0");
@@ -112,6 +115,7 @@ contract Core is CoreInterface, Util {
 		workers = _workers;
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
+		stateRoots[latestStateRootBlockHeight] = genesisStateRoot;
 	}
 
 	/**
@@ -207,8 +211,6 @@ contract Core is CoreInterface, Util {
 		external
 		returns(bool /* success */)
 	{
-		// Check for block height
-		require(_blockHeight != 0, "Given block height is 0");
 		// _rlpEncodedAccount should be valid
 		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
 		// _rlpParentNodes should be valid

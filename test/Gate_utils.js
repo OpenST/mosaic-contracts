@@ -26,7 +26,8 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , SimpleStake = artifacts.require("./SimpleStake.sol")
   , Gate = artifacts.require("./Gate.sol")
   , Workers = artifacts.require("./Workers.sol")
-  ;
+  , proof = require('./data/proof')
+;
 
 const Assert 	= require('assert')
   , BigNumber = require('bignumber.js')
@@ -67,7 +68,7 @@ module.exports.deployGate = async (artifacts, accounts) => {
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
-  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
+  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address, proof.account.stateRoot);
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);

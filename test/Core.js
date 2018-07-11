@@ -125,17 +125,19 @@ contract('Core', function (accounts) {
 
             await core.commitStateRoot(blockHeight, proof.account.stateRoot, {from: worker});
         });
-
-        it('should not be able to verify proof for account if block height is 0', async () => {
-            await utils.expectThrow(core.proveOpenST(0, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker}));
-        });
-
         it('should not be able to verify proof for account if rlpEncodedAccount value is blank', async () => {
             await utils.expectThrow(core.proveOpenST(blockHeight, '', proof.account.rlpParentNodes, {from: worker}));
         });
 
         it('should not be able to verify proof for account if rlpParentNodes value is blank', async () => {
             await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '', {from: worker}));
+        });
+
+        it('should be able to verify proof for account even if block height is 0', async () => {
+            let response = await core.proveOpenST(0, proof.account.rlpEncodedAccount, proof.account.rlpParentNodes, {from: worker});
+            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let event = formattedDecodedEvents['OpenSTProven'];
+            await coreUtils.checkOpenSTProvenEvent(event, 0, storageRoot, false);
         });
 
         it('should be able to verify proof for account when called for the first time ', async () => {
