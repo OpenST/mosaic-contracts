@@ -10,14 +10,14 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./ERC20Interface.sol";
-import "./Owned.sol";
+import "./OpsManaged.sol";
 import "./SafeMath.sol";
 
 
 //
 // Standard ERC20 implementation, with ownership.
 //
-contract ERC20Token is ERC20Interface, Owned {
+contract ERC20Token is ERC20Interface, OpsManaged {
 
     using SafeMath for uint256;
 
@@ -31,7 +31,7 @@ contract ERC20Token is ERC20Interface, Owned {
 
 
     constructor(string _symbol, string _name, uint8 _decimals, uint256 _totalSupply) public
-        Owned()
+        OpsManaged()
     {
         tokenSymbol      = _symbol;
         tokenName        = _name;
