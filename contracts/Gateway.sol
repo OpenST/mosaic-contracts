@@ -395,7 +395,6 @@ contract Gateway is ProtocolVersioned, Owned {
         onlyOwner()
         returns (bool /* success */)
     {
-        require(_workers != address(0));
         workers = _workers;
 
         //Event for workers set
