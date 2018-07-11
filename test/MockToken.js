@@ -1,8 +1,6 @@
 const Utils = require('./lib/utils.js')
 const SimpleTokenUtils = require('./SimpleToken_utils.js')
 
-const Moment = require('moment')
-
 const MockToken = artifacts.require("./MockToken.sol")
 
 
