@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Value chain: Gate
+// Value chain: Gateway
 //
 // http://www.simpletoken.org/
 //
@@ -29,13 +29,13 @@ import "./Owned.sol";
 import "./WorkersInterface.sol";
 
 /**
- *	@title Gate contract which implements ProtocolVersioned, Owned
+ *	@title Gateway contract which implements ProtocolVersioned, Owned
  *
- *	@notice Gate contract is staking gate that seperates the concerns of staker and staking processor
- *      Stake process is executed through Gate contract rather than directly with the protocol contract
- *      The Gate contract will serve the role of staking account rather than an external account
+ *	@notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor
+ *      Stake process is executed through Gateway contract rather than directly with the protocol contract
+ *      The Gateway contract will serve the role of staking account rather than an external account
  */
-contract Gate is ProtocolVersioned, Owned {
+contract Gateway is ProtocolVersioned, Owned {
 
     /* Events */
 
@@ -56,6 +56,9 @@ contract Gate is ProtocolVersioned, Owned {
       uint256 _nonce,
       uint256 _unlockHeight,
       bytes32 _stakingIntentHash);
+
+    /** Below event is emitted after successful execution of setWorkers */
+    event WorkersSet(WorkersInterface _workers);
 
     /* Storage */
 
@@ -111,8 +114,8 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function requestStake
       *
-      * @dev In order to request stake the staker needs to approve gate contract for stake amount
-      *      Staked amount is transferred from staker address to Gate contract
+      * @dev In order to request stake the staker needs to approve Gateway contract for stake amount
+      *      Staked amount is transferred from staker address to Gateway contract
       *
       * @param _amount staking amount
       * @param _beneficiary beneficiary address
@@ -150,7 +153,7 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to revert requested stake
       *
       * @dev This can be called only by staker
-      *      Staked amount is transferred back to staker address from Gate contract
+      *      Staked amount is transferred back to staker address from Gateway contract
       *
       * @return stakeRequestAmount staking amount
       */
@@ -181,7 +184,7 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to reject requested stake
       *
       * @dev This can be called only by whitelisted worker address
-      *      Staked amount is transferred back to staker address from Gate contract
+      *      Staked amount is transferred back to staker address from Gateway contract
       *
       * @param _staker staker address
       * @param _reason reason for rejection
@@ -208,7 +211,7 @@ contract Gate is ProtocolVersioned, Owned {
 
         stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
-        delete stakeRequests[msg.sender];
+        delete stakeRequests[_staker];
 
         emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
 
@@ -219,8 +222,8 @@ contract Gate is ProtocolVersioned, Owned {
       * @notice external function to accept requested stake
       *
       * @dev This can be called only by whitelisted worker address
-      *      Bounty amount is transferred from msg.sender to Gate contract
-      *      openSTProtocol is approved for staking amount by Gate contract
+      *      Bounty amount is transferred from msg.sender to Gateway contract
+      *      openSTProtocol is approved for staking amount by Gateway contract
       *
       * @param _staker staker address
       * @param _hashLock hash lock
@@ -252,7 +255,7 @@ contract Gate is ProtocolVersioned, Owned {
         // check if _hashLock is not 0
         require(_hashLock != bytes32(0));
 
-        // Transfer bounty amount from worker to gate contract
+        // Transfer bounty amount from worker to Gateway contract
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), bounty));
 
         // Approve OpenSTValue contract for stake amount
@@ -296,8 +299,8 @@ contract Gate is ProtocolVersioned, Owned {
       {
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
-        //but all staking stateful information will move to the gate contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
@@ -334,8 +337,7 @@ contract Gate is ProtocolVersioned, Owned {
     /**
       * @notice external function to revert staking
       *
-      * @dev Caller must be the whitelisted worker
-      *      Staked amount is transferred to the staker address
+      * @dev Staked amount is transferred to the staker address
       *      Bounty amount is transferred to workers contract
       *
       * @param _stakingIntentHash staking intent hash
@@ -345,16 +347,13 @@ contract Gate is ProtocolVersioned, Owned {
     function revertStaking(
         bytes32 _stakingIntentHash)
         external
-        returns (uint256 stakeRequestAmount)
+        returns (uint256 amountST)
       {
-
-        // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender));
 
         require(_stakingIntentHash != bytes32(0));
 
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and gate contract in v0.9.3;
-        //but all staking stateful information will move to the gate contract in v0.9.4 (making OpenST a library call)
+        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
+        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
         //and making this call obsolete
         address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
 
@@ -366,20 +365,41 @@ contract Gate is ProtocolVersioned, Owned {
         // check if the stake request was accepted
         require(stakeRequest.hashLock != bytes32(0));
 
-        bytes32 uuidR = bytes32(0);
-        uint256 amountST = uint256(0);
         address stakerAddress = address(0);
-        (uuidR, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash);
+        (, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash);
 
-        // check if the stake address is not 0
-        require(stakerAddress != address(0));
+        // check if the stake address is correct
+        assert(stakerAddress == staker);
+
+        assert(amountST == stakeRequest.amount);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
 
-        stakeRequestAmount = stakeRequest.amount;
         // delete the stake request from the mapping storage
         delete stakeRequests[staker];
 
-        return stakeRequestAmount;
+        return amountST;
       }
+
+    /**
+      * @notice external function to set workers
+      *
+      * @dev only owner can call this
+      *
+      * @param _workers workers contract address
+      *
+      * @return success, boolean that specifies status of the execution
+      */
+    function setWorkers(WorkersInterface _workers)
+        external
+        onlyOwner()
+        returns (bool /* success */)
+    {
+        workers = _workers;
+
+        //Event for workers set
+        emit WorkersSet(_workers);
+
+        return true;
+    }
 }
