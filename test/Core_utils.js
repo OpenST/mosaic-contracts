@@ -49,7 +49,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     await workers.setAdminAddress(admin);
     await workers.setOpsAddress(ops);
     await workers.setWorker(worker1, deactivationHeight, {from: ops});
-    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, proof.account.stateRoot, {from: accounts[0]});
+    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, workers.address, 0, proof.account.stateRoot, {from: accounts[0]});
     return {
         core: core,
         workersContract: workers,

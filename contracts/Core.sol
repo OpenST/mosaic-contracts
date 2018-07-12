@@ -91,7 +91,8 @@ contract Core is CoreInterface, Util {
 	 * @param _chainIdOrigin origin chain id
 	 * @param _chainIdRemote remote chain id
 	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
-	 * @param genesisStateRoot genesis block height state root
+	 * @param _blockHeight block height
+	 * @param _stateRoot state root
 	 */
 	constructor(
 		address _registrar,
@@ -99,7 +100,8 @@ contract Core is CoreInterface, Util {
 		uint256 _chainIdRemote,
 		address _openSTRemote,
 		WorkersInterface _workers,
-		bytes32 genesisStateRoot)
+		uint256 _blockHeight,
+		bytes32 _stateRoot)
 		public
 	{
 		require(_registrar != address(0), "Registrar address is 0");
@@ -114,7 +116,8 @@ contract Core is CoreInterface, Util {
 		workers = _workers;
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
-		stateRoots[latestStateRootBlockHeight] = genesisStateRoot;
+		latestStateRootBlockHeight = _blockHeight;
+		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
 
 	/**
