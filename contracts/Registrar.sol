@@ -30,9 +30,7 @@ import "./OpenSTUtilityInterface.sol";
  *  @title Registrar contract which implements OpsManaged.
  *
  *  @notice Contains functions that register for utility tokens.
- *
  */
-
 contract Registrar is OpsManaged {
 
     /** Storage */
@@ -236,8 +234,6 @@ contract Registrar is OpsManaged {
 	/**
 	 *  @notice Public function registerBrandedToken
 	 *
-	 *  @dev 
-	 *
 	 *  @param _registry Address of OpenSTUtility Interface contract.
 	 *  @param _symbol Symbol of the token.
 	 *  @param _name Name of the token.
@@ -284,7 +280,7 @@ contract Registrar is OpsManaged {
 	 *  @param _redemptionIntentHash Hash of the redemption intent data.
 	 *  @param _unlockSecret Unlock secret to the hash lock.
 	 *
-	 *  @return address Address of the token.  
+	 *  @return address Address of the token.
 	 */
     function processRedeeming(
     	// address of OpenSTUtility registry:
