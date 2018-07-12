@@ -27,7 +27,7 @@ import "./OpsManaged.sol";
 import "./WorkersInterface.sol";
 
 /**
- *  @title Workers contract which implement WorkersInterface, OpsManaged .
+ *  @title Workers contract which implement WorkersInterface, OpsManaged.
  *
  *  @notice A set of authorised workers.
  */
@@ -157,6 +157,7 @@ contract Workers is WorkersInterface, OpsManaged {
     {
         return (workers[_worker] >= block.number);
     }
+    
     /**
      *  @notice External function approve.
      *
