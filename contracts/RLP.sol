@@ -398,7 +398,7 @@ library RLP {
   *  @dev Decode an RLPItem into an address. This will not work if the
   *       RLPItem is a list.
   *
-  *  @param self The RLPItem.
+  *  @param memPtr Memory pointer. 
   *
   *  @return Get the full length of an RLP item.
   */
@@ -467,9 +467,9 @@ library RLP {
   *  @dev Assumes that enough memory has been allocated to store in target. 
   *       Gets the full length of an RLP item.
   *
-  *  @param btsPts 
-  *  @param tgt 
-  *  @param btsLen
+  *  @param btsPtr Bytes pointer. 
+  *  @param tgt Last item to be allocated.
+  *  @param btsLen Bytes length.
   */
  function _copyToBytes(uint btsPtr, bytes memory tgt, uint btsLen) private pure {
         // Exploiting the fact that 'tgt' was the last thing to be allocated,
