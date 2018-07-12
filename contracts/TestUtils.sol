@@ -22,19 +22,19 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *	@title TestingUtils 
+ *	@title TestingUtils Contract.
  *
- *	@notice contains functions used for testing on Mock contracts. 
+ *	@notice Contains functions used for testing on Mock contracts. 
  */
 library TestUtils {
 
 	/**
-	 *	@notice internal pure function getStoragePath
+	 *	@notice Internal pure function getStoragePath.
 	 *
-	 *	@param _mappingKey key of the mapping value
-	 *	@param _indexPosition index position of the mapping in contract storage
+	 *	@param _mappingKey Key of the mapping value.
+	 *	@param _indexPosition Index position of the mapping in contract storage.
 	 *
-	 *	@return bytes32 path to the mapping value in contract storage
+	 *	@return bytes32 Path to the mapping value in contract storage.
 	 */
 	function getStoragePath(
 		bytes32 _mappingKey,
