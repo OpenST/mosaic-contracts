@@ -26,45 +26,48 @@ import "./SafeMath.sol";
 import "./Hasher.sol";
 import "./ProtocolVersioned.sol";
 
-// utility chain contracts
+/** utility chain contracts */
 import "./UtilityTokenInterface.sol";
 
-
-/// @title UtilityToken abstract
+/**
+ *  @title UtilityTokenAbstract contracts which implements Hasher, ProtocolVersioned, UtilityTokenInterface.
+ *
+ *  @notice Contains functions to enable a utility token 
+ */
 contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterface {
     using SafeMath for uint256;
     
-    /*
-     *  Events
+    /** Events */
+
+    /** 
+     * Minted raised when new utility tokens are minted for a beneficiary
+     * Minted utility tokens still need to be claimed by anyone to transfer
+     * them to the beneficiary.
      */
-    /// Minted raised when new utility tokens are minted for a beneficiary
-    /// Minted utility tokens still need to be claimed by anyone to transfer
-    /// them to the beneficiary.
     event Minted(bytes32 indexed _uuid, address indexed _beneficiary,
         uint256 _amount, uint256 _unclaimed, uint256 _totalSupply);
 
     event Burnt(bytes32 indexed _uuid, address indexed _account,
         uint256 _amount, uint256 _totalSupply);
     
-    /*
-     *  Storage
-     */
-    /// UUID for the utility token
+    /**  Storage */
+
+    /** UUID for the utility token */
     bytes32 private tokenUuid;
-    /// totalSupply holds the total supply of utility tokens
+    /** totalSupply holds the total supply of utility tokens */
     uint256 private totalTokenSupply;
-    /// conversion rate for the utility token
+    /** conversion rate for the utility token */
     uint256 private tokenConversionRate;
-    /// conversion rate decimal factor
+    /** conversion rate decimal factor */
     uint8 private tokenConversionRateDecimals;
-    /// tokenChainIdValue is an invariant in the tokenUuid calculation    
+    /** tokenChainIdValue is an invariant in the tokenUuid calculation */
     uint256 private tokenChainIdValue;
-    /// tokenChainIdUtility is an invariant in the tokenUuid calculation
+    /** tokenChainIdUtility is an invariant in the tokenUuid calculation */
     uint256 private tokenChainIdUtility;
-    /// tokenOpenSTUtility is an invariant in the tokenUuid calculation
+    /** tokenOpenSTUtility is an invariant in the tokenUuid calculation */
     address private tokenOpenSTUtility;
-    /// claims is follows EIP20 allowance pattern but
-    /// for a staker to stake the utility token for a beneficiary
+    /** claims is follows EIP20 allowance pattern but */
+    /** for a staker to stake the utility token for a beneficiary */
     mapping(address => uint256) private claims;
 
     /*
