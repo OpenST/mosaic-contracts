@@ -258,6 +258,9 @@ contract OpenSTValue is OpsManaged, Hasher {
         // as is required on processMinting
 
         UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all transactions have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         stakeAddress = address(utilityToken.simpleStake);
         require(stakeAddress != address(0));
 
@@ -285,6 +288,10 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_stakingIntentHash != "");
 
         Stake storage stake = stakes[_stakingIntentHash];
+        UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all transactions have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
 
         // require that the stake is unlocked and exists
         require(stake.unlockHeight > 0);
