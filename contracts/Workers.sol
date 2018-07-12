@@ -26,33 +26,42 @@ import "./EIP20Interface.sol";
 import "./OpsManaged.sol";
 import "./WorkersInterface.sol";
 
-/// A set of authorised workers
+/**
+ *  @title Workers contract which implement WorkersInterface, OpsManaged .
+ *
+ *  @notice A set of authorised workers.
+ */
 contract Workers is WorkersInterface, OpsManaged {
     using SafeMath for uint256;
+
+    /** Constants */
     
     EIP20Interface private eip20token;
-    /*
-     *  Storage
-     */
-    /// workers are active up unto the deactivation height
+    
+    /**  Storage */
+    /** Workers are active up unto the deactivation height. */
     mapping(address => uint256 /* deactivation height */) public workers;
 
-    /*
-     * Events
-     */
-    ///Event for worker set
+    /** Events */
+
+    /** Event for worker set. */
     event WorkerSet(
         address indexed _worker,
         uint256 indexed _deactivationHeight,
         uint256 _remainingHeight);
 
-    ///Event for worker removed
+    /** Event for worker removed. */
     event WorkerRemoved(
         address indexed _worker,
         bool _existed);
 
-    /// @dev    Constructor;
-    ///         public method;    
+    /**
+     *  @notice Contract constructor.
+     *
+     *  @dev Sets the EIP20TokenInterface address.
+     * 
+     *  @param _eip20token Address of the EIP20Token.
+     */  
     constructor(
         address _eip20token)
         public
@@ -63,12 +72,19 @@ contract Workers is WorkersInterface, OpsManaged {
         eip20token = EIP20Interface(_eip20token);
     }
 
-    /// @dev    Takes _worker, _deactivationHeight;
-    ///         Sets worker and its deactivation height; 
-    ///         external method;
-    /// @param _worker worker
-    /// @param _deactivationHeight deactivationHeight
-    /// @return (remainingHeight)    
+    /** External Functions */
+    
+    /**
+     *  @notice External function setWorker.
+     *
+     *  @dev Takes _worker, _deactivationHeight,
+     *       Sets worker and its deactivation height.
+     *
+     *  @param _worker Worker address.
+     *  @param _deactivationHeight Deactivation Height.
+     *
+     *  @return uint256 Remaining activation length.
+     */
     function setWorker(
         address _worker,
         uint256 _deactivationHeight)
@@ -87,11 +103,15 @@ contract Workers is WorkersInterface, OpsManaged {
         return (remainingHeight);
     }
 
-    /// @dev    Takes _worker;
-    ///         removes the worker; 
-    ///         external method;
-    /// @param _worker worker
-    /// @return (existed)    
+    /**
+     *  @notice External function removeWorker.
+     *  
+     *  @dev Takes _worker and removes the worker.
+     *
+     *  @param _worker Worker address.
+     *
+     *  @return bool true if existed, false otherwise.
+     */
     function removeWorker(
         address _worker)
         external
@@ -106,10 +126,13 @@ contract Workers is WorkersInterface, OpsManaged {
 
         return existed;
     }
-    
-    /// @dev    Clean up or collectively revoke all workers;
-    ///         external method;
-    ///         only called by ops or admin;    
+
+    /**
+     *  @notice External function remove.
+     *
+     *  @dev Clean up or collectively revoke all workers.
+     *       Only callable by ops or admin.
+     */ 
     function remove()
         external
         onlyAdminOrOps()
@@ -117,11 +140,15 @@ contract Workers is WorkersInterface, OpsManaged {
         selfdestruct(msg.sender);
     }
 
-    /// @dev    Takes _worker;
-    ///         checks if the worker is valid; 
-    ///         external method;
-    /// @param _worker worker
-    /// @return (isValid)    
+    /**
+     *  @notice External function isWorker.
+     *
+     *  @dev Takes _worker, checks if the worker is valid. 
+     *
+     *  @param _worker Worker address.
+     *
+     *  @return bool True if worker is valid, false otherwise.
+     */   
     function isWorker(
         address _worker)
         external
@@ -130,12 +157,16 @@ contract Workers is WorkersInterface, OpsManaged {
     {
         return (workers[_worker] >= block.number);
     }
-    /// @dev Takes _spender and _amount;
-    ///      approves spender to spend amount;
-    ///      external method;
-    /// @param _spender spender;
-    ///        _amount amount;
-    /// @return (bool)
+    /**
+     *  @notice External function approve.
+     *
+     *  @dev Takes _spender and _amount, approves spender to spend amount.
+     *
+     *  @param _spender Spender address.
+     *  @param _amount Amount to approve for spender.
+     *
+     *  @return bool True if spender approved, false otherwise.
+     */
     function approve(
         address _spender,
         uint256 _amount)
