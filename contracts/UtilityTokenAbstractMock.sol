@@ -25,11 +25,17 @@ pragma solidity ^0.4.23;
 import "./UtilityTokenAbstract.sol";
 
 
-/// @title UtilityTokenAbstractMock
-/// @dev Implements mock claim, mint, and burn functions
-/// and wraps internal functions to enable testing UtilityTokenAbstract
+/**
+ *  @title UtilityTokenAbstractMock contract.
+ *
+ *  @dev Implements mock claim, mint, and burn functions
+ *       and wraps internal functions to enable testing UtilityTokenAbstract
+ */
 contract UtilityTokenAbstractMock is UtilityTokenAbstract {
 
+    /**
+     *  @notice Contract constructor.
+     */
     constructor(
         bytes32 _uuid,
         string _symbol,
@@ -50,27 +56,27 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         ProtocolVersioned(msg.sender)
         { }
 
-    /// @dev Mock claim function
+    /** @dev Mock claim function */
     function claim(address _beneficiary) public returns (bool success) {
         _beneficiary;
         success = true;
     }
 
-    /// @dev Mock mint function
+    /** @dev Mock mint function */
     function mint(address _beneficiary, uint256 _amount) public returns (bool success) {
         _beneficiary;
         _amount;
         success = true;
     }
 
-    /// @dev Mock burn function
+    /** @dev Mock burn function */
     function burn(address _redeemer, uint256 _amount) public payable returns (bool success) {
         _redeemer;
         _amount;
         success = true;
     }
        
-    /// @dev Public wrapper for claimInternal
+    /** @dev Public wrapper for claimInternal */
     function claimInternalPublic(
         address _beneficiary)
         public
@@ -79,7 +85,7 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         amount = claimInternal(_beneficiary);
     }
 
-    /// @dev Public wrapper for mintInternal
+    /** @dev Public wrapper for mintInternal */
     function mintInternalPublic(
         address _beneficiary,
         uint256 _amount)
@@ -89,7 +95,7 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         return mintInternal(_beneficiary, _amount);        
     }
 
-    /// @dev Public wrapper for burnInternal
+    /** @dev Public wrapper for burnInternal */
     function burnInternalPublic(
         address _redeemer,
         uint256 _amount)

@@ -30,9 +30,9 @@ import "./ProtocolVersioned.sol";
 import "./UtilityTokenInterface.sol";
 
 /**
- *  @title UtilityTokenAbstract contracts which implements Hasher, ProtocolVersioned, UtilityTokenInterface.
+ *  @title UtilityTokenAbstract contract which implements Hasher, ProtocolVersioned, UtilityTokenInterface.
  *
- *  @notice Contains functions to enable a utility token 
+ *  @notice Contains methods for utility tokens.
  */
 contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterface {
     using SafeMath for uint256;
@@ -50,7 +50,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     event Burnt(bytes32 indexed _uuid, address indexed _account,
         uint256 _amount, uint256 _totalSupply);
     
-    /**  Storage */
+    /** Storage */
 
     /** UUID for the utility token */
     bytes32 private tokenUuid;
@@ -70,9 +70,21 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /** for a staker to stake the utility token for a beneficiary */
     mapping(address => uint256) private claims;
 
-    /*
-     * Public functions
-     */
+    /** Public functions */
+
+    /**
+     *  @notice Contract constructor. 
+     *
+     *  @dev Sets ProtocolVersioned with msg.sender address.
+     *
+     *  @param _uuid Uuid of the token.
+     *  @param _symbol Symbol of the token.
+     *  @param _name Name of the token.
+     *  @param _chainIdValue Chain id of the value chain.
+     *  @param _chainIdUtility Chain id of the utility chain.
+     *  @param _conversionRate Conversion rate of the token.
+     *  @param _conversionRateDecimals Decimal places of conversion rate of token.
+     */    
     constructor(
         bytes32 _uuid,
         string _symbol,
@@ -103,83 +115,138 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         tokenOpenSTUtility = msg.sender;
     }
 
-    /// @dev Get totalTokenSupply as view so that child cannot edit
+    /**
+     *  @notice Public view function totalSupply.
+     *
+     *  @dev Get totalTokenSupply as view so that child cannot edit
+     *
+     *  @return uint256 Total token supply.
+     */       
     function totalSupply()
         public
         view
-        returns (uint256 /* supply */)
+        returns (uint256)
     {
         return totalTokenSupply;
     }
 
-    /// @dev Get tokenUuid as view so that child cannot edit
+    /**
+     *  @notice Public view function uuid
+     *
+     *  @dev Get tokenUuid as view so that child cannot edit
+     *
+     *  @return bytes32 Token uuid.
+     */       
     function uuid()
         public
         view
-        returns (bytes32 /* uuid */)
+        returns (bytes32)
     {
         return tokenUuid;
     }
 
-    /// @dev Get tokenConversionRate as view so that child cannot edit
+    /**
+     *  @notice Public view function conversionRate
+     *
+     *  @dev Get tokenConversionRate as view so that child cannot edit.
+     *
+     *  @return uint256 Token conversion rate. 
+     */       
     function conversionRate()
         public
         view
-        returns (uint256 /* rate */)
+        returns (uint256)
     {
         return tokenConversionRate;
     }
-
-    /// @dev Get conversion rate decimal factor for utility token
+ 
+    /**
+     *  @notice Public view function conversionRateDecimals.
+     *
+     *  @dev Get tokenConversionRateDecimal factor for utility token.
+     *
+     *  @return uint8 Token conversion rate decimals.
+     */       
     function conversionRateDecimals() 
         public 
         view 
-        returns (uint8 /*conversionRateDecimals*/)
+        returns (uint8)
     {
         return tokenConversionRateDecimals;
     }
 
-    /// @dev Get tokenChainIdValue as view so that child cannot edit
+    /**
+     *  @notice Public view function genesisChainIdValue.
+     *
+     *  @dev Get tokenChainIdValue as view so that child cannot edit.
+     *
+     *  @return uint256 Token genesis chain id value.
+     */       
     function genesisChainIdValue()
         public
         view
-        returns (uint256 /* tokenChainIdValue */)
+        returns (uint256)
     {
         return tokenChainIdValue;
     }
 
-    /// @dev Get tokenChainIdUtility as view so that child cannot edit
+    /**
+     *  @notice Public view function genesisChainIdUtility
+     *
+     *  @dev Get tokenChainIdUtility as view so that child cannot edit.
+     *
+     *  @return uint256 Token chain id utility.
+     */       
     function genesisChainIdUtility()
         public
         view
-        returns (uint256 /* tokenChainIdUtility */)
+        returns (uint256)
     {
         return tokenChainIdUtility;
     }
 
-    /// @dev Get tokenOpenSTUtility as view so that child cannot edit
+    /**
+     *  @notice Public view function genesisOpenSTUtility.
+     *
+     *  @dev Get tokenOpenSTUtility as view so that child cannot edit.
+     *
+     *  @return address Genesis OpenSTUtility address.
+     */       
     function genesisOpenSTUtility()
         public
         view
-        returns (address /* tokenOpenSTUtility */)
+        returns (address)
     {
         return tokenOpenSTUtility;
     }
 
-    /// @dev returns unclaimed amount for beneficiary
+    /**
+     *  @notice Public view function unclaimed.
+     *
+     *  @dev Returns unclaimed amount for beneficiary.
+     *
+     *  @return uint256 Unclaimed amount in beneficary account. 
+     */       
     function unclaimed(
         address _beneficiary)
         public
         view
-        returns (uint256 /* amount */)
+        returns (uint256)
     {
         return claims[_beneficiary];
     }
 
-    /*
-     * Internal functions
+    /** Internal functions */
+
+    /**
+     *  @notice Internal function claimInternal.
+     *
+     *  @dev Claim transfers all utility tokens to _beneficiary.
+     *
+     *  @param _beneficiary Address of the beneficary.
+     *
+     *  @return uint256 Amount of tokens to be claimed by beneficiary.
      */
-    /// @dev claim transfers all utility tokens to _beneficiary
     function claimInternal(
         address _beneficiary)
         internal
@@ -191,13 +258,22 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         return amount;
     }
 
-    /// @dev Mint new utility token by adding a claim
-    ///      for the beneficiary
+    /**
+     *  @notice Internal function mintInternal.
+     *
+     *  @dev Mint new utility token by adding a claim
+     *       for the beneficiary
+     *
+     *  @param _beneficiary Address of the beneficiary.
+     *  @param _amount Amount of tokens to mint. 
+     *
+     *  @return bool True if tokens are minted, false otherwise.
+     */
     function mintInternal(
         address _beneficiary,
         uint256 _amount)
         internal
-        returns (bool /* success */)
+        returns (bool)
     {
         totalTokenSupply = totalTokenSupply.add(_amount);
         claims[_beneficiary] = claims[_beneficiary].add(_amount);
@@ -207,8 +283,17 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
         return true;
     }
 
-    /// @dev Burn utility tokens after having redeemed them
-    ///      through the protocol for the staked Simple Token
+    /**
+     *  @notice Internal function burnInternal
+     *
+     *  @dev Burn utility tokens after having redeemed them
+     *       through the protocol for the staked Simple token.
+     *
+     *  @param _burner Address of the burner of tokens.
+     *  @param _amount Amount of tokens to burn.
+     *
+     *  @return bool True if tokens are burnt, false otherwise.
+     */
     function burnInternal(
         address _burner,
         uint256 _amount)
