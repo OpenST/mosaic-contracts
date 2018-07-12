@@ -26,25 +26,46 @@ import "./OpsManaged.sol";
 import "./OpenSTValueInterface.sol";
 import "./OpenSTUtilityInterface.sol";
 
-/// @title Registrar - registers for utility tokens
+/**
+ *  @title Registrar contract which implements OpsManaged.
+ *
+ *  @notice Contains functions that register for utility tokens.
+ *
+ */
+
 contract Registrar is OpsManaged {
 
-    /*
-     *  Storage
-     */
+    /** Storage */
+
     // mapping(uint256 /* chainId */ => CoreInterface) cores;
 
-    /*
-     *  Public functions
-     */
+    /**  Public functions */
+
+	/**
+	 *  @notice Contract Constructor.
+	 */
     constructor() public
         OpsManaged()
     {
     }
 
-    /*
-     *  OpenSTValue
-     */
+	/**
+	 *  @notice External function confirmRedemptionIntent.
+	 *
+	 *  @dev Only callable by Ops.
+	 *
+	 *  @param _uuid Uuid of the token.
+	 *  @param _redeemer Address of the redeemer.
+	 *  @param _redeemerNonce Nonce of the redeemer.
+	 *  @param _beneficiary Address of beneficiary on the value chain.
+	 *  @param _amountUT Amount of utility tokens to redeem.
+	 *  @param _redemptionUnlockHeight Block height upto which redemption is locked.
+	 *  @param _hashLock Hash lock for the redeem request.
+	 *  @param _redemptionIntentHash Hash of the redemption intent. 
+	 *
+	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
+	 *	@return uint256 expirationHeight Block height upto which redemption intent is valid. 
+	 */
     function confirmRedemptionIntent(
     	// address of OpenSTValue registry:
     	OpenSTValueInterface _registry,
@@ -75,7 +96,16 @@ contract Registrar is OpsManaged {
 
     	return (amountST, expirationHeight);
     }
-
+	/**
+	 *  @notice Public function addCore.
+	 *
+	 *  @dev Only callable by Admin or Ops. 
+	 *
+	 *  @param _registry Address of OpenSTValue registry.
+	 *  @param _core Address of CoreInterface contract.
+	 *
+	 *  @return bool True if core is registered on OpenSTValue, false otherwise.
+	 */
     function addCore(
     	// address of OpenSTValue registry:
     	OpenSTValueInterface _registry,
@@ -89,6 +119,21 @@ contract Registrar is OpsManaged {
 		return _registry.addCore(_core);
 	}
 
+	/**
+	 *  @notice Public function registerUtilityToken.
+	 *
+	 *  @dev Only callable by Admin or Ops.
+	 *
+	 *  @param _symbol Symbol of the token.
+	 *  @param _name Name of the token.
+	 *  @param _conversionRate Conversion rate of the token.
+	 *  @param _conversionRateDecimals Decimal places of conversion rate of the token.
+	 *  @param _chainIdUtility Chain id of the utility chain.
+	 *  @param _stakingAccount Address of the staking account.
+	 *	@param _checkUuid Uuid as the hash of regsiteration data.
+	 *
+	 *  @return bytes32 Keccak256 token uuid.
+	 */
 	function registerUtilityToken(
     	// address of OpenSTValue registry:
     	OpenSTValueInterface _registry,
@@ -115,8 +160,17 @@ contract Registrar is OpsManaged {
 			_checkUuid);
 	}
 
-	// @dev this can be deprecated as anyone with the unlockSecret
-	//  can now call the processRedeeming function
+	/**
+	 *  @notice External function processStaking
+	 *
+	 *  @dev This can be deprecated as anyone with the unlockSecret,
+	 *		 can now call the processRedeeming function.
+	 *
+	 *  @param _stakingIntentHash Hash of staking intent variables.
+	 *  @param _unlockSecret Unlock secret to the hash lock.
+	 *
+	 *  @return address Address at which ST is staked.
+	 */
 	function processStaking(
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
@@ -132,8 +186,22 @@ contract Registrar is OpsManaged {
 			_stakingIntentHash, _unlockSecret);
 	}
 
-	/*
-	 *  OpenSTUtility
+	/**
+	 *  @notice External function confirmStakingIntent
+	 *
+	 *  @dev Callable only by Ops
+	 *
+	 *  @param _uuid Uuid of the token.
+	 *  @param _staker Address of the staker.
+	 *  @param _stakerNonce Nonce of the staker.
+	 *  @param _beneficiary Beneficiary address on utility chain.
+	 *  @param _amountST Amount OST staked.
+	 *  @param _amountUT Amount utility tokens to be minted.
+	 *  @param _stakingUnlockHeight Height upto which stake is locked.
+	 *  @param _hashLock Hash lock for the staking intent.
+	 *  @param _stakingIntentHash Keccak256 hash of the staking intent variables.
+	 *
+	 *  @return uint256 Expiration height Block height upto which staking intent is valid.
 	 */
 	function confirmStakingIntent(
     	// address of OpenSTUtility registry:
@@ -165,15 +233,31 @@ contract Registrar is OpsManaged {
 			_stakingIntentHash);
 	}
 
+	/**
+	 *  @notice Public function registerBrandedToken
+	 *
+	 *  @dev 
+	 *
+	 *  @param _registry Address of OpenSTUtility Interface contract.
+	 *  @param _symbol Symbol of the token.
+	 *  @param _name Name of the token.
+	 *  @param _conversionRate Conversion rate of the token.
+	 *  @param _conversionRateDecimals Decimal places of the conversion rate of the token.
+	 *  @param _requester Address of the requester for registration. 
+	 *	@param _brandedToken Address of the utility token interface.
+	 *	@param _checkUuid Uuid as the hash of registration data.
+	 *
+	 *  @return bytes32 Keccak256 of the registration data.
+	 */
 	function registerBrandedToken(
     	// address of OpenSTUtility registry:
     	OpenSTUtilityInterface _registry,
     	// OpenSTUtility function:
 		string _symbol,
 		string _name,
-    uint256 _conversionRate,
-    uint8 _conversionRateDecimals,
-    address _requester,
+    	uint256 _conversionRate,
+    	uint8 _conversionRateDecimals,
+    	address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
@@ -185,14 +269,23 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-      _conversionRateDecimals,
-      _requester,
+     		_conversionRateDecimals,
+      		_requester,
 			_brandedToken,
 			_checkUuid);
 	}
 
-	// @dev this can be deprecated as anyone with the unlockSecret
-	//  can now call the processRedeeming function
+	/**
+	 *  @notice External function processRedeeming.
+	 *
+	 *  @dev Callable only by Admin. This can be deprecated as anyone with the unlockSecret,
+	 *		 can now call the processRedeeming function. 
+	 *
+	 *  @param _redemptionIntentHash Hash of the redemption intent data.
+	 *  @param _unlockSecret Unlock secret to the hash lock.
+	 *
+	 *  @return address Address of the token.  
+	 */
     function processRedeeming(
     	// address of OpenSTUtility registry:
     	OpenSTUtilityInterface _registry,
