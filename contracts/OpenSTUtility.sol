@@ -179,9 +179,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         uuids.push(uuidSTPrime);
         // lock name and symbol route for ST'
-        bytes32 hashName = keccak256(STPRIME_NAME);
+        bytes32 hashName = keccak256(abi.encodePacked(STPRIME_NAME));
         nameReservation[hashName] = registrar;
-        bytes32 hashSymbol = keccak256(STPRIME_SYMBOL);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(STPRIME_SYMBOL));
         symbolRoute[hashSymbol] = simpleTokenPrime;
 
         // @dev read STPrime address and uuid from contract
@@ -255,7 +255,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Mint storage mint = mints[_stakingIntentHash];
 
         // present secret to unlock hashlock and continue process
-        require(mint.hashLock == keccak256(_unlockSecret));
+        require(mint.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process minting results in a gain it needs to expire well before
         // the escrow on the cost unlocks in OpenSTValue.processStake
@@ -430,7 +430,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Redemption storage redemption = redemptions[_redemptionIntentHash];
 
         // present the secret to unlock the hashlock and continue process
-        require(redemption.hashLock == keccak256(_unlockSecret));
+        require(redemption.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process redemption bears the cost there is no need to require
         // the unlockHeight is not past, the same way as we do require for
@@ -514,8 +514,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, msg.sender));
 
         bytes32 btUuid = hashUuid(
@@ -595,8 +595,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, _requester));
 
         registeredUuid = hashUuid(
