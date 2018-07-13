@@ -35,12 +35,12 @@ library MerklePatriciaProof {
             if(pathPtr > path.length) {return false;}
 
             currentNode = RLP.toBytes(parentNodes[i]);
-            if(nodeKey != keccak256(currentNode)) {return false;}
+            if(nodeKey != keccak256(abi.encodePacked(currentNode))) {return false;}
             currentNodeList = RLP.toList(parentNodes[i]);
 
             if(currentNodeList.length == 17) {
                 if(pathPtr == path.length) {
-                    if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
                         return true;
                     } else {
                         return false;
@@ -55,7 +55,7 @@ library MerklePatriciaProof {
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if(pathPtr == path.length) {//leaf node
-                    if(keccak256(RLP.toData(currentNodeList[1])) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[1]))) == value) {
                         return true;
                     } else {
                         return false;
@@ -91,14 +91,14 @@ library MerklePatriciaProof {
             if(pathPtr > path.length) {loc = 1; res = false; return;}
 
             currentNode = RLP.toBytes(parentNodes[i]);
-            if(nodeKey != keccak256(currentNode)) { res = false; loc = 100+i; return;}
+            if(nodeKey != keccak256(abi.encodePacked(currentNode))) { res = false; loc = 100+i; return;}
             currentNodeList = RLP.toList(parentNodes[i]);
 
             loc = currentNodeList.length;
 
             if(currentNodeList.length == 17) {
                 if(pathPtr == path.length) {
-                    if(keccak256(RLP.toBytes(currentNodeList[16])) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
                         res = true; return;
                     } else {
                         loc = 3;
@@ -116,7 +116,7 @@ library MerklePatriciaProof {
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if(pathPtr == path.length) {//leaf node
-                    if(keccak256(RLP.toData(currentNodeList[1])) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[1]))) == value) {
                         res = true; return;
                     } else {
                         loc = 5;
@@ -154,7 +154,7 @@ library MerklePatriciaProof {
             slicedPath[i-pathPtr] = pathNibble;
         }
 
-        if(keccak256(partialPath) == keccak256(slicedPath)) {
+        if(keccak256(abi.encodePacked(partialPath)) == keccak256(abi.encodePacked(slicedPath))) {
             len = partialPath.length;
         } else {
             len = 0;
