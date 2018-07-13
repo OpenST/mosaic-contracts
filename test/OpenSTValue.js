@@ -335,7 +335,7 @@ contract('OpenSTValue', function(accounts) {
 			await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[0] }));
 		})
 
-		it('fails to processStaking when msg.sender is not the stakingAccount', async () => {
+		it('fails to processStaking when msg.sender is not staking account', async () => {
 		    await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, lock.s, { from: registrar }));
 		})
 
@@ -629,7 +629,7 @@ contract('OpenSTValue', function(accounts) {
 				await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
 			});
 
-			it('fails to revert staking when msg.sender is not staking account', async () => {
+			it('fails to revertStaking when msg.sender is not staking account', async () => {
 			    await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: accounts[0]}));
 			});
 
