@@ -21,7 +21,7 @@
 
 const Assert = require('assert');
 
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var SimpleToken = artifacts.require("./SimpleToken.sol");
 var SimpleStake = artifacts.require("./SimpleStake.sol");
 
 /// @dev Deploy 

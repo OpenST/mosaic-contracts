@@ -1,3 +1,0 @@
-# Simple Token EIP20
-
-Include the contract code of the deployed Simple Token EIP20 contracts here for development ease.  The official Simple Token repository is at [github.com/OpenSTFoundation/SimpleTokenSale](github.com/OpenSTFoundation/SimpleTokenSale).  Simple Token has been deployed and went live on Ethereum mainnet on 14 November 2017 13 UTC at [0x2C4e8f2D746113d0696cE89B35F0d8bF88E0AEcA](https://etherscan.io/address/0x2c4e8f2d746113d0696ce89b35f0d8bf88e0aeca)

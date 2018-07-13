@@ -22,7 +22,7 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var SimpleToken = artifacts.require("./SimpleToken.sol");
 
 /// @dev Deploy 
 module.exports.deploySimpleToken = async (artifacts, accounts) => {
