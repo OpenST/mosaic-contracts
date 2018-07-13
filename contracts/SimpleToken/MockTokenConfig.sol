@@ -10,7 +10,7 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 
-contract SimpleTokenConfig {
+contract MockTokenConfig {
 
     string  public constant TOKEN_SYMBOL   = "ST";
     string  public constant TOKEN_NAME     = "Simple Token";
