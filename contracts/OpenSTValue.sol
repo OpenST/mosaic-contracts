@@ -288,7 +288,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_stakingIntentHash != "");
 
         Stake storage stakeItem = stakes[_stakingIntentHash];
-        UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+        UtilityToken storage utilityToken = utilityTokens[stakeItem.uuid];
         // if the staking account is set to a non-zero address,
         // then all transactions have come (from/over) the staking account
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
