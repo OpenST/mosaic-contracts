@@ -20,8 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-const ethUtil = require('ethereumjs-util')
-  , BigNumber = ethUtil.BN;
+const BigNumber = require('bignumber.js');
 const utils = require("./lib/utils.js");
 const HashLock = require('./lib/hash_lock.js');
 const openSTValueUtils = require("./OpenSTValue_utils.js");

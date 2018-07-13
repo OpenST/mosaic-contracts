@@ -19,9 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const ethUtil = require('ethereumjs-util')
-  , BigNumber = ethUtil.BN;
-
+const BigNumber = require('bignumber.js');
 
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");

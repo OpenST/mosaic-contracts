@@ -19,9 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const ethUtil = require('ethereumjs-util')
-  , BigNumber = ethUtil.BN;
-
+const BigNumber = require('bignumber.js');
 const Utils = require('./lib/utils.js');
 const EIP20Token_utils = require('./EIP20Token_utils.js');
 
