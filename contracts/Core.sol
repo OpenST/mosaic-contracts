@@ -87,21 +87,21 @@ contract Core is CoreInterface, Util {
 	 *
 	 * @dev bytes32ToBytes is util contract method
 	 *
-	 * @param _registrar registrar address
-	 * @param _chainIdOrigin origin chain id
-	 * @param _chainIdRemote remote chain id
-	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
-	 * @param _blockHeight block height
-	 * @param _stateRoot state root
+	 * @param _registrar address of the registrar which registers for utility tokens
+	 * @param _chainIdOrigin chain id where current core contract is deployed since core contract can be deployed on remote chain also
+	 * @param _chainIdRemote if current chain is value then _chainIdRemote is chain id of utility chain
+	 * @param _openSTRemote if current chain is value then _openSTRemote is address of openSTUtility contract address
+	 * @param _blockHeight block height at which _stateRoot needs to store
+	 * @param _stateRoot state root hash of given _blockHeight
 	 */
 	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
-		WorkersInterface _workers,
 		uint256 _blockHeight,
-		bytes32 _stateRoot)
+		bytes32 _stateRoot,
+		WorkersInterface _workers)
 		public
 	{
 		require(_registrar != address(0), "Registrar address is 0");
@@ -116,8 +116,8 @@ contract Core is CoreInterface, Util {
 		workers = _workers;
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
-        latestStateRootBlockHeight = _blockHeight;
-        stateRoots[latestStateRootBlockHeight] = _stateRoot;
+		latestStateRootBlockHeight = _blockHeight;
+		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
 
 	/**

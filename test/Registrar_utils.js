@@ -60,7 +60,7 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
 	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);
-	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, workers.address, 0, proof.account.stateRoot);
+	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, 0, proof.account.stateRoot, workers.address);
 
 	return {
 		valueToken  	: valueToken,
