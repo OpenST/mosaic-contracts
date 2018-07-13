@@ -332,7 +332,7 @@ contract('OpenSTValue', function(accounts) {
 		it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 			const differentLock = HashLock.getHashLock();
 			// registrar can additionally as a fallback process staking in v0.9
-            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[0] }));
+			await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[0] }));
 		})
 
 		it('fails to processStaking when msg.sender is not the stakingAccount', async () => {
@@ -631,7 +631,7 @@ contract('OpenSTValue', function(accounts) {
 
 			it('fails to revert staking when msg.sender is not staking account', async () => {
 			    await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: accounts[0]}));
-            });
+			});
 
 			it('fails to process when reverting before waiting period ends', async () => {
 
