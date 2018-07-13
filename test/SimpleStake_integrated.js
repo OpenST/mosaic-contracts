@@ -20,7 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-const BigNumber = require('bignumber.js');
+const ethUtil = require('ethereumjs-util')
+  , BigNumber = ethUtil.BN;
 const Utils = require('./lib/utils.js');
 const SimpleStakeUtils = require('./SimpleStake_utils.js')
 

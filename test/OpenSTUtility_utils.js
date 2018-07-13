@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const ethUtil = require('ethereumjs-util')
+  , BigNumber = ethUtil.BN;
+
 
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");

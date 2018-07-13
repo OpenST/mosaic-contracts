@@ -18,8 +18,8 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-
-const BigNumber = require('bignumber.js');
+const ethUtil = require('ethereumjs-util')
+  , BigNumber = ethUtil.BN;
 
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");

@@ -19,7 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber       = require('bignumber.js');
+const ethUtil = require('ethereumjs-util')
+  , BigNumber = ethUtil.BN;
 const Utils           = require('./lib/utils.js');
 const HashLock        = require('./lib/hash_lock.js');
 const Registrar_utils = require('./Registrar_utils.js');

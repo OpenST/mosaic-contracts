@@ -19,7 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js')
 
 const Utils = require('./lib/utils.js')
 const OpsManagedUtils = require('./OpsManaged_utils.js');

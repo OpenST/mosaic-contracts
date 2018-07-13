@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const ethUtil = require('ethereumjs-util')
+  , BigNumber = ethUtil.BN;
+
 var Hasher = artifacts.require("./Hasher.sol");
 var UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");
 
