@@ -31,6 +31,8 @@ contract('Gateway', function(accounts) {
     , beneficiaryAccount = accounts[6]
   ;
 
+  var result, valueToken, openSTValue, uuid, gateway, workers, bounty, workerAddress1, ownerAddress;
+
   const deployGateway = async function() {
     result   = await Gateway_utils.deployGateway(artifacts, accounts);
     valueToken  = result.valueToken;
@@ -40,6 +42,7 @@ contract('Gateway', function(accounts) {
     workers = result.workers;
     bounty = result.bounty;
     workerAddress1 = result.workerAddress1;
+    ownerAddress = result.ownerAddress;
   };
 
   const approveGatewayAndRequestStake = async function (amount, beneficiary, staker, isSuccessCase) {
@@ -316,6 +319,24 @@ contract('Gateway', function(accounts) {
       hashLock: lock.l
     }
   };
+
+  const setWorkers = async function (workersAddress, messageSender, isSuccessCase) {
+
+    if (isSuccessCase){
+      let response = await gateway.setWorkers.call(workersAddress, {from: messageSender});
+      assert.equal(response, isSuccessCase);
+
+      let result = await gateway.setWorkers(workersAddress, {from: messageSender});
+      await Gateway_utils.checkWorkersSetEvent(result.logs[0], workersAddress);
+
+      let workersFromContract = await gateway.workers.call();
+      assert.equal(workersFromContract, workersAddress);
+
+    } else {
+      await Utils.expectThrow(gateway.setWorkers(workersAddress, {from: messageSender}));
+    }
+  };
+
   describe('Properties', async () => {
 
     before (async () => {
@@ -695,7 +716,23 @@ contract('Gateway', function(accounts) {
         await revertStaking(stakingIntentHashParams.stakingIntentHash, workerAddress1, false);
       });
 
-    })
+    });
+
+    describe('setWorkers', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to set workers when caller is not owner', async () => {
+            await setWorkers(accounts[8], accounts[2], false);
+        });
+
+        it('sucessfully sets workers when caller is owner', async () => {
+            await setWorkers(accounts[8], ownerAddress, true);
+        });
+
+    });
 
 });
 
