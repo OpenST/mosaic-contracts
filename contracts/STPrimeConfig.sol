@@ -30,7 +30,7 @@ pragma solidity ^0.4.23;
  */
 contract STPrimeConfig {
 
-	/** Constants */
+    /** Constants */
 
     string  public constant STPRIME_SYMBOL          = "STP";
     string  public constant STPRIME_NAME            = "SimpleTokenPrime";

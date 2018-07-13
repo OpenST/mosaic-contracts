@@ -62,7 +62,7 @@ contract Registrar is OpsManaged {
 	 *  @param _redemptionIntentHash Hash of the redemption intent. 
 	 *
 	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
-	 *	@return uint256 expirationHeight Block height upto which redemption intent is valid. 
+	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
 	 */
     function confirmRedemptionIntent(
     	// address of OpenSTValue registry:
@@ -128,7 +128,7 @@ contract Registrar is OpsManaged {
 	 *  @param _conversionRateDecimals Decimal places of conversion rate of the token.
 	 *  @param _chainIdUtility Chain id of the utility chain.
 	 *  @param _stakingAccount Address of the staking account.
-	 *	@param _checkUuid Uuid as the hash of regsiteration data.
+	 *  @param _checkUuid Uuid as the hash of regsiteration data.
 	 *
 	 *  @return bytes32 Keccak256 token uuid.
 	 */
@@ -159,10 +159,10 @@ contract Registrar is OpsManaged {
 	}
 
 	/**
-	 *  @notice External function processStaking
+	 *  @notice External function processStaking.
 	 *
 	 *  @dev This can be deprecated as anyone with the unlockSecret,
-	 *		 can now call the processRedeeming function.
+	 *       can now call the processRedeeming function.
 	 *
 	 *  @param _stakingIntentHash Hash of staking intent variables.
 	 *  @param _unlockSecret Unlock secret to the hash lock.
@@ -185,9 +185,9 @@ contract Registrar is OpsManaged {
 	}
 
 	/**
-	 *  @notice External function confirmStakingIntent
+	 *  @notice External function confirmStakingIntent.
 	 *
-	 *  @dev Callable only by Ops
+	 *  @dev Callable only by Ops.
 	 *
 	 *  @param _uuid Uuid of the token.
 	 *  @param _staker Address of the staker.
@@ -232,7 +232,7 @@ contract Registrar is OpsManaged {
 	}
 
 	/**
-	 *  @notice Public function registerBrandedToken
+	 *  @notice Public function registerBrandedToken.
 	 *
 	 *  @param _registry Address of OpenSTUtility Interface contract.
 	 *  @param _symbol Symbol of the token.
@@ -240,8 +240,8 @@ contract Registrar is OpsManaged {
 	 *  @param _conversionRate Conversion rate of the token.
 	 *  @param _conversionRateDecimals Decimal places of the conversion rate of the token.
 	 *  @param _requester Address of the requester for registration. 
-	 *	@param _brandedToken Address of the utility token interface.
-	 *	@param _checkUuid Uuid as the hash of registration data.
+	 *  @param _brandedToken Address of the utility token interface.
+	 *  @param _checkUuid Uuid as the hash of registration data.
 	 *
 	 *  @return bytes32 Keccak256 of the registration data.
 	 */
@@ -275,7 +275,7 @@ contract Registrar is OpsManaged {
 	 *  @notice External function processRedeeming.
 	 *
 	 *  @dev Callable only by Admin. This can be deprecated as anyone with the unlockSecret,
-	 *		 can now call the processRedeeming function. 
+	 *       can now call the processRedeeming function. 
 	 *
 	 *  @param _redemptionIntentHash Hash of the redemption intent data.
 	 *  @param _unlockSecret Unlock secret to the hash lock.

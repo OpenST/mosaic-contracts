@@ -25,7 +25,7 @@ pragma solidity ^0.4.23;
  *  @title ProtocolVersioned contract.
  *
  *  @notice Contains functions that facilitate a protocol version 
- * 			transfer by exisiting protocol.
+ *          transfer by exisiting protocol.
  */
 contract ProtocolVersioned {
 
@@ -38,11 +38,12 @@ contract ProtocolVersioned {
 	/** Constants */
 
 	/** 
-	 * Blocks to wait before the protocol transfer can be completed
-	 * This allows anyone with a stake to unstake under the existing
-	 * protocol if they disagree with the new proposed protocol
-	 * @dev from OpenST ^v1.0 this constant will be set to a significant value
-	 * ~ 1 week at 15 seconds per block
+	 *  Blocks to wait before the protocol transfer can be completed
+	 *  This allows anyone with a stake to unstake under the existing
+	 *  protocol if they disagree with the new proposed protocol
+	 * 
+	 *  @dev from OpenST ^v1.0 this constant will be set to a significant value
+	 *       ~ 1 week at 15 seconds per block
 	 */
 	uint256 constant private PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 	
@@ -81,7 +82,7 @@ contract ProtocolVersioned {
      *  @notice Modifier afterWait.
      *
      *  @dev Checks if earliest transfer height is lower or equal 
-     *		 to current block to proceed.
+     *       to current block to proceed.
      */
 	modifier afterWait() {
 		require(earliestTransferHeight <= block.number);
@@ -109,7 +110,7 @@ contract ProtocolVersioned {
 	 *
 	 *  @dev Constructor sets the OpenST Protocol address.
 	 *
-	 *	@param _protocol Address of the openSTProtocol.
+	 *  @param _protocol Address of the openSTProtocol.
 	 */	
 	constructor(address _protocol)
 		public
@@ -123,9 +124,9 @@ contract ProtocolVersioned {
 	 *
 	 *  @dev Only callable by protocol. Initiates protocol transfer.
 	 *
-	 *	@param _proposedProtocol Address of the proposed openSTProtocol.
+	 *  @param _proposedProtocol Address of the proposed openSTProtocol.
 	 *
-	 *	@return bool True if protocol tranfer is successfully inititated, false otherwise.
+	 *  @return bool True if protocol tranfer is successfully inititated, false otherwise.
 	 */
 	function initiateProtocolTransfer(
 		address _proposedProtocol)
@@ -151,7 +152,7 @@ contract ProtocolVersioned {
 	 *  @dev Only callable by proposed protocol. Only after the waiting period, can
      *       proposed protocol complete the transfer.
 	 *
-	 *	@return bool True if protocol transfer is completed, false otherwise.
+	 *  @return bool True if protocol transfer is completed, false otherwise.
 	 */
     function completeProtocolTransfer()
     	public
@@ -175,7 +176,7 @@ contract ProtocolVersioned {
 	 *  @dev Only callable by proposed protocol. Protocol can revoke initiated protocol
      *       transfer.
 	 *
-	 *	@return bool True if protocol transfer is revoked, false otherwise.
+	 *  @return bool True if protocol transfer is revoked, false otherwise.
 	 */    
     function revokeProtocolTransfer()
     	public
@@ -196,7 +197,7 @@ contract ProtocolVersioned {
 	/**
 	 *  @notice Public function blocksToWaitForProtocolTransfer.
 	 *
-	 *	@return uint256 Protocol transfer blocks to wait.
+	 *  @return uint256 Protocol transfer blocks to wait.
 	 */    
     function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
         return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;

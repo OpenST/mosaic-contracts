@@ -61,7 +61,7 @@ library RLP {
   *
   *  @param self The RLP encoded bytes.
   *
-  *  @return An RLPItem
+  *  @return An RLPItem.
   */
  function toRLPItem(bytes memory self) internal pure returns (RLPItem memory) {
      uint len = self.length;
@@ -81,7 +81,7 @@ library RLP {
   *  @param self The RLP encoded bytes.
   *  @param strict Will throw if the data is not RLP encoded.
   *
-  *  @return An RLPItem
+  *  @return An RLPItem.
   */
  function toRLPItem(bytes memory self, bool strict) internal pure returns (RLPItem memory) {
      RLPItem memory item = toRLPItem(self);

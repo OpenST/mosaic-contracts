@@ -26,7 +26,7 @@ import "./SafeMath.sol";
 import "./ProtocolVersioned.sol";
 
 /**
- *  @title SimpleStake contract which implements ProtocolVersioned
+ *  @title SimpleStake contract which implements ProtocolVersioned.
  *
  *  @notice Stakes the value of an EIP20 token on Ethereum
  *          for a utility token on the OpenST platform.
@@ -40,7 +40,7 @@ contract SimpleStake is ProtocolVersioned {
 
 	/** Storage */
 
-	/** EIP20 token contract that can be staked */
+	/** EIP20 token contract that can be staked. */
 	EIP20Interface public eip20Token;
 	/** UUID for the utility token */
 	bytes32 public uuid;
@@ -68,7 +68,7 @@ contract SimpleStake is ProtocolVersioned {
 	}
 
 	/**
-	 *  @notice Public function releaseTo
+	 *  @notice Public function releaseTo.
 	 *
 	 *  @dev Callable only by protocol. Allows the protocol to release the staked amount
 	 *       into provided address. The protocol MUST be a contract that sets the rules
@@ -96,7 +96,7 @@ contract SimpleStake is ProtocolVersioned {
 	/** Web3 call functions */
 
 	/**
-	 *	@notice Public view function getTotalStake
+	 *	@notice Public view function getTotalStake.
 	 *
      *  @dev Total stake is the balance of the staking contract
      *       accidental transfers directly to SimpleStake bypassing

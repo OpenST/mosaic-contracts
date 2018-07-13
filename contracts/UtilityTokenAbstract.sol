@@ -40,9 +40,9 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /** Events */
 
     /** 
-     * Minted raised when new utility tokens are minted for a beneficiary
-     * Minted utility tokens still need to be claimed by anyone to transfer
-     * them to the beneficiary.
+     *  Minted raised when new utility tokens are minted for a beneficiary
+     *  Minted utility tokens still need to be claimed by anyone to transfer
+     *  them to the beneficiary.
      */
     event Minted(bytes32 indexed _uuid, address indexed _beneficiary,
         uint256 _amount, uint256 _unclaimed, uint256 _totalSupply);
@@ -77,7 +77,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
      *
      *  @dev Sets ProtocolVersioned with msg.sender address.
      *
-     *  @param _uuid Uuid of the token.
+     *  @param _uuid UUID of the token.
      *  @param _symbol Symbol of the token.
      *  @param _name Name of the token.
      *  @param _chainIdValue Chain id of the value chain.
@@ -118,7 +118,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /**
      *  @notice Public view function totalSupply.
      *
-     *  @dev Get totalTokenSupply as view so that child cannot edit
+     *  @dev Get totalTokenSupply as view so that child cannot edit.
      *
      *  @return uint256 Total token supply.
      */       
@@ -131,11 +131,11 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     }
 
     /**
-     *  @notice Public view function uuid
+     *  @notice Public view function uuid.
      *
-     *  @dev Get tokenUuid as view so that child cannot edit
+     *  @dev Get tokenUuid as view so that child cannot edit.
      *
-     *  @return bytes32 Token uuid.
+     *  @return bytes32 Token UUID.
      */       
     function uuid()
         public
@@ -146,7 +146,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     }
 
     /**
-     *  @notice Public view function conversionRate
+     *  @notice Public view function conversionRate.
      *
      *  @dev Get tokenConversionRate as view so that child cannot edit.
      *
@@ -191,7 +191,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     }
 
     /**
-     *  @notice Public view function genesisChainIdUtility
+     *  @notice Public view function genesisChainIdUtility.
      *
      *  @dev Get tokenChainIdUtility as view so that child cannot edit.
      *
@@ -223,9 +223,11 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     /**
      *  @notice Public view function unclaimed.
      *
+     *  @param _beneficiary Address of the beneficiary.
+     *
      *  @dev Returns unclaimed amount for beneficiary.
      *
-     *  @return uint256 Unclaimed amount in beneficary account. 
+     *  @return uint256 Unclaimed amount in beneficiary account. 
      */       
     function unclaimed(
         address _beneficiary)
@@ -243,7 +245,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
      *
      *  @dev Claim transfers all utility tokens to _beneficiary.
      *
-     *  @param _beneficiary Address of the beneficary.
+     *  @param _beneficiary Address of the beneficiary.
      *
      *  @return uint256 Amount of tokens to be claimed by beneficiary.
      */
@@ -262,7 +264,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
      *  @notice Internal function mintInternal.
      *
      *  @dev Mint new utility token by adding a claim
-     *       for the beneficiary
+     *       for the beneficiary.
      *
      *  @param _beneficiary Address of the beneficiary.
      *  @param _amount Amount of tokens to mint. 
@@ -284,7 +286,7 @@ contract UtilityTokenAbstract is Hasher, ProtocolVersioned, UtilityTokenInterfac
     }
 
     /**
-     *  @notice Internal function burnInternal
+     *  @notice Internal function burnInternal.
      *
      *  @dev Burn utility tokens after having redeemed them
      *       through the protocol for the staked Simple token.

@@ -39,7 +39,7 @@ contract Workers is WorkersInterface, OpsManaged {
     EIP20Interface private eip20token;
     
     /**  Storage */
-    /** Workers are active up unto the deactivation height. */
+    /** Workers are not active once the deactivation height is passed. */
     mapping(address => uint256 /* deactivation height */) public workers;
 
     /** Events */

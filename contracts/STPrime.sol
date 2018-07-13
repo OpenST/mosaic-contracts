@@ -71,7 +71,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *
      *  @dev Sets the UtilityTokenAbstract contract. 
      *
-     *  @param _uuid Uuid of the token.
+     *  @param _uuid UUID of the token.
      *  @param _chainIdValue Chain id of the value chain.
      *  @param _chainIdUtility Chain id of the utility chain.
      *  @param _conversionRate Conversion rate of the token.
@@ -113,7 +113,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 
 
     /**
-     *  @notice Public function claim
+     *  @notice Public function claim.
      *
      *  @dev Only callable by initialized. Transfer full claim to beneficiary. 
      *       Claim can be called publicly as the beneficiary and amount are set, 
