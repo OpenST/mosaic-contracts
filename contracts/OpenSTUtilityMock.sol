@@ -65,9 +65,9 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
-	external
-	view
-	returns (bytes /* mock RLP encoded parent nodes*/)
+		external
+		view
+		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
 			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
