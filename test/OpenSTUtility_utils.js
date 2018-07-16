@@ -24,13 +24,15 @@ const BigNumber = require('bignumber.js');
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
 var CoreMock = artifacts.require("./CoreMock.sol");
+var proof = require('./data/proof');
+
 const chainIdValue   = 3;
 const chainIdUtility = 1410;
 
 /// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
     const registrar      = accounts[1];
-    const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], accounts[11]);
+    const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10],  0, proof.account.stateRoot, accounts[11]);
     const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
     const stPrime = new STPrime(stPrimeAddress);

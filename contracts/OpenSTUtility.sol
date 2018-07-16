@@ -216,7 +216,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
       *  @param _amountUT utility token amount
       *  @param _stakingUnlockHeight  height till which stake will be locked at Value chain.
       *  @param _hashLock hash lock
-      *  @param rlpParentNodes RLP encoded parent nodes for proof verification.
+      *  @param _rlpParentNodes RLP encoded parent nodes for proof verification.
       *
       *	@return uint256 expiration height
       */

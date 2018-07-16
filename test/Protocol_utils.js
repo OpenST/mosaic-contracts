@@ -32,6 +32,7 @@ var OpenSTValue   = artifacts.require("./OpenSTValueMock.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime       = artifacts.require("./STPrime.sol");
 var Workers = artifacts.require("./Workers.sol");
+var proof = require('./data/proof');
 
 const CHAINID_VALUE   = 2001;
 const CHAINID_UTILITY = 2002;
@@ -98,7 +99,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 
 
     const coreUC = await CoreMock.new(registrarVC.address, CHAINID_UTILITY, CHAINID_VALUE,
-        openSTValue.address, workers.address);
+        openSTValue.address, 0, proof.account.stateRoot, workers.address);
     await utils.logTransaction(coreUC.transactionHash, "CoreVC.new");
 
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
@@ -110,8 +111,10 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 		"OpenSTUtility.completeOwnershipTransfer");
 
 	// only setup a core for the Value Chain to track the Utility Chain for v0.9.1
+
 	const coreVC = await CoreMock.new(registrarVC.address, CHAINID_VALUE, CHAINID_UTILITY,
-		openSTUtility.address, workers.address);
+		openSTUtility.address, 0, proof.account.stateRoot, workers.address);
+
 	await utils.logTransaction(coreVC.transactionHash, "CoreVC.new");
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
