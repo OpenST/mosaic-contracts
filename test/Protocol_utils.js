@@ -25,7 +25,7 @@ const Assert = require('assert');
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 
-var SimpleToken   = artifacts.require("./SimpleToken/SimpleToken.sol");
+var SimpleToken   = artifacts.require("./SimpleToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
 var Core          = artifacts.require("./Core.sol");
 var OpenSTValue   = artifacts.require("./OpenSTValueMock.sol");

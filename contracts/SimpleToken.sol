@@ -12,7 +12,7 @@ pragma solidity ^0.4.23;
 
 import "./ERC20Token.sol";
 import "./SimpleTokenConfig.sol";
-
+import "./OpsManaged.sol";
 
 //
 // SimpleToken is a standard ERC20 token with some additional functionality:

@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const Core = artifacts.require("./Core.sol")
-	, SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+	, SimpleToken = artifacts.require("./SimpleToken.sol")
 	, Workers = artifacts.require("./Workers.sol")
 ;
 

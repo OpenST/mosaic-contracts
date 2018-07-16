@@ -21,7 +21,7 @@
 
 const BigNumber = require('bignumber.js');
 
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var SimpleToken = artifacts.require("./SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
 var OpenSTValue = artifacts.require("./OpenSTValue.sol");

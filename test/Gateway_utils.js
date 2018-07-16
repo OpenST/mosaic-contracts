@@ -21,7 +21,7 @@
 
 const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , OpenSTValue = artifacts.require("./OpenSTValueMock.sol")
-  , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+  , SimpleToken = artifacts.require("./SimpleToken.sol")
   , Core = artifacts.require("./Core.sol")
   , SimpleStake = artifacts.require("./SimpleStake.sol")
   , Gateway = artifacts.require("./Gateway.sol")

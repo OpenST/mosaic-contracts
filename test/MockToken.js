@@ -38,26 +38,4 @@ contract('MockToken', (accounts) => {
          assert.equal(await token.name.call(), NAME)
       })
    })
-   
-   describe('Finalize', async () => {
-
-      var token = null
-
-      before(async () => {
-         token = await createToken()
-
-         await token.setAdminAddress(admin)
-      })
-
-
-      it("check properties before and after finalize", async () => {
-         assert.equal(await token.finalized.call(), false)
-         SimpleTokenUtils.checkFinalizedEventGroup(await token.finalize({ from: admin }))
-         assert.equal(await token.finalized.call(), true)
-      })
-
-      it("try to finalize a 2nd time", async () => {
-         await Utils.expectThrow(token.finalize.call({ from: admin }))
-      })
-   })
 })
