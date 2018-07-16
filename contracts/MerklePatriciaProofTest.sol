@@ -1,7 +1,6 @@
 pragma solidity ^0.4.23;
 
 import "./MerklePatriciaProof.sol";
-import "./util.sol";
 
 /**
  *	@title This contract is a test contract for testing MerklePatriciaProof library contract
@@ -9,7 +8,7 @@ import "./util.sol";
  *	@notice It routes the parameters to MerklePatriciaProof.sol which it receives from test cases
  *
  */
-contract MerklePatriciaProofTest is Util{
+contract MerklePatriciaProofTest {
 
 
     /**
@@ -28,6 +27,7 @@ contract MerklePatriciaProofTest is Util{
         bytes rlpParentNodes,
         bytes32 root)
         external
+        pure
         returns (bool)
     {
         return MerklePatriciaProof.verify(value,encodedPath,rlpParentNodes,root);
