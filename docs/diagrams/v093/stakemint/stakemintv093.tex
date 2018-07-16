@@ -18,7 +18,7 @@
 \title{OpenST Protocol sequence diagrams v0.9.3}
 \author{Benjamin Bollen}
 
-\lstdefinelanguage{tikzuml}{language=[LaTeX]TeX, classoffset=0, morekeywords={umlbasiccomponent, umlprovidedinterface, umlrequiredinterface, umldelegateconnector, umlassemblyconnector, umlVHVassemblyconnector, umlHVHassemblyconnector, umlnote, umlusecase, umlactor, umlinherit, umlassoc, umlVHextend, umlinclude, umlstateinitial, umlbasicstate, umltrans, umlstatefinal, umlVHtrans, umlHVtrans, umldatabase, umlmulti, umlobject, umlfpart, umlcreatecall, umlclass, umlvirt, umlunicompo, umlimport, umlaggreg}, keywordstyle=\color{DarkBlue}, classoffset=1, morekeywords={umlcomponent, umlsystem, umlstate, umlseqdiag, umlcall, umlcallself, umlfragment, umlpackage}, keywordstyle=\color{DarkRed}, classoffset=0,  sensitive=true, morecomment=[l]{\%}}
+\lstdefinelanguage{tikzuml}{language=[LaTeX]TeX, classoffset=0, morekeywords={umlbasiccomponent, umlprovidedinterface, umlrequiredinterface, umldelegatewayconnector, umlassemblyconnector, umlVHVassemblyconnector, umlHVHassemblyconnector, umlnote, umlusecase, umlactor, umlinherit, umlassoc, umlVHextend, umlinclude, umlstateinitial, umlbasicstate, umltrans, umlstatefinal, umlVHtrans, umlHVtrans, umldatabase, umlmulti, umlobject, umlfpart, umlcreatecall, umlclass, umlvirt, umlunicompo, umlimport, umlaggreg}, keywordstyle=\color{DarkBlue}, classoffset=1, morekeywords={umlcomponent, umlsystem, umlstate, umlseqdiag, umlcall, umlcallself, umlfragment, umlpackage}, keywordstyle=\color{DarkRed}, classoffset=0,  sensitive=true, morecomment=[l]{\%}}
 
 \begin{document}
 \begin{minipage}[b]{0.55\linewidth}
@@ -50,17 +50,17 @@
     %%%  Staker initiates stake
     %%% 
     
-    % staker approves branded token gate contract on OST for amount
-    \begin{umlcall}[op={: approve(gate, amountST)}]{Staker}{OST}  
+    % staker approves branded token gateway contract on OST for amount
+    \begin{umlcall}[op={: approve(gateway, amountST)}]{Staker}{OST}  
     \end{umlcall}
     % worker approves worker contract for bounty amount
    % \begin{umlcall}[dt=9,op={: approve(worker, bounty)}]{Facilitator}{Workers}  
    % \end{umlcall}
           
-    % staker requests stake to gate
+    % staker requests stake to gateway
     \begin{umlcall}[dt=10, op={: requestStake(amountST, beneficiary)}]{Staker}{Branded Token Gateway}
-      % gate pulls amount from staker on OST
-      \begin{umlcall}[fill=green!20, dt=5, op={: transferFrom(staker, gate, amountST)}, return=<<OST(amountST)>>]{Branded Token Gateway}{OST}
+      % gateway pulls amount from staker on OST
+      \begin{umlcall}[fill=green!20, dt=5, op={: transferFrom(staker, gateway, amountST)}, return=<<OST(amountST)>>]{Branded Token Gateway}{OST}
         % pull OST from Facilitator
         \begin{umlcall}[dt=5, fill=green!20, type=return, op={<<OST(amountST)>>}]{Staker}{OST}
         \end{umlcall}
@@ -75,12 +75,12 @@
 
     % Facilitator evaluates request against policy (monetary and KYC/AML)
     \begin{umlfragment}[type=alt, label=accept, name=policy, inner xsep=2]
-      \begin{umlcall}[dt=10, op={: approve(gate, bounty)}]{Facilitator}{OST}
+      \begin{umlcall}[dt=10, op={: approve(gateway, bounty)}]{Facilitator}{OST}
       \end{umlcall}
       % Facilitator accepts request
       \begin{umlcall}[op={: acceptStakeRequest(staker, hashLock)}]{Facilitator}{Branded Token Gateway}  %return={ emit StakingRequestAccpeted (staker, amountST, amountUT, nonce, unlockHeight, stakingIntentHash}
         % Pull Facilitator's bounty into Gate
-        \begin{umlcall}[fill=green!20, op={: transferFrom(facilitator, gate, bounty)}, return={<<OST(bounty)>>}]{Branded Token Gateway}{OST}
+        \begin{umlcall}[fill=green!20, op={: transferFrom(facilitator, gateway, bounty)}, return={<<OST(bounty)>>}]{Branded Token Gateway}{OST}
             % pull OST for bounty from Facilitator
             \begin{umlcall}[dt=5, fill=green!20, op={<<OST(bounty)>>},type=return]{Facilitator}{OST}
             \end{umlcall}
@@ -92,11 +92,11 @@
         % Gate calls on to OpenSTValue to stake (later abstract to library call)
         \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)},return={amountUT, nonce, unlockHeight, StakingIntentHash}]{Branded Token Gateway}{OpenSTValue} % 
           % check stakingAccount 
-          \begin{umlcallself}[op={require(msg.sender = gate = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
+          \begin{umlcallself}[op={require(msg.sender = gateway = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
           \end{umlcallself}
           % OpenSTValue pulls amount plus bounty from Facilitator to
           % its OST account balance
-          \begin{umlcall}[dt=4, op={: transferFrom(gate, OpenSTValue, amountST)}, fill=green!20, return=<<OST(amountST)>>]{OpenSTValue}{OST}
+          \begin{umlcall}[dt=4, op={: transferFrom(gateway, OpenSTValue, amountST)}, fill=green!20, return=<<OST(amountST)>>]{OpenSTValue}{OST}
             % pull OST for pre-fund amount from Facilitator
             \begin{umlcall}[dt=20, fill=green!20, type ={return},op ={<<OST(amountST)>>}]{Branded Token Gateway}{OST}
             \end{umlcall}
@@ -119,7 +119,7 @@
       % Facilitator rejects request
       \umlfpart[reject]
       \begin{umlcall}[dt=5, op={: rejectStakeRequest(staker, reason)}]{Facilitator}{Branded Token Gateway}
-        % gate checks msg.sender == whitelister worker address and there is no hashlock
+        % gateway checks msg.sender == whitelister worker address and there is no hashlock
         \begin{umlcallself}[op={require(msg.sender=worker \&\& no HTLC)}]{Branded Token Gateway}
         \end{umlcallself}      
         % transfer amount back to staker
@@ -140,7 +140,7 @@
     \begin{umlfragment}[type=opt]
       % staker reverts Stake Request after timeout
       \begin{umlcall}[dt=12, op={: revertStakeRequest()}, fill=green!20]{Staker}{Branded Token Gateway}
-        % gate checks amount is not locked under HTLC or time-lock is not yet expired
+        % gateway checks amount is not locked under HTLC or time-lock is not yet expired
         \begin{umlcallself}[op={require(msg.sender=staker \&\& no HTLC)}]{Branded Token Gateway}
         \end{umlcallself}
         % transfer amount back to staker
@@ -265,7 +265,7 @@
         % Facilitator first calls processStaking to ensure the bounty is return to him
         \begin{umlcall}[dt=4, op={: processStaking(StakingIntentHash, unlockSecret)}]{Branded Token Gateway}{OpenSTValue}
           % check stakingAccount 
-          %\begin{umlcallself}[op={require(msg.sender = gate = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
+          %\begin{umlcallself}[op={require(msg.sender = gateway = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
           %\end{umlcallself}
           % check hashlock 
           \begin{umlcallself}[op={require(H(unlockSecret) = hashLock)}]{OpenSTValue}
@@ -278,7 +278,7 @@
           \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, staker, amountST, amountUT, unlockSecret)}]{OpenSTValue}{Hunter}
           \end{umlcall}
         \end{umlcall}
-        % transfer bounty from gate to facilitator
+        % transfer bounty from gateway to facilitator
         \begin{umlcall}[dt=5, fill=green!20, op={: transfer(facilitator, bounty)}]{Branded Token Gateway}{OST}
           \begin{umlcall}[fill=green!20, type=return, op={<<OST(bounty)>>}]{OST}{Facilitator}
           % \begin{umlcall}[fill=green!20, type=return, op={<<OST(bounty)>>}]{Workers}{Facilitator}
@@ -316,7 +316,7 @@
       %%%
       
       \begin{umlfragment}[type=opt, name=bounty, label={ensure completion}, inner xsep=15]
-        % process staking on gate
+        % process staking on gateway
         \begin{umlcall}[dt=20, fill=green!20, op={: processStaking(StakingIntentHash, unlockSecret)}]{Hunter}{Branded Token Gateway}
         % check hashlock 
         \begin{umlcallself}[op={require(H(unlockSecret = hashLock)}]{Branded Token Gateway}
@@ -327,7 +327,7 @@
           % Facilitator first calls processStaking to ensure the bounty is return to him
           \begin{umlcall}[dt=4, op={: processStaking(StakingIntentHash, unlockSecret)}]{Branded Token Gateway}{OpenSTValue}
             % check stakingAccount 
-           % \begin{umlcallself}[op={require(msg.sender = gate = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
+           % \begin{umlcallself}[op={require(msg.sender = gateway = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
             %\end{umlcallself}
             % check hashlock 
             \begin{umlcallself}[op={require(H(unlockSecret) = hashLock)}]{OpenSTValue}
@@ -340,7 +340,7 @@
             \begin{umlcall}[dt=5, type=return, op={emit ProcessedStake(StakingIntentHash, simpleStake, staker, amountST, amountUT, unlockSecret)}]{OpenSTValue}{Facilitator}
             \end{umlcall}
           \end{umlcall}
-          % transfer bounty from gate to facilitator
+          % transfer bounty from gateway to facilitator
           \begin{umlcall}[dt=5, fill=green!20, op={: transfer(hunter, bounty)}]{Branded Token Gateway}{OST}
             \begin{umlcall}[fill=green!20, type=return, op={<<OST(bounty)>>}]{OST}{Hunter}
             \end{umlcall}
@@ -361,7 +361,7 @@
         % Facilitator reverts stake to get back amount and bounty
         \begin{umlcall}[fill=green!20, op={: revertStaking(StakingIntentHash)}]{Branded Token Gateway}{OpenSTValue}
           % check stakingAccount 
-         % \begin{umlcallself}[op={require(msg.sender = gate = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
+         % \begin{umlcallself}[op={require(msg.sender = gateway = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
           %\end{umlcallself}
           % check unlockHeight
           \begin{umlcallself}[op={require(unlockHeight <= block.number)}]{OpenSTValue}
@@ -374,7 +374,7 @@
             \end{umlcall}   
           \end{umlcall}
         \end{umlcall}
-        % transfer bounty from gate to facilitator
+        % transfer bounty from gateway to facilitator
         \begin{umlcall}[dt=5, fill=green!20, op={: transfer(facilitator, bounty)}]{Branded Token Gateway}{OST}
           \begin{umlcall}[fill=green!20, type=return, op={<<OST(bounty)>>}]{OST}{Facilitator}
           %\begin{umlcall}[fill=green!20, type=return, op={<<OST(bounty)>>}]{Workers}{Facilitator}
