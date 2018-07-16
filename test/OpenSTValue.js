@@ -479,7 +479,7 @@ contract('OpenSTValue', function(accounts) {
 		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
 		        valueToken  = contracts.valueToken;
 		        openSTValue = contracts.openSTValue;
-                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+		        validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
 		        core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, 0, proof.account.stateRoot, workers.address);
 	            await openSTValue.addCore(core.address, { from: registrar });
 	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
