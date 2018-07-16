@@ -80,6 +80,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
      *  Storage
      */
 
+    // storage for redemption intent hash
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* redemptionIntentHash */) public redemptionIntents;
+
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
     mapping(bytes32 /* redemptionIntentHash */ => Redemption) public redemptions;
@@ -127,6 +130,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     struct Redemption {
         bytes32 uuid;
         address redeemer;
+        uint256 nonce;
         address beneficiary;
         uint256 amountUT;
         uint256 unlockHeight;
@@ -355,11 +359,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         _uuid,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -406,11 +415,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         uuidSTPrime,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
@@ -450,6 +464,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         delete redemptions[_redemptionIntentHash];
 
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
+
         return tokenAddress;
     }
 
@@ -485,6 +502,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         }
 
         delete redemptions[_redemptionIntentHash];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         // fire event
         emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);

@@ -23,10 +23,11 @@ const BigNumber = require('bignumber.js');
 
 var SimpleToken = artifacts.require("./SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
-var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
-var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
+var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var Core 		= artifacts.require("./Core.sol");
-var Workers = artifacts.require("./Workers.sol")
+var Workers = artifacts.require("./Workers.sol");
+var proof = require('./data/proof');
 
 /// @dev Deploy 
 module.exports.deployRegistrar = async (artifacts, accounts) => {
@@ -59,7 +60,7 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 
 	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
 	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);
-	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, workers.address);
+	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, 0, proof.account.stateRoot, workers.address);
 
 	return {
 		valueToken  	: valueToken,
