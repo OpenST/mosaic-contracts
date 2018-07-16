@@ -175,9 +175,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Get safe unlock height
+	 * @notice Get safe unlock height
 	 *
-	 *	@return uint256 safeUnlockHeight
+	 * @return uint256 safeUnlockHeight
 	 */
 	function safeUnlockHeight()
 		external
