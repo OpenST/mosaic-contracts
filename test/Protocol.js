@@ -63,9 +63,9 @@ contract('OpenST', function(accounts) {
 	const intercommVC       = accounts[4];
 	const intercommUC       = accounts[5];
 	const requester         = accounts[6];
-  const stakerVC          = accounts[7];
-  const stakerUC          = accounts[8];
-  const beneficiary       = accounts[10];
+  	const stakerVC          = accounts[7];
+  	const stakerUC          = accounts[8];
+  	const beneficiary       = accounts[10];
 	// account 9 and 19 have no base tokens
 	const redeemer          = accounts[9];
   const redeemBeneficiary = accounts[19];

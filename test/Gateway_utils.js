@@ -26,7 +26,8 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , SimpleStake = artifacts.require("./SimpleStake.sol")
   , Gateway = artifacts.require("./Gateway.sol")
   , Workers = artifacts.require("./Workers.sol")
-  ;
+  , proof = require('./data/proof')
+;
 
 const rootPrefix = ".."
   , constants = require(rootPrefix + '/test/lib/constants')
@@ -71,7 +72,8 @@ module.exports.deployGateway = async (artifacts, accounts) => {
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
-  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, workers.address);
+  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
+
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
