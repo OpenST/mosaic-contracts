@@ -12,8 +12,8 @@ const contracts = [
     path: "./contracts/OpenSTValue.sol"
   },
   {
-    name: "Gate.sol",
-    path: "./contracts/Gate.sol"
+    name: "Gateway.sol",
+    path: "./contracts/Gateway.sol"
   }
 ];
 const validSequence = ["event", "constant", "mapping", "variable", "array", "struct"];
