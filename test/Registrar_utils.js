@@ -25,7 +25,7 @@ var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
-var Core 		= artifacts.require("./Core.sol");
+var CoreMock 		= artifacts.require("./CoreMock.sol");
 var Workers = artifacts.require("./Workers.sol");
 var proof = require('./data/proof');
 
@@ -58,15 +58,16 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	await workers.setOpsAddress(ops);
 	await workers.setWorker(worker1, deactivationHeight, {from:ops});
 
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
 	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);
-	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, 0, proof.account.stateRoot, workers.address);
+    const coreUC = await CoreMock.new(registrar.address,  chainIdUtility, chainIdValue, openSTValue.address, 0, proof.account.stateRoot, workers.address);
+    const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, coreUC.address, { gas: 10000000 });
+    const coreVC  = await CoreMock.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address,  0, proof.account.stateRoot, workers.address);
 
 	return {
 		valueToken  	: valueToken,
 		registrar 		: registrar,
 		openSTUtility 	: openSTUtility,
 		openSTValue 	: openSTValue,
-		core 			: core
+		core 			: coreVC
 	}
 }

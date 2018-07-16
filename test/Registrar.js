@@ -150,7 +150,7 @@ contract('Registrar', function(accounts) {
 		var stakingIntentHash 	= null;
 
 		const lock = HashLock.getHashLock();
-
+        var validRLPParentNodes = null;
 		before(async() => {
 	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
 	        valueToken  	= contracts.valueToken;
@@ -161,7 +161,6 @@ contract('Registrar', function(accounts) {
 	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
 	        brandedToken 	= result.logs[0].args._token;
-
 			await registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid, { from: ops })
 	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
 	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
@@ -171,16 +170,17 @@ contract('Registrar', function(accounts) {
 	        amountUT = result.logs[0].args._amountUT;
 	        unlockHeight = result.logs[0].args._unlockHeight;
 	        stakingIntentHash = result.logs[0].args._stakingIntentHash;
+            validRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(true);
 		})
 
 		it('fails to confirm by non-ops', async () => {
-            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash));
-            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash, { from: admin }));
+            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, 0, validRLPParentNodes));
+            await Utils.expectThrow(registrar.confirmStakingIntent(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, 0, validRLPParentNodes,{ from: admin }));
 		})
 
 		it('successfully confirms', async () => {
 			var BLOCKS_TO_WAIT_SHORT = 5;
-            var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, stakingIntentHash, { from: ops });
+            var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, lock.l, 0, validRLPParentNodes, { from: ops });
 
             assert.ok(expirationHeight > BLOCKS_TO_WAIT_SHORT);
 		})

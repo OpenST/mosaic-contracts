@@ -149,7 +149,8 @@ contract Registrar is OpsManaged {
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
 		bytes32 _hashLock,
-		bytes32 _stakingIntentHash)
+		uint256 _blockHeight,
+		bytes _rlpParentNodes)
 		external
 		onlyOps
 		returns (
@@ -164,7 +165,8 @@ contract Registrar is OpsManaged {
 			_amountUT,
 			_stakingUnlockHeight,
 			_hashLock,
-			_stakingIntentHash);
+			_blockHeight,
+			_rlpParentNodes);
 	}
 
 	function registerBrandedToken(

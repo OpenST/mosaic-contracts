@@ -93,6 +93,7 @@ contract Core is CoreInterface, Util {
 	 * @param _openSTRemote if current chain is value then _openSTRemote is address of openSTUtility contract address
 	 * @param _blockHeight block height at which _stateRoot needs to store
 	 * @param _stateRoot state root hash of given _blockHeight
+	 * @param _workers Workers contract address
 	 */
 	constructor(
 		address _registrar,
