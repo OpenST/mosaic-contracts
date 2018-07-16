@@ -124,7 +124,7 @@ contract Core is CoreInterface, Util {
 		remoteBlockTime = _blockTimeRemote;
 		blocksToWait = TIME_TO_WAIT.div(_blockTimeRemote);
 		// Encoded remote path.
-		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
+		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 	}
 
 	/**
@@ -243,7 +243,7 @@ contract Core is CoreInterface, Util {
 		// Array 3rd position is storage root
 		bytes32 storageRoot = RLP.toBytes32(accountArray[2]);
 		// Hash the rlpEncodedValue value
-		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
+		bytes32 hashedAccount = keccak256(abi.encodePacked(_rlpEncodedAccount));
 
 		// If account already proven for block height
 		bytes32 provenStorageRoot = storageRoots[_blockHeight];

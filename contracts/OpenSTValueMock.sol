@@ -22,31 +22,54 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./OpenSTValue.sol";
+import "./TestUtils.sol";
 
-/// @title OpenSTValueMock
-/// @dev Overrides certain durational constants and getters to ease testing OpenSTValue
+/**
+ *	@title OpenSTValueMock which implements the OpenSTValue contract
+ *
+ *	@notice Overrides certain durational constants, getters
+ *			and creates temp variables to ease testing OpenSTValue
+ */
+
 contract OpenSTValueMock is OpenSTValue {
+	using TestUtils for bytes32;
+
 	uint256 private constant TIME_TO_WAIT_LONG = 220;
 	uint256 private constant TIME_TO_WAIT_SHORT = 20;
+	// test staker nonce required for confirming the intents mapping index position
+	uint256 private constant testStakerNonce = 1;
+	// test staker address required for confirming the intents mapping index position
+	address private constant testStakerAddress = 0x87FCA9F4CC0D439163235c2C33abe8e4bA203580;
+	// test staking intent hash required for confirming the intents mapping index position
+	bytes32 private constant testStakingIntentHash = 0xf61ea4fb6316d5ecdd2299b49ef9f07c49077c8a7d105fecc100e453742e0727;
+	
+	// the following public state variables do not alter the index position of intents mapping
+	// as storage in a contract if filled with inherited contract's variables first, ordered left to right 
+	// test intents key calculated to store the test staking intent hash in intents mapping
+	bytes32 public testIntentsKey = hashIntentKey(testStakerAddress, testStakerNonce);
+	// storage path to the test staking intent hash in the intents mapping
+	// calculated from the intentsMappingStorageIndexPosition constant in OpenSTValue
+	bytes32 public testStoragePath = TestUtils.getStoragePath(testIntentsKey,intentsMappingStorageIndexPosition);
+		
+	/* Public functions */
 
-	/*
-	 *  Public functions
-	 */
-	constructor(
+constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
 		address _registrar,
 		uint256 _blockTime)
 		OpenSTValue(_chainIdValue, _eip20token, _registrar, _blockTime)
 		public {
+		//inserting the intents mapping with the test staking intent hash against calculated testIntentsKey
+		stakingIntents[testIntentsKey] = testStakingIntentHash;
 
 		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
 		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
 
 	}
 
-	// mocked verifyRedemptionIntentHashStorage function for testing only
-	function verifyRedemptionIntentHashStorage(
+	// mocked verifyRedemptionIntent function for testing only
+	function verifyRedemptionIntent(
 		bytes32 _uuid,
 		address _redeemer,
 		uint256 _redeemerNonce,
@@ -57,7 +80,7 @@ contract OpenSTValueMock is OpenSTValue {
 		view
 		returns (bool)
 	{
-		bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
 		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
 	}
 
@@ -69,10 +92,10 @@ contract OpenSTValueMock is OpenSTValue {
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTUtils.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
 		return mockedInvalidValue;
 	}
 

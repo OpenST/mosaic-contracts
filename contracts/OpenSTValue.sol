@@ -31,7 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-import "./OpenSTUtils.sol";
+import "./OpenSTHelper.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -75,10 +75,13 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour in seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
-    uint8 private constant INTENT_INDEX = 3;
+    // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
+    // positions 0-3 are occupied by public state variables in OpsManaged and Owned
+    // private constants do not occupy the storage of a contract 
+    uint8 internal constant intentsMappingStorageIndexPosition = 4;
 
     // storage for staking intent hash of active staking intents
-    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* stakingIntentHash */) public stakingIntents;
     // register the active stakes and unstakes
     mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
@@ -203,7 +206,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         UtilityToken storage utilityToken = utilityTokens[_uuid];
 
         // if the staking account is set to a non-zero address,
-        // then all transactions have come (from/over) the staking account
+        // then all stakes have come (from/over) the staking account
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
@@ -239,7 +242,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // store the staking intent hash directly in storage of OpenSTValue 
         // so that a Merkle proof can be generated for active staking intents
         bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
-        intents[intentKeyHash] = stakingIntentHash;
+        stakingIntents[intentKeyHash] = stakingIntentHash;
 
         emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
@@ -256,27 +259,31 @@ contract OpenSTValue is OpsManaged, Hasher {
     {
         require(_stakingIntentHash != "");
 
-        Stake storage stake = stakes[_stakingIntentHash];
+        Stake storage stakeItem = stakes[_stakingIntentHash];
 
         // present the secret to unlock the hashlock and continue process
-    		require(stake.hashLock == keccak256(_unlockSecret));
+        require(stakeItem.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as this bears the cost, there is no need to require
-        // that the stake.unlockHeight is not yet surpassed
+        // that the stakeItem.unlockHeight is not yet surpassed
         // as is required on processMinting
 
-        UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+        UtilityToken storage utilityToken = utilityTokens[stakeItem.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all stakes have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         stakeAddress = address(utilityToken.simpleStake);
         require(stakeAddress != address(0));
 
-        assert(valueToken.balanceOf(address(this)) >= stake.amountST);
-        require(valueToken.transfer(stakeAddress, stake.amountST));
+        assert(valueToken.balanceOf(address(this)) >= stakeItem.amountST);
+        require(valueToken.transfer(stakeAddress, stakeItem.amountST));
 
-        emit ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
-            stake.amountST, stake.amountUT, _unlockSecret);
+        emit ProcessedStake(stakeItem.uuid, _stakingIntentHash, stakeAddress, stakeItem.staker,
+            stakeItem.amountST, stakeItem.amountUT, _unlockSecret);
         
-        // remove intent hash from intents mapping 
-        delete intents[hashIntentKey(stake.staker, stake.nonce)];        
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stakeItem.staker, stakeItem.nonce)];
+
         delete stakes[_stakingIntentHash];
 
         return stakeAddress;
@@ -292,25 +299,30 @@ contract OpenSTValue is OpsManaged, Hasher {
     {
         require(_stakingIntentHash != "");
 
-        Stake storage stake = stakes[_stakingIntentHash];
+        Stake storage stakeItem = stakes[_stakingIntentHash];
+        UtilityToken storage utilityToken = utilityTokens[stakeItem.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all stakes have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
 
         // require that the stake is unlocked and exists
-        require(stake.unlockHeight > 0);
-        require(stake.unlockHeight <= block.number);
+        require(stakeItem.unlockHeight > 0);
+        require(stakeItem.unlockHeight <= block.number);
 
-        assert(valueToken.balanceOf(address(this)) >= stake.amountST);
+        assert(valueToken.balanceOf(address(this)) >= stakeItem.amountST);
         // revert the amount that was intended to be staked back to staker
-        require(valueToken.transfer(stake.staker, stake.amountST));
+        require(valueToken.transfer(stakeItem.staker, stakeItem.amountST));
 
-        uuid = stake.uuid;
-        amountST = stake.amountST;
-        staker = stake.staker;
+        uuid = stakeItem.uuid;
+        amountST = stakeItem.amountST;
+        staker = stakeItem.staker;
 
-        emit RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
-            stake.amountST, stake.amountUT);
+        emit RevertedStake(stakeItem.uuid, _stakingIntentHash, stakeItem.staker,
+            stakeItem.amountST, stakeItem.amountUT);
 
-        // remove intent hash from intents mapping 
-        delete intents[hashIntentKey(stake.staker, stake.nonce)];   
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stakeItem.staker, stakeItem.nonce)];
+
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
@@ -319,7 +331,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     /**
       *	@notice Confirm redemption intent on value chain.
       *
-      * @dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
+      *	@dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
       *      is passed in this function along with rpl encoded parent nodes of merkle pactritia tree proof
       *      for RedemptionIntentHash.
       *
@@ -383,7 +395,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
-        require(verifyRedemptionIntentHashStorage(
+        require(verifyRedemptionIntent(
                 _uuid,
                 _redeemer,
                 _redeemerNonce,
@@ -416,9 +428,10 @@ contract OpenSTValue is OpsManaged, Hasher {
       *	@param _blockHeight Block height at which the Merkle proof was generated
       *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
       *
-      *	@return bool status if the storage of intent hash was verified
+      *	@return true if successfully verifies, otherwise throws an exception.
       */
-    function verifyRedemptionIntentHashStorage(
+
+    function verifyRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -435,13 +448,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         // storageRoot cannot be 0
         require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
-        require(OpenSTUtils.verifyIntentStorage(
-                INTENT_INDEX,
+        require(OpenSTHelper.verifyIntentStorage(
+                intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,
-                storageRoot,
                 _redemptionIntentHash,
-                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
+                _rlpParentNodes,
+                storageRoot), "RedemptionIntentHash storage verification failed");
 
         return true;
     }
@@ -458,7 +471,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         Unstake storage unstake = unstakes[_redemptionIntentHash];
 
         // present secret to unlock hashlock and proceed
-        require(unstake.hashLock == keccak256(_unlockSecret));
+        require(unstake.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as the process unstake results in a gain for the caller
         // it needs to expire well before the process redemption can
@@ -643,13 +656,14 @@ contract OpenSTValue is OpsManaged, Hasher {
 
     function getStakerAddress(
         bytes32 _stakingIntentHash)
+        view
         external
         returns (address /* staker */)
     {
         require(_stakingIntentHash != "");
-        Stake storage stake = stakes[_stakingIntentHash];
+        Stake storage stakeItem = stakes[_stakingIntentHash];
 
-        return stake.staker;
+        return stakeItem.staker;
 
     }
 }

@@ -34,7 +34,7 @@ import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
-import "./OpenSTUtils.sol";
+import "./OpenSTHelper.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -78,8 +78,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
     /* Storage */
 
-    // storage for staking intent hash of active staking intents
-    mapping(bytes32 /* intentHash */ => bytes32) public intents;
+    // storage for redemption intent hash
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* redemptionIntentHash */) public redemptionIntents;
 
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
@@ -110,7 +110,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     uint256 public blocksToWaitLong;
 
     CoreInterface public core;
-
 
     bytes32[] public uuids;
     /// registered branded tokens
@@ -195,9 +194,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         uuids.push(uuidSTPrime);
         // lock name and symbol route for ST'
-        bytes32 hashName = keccak256(STPRIME_NAME);
+        bytes32 hashName = keccak256(abi.encodePacked(STPRIME_NAME));
         nameReservation[hashName] = registrar;
-        bytes32 hashSymbol = keccak256(STPRIME_SYMBOL);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(STPRIME_SYMBOL));
         symbolRoute[hashSymbol] = simpleTokenPrime;
 
         // @dev read STPrime address and uuid from contract
@@ -300,8 +299,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         private
         returns(bool /* MerkleProofStatus*/)
     {
-        bytes memory encodedPathInMerkle = OpenSTUtils.bytes32ToBytes(
-            OpenSTUtils.storagePath(5, keccak256(_staker,_stakerNonce)));
+        bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
+            OpenSTHelper.storageVariablePath(5, keccak256(_staker,_stakerNonce)));
 
         return MerklePatriciaProof.verify(
             keccak256(stakingIntentHash),
@@ -321,7 +320,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Mint storage mint = mints[_stakingIntentHash];
 
         // present secret to unlock hashlock and continue process
-        require(mint.hashLock == keccak256(_unlockSecret));
+        require(mint.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process minting results in a gain it needs to expire well before
         // the escrow on the cost unlocks in OpenSTValue.processStake
@@ -430,7 +429,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         // store the Redemption intent hash directly in storage of OpenSTUtility
         // so that a Merkle proof can be generated for active redemption intents
-        intents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -484,6 +483,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             hashLock:     _hashLock
         });
 
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
+
         emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
 
@@ -502,7 +505,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Redemption storage redemption = redemptions[_redemptionIntentHash];
 
         // present the secret to unlock the hashlock and continue process
-        require(redemption.hashLock == keccak256(_unlockSecret));
+        require(redemption.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process redemption bears the cost there is no need to require
         // the unlockHeight is not past, the same way as we do require for
@@ -522,8 +525,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         delete redemptions[_redemptionIntentHash];
 
-        // remove intent hash from intents mapping
-        delete intents[hashIntentKey(redemption.redeemer, redemption.nonce)];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         return tokenAddress;
     }
@@ -560,6 +563,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         }
 
         delete redemptions[_redemptionIntentHash];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         // fire event
         emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
@@ -589,8 +594,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, msg.sender));
 
         bytes32 btUuid = hashUuid(
@@ -670,8 +675,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, _requester));
 
         registeredUuid = hashUuid(

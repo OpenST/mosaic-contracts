@@ -37,7 +37,7 @@ const rootPrefix = ".."
 /// 	has chainIdValue
 /// 	has valueToken
 /// 	has registrar
-///
+/// 	confirms intents mapping index position
 /// AddCore
 /// 	fails to add core by non-registrar
 /// 	fails to add core by registrar when core is null
@@ -141,6 +141,19 @@ contract('OpenSTValue', function(accounts) {
 		it('has registrar', async () => {
 			assert.equal(await openSTValue.registrar.call(), registrar);
 		})
+
+		it('confirms intents mapping index position', async () => {
+			const testIntentsKey = await openSTValue.testIntentsKey.call();
+	 		const testIntentsMappingValue = await openSTValue.stakingIntents.call(testIntentsKey);
+	 		const storagePath = await openSTValue.testStoragePath.call();
+	 		// getStorageAt gets the value directly from contract storage
+	 		// by passing a parameter determined from the indentified index position of the mapping
+	 		const storageValue = await web3.eth.getStorageAt(openSTValue.address, storagePath);
+			
+			// test confirms correct identification of the index of intents mapping in contract storage
+	 		// will raise a flag if the index position of the mapping changes for any reason in OpenSTValue
+	 		assert.equal(testIntentsMappingValue, storageValue);
+		})		
 	})
 
 	describe('AddCore', async () => {
@@ -311,7 +324,7 @@ contract('OpenSTValue', function(accounts) {
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constant.UTILITY_CHAIN_BLOCK_TIME, workers.address);
             await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
-			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, accounts[0], checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
 			result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
@@ -325,7 +338,11 @@ contract('OpenSTValue', function(accounts) {
 		it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 			const differentLock = HashLock.getHashLock();
 			// registrar can additionally as a fallback process staking in v0.9
-            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[5] }));
+			await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[0] }));
+		})
+
+		it('fails to processStaking when msg.sender is not staking account', async () => {
+		    await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, lock.s, { from: registrar }));
 		})
 
 		it('successfully processes', async () => {
@@ -648,6 +665,10 @@ contract('OpenSTValue', function(accounts) {
 
 				// Process Staking
 				await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
+			});
+
+			it('fails to revertStaking when msg.sender is not staking account', async () => {
+			    await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: accounts[0]}));
 			});
 
 			it('fails to process when reverting before waiting period ends', async () => {
