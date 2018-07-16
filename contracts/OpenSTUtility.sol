@@ -203,22 +203,22 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     }
 
     /**
-      *  @notice Confirm staking intent on utility chain
+      * @notice Confirm staking intent on utility chain
       *
-      *  @dev  StakingIntentHash is generated in value chain, the parameters that were used for hash generation is passed
+      * @dev  StakingIntentHash is generated in value chain, the parameters that were used for hash generation is passed
       *        in this function along with rpl encoded parent nodes of merkle pactritia tree proof.
       *
-      *  @param _uuid UUID of utility token
-      *  @param _staker address of the account whose resources will be staked
-      *  @param _stakerNonce nonce of staker address
-      *  @param _beneficiary address where the branded tokens will be transferred
-      *  @param _amountST amount to be stake
-      *  @param _amountUT utility token amount
-      *  @param _stakingUnlockHeight  height till which stake will be locked at Value chain.
-      *  @param _hashLock hash lock
-      *  @param _rlpParentNodes RLP encoded parent nodes for proof verification.
+      * @param _uuid UUID of utility token
+      * @param _staker address of the account whose resources will be staked
+      * @param _stakerNonce nonce of staker address
+      * @param _beneficiary address where the branded tokens will be transferred
+      * @param _amountST amount to be stake
+      * @param _amountUT utility token amount
+      * @param _stakingUnlockHeight  height till which stake will be locked at Value chain.
+      * @param _hashLock hash lock
+      * @param _rlpParentNodes RLP encoded parent nodes for proof verification.
       *
-      *	@return uint256 expiration height
+      * @return uint256 expiration height
       */
     function confirmStakingIntent(
         bytes32 _uuid,
@@ -286,7 +286,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
       * @param rlpParentNodes RLP encoded parent nodes for proof verification
       * @param storageRoot storage root for proof verification
       *
-      *	@return bool status if the storage of intent hash was verified
+      * @return bool status if the storage of intent hash was verified
       */
     function merkleVerificationOfStake(
         address _staker,
