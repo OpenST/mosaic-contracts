@@ -47,15 +47,16 @@ contract CoreMock is Core {
 	  * @param _workers Workers contract address
 	  */
 	constructor(
-	address _registrar,
-	uint256 _chainIdOrigin,
-	uint256 _chainIdRemote,
-	address _openSTRemote,
-	uint256 _blockTimeRemote,
-	uint256 _blockHeight,
-	bytes32 _stateRoot,
-	WorkersInterface _workers)
-	Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _blockTimeRemote, _blockHeight, _stateRoot, _workers) public {
+		address _registrar,
+		uint256 _chainIdOrigin,
+		uint256 _chainIdRemote,
+		address _openSTRemote,
+		uint256 _blockTimeRemote,
+		uint256 _blockHeight,
+		bytes32 _stateRoot,
+		WorkersInterface _workers)
+		Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _blockTimeRemote, _blockHeight, _stateRoot, _workers) public
+	{
 		blocksToWait = TIME_TO_WAIT.div(_blockTimeRemote);
 	}
 

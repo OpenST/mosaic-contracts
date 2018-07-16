@@ -36,7 +36,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     const registrar = accounts[1]
         , admin = accounts[2]
         , ops = accounts[3]
-        , openSTRemote = proof.account.openSTRemoteAddress
+        , openSTRemote = proof.account.accountAddress
         , chainIdOrigin = 3
         , chainIdRemote = 1410
         , valueToken = await MockToken.new()
