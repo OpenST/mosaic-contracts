@@ -33,7 +33,7 @@ import "./EIP20Token.sol";
  */
 contract EIP20TokenMock is EIP20Token {
 
-    /** Public Functions */
+    /** Public functions */
 
     /**
      *  @notice Contract constructor.

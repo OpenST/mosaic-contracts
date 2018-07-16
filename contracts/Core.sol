@@ -83,16 +83,20 @@ contract Core is CoreInterface, Util {
 	 *
 	 *  @dev bytes32ToBytes is util contract method.
 	 *
-	 *  @param _registrar Address of Registrar.
-	 *  @param _chainIdOrigin Origin chain id.
-	 *  @param _chainIdRemote Remote chain id.
-	 *  @param _openSTRemote Remote openSTUtility/openSTValue contract address.
+	 *  @param _registrar Address of the registrar which registers for utility tokens.
+	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
+	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+	 *  @param _openSTRemote If current chain is value then _openSTRemote is address of openSTUtility contract address.
+	 *  @param _blockHeight Block height at which _stateRoot needs to store.
+	 *  @param _stateRoot State root hash of given _blockHeight.
 	 */
 	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
+		uint256 _blockHeight,
+		bytes32 _stateRoot,
 		WorkersInterface _workers)
 		public
 	{
@@ -108,6 +112,8 @@ contract Core is CoreInterface, Util {
 		workers = _workers;
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
+		latestStateRootBlockHeight = _blockHeight;
+		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
 
 	/** Public functions */
@@ -233,10 +239,15 @@ contract Core is CoreInterface, Util {
 	/**
 	 *  @notice External function proveOpenST.
 	 *
-	 *  @dev ProofVerificationSkipped event needed to identify replay calls for same block height.
-	 *       Verify account proof of OpenSTRemote and commit storage root at given block height.
+	 *  @dev proveOpenST can be called by anyone to verify merkle proof of OpenSTRemote contract address. OpenSTRemote is OpenSTUtility
+	 *		   contract address on utility chain and OpenSTValue contract address on value chain.
+	 *		   Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
+	 *		   which is a trusted decentralized system running separately.
+	 * 		   It's important to note that in replay calls of proveOpenST bytes _rlpParentNodes variable is not validated. In this case
+	 *		   input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
+	 *		   OpenSTProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
 	 *
-	 *  @param _blockHeight Block height at which OpenST is to be proven
+	 *  @param _blockHeight Block height at which OpenST is to be proven.
 	 *  @param _rlpEncodedAccount RLP encoded account node object.
 	 *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
 	 *
@@ -249,10 +260,10 @@ contract Core is CoreInterface, Util {
 		external
 		returns(bool /* success */)
 	{
-		// Check for block height
-		require(_blockHeight != 0, "Given block height is 0");
-		// Storage root should be valid
+		// _rlpEncodedAccount should be valid
 		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		// _rlpParentNodes should be valid
+		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
@@ -284,6 +295,8 @@ contract Core is CoreInterface, Util {
 
 		// After verification update storageRoots mapping
 		storageRoots[_blockHeight] = storageRoot;
+		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
+		emit OpenSTProven(_blockHeight, storageRoot, false);
 
 		return true;
 	}

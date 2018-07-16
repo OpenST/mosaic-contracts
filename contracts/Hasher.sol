@@ -25,7 +25,7 @@ pragma solidity ^0.4.23;
  *  @title Hasher contract. 
  *
  *  @notice Hasher contains functions for hashing frequently occuring state variables
- *.         required for the process of stake and mint / redeem and unstake.
+ *          required for the process of stake and mint / redeem and unstake.
  */
 contract Hasher {
 
@@ -148,7 +148,7 @@ contract Hasher {
 	 *  @param _account Address of the hashing account.
 	 *  @param _nonce Nonce of the hashing account.
 	 *
-	 *.  @return bytes32 Keccak256 intent key hash.
+	 *  @return bytes32 Keccak256 intent key hash.
 	 */
 	function hashIntentKey(
 		address _account,

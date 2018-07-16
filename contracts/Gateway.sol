@@ -108,7 +108,7 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function requestStake.
      *
      *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
-     *      Staked amount is transferred from staker address to Gateway contract.
+     *       Staked amount is transferred from staker address to Gateway contract.
      *
      *  @param _amount Staking amount.
      *  @param _beneficiary Beneficiary address.
@@ -177,7 +177,7 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function to reject requested stake.
      *
      *  @dev This can be called only by whitelisted worker address.
-     *      Staked amount is transferred back to staker address from Gateway contract.
+     *       Staked amount is transferred back to staker address from Gateway contract.
      *
      *  @param _staker Staker address.
      *  @param _reason Reason for rejection.
@@ -215,8 +215,8 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function to accept requested stake.
      *
      *  @dev This can be called only by whitelisted worker address.
-     *      Bounty amount is transferred from msg.sender to Gateway contract.
-     *      openSTProtocol is approved for staking amount by Gateway contract.
+     *       Bounty amount is transferred from msg.sender to Gateway contract.
+     *       openSTProtocol is approved for staking amount by Gateway contract.
      *
      *  @param _staker Staker address.
      *  @param _hashLock Hash lock.
@@ -331,7 +331,7 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function to revert staking.
      *
      *  @dev Staked amount is transferred to the staker address.
-     *      Bounty amount is transferred to workers contract.
+     *       Bounty amount is transferred to workers contract.
      *
      *  @param _stakingIntentHash Staking intent hash.
      *
