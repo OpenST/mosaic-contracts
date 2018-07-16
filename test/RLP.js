@@ -2,7 +2,6 @@ const RLPTest = artifacts.require("./RLPTest.sol"),
     ethUtil = require("ethereumjs-util"),
     Utils = require('./lib/utils.js');
 
-
 contract('RLP', function (accounts) {
     let rlpTest;
     before(async () => {
@@ -63,8 +62,6 @@ contract('RLP', function (accounts) {
 
         it('should fail when input is empty', async () => {
             let data;
-            //let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
-            //let lengthOfList = await rlpTest.toList.call('0x' + data);
             await Utils.expectThrow(rlpTest.toList.call('0x' + data));
         })
     })
@@ -91,7 +88,7 @@ contract('RLP', function (accounts) {
             assert.equal("0x", result);
         })
     })
-    
+
     describe('ToData', async () => {
 
         it('should pass when input is non-list', async () => {

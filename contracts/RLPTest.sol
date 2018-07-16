@@ -3,7 +3,7 @@ import "./RLP.sol";
 
 
 /**
- *	@title RLPMock contract is for RLP library contract
+ *	@title RLPTest contract is for RLP library contract
  *
  *	@notice It is used to test methods in RLP library contract
  */
@@ -22,8 +22,8 @@ contract RLPTest  {
         public
         pure
         returns
-        (uint /*length*/,
-        uint /*memory_pointer*/)
+        (uint /* length */,
+        uint /* memory_pointer */)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         return (item._unsafe_length,item._unsafe_memPtr);
@@ -44,8 +44,8 @@ contract RLPTest  {
         public
         pure
         returns(
-        uint /*length*/,
-        uint /*memory_pointer*/)
+        uint /* length */,
+        uint /* memory_pointer */)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
         return(item._unsafe_length,item._unsafe_memPtr);
