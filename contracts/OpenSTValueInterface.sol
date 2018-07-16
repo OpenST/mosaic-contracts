@@ -41,7 +41,8 @@ contract OpenSTValueInterface {
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _redemptionIntentHash)
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
         returns (
         uint256 amountST,
