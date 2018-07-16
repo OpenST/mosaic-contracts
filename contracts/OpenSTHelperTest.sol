@@ -20,7 +20,7 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "../../contracts/OpenSTHelper.sol";
+import "./OpenSTHelper.sol";
 
 /**
   *	@title OpenSTHelperTest
@@ -32,7 +32,7 @@ contract OpenSTHelperTest {
     constructor(){}
 
 /**
-  *	@notice Calls storagePath of OpenSTHelper
+  *	@notice Calls storageVariablePath of OpenSTHelper
   *
   *	@dev For testing only
   *
@@ -41,14 +41,14 @@ contract OpenSTHelperTest {
   *
   *	@return bytes32 Storage path
   */
-    function storagePath(
+    function storageVariablePath(
         uint8 _index,
         bytes32 _key)
         external
         pure
         returns(bytes32 /* storage path */)
     {
-        return OpenSTHelper.storagePath(_index, _key);
+        return OpenSTHelper.storageVariablePath(_index, _key);
     }
 
 
@@ -60,9 +60,9 @@ contract OpenSTHelperTest {
   *	@param _intentIndex Index position of the storage variable
   *	@param _address account address
   *	@param _addressNonce nonce for account address
-  *	@param _storageRoot storage root for proof
   *	@param _intentHash value for proof
   *	@param _rlpParentNodes RLP encoded parent nodes
+  *	@param _storageRoot storage root for proof
   *
   *	@return bool status of verification
   */
@@ -70,9 +70,9 @@ contract OpenSTHelperTest {
         uint8 _intentIndex,
         address _address,
         uint256 _addressNonce,
-        bytes32 _storageRoot,
         bytes32 _intentHash,
-        bytes _rlpParentNodes)
+        bytes _rlpParentNodes,
+        bytes32 _storageRoot)
         external
         pure
         returns (bool /* verification status */)
@@ -81,9 +81,9 @@ contract OpenSTHelperTest {
                 _intentIndex,
                 _address,
                 _addressNonce,
-                _storageRoot,
                 _intentHash,
-                _rlpParentNodes));
+                _rlpParentNodes,
+                _storageRoot));
 
         return true;
     }

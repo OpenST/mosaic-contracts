@@ -72,8 +72,8 @@ contract OpenSTValueMock is OpenSTValue {
 		return BLOCKS_TO_WAIT_SHORT;
 	}
 
-	// mocked verifyRedemptionIntentHashStorage function for testing only
-	function verifyRedemptionIntentHashStorage(
+	// mocked verifyRedemptionIntent function for testing only
+	function verifyRedemptionIntent(
 		bytes32 _uuid,
 		address _redeemer,
 		uint256 _redeemerNonce,

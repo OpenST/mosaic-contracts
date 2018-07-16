@@ -74,7 +74,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     // ~1hour, assuming ~15s per block
     uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
 
-    // indentified index position of intents mapping in storage (in OpenSTUtility)
+    // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
     // positions 0-3 are occupied by public state variables in OpsManaged and Owned
     // private constants do not occupy the storage of a contract 
     uint8 internal constant intentsMappingStorageIndexPosition = 4;
@@ -377,7 +377,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
-        require(verifyRedemptionIntentHashStorage(
+        require(verifyRedemptionIntent(
                 _uuid,
                 _redeemer,
                 _redeemerNonce,
@@ -410,9 +410,10 @@ contract OpenSTValue is OpsManaged, Hasher {
       *	@param _blockHeight Block height at which the Merkle proof was generated
       *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
       *
-      *	@return bool status if the storage of intent hash was verified
+      *	@return true if successfully verifies, otherwise throws an exception.
       */
-    function verifyRedemptionIntentHashStorage(
+
+    function verifyRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -433,9 +434,9 @@ contract OpenSTValue is OpsManaged, Hasher {
                 intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,
-                storageRoot,
                 _redemptionIntentHash,
-                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
+                _rlpParentNodes,
+                storageRoot), "RedemptionIntentHash storage verification failed");
 
         return true;
     }

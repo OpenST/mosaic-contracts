@@ -27,7 +27,7 @@
   const rootPrefix = ".."
       , proofData = require( rootPrefix + "/test/data/proof.json" )
       , Utils = require(rootPrefix + '/test/lib/utils')
-      , OpenSTHelper = artifacts.require(rootPrefix + '/test/contracts/OpenSTHelperTest.sol');
+      , OpenSTHelper = artifacts.require("./OpenSTHelperTest.sol");
 
   contract('OpenSTHelper', function (accounts) {
       let openSTHelperContract;
@@ -45,7 +45,7 @@
               let mappingKey = dataSet1.mappingKey;
               let expectedPath = dataSet1.expectedPath;
 
-              let result = await openSTHelperContract.storagePath(storageIndex.toString(16), mappingKey);
+              let result = await openSTHelperContract.storageVariablePath(storageIndex.toString(16), mappingKey);
 
               assert.equal(expectedPath, result);
           });
@@ -55,7 +55,7 @@
               let mappingKey = dataSet2.mappingKey;
               let expectedPath = dataSet2.expectedPath;
 
-              let result = await openSTHelperContract.storagePath(storageIndex.toString(16), mappingKey);
+              let result = await openSTHelperContract.storageVariablePath(storageIndex.toString(16), mappingKey);
 
               assert.equal(expectedPath, result);
           });
@@ -69,9 +69,9 @@
                   dataSet1.storageIndex,
                   dataSet1.redeemer,
                   dataSet1.redeemerNonce,
-                  dataSet1.storageRoot,
                   dataSet1.redemptionIntentHash,
-                  dataSet1.rlpParentNodes);
+                  dataSet1.rlpParentNodes,
+                  dataSet1.storageRoot);
 
               assert.equal(true, result);
           });
@@ -81,9 +81,9 @@
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet2.redemptionIntentHash,
-                  dataSet2.rlpParentNodes);
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot);
 
               assert.equal(true, result);
           });
@@ -93,9 +93,9 @@
                   new BigNumber(3),
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet2.redemptionIntentHash,
-                  dataSet2.rlpParentNodes));
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
           });
 
           it('Should fail to verify intent storage when redeemer is incorrect', async function () {
@@ -103,9 +103,9 @@
                   dataSet2.storageIndex,
                   dataSet1.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet2.redemptionIntentHash,
-                  dataSet2.rlpParentNodes));
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
           });
 
           it('Should fail to verify intent storage when redeemerNonce is incorrect', async function () {
@@ -113,9 +113,9 @@
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet1.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet2.redemptionIntentHash,
-                  dataSet2.rlpParentNodes));
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
           });
 
           it('Should fail to verify intent storage when storageRoot is incorrect', async function () {
@@ -123,9 +123,9 @@
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet1.redemptionIntentHash,
                   dataSet2.redemptionIntentHash,
-                  dataSet2.rlpParentNodes));
+                  dataSet2.rlpParentNodes,
+                  dataSet1.redemptionIntentHash));
           });
 
           it('Should fail to verify intent storage when redemptionIntentHash is incorrect', async function () {
@@ -133,9 +133,9 @@
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet1.redemptionIntentHash,
-                  dataSet2.rlpParentNodes));
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
           });
 
           it('Should fail to verify intent storage when rlpParentNodes is incorrect', async function () {
@@ -143,9 +143,9 @@
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
-                  dataSet2.storageRoot,
                   dataSet2.redemptionIntentHash,
-                  dataSet1.rlpParentNodes));
+                  dataSet1.rlpParentNodes,
+                  dataSet2.storageRoot));
           });
       });
   });

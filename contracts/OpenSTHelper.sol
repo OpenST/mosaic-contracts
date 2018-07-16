@@ -20,24 +20,19 @@ import "./BytesLib.sol";
 import "./MerklePatriciaProof.sol";
 import "./RLPEncode.sol";
 
-
-/**
-  *	@title OpenSTHelper
-  */
-// Please note that this library exists for 0.9.3 and going forward will be merged with Utils.sol.
 library OpenSTHelper {
 
   /**
     *	@notice Convert bytes32 to bytes
     *
-    *	@param a bytes32 value
+    *	@param _inBytes32 bytes32 value
     *
     *	@return bytes value
     */
-  function bytes32ToBytes(bytes32 a) internal pure returns (bytes) {
+  function bytes32ToBytes(bytes32 _inBytes32) internal pure returns (bytes) {
     bytes memory res = new bytes(32);
     assembly {
-      mstore(add(32,res), a)
+      mstore(add(32,res), _inBytes32)
     }
     return res;
   }
@@ -50,7 +45,7 @@ library OpenSTHelper {
     *
     *	@return bytes32 Storage path of the variable
     */
-  function storagePath(
+  function storageVariablePath(
     uint8 _index,
     bytes32 _key)
     internal
@@ -64,34 +59,33 @@ library OpenSTHelper {
   }
 
   /**
-    *	@notice Verify storage of intent hash
+    *	@notice Verify storage of stakingIntents in OpenSTValue and redemptionIntents in OpenSTUtility
     *
-    *	@param _intentIndex Index of variable
-    *	@param _address Account address
-    *	@param _addressNonce Nonce for account address
-    *	@param _storageRoot Storage root
+    *	@param _intentionStorageIndex index position of storage variables stakingIntents/redemptionIntents
+    *	@param _account Account address
+    *	@param _accountNonce Nonce for account address
     *	@param _intentHash Intent hash
     *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+    *	@param _storageRoot Storage root
     *
     *	@return bool status if the storage of intent hash was verified
     */
   function verifyIntentStorage(
-    uint8 _intentIndex,
-    address _address,
-    uint256 _addressNonce,
-    bytes32 _storageRoot,
+    uint8 _intentionStorageIndex,
+    address _account,
+    uint256 _accountNonce,
     bytes32 _intentHash,
-    bytes _rlpParentNodes)
+    bytes _rlpParentNodes,
+    bytes32 _storageRoot)
     internal
     pure
     returns (bool /* verification status */)
   {
-    bytes32 keyPath = storagePath(_intentIndex, keccak256(_address, _addressNonce));
-    bytes memory path = bytes32ToBytes(keyPath);
+    bytes memory traversePath = bytes32ToBytes(storageVariablePath(_intentionStorageIndex, keccak256(_account, _accountNonce)));
 
     return MerklePatriciaProof.verify(
       keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash))),
-      path,
+      traversePath,
       _rlpParentNodes,
       _storageRoot);
   }
