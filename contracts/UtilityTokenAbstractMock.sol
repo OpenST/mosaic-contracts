@@ -47,7 +47,6 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         _chainIdUtility,
         _conversionRate,
         _conversionRateDecimals)
-        ProtocolVersioned(msg.sender)
         { }
 
     /// @dev Mock claim function

@@ -12,9 +12,8 @@ pragma solidity ^0.4.23;
 
 import "./ERC20Token.sol";
 import "./SimpleTokenConfig.sol";
-import "./OpsManaged.sol";
 
-contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
+contract MockToken is ERC20Token, SimpleTokenConfig {
 
     bool public finalized;
 
@@ -24,7 +23,6 @@ contract MockToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
     constructor() public
         ERC20Token("MOCK", "Mock Token", TOKEN_DECIMALS, TOKENS_MAX)
-        OpsManaged()
         { }
 
     // Finalize functionality retained because it is expected by platform scripts

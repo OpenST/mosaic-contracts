@@ -57,13 +57,14 @@ contract Hasher {
 		returns (bytes32)
 	{
 		return keccak256(
-			_symbol,
-			_name,
-			_chainIdValue,
-			_chainIdUtility,
-			_openSTUtility,
-			_conversionRate,
-			_conversionRateDecimals);
+			abi.encodePacked(
+				_symbol,
+				_name,
+				_chainIdValue,
+				_chainIdUtility,
+				_openSTUtility,
+				_conversionRate,
+				_conversionRateDecimals));
 	}
 
 	/**
@@ -94,14 +95,15 @@ contract Hasher {
 		returns (bytes32)
 	{
 		return keccak256(
-			_uuid,
-			_account,
-			_accountNonce,
-			_beneficiary,
-			_amountST,
-			_amountUT,
-			_unlockHeight,
-			_hashLock);
+			abi.encodePacked(
+				_uuid,
+				_account,
+				_accountNonce,
+				_beneficiary,
+				_amountST,
+				_amountUT,
+				_unlockHeight,
+				_hashLock));
 	}
 
 	/**
@@ -130,13 +132,14 @@ contract Hasher {
 		returns (bytes32)
 	{
 		return keccak256(
-			_uuid,
-			_account,
-			_accountNonce,
-			_beneficiary,
-			_amountUT,
-			_unlockHeight,
-			_hashLock);
+			abi.encodePacked(
+				_uuid,
+				_account,
+				_accountNonce,
+				_beneficiary,
+				_amountUT,
+				_unlockHeight,
+				_hashLock));
 	}
 
 	/**
@@ -155,7 +158,8 @@ contract Hasher {
 		returns (bytes32)
 	{
 		return keccak256(
-			_account,
-			_nonce);
+			abi.encodePacked(
+				_account,
+				_nonce));
 	}
 }
