@@ -23,8 +23,8 @@ const BigNumber = require('bignumber.js');
 
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
-var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
-var OpenSTValue = artifacts.require("./OpenSTValue.sol");
+var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
+var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var Core 		= artifacts.require("./Core.sol");
 var Workers = artifacts.require("./Workers.sol");
 var proof = require('./data/proof');
