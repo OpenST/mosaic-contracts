@@ -15,42 +15,19 @@ contract RLPTest  {
      *
      *  @param rlpEncodedData The RLP encoded bytes.
      *
-     *  @return length of the rlp data.
      *  @return memory pointer at which rlp data is present.
+     *  @return length of the rlp data.
      */
     function toRLPItem(bytes rlpEncodedData)
         public
         pure
-        returns
-        (uint /* length */,
-        uint /* memory_pointer */)
+        returns(
+        uint /* memory_pointer */,
+        uint /* length */)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
-        return (item._unsafe_length,item._unsafe_memPtr);
+        return (item._unsafe_memPtr,item._unsafe_length);
     }
-
-    /**
-     *   @notice Creates an RLPItem from an array of RLP encoded bytes having.
-     *
-     *   @param rlpEncodedData The RLP encoded bytes.
-     *   @param strict Will throw if the data is not RLP encoded.
-     *
-     *   @return length of the rlp data.
-     *   @return memory pointer at which rlp data is present.
-     */
-    function toRLPItemStrict(
-        bytes rlpEncodedData,
-        bool strict)
-        public
-        pure
-        returns(
-        uint /* length */,
-        uint /* memory_pointer */)
-    {
-        RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
-        return(item._unsafe_length,item._unsafe_memPtr);
-    }
-
 
     /**
      * @notice Get the list of sub-items from an RLP encoded list.

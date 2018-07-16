@@ -15,8 +15,8 @@ contract('RLP', function (accounts) {
             let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
             let result = await rlpTest.toRLPItem.call('0x' + hexDataArray),
             lengthInBytes = hexDataArray.length;
-            assert.equal((result[0].toString(10) > 0), true);
             assert.equal((result[1].toString(10) > 0), true);
+            assert.equal((result[0].toString(10) > 0), true);
         })
 
         it('should pass when input is RLP encoding of non-list', async () => {
@@ -24,8 +24,8 @@ contract('RLP', function (accounts) {
                 hexData = ethUtil.rlp.encode(data).toString('hex'),
                 result = await rlpTest.toRLPItem.call('0x' + hexData),
                 lengthInBytes = hexData.length;
-            assert.equal(lengthInBytes > 0, true); //Due to observation.
-            assert.equal((result[1].toString(10) > 0), true);
+            assert.equal((result[1].toString(10) > 0), true); //Due to observation.
+            assert.equal((result[0].toString(10) > 0), true);
         })
 
          it('should pass when input is RLP encoding of empty list', async () => {
@@ -33,14 +33,14 @@ contract('RLP', function (accounts) {
              let hexData = ethUtil.rlp.encode(data).toString('hex');
              let result = await rlpTest.toRLPItem.call('0x' + hexData),
                  lengthInBytes = hexData.length;
-             assert.equal(lengthInBytes > 0, true); //Due to observation.
-             assert.equal((result[1].toString(10) > 0), true);
+             assert.equal((result[1].toString(10) > 0), true); //Due to observation.
+             assert.equal((result[0].toString(10) > 0), true);
          })
 
          it('should pass when input is empty string', async () => {
             let result = await rlpTest.toRLPItem.call("");
             assert.equal(result[1].toString(10), 0);
-            assert.equal((result[1].toString(10)), 0);
+            assert.equal((result[0].toString(10)), 0);
          })
 
     })
