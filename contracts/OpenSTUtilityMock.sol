@@ -35,8 +35,9 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	constructor(
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
-		address _registrar)
-		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar)
+		address _registrar,
+		CoreInterface _core)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core)
 		public { }
 
 	function blocksToWaitLong() public pure returns (uint256) {
@@ -46,4 +47,35 @@ contract OpenSTUtilityMock is OpenSTUtility {
 	function blocksToWaitShort() public pure returns (uint256) {
 		return BLOCKS_TO_WAIT_SHORT;
 	}
+
+	// mock function for testing only to verify storage proof
+	function merkleVerificationOfStake(
+		address _staker,
+		uint256 _stakerNonce,
+		bytes32 stakingIntentHash,
+		bytes rlpParentNodes,
+		bytes32 storageRoot)
+		private
+		returns(bool /* MerkleProofStatus*/)
+	{
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
+	}
+
+	// mock function for testing only to get parent nodes
+	function getMockRLPParentNodes(
+		bool isValid)
+		external
+		view
+		returns (bytes /* mock RLP encoded parent nodes*/)
+	{
+		if(isValid) {
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+			return mockedValidValue;
+		}
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
+		return mockedInvalidValue;
+	}
+
+
 }

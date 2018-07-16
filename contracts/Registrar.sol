@@ -47,6 +47,7 @@ contract Registrar is OpsManaged {
 	 	OpsManaged()
 	 	{ }
 
+
 	/**
 	 *  @notice External function confirmRedemptionIntent.
 	 *
@@ -59,38 +60,41 @@ contract Registrar is OpsManaged {
 	 *  @param _amountUT Amount of utility tokens to redeem.
 	 *  @param _redemptionUnlockHeight Block height upto which redemption is locked.
 	 *  @param _hashLock Hash lock for the redeem request.
-	 *  @param _redemptionIntentHash Hash of the redemption intent. 
+	 *  @param _blockHeight Current block height.
+     *  @param _rlpParentNodes Rlp encoded parent nodes.
 	 *
 	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
 	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
 	 */
-	 function confirmRedemptionIntent(
-		// address of OpenSTValue registry:
-		OpenSTValueInterface _registry,
-		// OpenSTValue function:
-		bytes32 _uuid,
-		address _redeemer,
-		uint256 _redeemerNonce,
-		address _beneficiary,
-		uint256 _amountUT,
-		uint256 _redemptionUnlockHeight,
-		bytes32 _hashLock,
-		bytes32 _redemptionIntentHash)
-		external
-		onlyOps
-		returns (
-		uint256 amountST,
-		uint256 expirationHeight)
+    function confirmRedemptionIntent(
+    	// address of OpenSTValue registry:
+    	OpenSTValueInterface _registry,
+    	// OpenSTValue function:
+    	bytes32 _uuid,
+    	address _redeemer,
+    	uint256 _redeemerNonce,
+    	address _beneficiary,
+    	uint256 _amountUT,
+    	uint256 _redemptionUnlockHeight,
+    	bytes32 _hashLock,
+    	uint256 _blockHeight,
+    	bytes _rlpParentNodes)
+    	external
+    	onlyOps
+    	returns (
+    	uint256 amountST,
+    	uint256 expirationHeight)
     {
-		(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
-			_uuid,
-			_redeemer,
-			_redeemerNonce,
-			_beneficiary,
-			_amountUT,
-			_redemptionUnlockHeight,
-			_hashLock,
-			_redemptionIntentHash);
+    	(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
+    		_uuid,
+	    	_redeemer,
+	    	_redeemerNonce,
+	    	_beneficiary,
+	    	_amountUT,
+	    	_redemptionUnlockHeight,
+	    	_hashLock,
+	    	_blockHeight,
+	    	_rlpParentNodes);
 
 		return (amountST, expirationHeight);
     }
@@ -198,7 +202,8 @@ contract Registrar is OpsManaged {
 	 *  @param _amountUT Amount utility tokens to be minted.
 	 *  @param _stakingUnlockHeight Height upto which stake is locked.
 	 *  @param _hashLock Hash lock for the staking intent.
-	 *  @param _stakingIntentHash Keccak256 hash of the staking intent variables.
+	 *  @param _blockHeight Current block height.
+	 *  @param _rlpParentNodes Rlp encoded parent nodes. 
 	 *
 	 *  @return uint256 Expiration height Block height upto which staking intent is valid.
 	 */
@@ -214,7 +219,8 @@ contract Registrar is OpsManaged {
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
 		bytes32 _hashLock,
-		bytes32 _stakingIntentHash)
+		uint256 _blockHeight,
+		bytes _rlpParentNodes)
 		external
 		onlyOps
 		returns (
@@ -229,7 +235,8 @@ contract Registrar is OpsManaged {
 			_amountUT,
 			_stakingUnlockHeight,
 			_hashLock,
-			_stakingIntentHash);
+			_blockHeight,
+			_rlpParentNodes);
 	}
 
 	/**

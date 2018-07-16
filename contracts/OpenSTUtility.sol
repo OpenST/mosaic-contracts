@@ -32,7 +32,9 @@ import "./STPrimeConfig.sol";
 import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
-
+import "./CoreInterface.sol";
+import "./MerklePatriciaProof.sol";
+import "./OpenSTHelper.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -49,7 +51,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint8 _conversionRateDecimals, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
+        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight, uint256 blockHeight, bytes32 storageRoot);
 
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
         address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
@@ -76,9 +78,17 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     // ~1hour, assuming ~15s per block
     uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
 
+    // indentified index position of stakingIntents mapping in storage (in OpenSTValue)
+    // positions 0-3 are occupied by public state variables in OpsManaged and Owned
+    // private constants do not occupy the storage of a contract
+    uint8 internal constant intentsMappingStorageIndexPosition = 4;
+
     /*
      *  Storage
      */
+
+    // storage for redemption intent hash
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* redemptionIntentHash */) public redemptionIntents;
 
     /// store the ongoing mints and redemptions
     mapping(bytes32 /* stakingIntentHash */ => Mint) public mints;
@@ -105,6 +115,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     uint256 public chainIdUtility;
     address public registrar;
 
+    CoreInterface public core;
+
     bytes32[] public uuids;
     /// registered branded tokens
     /*
@@ -127,6 +139,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     struct Redemption {
         bytes32 uuid;
         address redeemer;
+        uint256 nonce;
         address beneficiary;
         uint256 amountUT;
         uint256 unlockHeight;
@@ -144,17 +157,19 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     constructor(
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
-        address _registrar)
+        address _registrar,
+        CoreInterface _core )
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
-
+        require(_core != address(0), "CoreInterface address cannot be null");
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
+        core = _core;
 
         uuidSTPrime = hashUuid(
             STPRIME_SYMBOL,
@@ -179,17 +194,32 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
         uuids.push(uuidSTPrime);
         // lock name and symbol route for ST'
-        bytes32 hashName = keccak256(STPRIME_NAME);
+        bytes32 hashName = keccak256(abi.encodePacked(STPRIME_NAME));
         nameReservation[hashName] = registrar;
-        bytes32 hashSymbol = keccak256(STPRIME_SYMBOL);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(STPRIME_SYMBOL));
         symbolRoute[hashSymbol] = simpleTokenPrime;
 
         // @dev read STPrime address and uuid from contract
     }
 
-    /*
-     *  External functions
-     */
+    /**
+      * @notice Confirm staking intent on utility chain
+      *
+      * @dev  StakingIntentHash is generated in value chain, the parameters that were used for hash generation is passed
+      *        in this function along with rpl encoded parent nodes of merkle pactritia tree proof.
+      *
+      * @param _uuid UUID of utility token
+      * @param _staker address of the account whose resources will be staked
+      * @param _stakerNonce nonce of staker address
+      * @param _beneficiary address where the branded tokens will be transferred
+      * @param _amountST amount to be stake
+      * @param _amountUT utility token amount
+      * @param _stakingUnlockHeight  height till which stake will be locked at Value chain.
+      * @param _hashLock hash lock
+      * @param _rlpParentNodes RLP encoded parent nodes for proof verification.
+      *
+      * @return uint256 expiration height
+      */
     function confirmStakingIntent(
         bytes32 _uuid,
         address _staker,
@@ -199,9 +229,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
         bytes32 _hashLock,
-        bytes32 _stakingIntentHash)
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
-        onlyRegistrar
         returns (uint256 expirationHeight)
     {
         require(address(registeredTokens[_uuid].token) != address(0));
@@ -211,7 +241,6 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_amountUT > 0);
         // stakingUnlockheight needs to be checked against the core that tracks the value chain
         require(_stakingUnlockHeight > 0);
-        require(_stakingIntentHash != "");
 
         expirationHeight = block.number + blocksToWaitShort();
         nonces[_staker] = _stakerNonce;
@@ -226,8 +255,12 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             _stakingUnlockHeight,
             _hashLock
         );
-
-        require(stakingIntentHash == _stakingIntentHash);
+        require(merkleVerificationOfStake(
+                _staker,
+                _stakerNonce,
+                stakingIntentHash,
+                _rlpParentNodes,
+                core.getStorageRoot(_blockHeight)));
 
         mints[stakingIntentHash] = Mint({
             uuid:             _uuid,
@@ -239,9 +272,41 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         });
 
         emit StakingIntentConfirmed(_uuid, stakingIntentHash, _staker, _beneficiary, _amountST,
-                _amountUT, expirationHeight);
+                _amountUT, expirationHeight, _blockHeight ,core.getStorageRoot(_blockHeight));
 
         return expirationHeight;
+    }
+
+    /**
+      * @notice Verify storage of staking intent hash.
+      *
+      * @param _staker staker account address
+      * @param _stakerNonce nonce of the staker address.
+      * @param stakingIntentHash staking intent hash
+      * @param rlpParentNodes RLP encoded parent nodes for proof verification
+      * @param storageRoot storage root for proof verification
+      *
+      * @return bool status if the storage of intent hash was verified
+      */
+    function merkleVerificationOfStake(
+        address _staker,
+        uint256 _stakerNonce,
+        bytes32 stakingIntentHash,
+        bytes rlpParentNodes,
+        bytes32 storageRoot)
+        private
+        returns(bool /* MerkleProofStatus*/)
+    {
+        bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
+            OpenSTHelper.storageVariablePath(
+                intentsMappingStorageIndexPosition,
+                keccak256(_staker,_stakerNonce)));
+
+        return MerklePatriciaProof.verify(
+            keccak256(stakingIntentHash),
+            encodedPathInMerkle,
+            rlpParentNodes,
+            storageRoot);
     }
 
     function processMinting(
@@ -255,7 +320,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Mint storage mint = mints[_stakingIntentHash];
 
         // present secret to unlock hashlock and continue process
-        require(mint.hashLock == keccak256(_unlockSecret));
+        require(mint.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process minting results in a gain it needs to expire well before
         // the escrow on the cost unlocks in OpenSTValue.processStake
@@ -355,11 +420,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         _uuid,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     _amountBT,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(_uuid, redemptionIntentHash, address(token),
             msg.sender, _nonce, _beneficiary, _amountBT, unlockHeight, chainIdValue);
@@ -406,11 +476,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         redemptions[redemptionIntentHash] = Redemption({
             uuid:         uuidSTPrime,
             redeemer:     msg.sender,
+            nonce:        _nonce,
             beneficiary:  _beneficiary,
             amountUT:     amountSTP,
             unlockHeight: unlockHeight,
             hashLock:     _hashLock
         });
+
+        // store the Redemption intent hash directly in storage of OpenSTUtility
+        // so that a Merkle proof can be generated for active redemption intents
+        redemptionIntents[hashIntentKey(msg.sender, _nonce)] = redemptionIntentHash;
 
         emit RedemptionIntentDeclared(uuidSTPrime, redemptionIntentHash, simpleTokenPrime,
             msg.sender, _nonce, _beneficiary, amountSTP, unlockHeight, chainIdValue);
@@ -430,7 +505,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         Redemption storage redemption = redemptions[_redemptionIntentHash];
 
         // present the secret to unlock the hashlock and continue process
-        require(redemption.hashLock == keccak256(_unlockSecret));
+        require(redemption.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as process redemption bears the cost there is no need to require
         // the unlockHeight is not past, the same way as we do require for
@@ -449,6 +524,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
             redemption.redeemer, redemption.beneficiary, redemption.amountUT, _unlockSecret);
 
         delete redemptions[_redemptionIntentHash];
+
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         return tokenAddress;
     }
@@ -485,6 +563,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         }
 
         delete redemptions[_redemptionIntentHash];
+        // remove from redemptionIntents mapping
+        delete redemptionIntents[hashIntentKey(redemption.redeemer, redemption.nonce)];
 
         // fire event
         emit RevertedRedemption(uuid, _redemptionIntentHash, redeemer, beneficiary, amountUT);
@@ -514,8 +594,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, msg.sender));
 
         bytes32 btUuid = hashUuid(
@@ -595,8 +675,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_conversionRate > 0);
         require(_conversionRateDecimals <= 5);
 
-        bytes32 hashSymbol = keccak256(_symbol);
-        bytes32 hashName = keccak256(_name);
+        bytes32 hashSymbol = keccak256(abi.encodePacked(_symbol));
+        bytes32 hashName = keccak256(abi.encodePacked(_name));
         require(checkAvailability(hashSymbol, hashName, _requester));
 
         registeredUuid = hashUuid(

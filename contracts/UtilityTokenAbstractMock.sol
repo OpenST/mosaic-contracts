@@ -62,7 +62,6 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         _chainIdUtility,
         _conversionRate,
         _conversionRateDecimals)
-        ProtocolVersioned(msg.sender)
         { }
 
     /**
@@ -117,7 +116,7 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
     /**
      *  @notice Internal function claimInternalPublic.
      *
-     *  @dev Public wrapper for claimInternal.
+     *  @dev Public wrapper for claimInternalPublic.
      *       Claim transfers all utility tokens to _beneficiary.
      *
      *  @param _beneficiary Address of the beneficiary.
@@ -136,7 +135,7 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
     /**
      *  @notice Public function mintInternalPublic.
      *
-     *  @dev Public wrapper for mintInternal.
+     *  @dev Public wrapper for mintInternalPublic.
      *       Mint new utility token by adding a claim
      *       for the beneficiary.
      *
@@ -157,7 +156,7 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
     /**
      *  @notice Public function burnInternalPublic.
      *
-     *  @dev Public wrapper for burnInternal.
+     *  @dev Public wrapper for burnInternalPublic.
      *       Burn utility tokens after having redeemed them
      *       through the protocol for the staked Simple token.
      *

@@ -21,7 +21,6 @@
 
 const Assert = require('assert');
 // const Web3 = require('web3');
-const Moment = require('moment');
 const BigNumber = require('bignumber.js');
 
 const Utils = require('./lib/utils.js');
