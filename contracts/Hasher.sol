@@ -22,27 +22,27 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *	@title Hasher contract. 
+ *  @title Hasher contract. 
  *
- *	@notice Hasher contains functions for hashing frequently occuring state variables
- *			required for the process of stake and mint / redeem and unstake.
+ *  @notice Hasher contains functions for hashing frequently occuring state variables
+ *.         required for the process of stake and mint / redeem and unstake.
  */
 contract Hasher {
 
 	/**  Public functions */
 
 	/**
-	 *	@notice Public pure function 
-	 *	
-	 *	@param _symbol Symbol of the token.
-	 *	@param _name Name of the token.
-	 *	@param _chainIdValue Chain id of the value chain.
-	 *	@param _chainIdUtility Chain id of the utility chain.
-	 *	@param _openSTUtility Address of the openSTUtility contract.
-     *  @param _conversionRate Conversion rate of the token.
-     *  @param _conversionRateDecimals Decimal places of conversion rate of token.
+	 *  @notice Public pure function.
 	 *
-	 *	@return bytes32 Keccak256 uuid hash. 
+	 *  @param _symbol Symbol of the token.
+	 *  @param _name Name of the token.
+	 *  @param _chainIdValue Chain id of the value chain.
+	 *  @param _chainIdUtility Chain id of the utility chain.
+	 *  @param _openSTUtility Address of the openSTUtility contract.
+	 *  @param _conversionRate Conversion rate of the token.
+	 *  @param _conversionRateDecimals Decimal places of conversion rate of token.
+	 *
+	 *  @return bytes32 Keccak256 uuid hash. 
 	 */
 	function hashUuid(
 		string _symbol,
@@ -68,18 +68,18 @@ contract Hasher {
 	}
 
 	/**
-	 *	@notice Public pure function 
-	 *	
-	 *	@param _uuid Uuid of the token.
-	 *	@param _account Address of the staking account.
-	 *	@param _accountNonce Nonce of the staking account.
-	 *	@param _beneficiary Address of the beneficiary on utility chain.
-	 *	@param _amountST Amount of ST staked.
-	 *	@param _amountUT Amount of UT to mint.
-	 *	@param _unlockHeight Block height upto which staking is locked.
-	 *	@param _hashLock Hash lock for the stake request. 
+	 *  @notice Public pure function.
 	 *
-	 *	@return bytes32 Keccak256 staking intent hash.
+	 *  @param _uuid UUID of the token.
+	 *  @param _account Address of the staking account.
+	 *  @param _accountNonce Nonce of the staking account.
+	 *  @param _beneficiary Address of the beneficiary on utility chain.
+	 *  @param _amountST Amount of ST staked.
+	 *  @param _amountUT Amount of UT to mint.
+	 *  @param _unlockHeight Block height upto which staking is locked.
+	 *  @param _hashLock Hash lock for the stake request. 
+	 *
+	 *  @return bytes32 Keccak256 staking intent hash.
 	 */
 	function hashStakingIntent(
 		bytes32 _uuid,
@@ -107,17 +107,17 @@ contract Hasher {
 	}
 
 	/**
-	 *	@notice Public pure function 
-	 *	
-	 *	@param _uuid Uuid of the token.
-	 *	@param _account Address of the redeeming account.
-	 *	@param _accountNonce Nonce of the redeeming account.
-	 *	@param _beneficiary Address of the beneficiary on value chain.
-	 *	@param _amountUT Amount of UT to redeem.
-	 *	@param _unlockHeight Block height upto which redeeming is locked.
-	 *	@param _hashLock Hash lock for the redemption request. 
+	 *  @notice Public pure function.
 	 *
-	 *	@return bytes32 Keccak256 redemption intent hash.
+	 *  @param _uuid UUID of the token.
+	 *  @param _account Address of the redeeming account.
+	 *  @param _accountNonce Nonce of the redeeming account.
+	 *  @param _beneficiary Address of the beneficiary on value chain.
+	 *  @param _amountUT Amount of UT to redeem.
+	 *  @param _unlockHeight Block height up to which redeeming is locked.
+	 *  @param _hashLock Hash lock for the redemption request. 
+	 *
+	 *  @return bytes32 Keccak256 redemption intent hash.
 	 */
 	function hashRedemptionIntent(
 		bytes32 _uuid,
@@ -143,12 +143,12 @@ contract Hasher {
 	}
 
 	/**
-	 *	@notice Public pure function 
-	 *	
-	 *	@param _account Address of the hashing account.
-	 *	@param _nonce Nonce of the hashing account.
+	 *  @notice Public pure function.
 	 *
-	 *	@return bytes32 Keccak256 intent key hash.
+	 *  @param _account Address of the hashing account.
+	 *  @param _nonce Nonce of the hashing account.
+	 *
+	 *.  @return bytes32 Keccak256 intent key hash.
 	 */
 	function hashIntentKey(
 		address _account,

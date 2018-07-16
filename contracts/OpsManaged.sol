@@ -147,7 +147,7 @@ contract OpsManaged is Owned {
 
 
     /**
-     *  @notice external function setOpsAddress
+     *  @notice External function setOpsAddress.
      * 
      *  @dev Only callable by Owner or Admin, address can also be set to 0 to 'disable' it.
      * 

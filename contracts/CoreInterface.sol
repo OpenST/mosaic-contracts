@@ -22,13 +22,13 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title CoreInterface
+ *  @title CoreInterface contract.
  *
- *	@notice provide interface for core contract
+ *  @notice Provides interface for core contract.
  */
 contract CoreInterface {
 
-	/** Public Functions */
+	/** Public functions */
 
 	function registrar() public view returns (address /** registrar */);
 	function chainIdRemote() public view returns (uint256 /** chainIdRemote */);
@@ -38,7 +38,7 @@ contract CoreInterface {
 	function getStateRoot(uint256 _blockHeight) public view returns (bytes32 /** state root */);
 	function getStorageRoot(uint256 _blockHeight) public view returns (bytes32 /** storage root */);
 
-	/** External Functions */
+	/** External functions */
 
 	/** commitStateRoot external function to be called by game process */
 	function commitStateRoot(uint256 _blockHeight, bytes32 _stateRoot) external returns (bytes32 /** stateRoot */);

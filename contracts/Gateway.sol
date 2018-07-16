@@ -79,12 +79,12 @@ contract Gateway is ProtocolVersioned, Owned {
     /** Public functions */
 
     /**
-     * @notice Contract constructor.
+     *  @notice Contract constructor.
      *
-     * @param _workers Worker contract address.
-     * @param _bounty Bounty amount that worker address stakes while accepting stake request.
-     * @param _uuid UUID of utility token.
-     * @param _openSTProtocol OpenSTProtocol address contract that governs staking.
+     *  @param _workers Workers contract address.
+     *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+     *  @param _uuid UUID of utility token.
+     *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
      */
     constructor(
         WorkersInterface _workers,
@@ -105,15 +105,15 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-     * @notice External function requestStake.
+     *  @notice External function requestStake.
      *
-     * @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
+     *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
      *      Staked amount is transferred from staker address to Gateway contract.
      *
-     * @param _amount Staking amount.
-     * @param _beneficiary Beneficiary address.
+     *  @param _amount Staking amount.
+     *  @param _beneficiary Beneficiary address.
      *
-     * @return bool Specifies status of the execution.
+     *  @return bool Specifies status of the execution.
      */
     function requestStake(
         uint256 _amount,
@@ -143,12 +143,12 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-     * @notice External function to revert requested stake.
+     *  @notice External function to revert requested stake.
      *
-     * @dev This can be called only by staker. Staked amount is transferred back
+     *  @dev This can be called only by staker. Staked amount is transferred back
      *       to staker address from Gateway contract.
      *
-     * @return stakeRequestAmount Staking amount.
+     *  @return stakeRequestAmount Staking amount.
      */
     function revertStakeRequest()
         external
@@ -174,15 +174,15 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-     * @notice External function to reject requested stake.
+     *  @notice External function to reject requested stake.
      *
-     * @dev This can be called only by whitelisted worker address.
+     *  @dev This can be called only by whitelisted worker address.
      *      Staked amount is transferred back to staker address from Gateway contract.
      *
-     * @param _staker Staker address.
-     * @param _reason Reason for rejection.
+     *  @param _staker Staker address.
+     *  @param _reason Reason for rejection.
      *
-     * @return stakeRequestAmount Staking amount.
+     *  @return stakeRequestAmount Staking amount.
      */
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
@@ -212,19 +212,19 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-     * @notice External function to accept requested stake.
+     *  @notice External function to accept requested stake.
      *
-     * @dev This can be called only by whitelisted worker address.
+     *  @dev This can be called only by whitelisted worker address.
      *      Bounty amount is transferred from msg.sender to Gateway contract.
      *      openSTProtocol is approved for staking amount by Gateway contract.
      *
-     * @param _staker Staker address.
-     * @param _hashLock Hash lock.
+     *  @param _staker Staker address.
+     *  @param _hashLock Hash lock.
      *
-     * @return amountUT Branded token amount.
-     * @return nonce Staker nonce count.
-     * @return unlockHeight Height till what the amount is locked.
-     * @return stakingIntentHash Staking intent hash.
+     *  @return amountUT Branded token amount.
+     *  @return nonce Staker nonce count.
+     *  @return unlockHeight Height till what the amount is locked.
+     *  @return stakingIntentHash Staking intent hash.
      */
     function acceptStakeRequest(address _staker, bytes32 _hashLock)
         external
@@ -274,15 +274,15 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-     * @notice External function to process staking.
+     *  @notice External function to process staking.
      *
-     * @dev Bounty amount is transferred to msg.sender if its not a whitelisted worker.
-     *      Bounty amount is transferred to workers contract if msg.sender is a whitelisted worker.
+     *  @dev Bounty amount is transferred to msg.sender if msg.sender is not a whitelisted worker.
+     *       Bounty amount is transferred to workers contract if msg.sender is a whitelisted worker.
      *
-     * @param _stakingIntentHash Staking intent hash.
-     * @param _unlockSecret Unlock secret.
+     *  @param _stakingIntentHash Staking intent hash.
+     *  @param _unlockSecret Unlock secret.
      *
-     * @return stakeRequestAmount Stake amount.
+     *  @return stakeRequestAmount Stake amount.
      */
     function processStaking(
         bytes32 _stakingIntentHash,
@@ -328,14 +328,14 @@ contract Gateway is ProtocolVersioned, Owned {
       }
 
     /**
-     * @notice External function to revert staking.
+     *  @notice External function to revert staking.
      *
-     * @dev Staked amount is transferred to the staker address.
+     *  @dev Staked amount is transferred to the staker address.
      *      Bounty amount is transferred to workers contract.
      *
-     * @param _stakingIntentHash Staking intent hash.
+     *  @param _stakingIntentHash Staking intent hash.
      *
-     * @return stakeRequestAmount Staking amount.
+     *  @return stakeRequestAmount Staking amount.
      */
     function revertStaking(
         bytes32 _stakingIntentHash)
@@ -375,13 +375,13 @@ contract Gateway is ProtocolVersioned, Owned {
       }
 
     /**
-     * @notice External function to set workers.
+     *  @notice External function to set workers.
      *
-     * @dev Only callable by owner.
+     *  @dev Only callable by owner.
      *
-     * @param _workers Workers contract address.
+     *  @param _workers Workers contract address.
      *
-     * @return bool Specifies status of the execution.
+     *  @return bool Specifies status of the execution.
      */
     function setWorkers(WorkersInterface _workers)
         external

@@ -157,7 +157,7 @@ contract EIP20Token is EIP20Interface {
      *       it overwrites the current allowance with _value.
      *
      *  @param _spender Address authorized to spend from the function caller's address.
-     *  @param _value Amount upto which spender is authorized to spend.
+     *  @param _value Amount up to which spender is authorized to spend.
      *
      *  @return bool True for a successful approval, false otherwise.
      */
@@ -173,7 +173,7 @@ contract EIP20Token is EIP20Interface {
     /**
      *  @notice Internal function claimEIP20.
      *
-     *  @dev Substracts _amount of tokens from EIP20Token contract balance,
+     *  @dev Subtracts _amount of tokens from EIP20Token contract balance,
      *       adds _amount to beneficiary's balance.
      *
      *  @param _beneficiary Address of tokens beneificary.
@@ -211,7 +211,7 @@ contract EIP20Token is EIP20Interface {
     /**
      *  @notice Internal function burnEIP20.
      *
-     *  @dev Substracts _amount tokens from the balance of function caller's address.  
+     *  @dev Subtracts _amount tokens from the balance of function caller's address.  
      *
      *  @param _amount Amount of tokens to burn.
      *

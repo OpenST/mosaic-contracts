@@ -28,10 +28,10 @@ import "./WorkersInterface.sol";
 import "./RLP.sol";
 
 /**
- *	@title Core contract which implements CoreInterface.
+ *  @title Core contract which implements CoreInterface.
  *
- *	@notice Core is a minimal stub that will become the anchoring and consensus point for
- *      the utility chain to validate itself against.
+ *  @notice Core is a minimal stub that will become the anchoring and consensus point for
+ *          the utility chain to validate itself against.
  */
 contract Core is CoreInterface, Util {
 
@@ -70,7 +70,7 @@ contract Core is CoreInterface, Util {
     /**
      *  @notice Modifier onlyWorker.
      *
-     *  @dev Checks if msg.sender is whitelisted workder address to proceed.
+     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
      */
 	modifier onlyWorker() {
 		// msg.sender should be worker only
@@ -79,14 +79,14 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 * @notice Contract constructor.
+	 *  @notice Contract constructor.
 	 *
-	 * @dev bytes32ToBytes is util contract method.
+	 *  @dev bytes32ToBytes is util contract method.
 	 *
-	 * @param _registrar Address of Registrar.
-	 * @param _chainIdOrigin Origin chain id.
-	 * @param _chainIdRemote Remote chain id.
-	 * @param _openSTRemote Remote openSTUtility/openSTValue contract address.
+	 *  @param _registrar Address of Registrar.
+	 *  @param _chainIdOrigin Origin chain id.
+	 *  @param _chainIdRemote Remote chain id.
+	 *  @param _openSTRemote Remote openSTUtility/openSTValue contract address.
 	 */
 	constructor(
 		address _registrar,
@@ -113,9 +113,9 @@ contract Core is CoreInterface, Util {
 	/** Public functions */
 
 	/**
-	 *	@notice Public view function registrar.
+	 *  @notice Public view function registrar.
 	 *
-	 *	@return address coreRegistrar.
+	 *  @return address coreRegistrar.
 	 */
 	function registrar()
 		public
@@ -126,9 +126,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Public view function chainIdRemote.
+	 *  @notice Public view function chainIdRemote.
 	 *
-	 *	@return uint256 coreChainIdRemote.
+	 *  @return uint256 coreChainIdRemote.
 	 */
 	function chainIdRemote()
 		public
@@ -139,9 +139,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Public view function openSTRemote.
+	 *  @notice Public view function openSTRemote.
 	 *
-	 *	@return address coreOpenSTRemote.
+	 *  @return address coreOpenSTRemote.
 	 */
 	function openSTRemote()
 		public
@@ -152,11 +152,11 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Public view function getStateRoot.
+	 *  @notice Public view function getStateRoot.
 	 *
-	 *	@param _blockHeight Block height for which state root is needed.
+	 *  @param _blockHeight Block height for which state root is needed.
 	 *
-	 *	@return bytes32 State root.
+	 *  @return bytes32 State root.
 	 */
 	function getStateRoot(
 		uint256 _blockHeight)
@@ -168,11 +168,11 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Public view function getStorageRoot.
+	 *  @notice Public view function getStorageRoot.
 	 *
-	 *	@param _blockHeight Block height for which storage root is needed.
+	 *  @param _blockHeight Block height for which storage root is needed.
 	 *
-	 *	@return bytes32 Storage root.
+	 *  @return bytes32 Storage root.
 	 */
 	function getStorageRoot(
 		uint256 _blockHeight)
@@ -184,9 +184,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Public function getLatestStateRootBlockHeight.
+	 *  @notice Public function getLatestStateRootBlockHeight.
 	 *
-	 *	@return uint256 Latest state root block height.
+	 *  @return uint256 Latest state root block height.
 	 */
 	function getLatestStateRootBlockHeight()
 		public
@@ -197,17 +197,18 @@ contract Core is CoreInterface, Util {
 	}
 
 
-	/** External Functions */
+	/** External functions */
 
 	/**
-	 *	@notice Commit new state root for a block height.
+	 *  @notice External function commitStateRoot.
 	 *
 	 *  @dev commitStateRoot Called from game process.
+	 *       Commit new state root for a block height.
 	 *
-	 *	@param _blockHeight Block height for which stateRoots mapping needs to update.
-	 *	@param _stateRoot State root of input block height.
+	 *  @param _blockHeight Block height for which stateRoots mapping needs to update.
+	 *  @param _stateRoot State root of input block height.
 	 *
-	 *	@return bytes32 stateRoot
+	 *  @return bytes32 stateRoot
 	 */
 	function commitStateRoot(
 		uint256 _blockHeight,
@@ -230,15 +231,16 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Verify account proof of OpenSTRemote and commit storage root at given block height.
+	 *  @notice External function proveOpenST.
 	 *
 	 *  @dev ProofVerificationSkipped event needed to identify replay calls for same block height.
+	 *       Verify account proof of OpenSTRemote and commit storage root at given block height.
 	 *
-	 *	@param _blockHeight Block height at which OpenST is to be proven
-	 *	@param _rlpEncodedAccount RLP encoded account node object.
-	 *	@param _rlpParentNodes RLP encoded value of account proof parent nodes.
+	 *  @param _blockHeight Block height at which OpenST is to be proven
+	 *  @param _rlpEncodedAccount RLP encoded account node object.
+	 *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
 	 *
-	 *	@return bool Status.
+	 *  @return bool Status.
 	 */
 	function proveOpenST(
 		uint256 _blockHeight,

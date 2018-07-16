@@ -48,12 +48,12 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
     using SafeMath for uint256;
 
     /**
-     *  @notice Contract Constructor. 
+     *  @notice Contract constructor. 
      *
      *  @dev Creates an EIP20Token and a UtilityTokenAbstract contract with arguments 
      *       passed in the contract constructor
      *  
-     *  @param _uuid Uuid of the token.
+     *  @param _uuid UUID of the token.
      *  @param _symbol Symbol of the token. 
      *  @param _name Name of the token.
      *  @param _decimals Decimal places of the token.
@@ -83,15 +83,15 @@ contract BrandedToken is EIP20Token, UtilityTokenAbstract {
         _conversionRateDecimals)
         { }
 
-    /* Public functions */
+    /** Public functions */
 
     /**
-     *  @notice Public function claim
+     *  @notice Public function claim.
      *
      *  @dev Calls on claimInteral which returns amount of utility
-     *       tokens to transfer for _beneficiary address
+     *       tokens to transfer for _beneficiary address.
      *
-     *  @param _beneficiary Address of the utility tokens beneficiary
+     *  @param _beneficiary Address of the utility tokens beneficiary.
      *
      *  @return True if claim of utility tokens for beneficiary address is successful, 
      *          false otherwise.
