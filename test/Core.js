@@ -22,7 +22,7 @@
 const coreUtils = require('./Core_utils.js')
     , utils = require('./lib/utils.js')
     , proof = require('./data/proof')
-    , ethUtil = require('ethereumjs-util')
+    , RLP = require('rlp')
     , BigNumber = require('bignumber.js')
     , web3EventsDecoder = require('./lib/event_decoder.js')
 ;
@@ -111,9 +111,9 @@ contract('Core', function (accounts) {
 
     describe('proveOpenST', async () => {
         let blockHeight = 4
-            , parentNodes = ethUtil.rlp.decode(proof.account.rlpParentNodes)
+            , parentNodes = RLP.decode(proof.account.rlpParentNodes)
             , accountNode = parentNodes[parentNodes.length - 1]
-            , accountValue = ethUtil.rlp.decode(accountNode[1])
+            , accountValue = RLP.decode(accountNode[1])
             , storageRoot = '0x' + accountValue[2].toString('hex')
         ;
 
