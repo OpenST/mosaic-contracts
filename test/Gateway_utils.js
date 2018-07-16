@@ -83,13 +83,14 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 
   // Stake address is returned by UtilityTokenRegistered but verified below rather than by checkUtilityTokenRegisteredEvent
   OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, symbol, name, 18, conversionRate, chainIdRemote, gateway.address);
-
   var simpleStake = new SimpleStake(result.logs[0].args.stake);
 
   assert.equal(await simpleStake.uuid.call(), checkUuid);
   assert.equal(await simpleStake.eip20Token.call(), valueToken.address);
   assert.equal(await openSTValue.getUuidsSize.call(), 1);
   assert.equal((await openSTValue.utilityTokens.call(checkUuid))[0], symbol);
+
+
 
   return {
     valueToken  : valueToken,

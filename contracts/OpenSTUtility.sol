@@ -51,7 +51,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint8 _conversionRateDecimals, address _requester);
 
     event StakingIntentConfirmed(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight,uint256 blockHeight,bytes32 storageRoot);
+        address _staker, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight, uint256 blockHeight, bytes32 storageRoot);
 
     event ProcessedMint(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash, address _token,
         address _staker, address _beneficiary, uint256 _amount, bytes32 _unlockSecret);
@@ -75,6 +75,11 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
     // ~1hour in seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
+
+    // indentified index position of stakingIntents mapping in storage (in OpenSTValue)
+    // positions 0-3 are occupied by public state variables in OpsManaged and Owned
+    // private constants do not occupy the storage of a contract
+    uint8 internal constant intentsMappingStorageIndexPosition = 4;
 
     /* Storage */
 
@@ -300,7 +305,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         returns(bool /* MerkleProofStatus*/)
     {
         bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
-            OpenSTHelper.storageVariablePath(5, keccak256(_staker,_stakerNonce)));
+            OpenSTHelper.storageVariablePath(intentsMappingStorageIndexPosition, keccak256(_staker,_stakerNonce)));
 
         return MerklePatriciaProof.verify(
             keccak256(stakingIntentHash),
