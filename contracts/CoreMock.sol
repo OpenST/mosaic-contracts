@@ -22,7 +22,7 @@ contract CoreMock is Core{
          uint256 _blockHeight,
          bytes32 _stateRoot,
          WorkersInterface _workers)
-        Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _blockHeight, _stateRoot, _workers) public { }
+         Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _blockHeight, _stateRoot, _workers) public { }
 
      /**
        * @notice public view function getStorageRoot.
@@ -35,9 +35,9 @@ contract CoreMock is Core{
        */
     function getStorageRoot(
         uint256 _blockHeight)
-    public
-    view
-    returns (bytes32 /* storage root */)
+        public
+        view
+        returns (bytes32 /* storage root */)
     {
         return keccak256(_blockHeight);
     }
