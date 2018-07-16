@@ -7,17 +7,16 @@ import "./RLP.sol";
  *
  *	@notice It is used to test methods in RLP library contract
  */
-contract RLPMock  {
+contract RLPTest  {
 
-    constructor() public{}
 
     /**
-     *  @notice Creates an RLPItem from an array of RLP encoded bytes
+     *  @notice Creates an RLPItem from an array of RLP encoded bytes.
      *
-     *  @param rlpEncodedData The RLP encoded bytes
+     *  @param rlpEncodedData The RLP encoded bytes.
      *
-     *  @return length of the rlp data
-     *  @return memory pointer at which rlp data is present
+     *  @return length of the rlp data.
+     *  @return memory pointer at which rlp data is present.
      */
     function toRLPItem(bytes rlpEncodedData)
         public
@@ -31,21 +30,21 @@ contract RLPMock  {
     }
 
     /**
-     *   @notice Creates an RLPItem from an array of RLP encoded bytes having
+     *   @notice Creates an RLPItem from an array of RLP encoded bytes having.
      *
-     *   @param rlpEncodedData The RLP encoded bytes
-     *   @param strict Will throw if the data is not RLP encoded
+     *   @param rlpEncodedData The RLP encoded bytes.
+     *   @param strict Will throw if the data is not RLP encoded.
      *
-     *   @return length of the rlp data
-     *   @return memory pointer at which rlp data is present
+     *   @return length of the rlp data.
+     *   @return memory pointer at which rlp data is present.
      */
     function toRLPItemStrict(
         bytes rlpEncodedData,
         bool strict)
         public
         pure
-        returns
-        (uint /*length*/,
+        returns(
+        uint /*length*/,
         uint /*memory_pointer*/)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,strict);
@@ -54,17 +53,17 @@ contract RLPMock  {
 
 
     /**
-     * @notice Get the list of sub-items from an RLP encoded list
-     * Warning: This is inefficient, as it requires that the list is read twice
+     * @notice Get the list of sub-items from an RLP encoded list.
+     * Warning: This is inefficient, as it requires that the list is read twice.
      *
-     * @param rlpEncodedData The RLP encoded bytes
+     * @param rlpEncodedData The RLP encoded bytes.
      *
-     * @return length of list
+     * @return length of list.
      */
     function toList(
         bytes rlpEncodedData)
-        pure
         public
+        pure
         returns(uint)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
@@ -72,19 +71,19 @@ contract RLPMock  {
         return list.length;
     }
 
-    /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list
+    /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
      *
-     *    @param rlpEncodedData The RLPItem encoded bytes
+     *   @param rlpEncodedData The RLPItem encoded bytes.
      *
-     *    @return toBytes decoded value in the form of bytes
+     *    @return toBytes decoded value in the form of bytes.
      */
     function toBytes(
         bytes rlpEncodedData)
-        pure
         public
+        pure
         returns(bytes)
     {
-        RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData,true);
+        RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         return RLP.toBytes(item);
     }
 
@@ -97,8 +96,8 @@ contract RLPMock  {
      */
     function toData(
         bytes rlpEncodedData)
-        pure
         public
+        pure
         returns(bytes)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);

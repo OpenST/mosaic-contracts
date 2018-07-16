@@ -1,72 +1,115 @@
-const RLP = artifacts.require("./RLPMock.sol"),
+const RLPTest = artifacts.require("./RLPTest.sol"),
     ethUtil = require("ethereumjs-util"),
     Utils = require('./lib/utils.js');
 
 
-contract('RLP library', function (accounts) {
-    let rlpMock;
+contract('RLP', function (accounts) {
+    let rlpTest;
     before(async () => {
-        rlpMock = await RLP.new();
+        rlpTest = await RLPTest.new();
 
     });
-    let dataArray = ['2', '5', '6'];
-    describe('Test Cases ', async () => {
+    describe('ToRLPItem', async () => {
 
-        it('should pass when RLP data is correct', async () => {
-
-            dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex')
-                , result = await rlpMock.toRLPItem.call('0x' + dataInNibbles)
-                , lengthInBytes = dataInNibbles.length;
-            assert.equal((lengthInBytes / 2), result[0].toString(10));
-            assert.isAtLeast(result[1].toString(10), 0);
-
+        it('should pass when input is RLP encoding of list', async () => {
+            let dataArray = ['2', '5', '6','86735'];
+            let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
+            let result = await rlpTest.toRLPItem.call('0x' + hexDataArray),
+            lengthInBytes = hexDataArray.length;
+            assert.equal((result[0].toString(10) > 0), true);
+            assert.equal((result[1].toString(10) > 0), true);
         })
 
-        it('should fail to return memory location when RLP is incorrect or length is 0', async () => {
-            let result = await rlpMock.toRLPItem.call("");
+        it('should pass when input is RLP encoding of non-list', async () => {
+            let data = 1234;
+                hexData = ethUtil.rlp.encode(data).toString('hex'),
+                result = await rlpTest.toRLPItem.call('0x' + hexData),
+                lengthInBytes = hexData.length;
+            assert.equal(lengthInBytes > 0, true); //Due to observation.
+            assert.equal((result[1].toString(10) > 0), true);
+        })
+
+         it('should pass when input is RLP encoding of empty list', async () => {
+             let data = [];
+             let hexData = ethUtil.rlp.encode(data).toString('hex');
+             let result = await rlpTest.toRLPItem.call('0x' + hexData),
+                 lengthInBytes = hexData.length;
+             assert.equal(lengthInBytes > 0, true); //Due to observation.
+             assert.equal((result[1].toString(10) > 0), true);
+         })
+
+         it('should pass when input is empty string', async () => {
+            let result = await rlpTest.toRLPItem.call("");
             assert.equal(result[1].toString(10), 0);
-            assert.equal(result[0].toString(10), 0);
+            assert.equal((result[1].toString(10)), 0);
+         })
 
-        })
+    })
 
-        it('should fail when RLP is incorrect with option strict as true', async () => {
+    describe('ToList', async () => {
 
-            await Utils.expectThrow(rlpMock.toRLPItemStrict.call(dataArray, true));
-
-        })
-
-        it('should pass when RLP list is correct', async () => {
-
-            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex')
-                , lengthOfList = await rlpMock.toList.call('0x' + dataInNibbles);
+        it('should pass when input is list', async () => {
+            let dataArray = ['2', '5', '6','86735'];
+            let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
+            let lengthOfList = await rlpTest.toList.call('0x' + hexDataArray);
             assert.equal(dataArray.length, lengthOfList);
-
         })
 
-        it('should pass when toBytes is passed with correct rlp data ', async () => {
-
-            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex'),
-                result = await rlpMock.toBytes.call('0x' + dataInNibbles);
-            assert.equal(result.replace("0x", ""), dataInNibbles);
-
+        it('should fail when input is non-list', async () => {
+            let data = 1234;
+            let hexDataArray = ethUtil.rlp.encode(data).toString('hex');
+            await Utils.expectThrow(rlpTest.toList.call('0x' + hexDataArray));
         })
 
+        it('should fail when input is empty', async () => {
+            let data;
+            //let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
+            //let lengthOfList = await rlpTest.toList.call('0x' + data);
+            await Utils.expectThrow(rlpTest.toList.call('0x' + data));
+        })
+    })
 
-        it('should pass when toData is passed with correct rlp data', async () => {
+    describe('ToBytes', async () => {
 
+        it('should pass when input is list', async () => {
+            let dataArray = ['2', '5', '6','86735'];
+            let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
+            let result = await rlpTest.toBytes.call('0x' + hexDataArray);
+            assert.equal(result.replace("0x", ""), hexDataArray);
+        })
+
+        it('should pass when input is non-list', async () => {
+            let data = 1234;
+            let hexData = ethUtil.rlp.encode(data).toString('hex');
+            let result = await rlpTest.toBytes.call('0x' + hexData);
+            assert.equal(result.replace("0x", ""), hexData);
+        })
+
+        it('should pass when input is empty', async () => {
+            let dataArray = "";
+            let result = await rlpTest.toBytes.call('0x' + dataArray);
+            assert.equal("0x", result);
+        })
+    })
+    
+    describe('ToData', async () => {
+
+        it('should pass when input is non-list', async () => {
             let data = "1234",
-                dataInNibbles = ethUtil.rlp.encode(data).toString('hex'),
-                result = await rlpMock.toData.call('0x' + dataInNibbles);
+                hexDataArray = ethUtil.rlp.encode(data).toString('hex'),
+                result = await rlpTest.toData.call('0x' + hexDataArray);
             assert.equal(result.replace("0x", ""), Buffer.from(data).toString('hex'))
-
         })
 
-        it('should fail when toData is passed with array of rlp data', async () => {
+        it('should fail when input is in list form and encoded', async () => {
+            let data = ['2', '5', '6','86735'],
+                hexDataArray = ethUtil.rlp.encode(data).toString('hex');
+            await Utils.expectThrow(rlpTest.toData.call('0x' + hexDataArray));
+        })
 
-            let dataInNibbles = ethUtil.rlp.encode(dataArray).toString('hex');
-            await Utils.expectThrow(rlpMock.toData.call('0x' + dataInNibbles));
-
-
+        it('should fail when input is in list form', async () => {
+            let dataArray = ['2', '5', '6'];
+            await Utils.expectThrow(rlpTest.toData.call('0x' + dataArray));
         })
     })
 })
