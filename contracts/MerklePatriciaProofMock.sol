@@ -27,6 +27,8 @@ contract MerklePatriciaProofMock is Util{
         bytes encodedPath,
         bytes rlpParentNodes,
         bytes32 root)
+        external
+        pure
         returns (bool)
     {
         bytes memory encodedPathToBytes = bytes32ToBytes(keccak256(encodedPath));
@@ -48,6 +50,8 @@ contract MerklePatriciaProofMock is Util{
         bytes encodedPath,
         bytes rlpParentNodes,
         bytes32 root)
+        external
+        pure
         returns (bool)
     {
         return MerklePatriciaProof.verify(value,encodedPath,rlpParentNodes,root);
