@@ -50,30 +50,31 @@ contract OpenSTUtilityMock is OpenSTUtility {
 
 	// mock function for testing only to verify storage proof
 	function merkleVerificationOfStake(
-		address _staker,
-		uint256 _stakerNonce,
-		bytes32 stakingIntentHash,
+		address ,
+		uint256 ,
+		bytes32 ,
 		bytes rlpParentNodes,
-		bytes32 storageRoot)
+		bytes32 )
 	    private
+		pure
 	    returns(bool /* MerkleProofStatus*/)
 	{
-		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
-		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+		return (keccak256(abi.encodePacked(mockedValidValue)) == keccak256(abi.encodePacked(rlpParentNodes)));
 	}
 
 	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
 		external
-		view
+		pure
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
 		return mockedInvalidValue;
 	}
 

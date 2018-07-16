@@ -87,6 +87,6 @@ contract CoreMock is Core {
 		view
 		returns (bytes32 /* storage root */)
 	{
-		return keccak256(_blockHeight);
+		return keccak256(abi.encodePacked(_blockHeight));
 	}
 }

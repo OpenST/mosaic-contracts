@@ -55,7 +55,7 @@ library OpenSTHelper {
     bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_index)));
     bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
     bytes memory path = BytesLib.concat(keyBytes, indexBytes);
-    return keccak256(keccak256(path));
+    return keccak256(abi.encodePacked(keccak256(abi.encodePacked(path))));
   }
 
   /**
@@ -81,10 +81,10 @@ library OpenSTHelper {
     pure
     returns (bool /* verification status */)
   {
-    bytes memory traversePath = bytes32ToBytes(storageVariablePath(_intentionStorageIndex, keccak256(_account, _accountNonce)));
+    bytes memory traversePath = bytes32ToBytes(storageVariablePath(_intentionStorageIndex, keccak256(abi.encodePacked(_account, _accountNonce))));
 
     return MerklePatriciaProof.verify(
-      keccak256(RLPEncode.encodeItem(bytes32ToBytes(_intentHash))),
+      keccak256(abi.encodePacked(RLPEncode.encodeItem(bytes32ToBytes(_intentHash)))),
       traversePath,
       _rlpParentNodes,
       _storageRoot);

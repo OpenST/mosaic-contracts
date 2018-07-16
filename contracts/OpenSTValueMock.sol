@@ -70,32 +70,32 @@ constructor(
 
 	// mocked verifyRedemptionIntent function for testing only
 	function verifyRedemptionIntent(
-		bytes32 _uuid,
-		address _redeemer,
-		uint256 _redeemerNonce,
-		uint256 _blockHeight,
-		bytes32 _redemptionIntentHash,
+		bytes32 ,
+		address ,
+		uint256 ,
+		uint256 ,
+		bytes32 ,
 		bytes _rlpParentNodes)
 		internal
 		view
 		returns (bool)
 	{
-		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
-		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+		return (keccak256(abi.encodePacked(mockedValidValue)) == keccak256(abi.encodePacked(_rlpParentNodes)));
 	}
 
 	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
 		external
-		view
+		pure
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
 		return mockedInvalidValue;
 	}
 

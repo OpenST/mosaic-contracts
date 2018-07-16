@@ -302,15 +302,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         bytes rlpParentNodes,
         bytes32 storageRoot)
         private
+        pure
         returns(bool /* MerkleProofStatus*/)
     {
         bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
             OpenSTHelper.storageVariablePath(
                 intentsMappingStorageIndexPosition,
-                keccak256(_staker,_stakerNonce)));
+                keccak256(abi.encodePacked(_staker,_stakerNonce))));
 
         return MerklePatriciaProof.verify(
-            keccak256(stakingIntentHash),
+            keccak256(abi.encodePacked(stakingIntentHash)),
             encodedPathInMerkle,
             rlpParentNodes,
             storageRoot);
