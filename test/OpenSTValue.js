@@ -320,7 +320,7 @@ contract('OpenSTValue', function(accounts) {
         	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, workers.address);
             await openSTValue.addCore(core.address, { from: registrar });
         	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
-			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
+			result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, accounts[0], checkUuid, { from: registrar });
 			stake = result.logs[0].args.stake;
 			await valueToken.approve(openSTValue.address, amountST, { from: accounts[0] });
 			result = await openSTValue.stake(checkUuid, amountST, accounts[0], lock.l, accounts[0], { from: accounts[0] });
@@ -334,7 +334,11 @@ contract('OpenSTValue', function(accounts) {
 		it('fails to process if hash of unlockSecret does not match hashlock', async () => {
 			const differentLock = HashLock.getHashLock();
 			// registrar can additionally as a fallback process staking in v0.9
-            await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[5] }));
+			await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, differentLock.s, { from: accounts[0] }));
+		})
+
+		it('fails to processStaking when msg.sender is not staking account', async () => {
+		    await Utils.expectThrow(openSTValue.processStaking(stakingIntentHash, lock.s, { from: registrar }));
 		})
 
 		it('successfully processes', async () => {
@@ -628,6 +632,10 @@ contract('OpenSTValue', function(accounts) {
 
 				// Process Staking
 				await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
+			});
+
+			it('fails to revertStaking when msg.sender is not staking account', async () => {
+			    await Utils.expectThrow(openSTValue.revertStaking(stakingIntentHash, {from: accounts[0]}));
 			});
 
 			it('fails to process when reverting before waiting period ends', async () => {
