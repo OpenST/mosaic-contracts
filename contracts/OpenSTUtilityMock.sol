@@ -54,7 +54,7 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		uint256 ,
 		bytes32 ,
 		bytes rlpParentNodes,
-		bytes32 storageRoot)
+		bytes32 )
 		private
 		pure
 		returns(bool /* MerkleProofStatus*/)
