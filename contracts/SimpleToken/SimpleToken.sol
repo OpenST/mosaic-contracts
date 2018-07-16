@@ -12,7 +12,6 @@ pragma solidity ^0.4.23;
 
 import "./ERC20Token.sol";
 import "./SimpleTokenConfig.sol";
-import "./OpsManaged.sol";
 
 
 //
@@ -33,7 +32,7 @@ import "./OpsManaged.sol";
 // finalize                                      x
 //
 
-contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
+contract SimpleToken is ERC20Token, SimpleTokenConfig {
 
     bool public finalized;
 
@@ -45,7 +44,6 @@ contract SimpleToken is ERC20Token, OpsManaged, SimpleTokenConfig {
 
     constructor() public
         ERC20Token(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, TOKENS_MAX)
-        OpsManaged()
     {
         finalized = false;
     }

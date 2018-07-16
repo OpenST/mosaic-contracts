@@ -24,7 +24,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
   , Core = artifacts.require("./Core.sol")
   , SimpleStake = artifacts.require("./SimpleStake.sol")
-  , Gate = artifacts.require("./Gate.sol")
+  , Gateway = artifacts.require("./Gateway.sol")
   , Workers = artifacts.require("./Workers.sol")
   ;
 
@@ -33,7 +33,7 @@ const Assert 	= require('assert')
   ;
 
 /// @dev Deploy 
-module.exports.deployGate = async (artifacts, accounts) => {
+module.exports.deployGateway = async (artifacts, accounts) => {
 
   const chainIdValue = 3
     , chainIdRemote = 1410
@@ -47,6 +47,7 @@ module.exports.deployGate = async (artifacts, accounts) => {
     , admin = accounts[3]
     , ops = accounts[1]
     , registrar = accounts[5]
+    , ownerAddress = accounts[12]
   ;
 
   var core = null
@@ -72,11 +73,14 @@ module.exports.deployGate = async (artifacts, accounts) => {
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 
-  assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar }), checkUuid);
-  const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, 0, checkUuid, { from: registrar });
+  const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address, {from:ownerAddress});
+
+  assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar }), checkUuid);
+  const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar });
 
   // Stake address is returned by UtilityTokenRegistered but verified below rather than by checkUtilityTokenRegisteredEvent
-  OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, symbol, name, 18, conversionRate, chainIdRemote, 0);
+  OpenSTValue_utils.checkUtilityTokenRegisteredEvent(result.logs[0], checkUuid, symbol, name, 18, conversionRate, chainIdRemote, gateway.address);
+
   var simpleStake = new SimpleStake(result.logs[0].args.stake);
 
   assert.equal(await simpleStake.uuid.call(), checkUuid);
@@ -84,16 +88,15 @@ module.exports.deployGate = async (artifacts, accounts) => {
   assert.equal(await openSTValue.getUuidsSize.call(), 1);
   assert.equal((await openSTValue.utilityTokens.call(checkUuid))[0], symbol);
 
-  const gate = await Gate.new(workers.address, bounty, checkUuid, openSTValue.address);
-
   return {
     valueToken  : valueToken,
     openSTValue : openSTValue,
     uuid: checkUuid,
-    gate: gate,
+    gateway: gateway,
     workers: workers.address,
     bounty: bounty,
-    workerAddress1: worker1
+    workerAddress1: worker1,
+    ownerAddress: ownerAddress
   }
 };
 
@@ -159,11 +162,15 @@ module.exports.checkProcessedStakeEvent = (event, _staker, _amount) => {
   if (Number.isInteger(_amount)) {
     _amount = new BigNumber(_amount);
   }
-  console.log("event: ",event);
   assert.equal(event.event, "ProcessedStake");
   assert.equal(event.args._staker, _staker);
   assert.equal(event.args._amountST.toNumber(10), _amount.toNumber(10));
 };
 
+
+module.exports.checkWorkersSetEvent = (event, _workersAddress) => {
+  assert.equal(event.event, "WorkersSet");
+  assert.equal(event.args._workers, _workersAddress);
+};
 
 
