@@ -37,7 +37,7 @@ contract ProtocolVersioned {
 
 	/** Constants */
 
-	/** 
+	/**
 	 *  Blocks to wait before the protocol transfer can be completed
 	 *  This allows anyone with a stake to unstake under the existing
 	 *  protocol if they disagree with the new proposed protocol
@@ -74,11 +74,11 @@ contract ProtocolVersioned {
 	 *  @dev Checks if msg.sender is proposed protocol to proceed.
 	 */
 	modifier onlyProposedProtocol() {
-        require(msg.sender == proposedProtocol);
-        _;
+		require(msg.sender == proposedProtocol);
+		_;
 	}
 
-    /**
+	/**
 	 *  @notice Modifier afterWait.
 	 *
 	 *  @dev Checks if earliest transfer height is lower or equal 
@@ -89,7 +89,7 @@ contract ProtocolVersioned {
 		_;
 	}
 
-    /**
+	/**
 	 *  @notice Modifier notNull.
 	 *
 	 *  @dev Checks if address is not null to proceed.
@@ -106,12 +106,12 @@ contract ProtocolVersioned {
 	/** Public functions */
 
 	/**
-	 *  @notice Contract Constructor.
+	 *  @notice Contract constructor.
 	 *
 	 *  @dev Constructor sets the OpenST Protocol address.
 	 *
 	 *  @param _protocol Address of the openSTProtocol.
-	 */	
+	 */
 	constructor(address _protocol)
 		public
 		notNull(_protocol)
@@ -139,12 +139,12 @@ contract ProtocolVersioned {
 		require(proposedProtocol == address(0));
 
 		earliestTransferHeight = block.number + blocksToWaitForProtocolTransfer();
-        proposedProtocol = _proposedProtocol;
+		proposedProtocol = _proposedProtocol;
 
-        emit ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
+		emit ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
 
-        return true;
-    }
+		return true;
+	}
 
 	/**
 	 *  @notice Public function completeProtocolTransfer.
@@ -154,20 +154,20 @@ contract ProtocolVersioned {
 	 *
 	 *  @return bool True if protocol transfer is completed, false otherwise.
 	 */
-    function completeProtocolTransfer()
-    	public
-    	onlyProposedProtocol
-    	afterWait
-    	returns (bool) 
-    {
-        openSTProtocol = proposedProtocol;
-        proposedProtocol = address(0);
-    	earliestTransferHeight = 0;
+	 function completeProtocolTransfer()
+	 	public
+	 	onlyProposedProtocol
+	 	afterWait
+	 	returns (bool) 
+	 {
+	 	openSTProtocol = proposedProtocol;
+	 	proposedProtocol = address(0);
+	 	earliestTransferHeight = 0;
 
-        emit ProtocolTransferCompleted(openSTProtocol);
+	 	emit ProtocolTransferCompleted(openSTProtocol);
 
-        return true;
-    }
+	 	return true;
+	 }
 
 
 	/**
@@ -177,30 +177,29 @@ contract ProtocolVersioned {
 	 *       transfer.
 	 *
 	 *  @return bool True if protocol transfer is revoked, false otherwise.
-	 */    
-    function revokeProtocolTransfer()
-    	public
-    	onlyProtocol
-    	returns (bool)
-    {
-    	require(proposedProtocol != address(0));
+	 */
+	 function revokeProtocolTransfer()
+	 	public
+	 	onlyProtocol
+	 	returns (bool)
+	 {
+	 	require(proposedProtocol != address(0));
 
-    	address revokedProtocol = proposedProtocol;
-    	proposedProtocol = address(0);
-    	earliestTransferHeight = 0;
+	 	address revokedProtocol = proposedProtocol;
+	 	proposedProtocol = address(0);
+	 	earliestTransferHeight = 0;
 
 		emit ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
-    	return true;
-    }
+		return true;
+	}
 
 	/**
 	 *  @notice Public function blocksToWaitForProtocolTransfer.
 	 *
 	 *  @return uint256 Protocol transfer blocks to wait.
-	 */    
-    function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
-        return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
-    }
-
+	 */
+	 function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
+	 	return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
+	 }
 }

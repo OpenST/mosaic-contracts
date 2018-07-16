@@ -44,7 +44,6 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
      *  @param _conversionRate Conversion rate of the token.
      *  @param _conversionRateDecimals Decimal places of conversion rate of token.
      */
-
     constructor(
         bytes32 _uuid,
         string _symbol,

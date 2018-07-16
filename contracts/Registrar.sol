@@ -40,7 +40,7 @@ contract Registrar is OpsManaged {
 	/**  Public functions */
 
 	/**
-	 *  @notice Contract Constructor.
+	 *  @notice Contract constructor.
 	 */
 
 	 constructor() public
@@ -60,44 +60,44 @@ contract Registrar is OpsManaged {
 	 *  @param _amountUT Amount of utility tokens to redeem.
 	 *  @param _redemptionUnlockHeight Block height upto which redemption is locked.
 	 *  @param _hashLock Hash lock for the redeem request.
-	 *  @param _blockHeight Current block height.
-         *  @param _rlpParentNodes Rlp encoded parent nodes.
+	 *  @param _blockHeight Height when redemption intent hashed.
+	 *  @param _rlpParentNodes Rlp encoded parent nodes.
 	 *
 	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
 	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
 	 */
-    function confirmRedemptionIntent(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-    	bytes32 _uuid,
-    	address _redeemer,
-    	uint256 _redeemerNonce,
-    	address _beneficiary,
-    	uint256 _amountUT,
-    	uint256 _redemptionUnlockHeight,
-    	bytes32 _hashLock,
-    	uint256 _blockHeight,
-    	bytes _rlpParentNodes)
-    	external
-    	onlyOps
-    	returns (
-    	uint256 amountST,
-    	uint256 expirationHeight)
-    {
-    	(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
-    		_uuid,
-	    	_redeemer,
-	    	_redeemerNonce,
-	    	_beneficiary,
-	    	_amountUT,
-	    	_redemptionUnlockHeight,
-	    	_hashLock,
-	    	_blockHeight,
-	    	_rlpParentNodes);
+	 function confirmRedemptionIntent(
+	 	// address of OpenSTValue registry:
+	 	OpenSTValueInterface _registry,
+	 	// OpenSTValue function:
+	 	bytes32 _uuid,
+	 	address _redeemer,
+	 	uint256 _redeemerNonce,
+	 	address _beneficiary,
+	 	uint256 _amountUT,
+	 	uint256 _redemptionUnlockHeight,
+	 	bytes32 _hashLock,
+	 	uint256 _blockHeight,
+	 	bytes _rlpParentNodes)
+	 	external
+	 	onlyOps
+	 	returns (
+	 	uint256 amountST,
+	 	uint256 expirationHeight)
+	 	{
+	 		(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
+	 		_uuid,
+	 		_redeemer,
+	 		_redeemerNonce,
+	 		_beneficiary,
+	 		_amountUT,
+	 		_redemptionUnlockHeight,
+	 		_hashLock,
+	 		_blockHeight,
+	 		_rlpParentNodes);
 
 		return (amountST, expirationHeight);
-    }
+	}
 
 	/**
 	 *  @notice Public function addCore.
@@ -113,7 +113,7 @@ contract Registrar is OpsManaged {
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
 		// OpenSTValue function:
-   		CoreInterface _core)
+		CoreInterface _core)
 		public
 		onlyAdminOrOps
 		returns (
@@ -202,7 +202,7 @@ contract Registrar is OpsManaged {
 	 *  @param _amountUT Amount utility tokens to be minted.
 	 *  @param _stakingUnlockHeight Height upto which stake is locked.
 	 *  @param _hashLock Hash lock for the staking intent.
-	 *  @param _blockHeight Current block height.
+	 *  @param _blockHeight Height when staking intent hashed.
 	 *  @param _rlpParentNodes Rlp encoded parent nodes. 
 	 *
 	 *  @return uint256 Expiration height Block height upto which staking intent is valid.
@@ -249,7 +249,7 @@ contract Registrar is OpsManaged {
 	 *  @param _conversionRateDecimals Decimal places of the conversion rate of the token.
 	 *  @param _requester Address of the requester for registration. 
 	 *  @param _brandedToken Address of the utility token interface.
-	 *  @param _checkUuid Uuid as the hash of registration data.
+	 *  @param _checkUuid UUID as the hash of registration data.
 	 *
 	 *  @return bytes32 Keccak256 of the registration data.
 	 */

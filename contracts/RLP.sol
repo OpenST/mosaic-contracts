@@ -56,7 +56,7 @@ library RLP {
 
  /** RLPItem */
 
- /** 
+ /**
   *  @dev Creates an RLPItem from an array of RLP encoded bytes.
   *
   *  @param self The RLP encoded bytes.
@@ -75,7 +75,7 @@ library RLP {
      return RLPItem(memPtr, len);
  }
 
- /** 
+ /**
   *  @dev Creates an RLPItem from an array of RLP encoded bytes.
   *
   *  @param self The RLP encoded bytes.
@@ -105,7 +105,7 @@ library RLP {
      return self._unsafe_length == 0;
  }
 
- /** 
+ /**
   *  @dev Check if the RLP item is a list.
   *
   *  @param self The RLP item.
@@ -155,7 +155,7 @@ library RLP {
      return (b0 == DATA_SHORT_START || b0 == LIST_SHORT_START);
  }
 
- /** 
+ /**
   *  @dev Get the number of items in an RLP encoded list.
   *
   *  @param self The RLP item.
@@ -180,7 +180,7 @@ library RLP {
      return itms;
  }
 
- /** 
+ /**
   *  @dev Create an iterator.
   *
   *  @param self The RLP item.
@@ -194,7 +194,7 @@ library RLP {
      it._unsafe_nextPtr = ptr;
  }
 
- /** 
+ /**
   *  @dev Return the RLP encoded bytes.
   *
   *  @param self The RLPItem.
@@ -209,7 +209,7 @@ library RLP {
      _copyToBytes(self._unsafe_memPtr, bts, len);
  }
 
- /** 
+ /**
   *  @dev Decode an RLPItem into bytes. This will not work if the RLPItem is a list.
   *
   *  @param self The RLPItem.
@@ -283,7 +283,7 @@ library RLP {
      }
  }
 
- /** 
+ /**
   *  @dev Decode an RLPItem into a boolean. This will not work if the
   *       RLPItem is a list.
   *
@@ -326,7 +326,7 @@ library RLP {
      return byte(temp);
  }
 
- /** 
+ /**
   *  @dev Decode an RLPItem into an int. This will not work if the
   *       RLPItem is a list.
   *

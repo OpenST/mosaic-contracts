@@ -22,13 +22,13 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title TestingUtils Contract.
+ *  @title TestUtils contract.
  *
  *  @notice Contains functions used for testing on Mock contracts. 
  */
 library TestUtils {
 
-	/** Internal Functions */
+	/** Internal functions */
 
 	/**
 	 *  @notice Internal pure function getStoragePath.

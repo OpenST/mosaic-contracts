@@ -39,7 +39,7 @@ contract SafeMathMock {
   
   uint256 public result;
 
-  /** Public Functions */
+  /** Public functions */
 
   /**
    *  @notice Public function multiply.
