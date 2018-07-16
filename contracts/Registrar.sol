@@ -61,7 +61,7 @@ contract Registrar is OpsManaged {
 	 *  @param _redemptionUnlockHeight Block height upto which redemption is locked.
 	 *  @param _hashLock Hash lock for the redeem request.
 	 *  @param _blockHeight Current block height.
-     *  @param _rlpParentNodes Rlp encoded parent nodes.
+         *  @param _rlpParentNodes Rlp encoded parent nodes.
 	 *
 	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
 	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
