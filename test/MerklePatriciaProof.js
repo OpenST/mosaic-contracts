@@ -10,7 +10,7 @@ contract('MerklePatriciaProof', function(accounts) {
         })
 
         it('Should pass when all the parameters are valid', async () => {
-            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.openSTRemoteAddress, proofJson.account.rlpParentNodes, proofJson.account.stateRoot);
+            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.hashedPath, proofJson.account.rlpParentNodes, proofJson.account.stateRoot);
             assert.equal(proofStatus,true);
         })
 
@@ -20,17 +20,17 @@ contract('MerklePatriciaProof', function(accounts) {
         })
 
         it('Should fail when state root is incorrect', async () => {
-            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.openSTRemoteAddress, proofJson.account.rlpParentNodes, "0x58810687b84d5bddc1e9e68b2733caa4a8c6c9e7dd5d0b2f9c28b4bbf5c6f851");
+            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.hashedPath, proofJson.account.rlpParentNodes, "0x58810687b84d5bddc1e9e68b2733caa4a8c6c9e7dd5d0b2f9c28b4bbf5c6f851");
             assert.equal(proofStatus,false);
         })
 
         it('Should fail when rlp parent nodes is incorrect', async () => {
-            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.openSTRemoteAddress, "0xf908cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", proofJson.account.stateRoot);
+            let proofStatus = await merkleMock.verifyAccount.call(proofJson.account.sha3EncodedAccount, proofJson.account.hashedPath, "0xf908cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", proofJson.account.stateRoot);
             assert.equal(proofStatus,false);
         })
 
         it('Should fail when encoded value is incorrect', async () => {
-            let proofStatus = await merkleMock.verifyAccount.call("0xf8468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7c", proofJson.account.openSTRemoteAddress, proofJson.account.rlpParentNodes, proofJson.account.stateRoot);
+            let proofStatus = await merkleMock.verifyAccount.call("0xf8468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7c", proofJson.account.hashedPath, proofJson.account.rlpParentNodes, proofJson.account.stateRoot);
             assert.equal(proofStatus,false);
         })
      })

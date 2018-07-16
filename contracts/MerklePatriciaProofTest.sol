@@ -4,9 +4,9 @@ import "./MerklePatriciaProof.sol";
 import "./util.sol";
 
 /**
- *	@title This contract is a mock contract for MerklePatriciaProof library contract
+ *	@title This contract is a test contract for testing MerklePatriciaProof library contract
  *
- *	@notice It passes the parameters which it receives from test cases
+ *	@notice It routes the parameters to MerklePatriciaProof.sol which it receives from test cases
  *
  */
 contract MerklePatriciaProofTest is Util{
@@ -28,11 +28,9 @@ contract MerklePatriciaProofTest is Util{
         bytes rlpParentNodes,
         bytes32 root)
         external
-        pure
         returns (bool)
     {
-        bytes memory encodedPathToBytes = bytes32ToBytes(keccak256(encodedPath));
-        return MerklePatriciaProof.verify(value,encodedPathToBytes,rlpParentNodes,root);
+        return MerklePatriciaProof.verify(value,encodedPath,rlpParentNodes,root);
     }
 
     /**
