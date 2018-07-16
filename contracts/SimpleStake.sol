@@ -78,7 +78,7 @@ contract SimpleStake is ProtocolVersioned {
 	 *  @param _to Beneficiary of the amount of the stake.
 	 *  @param _amount Amount of stake to release to beneficiary.
 	 *
-	 *	@return bool True if stake is released to beneficiary, false otherwise.
+	 *  @return bool True if stake is released to beneficiary, false otherwise.
 	 */
 	function releaseTo(address _to, uint256 _amount) 
 		public 
@@ -96,21 +96,21 @@ contract SimpleStake is ProtocolVersioned {
 	/** Web3 call functions */
 
 	/**
-	 *	@notice Public view function getTotalStake.
+	 *  @notice Public view function getTotalStake.
 	 *
-     *  @dev Total stake is the balance of the staking contract
-     *       accidental transfers directly to SimpleStake bypassing
-     *       the OpenST protocol will not mint new utility tokens,
-     *       but will add to the total stake,
-     *       (accidental) donations can not be prevented.
-     *
-     *	@return uint256 Total staked amount.
-     */
-    function getTotalStake()
-    	public
-    	view
-    	returns (uint256)
-    {
-    	return eip20Token.balanceOf(this);
-    }
+	 *  @dev Total stake is the balance of the staking contract
+	 *       accidental transfers directly to SimpleStake bypassing
+	 *       the OpenST protocol will not mint new utility tokens,
+	 *       but will add to the total stake,
+	 *       (accidental) donations can not be prevented.
+	 *
+	 *  @return uint256 Total staked amount.
+	 */
+	 function getTotalStake()
+		public
+		view
+		returns (uint256)
+		{
+		return eip20Token.balanceOf(this);
+	}
 }

@@ -58,42 +58,42 @@ contract ProtocolVersioned {
 
 	/** Modifiers */
 
-    /**
-     *  @notice Modifier onlyProtocol.
-     *
-     *  @dev Checks if msg.sender is openST protocol to proceed.
-     */
+	/**
+	 *  @notice Modifier onlyProtocol.
+	 *
+	 *  @dev Checks if msg.sender is openST protocol to proceed.
+	 */
 	modifier onlyProtocol() {
 		require(msg.sender == openSTProtocol);
 		_;
 	}
 
-    /**
-     *  @notice Modifier onlyProposedProtocol.
-     *
-     *  @dev Checks if msg.sender is proposed protocol to proceed.
-     */
+	/**
+	 *  @notice Modifier onlyProposedProtocol.
+	 *
+	 *  @dev Checks if msg.sender is proposed protocol to proceed.
+	 */
 	modifier onlyProposedProtocol() {
         require(msg.sender == proposedProtocol);
         _;
 	}
 
     /**
-     *  @notice Modifier afterWait.
-     *
-     *  @dev Checks if earliest transfer height is lower or equal 
-     *       to current block to proceed.
-     */
+	 *  @notice Modifier afterWait.
+	 *
+	 *  @dev Checks if earliest transfer height is lower or equal 
+	 *       to current block to proceed.
+	 */
 	modifier afterWait() {
 		require(earliestTransferHeight <= block.number);
 		_;
 	}
 
     /**
-     *  @notice Modifier notNull.
-     *
-     *  @dev Checks if address is not null to proceed.
-     */
+	 *  @notice Modifier notNull.
+	 *
+	 *  @dev Checks if address is not null to proceed.
+	 */
 	modifier notNull(address _address) {
 		require(_address != 0);
 		_;
@@ -150,7 +150,7 @@ contract ProtocolVersioned {
 	 *  @notice Public function completeProtocolTransfer.
 	 *
 	 *  @dev Only callable by proposed protocol. Only after the waiting period, can
-     *       proposed protocol complete the transfer.
+	 *       proposed protocol complete the transfer.
 	 *
 	 *  @return bool True if protocol transfer is completed, false otherwise.
 	 */
@@ -174,7 +174,7 @@ contract ProtocolVersioned {
 	 *  @notice Public function revokeProtocolTransfer.
 	 *
 	 *  @dev Only callable by proposed protocol. Protocol can revoke initiated protocol
-     *       transfer.
+	 *       transfer.
 	 *
 	 *  @return bool True if protocol transfer is revoked, false otherwise.
 	 */    

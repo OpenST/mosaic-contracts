@@ -32,20 +32,20 @@ import "./OpenSTUtilityInterface.sol";
  *  @notice Contains functions that register for utility tokens.
  */
 contract Registrar is OpsManaged {
+	
+	/** Storage */
 
-    /** Storage */
+	// mapping(uint256 /* chainId */ => CoreInterface) cores;
 
-    // mapping(uint256 /* chainId */ => CoreInterface) cores;
-
-    /**  Public functions */
+	/**  Public functions */
 
 	/**
 	 *  @notice Contract Constructor.
 	 */
-    constructor() public
-        OpsManaged()
-    {
-    }
+
+	 constructor() public
+	 	OpsManaged()
+	 	{ }
 
 	/**
 	 *  @notice External function confirmRedemptionIntent.
@@ -64,36 +64,37 @@ contract Registrar is OpsManaged {
 	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
 	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
 	 */
-    function confirmRedemptionIntent(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-    	bytes32 _uuid,
-    	address _redeemer,
-    	uint256 _redeemerNonce,
-    	address _beneficiary,
-    	uint256 _amountUT,
-    	uint256 _redemptionUnlockHeight,
-    	bytes32 _hashLock,
-    	bytes32 _redemptionIntentHash)
-    	external
-    	onlyOps
-    	returns (
-    	uint256 amountST,
-    	uint256 expirationHeight)
+	 function confirmRedemptionIntent(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+		// OpenSTValue function:
+		bytes32 _uuid,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		address _beneficiary,
+		uint256 _amountUT,
+		uint256 _redemptionUnlockHeight,
+		bytes32 _hashLock,
+		bytes32 _redemptionIntentHash)
+		external
+		onlyOps
+		returns (
+		uint256 amountST,
+		uint256 expirationHeight)
     {
-    	(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
-    		_uuid,
-	    	_redeemer,
-	    	_redeemerNonce,
-	    	_beneficiary,
-	    	_amountUT,
-	    	_redemptionUnlockHeight,
-	    	_hashLock,
-	    	_redemptionIntentHash);
+		(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
+			_uuid,
+			_redeemer,
+			_redeemerNonce,
+			_beneficiary,
+			_amountUT,
+			_redemptionUnlockHeight,
+			_hashLock,
+			_redemptionIntentHash);
 
-    	return (amountST, expirationHeight);
+		return (amountST, expirationHeight);
     }
+
 	/**
 	 *  @notice Public function addCore.
 	 *
@@ -104,10 +105,10 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return bool True if core is registered on OpenSTValue, false otherwise.
 	 */
-    function addCore(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
+	 function addCore(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+		// OpenSTValue function:
    		CoreInterface _core)
 		public
 		onlyAdminOrOps
@@ -132,14 +133,14 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return bytes32 Keccak256 token uuid.
 	 */
-	function registerUtilityToken(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-   		string _symbol,
+	 function registerUtilityToken(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+		// OpenSTValue function:
+		string _symbol,
 		string _name,
 		uint256 _conversionRate,
-    uint8 _conversionRateDecimals,
+		uint8 _conversionRateDecimals,
 		uint256 _chainIdUtility,
 		address _stakingAccount,
 		bytes32 _checkUuid)
@@ -152,7 +153,7 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-      _conversionRateDecimals,
+			_conversionRateDecimals,
 			_chainIdUtility,
 			_stakingAccount,
 			_checkUuid);
@@ -169,10 +170,10 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return address Address at which ST is staked.
 	 */
-	function processStaking(
+	 function processStaking(
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
-    	// OpenSTValue function:
+		// OpenSTValue function:
 		bytes32 _stakingIntentHash,
 		bytes32 _unlockSecret)
 		external
@@ -201,10 +202,10 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return uint256 Expiration height Block height upto which staking intent is valid.
 	 */
-	function confirmStakingIntent(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
+	 function confirmStakingIntent(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
 		bytes32 _uuid,
 		address _staker,
 		uint256 _stakerNonce,
@@ -245,15 +246,15 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return bytes32 Keccak256 of the registration data.
 	 */
-	function registerBrandedToken(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
+	 function registerBrandedToken(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
 		string _symbol,
 		string _name,
-    	uint256 _conversionRate,
-    	uint8 _conversionRateDecimals,
-    	address _requester,
+		uint256 _conversionRate,
+		uint8 _conversionRateDecimals,
+		address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
@@ -265,8 +266,8 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-     		_conversionRateDecimals,
-      		_requester,
+			_conversionRateDecimals,
+			_requester,
 			_brandedToken,
 			_checkUuid);
 	}
@@ -282,18 +283,18 @@ contract Registrar is OpsManaged {
 	 *
 	 *  @return address Address of the token.
 	 */
-    function processRedeeming(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
-    	bytes32 _redemptionIntentHash,
-    	bytes32 _unlockSecret)
-    	external
-    	onlyAdmin
-    	returns (
-    	address tokenAddress)
-    {
-    	return _registry.processRedeeming(
-    		_redemptionIntentHash, _unlockSecret);
-    }
+	 function processRedeeming(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
+		bytes32 _redemptionIntentHash,
+		bytes32 _unlockSecret)
+		external
+		onlyAdmin
+		returns (
+		address tokenAddress)
+		{
+		return _registry.processRedeeming(
+			_redemptionIntentHash, _unlockSecret);
+	}
 }

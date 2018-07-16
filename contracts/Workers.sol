@@ -148,7 +148,7 @@ contract Workers is WorkersInterface, OpsManaged {
      *  @param _worker Worker address.
      *
      *  @return bool True if worker is valid, false otherwise.
-     */   
+     */
     function isWorker(
         address _worker)
         external
