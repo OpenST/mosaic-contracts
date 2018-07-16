@@ -3,9 +3,9 @@ pragma solidity ^0.4.23;
 import "./Core.sol";
 
 /**
- *	@title CoreMock contract
+ * @title CoreMock contract
  *
- *	@notice Used for test only
+ * @notice Used for test only
  */
 contract CoreMock is Core {
 
