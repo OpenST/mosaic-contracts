@@ -9,7 +9,7 @@ import "./util.sol";
  *	@notice It passes the parameters which it receives from test cases
  *
  */
-contract MerklePatriciaProofMock is Util{
+contract MerklePatriciaProofTest is Util{
 
 
     /**
