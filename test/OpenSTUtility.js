@@ -125,8 +125,8 @@ contract('OpenSTUtility', function(accounts) {
 	var unlockHeight 			= null;
 	var uuidSTPrime				= null;
 	var expirationHeight 		= null;
-    var validRLPParentNodes     = null;
-    var invalidRLPParentNodes   = null;
+	var validRLPParentNodes     = null;
+	var invalidRLPParentNodes   = null;
 
 	describe('Properties', async () => {
 		before(async () => {

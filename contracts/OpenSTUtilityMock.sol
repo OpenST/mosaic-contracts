@@ -55,8 +55,8 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		bytes32 stakingIntentHash,
 		bytes rlpParentNodes,
 		bytes32 storageRoot)
-	    private
-	    returns(bool /* MerkleProofStatus*/)
+		private
+		returns(bool /* MerkleProofStatus*/)
 	{
 		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
 		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
