@@ -10,13 +10,13 @@ import "./RLP.sol";
 contract RLPTest  {
 
     /**
-     *  @notice Creates an RLPItem from an array of RLP encoded bytes.
-     *
-     *  @param rlpEncodedData The RLP encoded bytes.
-     *
-     *  @return memory pointer at which rlp data is present.
-     *  @return length of the rlp data.
-     */
+      * @notice Creates an RLPItem from an array of RLP encoded bytes.
+      *
+      * @param rlpEncodedData The RLP encoded bytes.
+      *
+      * @return memory pointer at which rlp data is present.
+      * @return length of the rlp data.
+      */
     function toRLPItem(bytes rlpEncodedData)
         public
         pure
@@ -29,15 +29,15 @@ contract RLPTest  {
     }
 
     /**
-     * @notice Get the list of sub-items from an RLP encoded list.
-     * Warning: This is inefficient, as it requires that the list is read twice.
-     *
-     * @param rlpEncodedData The RLP encoded bytes.
-     * @param index The position in the input array of which data is returned
-     *
-     * @return data kept at index.
-     * @return length of list.
-     */
+      * @notice Get the list of sub-items from an RLP encoded list.
+      * Warning: This is inefficient, as it requires that the list is read twice.
+      *
+      * @param rlpEncodedData The RLP encoded bytes.
+      * @param index The position in the input array of which data is returned
+      *
+      * @return data kept at index.
+      * @return length of list.
+      */
     function toList(
         bytes rlpEncodedData
       , uint256 index)
@@ -55,12 +55,12 @@ contract RLPTest  {
 
 
 
-    /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
-     *
-     *   @param rlpEncodedData The RLPItem encoded bytes.
-     *
-     *    @return toBytes decoded value in the form of bytes.
-     */
+    /** @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
+      *
+      * @param rlpEncodedData The RLPItem encoded bytes.
+      *
+      * @return toBytes decoded value in the form of bytes.
+      */
     function toBytes(
         bytes rlpEncodedData)
         public
@@ -72,12 +72,12 @@ contract RLPTest  {
     }
 
     /**
-     *  @notice Decode an RLPItem into bytes. This will not work if the RLPItem is a list.
-     *
-     *  @param rlpEncodedData The RLPItem encoded bytes.
-     *
-     *  @return toData The decoded string in bytes format.
-     */
+      * @notice Decode an RLPItem into bytes. This will not work if the RLPItem is a list.
+      *
+      * @param rlpEncodedData The RLPItem encoded bytes.
+      *
+      * @return toData The decoded string in bytes format.
+      */
     function toData(
         bytes rlpEncodedData)
         public
