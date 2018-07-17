@@ -52,34 +52,61 @@ contract('RLP', function (accounts) {
 
     describe('ToList', async () => {
 
-        it('should pass when input is list', async () => {
-            let dataArray = ['2', '5', '6','86735'];
-            let first = ['2'];
-            let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
-            let firstElement = ethUtil.rlp.encode(first).toString('hex');
-            let lengthOfList = await rlpTest.toList.call('0x' + hexDataArray,firstElement);
-            console.log("Array",lengthOfList);
-            //assert.equal(dataArray.length, lengthOfList);
+      it('should pass for RLP encoded list of length one', async () => {
+        let rlpItem = ethUtil.rlp.encode('5')
+          , items = [rlpItem]
+          , rlpEncodedArray = ethUtil.rlp.encode(items).toString('hex')
+          , index = 0;
+
+        let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
+          , itemAtIndex = result[0];
+
+        assert.equal('0x' + rlpItem.toString('hex'), itemAtIndex);
+
+      });
+      it('should pass for  RLP encoded list', async () => {
+        let rlpItemOne = ethUtil.rlp.encode('5')
+          , rlpItemTwo = ethUtil.rlp.encode('6')
+          , items = [rlpItemOne, rlpItemTwo]
+          , rlpEncodedArray = ethUtil.rlp.encode(items).toString('hex');
+
+        for (let index = 0; index < items.length; index++) {
+
+          let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
+            , itemAtIndex = result[0];
+
+          assert.equal('0x' + items[index].toString('hex'), itemAtIndex);
+        }
         });
 
-        // it('should pass when input RLP encoding of empty list', async () => {
-        //     let dataArray = [];
-        //     let hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex');
-        //     let lengthOfList = await rlpTest.toList.call('0x' + hexDataArray);
-        //     console.log("Data",lengthOfList);
-        //     //assert.equal(dataArray.length, lengthOfList);
-        // });
-        //
-        // it('should fail when input is non-list', async () => {
-        //     let data = 1234;
-        //     let hexDataArray = ethUtil.rlp.encode(data).toString('hex');
-        //     await Utils.expectThrow(rlpTest.toList.call('0x' + hexDataArray));
-        // });
-        //
-        // it('should fail when input is empty (NOT RLP encoded)', async () => {
-        //     let data;
-        //     await Utils.expectThrow(rlpTest.toList.call('0x' + data));
-        // });
+      it('should pass when input RLP encoding of empty list', async () => {
+        let dataArray = []
+          , hexDataArray = ethUtil.rlp.encode(dataArray).toString('hex')
+          , result = await rlpTest.toList.call('0x' + hexDataArray, 0)
+          , length = result[1].toNumber();
+
+        assert.equal(dataArray.length, length);
+      });
+
+      it('should fail when input is non-list', async () => {
+        let data = 1234
+          , hexDataArray = ethUtil.rlp.encode(data).toString('hex');
+
+        await Utils.expectThrow(rlpTest.toList.call('0x' + hexDataArray, 0));
+      });
+
+      it('should fail when input is empty ', async () => {
+        let data;
+
+        await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
+      });
+
+      it('should fail when input is not RLP encoded ', async () => {
+        let data = '1234';
+
+        await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
+      });
+
     });
 
     describe('ToBytes', async () => {
