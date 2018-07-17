@@ -67,7 +67,7 @@ contract Core is CoreInterface, Util {
 
 	/** Modifiers */
 
-    /**
+	/**
      *  @notice Modifier onlyWorker.
      *
      *  @dev Checks if msg.sender is whitelisted worker address to proceed.
@@ -89,6 +89,7 @@ contract Core is CoreInterface, Util {
 	 *  @param _openSTRemote If current chain is value then _openSTRemote is address of openSTUtility contract address.
 	 *  @param _blockHeight Block height at which _stateRoot needs to store.
 	 *  @param _stateRoot State root hash of given _blockHeight.
+	 *  @param _workers Workers contract address.
 	 */
 	constructor(
 		address _registrar,
