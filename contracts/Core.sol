@@ -80,12 +80,12 @@ contract Core is CoreInterface, Util {
 		_;
 	}
 
-    // time that is safe to execute confirmStakingIntent and confirmRedemptionIntent from the time the
-    // stake and redemption was initiated
+	// time that is safe to execute confirmStakingIntent and confirmRedemptionIntent from the time the
+	// stake and redemption was initiated
 	//
-    // 5Days in seconds
-    // 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs
-    // so 5 days = 5 * 24 hrs = 5 * 24 * 60 mins = 5 * 24 * 60 * 60 seconds = 432000 seconds
+	// 5Days in seconds
+	// 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs
+	// so 5 days = 5 * 24 hrs = 5 * 24 * 60 mins = 5 * 24 * 60 * 60 seconds = 432000 seconds
 	uint256 private constant TIME_TO_WAIT = 432000;
 
 	uint256 public remoteChainBlockGenerationTime;
