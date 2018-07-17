@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -14,7 +14,7 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Utility chain: OpenSTUtilityInterface
 //
@@ -35,13 +35,16 @@ contract OpenSTUtilityInterface {
         uint256 _amountST,
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
-        bytes32 _stakingIntentHash)
+        bytes32 _hashLock,
+        uint256 _blockHeight,
+        bytes rlpParentNodes)
         external
         returns (
         uint256 expirationHeight);
 
     function processRedeeming(
-        bytes32 _redemptionIntentHash)
+        bytes32 _redemptionIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (
         address tokenAddress);

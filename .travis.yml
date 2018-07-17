@@ -20,8 +20,8 @@ before_install:
 install:
   - npm install
 before_script:
-  - nohup ./tools/runTestRpc.sh </dev/null >/dev/null 2>&1 &
+  - nohup ./tools/runGanacheCli.sh </dev/null >/dev/null 2>&1 &
 script:
   - truffle test
 after_script:
-  - kill $(ps aux | grep 'testrpc' | awk '{print $2}')
+  - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')

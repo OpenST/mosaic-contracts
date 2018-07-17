@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -31,12 +31,12 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-
+import "./OpenSTHelper.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
     using SafeMath for uint256;
-    
+
     /*
      *  Events
      */
@@ -45,12 +45,12 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdUtility, address indexed _stakingAccount);
 
     event StakingIntentDeclared(bytes32 indexed _uuid, address indexed _staker,
-        uint256 _stakerNonce, address _beneficiary, uint256 _amountST,
+        uint256 _stakerNonce, bytes32 _intentKeyHash, address _beneficiary, uint256 _amountST,
         uint256 _amountUT, uint256 _unlockHeight, bytes32 _stakingIntentHash,
         uint256 _chainIdUtility);
 
     event ProcessedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
-        address _stake, address _staker, uint256 _amountST, uint256 _amountUT);
+        address _stake, address _staker, uint256 _amountST, uint256 _amountUT, bytes32 _unlockSecret);
 
     event RevertedStake(bytes32 indexed _uuid, bytes32 indexed _stakingIntentHash,
         address _staker, uint256 _amountST, uint256 _amountUT);
@@ -59,7 +59,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         address _redeemer, address _beneficiary, uint256 _amountST, uint256 _amountUT, uint256 _expirationHeight);
 
     event ProcessedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
-        address stake, address _redeemer, address _beneficiary, uint256 _amountST);
+        address stake, address _redeemer, address _beneficiary, uint256 _amountST, bytes32 _unlockSecret);
 
     event RevertedUnstake(bytes32 indexed _uuid, bytes32 indexed _redemptionIntentHash,
         address _redeemer, address _beneficiary, uint256 _amountST);
@@ -69,20 +69,52 @@ contract OpenSTValue is OpsManaged, Hasher {
      */
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    // ~2 weeks, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+
+    // 2 weeks in seconds
+    uint256 private constant TIME_TO_WAIT_LONG = 1209600;
+
+    // 1hour in seconds
+    uint256 private constant TIME_TO_WAIT_SHORT = 3600;
+
+    // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
+    // positions 0-3 are occupied by public state variables in OpsManaged and Owned
+    // private constants do not occupy the storage of a contract 
+    uint8 internal constant intentsMappingStorageIndexPosition = 4;
+
+    // storage for staking intent hash of active staking intents
+    mapping(bytes32 /* hashIntentKey */ => bytes32 /* stakingIntentHash */) public stakingIntents;
+    // register the active stakes and unstakes
+    mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
+    mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
+    mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
+    /// nonce makes the staking process atomic across the two-phased process
+    /// and protects against replay attack on (un)staking proofs during the process.
+    /// On the value chain nonces need to strictly increase by one; on the utility
+    /// chain the nonce need to strictly increase (as one value chain can have multiple
+    /// utility chains)
+    mapping(address /* (un)staker */ => uint256) internal nonces;
+    mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
+
+    /*
+     *  Storage
+     */
+    uint256 public chainIdValue;
+    EIP20Interface public valueToken;
+    address public registrar;
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitLong;
+
+    bytes32[] public uuids;
 
     /*
      *  Structures
      */
     struct UtilityToken {
-        string  symbol;
-        string  name;
+        string symbol;
+        string name;
         uint256 conversionRate;
         uint8 conversionRateDecimals;
-        uint8   decimals;
+        uint8 decimals;
         uint256 chainIdUtility;
         SimpleStake simpleStake;
         address stakingAccount;
@@ -96,6 +128,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 amountST;
         uint256 amountUT;
         uint256 unlockHeight;
+        bytes32 hashLock;
     }
 
     struct Unstake {
@@ -106,26 +139,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         // @dev consider removal of amountUT
         uint256 amountUT;
         uint256 expirationHeight;
+        bytes32 hashLock;
     }
-
-    /*
-     *  Storage
-     */
-    uint256 public chainIdValue;
-    EIP20Interface public valueToken;
-    address public registrar;
-    bytes32[] public uuids;
-    mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
-    mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
-    /// nonce makes the staking process atomic across the two-phased process
-    /// and protects against replay attack on (un)staking proofs during the process.
-    /// On the value chain nonces need to strictly increase by one; on the utility
-    /// chain the nonce need to strictly increase (as one value chain can have multiple
-    /// utility chains)
-    mapping(address /* (un)staker */ => uint256) internal nonces;
-    /// register the active stakes and unstakes
-    mapping(bytes32 /* hashStakingIntent */ => Stake) public stakes;
-    mapping(bytes32 /* hashRedemptionIntent */ => Unstake) public unstakes;
 
     /*
      *  Modifiers
@@ -136,16 +151,21 @@ contract OpenSTValue is OpsManaged, Hasher {
         _;
     }
 
-    function OpenSTValue(
+    constructor(
         uint256 _chainIdValue,
         EIP20Interface _eip20token,
-        address _registrar)
+        address _registrar,
+        uint256 _valueChainBlockGenerationTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_eip20token != address(0));
         require(_registrar != address(0));
+        require(_valueChainBlockGenerationTime != 0);
+
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_valueChainBlockGenerationTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_valueChainBlockGenerationTime);
 
         chainIdValue = _chainIdValue;
         valueToken = _eip20token;
@@ -163,7 +183,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     function stake(
         bytes32 _uuid,
         uint256 _amountST,
-        address _beneficiary)
+        address _beneficiary,
+        bytes32 _hashLock,
+        address _staker)
         external
         returns (
         uint256 amountUT,
@@ -176,52 +198,54 @@ contract OpenSTValue is OpsManaged, Hasher {
         // check the staking contract has been approved to spend the amount to stake
         // OpenSTValue needs to be able to transfer the stake into its balance for
         // keeping until the two-phase process is completed on both chains.
-        require(_amountST > 0);
-        // Consider the security risk of using tx.origin; at the same time an allowance
-        // needs to be set before calling stake over a potentially malicious contract at stakingAccount.
-        // The second protection is that the staker needs to check the intent hash before
-        // signing off on completing the two-phased process.
-        require(valueToken.allowance(tx.origin, address(this)) >= _amountST);
+        require(_amountST > uint256(0));
 
         require(utilityTokens[_uuid].simpleStake != address(0));
         require(_beneficiary != address(0));
+        require(_staker != address(0));
 
         UtilityToken storage utilityToken = utilityTokens[_uuid];
 
         // if the staking account is set to a non-zero address,
-        // then all transactions have come (from/over) the staking account,
-        // whether this is an EOA or a contract; tx.origin is putting forward the funds
+        // then all stakes have come (from/over) the staking account
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
-        require(valueToken.transferFrom(tx.origin, address(this), _amountST));
+        require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
             .div(10**uint256(utilityToken.conversionRateDecimals));
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
-        nonces[tx.origin]++;
-        nonce = nonces[tx.origin];
+        nonces[_staker]++;
+        nonce = nonces[_staker];
 
         stakingIntentHash = hashStakingIntent(
             _uuid,
-            tx.origin,
+            _staker,
             nonce,
             _beneficiary,
             _amountST,
             amountUT,
-            unlockHeight
+            unlockHeight,
+            _hashLock
         );
 
         stakes[stakingIntentHash] = Stake({
             uuid:         _uuid,
-            staker:       tx.origin,
+            staker:       _staker,
             beneficiary:  _beneficiary,
             nonce:        nonce,
             amountST:     _amountST,
             amountUT:     amountUT,
-            unlockHeight: unlockHeight
+            unlockHeight: unlockHeight,
+            hashLock:     _hashLock
         });
 
-        StakingIntentDeclared(_uuid, tx.origin, nonce, _beneficiary,
+        // store the staking intent hash directly in storage of OpenSTValue 
+        // so that a Merkle proof can be generated for active staking intents
+        bytes32 intentKeyHash = hashIntentKey(_staker, nonce);
+        stakingIntents[intentKeyHash] = stakingIntentHash;
+
+        emit StakingIntentDeclared(_uuid, _staker, nonce, intentKeyHash, _beneficiary,
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
@@ -229,34 +253,37 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     function processStaking(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (address stakeAddress)
     {
         require(_stakingIntentHash != "");
 
-        Stake storage stake = stakes[_stakingIntentHash];
+        Stake storage stakeItem = stakes[_stakingIntentHash];
 
-        // note: as processStaking incurs a cost for the staker, we provide a fallback
-        // in v0.9 for registrar to process the staking on behalf of the staker,
-        // as the staker could fail to process the stake and avoid the cost of staking;
-        // this will be replaced with a signature carry-over implementation instead, where
-        // the signature of the intent hash suffices on value and utility chain, decoupling
-        // it from the transaction to processStaking and processMinting
-        require(stake.staker == msg.sender || registrar == msg.sender);
+        // present the secret to unlock the hashlock and continue process
+        require(stakeItem.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
+
         // as this bears the cost, there is no need to require
-        // that the stake.unlockHeight is not yet surpassed
+        // that the stakeItem.unlockHeight is not yet surpassed
         // as is required on processMinting
 
-        UtilityToken storage utilityToken = utilityTokens[stake.uuid];
+        UtilityToken storage utilityToken = utilityTokens[stakeItem.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all stakes have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         stakeAddress = address(utilityToken.simpleStake);
         require(stakeAddress != address(0));
 
-        assert(valueToken.balanceOf(address(this)) >= stake.amountST);
-        require(valueToken.transfer(stakeAddress, stake.amountST));
+        assert(valueToken.balanceOf(address(this)) >= stakeItem.amountST);
+        require(valueToken.transfer(stakeAddress, stakeItem.amountST));
 
-        ProcessedStake(stake.uuid, _stakingIntentHash, stakeAddress, stake.staker,
-            stake.amountST, stake.amountUT);
+        emit ProcessedStake(stakeItem.uuid, _stakingIntentHash, stakeAddress, stakeItem.staker,
+            stakeItem.amountST, stakeItem.amountUT, _unlockSecret);
+        
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stakeItem.staker, stakeItem.nonce)];
 
         delete stakes[_stakingIntentHash];
 
@@ -273,28 +300,55 @@ contract OpenSTValue is OpsManaged, Hasher {
     {
         require(_stakingIntentHash != "");
 
-        Stake storage stake = stakes[_stakingIntentHash];
+        Stake storage stakeItem = stakes[_stakingIntentHash];
+        UtilityToken storage utilityToken = utilityTokens[stakeItem.uuid];
+        // if the staking account is set to a non-zero address,
+        // then all stakes have come (from/over) the staking account
+        if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
 
         // require that the stake is unlocked and exists
-        require(stake.unlockHeight > 0);
-        require(stake.unlockHeight <= block.number);
+        require(stakeItem.unlockHeight > 0);
+        require(stakeItem.unlockHeight <= block.number);
 
-        assert(valueToken.balanceOf(address(this)) >= stake.amountST);
+        assert(valueToken.balanceOf(address(this)) >= stakeItem.amountST);
         // revert the amount that was intended to be staked back to staker
-        require(valueToken.transfer(stake.staker, stake.amountST));
+        require(valueToken.transfer(stakeItem.staker, stakeItem.amountST));
 
-        uuid = stake.uuid;
-        amountST = stake.amountST;
-        staker = stake.staker;
+        uuid = stakeItem.uuid;
+        amountST = stakeItem.amountST;
+        staker = stakeItem.staker;
 
-        RevertedStake(stake.uuid, _stakingIntentHash, stake.staker,
-            stake.amountST, stake.amountUT);
+        emit RevertedStake(stakeItem.uuid, _stakingIntentHash, stakeItem.staker,
+            stakeItem.amountST, stakeItem.amountUT);
+
+        // remove from stakingIntents mapping
+        delete stakingIntents[hashIntentKey(stakeItem.staker, stakeItem.nonce)];
 
         delete stakes[_stakingIntentHash];
 
         return (uuid, amountST, staker);
     }
 
+    /**
+      *	@notice Confirm redemption intent on value chain.
+      *
+      *	@dev RedemptionIntentHash is generated in Utility chain, the paramerters are that were used for hash generation
+      *      is passed in this function along with rpl encoded parent nodes of merkle pactritia tree proof
+      *      for RedemptionIntentHash.
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _beneficiary Beneficiary address
+      *	@param _amountUT Amount of utility token
+      *	@param _redemptionUnlockHeight Unlock height for redemption
+      *	@param _hashLock Hash lock
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return bytes32 amount of OST
+      *	@return uint256 expiration height
+      */
     function confirmRedemptionIntent(
         bytes32 _uuid,
         address _redeemer,
@@ -302,20 +356,23 @@ contract OpenSTValue is OpsManaged, Hasher {
         address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
-        bytes32 _redemptionIntentHash)
+        bytes32 _hashLock,
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
-        onlyRegistrar
         returns (
         uint256 amountST,
         uint256 expirationHeight)
     {
-        require(utilityTokens[_uuid].simpleStake != address(0));
+        UtilityToken storage utilityToken = utilityTokens[_uuid];
+        require(utilityToken.simpleStake != address(0));
         require(_amountUT > 0);
         require(_beneficiary != address(0));
         // later core will provide a view on the block height of the
         // utility chain
         require(_redemptionUnlockHeight > 0);
-        require(_redemptionIntentHash != "");
+
+        require(cores[utilityToken.chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
 
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
@@ -323,17 +380,15 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 redemptionIntentHash = hashRedemptionIntent(
             _uuid,
             _redeemer,
-            nonces[_redeemer],
+            _redeemerNonce,
             _beneficiary,
             _amountUT,
-            _redemptionUnlockHeight
+            _redemptionUnlockHeight,
+            _hashLock
         );
 
-        require(_redemptionIntentHash == redemptionIntentHash);
+        expirationHeight = block.number + blocksToWaitShort;
 
-        expirationHeight = block.number + blocksToWaitShort();
-
-        UtilityToken storage utilityToken = utilityTokens[_uuid];
         // minimal precision to unstake 1 STWei
         require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
         amountST = (_amountUT
@@ -341,23 +396,73 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
+        require(verifyRedemptionIntent(
+                _uuid,
+                _redeemer,
+                _redeemerNonce,
+                _blockHeight,
+                redemptionIntentHash,
+                _rlpParentNodes), "RedemptionIntentHash storage verification failed");
+
         unstakes[redemptionIntentHash] = Unstake({
-            uuid:         _uuid,
-            redeemer:     _redeemer,
-            beneficiary:  _beneficiary,
-            amountUT:     _amountUT,
-            amountST:     amountST,
-            expirationHeight: expirationHeight
+            uuid:             _uuid,
+            redeemer:         _redeemer,
+            beneficiary:      _beneficiary,
+            amountUT:         _amountUT,
+            amountST:         amountST,
+            expirationHeight: expirationHeight,
+            hashLock:         _hashLock
         });
 
-        RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
+        emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
             _beneficiary, amountST, _amountUT, expirationHeight);
 
         return (amountST, expirationHeight);
     }
 
+    /**
+      *	@notice Verify storage of redemption intent hash
+      *
+      *	@param _uuid UUID for utility token
+      *	@param _redeemer Redeemer address
+      *	@param _redeemerNonce Nonce for redeemer account
+      *	@param _blockHeight Block height at which the Merkle proof was generated
+      *	@param _rlpParentNodes RLP encoded parent nodes for proof verification
+      *
+      *	@return true if successfully verifies, otherwise throws an exception.
+      */
+
+    function verifyRedemptionIntent(
+        bytes32 _uuid,
+        address _redeemer,
+        uint256 _redeemerNonce,
+        uint256 _blockHeight,
+        bytes32 _redemptionIntentHash,
+        bytes _rlpParentNodes)
+        internal
+        view
+        returns (bool /* verification status */)
+    {
+        // get storageRoot from core for the given block height
+        bytes32 storageRoot = CoreInterface(cores[utilityTokens[_uuid].chainIdUtility]).getStorageRoot(_blockHeight);
+
+        // storageRoot cannot be 0
+        require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
+
+        require(OpenSTHelper.verifyIntentStorage(
+                intentsMappingStorageIndexPosition,
+                _redeemer,
+                _redeemerNonce,
+                _redemptionIntentHash,
+                _rlpParentNodes,
+                storageRoot), "RedemptionIntentHash storage verification failed");
+
+        return true;
+    }
+
     function processUnstaking(
-        bytes32 _redemptionIntentHash)
+        bytes32 _redemptionIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (
         address stakeAddress)
@@ -365,7 +470,9 @@ contract OpenSTValue is OpsManaged, Hasher {
         require(_redemptionIntentHash != "");
 
         Unstake storage unstake = unstakes[_redemptionIntentHash];
-        require(unstake.redeemer == msg.sender);
+
+        // present secret to unlock hashlock and proceed
+        require(unstake.hashLock == keccak256(abi.encodePacked(_unlockSecret)));
 
         // as the process unstake results in a gain for the caller
         // it needs to expire well before the process redemption can
@@ -378,8 +485,8 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(utilityToken.simpleStake.releaseTo(unstake.beneficiary, unstake.amountST));
 
-        ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
-            unstake.redeemer, unstake.beneficiary, unstake.amountST);
+        emit ProcessedUnstake(unstake.uuid, _redemptionIntentHash, stakeAddress,
+            unstake.redeemer, unstake.beneficiary, unstake.amountST, _unlockSecret);
 
         delete unstakes[_redemptionIntentHash];
 
@@ -411,7 +518,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         delete unstakes[_redemptionIntentHash];
 
-        RevertedUnstake(uuid, _redemptionIntentHash, redeemer, beneficiary, amountST);
+        emit RevertedUnstake(uuid, _redemptionIntentHash, redeemer, beneficiary, amountST);
 
         return (uuid, redeemer, beneficiary, amountST);
     }
@@ -437,14 +544,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         return (nonces[_account] + 1);
     }
 
-    function blocksToWaitLong() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_LONG;
-    }
-
-    function blocksToWaitShort() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_SHORT;
-    }
-
     /// @dev Returns size of uuids
     /// @return size
     function getUuidsSize() public view returns (uint256) {
@@ -461,8 +560,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (bool /* success */)
     {
         require(address(_core) != address(0));
-        // core constructed with same registrar
-        require(registrar == _core.registrar());
         // on value chain core only tracks a remote utility chain
         uint256 chainIdUtility = _core.chainIdRemote();
         require(chainIdUtility != 0);
@@ -522,7 +619,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         });
         uuids.push(uuid);
 
-        UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
+        emit UtilityTokenRegistered(uuid, address(simpleStake), _symbol, _name,
             TOKEN_DECIMALS, _conversionRate, _conversionRateDecimals, _chainIdUtility, _stakingAccount);
 
         return uuid;
@@ -556,5 +653,18 @@ contract OpenSTValue is OpsManaged, Hasher {
         _simpleStake.revokeProtocolTransfer();
 
         return true;
+    }
+
+    function getStakerAddress(
+        bytes32 _stakingIntentHash)
+        view
+        external
+        returns (address /* staker */)
+    {
+        require(_stakingIntentHash != "");
+        Stake storage stakeItem = stakes[_stakingIntentHash];
+
+        return stakeItem.staker;
+
     }
 }

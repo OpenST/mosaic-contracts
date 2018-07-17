@@ -21,12 +21,12 @@
 
 const Assert = require('assert');
 // const Web3 = require('web3');
-const Moment = require('moment');
 const BigNumber = require('bignumber.js');
 
 const Utils = require('./lib/utils.js');
 const SimpleTokenUtils = require('./SimpleToken_utils.js')
 const EIP20Token_utils = require('./EIP20Token_utils.js')
+const web3EventsDecoder = require('./lib/event_decoder.js');
 
 
 const SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
@@ -101,377 +101,377 @@ const SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
 //
 
 contract('SimpleToken', (accounts) => {
-   
-   const SYMBOL         = "ST"
-   const NAME           = "Simple Token"
-   const DECIMALS       = 18
-   const TOTAL_SUPPLY   = new BigNumber(web3.toWei(800000000, "ether"));
-      
-   const ST10000 = new BigNumber(web3.toWei(10000, "ether"));
-   const ST9000 = new BigNumber(web3.toWei(9000, "ether"));
-   const ST1000 = new BigNumber(web3.toWei(1000, "ether"));
-   const ST10 = new BigNumber(web3.toWei(10, "ether"));
-   const ST1 = new BigNumber(web3.toWei(1, "ether"));
-
-   const owner  = accounts[0]
-   const admin  = accounts[1]
-   const ops    = accounts[2]
-
-   async function createToken() {
-      return await SimpleToken.new()
-   }
-
-
-   describe('Basic properties', async () => {
-
-      var token = null
-
-      before(async () => {
-         token = await createToken()
-      })
-
-
-      it("name", async () => {
-         assert.equal(await token.name.call(), NAME)
-      })
-
-      it("symbol", async () => {
-         assert.equal(await token.symbol.call(), SYMBOL)
-      })
-
-      it("decimals", async () => {
-         assert.equal(await token.decimals.call(), DECIMALS)
-      })
-
-      it("totalSupply", async () => {
-         assert.equal((await token.totalSupply.call()).toNumber(), TOTAL_SUPPLY.toNumber())
-      })
-
-      it("balances is private", async () => {
-         assert.isTrue(typeof(token.balances) == 'undefined')
-      })
-
-      it('Constructor raised transfer event', async () => {
-          const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
-          assert.equal(receipt.logs.length, 1)
-          const logs = Utils.decodeLogs(token.abi, [ receipt.logs[0] ])
-          EIP20Token_utils.checkTransferEvent(logs[0], 0, accounts[0], TOTAL_SUPPLY)
-      })
-      // it('Constructor raised transfer event', async () => {
-      //     const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
-      //     assert.equal(receipt.logs.length, 1)
-      //     console.log("Simple Token -------- token.abi");
-      //     console.log(token.abi.length)
-      //     console.log(JSON.stringify(token.abi[32], null, 4));
-      //     console.log("Simple Token -------- receipt.logs[0]");
-      //     console.log(receipt.logs[0])
-      //     console.log("Simple Token -------- receipt.logs[0].topics");
-      //     console.log(receipt.logs[0].topics)
-      //     // @dev SimpleToken abi[32] is 'Transfer' event;
-      //     // solve this better for moving to web3 v1.0.0
-      //     // var inputs = token.abi[32].inputs;
-      //     // var data = receipt.logs[0].data;
-      //     // var topics = receipt.logs[0].topics;
-      //     // const logs = Web3.eth.abi.decodeLog(inputs, data, topics)
-      //     // console.log(JSON.stringify(logs, null, 4));
-      //     // Utils.checkTransferEvent(logs, 0, accounts[0], TOTAL_SUPPLY)
-      // })
-   })
 
-
-   describe('transfer function after finalize', async () => {
+  const SYMBOL = "ST"
+  const NAME = "Simple Token"
+  const DECIMALS = 18
+  const TOTAL_SUPPLY = new BigNumber(web3.toWei(800000000, "ether"));
+
+  const ST10000 = new BigNumber(web3.toWei(10000, "ether"));
+  const ST9000 = new BigNumber(web3.toWei(9000, "ether"));
+  const ST1000 = new BigNumber(web3.toWei(1000, "ether"));
+  const ST10 = new BigNumber(web3.toWei(10, "ether"));
+  const ST1 = new BigNumber(web3.toWei(1, "ether"));
+
+  const owner = accounts[0]
+  const admin = accounts[1]
+  const ops = accounts[2]
+
+  async function createToken() {
+    return await SimpleToken.new()
+  }
+
+
+  describe('Basic properties', async () => {
+
+    var token = null
+
+    before(async () => {
+      token = await createToken()
+    })
+
+
+    it("name", async () => {
+      assert.equal(await token.name.call(), NAME)
+    })
+
+    it("symbol", async () => {
+      assert.equal(await token.symbol.call(), SYMBOL)
+    })
+
+    it("decimals", async () => {
+      assert.equal(await token.decimals.call(), DECIMALS)
+    })
 
-      var token = null
+    it("totalSupply", async () => {
+      assert.equal((await token.totalSupply.call()).toNumber(), TOTAL_SUPPLY.toNumber())
+    })
 
-      before(async () => {
-         token = await createToken()
+    it("balances is private", async () => {
+      assert.isTrue(typeof(token.balances) == 'undefined')
+    })
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
+    it('Constructor raised transfer event', async () => {
+      const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
+      assert.equal(receipt.logs.length, 1)
+      const logs = web3EventsDecoder.perform(receipt, token.address, token.abi);
+      EIP20Token_utils.checkTransferEventAbiDecoder(logs, 0, accounts[0], TOTAL_SUPPLY)
+    })
+    // it('Constructor raised transfer event', async () => {
+    //     const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
+    //     assert.equal(receipt.logs.length, 1)
+    //     console.log("Simple Token -------- token.abi");
+    //     console.log(token.abi.length)
+    //     console.log(JSON.stringify(token.abi[32], null, 4));
+    //     console.log("Simple Token -------- receipt.logs[0]");
+    //     console.log(receipt.logs[0])
+    //     console.log("Simple Token -------- receipt.logs[0].topics");
+    //     console.log(receipt.logs[0].topics)
+    //     // @dev SimpleToken abi[32] is 'Transfer' event;
+    //     // solve this better for moving to web3 v1.0.0
+    //     // var inputs = token.abi[32].inputs;
+    //     // var data = receipt.logs[0].data;
+    //     // var topics = receipt.logs[0].topics;
+    //     // const logs = Web3.eth.abi.decodeLog(inputs, data, topics)
+    //     // console.log(JSON.stringify(logs, null, 4));
+    //     // Utils.checkTransferEvent(logs, 0, accounts[0], TOTAL_SUPPLY)
+    // })
+  })
 
-         await token.finalize({ from: admin })
-      })
-
-      it("transfer tokens from owner to other", async () => {         
-         var res = await token.transfer(accounts[1], ST1000);
-         EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[1], ST1000), accounts[0], accounts[1], ST1000)
-      })
-
-      it("transfer 0 tokens", async () => {
-         assert.equal(await token.transfer.call(accounts[2], 0, { from: accounts[1] }), true)
-         EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[2], 0, { from: accounts[1] }), accounts[1], accounts[2], 0)
-      })
 
-      it("transfer > balance", async () => {
-         const balance = await token.balanceOf.call(accounts[1])
-         await Utils.expectThrow(token.transfer.call(accounts[2], balance.add(ST1), { from: accounts[1] }))
-      })
+  describe('transfer function after finalize', async () => {
 
-      it("transfer = balance", async () => {
-         const balance1Before = await token.balanceOf.call(accounts[1])
-         const balance2Before = await token.balanceOf.call(accounts[2])
+    var token = null
 
-         assert.equal(await token.transfer.call(accounts[2], balance1Before, { from: accounts[1] }), true)
-         await token.transfer(accounts[2], balance1Before, { from: accounts[1] })
+    before(async () => {
+      token = await createToken()
 
-         const balance1After = await token.balanceOf.call(accounts[1])
-         const balance2After = await token.balanceOf.call(accounts[2])
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
 
-         assert.equal(balance1After.toNumber(), 0)
-         assert.equal(balance2After.sub(balance2Before).toNumber(), balance1Before.sub(balance1After).toNumber(), balance1Before.toNumber())
-      })
+      await token.finalize({from: admin})
+    })
 
-      it("transfer 1 token", async () => {
-         const balance1Before = await token.balanceOf.call(accounts[1])
-         const balance2Before = await token.balanceOf.call(accounts[2])
+    it("transfer tokens from owner to other", async () => {
+      var res = await token.transfer(accounts[1], ST1000);
+      EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[1], ST1000), accounts[0], accounts[1], ST1000)
+    })
 
-         assert.equal(await token.transfer.call(accounts[1], ST1, { from: accounts[2] }), true)
-         await token.transfer(accounts[1], ST1, { from: accounts[2] })
+    it("transfer 0 tokens", async () => {
+      assert.equal(await token.transfer.call(accounts[2], 0, {from: accounts[1]}), true)
+      EIP20Token_utils.checkTransferEventGroup(await token.transfer(accounts[2], 0, {from: accounts[1]}), accounts[1], accounts[2], 0)
+    })
 
-         const balance1After = await token.balanceOf.call(accounts[1])
-         const balance2After = await token.balanceOf.call(accounts[2])
+    it("transfer > balance", async () => {
+      const balance = await token.balanceOf.call(accounts[1])
+      await Utils.expectThrow(token.transfer.call(accounts[2], balance.add(ST1), {from: accounts[1]}))
+    })
 
-         assert.equal(balance1After.toNumber(), ST1.toNumber())
-         assert.equal(balance2After.toNumber(), balance2Before.sub(ST1).toNumber())
-      })
-   })
+    it("transfer = balance", async () => {
+      const balance1Before = await token.balanceOf.call(accounts[1])
+      const balance2Before = await token.balanceOf.call(accounts[2])
 
+      assert.equal(await token.transfer.call(accounts[2], balance1Before, {from: accounts[1]}), true)
+      await token.transfer(accounts[2], balance1Before, {from: accounts[1]})
 
-   describe('transferFrom function before finalize', async () => {
+      const balance1After = await token.balanceOf.call(accounts[1])
+      const balance2After = await token.balanceOf.call(accounts[2])
 
-      var token = null
+      assert.equal(balance1After.toNumber(), 0)
+      assert.equal(balance2After.sub(balance2Before).toNumber(), balance1Before.sub(balance1After).toNumber(), balance1Before.toNumber())
+    })
 
-      before(async () => {
-         token = await createToken()
+    it("transfer 1 token", async () => {
+      const balance1Before = await token.balanceOf.call(accounts[1])
+      const balance2Before = await token.balanceOf.call(accounts[2])
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
+      assert.equal(await token.transfer.call(accounts[1], ST1, {from: accounts[2]}), true)
+      await token.transfer(accounts[1], ST1, {from: accounts[2]})
 
-         await token.transfer(accounts[4], ST10000)
-      })
+      const balance1After = await token.balanceOf.call(accounts[1])
+      const balance2After = await token.balanceOf.call(accounts[2])
 
+      assert.equal(balance1After.toNumber(), ST1.toNumber())
+      assert.equal(balance2After.toNumber(), balance2Before.sub(ST1).toNumber())
+    })
+  })
 
-      it("transfer 0 from account 1 -> 2 with 0 allowance", async () => {
-         assert.equal(await token.approve.call(accounts[2], 0, { from: accounts[4] }), true)
-         assert.equal(await token.allowance.call(accounts[4], accounts[2]), 0)
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST10, { from: accounts[2] }))
-      })
 
-      it("transfer 1000 from account 1 -> 2 without allowance", async () => {
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, { from: accounts[4] }))
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, { from: accounts[2] }))
-      })
+  describe('transferFrom function before finalize', async () => {
 
-      it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
-         assert.equal(await token.approve.call(accounts[2], ST10, { from: accounts[4] }), true)
-         EIP20Token_utils.checkApprovalEventGroup(await token.approve(accounts[2], ST10, { from: accounts[4] }), accounts[4], accounts[2], ST10)
+    var token = null
 
-         assert.equal((await token.allowance.call(accounts[4], accounts[2], { from: accounts[4] })).toNumber(), ST10.toNumber())
+    before(async () => {
+      token = await createToken()
 
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, { from: accounts[4] }))
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, { from: accounts[2] }))
-      })
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
 
-      it("transfer 1000 from account 1 -> 2 with 1000 allowance (as ops)", async () => {
-         // We first need to bring approval to 0
-         assert.equal(await token.approve.call(ops, 0, { from: accounts[4] }), true)
-         EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, 0, { from: accounts[4] }), accounts[4], ops, 0)
+      await token.transfer(accounts[4], ST10000)
+    })
 
-         assert.equal(await token.allowance.call(accounts[4], ops, { from: accounts[4] }), 0)
 
-         assert.equal(await token.approve.call(ops, ST1000, { from: accounts[4] }), true)
-         EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, ST1000, { from: accounts[4] }), accounts[4], ops, ST1000)
+    it("transfer 0 from account 1 -> 2 with 0 allowance", async () => {
+      assert.equal(await token.approve.call(accounts[2], 0, {from: accounts[4]}), true)
+      assert.equal(await token.allowance.call(accounts[4], accounts[2]), 0)
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST10, {from: accounts[2]}))
+    })
 
-         assert.equal(await token.allowance.call(accounts[4], ops), ST1000.toNumber(), { from: accounts[4] })
+    it("transfer 1000 from account 1 -> 2 without allowance", async () => {
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, {from: accounts[4]}))
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, {from: accounts[2]}))
+    })
 
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], ops, ST1000, { from: accounts[4] }))
-         assert.equal(await token.transferFrom.call(accounts[4], ops, ST1000, { from: ops }), true)
-         await token.transferFrom(accounts[4], ops, ST1000, { from: ops })
-         
-         assert.equal((await token.balanceOf.call(accounts[4])).toNumber(), ST9000.toNumber())
-         assert.equal((await token.balanceOf.call(ops)).toNumber(), ST1000.toNumber())
-      })
+    it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
+      assert.equal(await token.approve.call(accounts[2], ST10, {from: accounts[4]}), true)
+      EIP20Token_utils.checkApprovalEventGroup(await token.approve(accounts[2], ST10, {from: accounts[4]}), accounts[4], accounts[2], ST10)
 
-      it("transfer 1000 from account 1 -> 2 with 1000 allowance (as admin)", async () => {
-         // We first need to bring approval to 0
-         assert.equal(await token.approve.call(admin, 0, { from: accounts[4] }), true)
-         EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, 0, { from: accounts[4] }), accounts[4], admin, 0)
+      assert.equal((await token.allowance.call(accounts[4], accounts[2], {from: accounts[4]})).toNumber(), ST10.toNumber())
 
-         assert.equal(await token.allowance.call(accounts[4], admin, { from: accounts[4] }), 0)
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, {from: accounts[4]}))
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], accounts[2], ST1000, {from: accounts[2]}))
+    })
 
-         assert.equal(await token.approve.call(admin, ST1000, { from: accounts[4] }), true)
-         EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, ST1000, { from: accounts[4] }), accounts[4], admin, ST1000)
+    it("transfer 1000 from account 1 -> 2 with 1000 allowance (as ops)", async () => {
+      // We first need to bring approval to 0
+      assert.equal(await token.approve.call(ops, 0, {from: accounts[4]}), true)
+      EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, 0, {from: accounts[4]}), accounts[4], ops, 0)
 
-         assert.equal(await token.allowance.call(accounts[4], admin), ST1000.toNumber(), { from: accounts[4] })
+      assert.equal(await token.allowance.call(accounts[4], ops, {from: accounts[4]}), 0)
 
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], admin, ST1000, { from: accounts[4] }))
-         await Utils.expectThrow(token.transferFrom.call(accounts[4], admin, ST1000, { from: admin }))
-      })
-   })
+      assert.equal(await token.approve.call(ops, ST1000, {from: accounts[4]}), true)
+      EIP20Token_utils.checkApprovalEventGroup(await token.approve(ops, ST1000, {from: accounts[4]}), accounts[4], ops, ST1000)
 
+      assert.equal(await token.allowance.call(accounts[4], ops), ST1000.toNumber(), {from: accounts[4]})
 
-   describe('transferFrom function after finalize', async () => {
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], ops, ST1000, {from: accounts[4]}))
+      assert.equal(await token.transferFrom.call(accounts[4], ops, ST1000, {from: ops}), true)
+      await token.transferFrom(accounts[4], ops, ST1000, {from: ops})
 
-      var token = null
+      assert.equal((await token.balanceOf.call(accounts[4])).toNumber(), ST9000.toNumber())
+      assert.equal((await token.balanceOf.call(ops)).toNumber(), ST1000.toNumber())
+    })
 
-      before(async () => {
-         token = await createToken()
+    it("transfer 1000 from account 1 -> 2 with 1000 allowance (as admin)", async () => {
+      // We first need to bring approval to 0
+      assert.equal(await token.approve.call(admin, 0, {from: accounts[4]}), true)
+      EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, 0, {from: accounts[4]}), accounts[4], admin, 0)
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
+      assert.equal(await token.allowance.call(accounts[4], admin, {from: accounts[4]}), 0)
 
-         await token.transfer(accounts[1], ST10000)
+      assert.equal(await token.approve.call(admin, ST1000, {from: accounts[4]}), true)
+      EIP20Token_utils.checkApprovalEventGroup(await token.approve(admin, ST1000, {from: accounts[4]}), accounts[4], admin, ST1000)
 
-         token.finalize({ from: admin })
-      })
+      assert.equal(await token.allowance.call(accounts[4], admin), ST1000.toNumber(), {from: accounts[4]})
 
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], admin, ST1000, {from: accounts[4]}))
+      await Utils.expectThrow(token.transferFrom.call(accounts[4], admin, ST1000, {from: admin}))
+    })
+  })
 
-      it("transfer 0 from account 1 -> 2 with 0 allowance", async () => {
-         assert.equal(await token.approve.call(accounts[2], 0, { from: accounts[1] }), true)
-         assert.equal(await token.allowance.call(accounts[1], accounts[2]), 0)
-         assert.equal(await token.transferFrom.call(accounts[1], accounts[2], 0, { from: accounts[1] }), true)
-         assert.equal(await token.transferFrom.call(accounts[1], accounts[2], 0, { from: accounts[2] }), true)
-      })
 
-      it("transfer 1000 from account 1 -> 2 without allowance", async () => {
-         await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[1] }))
-         await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[2] }))
-      })
+  describe('transferFrom function after finalize', async () => {
 
-      it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
-         assert.equal(await token.approve.call(accounts[2], ST10, { from: accounts[1] }), true)
-         await token.approve(accounts[2], ST10, { from: accounts[1] })
-         assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST10.toNumber())
-         await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[1] }))
-         await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[2] }))
-      })
+    var token = null
 
-      it("transfer 1000 from account 1 -> 2 with 1000 allowance", async () => {
-         // We first need to bring approval to 0
-         assert.equal(await token.approve.call(accounts[2], 0, { from: accounts[1] }), true)
-         await token.approve(accounts[2], 0, { from: accounts[1] })
-         assert.equal(await token.allowance.call(accounts[1], accounts[2]), 0)
+    before(async () => {
+      token = await createToken()
 
-         assert.equal(await token.approve.call(accounts[2], ST1000, { from: accounts[1] }), true)
-         await token.approve(accounts[2], ST1000, { from: accounts[1] })
-         assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST1000.toNumber())
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
 
-         await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[1] }))
-         assert.equal(await token.transferFrom.call(accounts[1], accounts[2], ST1000, { from: accounts[2] }), true)
-         await token.transferFrom(accounts[1], accounts[2], ST1000, { from: accounts[2] })
+      await token.transfer(accounts[1], ST10000)
 
-         assert.equal((await token.balanceOf.call(accounts[1])).toNumber(), ST9000.toNumber())
-         assert.equal((await token.balanceOf.call(accounts[2])).toNumber(), ST1000.toNumber())
-      })
-   })
+      token.finalize({from: admin})
+    })
 
 
-   describe('owner and operations', async () => {
+    it("transfer 0 from account 1 -> 2 with 0 allowance", async () => {
+      assert.equal(await token.approve.call(accounts[2], 0, {from: accounts[1]}), true)
+      assert.equal(await token.allowance.call(accounts[1], accounts[2]), 0)
+      assert.equal(await token.transferFrom.call(accounts[1], accounts[2], 0, {from: accounts[1]}), true)
+      assert.equal(await token.transferFrom.call(accounts[1], accounts[2], 0, {from: accounts[2]}), true)
+    })
 
-      var token = null
+    it("transfer 1000 from account 1 -> 2 without allowance", async () => {
+      await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[1]}))
+      await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[2]}))
+    })
 
+    it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
+      assert.equal(await token.approve.call(accounts[2], ST10, {from: accounts[1]}), true)
+      await token.approve(accounts[2], ST10, {from: accounts[1]})
+      assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST10.toNumber())
+      await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[1]}))
+      await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[2]}))
+    })
 
-      before(async () => {
-         token = await createToken()
+    it("transfer 1000 from account 1 -> 2 with 1000 allowance", async () => {
+      // We first need to bring approval to 0
+      assert.equal(await token.approve.call(accounts[2], 0, {from: accounts[1]}), true)
+      await token.approve(accounts[2], 0, {from: accounts[1]})
+      assert.equal(await token.allowance.call(accounts[1], accounts[2]), 0)
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
+      assert.equal(await token.approve.call(accounts[2], ST1000, {from: accounts[1]}), true)
+      await token.approve(accounts[2], ST1000, {from: accounts[1]})
+      assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST1000.toNumber())
 
-         await token.transfer(accounts[1], ST10000)
-         await token.transfer(accounts[2], ST1000)
-      })
+      await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[1]}))
+      assert.equal(await token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[2]}), true)
+      await token.transferFrom(accounts[1], accounts[2], ST1000, {from: accounts[2]})
 
+      assert.equal((await token.balanceOf.call(accounts[1])).toNumber(), ST9000.toNumber())
+      assert.equal((await token.balanceOf.call(accounts[2])).toNumber(), ST1000.toNumber())
+    })
+  })
 
-      it("check initial owner", async () => {
-         assert.equal(await token.owner.call(), accounts[0])
-      })
 
-      it("check initial admin", async () => {
-         assert.equal(await token.adminAddress.call(), accounts[1])
-      })
+  describe('owner and operations', async () => {
 
-      it("check initial ops", async () => {
-         assert.equal(await token.opsAddress.call(), accounts[2])
-      })
+    var token = null
 
-      it("change ops address to some account", async () => {
-         assert.equal(await token.setOpsAddress.call(accounts[5]), true)
-         await token.setOpsAddress(accounts[5])
-      })
 
-      it("change ops address to 0", async () => {
-         assert.equal(await token.setOpsAddress.call(0), true)
-         await token.setOpsAddress(0)
-      })
+    before(async () => {
+      token = await createToken()
 
-      it("change ops address to account 3", async () => {
-         assert.equal(await token.setOpsAddress.call(accounts[3]), true)
-         await token.setOpsAddress(accounts[3])
-      })
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
 
-      it("finalize as normal", async () => {
-         await Utils.expectThrow(token.finalize.call({ from: accounts[4] }))
-      })
+      await token.transfer(accounts[1], ST10000)
+      await token.transfer(accounts[2], ST1000)
+    })
 
-      it("finalize as ops", async () => {
-         await Utils.expectThrow(token.finalize.call({ from: ops }))
-      })
 
-      it("finalize as admin", async () => {
-         assert.equal(await token.finalize.call({ from: admin }), true)
-      })
-   })
+    it("check initial owner", async () => {
+      assert.equal(await token.owner.call(), accounts[0])
+    })
 
+    it("check initial admin", async () => {
+      assert.equal(await token.adminAddress.call(), accounts[1])
+    })
 
-   describe('finalize function', async () => {
+    it("check initial ops", async () => {
+      assert.equal(await token.opsAddress.call(), accounts[2])
+    })
 
-      var token = null
+    it("change ops address to some account", async () => {
+      assert.equal(await token.setOpsAddress.call(accounts[5]), true)
+      await token.setOpsAddress(accounts[5])
+    })
 
-      before(async () => {
-         token = await createToken()
+    it("change ops address to 0", async () => {
+      assert.equal(await token.setOpsAddress.call(0), true)
+      await token.setOpsAddress(0)
+    })
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
-      })
+    it("change ops address to account 3", async () => {
+      assert.equal(await token.setOpsAddress.call(accounts[3]), true)
+      await token.setOpsAddress(accounts[3])
+    })
 
+    it("finalize as normal", async () => {
+      await Utils.expectThrow(token.finalize.call({from: accounts[4]}))
+    })
 
-      it("check properties before and after finalize", async () => {
-         assert.equal(await token.finalized.call(), false)
-         SimpleTokenUtils.checkFinalizedEventGroup(await token.finalize({ from: admin }))
-         assert.equal(await token.finalized.call(), true)
-      })
+    it("finalize as ops", async () => {
+      await Utils.expectThrow(token.finalize.call({from: ops}))
+    })
 
-      it("try to finalize a 2nd time", async () => {
-         await Utils.expectThrow(token.finalize.call({ from: admin }))
-      })
-   })
+    it("finalize as admin", async () => {
+      assert.equal(await token.finalize.call({from: admin}), true)
+    })
+  })
 
 
-   describe('burn function', async () => {
+  describe('finalize function', async () => {
 
-      var token = null
+    var token = null
 
-      before(async () => {
-         token = await createToken()
+    before(async () => {
+      token = await createToken()
 
-         await token.setOpsAddress(ops)
-         await token.setAdminAddress(admin)
-      })
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
+    })
 
-      it("burn greater than balance", async () => {
-         await Utils.expectThrow(token.burn.call((TOTAL_SUPPLY.plus(ST1)), { from: accounts[0] }))
-      })
 
-      it("burn less than or equal to balance", async () => {
-         const balanceBefore = await token.balanceOf(accounts[0])
+    it("check properties before and after finalize", async () => {
+      assert.equal(await token.finalized.call(), false)
+      SimpleTokenUtils.checkFinalizedEventGroup(await token.finalize({from: admin}))
+      assert.equal(await token.finalized.call(), true)
+    })
 
-         SimpleTokenUtils.checkBurntEventGroup(await token.burn(ST1000, { from: accounts[0] }))
+    it("try to finalize a 2nd time", async () => {
+      await Utils.expectThrow(token.finalize.call({from: admin}))
+    })
+  })
 
-         const currentBalance = await token.balanceOf(accounts[0])
-         const currentSupply = await token.totalSupply.call()
 
-         assert.equal(balanceBefore.minus(currentBalance).toNumber(), ST1000.toNumber())
-         assert.equal(TOTAL_SUPPLY.minus(currentSupply).toNumber(), ST1000.toNumber())
-      })
-   })
+  describe('burn function', async () => {
+
+    var token = null
+
+    before(async () => {
+      token = await createToken()
+
+      await token.setOpsAddress(ops)
+      await token.setAdminAddress(admin)
+    })
+
+    it("burn greater than balance", async () => {
+      await Utils.expectThrow(token.burn.call((TOTAL_SUPPLY.plus(ST1)), {from: accounts[0]}))
+    })
+
+    it("burn less than or equal to balance", async () => {
+      const balanceBefore = await token.balanceOf(accounts[0])
+
+      SimpleTokenUtils.checkBurntEventGroup(await token.burn(ST1000, {from: accounts[0]}))
+
+      const currentBalance = await token.balanceOf(accounts[0])
+      const currentSupply = await token.totalSupply.call()
+
+      assert.equal(balanceBefore.minus(currentBalance).toNumber(), ST1000.toNumber())
+      assert.equal(TOTAL_SUPPLY.minus(currentSupply).toNumber(), ST1000.toNumber())
+    })
+  })
 })

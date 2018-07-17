@@ -20,27 +20,31 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
 
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
+var CoreMock = artifacts.require("./CoreMock.sol");
+var proof = require('./data/proof');
 
 const chainIdValue   = 3;
 const chainIdUtility = 1410;
 
 /// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-  const registrar      = accounts[1];
-
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
+    const registrar      = accounts[1];
+    const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], constants.VALUE_CHAIN_BLOCK_TIME,  0, proof.account.stateRoot, accounts[11]);
+    const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
-	const stPrime = new STPrime(stPrimeAddress);
+    const stPrime = new STPrime(stPrimeAddress);
+    await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
 
-	await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
-
-	return {
-		stPrime       : stPrime,
-		openSTUtility : openSTUtility
-	}
+    return {
+        stPrime       : stPrime,
+        openSTUtility : openSTUtility
+    }
 }
 
 // Token address is returned by ProposedBrandedToken but verified elsewhere
@@ -150,7 +154,7 @@ module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEve
   assert.equal(event._amountUT, _amountUT.toNumber());
 }
 
-module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount) => {
+module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -162,6 +166,7 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _tok
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _beneficiary, _amount, _unlockHeight, _chainIdValue) => {
@@ -193,7 +198,7 @@ module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIn
 	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
 }
 
-module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount) => {
+module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
 		_amount = new BigNumber(_amount);
 	}
@@ -205,6 +210,7 @@ module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentH
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {

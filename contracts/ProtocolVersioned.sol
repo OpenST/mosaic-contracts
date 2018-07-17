@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -21,53 +21,79 @@ pragma solidity ^0.4.17;
 //
 // ----------------------------------------------------------------------------
 
+/**
+ *  @title ProtocolVersioned contract.
+ *
+ *  @notice Contains functions that facilitate a protocol version 
+ *          transfer by exisiting protocol.
+ */
 contract ProtocolVersioned {
 
-	/*
-	 *  Events
-	 */
+	/** Events */
+
 	event ProtocolTransferInitiated(address indexed _existingProtocol, address indexed _proposedProtocol, uint256 _activationHeight);
 	event ProtocolTransferRevoked(address indexed _existingProtocol, address indexed _revokedProtocol);
 	event ProtocolTransferCompleted(address indexed _newProtocol);
 
-	/*
-	 *  Constants
+	/** Constants */
+
+	/**
+	 *  Blocks to wait before the protocol transfer can be completed
+	 *  This allows anyone with a stake to unstake under the existing
+	 *  protocol if they disagree with the new proposed protocol
+	 * 
+	 *  @dev from OpenST ^v1.0 this constant will be set to a significant value
+	 *       ~ 1 week at 15 seconds per block
 	 */
-	/// Blocks to wait before the protocol transfer can be completed
-	/// This allows anyone with a stake to unstake under the existing
-	/// protocol if they disagree with the new proposed protocol
-	/// @dev from OpenST ^v1.0 this constant will be set to a significant value
-	/// ~ 1 week at 15 seconds per block
 	uint256 constant private PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 	
-	/*
-	 *  Storage
-	 */
-	/// OpenST protocol contract
+	/** Storage */
+	
+	/** OpenST protocol contract */
 	address public openSTProtocol;
-	/// proposed OpenST protocol
+	/** proposed OpenST protocol */
 	address public proposedProtocol;
-	/// earliest protocol transfer height
+	/** earliest protocol transfer height */
 	uint256 public earliestTransferHeight;
 
-	/*
-	 * Modifiers
+	/** Modifiers */
+
+	/**
+	 *  @notice Modifier onlyProtocol.
+	 *
+	 *  @dev Checks if msg.sender is openST protocol to proceed.
 	 */
 	modifier onlyProtocol() {
 		require(msg.sender == openSTProtocol);
 		_;
 	}
 
+	/**
+	 *  @notice Modifier onlyProposedProtocol.
+	 *
+	 *  @dev Checks if msg.sender is proposed protocol to proceed.
+	 */
 	modifier onlyProposedProtocol() {
-        require(msg.sender == proposedProtocol);
-        _;
+		require(msg.sender == proposedProtocol);
+		_;
 	}
 
+	/**
+	 *  @notice Modifier afterWait.
+	 *
+	 *  @dev Checks if earliest transfer height is lower or equal 
+	 *       to current block to proceed.
+	 */
 	modifier afterWait() {
 		require(earliestTransferHeight <= block.number);
 		_;
 	}
 
+	/**
+	 *  @notice Modifier notNull.
+	 *
+	 *  @dev Checks if address is not null to proceed.
+	 */
 	modifier notNull(address _address) {
 		require(_address != 0);
 		_;
@@ -77,18 +103,31 @@ contract ProtocolVersioned {
 	//       a significant wait time the code at the proposed new
 	//       protocol can be reviewed
 
-	/*
-	 *  Public functions
+	/** Public functions */
+
+	/**
+	 *  @notice Contract constructor.
+	 *
+	 *  @dev Constructor sets the OpenST Protocol address.
+	 *
+	 *  @param _protocol Address of the openSTProtocol.
 	 */
-	/// @dev Constructor set the OpenST Protocol
-	function ProtocolVersioned(address _protocol) 
+	constructor(address _protocol)
 		public
 		notNull(_protocol)
 	{
 		openSTProtocol = _protocol;
 	}
 
-	/// @dev initiate protocol transfer
+	/**
+	 *  @notice Public function inititateProtocolTransfer.
+	 *
+	 *  @dev Only callable by protocol. Initiates protocol transfer.
+	 *
+	 *  @param _proposedProtocol Address of the proposed openSTProtocol.
+	 *
+	 *  @return bool True if protocol tranfer is successfully inititated, false otherwise.
+	 */
 	function initiateProtocolTransfer(
 		address _proposedProtocol)
 		public 
@@ -100,50 +139,67 @@ contract ProtocolVersioned {
 		require(proposedProtocol == address(0));
 
 		earliestTransferHeight = block.number + blocksToWaitForProtocolTransfer();
-        proposedProtocol = _proposedProtocol;
+		proposedProtocol = _proposedProtocol;
 
-        ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
+		emit ProtocolTransferInitiated(openSTProtocol, _proposedProtocol, earliestTransferHeight);
 
-        return true;
-    }
+		return true;
+	}
 
-    /// @dev only after the waiting period, can
-    ///      proposed protocol complete the transfer
-    function completeProtocolTransfer()
-    	public
-    	onlyProposedProtocol
-    	afterWait
-    	returns (bool) 
-    {
-        openSTProtocol = proposedProtocol;
-        proposedProtocol = address(0);
-    	earliestTransferHeight = 0;
+	/**
+	 *  @notice Public function completeProtocolTransfer.
+	 *
+	 *  @dev Only callable by proposed protocol. Only after the waiting period, can
+	 *       proposed protocol complete the transfer.
+	 *
+	 *  @return bool True if protocol transfer is completed, false otherwise.
+	 */
+	 function completeProtocolTransfer()
+	 	public
+	 	onlyProposedProtocol
+	 	afterWait
+	 	returns (bool) 
+	 {
+	 	openSTProtocol = proposedProtocol;
+	 	proposedProtocol = address(0);
+	 	earliestTransferHeight = 0;
 
-        ProtocolTransferCompleted(openSTProtocol);
+	 	emit ProtocolTransferCompleted(openSTProtocol);
 
-        return true;
-    }
+	 	return true;
+	 }
 
-    /// @dev protocol can revoke initiated protocol
-    ///      transfer
-    function revokeProtocolTransfer()
-    	public
-    	onlyProtocol
-    	returns (bool)
-    {
-    	require(proposedProtocol != address(0));
 
-    	address revokedProtocol = proposedProtocol;
-    	proposedProtocol = address(0);
-    	earliestTransferHeight = 0;
+	/**
+	 *  @notice Public function revokeProtocolTransfer.
+	 *
+	 *  @dev Only callable by proposed protocol. Protocol can revoke initiated protocol
+	 *       transfer.
+	 *
+	 *  @return bool True if protocol transfer is revoked, false otherwise.
+	 */
+	 function revokeProtocolTransfer()
+	 	public
+	 	onlyProtocol
+	 	returns (bool)
+	 {
+	 	require(proposedProtocol != address(0));
 
-		ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
+	 	address revokedProtocol = proposedProtocol;
+	 	proposedProtocol = address(0);
+	 	earliestTransferHeight = 0;
 
-    	return true;
-    }
+		emit ProtocolTransferRevoked(openSTProtocol, revokedProtocol);
 
-    function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
-        return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
-    }
+		return true;
+	}
 
+	/**
+	 *  @notice Public function blocksToWaitForProtocolTransfer.
+	 *
+	 *  @return uint256 Protocol transfer blocks to wait.
+	 */
+	 function blocksToWaitForProtocolTransfer() public pure returns (uint256) {
+	 	return PROTOCOL_TRANSFER_BLOCKS_TO_WAIT;
+	 }
 }

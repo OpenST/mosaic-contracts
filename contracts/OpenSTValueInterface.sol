@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -14,7 +14,7 @@ pragma solidity ^0.4.17;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Value chain: OpenST protocol interface
 //
@@ -23,11 +23,13 @@ pragma solidity ^0.4.17;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
+import "./EIP20Interface.sol";
 
 
 contract OpenSTValueInterface {
     function processStaking(
-        bytes32 _stakingIntentHash)
+        bytes32 _stakingIntentHash,
+        bytes32 _unlockSecret)
         external
         returns (address stakeAddress);
 
@@ -38,7 +40,9 @@ contract OpenSTValueInterface {
         address _beneficiary,
         uint256 _amountUT,
         uint256 _redemptionUnlockHeight,
-        bytes32 _redemptionIntentHash)
+        bytes32 _hashLock,
+        uint256 _blockHeight,
+        bytes _rlpParentNodes)
         external
         returns (
         uint256 amountST,
@@ -59,7 +63,7 @@ contract OpenSTValueInterface {
         address _stakingAccount,
         bytes32 _checkUuid)
         public
-        returns ( 
+        returns (
         bytes32 uuid);
 
     function stakes(
@@ -83,4 +87,33 @@ contract OpenSTValueInterface {
         uint256, /* amountST */
         uint256, /* amountUT */
         uint256 /* expirationHeight */);
+
+    function valueToken()
+        public
+        returns (EIP20Interface /* value token address*/);
+
+    function stake(
+        bytes32 _uuid,
+        uint256 _amountST,
+        address _beneficiary,
+        bytes32 _hashLock,
+        address _staker)
+        external
+        returns (
+        uint256, /* amountUT*/
+        uint256, /* nonce*/
+        uint256, /* unlockHeight*/
+        bytes32 /* stakingIntentHash*/);
+
+    function revertStaking(
+        bytes32 _stakingIntentHash)
+        external
+        returns (
+        bytes32, /* uuid */
+        uint256, /* amountST */
+        address /* staker */);
+
+    function getStakerAddress(bytes32 _stakingIntentHash)
+        external
+        returns (address /* staker */);
 }

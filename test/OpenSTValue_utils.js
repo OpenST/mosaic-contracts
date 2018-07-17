@@ -21,26 +21,46 @@
 
 const BigNumber = require('bignumber.js');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var Workers = artifacts.require("./Workers.sol");
 
-/// @dev Deploy 
+/// @dev Deploy
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
-	const chainIdValue = 3;
-	const valueToken   = await SimpleToken.new();
-	const registrar    = accounts[1]
+	const chainIdValue = 3
+		, valueToken   = await SimpleToken.new()
+		, registrar    = accounts[1]
+		, admin = accounts[2]
+		, ops = accounts[3]
+		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+	;
 
 	// Set SimpleToken admin in order to finalize SimpleToken
 	await valueToken.setAdminAddress(accounts[1]);
 	// SimpleToken must be finalized to permit certain transfers
 	assert.ok(await valueToken.finalize({ from: accounts[1] }));
 
-	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
+
+  //Set SimpleToken admin in order to finalize SimpleToken
+  await valueToken.setAdminAddress(admin);
+
+  // Deploy worker contract
+  const workers = await Workers.new(valueToken.address)
+    , worker1 = accounts[7];
+  await workers.setAdminAddress(admin);
+  await workers.setOpsAddress(ops);
+  await workers.setWorker(worker1, deactivationHeight, {from:ops});
 
 	return {
 		valueToken  : valueToken,
-		openSTValue : openSTValue
+		openSTValue : openSTValue,
+		workers: workers
 	}
 }
 
@@ -90,7 +110,7 @@ module.exports.checkUtilityTokenRegisteredEventOnProtocol = (formattedDecodedEve
   assert.equal(event._stakingAccount, _stakingAccount);
 }
 
-module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
+module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _stakerNonce, _hashIntentKey, _beneficiary, _amountST, _amountUT, _unlockHeight, _stakingIntentHash, _chainIdUtility) => {
 	if (Number.isInteger(_stakerNonce)) {
 		_stakerNonce = new BigNumber(_stakerNonce);
 	}
@@ -111,6 +131,7 @@ module.exports.checkStakingIntentDeclaredEvent = (event, _uuid, _staker, _staker
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._stakerNonce.toNumber(), _stakerNonce.toNumber());
+	assert.equal(event.args._hashIntentKey, _hashIntentKey);
 	assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
@@ -148,7 +169,7 @@ module.exports.checkStakingIntentDeclaredEventProtocol = (event, _uuid, _staker,
 	assert.equal(event.args._chainIdUtility.toNumber(), _chainIdUtility.toNumber());
 }
 
-module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT) => {
+module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _stake, _staker, _amountST, _amountUT, _unlockSecret) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -164,6 +185,7 @@ module.exports.checkProcessedStakeEvent = (event, _uuid, _stakingIntentHash, _st
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
 	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRedemptionIntentConfirmedEvent = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
@@ -212,7 +234,7 @@ module.exports.checkRedemptionIntentConfirmedEventOnProtocol = (formattedDecoded
 	assert.isAbove(_unlockHeight.toNumber(), 0);
 }
 
-module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _beneficiary, _amountST) => {
+module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash, stake, _redeemer, _beneficiary, _amountST, _unlockSecret) => {
 	if (Number.isInteger(_amountST)) {
 		_amountST = new BigNumber(_amountST);
 	}
@@ -224,6 +246,7 @@ module.exports.checkProcessedUnstakeEvent = (event, _uuid, _redemptionIntentHash
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
 	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
+	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRevertStakingEventProtocol = (event, _uuid, _stakingIntentHash, _staker, _amountST, _amountUT) => {

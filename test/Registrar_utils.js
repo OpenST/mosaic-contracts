@@ -21,11 +21,17 @@
 
 const BigNumber = require('bignumber.js');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
-var OpenSTUtility = artifacts.require("./OpenSTUtility.sol");
-var OpenSTValue = artifacts.require("./OpenSTValue.sol");
-var Core 		= artifacts.require("./Core.sol");
+var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
+var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
+var CoreMock 		= artifacts.require("./CoreMock.sol");
+var Workers = artifacts.require("./Workers.sol");
+var proof = require('./data/proof');
 
 /// @dev Deploy 
 module.exports.deployRegistrar = async (artifacts, accounts) => {
@@ -34,7 +40,10 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const valueToken   	 = await SimpleToken.new();
 	const registrar    	 = await Registrar.new();
 	const staker	  	 = accounts[2];
-	const amountST		 = new BigNumber(web3.toWei(2, "ether"));;
+	const amountST		 = new BigNumber(web3.toWei(2, "ether"));
+	const deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const admin = accounts[3];
+	const ops = accounts[2];
 
 	// Registrar is OpsManaged
 	await registrar.setOpsAddress(accounts[1]);
@@ -46,15 +55,23 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	await valueToken.finalize({ from: accounts[3] });
     await valueToken.transfer(staker, amountST);
 
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, { gas: 10000000 });
-	const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address);
-	const core 		  	 = await Core.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address);
+	// Deploy worker contract
+	const workers = await Workers.new(valueToken.address)
+		, worker1 = accounts[7];
+	await workers.setAdminAddress(admin);
+	await workers.setOpsAddress(ops);
+	await workers.setWorker(worker1, deactivationHeight, {from:ops});
+
+    const openSTValue 	= await OpenSTValue.new(chainIdValue, valueToken.address, registrar.address, constants.VALUE_CHAIN_BLOCK_TIME);
+	const coreForOpenSTUtility   = await CoreMock.new(registrar.address, chainIdUtility, chainIdValue, openSTValue.address, constants.VALUE_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
+	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar.address, coreForOpenSTUtility.address ,constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
+	const coreVC 		  	 = await CoreMock.new(registrar.address, chainIdValue, chainIdUtility, openSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
 
 	return {
 		valueToken  	: valueToken,
 		registrar 		: registrar,
 		openSTUtility 	: openSTUtility,
 		openSTValue 	: openSTValue,
-		core 			: core
+		core 			: coreVC
 	}
 }
