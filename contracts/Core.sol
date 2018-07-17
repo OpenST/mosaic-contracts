@@ -70,10 +70,10 @@ contract Core is CoreInterface, Util {
 	/** Modifiers */
 
 	/**
-     *  @notice Modifier onlyWorker.
-     *
-     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
-     */
+	 *  @notice Modifier onlyWorker.
+	 *
+	 *  @dev Checks if msg.sender is whitelisted worker address to proceed.
+	 */
 	modifier onlyWorker() {
 		// msg.sender should be worker only
 		require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
