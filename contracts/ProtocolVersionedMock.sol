@@ -23,14 +23,16 @@ pragma solidity ^0.4.23;
 
 import "./ProtocolVersioned.sol";
 
-/// @title ProtocolVersionedMock
-/// @dev Overrides certain durational constants and getters to ease testing ProtocolVersioned
+/**
+ *  @title ProtocolVersionedMock contract.
+ *
+ *  @dev Overrides certain durational constants and getters to ease testing ProtocolVersioned.
+ */
 contract ProtocolVersionedMock is ProtocolVersioned {
     uint256 private constant PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 3;
 
-    /*
-     *  Public functions
-     */
+    /**  Public functions */
+    
     constructor(address _protocol)
         ProtocolVersioned(_protocol)
         public { }
