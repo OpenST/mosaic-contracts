@@ -82,12 +82,17 @@ contract Core is CoreInterface, Util {
 		_;
 	}
 
-	// ~5Days in seconds
+    // time that is safe to execute confirmStakingIntent and confirmRedemptionIntent from the time the
+    // stake and redemption was initiated
+	//
+    // 5Days in seconds
+    // 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs
+    // so 5 days = 5 * 24 hrs = 5 * 24 * 60 mins = 5 * 24 * 60 * 60 seconds = 432000 seconds
 	uint256 private constant TIME_TO_WAIT = 432000;
 
-	uint256 public remoteBlockTime;
+	uint256 public remoteChainBlockGenerationTime;
 
-	uint256 public blocksToWait;
+	uint256 public remoteChainBlocksToWait;
 
 	/*  Public functions */
 
@@ -100,7 +105,7 @@ contract Core is CoreInterface, Util {
 	 * @param _chainIdOrigin chain id where current core contract is deployed since core contract can be deployed on remote chain also
 	 * @param _chainIdRemote if current chain is value then _chainIdRemote is chain id of utility chain
 	 * @param _openSTRemote if current chain is value then _openSTRemote is address of openSTUtility contract address
-	 * @param _blockTimeRemote block generation time of remote chain
+	 * @param _remoteChainBlockGenerationTime block generation time of remote chain
 	 * @param _blockHeight block height at which _stateRoot needs to store
 	 * @param _stateRoot state root hash of given _blockHeight
 	 * @param _workers Workers contract address
@@ -110,7 +115,7 @@ contract Core is CoreInterface, Util {
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
-		uint256 _blockTimeRemote,
+		uint256 _remoteChainBlockGenerationTime,
 		uint256 _blockHeight,
 		bytes32 _stateRoot,
 		WorkersInterface _workers)
@@ -121,14 +126,14 @@ contract Core is CoreInterface, Util {
 		require(_chainIdRemote != 0, "Remote chain Id is 0");
 		require(_openSTRemote != address(0), "OpenSTRemote address is 0");
 		require(_workers != address(0), "Workers contract address is 0");
-		require(_blockTimeRemote != uint256(0), "Remote block time is 0");
+		require(_remoteChainBlockGenerationTime != uint256(0), "Remote block time is 0");
 		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
-		remoteBlockTime = _blockTimeRemote;
-		blocksToWait = TIME_TO_WAIT.div(_blockTimeRemote);
+		remoteChainBlockGenerationTime = _remoteChainBlockGenerationTime;
+		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
@@ -177,6 +182,10 @@ contract Core is CoreInterface, Util {
 	/**
 	 * @notice Get safe unlock height
 	 *
+	 * @dev block height that is safe to execute confirmStakingIntent and confirmRedemptionIntent,
+	 * 		else there will be possibility that there is not much time left for executing processStaking
+	 *		and processRedeeming respectively
+	 *
 	 * @return uint256 safeUnlockHeight
 	 */
 	function safeUnlockHeight()
@@ -184,7 +193,7 @@ contract Core is CoreInterface, Util {
 		view
 		returns (uint256 /* safeUnlockHeight */)
 	{
-		return blocksToWait + latestStateRootBlockHeight;
+		return remoteChainBlocksToWait.add(latestStateRootBlockHeight);
 	}
 
 	/**

@@ -20,7 +20,7 @@ contract CoreMock is Core {
 	  * @param _chainIdOrigin chain id where current core contract is deployed since core contract can be deployed on remote chain also
 	  * @param _chainIdRemote if current chain is value then _chainIdRemote is chain id of utility chain
 	  * @param _openSTRemote if current chain is value then _openSTRemote is address of openSTUtility contract address
-	  * @param _blockTimeRemote block generation time of remote chain
+	  * @param _remoteChainBlockGenerationTime block generation time of remote chain
 	  * @param _blockHeight block height at which _stateRoot needs to store
 	  * @param _stateRoot state root hash of given _blockHeight
 	  * @param _workers Workers contract address
@@ -30,13 +30,13 @@ contract CoreMock is Core {
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
-		uint256 _blockTimeRemote,
+		uint256 _remoteChainBlockGenerationTime,
 		uint256 _blockHeight,
 		bytes32 _stateRoot,
 		WorkersInterface _workers)
-		Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _blockTimeRemote, _blockHeight, _stateRoot, _workers) public
+		Core(_registrar, _chainIdOrigin, _chainIdRemote, _openSTRemote, _remoteChainBlockGenerationTime, _blockHeight, _stateRoot, _workers) public
 	{
-		blocksToWait = TIME_TO_WAIT.div(_blockTimeRemote);
+		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
 	}
 
 	/**
@@ -49,13 +49,13 @@ contract CoreMock is Core {
 		view
 		returns (uint256 /* safeUnlockHeight */)
 	{
-		return  block.number + blocksToWait;
+		return  remoteChainBlocksToWait.add(block.number);
 	}
 
 	/**
-	  * @notice public view function getStorageRoot
+	  * @notice get storage root for a given block height
 	  *
-	  * @dev this is for testing only
+	  * @dev this is for testing only so the data is mocked here
 	  *
 	  * @param _blockHeight block height for which storage root is needed
 	  *

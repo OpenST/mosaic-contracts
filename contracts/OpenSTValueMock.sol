@@ -57,14 +57,14 @@ constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
 		address _registrar,
-		uint256 _blockTime)
-		OpenSTValue(_chainIdValue, _eip20token, _registrar, _blockTime)
+		uint256 _valueChainBlockGenerationTime)
+		OpenSTValue(_chainIdValue, _eip20token, _registrar, _valueChainBlockGenerationTime)
 		public {
 		//inserting the intents mapping with the test staking intent hash against calculated testIntentsKey
 		stakingIntents[testIntentsKey] = testStakingIntentHash;
 
-		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
+		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_valueChainBlockGenerationTime);
+		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_valueChainBlockGenerationTime);
 
 	}
 

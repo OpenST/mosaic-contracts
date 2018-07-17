@@ -70,9 +70,14 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
 
-    // ~2 weeks in seconds
+    // 2 weeks in seconds
+    // 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs, 1 week = 7 days
+    // so 2 week =  2 * 7 days = 2 * 7 * 24 hrs = 2 * 7 * 24 * 60 mins = 2 * 7 * 24 * 60 * 60 seconds = 1209600 seconds
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~1hour in seconds
+
+    // 1hour in seconds
+    // 1 min = 60 seconds, 1 hrs = 60 mins
+    // so 1 hour = 60 mins = 60 * 60 seconds = 3600 seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
@@ -154,17 +159,17 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _chainIdValue,
         EIP20Interface _eip20token,
         address _registrar,
-        uint256 _blockTime)
+        uint256 _valueChainBlockGenerationTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_eip20token != address(0));
         require(_registrar != address(0));
-        require(_blockTime != 0);
+        require(_valueChainBlockGenerationTime != 0);
 
-        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_valueChainBlockGenerationTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_valueChainBlockGenerationTime);
 
         chainIdValue = _chainIdValue;
         valueToken = _eip20token;

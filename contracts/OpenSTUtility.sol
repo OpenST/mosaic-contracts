@@ -71,9 +71,15 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
 
 
     /* Constants */
-    // ~2 weeks in seconds
+
+    // 2 weeks in seconds
+    // 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs, 1 week = 7 days
+    // so 2 week =  2 * 7 days = 2 * 7 * 24 hrs = 2 * 7 * 24 * 60 mins = 2 * 7 * 24 * 60 * 60 seconds = 1209600 seconds
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
-    // ~1hour in seconds
+
+    // 1hour in seconds
+    // 1 min = 60 seconds, 1 hrs = 60 mins
+    // so 1 hour = 60 mins = 60 * 60 seconds = 3600 seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     // indentified index position of stakingIntents mapping in storage (in OpenSTValue)
@@ -158,7 +164,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _chainIdUtility,
         address _registrar,
         CoreInterface _core,
-        uint256 _blockTime)
+        uint256 _utilityChainBlockGenerationTime)
         public
         OpsManaged()
     {
@@ -166,10 +172,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
         require(_core != address(0), "Core address cannot be null");
-        require(_blockTime != 0, "Block time cannot be 0");
+        require(_utilityChainBlockGenerationTime != 0, "Block time cannot be 0");
 
-        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_blockTime);
-        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_blockTime);
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_utilityChainBlockGenerationTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_utilityChainBlockGenerationTime);
 
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
