@@ -39,8 +39,8 @@ contract RLPTest  {
       * @return length of list.
       */
     function toList(
-        bytes rlpEncodedData
-      , uint256 index)
+        bytes rlpEncodedData,
+        uint256 index)
         public
         pure
     returns (bytes data, uint256 length)

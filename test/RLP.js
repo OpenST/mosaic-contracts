@@ -72,8 +72,8 @@ contract('RLP', function (accounts) {
 			
 			for (let index = 0; index < items.length; index++) {
 				
-				let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
-					, itemAtIndex = result[0];
+				let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index),
+					itemAtIndex = result[0];
 				
 				assert.equal('0x' + items[index].toString('hex'), itemAtIndex);
 			}
