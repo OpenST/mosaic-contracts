@@ -42,6 +42,8 @@ contract CoreMock is Core {
 	/**
 	  * @notice Get safe unlock height
 	  *
+	  * @dev this is for testing only so the data is mocked here
+	  *
 	  * @return uint256 safeUnlockHeight
 	  */
 	function safeUnlockHeight()

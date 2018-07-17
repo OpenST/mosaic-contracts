@@ -21,42 +21,78 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-/// A set of authorised workers
+/**
+ *  @title WorkersInterface contract.
+ *
+ *  @notice Provides an interface to workers contract.
+ */
 contract WorkersInterface {
 
+    /**
+     *  @notice External function setWorker.
+     *
+     *  @dev Takes _worker, _deactivationHeight,
+     *       Sets worker and its deactivation height.
+     *
+     *  @param _worker Worker address.
+     *  @param _deactivationHeight Deactivation Height.
+     *
+     *  @return uint256 Remaining activation length.
+     */
     function setWorker(
         address _worker,
         uint256 _deactivationHeight)
         external
         returns (uint256 /* remaining activation length */);
 
-    /// @dev    Takes _worker;
-    ///         removes the worker; 
-    ///         external method;
-    /// @param _worker worker
-    /// @return (existed)    
+    /**
+     *  @notice External function removeWorker.
+     *  
+     *  @dev Takes _worker and removes the worker.
+     *
+     *  @param _worker Worker address.
+     *
+     *  @return bool true if existed, false otherwise.
+     */
     function removeWorker(
         address _worker)
         external
         returns (bool /* existed */);
     
-    /// @dev    Clean up or collectively revoke all workers;
-    ///         external method;
-    ///         only called by ops or admin;    
+    /**
+     *  @notice External function remove.
+     *
+     *  @dev Clean up or collectively revoke all workers.
+     *       Only callable by ops or admin.
+     */   
     function remove()
         external;
 
-    /// @dev    Takes _worker;
-    ///         checks if the worker is valid; 
-    ///         external method;
-    /// @param _worker worker
-    /// @return (isValid)    
+    /**
+     *  @notice External function isWorker.
+     *
+     *  @dev Takes _worker, checks if the worker is valid. 
+     *
+     *  @param _worker Worker address.
+     *
+     *  @return bool True if worker is valid, false otherwise.
+     */     
     function isWorker(
         address _worker)
         external
         view
         returns (bool /* is active worker */);
 
+    /**
+     *  @notice External function approve.
+     *
+     *  @dev Takes _spender and _amount, approves spender to spend amount.
+     *
+     *  @param _spender Spender address.
+     *  @param _amount Amount to approve for spender.
+     *
+     *  @return bool True if spender approved, false otherwise.
+     */
     function approve(
         address _spender,
         uint256 _amount)
