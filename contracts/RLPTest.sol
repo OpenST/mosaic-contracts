@@ -52,9 +52,7 @@ contract RLPTest  {
         if (index < length)
             data = RLP.toData(list[index]);
     }
-
-
-
+    
     /** @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
       *
       * @param rlpEncodedData The RLPItem encoded bytes.
