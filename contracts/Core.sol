@@ -180,8 +180,8 @@ contract Core is CoreInterface, Util {
 	 * @notice Get safe unlock height
 	 *
 	 * @dev block height that is safe to execute confirmStakingIntent and confirmRedemptionIntent,
-	 * 		else there will be possibility that there is not much time left for executing processStaking
-	 *		and processRedeeming respectively
+	 *      else there will be possibility that there is not much time left for executing processStaking
+	 *      and processRedeeming respectively
 	 *
 	 * @return uint256 safeUnlockHeight
 	 */
