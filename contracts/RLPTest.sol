@@ -9,7 +9,7 @@ import "./RLP.sol";
  */
 contract RLPTest  {
 
-
+    bytes[] arrayStorage;
     /**
      *  @notice Creates an RLPItem from an array of RLP encoded bytes.
      *
@@ -38,15 +38,26 @@ contract RLPTest  {
      * @return length of list.
      */
     function toList(
-        bytes rlpEncodedData)
+        bytes rlpEncodedData,bytes array)
         public
         pure
-        returns(uint)
+        returns(bool)
     {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpEncodedData);
         RLP.RLPItem[] memory list =  RLP.toList(item);
-        return list.length;
+        uint memPtr = list[0]._unsafe_memPtr;
+        bytes data;
+        assembly
+        {
+            data := mload(memPtr)
+        }
+
+        require(data == array);
+
     }
+
+
+
 
     /**  @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
      *
