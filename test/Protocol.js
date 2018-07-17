@@ -186,7 +186,7 @@ contract('OpenST', function(accounts) {
 			it("confirm staking intent for Simple Token Prime", async () => {
 				// registrar registers staking intent on utility chain
                 const validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true);
-				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, stakerVC, nonceSTP,
+                const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, stakerVC, nonceSTP,
 					beneficiary, AMOUNT_ST, AMOUNT_ST, unlockHeight, lockSTP.l, 0, validRLPParentNodes, { from: intercommUC });
 				  utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
 			});

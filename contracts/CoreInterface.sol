@@ -45,4 +45,6 @@ contract CoreInterface {
 	/** It's called whenever account proof needs to be verified */
 	function proveOpenST(uint256 _blockHeight, bytes _rlpEncodedAccount, bytes _rlpParentNodes) external returns (bool /** success */);
 
+	function safeUnlockHeight() external view returns (uint256 /* safeUnlockHeight */);
+
 }

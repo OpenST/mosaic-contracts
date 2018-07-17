@@ -70,22 +70,20 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         address _redeemer, address _beneficiary, uint256 _amountUT);
 
 
-    /*
-  *  Constants
-  */
-    // ~2 weeks, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
+    /* Constants */
+
+    // 2 weeks in seconds
+    uint256 private constant TIME_TO_WAIT_LONG = 1209600;
+
+    // 1hour in seconds
+    uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     // indentified index position of stakingIntents mapping in storage (in OpenSTValue)
     // positions 0-3 are occupied by public state variables in OpsManaged and Owned
     // private constants do not occupy the storage of a contract
     uint8 internal constant intentsMappingStorageIndexPosition = 4;
 
-    /*
-     *  Storage
-     */
+    /* Storage */
 
     // storage for redemption intent hash
     mapping(bytes32 /* hashIntentKey */ => bytes32 /* redemptionIntentHash */) public redemptionIntents;
@@ -114,6 +112,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /// chainId of the current utility chain
     uint256 public chainIdUtility;
     address public registrar;
+
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitLong;
 
     CoreInterface public core;
 
@@ -158,14 +159,20 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         uint256 _chainIdValue,
         uint256 _chainIdUtility,
         address _registrar,
-        CoreInterface _core )
+        CoreInterface _core,
+        uint256 _utilityChainBlockGenerationTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_chainIdUtility != 0);
         require(_registrar != address(0));
-        require(_core != address(0), "CoreInterface address cannot be null");
+        require(_core != address(0), "Core address cannot be null");
+        require(_utilityChainBlockGenerationTime != 0, "Block time cannot be 0");
+
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_utilityChainBlockGenerationTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_utilityChainBlockGenerationTime);
+
         chainIdValue = _chainIdValue;
         chainIdUtility = _chainIdUtility;
         registrar = _registrar;
@@ -242,7 +249,9 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         // stakingUnlockheight needs to be checked against the core that tracks the value chain
         require(_stakingUnlockHeight > 0);
 
-        expirationHeight = block.number + blocksToWaitShort();
+        require(core.safeUnlockHeight() < _stakingUnlockHeight);
+
+        expirationHeight = block.number + blocksToWaitShort;
         nonces[_staker] = _stakerNonce;
 
         bytes32 stakingIntentHash = hashStakingIntent(
@@ -295,15 +304,16 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         bytes rlpParentNodes,
         bytes32 storageRoot)
         private
+        pure
         returns(bool /* MerkleProofStatus*/)
     {
         bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
             OpenSTHelper.storageVariablePath(
                 intentsMappingStorageIndexPosition,
-                keccak256(_staker,_stakerNonce)));
+                keccak256(abi.encodePacked(_staker,_stakerNonce))));
 
         return MerklePatriciaProof.verify(
-            keccak256(stakingIntentHash),
+            keccak256(abi.encodePacked(stakingIntentHash)),
             encodedPathInMerkle,
             rlpParentNodes,
             storageRoot);
@@ -405,7 +415,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         require(token.allowance(msg.sender, address(this)) >= _amountBT);
         require(token.transferFrom(msg.sender, address(this), _amountBT));
 
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         redemptionIntentHash = hashRedemptionIntent(
                 _uuid,
@@ -461,7 +471,7 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         nonces[msg.sender] = _nonce;
 
         amountSTP = msg.value;
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         redemptionIntentHash = hashRedemptionIntent(
                 uuidSTPrime,
@@ -740,11 +750,4 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         return true;
     }
 
-    function blocksToWaitLong() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_LONG;
-    }
-
-    function blocksToWaitShort() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_SHORT;
-    }
 }

@@ -29,6 +29,9 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , proof = require('./data/proof')
 ;
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
 const Assert 	= require('assert')
   , BigNumber = require('bignumber.js')
   ;
@@ -60,7 +63,7 @@ module.exports.deployGateway = async (artifacts, accounts) => {
   await valueToken.setAdminAddress(admin);
   // SimpleToken must be finalized to permit certain transfers
   assert.ok(await valueToken.finalize({ from: admin }));
-  openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+  openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
@@ -69,7 +72,8 @@ module.exports.deployGateway = async (artifacts, accounts) => {
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
-  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, 0, proof.account.stateRoot, workers.address);
+  core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
+
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);

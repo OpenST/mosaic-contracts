@@ -34,8 +34,8 @@ import "./TestUtils.sol";
 contract OpenSTValueMock is OpenSTValue {
 	using TestUtils for bytes32;
 
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+	uint256 private constant TIME_TO_WAIT_LONG = 220;
+	uint256 private constant TIME_TO_WAIT_SHORT = 20;
 	// test staker nonce required for confirming the intents mapping index position
 	uint256 private constant testStakerNonce = 1;
 	// test staker address required for confirming the intents mapping index position
@@ -53,53 +53,49 @@ contract OpenSTValueMock is OpenSTValue {
 		
 	/* Public functions */
 
-	constructor(
+constructor(
 		uint256 _chainIdValue,
 		EIP20Interface _eip20token,
-		address _registrar)
-		OpenSTValue(_chainIdValue, _eip20token, _registrar)
-		public 
-	{
+		address _registrar,
+		uint256 _valueChainBlockGenerationTime)
+		OpenSTValue(_chainIdValue, _eip20token, _registrar, _valueChainBlockGenerationTime)
+		public {
 		//inserting the intents mapping with the test staking intent hash against calculated testIntentsKey
 		stakingIntents[testIntentsKey] = testStakingIntentHash;
-	}
 
-	function blocksToWaitLong() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_LONG;
-	}
+		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_valueChainBlockGenerationTime);
+		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_valueChainBlockGenerationTime);
 
-	function blocksToWaitShort() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_SHORT;
 	}
 
 	// mocked verifyRedemptionIntent function for testing only
 	function verifyRedemptionIntent(
-		bytes32 _uuid,
-		address _redeemer,
-		uint256 _redeemerNonce,
-		uint256 _blockHeight,
-		bytes32 _redemptionIntentHash,
+		bytes32 ,
+		address ,
+		uint256 ,
+		uint256 ,
+		bytes32 ,
 		bytes _rlpParentNodes)
 		internal
 		view
 		returns (bool)
 	{
-		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
-		return (keccak256(mockedValidValue) == keccak256(_rlpParentNodes));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+		return (keccak256(abi.encodePacked(mockedValidValue)) == keccak256(abi.encodePacked(_rlpParentNodes)));
 	}
 
 	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
 		external
-		view
+		pure
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
 		return mockedInvalidValue;
 	}
 

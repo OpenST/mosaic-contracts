@@ -26,8 +26,9 @@ import "./OpenSTUtility.sol";
 /// @title OpenSTUtilityMock
 /// @dev Overrides certain durational constants and getters to ease testing OpenSTUtility
 contract OpenSTUtilityMock is OpenSTUtility {
-	uint256 private constant BLOCKS_TO_WAIT_LONG = 8;
-	uint256 private constant BLOCKS_TO_WAIT_SHORT = 5;
+
+	uint256 private constant TIME_TO_WAIT_LONG = 220;
+	uint256 private constant TIME_TO_WAIT_SHORT = 20;
 
 	/*
 	 *  Public functions
@@ -36,44 +37,44 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		uint256 _chainIdValue,
 		uint256 _chainIdUtility,
 		address _registrar,
-		CoreInterface _core)
-		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core)
-		public { }
+		CoreInterface _core,
+		uint256 _utilityChainBlockGenerationTime)
+		OpenSTUtility(_chainIdValue, _chainIdUtility, _registrar, _core, _utilityChainBlockGenerationTime)
+		public
+	{
 
-	function blocksToWaitLong() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_LONG;
-	}
+		blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_utilityChainBlockGenerationTime);
+		blocksToWaitLong = TIME_TO_WAIT_LONG.div(_utilityChainBlockGenerationTime);
 
-	function blocksToWaitShort() public pure returns (uint256) {
-		return BLOCKS_TO_WAIT_SHORT;
 	}
 
 	// mock function for testing only to verify storage proof
 	function merkleVerificationOfStake(
-		address _staker,
-		uint256 _stakerNonce,
-		bytes32 stakingIntentHash,
+		address ,
+		uint256 ,
+		bytes32 ,
 		bytes rlpParentNodes,
-		bytes32 storageRoot)
+		bytes32 )
 		private
+		pure
 		returns(bool /* MerkleProofStatus*/)
 	{
-		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
-		return (keccak256(mockedValidValue) == keccak256(rlpParentNodes));
+		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+		return (keccak256(abi.encodePacked(mockedValidValue)) == keccak256(abi.encodePacked(rlpParentNodes)));
 	}
 
 	// mock function for testing only to get parent nodes
 	function getMockRLPParentNodes(
 		bool isValid)
 		external
-		view
+		pure
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(1)));
+			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(uint8(0)));
+		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
 		return mockedInvalidValue;
 	}
 

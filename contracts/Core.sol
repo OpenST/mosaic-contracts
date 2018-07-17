@@ -26,6 +26,7 @@ import "./MerklePatriciaProof.sol";
 import "./util.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
+import "./SafeMath.sol";
 
 /**
  *  @title Core contract which implements CoreInterface.
@@ -34,6 +35,7 @@ import "./RLP.sol";
  *          the utility chain to validate itself against.
  */
 contract Core is CoreInterface, Util {
+	using SafeMath for uint256;
 
 	/** Events */
 
@@ -68,15 +70,26 @@ contract Core is CoreInterface, Util {
 	/** Modifiers */
 
 	/**
-     *  @notice Modifier onlyWorker.
-     *
-     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
-     */
+	 *  @notice Modifier onlyWorker.
+	 *
+	 *  @dev Checks if msg.sender is whitelisted worker address to proceed.
+	 */
 	modifier onlyWorker() {
 		// msg.sender should be worker only
 		require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
 		_;
 	}
+
+	// time that is safe to execute confirmStakingIntent and confirmRedemptionIntent from the time the
+	// stake and redemption was initiated
+	// 5Days in seconds
+	uint256 private constant TIME_TO_WAIT = 432000;
+
+	uint256 public remoteChainBlockGenerationTime;
+
+	uint256 public remoteChainBlocksToWait;
+
+	/*  Public functions */
 
 	/**
 	 *  @notice Contract constructor.
@@ -87,6 +100,7 @@ contract Core is CoreInterface, Util {
 	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
 	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
 	 *  @param _openSTRemote If current chain is value then _openSTRemote is address of openSTUtility contract address.
+	 *  @param _remoteChainBlockGenerationTime block generation time of remote chain.
 	 *  @param _blockHeight Block height at which _stateRoot needs to store.
 	 *  @param _stateRoot State root hash of given _blockHeight.
 	 *  @param _workers Workers contract address.
@@ -96,6 +110,7 @@ contract Core is CoreInterface, Util {
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
+		uint256 _remoteChainBlockGenerationTime,
 		uint256 _blockHeight,
 		bytes32 _stateRoot,
 		WorkersInterface _workers)
@@ -106,11 +121,14 @@ contract Core is CoreInterface, Util {
 		require(_chainIdRemote != 0, "Remote chain Id is 0");
 		require(_openSTRemote != address(0), "OpenSTRemote address is 0");
 		require(_workers != address(0), "Workers contract address is 0");
+		require(_remoteChainBlockGenerationTime != uint256(0), "Remote block time is 0");
 		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
+		remoteChainBlockGenerationTime = _remoteChainBlockGenerationTime;
+		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
 		// Encoded remote path.
 		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
@@ -156,6 +174,23 @@ contract Core is CoreInterface, Util {
 		returns (address /* OpenSTRemote */)
 	{
 		return coreOpenSTRemote;
+	}
+
+	/**
+	 * @notice Get safe unlock height
+	 *
+	 * @dev block height that is safe to execute confirmStakingIntent and confirmRedemptionIntent,
+	 *      else there will be possibility that there is not much time left for executing processStaking
+	 *      and processRedeeming respectively
+	 *
+	 * @return uint256 safeUnlockHeight
+	 */
+	function safeUnlockHeight()
+		external
+		view
+		returns (uint256 /* safeUnlockHeight */)
+	{
+		return remoteChainBlocksToWait.add(latestStateRootBlockHeight);
 	}
 
 	/**
