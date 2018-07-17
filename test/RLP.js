@@ -12,9 +12,8 @@ contract('RLP', function (accounts) {
 		
 		it('should pass when input is RLP encoded list', async () => {
 			let dataArray = ['2', '5', '6', '86735']
-				, hexDataArray = RLP.encode(dataArray).toString('hex')
-				, result = await rlpTest.toRLPItem.call('0x' + hexDataArray);
-			
+			, hexDataArray = RLP.encode(dataArray).toString('hex')
+			, result = await rlpTest.toRLPItem.call('0x' + hexDataArray);
 			//result[0] is memory pointer and result[1] is length
 			// memory pointer should be greater than 0
 			assert.equal((result[0].toString(10) > 0), true);
