@@ -1,3 +1,21 @@
+## OpenST v0.9.3 July 2018
+
+The OpenST protocol is a framework for building token economies.  To scale Ethereum's throughput capacity, OpenST includes the OpenST-Gateway protocol and OpenST-Mosaic protocol.  OpenST-Gateway is a layer-2 sharding schema for (non-fungible) tokens. A gateway can be used to transpose ownership of tokens from Ethereum to different auxiliary blockchains and back.  These auxiliary blockchains are secured by OpenST-Mosaic on Ethereum, and the transactions executed on them are finalised on Ethereum.  As all value is defined on Ethereum before it is moved over a gateway to the auxiliary blockchains, OpenST is a layer-2 scaling solution to Ethereum.
+
+OpenST v0.9.3 is a milestone release as we complete the first two types of a gateway and improve the usability of the OpenST protocol.
+A gateway is a triplet of a gateway contract on the value chain, a corresponding co-gateway contract on a utility chain and a transformation function t that acts on tokens types defined on the value chain to transformed tokens on the utility chain.
+
+The first type of gateway defines Branded Tokens on a utility chain with their value backed with ERC20 tokens on Ethereum mainnet.  For a branded token, on definition, the gateway allows a precision mapping between the precision of the value token onto the precision the branded token, which is expressed in the conversion rate.
+
+The second type of gateway awards base tokens on the utility chain at a 1:1 ratio for OST staked on the value chain, making the base token of the utility chain equivalent to OST.  Each utility chain has only one such gateway, and transactions on the utility chain are therefore effectively paid in OST.  Transaction fee rewards earned by the validators on the utility chain are earned in OST, as they can unstake the equivalent amount by redeeming the base token of the utility chain.
+
+The OpenST-Gateway protocol atomically transposes the ownership of tokens between chains.  With the release of v0.9.3 OpenST is fully decentralised and any actor move ownership across the gateway, if she can prove ownership and declared intent.  The process is a two-phased, hash-timelock which requires the user to be online during the process.  To make it easier for end-users the current release introduces the concept of the facilitator, which can be any agent who is capable to do the actions on behalf of the user.  The smart contracts bind the actions of the facilitator so the user does not need to trust the facilitator; the facilitator is at risk of losing a staked bounty if he would fail to follow the process correctly.
+
+In next version the facilitator role will be opened up to earn a fee in OST, and a gateway-fee market will be introduced to accept requests from users who want to traverse tokens across a gateway.
+
+With this release the gateway relies only on Merkle proofs of the remote blockchain to prove user intentions, and as such we completed the "interblockchain communication", where there is no need to rely on trusted parties to transfer information between blockchains.
+
+
 ## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.2) March 27 2018
 
 OpenST v0.9.2 improves usability to facilitate application by the [OpenST-Platform](https://github.com/OpenSTFoundation/openst-platform) and other services. Additionally, this release increases test coverage, with additional unit and integration tests, and adds continuous integration with Travis CI.
@@ -11,7 +29,7 @@ Detailed changelog:
 - Incorporate a `beneficiary` into redeem and unstake ([openst-protocol #101](https://github.com/OpenSTFoundation/openst-protocol/pull/101))
 - Expose `mints` and `redemptions` on `OpenSTUtility` ([openst-protocol #100](https://github.com/OpenSTFoundation/openst-protocol/pull/100))
 - Expose `stakes` and `unstakes` on `OpenSTValue` ([openst-protocol #99](https://github.com/OpenSTFoundation/openst-protocol/pull/99))
-- Revise `UtilityTokenAbstract` to set certain invariants upon construction and to expose them ([openst-protocol #97](https://github.com/OpenSTFoundation/openst-protocol/pull/97)) 
+- Revise `UtilityTokenAbstract` to set certain invariants upon construction and to expose them ([openst-protocol #97](https://github.com/OpenSTFoundation/openst-protocol/pull/97))
 - Remove unneeded files ([openst-protocol #93](https://github.com/OpenSTFoundation/openst-protocol/pull/93))
 - Tests: configure Travis CI to run unit tests on `master` and `develop` branches for every commit, merge and pull request ([openst-protocol #87](https://github.com/OpenSTFoundation/openst-protocol/pull/87), [openst-protocol #105](https://github.com/OpenSTFoundation/openst-protocol/pull/105))
 - Tests: denominate tokens consistently ([openst-protocol #82](https://github.com/OpenSTFoundation/openst-protocol/pull/82))
