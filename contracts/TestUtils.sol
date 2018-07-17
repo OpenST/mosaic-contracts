@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
 
 // Copyright 2017 OpenST Ltd.
@@ -14,32 +13,40 @@ pragma solidity ^0.4.23;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Common: TestingUtils
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-/* solhint-disable-next-line two-lines-top-level-separator */
 /**
- *  @title STPrimeConfig contract.
+ *  @title TestUtils contract.
  *
- *  @notice Contains configuration constants utilized by the STPrime contract.
+ *  @notice Contains functions used for testing on Mock contracts. 
  */
-contract STPrimeConfig {
+library TestUtils {
 
-    /** Constants */
+	/** Internal functions */
 
-    string  public constant STPRIME_SYMBOL          = "STP";
-    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
-
-    /** Storage */
-
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
+	/**
+	 *  @notice Internal pure function getStoragePath.
+	 *
+	 *  @param _mappingKey Key of the mapping value.
+	 *  @param _indexPosition Index position of the mapping in contract storage.
+	 *
+	 *  @return bytes32 Path to the mapping value in contract storage.
+	 */
+	function getStoragePath(
+		bytes32 _mappingKey,
+		uint256 _indexPosition)
+		internal
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encode(
+			_mappingKey,
+			_indexPosition));
+	}
 }

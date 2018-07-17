@@ -28,41 +28,35 @@ import "./WorkersInterface.sol";
 import "./RLP.sol";
 
 /**
- *	@title Core contract which implements CoreInterface
+ *  @title Core contract which implements CoreInterface.
  *
- *	@notice Core is a minimal stub that will become the anchoring and consensus point for
- *      the utility chain to validate itself against
+ *  @notice Core is a minimal stub that will become the anchoring and consensus point for
+ *          the utility chain to validate itself against.
  */
 contract Core is CoreInterface, Util {
 
-	/* Events */
+	/** Events */
 
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
-
 	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
 	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bool wasAlreadyProved);
 
-	/*  Storage */
+	/** Storage */
 
 	mapping (uint256 /* block height */ => bytes32) private stateRoots;
-
 	mapping (uint256 /* block height */ => bytes32) private storageRoots;
 
-	/** chainIdOrigin is the origin chain id where core contract is deployed  */
+	/** chainIdOrigin is the origin chain id where core contract is deployed.  */
 	uint256 public coreChainIdOrigin;
-
-	/** chainIdRemote is the remote chain id where core contract is deployed */
+	/** chainIdRemote is the remote chain id where core contract is deployed. */
 	uint256 private coreChainIdRemote;
-
-	/** It is the address of the openSTUtility/openSTValue contract on the remote chain */
+	/** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
 	address private coreOpenSTRemote;
-
 	address private coreRegistrar;
-
 	/** Latest block height of block for which state root was committed. */
 	uint256 private latestStateRootBlockHeight;
 
-	/** Workers contract address */
+	/** Workers contract address. */
 	WorkersInterface public workers;
 
 	/**
@@ -71,32 +65,39 @@ contract Core is CoreInterface, Util {
 	 */
 	bytes private encodedOpenSTRemotePath;
 
-	/* Modifiers */
+	/** Modifiers */
 
-	/** only worker modifier */
+	/**
+     *  @notice Modifier onlyWorker.
+     *
+     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
+     */
 	modifier onlyWorker() {
 		// msg.sender should be worker only
 		require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
 		_;
 	}
 
-	/*  Public functions */
-
 	/**
-	 * @notice Contract constructor
+	 *  @notice Contract constructor.
 	 *
-	 * @dev bytes32ToBytes is util contract method
+	 *  @dev bytes32ToBytes is util contract method.
 	 *
-	 * @param _registrar registrar address
-	 * @param _chainIdOrigin origin chain id
-	 * @param _chainIdRemote remote chain id
-	 * @param _openSTRemote remote openSTUtility/openSTValue contract address
+	 *  @param _registrar Address of the registrar which registers for utility tokens.
+	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
+	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+	 *  @param _openSTRemote If current chain is value then _openSTRemote is address of openSTUtility contract address.
+	 *  @param _blockHeight Block height at which _stateRoot needs to store.
+	 *  @param _stateRoot State root hash of given _blockHeight.
+	 *  @param _workers Workers contract address.
 	 */
 	constructor(
 		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
 		address _openSTRemote,
+		uint256 _blockHeight,
+		bytes32 _stateRoot,
 		WorkersInterface _workers)
 		public
 	{
@@ -111,13 +112,17 @@ contract Core is CoreInterface, Util {
 		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
 		// Encoded remote path.
-		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(coreOpenSTRemote));
+		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
+		latestStateRootBlockHeight = _blockHeight;
+		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
 
+	/** Public functions */
+
 	/**
-	 *	@notice public view function registrar
+	 *  @notice Public view function registrar.
 	 *
-	 *	@return address coreRegistrar
+	 *  @return address coreRegistrar.
 	 */
 	function registrar()
 		public
@@ -128,9 +133,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice public view function chainIdRemote
+	 *  @notice Public view function chainIdRemote.
 	 *
-	 *	@return uint256 coreChainIdRemote
+	 *  @return uint256 coreChainIdRemote.
 	 */
 	function chainIdRemote()
 		public
@@ -141,9 +146,9 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice public view function openSTRemote
+	 *  @notice Public view function openSTRemote.
 	 *
-	 *	@return address coreOpenSTRemote
+	 *  @return address coreOpenSTRemote.
 	 */
 	function openSTRemote()
 		public
@@ -154,14 +159,63 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Commit new state root for a block height
+	 *  @notice Public view function getStateRoot.
 	 *
-	 *  @dev commitStateRoot called from game process
+	 *  @param _blockHeight Block height for which state root is needed.
 	 *
-	 *	@param _blockHeight block height for which stateRoots mapping needs to update
-	 *	@param _stateRoot state root of input block height
+	 *  @return bytes32 State root.
+	 */
+	function getStateRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* state root */)
+	{
+		return stateRoots[_blockHeight];
+	}
+
+	/**
+	 *  @notice Public view function getStorageRoot.
 	 *
-	 *	@return bytes32 stateRoot
+	 *  @param _blockHeight Block height for which storage root is needed.
+	 *
+	 *  @return bytes32 Storage root.
+	 */
+	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return storageRoots[_blockHeight];
+	}
+
+	/**
+	 *  @notice Public function getLatestStateRootBlockHeight.
+	 *
+	 *  @return uint256 Latest state root block height.
+	 */
+	function getLatestStateRootBlockHeight()
+		public
+		view
+		returns (uint256 /* block height */)
+	{
+		return latestStateRootBlockHeight;
+	}
+
+
+	/** External functions */
+
+	/**
+	 *  @notice External function commitStateRoot.
+	 *
+	 *  @dev commitStateRoot Called from game process.
+	 *       Commit new state root for a block height.
+	 *
+	 *  @param _blockHeight Block height for which stateRoots mapping needs to update.
+	 *  @param _stateRoot State root of input block height.
+	 *
+	 *  @return bytes32 stateRoot
 	 */
 	function commitStateRoot(
 		uint256 _blockHeight,
@@ -184,15 +238,21 @@ contract Core is CoreInterface, Util {
 	}
 
 	/**
-	 *	@notice Verify account proof of OpenSTRemote and commit storage root at given block height
+	 *  @notice External function proveOpenST.
 	 *
-	 *  @dev ProofVerificationSkipped event needed to identify replay calls for same block height
+	 *  @dev proveOpenST can be called by anyone to verify merkle proof of OpenSTRemote contract address. OpenSTRemote is OpenSTUtility
+	 *		   contract address on utility chain and OpenSTValue contract address on value chain.
+	 *		   Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
+	 *		   which is a trusted decentralized system running separately.
+	 * 		   It's important to note that in replay calls of proveOpenST bytes _rlpParentNodes variable is not validated. In this case
+	 *		   input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
+	 *		   OpenSTProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
 	 *
-	 *	@param _blockHeight block height at which OpenST is to be proven
-	 *	@param _rlpEncodedAccount rlpencoded account node object
-	 *	@param _rlpParentNodes RLP encoded value of account proof parent nodes
+	 *  @param _blockHeight Block height at which OpenST is to be proven.
+	 *  @param _rlpEncodedAccount RLP encoded account node object.
+	 *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
 	 *
-	 *	@return bool status
+	 *  @return bool Status.
 	 */
 	function proveOpenST(
 		uint256 _blockHeight,
@@ -201,10 +261,10 @@ contract Core is CoreInterface, Util {
 		external
 		returns(bool /* success */)
 	{
-		// Check for block height
-		require(_blockHeight != 0, "Given block height is 0");
-		// Storage root should be valid
+		// _rlpEncodedAccount should be valid
 		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		// _rlpParentNodes should be valid
+		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
 
 		bytes32 stateRoot = stateRoots[_blockHeight];
 		// State root should be present for the block height
@@ -217,10 +277,11 @@ contract Core is CoreInterface, Util {
 		// Array 3rd position is storage root
 		bytes32 storageRoot = RLP.toBytes32(accountArray[2]);
 		// Hash the rlpEncodedValue value
-		bytes32 hashedAccount = keccak256(_rlpEncodedAccount);
+		bytes32 hashedAccount = keccak256(abi.encodePacked(_rlpEncodedAccount));
 
 		// If account already proven for block height
 		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+
 		if (provenStorageRoot != bytes32(0)) {
 			// Check extracted storage root is matching with existing stored storage root
 			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
@@ -240,50 +301,4 @@ contract Core is CoreInterface, Util {
 
 		return true;
 	}
-
-	/**
-	 *	@notice public view function getStateRoot
-	 *
-	 *	@param _blockHeight block height for which state root is needed
-	 *
-	 *	@return bytes32 state root
-	 */
-	function getStateRoot(
-		uint256 _blockHeight)
-		public
-		view
-		returns (bytes32 /* state root */)
-	{
-		return stateRoots[_blockHeight];
-	}
-
-	/**
-	 *	@notice public view function getStorageRoot
-	 *
-	 *	@param _blockHeight block height for which storage root is needed
-	 *
-	 *	@return bytes32 storage root
-	 */
-	function getStorageRoot(
-		uint256 _blockHeight)
-		public
-		view
-		returns (bytes32 /* storage root */)
-	{
-		return storageRoots[_blockHeight];
-	}
-
-	/**
-	 *	@notice public function getLatestStateRootBlockHeight
-	 *
-	 *	@return uint256 latest state root block height
-	 */
-	function getLatestStateRootBlockHeight()
-		public
-		view
-		returns (uint256 /* block height */)
-	{
-		return latestStateRootBlockHeight;
-	}
-
 }

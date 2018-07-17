@@ -25,11 +25,25 @@ pragma solidity ^0.4.23;
 import "./UtilityTokenAbstract.sol";
 
 
-/// @title UtilityTokenAbstractMock
-/// @dev Implements mock claim, mint, and burn functions
-/// and wraps internal functions to enable testing UtilityTokenAbstract
+/**
+ *  @title UtilityTokenAbstractMock contract.
+ *
+ *  @dev Implements mock claim, mint, and burn functions
+ *       and wraps internal functions to enable testing UtilityTokenAbstract
+ */
 contract UtilityTokenAbstractMock is UtilityTokenAbstract {
 
+    /**
+     *  @notice Contract constructor.
+     *
+     *  @param _uuid UUID of the token.
+     *  @param _symbol Symbol of the token. 
+     *  @param _name Name of the token.
+     *  @param _chainIdValue Chain id of the value chain.
+     *  @param _chainIdUtility Chain id of the utility chain.
+     *  @param _conversionRate Conversion rate of the token.
+     *  @param _conversionRateDecimals Decimal places of conversion rate of token.
+     */
     constructor(
         bytes32 _uuid,
         string _symbol,
@@ -47,30 +61,67 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         _chainIdUtility,
         _conversionRate,
         _conversionRateDecimals)
-        ProtocolVersioned(msg.sender)
         { }
 
-    /// @dev Mock claim function
+    /**
+     *  @notice Public function claim.
+     *
+     *  @dev Mock claim function. 
+     *
+     *  @param _beneficiary Address of the utility tokens beneficiary.
+     *
+     *  @return True if claim of utility tokens for beneficiary address is successful, 
+     *          false otherwise.
+     */
     function claim(address _beneficiary) public returns (bool success) {
         _beneficiary;
         success = true;
     }
 
-    /// @dev Mock mint function
+    /**
+     *  @notice Public function mintEIP20.
+     *
+     *  @dev Mock mint function. 
+     *
+     *  @param _beneficiary Address of beneficiary.
+     *  @param _amount Amount of utility tokens to mint.
+     *
+     *  @return True if mint is successful, false otherwise.
+     */
     function mint(address _beneficiary, uint256 _amount) public returns (bool success) {
         _beneficiary;
         _amount;
         success = true;
     }
 
-    /// @dev Mock burn function
+    /**
+     *  @notice Public function burn.
+     *
+     *  @dev Mock burn function. 
+     *
+     *  @param _redeemer Address of token burner. 
+     *  @param _amount Amount of tokens to burn.
+     *
+     *  @return True if burn is successful, false otherwise.
+     */
     function burn(address _redeemer, uint256 _amount) public payable returns (bool success) {
         _redeemer;
         _amount;
         success = true;
     }
        
-    /// @dev Public wrapper for claimInternal
+
+
+    /**
+     *  @notice Internal function claimInternalPublic.
+     *
+     *  @dev Public wrapper for claimInternalPublic.
+     *       Claim transfers all utility tokens to _beneficiary.
+     *
+     *  @param _beneficiary Address of the beneficiary.
+     *
+     *  @return uint256 Amount of tokens to be claimed by beneficiary.
+     */   
     function claimInternalPublic(
         address _beneficiary)
         public
@@ -79,7 +130,19 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         amount = claimInternal(_beneficiary);
     }
 
-    /// @dev Public wrapper for mintInternal
+
+    /**
+     *  @notice Public function mintInternalPublic.
+     *
+     *  @dev Public wrapper for mintInternalPublic.
+     *       Mint new utility token by adding a claim
+     *       for the beneficiary.
+     *
+     *  @param _beneficiary Address of the beneficiary.
+     *  @param _amount Amount of tokens to mint. 
+     *
+     *  @return bool True if tokens are minted, false otherwise.
+     */    
     function mintInternalPublic(
         address _beneficiary,
         uint256 _amount)
@@ -89,7 +152,18 @@ contract UtilityTokenAbstractMock is UtilityTokenAbstract {
         return mintInternal(_beneficiary, _amount);        
     }
 
-    /// @dev Public wrapper for burnInternal
+    /**
+     *  @notice Public function burnInternalPublic.
+     *
+     *  @dev Public wrapper for burnInternalPublic.
+     *       Burn utility tokens after having redeemed them
+     *       through the protocol for the staked Simple token.
+     *
+     *  @param _redeemer Address of the redeemer of tokens.
+     *  @param _amount Amount of tokens to burn.
+     *
+     *  @return bool True if tokens are burnt, false otherwise.
+     */
     function burnInternalPublic(
         address _redeemer,
         uint256 _amount)

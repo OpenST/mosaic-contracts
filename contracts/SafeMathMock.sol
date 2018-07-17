@@ -27,19 +27,60 @@ pragma solidity ^0.4.23;
 
 import "./SafeMath.sol";
 
-
+/**
+ *  @title SafeMathMock library.
+ *
+ *  @notice Based on the SafeMath library by the OpenZeppelin team.
+ *          Mock used for testing.
+ */
 contract SafeMathMock {
+
+  /** Storage */
+  
   uint256 public result;
 
+  /** Public functions */
+
+  /**
+   *  @notice Public function multiply.
+   *
+   *  @dev Public wrapper for SafeMath function mul.
+   *
+   *  @param a Unsigned integer multiplicand.
+   *  @param b Unsigned integer multiplier.
+   *
+   *  @return uint256 Product.
+   */  
   function multiply(uint256 a, uint256 b) public {
     result = SafeMath.mul(a, b);
   }
 
+  /**
+   *  @notice Public function subtract.
+   *
+   *  @dev Public wrapper for SafeMath function sub.
+   *
+   *  @param a Unsigned integer minuend.
+   *  @param b Unsigned integer subtrahend.
+   *
+   *  @return uint256 Difference.
+   */    
   function subtract(uint256 a, uint256 b) public {
     result = SafeMath.sub(a, b);
   }
 
+  /**
+   *  @notice Public function add.
+   *
+   *  @dev Public wrapper for SafeMath function add.
+   *
+   *  @param a Unsigned integer augend.
+   *  @param b Unsigned integer addend.
+   *
+   *  @return uint256 Sum.
+   */
   function add(uint256 a, uint256 b) public {
     result = SafeMath.add(a, b);
   }
 }
+
