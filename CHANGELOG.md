@@ -1,3 +1,46 @@
+## OpenST-protocol [v0.9.3](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.3) July 18 2018
+
+OpenST v0.9.3 introduces the concept of a `Gateway` on the value chain and incorporates changes to facilitate generating and verifying account and intent storage proofs. This release additionally includes, _inter alia_, refactorings, improvements to documentation, and upgrades to our tooling.
+
+Detailed changelog:
+
+- Documentation: update sequence diagram for v0.9.3 ([openst-protocol #161](https://github.com/OpenSTFoundation/openst-protocol/pull/161))
+- Tests: check relevant external RLP library functionality ([openst-protocol #185](https://github.com/OpenSTFoundation/openst-protocol/pull/185))
+- Contracts: update contracts to reflect different speeds at which blocks are added to value and utility chains ([openst-protocol #153](https://github.com/OpenSTFoundation/openst-protocol/pull/153))
+- Contracts: improve documentation comments across contracts ([openst-protocol #191](https://github.com/OpenSTFoundation/openst-protocol/pull/191), [openst-protocol #193](https://github.com/OpenSTFoundation/openst-protocol/pull/193))
+- Contracts: incorporate storage proof of `stakingIntentHash` into `OpenSTUtility` ([openst-protocol #200](https://github.com/OpenSTFoundation/openst-protocol/pull/200))
+- Tests: check relevant external Merkle Patricia Proof library functionality ([openst-protocol #173](https://github.com/OpenSTFoundation/openst-protocol/pull/173))
+- Tests: assay account and storage proof functionality in `Core` ([openst-protocol #179](https://github.com/OpenSTFoundation/openst-protocol/pull/179))
+- Contracts: introduce Merkle Patricia Proof verification into redeem and unstake flow ([openst-protocol #163](https://github.com/OpenSTFoundation/openst-protocol/pull/163))
+- Tools: update package.json dependencies ([openst-protocol #194](https://github.com/OpenSTFoundation/openst-protocol/pull/194))
+- Contracts: enforce stakingAccount on `processStaking` and `revertStaking` in `OpenSTValue` ([openst-protocol #195](https://github.com/OpenSTFoundation/openst-protocol/pull/195))
+- Tools: upgrade to Solidity 0.4.23 ([openst-protocol #189](https://github.com/OpenSTFoundation/openst-protocol/pull/189))
+- Contracts: enable resetting `workers` for `Gateway` ([openst-protocol #187](https://github.com/OpenSTFoundation/openst-protocol/pull/187))
+- Tests: confirm determination of `intents` mapping index position for `OpenSTValue` ([openst-protocol #172](https://github.com/OpenSTFoundation/openst-protocol/pull/172))
+- Contracts: Rename `Gate` to `Gateway` ([openst-protocol #182](https://github.com/OpenSTFoundation/openst-protocol/pull/182))
+- Contracts: remove requirement that only workers can call `revertStaking` in `Gate` ([openst-protocol #180](https://github.com/OpenSTFoundation/openst-protocol/pull/180))
+- Contracts: delete correct stake request in `rejectStakeRequest` ([openst-protocol #177](https://github.com/OpenSTFoundation/openst-protocol/pull/177))
+- Contracts: add documentation comments to `Gate` ([openst-protocol #160](https://github.com/OpenSTFoundation/openst-protocol/pull/160))
+- Contracts: remove requirement that only workers can call `processStaking` in `Gate` ([openst-protocol #169](https://github.com/OpenSTFoundation/openst-protocol/pull/169))
+- Contracts: refactor proof verification events in `Core` ([openst-protocol #167](https://github.com/OpenSTFoundation/openst-protocol/pull/167))
+- Contracts: correct variable name in `processStaking` for `Gate` ([openst-protocol #171](https://github.com/OpenSTFoundation/openst-protocol/pull/171))
+- Contracts: incorporate mapping of staking intent hashes into `OpenSTValue` to for storage verification ([openst-protocol #150](https://github.com/OpenSTFoundation/openst-protocol/pull/150))
+- Tools: replace TestRPC with Ganache ([openst-protocol #156](https://github.com/OpenSTFoundation/openst-protocol/pull/156))
+- Contracts: add state root storing and account proof verification functionality to `Core` ([openst-protocol #149](https://github.com/OpenSTFoundation/openst-protocol/pull/149))
+- Tests: fix `Gate` tests ([openst-protocol #159](https://github.com/OpenSTFoundation/openst-protocol/pull/159))
+- Contracts: revise returns for certain `Gate` functions ([openst-protocol #147](https://github.com/OpenSTFoundation/openst-protocol/pull/147))
+- Tools: reorganize proof contracts and libraries within repository ([openst-protocol #158](https://github.com/OpenSTFoundation/openst-protocol/pull/158))
+- Tests: flag changes that problematize proving certain contracts' storage ([openst-protocol #155](https://github.com/OpenSTFoundation/openst-protocol/pull/155))
+- Contracts: update external RLP library to be in line with current Solidity usage ([openst-protocol #154](https://github.com/OpenSTFoundation/openst-protocol/pull/154))
+- Contracts: incorporate proof verification libraries and revise layout of storage for certain contracts ([openst-protocol #148](https://github.com/OpenSTFoundation/openst-protocol/pull/148))
+- Contracts: add documentation comments to `Workers` ([openst-protocol #137](https://github.com/OpenSTFoundation/openst-protocol/pull/137))
+- Contracts: incorporate `Gate` proof of concept ([openst-protocol #141](https://github.com/OpenSTFoundation/openst-protocol/pull/141))
+- Documentation: present initial sequence diagram for v0.9.3 ([openst-protocol #133](https://github.com/OpenSTFoundation/openst-protocol/pull/133))
+- Contracts: update contracts to remove compiler warnings ([openst-protocol #132](https://github.com/OpenSTFoundation/openst-protocol/pull/132))
+- Tools: upgrade web3 version to v1.0.0.beta.33 ([openst-protocol #131](https://github.com/OpenSTFoundation/openst-protocol/pull/131))
+- Contracts: incorporate hashlock ([openst-protocol #126](https://github.com/OpenSTFoundation/openst-protocol/pull/126))
+- Tests: refactor tests for `MockToken` ([openst-protocol #121](https://github.com/OpenSTFoundation/openst-protocol/pull/121))
+
 ## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.2) March 27 2018
 
 OpenST v0.9.2 improves usability to facilitate application by the [OpenST-Platform](https://github.com/OpenSTFoundation/openst-platform) and other services. Additionally, this release increases test coverage, with additional unit and integration tests, and adds continuous integration with Travis CI.
