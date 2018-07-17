@@ -70,8 +70,7 @@
       \begin{umlcall}[dt=5, type=return, op={emit StakeRequested(staker, amountST, beneficiary)}]{Branded Token Gateway}{Facilitator}
       \end{umlcall}
     \end{umlcall}
-   
-
+  
 
     % Facilitator evaluates request against policy (monetary and KYC/AML)
     \begin{umlfragment}[type=alt, label=accept, name=policy, inner xsep=2]
@@ -93,7 +92,7 @@
                   \end{umlcall}
                   
         % Gate calls on to OpenSTValue to stake (later abstract to library call)
-        \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)},return={amountUT, nonce, unlockHeight, StakingIntentHash}]{Branded Token Gateway}{OpenSTValue} % 
+        \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)}]{Branded Token Gateway}{OpenSTValue} % 
           % check stakingAccount 
           \begin{umlcallself}[op={require(stakingAccount == 0x || (stakingAccount == msg.sender \&\& msg.sender == gateway))}]{OpenSTValue}
           \end{umlcallself}
@@ -164,18 +163,18 @@
     
     \begin{umlfragment}[type=loop, name=mosaic]
       
-      \begin{umlcall}[dt=198, op={new block(blockHeightUC, stateRootUC)}]{Utility Chain}{OstDotCom}
+      \begin{umlcall}[dt=205, op={new block(blockHeightUC, stateRootUC)}]{Utility Chain}{OstDotCom}
         % OstDotCom report state root of Utility chain on CoreUC on value chain
         %\begin{umlcall}[op={: report(UC, blockHeight, stateRoot)}]{OstDotCom}{RegistrarVC}
           \begin{umlcall}[op={: commitStateRoot(blockHeightUC, stateRootUC)}]{OstDotCom}{CoreUC}
           % make sure block height is greater than the lastestStateRootBlockHeight previously stored
-          \begin{umlcallself}[op={require(blockHeightUC > latestSateRootBlockHeightUC)}]{CoreUC}
+          \begin{umlcallself}[dt= 8, op={require(blockHeightUC > latestSateRootBlockHeightUC)}]{CoreUC}
           \end{umlcallself}
           % store the state root in the contract's mapping
-          \begin{umlcallself}[dt=4,op={store latest valid stateRootUC}]{CoreUC}
+          \begin{umlcallself}[dt=7,op={store latest valid stateRootUC}]{CoreUC}
           \end{umlcallself}
             % state root of utility chain got reported on value chain
-            \begin{umlcall}[dt=10, type=return, op={emit StateRootCommitted(blockHeightUC, stateRootUC)}]{CoreUC}{Facilitator}
+            \begin{umlcall}[dt=13, type=return, op={emit StateRootCommitted(blockHeightUC, stateRootUC)}]{CoreUC}{Facilitator}
             \end{umlcall}
           \end{umlcall}
         %\end{umlcall}
