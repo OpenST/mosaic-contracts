@@ -54,10 +54,8 @@ contract('RLP', function (accounts) {
 				, items = [rlpItem]
 				, rlpEncodedArray = RLP.encode(items).toString('hex')
 				, index = 0;
-			
 			let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
 				, itemAtIndex = result[0];
-			
 			assert.equal('0x' + rlpItem.toString('hex'), itemAtIndex);
 			
 		});
@@ -68,10 +66,8 @@ contract('RLP', function (accounts) {
 				, rlpEncodedArray = RLP.encode(items).toString('hex');
 			
 			for (let index = 0; index < items.length; index++) {
-				
 				let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
 					, itemAtIndex = result[0];
-				
 				assert.equal('0x' + items[index].toString('hex'), itemAtIndex);
 			}
 		});
@@ -81,7 +77,6 @@ contract('RLP', function (accounts) {
 				, hexDataArray = RLP.encode(dataArray).toString('hex')
 				, result = await rlpTest.toList.call('0x' + hexDataArray, 0)
 				length = result[1].toNumber();
-			
 			assert.equal(dataArray.length, length);
 		});
 		
