@@ -3,9 +3,9 @@ import "./RLP.sol";
 
 
 /**
- *	@title RLPTest contract is for RLP library contract
+ *  @title RLPTest contract is for RLP library contract
  *
- *	@notice It is used to test methods in RLP library contract
+ *  @notice It is used to test methods in RLP library contract
  */
 contract RLPTest  {
 
