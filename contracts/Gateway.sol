@@ -29,25 +29,22 @@ import "./Owned.sol";
 import "./WorkersInterface.sol";
 
 /**
- *	@title Gateway contract which implements ProtocolVersioned, Owned
+ *  @title Gateway contract which implements ProtocolVersioned, Owned.
  *
- *	@notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor
- *      Stake process is executed through Gateway contract rather than directly with the protocol contract
- *      The Gateway contract will serve the role of staking account rather than an external account
+ *  @notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor.
+ *          Stake process is executed through Gateway contract rather than directly with the protocol contract.
+ *          The Gateway contract will serve the role of staking account rather than an external account.
  */
 contract Gateway is ProtocolVersioned, Owned {
 
-    /* Events */
+    /** Events */
 
     /** Below event is emitted after successful execution of requestStake */
     event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
-
     /** Below event is emitted after successful execution of revertStakeRequest */
     event StakeRequestReverted(address _staker, uint256 _amount);
-
     /** Below event is emitted after successful execution of rejectStakeRequest */
     event StakeRequestRejected(address _staker, uint256 _amount, uint8 _reason);
-
     /** Below event is emitted after successful execution of acceptStakeRequest */
     event StakeRequestAccepted(
       address _staker,
@@ -56,25 +53,21 @@ contract Gateway is ProtocolVersioned, Owned {
       uint256 _nonce,
       uint256 _unlockHeight,
       bytes32 _stakingIntentHash);
-
     /** Below event is emitted after successful execution of setWorkers */
     event WorkersSet(WorkersInterface _workers);
 
-    /* Storage */
+    /** Storage */
 
     /** Storing stake requests */
     mapping(address /*staker */ => StakeRequest) public stakeRequests;
-
     /** Storing workers contract address */
     WorkersInterface public workers;
-
     /** Storing bounty amount that will be used while accepting stake */
     uint256 public bounty;
-
     /** Storing utility token UUID */
     bytes32 public uuid;
 
-    /* Structures */
+    /** Structures */
 
     struct StakeRequest {
         uint256 amount;
@@ -83,16 +76,16 @@ contract Gateway is ProtocolVersioned, Owned {
         bytes32 hashLock;
     }
 
-    /* Public functions */
+    /** Public functions */
 
     /**
-      * @notice Contract constructor
-      *
-      * @param _workers worker contract address
-      * @param _bounty bounty amount that worker address stakes while accepting stake request
-      * @param _uuid UUID of utility token
-      * @param _openSTProtocol OpenSTProtocol contract that governs staking
-      */
+     *  @notice Contract constructor.
+     *
+     *  @param _workers Workers contract address.
+     *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+     *  @param _uuid UUID of utility token.
+     *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
+     */
     constructor(
         WorkersInterface _workers,
         uint256 _bounty,
@@ -112,16 +105,16 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function requestStake
-      *
-      * @dev In order to request stake the staker needs to approve Gateway contract for stake amount
-      *      Staked amount is transferred from staker address to Gateway contract
-      *
-      * @param _amount staking amount
-      * @param _beneficiary beneficiary address
-      *
-      * @return success, boolean that specifies status of the execution
-      */
+     *  @notice External function requestStake.
+     *
+     *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
+     *       Staked amount is transferred from staker address to Gateway contract.
+     *
+     *  @param _amount Staking amount.
+     *  @param _beneficiary Beneficiary address.
+     *
+     *  @return bool Specifies status of the execution.
+     */
     function requestStake(
         uint256 _amount,
         address _beneficiary)
@@ -150,13 +143,13 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to revert requested stake
-      *
-      * @dev This can be called only by staker
-      *      Staked amount is transferred back to staker address from Gateway contract
-      *
-      * @return stakeRequestAmount staking amount
-      */
+     *  @notice External function to revert requested stake.
+     *
+     *  @dev This can be called only by staker. Staked amount is transferred back
+     *       to staker address from Gateway contract.
+     *
+     *  @return stakeRequestAmount Staking amount.
+     */
     function revertStakeRequest()
         external
         returns (uint256 stakeRequestAmount)
@@ -181,16 +174,16 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to reject requested stake
-      *
-      * @dev This can be called only by whitelisted worker address
-      *      Staked amount is transferred back to staker address from Gateway contract
-      *
-      * @param _staker staker address
-      * @param _reason reason for rejection
-      *
-      * @return stakeRequestAmount staking amount
-      */
+     *  @notice External function to reject requested stake.
+     *
+     *  @dev This can be called only by whitelisted worker address.
+     *       Staked amount is transferred back to staker address from Gateway contract.
+     *
+     *  @param _staker Staker address.
+     *  @param _reason Reason for rejection.
+     *
+     *  @return stakeRequestAmount Staking amount.
+     */
     function rejectStakeRequest(address _staker, uint8 _reason)
         external
         returns (uint256 stakeRequestAmount)
@@ -219,20 +212,20 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to accept requested stake
-      *
-      * @dev This can be called only by whitelisted worker address
-      *      Bounty amount is transferred from msg.sender to Gateway contract
-      *      openSTProtocol is approved for staking amount by Gateway contract
-      *
-      * @param _staker staker address
-      * @param _hashLock hash lock
-      *
-      * @return amountUT branded token amount
-      * @return nonce staker nonce count
-      * @return unlockHeight height till what the amount is locked
-      * @return stakingIntentHash staking intent hash
-      */
+     *  @notice External function to accept requested stake.
+     *
+     *  @dev This can be called only by whitelisted worker address.
+     *       Bounty amount is transferred from msg.sender to Gateway contract.
+     *       openSTProtocol is approved for staking amount by Gateway contract.
+     *
+     *  @param _staker Staker address.
+     *  @param _hashLock Hash lock.
+     *
+     *  @return amountUT Branded token amount.
+     *  @return nonce Staker nonce count.
+     *  @return unlockHeight Height till what the amount is locked.
+     *  @return stakingIntentHash Staking intent hash.
+     */
     function acceptStakeRequest(address _staker, bytes32 _hashLock)
         external
         returns (
@@ -281,16 +274,16 @@ contract Gateway is ProtocolVersioned, Owned {
     }
 
     /**
-      * @notice external function to process staking
-      *
-      * @dev Bounty amount is transferred to msg.sender if it's not whitelisted worker
-      *      Bounty amount is transferred to workers contract if msg.sender is whitelisted worker
-      *
-      * @param _stakingIntentHash staking intent hash
-      * @param _unlockSecret unlock secret
-      *
-      * @return stakeRequestAmount stake amount
-      */
+     *  @notice External function to process staking.
+     *
+     *  @dev Bounty amount is transferred to msg.sender if msg.sender is not a whitelisted worker.
+     *       Bounty amount is transferred to workers contract if msg.sender is a whitelisted worker.
+     *
+     *  @param _stakingIntentHash Staking intent hash.
+     *  @param _unlockSecret Unlock secret.
+     *
+     *  @return stakeRequestAmount Stake amount.
+     */
     function processStaking(
         bytes32 _stakingIntentHash,
         bytes32 _unlockSecret)
@@ -335,15 +328,15 @@ contract Gateway is ProtocolVersioned, Owned {
       }
 
     /**
-      * @notice external function to revert staking
-      *
-      * @dev Staked amount is transferred to the staker address
-      *      Bounty amount is transferred to workers contract
-      *
-      * @param _stakingIntentHash staking intent hash
-      *
-      * @return stakeRequestAmount staking amount
-      */
+     *  @notice External function to revert staking.
+     *
+     *  @dev Staked amount is transferred to the staker address.
+     *       Bounty amount is transferred to workers contract.
+     *
+     *  @param _stakingIntentHash Staking intent hash.
+     *
+     *  @return stakeRequestAmount Staking amount.
+     */
     function revertStaking(
         bytes32 _stakingIntentHash)
         external
@@ -382,14 +375,14 @@ contract Gateway is ProtocolVersioned, Owned {
       }
 
     /**
-      * @notice external function to set workers
-      *
-      * @dev only owner can call this
-      *
-      * @param _workers workers contract address
-      *
-      * @return success, boolean that specifies status of the execution
-      */
+     *  @notice External function to set workers.
+     *
+     *  @dev Only callable by owner.
+     *
+     *  @param _workers Workers contract address.
+     *
+     *  @return bool Specifies status of the execution.
+     */
     function setWorkers(WorkersInterface _workers)
         external
         onlyOwner()
