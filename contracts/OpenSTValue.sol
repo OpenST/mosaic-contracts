@@ -71,13 +71,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
 
     // 2 weeks in seconds
-    // 1 mins = 60 seconds, 1 hrs = 60 mins, 1 day = 24 hrs, 1 week = 7 days
-    // so 2 week =  2 * 7 days = 2 * 7 * 24 hrs = 2 * 7 * 24 * 60 mins = 2 * 7 * 24 * 60 * 60 seconds = 1209600 seconds
     uint256 private constant TIME_TO_WAIT_LONG = 1209600;
 
     // 1hour in seconds
-    // 1 min = 60 seconds, 1 hrs = 60 mins
-    // so 1 hour = 60 mins = 60 * 60 seconds = 3600 seconds
     uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
