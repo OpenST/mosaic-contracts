@@ -88,11 +88,14 @@
         % Approve OpenSTValue as spender for Gate
         \begin{umlcall}[op={: approve(openSTValue, amountST)}]{Branded Token Gateway}{OST}
         \end{umlcall}
-        
+       %emit acceptStaking
+                  \begin{umlcall}[type=return, op={emit StakeRequestAccepted(staker, amountST, amountUT, nonce, unlockHeight, stakingIntentHash)}]{Branded Token Gateway}{Facilitator}
+                  \end{umlcall}
+                  
         % Gate calls on to OpenSTValue to stake (later abstract to library call)
         \begin{umlcall}[op={: stake(uuid, amountST, beneficiary, hashLock, staker)},return={amountUT, nonce, unlockHeight, StakingIntentHash}]{Branded Token Gateway}{OpenSTValue} % 
           % check stakingAccount 
-          \begin{umlcallself}[op={require(msg.sender = gateway = stakingAccount || stakingAccount = 0x)}]{OpenSTValue}
+          \begin{umlcallself}[op={require(stakingAccount == 0x || (stakingAccount == msg.sender \&\& msg.sender == gateway))}]{OpenSTValue}
           \end{umlcallself}
           % OpenSTValue pulls amount plus bounty from Facilitator to
           % its OST account balance
@@ -301,7 +304,7 @@
           \begin{umlcallself}[op={store claim}]{Branded Token}
           \end{umlcallself}
         \end{umlcall}
-        \begin{umlcall}[type=return, op={emit ProcessedMint(StakingIntentHash, tokenAddress, staker, beneficiary, amountUT, unlockSecret)}]{OpenSTUtility}{Hunter}
+        \begin{umlcall}[type=return, op={emit ProcessedMint(uuid, StakingIntentHash, tokenAddress, staker, beneficiary, amountUT, unlockSecret)}]{OpenSTUtility}{Hunter}
         \end{umlcall}
       \end{umlcall}
       
