@@ -211,8 +211,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
-        amountUT = (_amountST.mul(utilityToken.conversionRate))
-            .div(10**uint256(utilityToken.conversionRateDecimals));
+        amountUT = calculateUTAmount(_amountST, utilityToken.conversionRate, utilityToken.conversionRateDecimals);
         unlockHeight = block.number + blocksToWaitLong;
 
         nonces[_staker]++;
@@ -250,6 +249,19 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
         /* solhint-enable avoid-tx-origin */
+    }
+
+
+    function calculateUTAmount(
+        uint256 amountST,
+        uint256 conversionRate,
+        uint8 conversionRateDecimals)
+        private
+        returns (
+        uint256 amountUT)
+    {
+        amountUT = (amountST.mul(conversionRate)).div(10**uint256(conversionRateDecimals));
+        return amountUT;
     }
 
     function processStaking(
