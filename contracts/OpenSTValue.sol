@@ -252,18 +252,6 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
 
-    function calculateUTAmount(
-        uint256 amountST,
-        uint256 conversionRate,
-        uint8 conversionRateDecimals)
-        private
-        returns (
-        uint256 amountUT)
-    {
-        amountUT = (amountST.mul(conversionRate)).div(10**uint256(conversionRateDecimals));
-        return amountUT;
-    }
-
     function processStaking(
         bytes32 _stakingIntentHash,
         bytes32 _unlockSecret)
@@ -678,5 +666,48 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         return stakeItem.staker;
 
+    }
+
+    /**
+      *	@notice Calculate Utility token amount based on stake OST amount, conversion rate and conversion decimal
+      *
+      *	@param amountST amount of ST needs to be staked and converted to UT
+      *	@param conversionRate rate which is used to convert ST to UT
+      *	@param conversionRateDecimals represents number of decimal in conversion rate
+      *
+      *	@return  amountUT number of utility token which can be minted from given amountST
+      */
+
+    function calculateUTAmount(
+        uint256 amountST,
+        uint256 conversionRate,
+        uint8 conversionRateDecimals)
+        private
+        returns (
+        uint256 amountUT)
+    {
+        amountUT = (amountST.mul(conversionRate)).div(10**uint256(conversionRateDecimals));
+        return amountUT;
+    }
+
+    /**
+      *	@notice Calculate Simple token amount based on unstake BT amount, conversion rate and conversion decimal
+      *
+      *	@param amountUT amount of UT needs to be unstaked and converted to ST
+      *	@param conversionRate rate which is used to convert UT to ST
+      *	@param conversionRateDecimals represents number of decimal in conversion rate
+      *
+      *	@return amountST number of ST token which can be unstaked from given amountUT
+      */
+
+    function calculateSTAmount(
+        uint256 amountUT,
+        uint256 conversionRate,
+        uint8 conversionRateDecimals)
+        returns(
+        uint256 amountST)
+    {
+        amountST = (amountUT.mul(10**uint256(conversionRateDecimals))).div(conversionRate);
+        return amountST;
     }
 }
