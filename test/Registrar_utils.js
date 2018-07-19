@@ -21,7 +21,7 @@
 
 const BigNumber = require('bignumber.js');
 
-var SimpleToken = artifacts.require("./SimpleToken.sol");
+var MockToken = artifacts.require("./MockToken.sol");
 var Registrar 	= artifacts.require("./Registrar.sol");
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
@@ -33,7 +33,7 @@ var proof = require('./data/proof');
 module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const chainIdValue   = 3;
 	const chainIdUtility = 1410;
-	const valueToken   	 = await SimpleToken.new();
+	const valueToken   	 = await MockToken.new();
 	const registrar    	 = await Registrar.new();
 	const staker	  	 = accounts[2];
 	const amountST		 = new BigNumber(web3.toWei(2, "ether"));
@@ -44,11 +44,7 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	// Registrar is OpsManaged
 	await registrar.setOpsAddress(accounts[1]);
 	await registrar.setAdminAddress(accounts[3]);
-
-	// Set SimpleToken admin to in order to finalize SimpleToken
-	await valueToken.setAdminAddress(accounts[3]);
-	// SimpleToken must be finalized to permit certain transfers
-	await valueToken.finalize({ from: accounts[3] });
+	
     await valueToken.transfer(staker, amountST);
 
 	// Deploy worker contract
