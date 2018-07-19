@@ -40,64 +40,36 @@ const MockToken = artifacts.require("./MockToken.sol")
 //    balances is private
 //    Constructor raised transfer event
 //
-// transfer before finalize
+// transfer function
 //    transfer from owner to other
 //    transfer 0 tokens
 //    transfer > balance
 //    transfer = balance
 //    transfer 1 token
-//    transfer 10000 tokens
 //
-// transfer after finalize
-//    transfer 0 tokens
-//    transfer > balance
-//    transfer = balance
-//    transfer 1 token
-//    transfer 10000 tokens
-//
-// transferFrom
-//    transfer    0  from account 0 -> 1 with 0 allowance
-//    transfer 1000  from account 0 -> 1 without allowance
-//    transfer 1000  from account 0 -> 1 with 10 allowance
-//    transfer 1000  from account 0 -> 1 with 1000 allowance
-//    transfer 50+50 from account 0 -> 1 with 100 allowance
-//    transfer 1000  from account 0 -> 1 with 999 allowance
-//    transfer    1  from account 0 -> 1 with 0 allowance
 //
 // transferFrom after finalize
 //    transfer    0  from account 0 -> 1 with 0 allowance
 //    transfer 1000  from account 0 -> 1 without allowance
 //    transfer 1000  from account 0 -> 1 with 10 allowance
 //    transfer 1000  from account 0 -> 1 with 1000 allowance
-//    transfer 50+50 from account 0 -> 1 with 100 allowance
-//    transfer 1000  from account 0 -> 1 with 999 allowance
-//    transfer    1  from account 0 -> 1 with 0 allowance
 //
 // approve
 // balanceOf
 // allowance
 //    * covered indirectly by testing the other functions
 //
+// owner and operations
+//    check initial owner
+//    check initial admin
+//    check initial ops
+//    change ops address to some account
+//    change ops address to 0
+//    change ops address to account 3
+//
 // burn
 //    burn greater than balance
 //    burn less than or equal to balance
-//
-// balances
-//    check if balances is exposed publicly
-//
-// owner and operations
-//    - owner is set
-//    - admin is 0
-//    - operations is 0
-//    - set operations key
-//    - set operations key
-//    - finalize (owner + ops)
-//
-// finalize
-//    - check properties before and after finalize
-//    - try to finalize a 2nd time
-//    * other cases covered indirectly by testing other functions
-//
 
 contract('MockToken', (accounts) => {
 
