@@ -69,10 +69,12 @@ contract OpenSTValue is OpsManaged, Hasher {
      */
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    // ~2 weeks, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+
+    // 2 weeks in seconds
+    uint256 private constant TIME_TO_WAIT_LONG = 1209600;
+
+    // 1hour in seconds
+    uint256 private constant TIME_TO_WAIT_SHORT = 3600;
 
     // indentified index position of redemptionIntents mapping in storage (in OpenSTUtility)
     // positions 0-3 are occupied by public state variables in OpsManaged and Owned
@@ -99,6 +101,9 @@ contract OpenSTValue is OpsManaged, Hasher {
     uint256 public chainIdValue;
     EIP20Interface public valueToken;
     address public registrar;
+    uint256 public blocksToWaitShort;
+    uint256 public blocksToWaitLong;
+
     bytes32[] public uuids;
 
     /*
@@ -149,13 +154,18 @@ contract OpenSTValue is OpsManaged, Hasher {
     constructor(
         uint256 _chainIdValue,
         EIP20Interface _eip20token,
-        address _registrar)
+        address _registrar,
+        uint256 _valueChainBlockGenerationTime)
         public
         OpsManaged()
     {
         require(_chainIdValue != 0);
         require(_eip20token != address(0));
         require(_registrar != address(0));
+        require(_valueChainBlockGenerationTime != 0);
+
+        blocksToWaitShort = TIME_TO_WAIT_SHORT.div(_valueChainBlockGenerationTime);
+        blocksToWaitLong = TIME_TO_WAIT_LONG.div(_valueChainBlockGenerationTime);
 
         chainIdValue = _chainIdValue;
         valueToken = _eip20token;
@@ -203,7 +213,7 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         amountUT = (_amountST.mul(utilityToken.conversionRate))
             .div(10**uint256(utilityToken.conversionRateDecimals));
-        unlockHeight = block.number + blocksToWaitLong();
+        unlockHeight = block.number + blocksToWaitLong;
 
         nonces[_staker]++;
         nonce = nonces[_staker];
@@ -362,6 +372,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         // utility chain
         require(_redemptionUnlockHeight > 0);
 
+        require(cores[utilityToken.chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
+
         require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
 
@@ -375,7 +387,7 @@ contract OpenSTValue is OpsManaged, Hasher {
             _hashLock
         );
 
-        expirationHeight = block.number + blocksToWaitShort();
+        expirationHeight = block.number + blocksToWaitShort;
 
         // minimal precision to unstake 1 STWei
         require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
@@ -530,14 +542,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         returns (uint256 /* nextNonce */)
     {
         return (nonces[_account] + 1);
-    }
-
-    function blocksToWaitLong() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_LONG;
-    }
-
-    function blocksToWaitShort() public pure returns (uint256) {
-        return BLOCKS_TO_WAIT_SHORT;
     }
 
     /// @dev Returns size of uuids

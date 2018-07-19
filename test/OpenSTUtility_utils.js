@@ -20,27 +20,31 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
 
 var OpenSTUtility = artifacts.require("./OpenSTUtilityMock.sol");
 var STPrime = artifacts.require("./STPrime.sol");
+var CoreMock = artifacts.require("./CoreMock.sol");
+var proof = require('./data/proof');
 
 const chainIdValue   = 3;
 const chainIdUtility = 1410;
 
 /// @dev Deploy OpenSTUtility
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
-  const registrar      = accounts[1];
-
-	const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, { gas: 10000000 });
+    const registrar      = accounts[1];
+    const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], constants.VALUE_CHAIN_BLOCK_TIME,  0, proof.account.stateRoot, accounts[11]);
+    const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
-	const stPrime = new STPrime(stPrimeAddress);
+    const stPrime = new STPrime(stPrimeAddress);
+    await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
 
-	await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
-
-	return {
-		stPrime       : stPrime,
-		openSTUtility : openSTUtility
-	}
+    return {
+        stPrime       : stPrime,
+        openSTUtility : openSTUtility
+    }
 }
 
 // Token address is returned by ProposedBrandedToken but verified elsewhere

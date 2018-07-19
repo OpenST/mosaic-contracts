@@ -31,7 +31,7 @@ contract('Core', function (accounts) {
 
     describe('Properties', async () => {
         before(async () => {
-            openSTRemote = proof.account.openSTRemoteAddress;
+            openSTRemote = proof.account.accountAddress;
             blockHeight = new BigNumber(5);
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;

@@ -63,9 +63,9 @@ contract('OpenST', function(accounts) {
 	const intercommVC       = accounts[4];
 	const intercommUC       = accounts[5];
 	const requester         = accounts[6];
-  const stakerVC          = accounts[7];
-  const stakerUC          = accounts[8];
-  const beneficiary       = accounts[10];
+  	const stakerVC          = accounts[7];
+  	const stakerUC          = accounts[8];
+  	const beneficiary       = accounts[10];
 	// account 9 and 19 have no base tokens
 	const redeemer          = accounts[9];
   const redeemBeneficiary = accounts[19];
@@ -99,7 +99,6 @@ contract('OpenST', function(accounts) {
 		var unlockHeight = null;
 		var redemptionIntentHash = null;
 		var redeemedAmountST = null;
-        var validRLPParentNodes = null;
 
 		before(async () => {
 			var contracts = await ProtocolUtils.deployOpenSTProtocol(artifacts, accounts);
@@ -186,8 +185,9 @@ contract('OpenST', function(accounts) {
 
 			it("confirm staking intent for Simple Token Prime", async () => {
 				// registrar registers staking intent on utility chain
-				const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, stakerVC, nonceSTP,
-					beneficiary, AMOUNT_ST, AMOUNT_ST, unlockHeight, lockSTP.l, stakingIntentHash, { from: intercommUC });
+                const validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true);
+                const o = await registrarUC.confirmStakingIntent(openSTUtility.address, uuidSTP, stakerVC, nonceSTP,
+					beneficiary, AMOUNT_ST, AMOUNT_ST, unlockHeight, lockSTP.l, 0, validRLPParentNodes, { from: intercommUC });
 				  utils.logResponse(o, "OpenSTUtility.confirmStakingIntent");
 			});
 
@@ -313,8 +313,9 @@ contract('OpenST', function(accounts) {
 
 			it("confirm staking intent for Branded Token", async() => {
 
+                const validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true);
 				const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
-					stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockBT.l, stakingIntentHash, { from: intercommUC });
+					stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockBT.l, 0, validRLPParentNodes, { from: intercommUC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
@@ -416,7 +417,7 @@ contract('OpenST', function(accounts) {
 			});
 
 			it("confirm redemption intent", async() => {
-                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                const validRLPParentNodes = await openSTValue.getMockRLPParentNodes.call(true);
 
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				  redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
@@ -478,7 +479,7 @@ contract('OpenST', function(accounts) {
 			});
 
 			it("confirm redemption intent", async() => {
-                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                const validRLPParentNodes = await openSTValue.getMockRLPParentNodes.call(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, uuidSTP, redeemer, nonce, redeemBeneficiary,
 					REDEEM_AMOUNT_STPRIME, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 
@@ -596,8 +597,10 @@ contract('OpenST', function(accounts) {
 
 			it("confirm staking intent for Branded Token", async() => {
 
+                const validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true);
+
 				const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
-				stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockR.l, stakingIntentHash, { from: intercommUC });
+				stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockR.l, 0, validRLPParentNodes, { from: intercommUC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
@@ -684,8 +687,10 @@ contract('OpenST', function(accounts) {
 
 			it("confirm staking intent for Branded Token", async() => {
 
+                const validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true);
+
 			    const result = await registrarUC.confirmStakingIntent(openSTUtility.address, registeredBrandedTokenUuid,
-			    stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockStake.l, stakingIntentHash, { from: intercommUC });
+			    stakerVC, nonceBT, beneficiary, AMOUNT_ST, AMOUNT_BT, unlockHeight, lockStake.l, 0, validRLPParentNodes, { from: intercommUC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(result.receipt, openSTUtility.address, openSTUtilityArtifacts.abi);
 
@@ -847,7 +852,7 @@ contract('OpenST', function(accounts) {
 
 			// Call confirmRedemptionIntent
 			it("calls confirmRedemptionIntent", async() => {
-                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                const validRLPParentNodes = await openSTValue.getMockRLPParentNodes.call(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
@@ -951,7 +956,7 @@ contract('OpenST', function(accounts) {
 
 			// Call confirmRedemptionIntent
 			it("calls confirmRedemptionIntent", async() => {
-                validRLPParentNodes = await openSTValue.getMockRLPParentNodes(true);
+                const validRLPParentNodes = await openSTValue.getMockRLPParentNodes.call(true);
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);

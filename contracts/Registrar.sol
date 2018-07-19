@@ -26,63 +26,94 @@ import "./OpsManaged.sol";
 import "./OpenSTValueInterface.sol";
 import "./OpenSTUtilityInterface.sol";
 
-/// @title Registrar - registers for utility tokens
+/**
+ *  @title Registrar contract which implements OpsManaged.
+ *
+ *  @notice Contains functions that register for utility tokens.
+ */
 contract Registrar is OpsManaged {
+	
+	/** Storage */
 
-    /*
-     *  Storage
-     */
-    // mapping(uint256 /* chainId */ => CoreInterface) cores;
+	// mapping(uint256 /* chainId */ => CoreInterface) cores;
 
-    /*
-     *  Public functions
-     */
-    constructor() public
-        OpsManaged()
-    {
-    }
+	/**  Public functions */
 
-    /*
-     *  OpenSTValue
-     */
-    function confirmRedemptionIntent(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-    	bytes32 _uuid,
-    	address _redeemer,
-    	uint256 _redeemerNonce,
-    	address _beneficiary,
-    	uint256 _amountUT,
-    	uint256 _redemptionUnlockHeight,
-    	bytes32 _hashLock,
-    	uint256 _blockHeight,
-    	bytes _rlpParentNodes)
-    	external
-    	onlyOps
-    	returns (
-    	uint256 amountST,
-    	uint256 expirationHeight)
-    {
-    	(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
-    		_uuid,
-	    	_redeemer,
-	    	_redeemerNonce,
-	    	_beneficiary,
-	    	_amountUT,
-	    	_redemptionUnlockHeight,
-	    	_hashLock,
-	    	_blockHeight,
-	    	_rlpParentNodes);
+	/**
+	 *  @notice Contract constructor.
+	 */
 
-    	return (amountST, expirationHeight);
-    }
+	 constructor() public
+	 	OpsManaged()
+	 	{ }
 
-    function addCore(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-   		CoreInterface _core)
+
+	/**
+	 *  @notice External function confirmRedemptionIntent.
+	 *
+	 *  @dev Only callable by Ops.
+	 *
+	 *  @param _uuid Uuid of the token.
+	 *  @param _redeemer Address of the redeemer.
+	 *  @param _redeemerNonce Nonce of the redeemer.
+	 *  @param _beneficiary Address of beneficiary on the value chain.
+	 *  @param _amountUT Amount of utility tokens to redeem.
+	 *  @param _redemptionUnlockHeight Block height upto which redemption is locked.
+	 *  @param _hashLock Hash lock for the redeem request.
+	 *  @param _blockHeight Height when redemption intent hashed.
+	 *  @param _rlpParentNodes Rlp encoded parent nodes.
+	 *
+	 *  @return uint256 amountST Amount of utility token equivalent OST redeemed.
+	 *  @return uint256 expirationHeight Block height upto which redemption intent is valid. 
+	 */
+	 function confirmRedemptionIntent(
+	 	// address of OpenSTValue registry:
+	 	OpenSTValueInterface _registry,
+	 	// OpenSTValue function:
+	 	bytes32 _uuid,
+	 	address _redeemer,
+	 	uint256 _redeemerNonce,
+	 	address _beneficiary,
+	 	uint256 _amountUT,
+	 	uint256 _redemptionUnlockHeight,
+	 	bytes32 _hashLock,
+	 	uint256 _blockHeight,
+	 	bytes _rlpParentNodes)
+	 	external
+	 	onlyOps
+	 	returns (
+	 	uint256 amountST,
+	 	uint256 expirationHeight)
+	 	{
+	 		(amountST, expirationHeight) = _registry.confirmRedemptionIntent(
+	 		_uuid,
+	 		_redeemer,
+	 		_redeemerNonce,
+	 		_beneficiary,
+	 		_amountUT,
+	 		_redemptionUnlockHeight,
+	 		_hashLock,
+	 		_blockHeight,
+	 		_rlpParentNodes);
+
+		return (amountST, expirationHeight);
+	}
+
+	/**
+	 *  @notice Public function addCore.
+	 *
+	 *  @dev Only callable by Admin or Ops. 
+	 *
+	 *  @param _registry Address of OpenSTValue registry.
+	 *  @param _core Address of CoreInterface contract.
+	 *
+	 *  @return bool True if core is registered on OpenSTValue, false otherwise.
+	 */
+	 function addCore(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+		// OpenSTValue function:
+		CoreInterface _core)
 		public
 		onlyAdminOrOps
 		returns (
@@ -91,14 +122,29 @@ contract Registrar is OpsManaged {
 		return _registry.addCore(_core);
 	}
 
-	function registerUtilityToken(
-    	// address of OpenSTValue registry:
-    	OpenSTValueInterface _registry,
-    	// OpenSTValue function:
-   		string _symbol,
+	/**
+	 *  @notice Public function registerUtilityToken.
+	 *
+	 *  @dev Only callable by Admin or Ops.
+	 *
+	 *  @param _symbol Symbol of the token.
+	 *  @param _name Name of the token.
+	 *  @param _conversionRate Conversion rate of the token.
+	 *  @param _conversionRateDecimals Decimal places of conversion rate of the token.
+	 *  @param _chainIdUtility Chain id of the utility chain.
+	 *  @param _stakingAccount Address of the staking account.
+	 *  @param _checkUuid Uuid as the hash of regsiteration data.
+	 *
+	 *  @return bytes32 Keccak256 token uuid.
+	 */
+	 function registerUtilityToken(
+		// address of OpenSTValue registry:
+		OpenSTValueInterface _registry,
+		// OpenSTValue function:
+		string _symbol,
 		string _name,
 		uint256 _conversionRate,
-    uint8 _conversionRateDecimals,
+		uint8 _conversionRateDecimals,
 		uint256 _chainIdUtility,
 		address _stakingAccount,
 		bytes32 _checkUuid)
@@ -111,18 +157,27 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-      _conversionRateDecimals,
+			_conversionRateDecimals,
 			_chainIdUtility,
 			_stakingAccount,
 			_checkUuid);
 	}
 
-	// @dev this can be deprecated as anyone with the unlockSecret
-	//  can now call the processRedeeming function
-	function processStaking(
+	/**
+	 *  @notice External function processStaking.
+	 *
+	 *  @dev This can be deprecated as anyone with the unlockSecret,
+	 *       can now call the processRedeeming function.
+	 *
+	 *  @param _stakingIntentHash Hash of staking intent variables.
+	 *  @param _unlockSecret Unlock secret to the hash lock.
+	 *
+	 *  @return address Address at which ST is staked.
+	 */
+	 function processStaking(
 		// address of OpenSTValue registry:
 		OpenSTValueInterface _registry,
-    	// OpenSTValue function:
+		// OpenSTValue function:
 		bytes32 _stakingIntentHash,
 		bytes32 _unlockSecret)
 		external
@@ -134,13 +189,28 @@ contract Registrar is OpsManaged {
 			_stakingIntentHash, _unlockSecret);
 	}
 
-	/*
-	 *  OpenSTUtility
+	/**
+	 *  @notice External function confirmStakingIntent.
+	 *
+	 *  @dev Callable only by Ops.
+	 *
+	 *  @param _uuid Uuid of the token.
+	 *  @param _staker Address of the staker.
+	 *  @param _stakerNonce Nonce of the staker.
+	 *  @param _beneficiary Beneficiary address on utility chain.
+	 *  @param _amountST Amount OST staked.
+	 *  @param _amountUT Amount utility tokens to be minted.
+	 *  @param _stakingUnlockHeight Height upto which stake is locked.
+	 *  @param _hashLock Hash lock for the staking intent.
+	 *  @param _blockHeight Height when staking intent hashed.
+	 *  @param _rlpParentNodes Rlp encoded parent nodes. 
+	 *
+	 *  @return uint256 Expiration height Block height upto which staking intent is valid.
 	 */
-	function confirmStakingIntent(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
+	 function confirmStakingIntent(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
 		bytes32 _uuid,
 		address _staker,
 		uint256 _stakerNonce,
@@ -149,7 +219,8 @@ contract Registrar is OpsManaged {
 		uint256 _amountUT,
 		uint256 _stakingUnlockHeight,
 		bytes32 _hashLock,
-		bytes32 _stakingIntentHash)
+		uint256 _blockHeight,
+		bytes _rlpParentNodes)
 		external
 		onlyOps
 		returns (
@@ -164,18 +235,33 @@ contract Registrar is OpsManaged {
 			_amountUT,
 			_stakingUnlockHeight,
 			_hashLock,
-			_stakingIntentHash);
+			_blockHeight,
+			_rlpParentNodes);
 	}
 
-	function registerBrandedToken(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
+	/**
+	 *  @notice Public function registerBrandedToken.
+	 *
+	 *  @param _registry Address of OpenSTUtility Interface contract.
+	 *  @param _symbol Symbol of the token.
+	 *  @param _name Name of the token.
+	 *  @param _conversionRate Conversion rate of the token.
+	 *  @param _conversionRateDecimals Decimal places of the conversion rate of the token.
+	 *  @param _requester Address of the requester for registration. 
+	 *  @param _brandedToken Address of the utility token interface.
+	 *  @param _checkUuid UUID as the hash of registration data.
+	 *
+	 *  @return bytes32 Keccak256 of the registration data.
+	 */
+	 function registerBrandedToken(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
 		string _symbol,
 		string _name,
-    uint256 _conversionRate,
-    uint8 _conversionRateDecimals,
-    address _requester,
+		uint256 _conversionRate,
+		uint8 _conversionRateDecimals,
+		address _requester,
 		UtilityTokenInterface _brandedToken,
 		bytes32 _checkUuid)
 		public
@@ -187,26 +273,35 @@ contract Registrar is OpsManaged {
 			_symbol,
 			_name,
 			_conversionRate,
-      _conversionRateDecimals,
-      _requester,
+			_conversionRateDecimals,
+			_requester,
 			_brandedToken,
 			_checkUuid);
 	}
 
-	// @dev this can be deprecated as anyone with the unlockSecret
-	//  can now call the processRedeeming function
-    function processRedeeming(
-    	// address of OpenSTUtility registry:
-    	OpenSTUtilityInterface _registry,
-    	// OpenSTUtility function:
-    	bytes32 _redemptionIntentHash,
-    	bytes32 _unlockSecret)
-    	external
-    	onlyAdmin
-    	returns (
-    	address tokenAddress)
-    {
-    	return _registry.processRedeeming(
-    		_redemptionIntentHash, _unlockSecret);
-    }
+	/**
+	 *  @notice External function processRedeeming.
+	 *
+	 *  @dev Callable only by Admin. This can be deprecated as anyone with the unlockSecret,
+	 *       can now call the processRedeeming function. 
+	 *
+	 *  @param _redemptionIntentHash Hash of the redemption intent data.
+	 *  @param _unlockSecret Unlock secret to the hash lock.
+	 *
+	 *  @return address Address of the token.
+	 */
+	 function processRedeeming(
+		// address of OpenSTUtility registry:
+		OpenSTUtilityInterface _registry,
+		// OpenSTUtility function:
+		bytes32 _redemptionIntentHash,
+		bytes32 _unlockSecret)
+		external
+		onlyAdmin
+		returns (
+		address tokenAddress)
+		{
+		return _registry.processRedeeming(
+			_redemptionIntentHash, _unlockSecret);
+	}
 }

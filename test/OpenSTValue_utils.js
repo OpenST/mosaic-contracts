@@ -21,6 +21,10 @@
 
 const BigNumber = require('bignumber.js');
 
+const rootPrefix = ".."
+  , constants = require(rootPrefix + '/test/lib/constants')
+;
+
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
 var MockToken = artifacts.require("./MockToken.sol");
@@ -39,7 +43,7 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	// Set MockToken admin in order to finalize MockToken
 	await valueToken.setAdminAddress(accounts[1]);
 
-	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
 
   // Deploy worker contract

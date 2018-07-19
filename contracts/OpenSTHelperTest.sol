@@ -29,8 +29,6 @@ import "./OpenSTHelper.sol";
   */
 contract OpenSTHelperTest {
 
-    constructor(){}
-
 /**
   *	@notice Calls storageVariablePath of OpenSTHelper
   *

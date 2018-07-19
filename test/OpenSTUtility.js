@@ -125,11 +125,16 @@ contract('OpenSTUtility', function(accounts) {
 	var unlockHeight 			= null;
 	var uuidSTPrime				= null;
 	var expirationHeight 		= null;
+	var validRLPParentNodes     = null;
+	var invalidRLPParentNodes   = null;
+	var blockToWaitLong 		= 110;
 
 	describe('Properties', async () => {
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false) ;
 	    })
 
 		it('has chainIdValue', async () => {
@@ -217,75 +222,103 @@ contract('OpenSTUtility', function(accounts) {
 	describe('ConfirmStakingIntent', async () => {
 
 		const lock = HashLock.getHashLock();
-
+		var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false);
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
             brandedToken = result.logs[0].args._token;
             await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
+            stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
 	    })
 
-		it('fails to confirm by non-registrar', async () => {
-            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: accounts[0] }));
-		})
+
 
 		it('fails to confirm when token is not registered', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent("bad UUID", accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent("bad UUID", accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails confirm when stakerNonce is not > previously', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 0, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 0, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when amoutST is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 0, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], 0, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when amountUT is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, 0, 80668, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, 0, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
 		it('fails to confirm when stakingUnlockHeight is not > 0', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 0, lock.l, checkStakingIntentHash, { from: registrar }));
+			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 0, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
 		})
 
-		it('fails to confirm when stakingIntentHash is empty', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, "", { from: registrar }));
-		})
 
-		it('fails to confirm when presented with different lock', async () => {
-			const differentLock = HashLock.getHashLock();
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, differentLock.l, "", { from: registrar }));
-		})
+        it('fails to confirm when invalidRLPParentNodes is passed',async() => {
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,invalidRLPParentNodes, { from: registrar }));
+        })
 
-		it('fails to confirm when stakingIntentHash does not match calculated hash', async () => {
-			await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, "bad stakingIntentHash", { from: registrar }));
-		})
-
-		it('successfully confirms', async () => {
-			expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
-			result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
-			await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
+        it('successfully confirms', async () => {
+            expirationHeight = await openSTUtility.confirmStakingIntent.call(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
+            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
+            await OpenSTUtility_utils.checkStakingIntentConfirmedEvent(result.logs[0], checkBtUuid, checkStakingIntentHash, accounts[0], accounts[0], amountST, amountUT, expirationHeight);
 		})
 	})
+
+    describe('ConfirmStakingIntent when block number exceeds safe unlockHeight', async () => {
+
+        const lock = HashLock.getHashLock();
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
+        before(async () => {
+            contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
+            openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false);
+            checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
+            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
+            brandedToken = result.logs[0].args._token;
+            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
+            stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+        })
+
+        it('fails to confirm when block number is equal to safe unlockHeight',async() => {
+        	// blockToWaitLong = 110
+			// blockToWaitMedium = 60
+			// blockToWaitLong-blockToWaitMedium = 50; so the value 49
+            for (var i=0; i<49; i++){
+        	    await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,invalidRLPParentNodes, { from: registrar }));
+			}
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
+        })
+        it('fails to confirm when block number is greater to safe unlockHeight',async() => {
+            await Utils.expectThrow(openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar }));
+        })
+
+    })
 
 	describe('ProcessMinting', async () => {
 
 		const lock = HashLock.getHashLock();
-
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 		context('when expirationHeight is > block number', async () => {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+	            result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l , 1 ,validRLPParentNodes, { from: registrar });
 		    })
 
 			it('fails to process if stakingIntentHash is empty', async () => {
@@ -316,16 +349,20 @@ contract('OpenSTUtility', function(accounts) {
 
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 
 		before(async () => {
 	        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        openSTUtility = contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes.call(false) ;
         	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
             result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
             brandedToken = result.logs[0].args._token;
             await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+            stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
             await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 
 	    	brandedTokenContract = new BrandedToken(brandedToken);
@@ -374,15 +411,19 @@ contract('OpenSTUtility', function(accounts) {
 		const redeemSTP = new BigNumber(2);
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 
 		before(async () => {
 	        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 	        stPrime     			= contracts.stPrime;
 	        openSTUtility 			= contracts.openSTUtility;
+            validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+            invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
-			checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l);
+            stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+			checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l);
 
-			await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+			await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 			await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 			await stPrime.claim(accounts[0]);
 	    })
@@ -415,6 +456,7 @@ contract('OpenSTUtility', function(accounts) {
 
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 
 		context('BrandedToken', async () => {
 			var redemptionAmount = 3;
@@ -422,12 +464,15 @@ contract('OpenSTUtility', function(accounts) {
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate, conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				brandedTokenContract = new BrandedToken(brandedToken);
 				await brandedTokenContract.claim(accounts[0]);
@@ -464,15 +509,18 @@ contract('OpenSTUtility', function(accounts) {
 
 		context('STPrime', async () => {
 			var redemptionAmount = 2;
-
+            var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 			before(async () => {
 				contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 				stPrime     			= contracts.stPrime;
 				openSTUtility           = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 				uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
-				checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l);
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+				checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l);
 
-	          await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+	          await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	          await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 						await stPrime.claim(accounts[0]);
 	          result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, lockR.l, { from: redeemer, value: redemptionAmount });
@@ -501,19 +549,22 @@ contract('OpenSTUtility', function(accounts) {
 
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
-
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 		context('BrandedToken', async () => {
 			var redemptionAmount = 3;
 
 			before(async () => {
 		        contracts   = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        openSTUtility = contracts.openSTUtility;
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 	        	checkBtUuid = await openSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, openSTUtility.address, conversionRate,conversionRateDecimals);
 	            result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 	            brandedToken = result.logs[0].args._token;
 	            await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-	            checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
-	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+                checkStakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
+	            await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 							brandedTokenContract = new BrandedToken(brandedToken);
 							await brandedTokenContract.claim(accounts[0]);
@@ -539,16 +590,18 @@ contract('OpenSTUtility', function(accounts) {
 
 		context('STPrime', async () => {
 			var redemptionAmount = 2;
-
+            var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 			before(async () => {
 		        contracts  		 		= await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
 		        stPrime     			= contracts.stPrime;
 		        openSTUtility 			= contracts.openSTUtility;
-
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
 		        uuidSTPrime 			= await openSTUtility.uuidSTPrime.call();
-	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l)
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+	            checkStakingIntentHash 	= await openSTUtility.hashStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l)
 
-	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, 80668, lock.l, checkStakingIntentHash, { from: registrar });
+	            await openSTUtility.confirmStakingIntent(uuidSTPrime, accounts[0], 1, accounts[0], amountST, amountUT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 	            await openSTUtility.processMinting(checkStakingIntentHash, lock.s);
 				await stPrime.claim(accounts[0]);
 	            result = await openSTUtility.redeemSTPrime(redemptionAmount, redeemBeneficiary, lockR.l, { from: redeemer, value: redemptionAmount });
@@ -576,7 +629,7 @@ contract('OpenSTUtility', function(accounts) {
 
 		const lock = HashLock.getHashLock();
 		const lockR = HashLock.getHashLock();
-
+        var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 		context('revert redemption', async () => {
 
 			var stakeAmountST =  new BigNumber(web3.toWei(1, "ether")),
@@ -587,26 +640,29 @@ contract('OpenSTUtility', function(accounts) {
 
 			before(async () => {
 				contracts = await OpenSTUtility_utils.deployOpenSTUtility(artifacts, accounts);
-				// Use OpenSTUtility Contract to expire redeem soon
+                // Use OpenSTUtility Contract to expire redeem soon
 				OpenSTUtility = contracts.openSTUtility;
-				checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate, conversionRateDecimals);
-				result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
-				brandedToken = result.logs[0].args._token;
-				await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
+                validRLPParentNodes = await openSTUtility.getMockRLPParentNodes.call(true) ;
+                invalidRLPParentNodes =  await  openSTUtility.getMockRLPParentNodes(false) ;
+                checkBtUuid = await OpenSTUtility.hashUuid.call(symbol, name, chainIdValue, chainIdUtility, OpenSTUtility.address, conversionRate, conversionRateDecimals);
+                result = await OpenSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
+                brandedToken = result.logs[0].args._token;
+                await OpenSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, redeemerForRevert, brandedToken, checkBtUuid, { from: registrar });
 
 				escrowUnlockHeight = await OpenSTUtility.blocksToWaitLong.call();
-				// 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtility contract so that redeem expires
-				escrowUnlockHeight = escrowUnlockHeight.toNumber() + 1;
-				checkStakingIntentHash = await OpenSTUtility.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l);
-				await OpenSTUtility.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, escrowUnlockHeight, lock.l, checkStakingIntentHash, { from: registrar });
-				await OpenSTUtility.processMinting(checkStakingIntentHash, lock.s);
-				brandedTokenContract = new BrandedToken(brandedToken);
-				await brandedTokenContract.claim(redeemerForRevert);
-				// redeemerForRevert is approved with 5 BT
+                // 1 more than BLOCKS_TO_WAIT_LONG in OpenSTUtility contract so that redeem expires
+				escrowUnlockHeight = escrowUnlockHeight.toNumber() + 3;
+                stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+                checkStakingIntentHash = await OpenSTUtility.hashStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, stakeUnlockHeight, lock.l);
+                await OpenSTUtility.confirmStakingIntent(checkBtUuid, redeemerForRevert, 1, redeemerForRevert, stakeAmountST, convertedAmountBT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
+                await OpenSTUtility.processMinting(checkStakingIntentHash, lock.s);
+                brandedTokenContract = new BrandedToken(brandedToken);
+                await brandedTokenContract.claim(redeemerForRevert);
+                // redeemerForRevert is approved with 5 BT
 				await brandedTokenContract.approve(OpenSTUtility.address, redemptionAmountBT, { from: redeemerForRevert });
-				// After calling Redeem is left with 3 BT since redemptionAmountBT is 2 (5-2)
+                // After calling Redeem is left with 3 BT since redemptionAmountBT is 2 (5-2)
 				result = await OpenSTUtility.redeem(checkBtUuid, redemptionAmountBT, 2, redeemBeneficiary, lockR.l, { from: redeemerForRevert });
-				redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
+                redemptionIntentHash = result.logs[0].args._redemptionIntentHash;
 			});
 
 			// Mock transactions so that block number increases
@@ -668,11 +724,11 @@ contract('OpenSTUtility', function(accounts) {
   describe('revert minting', async () => {
     var redemptionIntentHash = null;
   	var brandedToken = null;
-  	var stakingIntentHash = null;
   	const AMOUNT_ST = new BigNumber(web3.toWei(10, "ether"));
   	const AMOUNT_BT = new BigNumber(AMOUNT_ST*conversionRate);
 
 		const lock = HashLock.getHashLock();
+      var stakeUnlockHeight = new BigNumber(blockToWaitLong);
 
 			context('BrandedToken', async () => {
 
@@ -683,10 +739,11 @@ contract('OpenSTUtility', function(accounts) {
 					result = await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals);
 					brandedToken = result.logs[0].args._token;
 					await openSTUtility.registerBrandedToken(symbol, name, conversionRate, conversionRateDecimals, accounts[0], brandedToken, checkBtUuid, { from: registrar });
-					stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
-																AMOUNT_ST, AMOUNT_BT, 80668, lock.l);
+                    stakeUnlockHeight = new BigNumber(blockToWaitLong).plus(web3.eth.blockNumber);
+                    stakingIntentHash = await openSTUtility.hashStakingIntent(checkBtUuid, accounts[0], 1, accounts[0],
+                        AMOUNT_ST, AMOUNT_BT, stakeUnlockHeight, lock.l);
 					result = await openSTUtility.confirmStakingIntent(checkBtUuid, accounts[0], 1, accounts[0], AMOUNT_ST,
-										AMOUNT_BT, 80668, lock.l, stakingIntentHash, { from: registrar });
+										AMOUNT_BT, stakeUnlockHeight, lock.l, 1 ,validRLPParentNodes, { from: registrar });
 				});
 
 				it('fails if stakingIntentHash is empty', async() => {

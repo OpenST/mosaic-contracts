@@ -27,13 +27,16 @@ const Core = artifacts.require("./Core.sol")
 
 const BigNumber = require('bignumber.js')
 ;
+const rootPrefix = ".."
+    , constants = require(rootPrefix + '/test/lib/constants')
+;
 
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
     const registrar = accounts[1]
         , admin = accounts[2]
         , ops = accounts[3]
-        , openSTRemote = proof.account.openSTRemoteAddress
+        , openSTRemote = proof.account.accountAddress
         , chainIdOrigin = 3
         , chainIdRemote = 1410
         , valueToken = await MockToken.new()
@@ -49,7 +52,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     await workers.setAdminAddress(admin);
     await workers.setOpsAddress(ops);
     await workers.setWorker(worker1, deactivationHeight, {from: ops});
-    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
+    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
     return {
         core: core,
         workersContract: workers,
