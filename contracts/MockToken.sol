@@ -120,19 +120,6 @@ contract MockToken is EIP20Interface, MockTokenConfig, OpsManaged {
 		return true;
 	}
 
-	// Implement a burn function to permit msg.sender to reduce its balance
-	// which also reduces tokenTotalSupply
-	function burn(uint256 _value) public returns (bool success) {
-		require(_value <= balances[msg.sender]);
-
-		balances[msg.sender] = balances[msg.sender].sub(_value);
-		tokenTotalSupply = tokenTotalSupply.sub(_value);
-
-		emit Burnt(msg.sender, _value);
-
-		return true;
-	}
-
 	function remove() public onlyOwner {
 		selfdestruct(msg.sender);
 	}
