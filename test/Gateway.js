@@ -387,7 +387,7 @@ contract('Gateway', function(accounts) {
       await requestStake(stakeAmount, beneficiaryAccount, stakerAccount, false);
     });
 
-    it('should consume stake amount which can be converted to BT', async function () {
+    it('should only consume stake amount which can be converted to BT', async function () {
       const conversionRate = 20,
         conversionRateDecimals = 2
         , requestedStakeAmount = new BigNumber(9)
@@ -413,6 +413,17 @@ contract('Gateway', function(accounts) {
 
     it('successfully processes revert stake request', async () => {
       await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+      await revertStakeRequest(stakerAccount, stakeAmount ,true);
+    });
+
+    it('should revert stake amount which is consumed', async () => {
+      const conversionRate = 20,
+        conversionRateDecimals = 2
+        , requestedStakeAmount = new BigNumber(9)
+        , stakeAmount = new BigNumber(5);
+
+      await deployGateway(conversionRate, conversionRateDecimals);
+      await approveGatewayAndRequestStake(requestedStakeAmount, beneficiaryAccount, stakerAccount, true, stakeAmount);
       await revertStakeRequest(stakerAccount, stakeAmount ,true);
     });
 
@@ -489,6 +500,23 @@ contract('Gateway', function(accounts) {
       it('successfully processes accept stake request', async () => {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
+
+        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
+
+        await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
+
+      });
+
+      it('should processes accept stake request with consumed amount', async () => {
+
+        const conversionRate = 20,
+          conversionRateDecimals = 2
+          , requestedStakeAmount = new BigNumber(9)
+          , stakeAmount = new BigNumber(5);
+
+        await deployGateway(conversionRate, conversionRateDecimals);
+        await approveGatewayAndRequestStake(requestedStakeAmount, beneficiaryAccount, stakerAccount, true, stakeAmount);
 
         await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
