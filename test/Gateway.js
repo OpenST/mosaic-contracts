@@ -33,8 +33,8 @@ contract('Gateway', function(accounts) {
 
   var result, valueToken, openSTValue, uuid, gateway, workers, bounty, workerAddress1, ownerAddress;
 
-  const deployGateway = async function() {
-    result   = await Gateway_utils.deployGateway(artifacts, accounts);
+  const deployGateway = async function (conversionRate = 1000000, conversionRateDecimals = 5) {
+    result = await Gateway_utils.deployGateway(artifacts, accounts, conversionRate, conversionRateDecimals);
     valueToken  = result.valueToken;
     openSTValue = result.openSTValue;
     uuid = result.uuid;
@@ -45,14 +45,14 @@ contract('Gateway', function(accounts) {
     ownerAddress = result.ownerAddress;
   };
 
-  const approveGatewayAndRequestStake = async function (amount, beneficiary, staker, isSuccessCase) {
+  const approveGatewayAndRequestStake = async function (amount, beneficiary, staker, isSuccessCase, stakeAmount) {
     // approve Gateway contract
     await valueToken.approve(gateway.address, amount, { from: staker });
     // call the request stake
-    return requestStake(amount, beneficiary, staker, isSuccessCase);
+    return requestStake(amount, beneficiary, staker, isSuccessCase, stakeAmount);
   };
 
-  const requestStake = async function (amount, beneficiary, staker, isSuccessCase) {
+  const requestStake = async function (amount, beneficiary, staker, isSuccessCase, stakeAmount) {
     // intial account balances
     let initialStakerAccountBalance = await valueToken.balanceOf.call(staker)
       , initialGatewayBalance = await valueToken.balanceOf.call(gateway.address)
@@ -64,7 +64,11 @@ contract('Gateway', function(accounts) {
       assert.equal(isSuccess, true);
 
       let requestStakeResponse = await gateway.requestStake(amount, beneficiary, {from: staker});
-      await Gateway_utils.checkRequestStakeEvent(requestStakeResponse.logs[0],staker, amount, beneficiary);
+
+      if (!stakeAmount) {
+        stakeAmount = amount;
+      }
+      await Gateway_utils.checkRequestStakeEvent(requestStakeResponse.logs[0], staker, amount, stakeAmount, beneficiary);
 
     } else {
       // fail case
@@ -78,8 +82,8 @@ contract('Gateway', function(accounts) {
 
     if (isSuccessCase) {
       // check balances for success case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.sub(amount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(amount)), true);
+      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.sub(stakeAmount)), true);
+      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(stakeAmount)), true);
     } else {
       // check balances for failed case
       assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
@@ -382,6 +386,17 @@ contract('Gateway', function(accounts) {
     it('fails to processes request stake when staker account has not approved Gateway contract', async () => {
       await requestStake(stakeAmount, beneficiaryAccount, stakerAccount, false);
     });
+
+    it('should consume stake amount which can be converted to BT', async function () {
+      const conversionRate = 20,
+        conversionRateDecimals = 2
+        , requestedStakeAmount = new BigNumber(9)
+        , stakeAmount = new BigNumber(5);
+
+      await deployGateway(conversionRate, conversionRateDecimals);
+      await approveGatewayAndRequestStake(requestedStakeAmount, beneficiaryAccount, stakerAccount, true, stakeAmount);
+    });
+
   });
 
 
@@ -733,7 +748,6 @@ contract('Gateway', function(accounts) {
         });
 
     });
-
 });
 
 

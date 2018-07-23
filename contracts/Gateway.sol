@@ -27,6 +27,7 @@ import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
 import "./Owned.sol";
 import "./WorkersInterface.sol";
+import "./TokenConversionLib.sol";
 
 /**
  *  @title Gateway contract which implements ProtocolVersioned, Owned.
@@ -40,7 +41,7 @@ contract Gateway is ProtocolVersioned, Owned {
     /** Events */
 
     /** Below event is emitted after successful execution of requestStake */
-    event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
+    event StakeRequested(address _staker, uint256 _amount, uint256 _stakedAmount, address _beneficiary);
     /** Below event is emitted after successful execution of revertStakeRequest */
     event StakeRequestReverted(address _staker, uint256 _amount);
     /** Below event is emitted after successful execution of rejectStakeRequest */
@@ -67,6 +68,10 @@ contract Gateway is ProtocolVersioned, Owned {
     /** Storing utility token UUID */
     bytes32 public uuid;
 
+    uint256 conversionRate;
+    uint8 conversionRateDecimals;
+
+
     /** Structures */
 
     struct StakeRequest {
@@ -90,6 +95,8 @@ contract Gateway is ProtocolVersioned, Owned {
         WorkersInterface _workers,
         uint256 _bounty,
         bytes32 _uuid,
+        uint256 _conversionRate,
+        uint8 _conversionRateDecimals,
         address _openSTProtocol)
         public
         Owned()
@@ -101,7 +108,8 @@ contract Gateway is ProtocolVersioned, Owned {
         workers = _workers;
         bounty = _bounty;
         uuid = _uuid;
-
+        conversionRate = _conversionRate;
+        conversionRateDecimals = _conversionRateDecimals;
     }
 
     /**
@@ -128,16 +136,19 @@ contract Gateway is ProtocolVersioned, Owned {
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
 
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), _amount));
+        uint256 amountUT = TokenConversionLib.calculateUTAmount(_amount, conversionRate, conversionRateDecimals);
+        uint256 stakedAmount = TokenConversionLib.calculateSTAmount(amountUT, conversionRate, conversionRateDecimals);
+
+        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), stakedAmount));
 
         stakeRequests[msg.sender] = StakeRequest({
-            amount: _amount,
+            amount : stakedAmount,
             beneficiary: _beneficiary,
             hashLock: 0,
             unlockHeight: 0
         });
 
-        emit StakeRequested(msg.sender, _amount, _beneficiary);
+        emit StakeRequested(msg.sender, _amount, stakedAmount, _beneficiary);
 
         return true;
     }
