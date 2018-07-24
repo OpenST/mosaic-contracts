@@ -31,7 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-import "./OpenSTHelper.sol";
+import "./ProofLib.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -449,7 +449,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // storageRoot cannot be 0
         require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
-        require(OpenSTHelper.verifyIntentStorage(
+        require(ProofLib.verifyIntentStorage(
                 intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,

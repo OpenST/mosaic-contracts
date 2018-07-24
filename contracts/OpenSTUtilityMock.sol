@@ -59,7 +59,7 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		pure
 		returns(bool /* MerkleProofStatus*/)
 	{
-		bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+		bytes memory mockedValidValue = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 		return (keccak256(abi.encodePacked(mockedValidValue)) == keccak256(abi.encodePacked(rlpParentNodes)));
 	}
 
@@ -71,10 +71,10 @@ contract OpenSTUtilityMock is OpenSTUtility {
 		returns (bytes /* mock RLP encoded parent nodes*/)
 	{
 		if(isValid) {
-			bytes memory mockedValidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
+			bytes memory mockedValidValue = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(uint8(1))));
 			return mockedValidValue;
 		}
-		bytes memory mockedInvalidValue = OpenSTHelper.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
+		bytes memory mockedInvalidValue = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(uint8(0))));
 		return mockedInvalidValue;
 	}
 

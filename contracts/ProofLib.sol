@@ -20,7 +20,7 @@ import "./BytesLib.sol";
 import "./MerklePatriciaProof.sol";
 import "./RLPEncode.sol";
 
-library OpenSTHelper {
+library ProofLib {
 
   /**
     *	@notice Convert bytes32 to bytes

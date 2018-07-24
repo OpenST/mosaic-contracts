@@ -23,7 +23,7 @@ pragma solidity ^0.4.23;
 
 import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
-import "./OpenSTHelper.sol";
+import "./ProofLib.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
 import "./SafeMath.sol";
@@ -94,7 +94,7 @@ contract Core is CoreInterface {
 	/**
 	 *  @notice Contract constructor.
 	 *
-	 *  @dev bytes32ToBytes is OpenSTHelper contract method.
+	 *  @dev bytes32ToBytes is ProofLib contract method.
 	 *
 	 *  @param _registrar Address of the registrar which registers for utility tokens.
 	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
@@ -130,7 +130,7 @@ contract Core is CoreInterface {
 		remoteChainBlockGenerationTime = _remoteChainBlockGenerationTime;
 		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
 		// Encoded remote path.
-		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
+		encodedOpenSTRemotePath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
 		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
