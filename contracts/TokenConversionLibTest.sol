@@ -46,6 +46,6 @@ library TokenConversionLibTest {
     returns (
         uint256)
     {
-        return TokenConversionLib.calculateSTAmount(amountST, conversionRate, conversionRateDecimals);
+        return TokenConversionLib.calculateSTAmount(amountUT, conversionRate, conversionRateDecimals);
     }
 }
