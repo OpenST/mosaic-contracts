@@ -625,32 +625,46 @@ contract OpenSTValue is OpsManaged, Hasher {
         return uuid;
     }
 
-    /*
-     *  Administrative functions
+    /** Administrative functions */
+
+    /**
+     *  @notice Public function to initiate protocol transfer.
+     *
+	 *  @dev Only callable by admin. Initiates protocol transfer.
+	 *
+	 *  @param _protocolVersioned Address of the existing openSTProtocol.
+	 *  @param _proposedProtocol Address of the proposed openSTProtocol.
+     *
+     *  @return bool True if protocol transfer initiation is completed, false otherwise.
      */
     function initiateProtocolTransfer(
-        ProtocolVersioned _simpleStake,
+        ProtocolVersioned _protocolVersioned,
         address _proposedProtocol)
         public
         onlyAdmin
         returns (bool)
     {
-        _simpleStake.initiateProtocolTransfer(_proposedProtocol);
+        _protocolVersioned.initiateProtocolTransfer(_proposedProtocol);
 
         return true;
     }
 
-    // on the very first released version v0.9.1 there is no need
-    // to completeProtocolTransfer from a previous version
-
-    /* solhint-disable-next-line separate-by-one-line-in-contract */
+    /**
+     *  @notice Public function to revoke protocol transfer.
+     *
+     *  @dev Only callable by admin. Revokes protocol transfer.
+     *
+     *  @param _protocolVersioned Address of the existing openSTProtocol.
+     *
+     *  @return bool True if protocol revoke is completed, false otherwise.
+     */
     function revokeProtocolTransfer(
-        ProtocolVersioned _simpleStake)
+        ProtocolVersioned _protocolVersioned)
         public
         onlyAdmin
         returns (bool)
     {
-        _simpleStake.revokeProtocolTransfer();
+        _protocolVersioned.revokeProtocolTransfer();
 
         return true;
     }
