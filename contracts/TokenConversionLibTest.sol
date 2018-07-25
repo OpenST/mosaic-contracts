@@ -1,9 +1,8 @@
 pragma solidity 0.4.23;
 
-import "./SafeMath.sol";
+import "./TokenConversionLib.sol";
 
-library TokenConversionLib {
-    using SafeMath for uint256;
+library TokenConversionLibTest {
 
     /**
      *	@notice Calculate Utility token amount based on stake OST amount, conversion rate and conversion decimal
@@ -19,16 +18,13 @@ library TokenConversionLib {
         uint256 amountST,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
-    internal
+    public
     pure
     returns (
-        uint256 amountUT)
+        uint256)
     {
-        require(amountST > 0, 'Amount that needs to be converted should be greater than zero');
-        require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
-        amountUT = (amountST.mul(conversionRate)).div(10 ** uint256(conversionRateDecimals));
-        return amountUT;
+        return TokenConversionLib.calculateUTAmount(amountST, conversionRate, conversionRateDecimals);
     }
 
     /**
@@ -45,15 +41,11 @@ library TokenConversionLib {
         uint256 amountUT,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
-    internal
+    public
     pure
     returns (
-        uint256 amountST)
+        uint256)
     {
-        require(amountUT > 0, 'Amount that needs to be converted should be greater than zero');
-        require(conversionRate > 0, 'Conversion Rate should be greater than zero');
-
-        amountST = (amountUT.mul(10 ** uint256(conversionRateDecimals))).div(conversionRate);
-        return amountST;
+        return TokenConversionLib.calculateSTAmount(amountST, conversionRate, conversionRateDecimals);
     }
 }
