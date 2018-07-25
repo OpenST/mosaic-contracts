@@ -27,15 +27,21 @@
         10. [Modifier Names](#modifier-names)
         11. [Enums](#enums)
         12. [Avoiding Naming Collisions](#avoiding-naming-collisions)
-  3. [Documentation](#documentation)
+  3. [Best Practices](#best-practices)
+        1. [Variable Initialization](#variable-initialization)
+        2. [Casting](#casting)
+        3. [Require and Assert](#require-and-assert)
+  4. [Documentation](#documentation)
         1. [Single Line](#single-line)
         2. [Multi Line](#multi-line)
         3. [Spaces](#spaces)
         4. [English Sentence](#english-sentence)
         5. [Grouping](#grouping)
         6. [Alignment](#alignment)
-        7. [Best Practices](#best-practices)
-  4. [Comments](#comments)
+  5. [Comments](#comments)
+
+*The current style guide is mostly based on [Ethereum Solidity Style Guide](http://solidity.readthedocs.io/en/v0.4.24/style-guide.html)
+with some changes and additions.*
 
 ## Code Layout
 
@@ -1151,6 +1157,62 @@ CapWords style.
 This convention is suggested when the desired name collides with that of a
 built-in or otherwise reserved name.
 
+## Best Practices
+
+### Variable Initialization
+
+Variables should be always initialized.
+
+`Example`
+
+```solidity
+function spam() internal {
+    ...
+    uint256 index = 0;
+    bool isEmpty = false;
+    ...
+}
+```
+
+### Casting
+
+For non primitive types we do not rely on implicit casting and specify
+constructor call explicitly.
+
+`Good`
+
+```solidity
+function spam(address a, bytes32 b, uint i) internal {
+    ...
+    require(a != Address(0));
+    require(b != bytes32(0));
+    require(i != 0);
+    ...
+}
+```
+
+`Bad`
+
+```solidity
+function spam(address a, bytes32 b) internal {
+    ...
+    require(a != 0);
+    require(b != 0);
+    ...
+}
+```
+
+### Require and Assert
+
+Use `assert(condition, message)` if you never ever want the condition to be `false`, not in any circumstance
+(apart from a bug in your code). It checks for invariants in code.
+
+Use `require(condition, message)` if condition can be `false`, due to e.g. invalid input,
+contract state variables are not met, a failing external component.
+
+Specifying *message* parameter for `require` is mandatory.
+For `assert` use your best judgement.
+
 ## Documentation
 
 Solidity contracts, functions, enums, etc documentation follows
@@ -1422,12 +1484,6 @@ function approve(address _spender, uint256 _value) returns (bool success);
  */
 function approve(address _spender, uint256 _value) returns (bool success);
 ```
-
-### Best Practices
-
-`DOs`
-
-`DONTs`
 
 ## Comments
 
