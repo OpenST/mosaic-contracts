@@ -27,13 +27,13 @@
   const rootPrefix = ".."
       , proofData = require( rootPrefix + "/test/data/proof.json" )
       , Utils = require(rootPrefix + '/test/lib/utils')
-      , OpenSTHelper = artifacts.require("./OpenSTHelperTest.sol");
+      , ProofLib = artifacts.require("./ProofLibTest.sol");
 
-  contract('OpenSTHelper', function (accounts) {
-      let openSTHelperContract;
+  contract('ProofLib', function (accounts) {
+      let ProofLibContract;
 
       before(async function () {
-          openSTHelperContract = await OpenSTHelper.new();
+          ProofLibContract = await ProofLib.new();
       });
 
       describe('Storage Path', function () {
@@ -45,7 +45,7 @@
               let mappingKey = dataSet1.mappingKey;
               let expectedPath = dataSet1.expectedPath;
 
-              let result = await openSTHelperContract.storageVariablePath(storageIndex.toString(16), mappingKey);
+              let result = await ProofLibContract.storageVariablePath(storageIndex.toString(16), mappingKey);
 
               assert.equal(expectedPath, result);
           });
@@ -55,7 +55,7 @@
               let mappingKey = dataSet2.mappingKey;
               let expectedPath = dataSet2.expectedPath;
 
-              let result = await openSTHelperContract.storageVariablePath(storageIndex.toString(16), mappingKey);
+              let result = await ProofLibContract.storageVariablePath(storageIndex.toString(16), mappingKey);
 
               assert.equal(expectedPath, result);
           });
@@ -65,7 +65,7 @@
           const dataSet1 = proofData.redemptionProof.dataSet1
               , dataSet2 = proofData.redemptionProof.dataSet2;
           it('Should verify intent storage [Redemption dataSet1]', async function () {
-              const result = await openSTHelperContract.verifyIntentStorage.call(
+              const result = await ProofLibContract.verifyIntentStorage.call(
                   dataSet1.storageIndex,
                   dataSet1.redeemer,
                   dataSet1.redeemerNonce,
@@ -77,7 +77,7 @@
           });
 
           it('Should verify intent storage [Redemption dataSet2]', async function () {
-              const result = await openSTHelperContract.verifyIntentStorage.call(
+              const result = await ProofLibContract.verifyIntentStorage.call(
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
@@ -89,7 +89,7 @@
           });
 
           it('Should fail to verify intent storage when storageIndex is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage.call(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
                   new BigNumber(3),
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
@@ -99,7 +99,7 @@
           });
 
           it('Should fail to verify intent storage when redeemer is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage.call(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
                   dataSet2.storageIndex,
                   dataSet1.redeemer,
                   dataSet2.redeemerNonce,
@@ -109,7 +109,7 @@
           });
 
           it('Should fail to verify intent storage when redeemerNonce is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage.call(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet1.redeemerNonce,
@@ -119,7 +119,7 @@
           });
 
           it('Should fail to verify intent storage when storageRoot is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage(
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
@@ -129,7 +129,7 @@
           });
 
           it('Should fail to verify intent storage when redemptionIntentHash is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage.call(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
@@ -139,7 +139,7 @@
           });
 
           it('Should fail to verify intent storage when rlpParentNodes is incorrect', async function () {
-              await Utils.expectThrow(openSTHelperContract.verifyIntentStorage.call(
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,

@@ -34,7 +34,7 @@ import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
-import "./OpenSTHelper.sol";
+import "./ProofLib.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
@@ -307,8 +307,8 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
         pure
         returns(bool /* MerkleProofStatus*/)
     {
-        bytes memory encodedPathInMerkle = OpenSTHelper.bytes32ToBytes(
-            OpenSTHelper.storageVariablePath(
+        bytes memory encodedPathInMerkle = ProofLib.bytes32ToBytes(
+            ProofLib.storageVariablePath(
                 intentsMappingStorageIndexPosition,
                 keccak256(abi.encodePacked(_staker,_stakerNonce))));
 
