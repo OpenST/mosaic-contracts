@@ -625,17 +625,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         return uuid;
     }
 
-    /** Administrative functions */
-
     /**
-     *  @notice Public function to initiate protocol transfer.
+     *  @notice Initiates protocol transfer.
      *
-     *  @dev Only callable by admin. Initiates protocol transfer.
+     *  @param _protocolVersioned The address of the current protocol.
+     *  @param _proposedProtocol The address of the proposed protocol.
      *
-     *  @param _protocolVersioned Address of the existing openSTProtocol.
-     *  @param _proposedProtocol Address of the proposed openSTProtocol.
-     *
-     *  @return bool True if protocol transfer initiation is completed, false otherwise.
+     *  @return bool true in case of success, otherwise throws an exception.
      */
     function initiateProtocolTransfer(
         ProtocolVersioned _protocolVersioned,
@@ -650,13 +646,11 @@ contract OpenSTValue is OpsManaged, Hasher {
     }
 
     /**
-     *  @notice Public function to revoke protocol transfer.
+     *  @notice Revokes protocol transfer.
      *
-     *  @dev Only callable by admin. Revokes protocol transfer.
+     *  @param _protocolVersioned The address of the current protocol.
      *
-     *  @param _protocolVersioned Address of the existing openSTProtocol.
-     *
-     *  @return bool True if protocol revoke is completed, false otherwise.
+     *  @return bool true in case of success, otherwise throws an exception.
      */
     function revokeProtocolTransfer(
         ProtocolVersioned _protocolVersioned)
