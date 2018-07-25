@@ -630,10 +630,10 @@ contract OpenSTValue is OpsManaged, Hasher {
     /**
      *  @notice Public function to initiate protocol transfer.
      *
-	 *  @dev Only callable by admin. Initiates protocol transfer.
-	 *
-	 *  @param _protocolVersioned Address of the existing openSTProtocol.
-	 *  @param _proposedProtocol Address of the proposed openSTProtocol.
+     *  @dev Only callable by admin. Initiates protocol transfer.
+     *
+     *  @param _protocolVersioned Address of the existing openSTProtocol.
+     *  @param _proposedProtocol Address of the proposed openSTProtocol.
      *
      *  @return bool True if protocol transfer initiation is completed, false otherwise.
      */
