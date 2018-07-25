@@ -67,10 +67,9 @@ contract Gateway is ProtocolVersioned, Owned {
     uint256 public bounty;
     /** Storing utility token UUID */
     bytes32 public uuid;
-
+    /** Token conversion Rate and Decimal example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1 */
     uint256 conversionRate;
     uint8 conversionRateDecimals;
-
 
     /** Structures */
 
@@ -117,6 +116,7 @@ contract Gateway is ProtocolVersioned, Owned {
      *
      *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
      *       Staked amount is transferred from staker address to Gateway contract.
+     *   Only part of stake amount is consumed which can minted to BT without any loss
      *
      *  @param _amount Staking amount.
      *  @param _beneficiary Beneficiary address.

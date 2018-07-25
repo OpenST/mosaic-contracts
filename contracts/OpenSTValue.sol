@@ -252,7 +252,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         /* solhint-enable avoid-tx-origin */
     }
 
-
     function processStaking(
         bytes32 _stakingIntentHash,
         bytes32 _unlockSecret)

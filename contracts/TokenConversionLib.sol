@@ -19,9 +19,9 @@ library TokenConversionLib {
         uint256 amountST,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
-    internal
-    pure
-    returns (
+        internal
+        pure
+        returns(
         uint256 amountUT)
     {
         require(amountST > 0, 'Amount that needs to be converted should be greater than zero');
@@ -45,9 +45,9 @@ library TokenConversionLib {
         uint256 amountUT,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
-    internal
-    pure
-    returns (
+        internal
+        pure
+        returns(
         uint256 amountST)
     {
         require(amountUT > 0, 'Amount that needs to be converted should be greater than zero');

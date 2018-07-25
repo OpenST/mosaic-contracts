@@ -79,8 +79,8 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionDecimal = 1;
 
       utils.expectThrow(contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal));
-
     });
+
   });
   describe('UT to ST conversion Test', async () => {
 
@@ -144,7 +144,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionDecimal = 1;
 
       utils.expectThrow(contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal));
-
     });
+
   });
 });
