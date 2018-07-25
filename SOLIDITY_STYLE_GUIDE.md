@@ -1184,7 +1184,7 @@ constructor call explicitly.
 ```solidity
 function spam(address a, bytes32 b, uint i) internal {
     ...
-    require(a != Address(0));
+    require(a != address(0));
     require(b != bytes32(0));
     require(i != 0);
     ...
