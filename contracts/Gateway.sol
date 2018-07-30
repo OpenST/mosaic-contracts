@@ -67,7 +67,7 @@ contract Gateway is ProtocolVersioned, Owned {
     uint256 public bounty;
     /** Storing utility token UUID */
     bytes32 public uuid;
-    /** Token conversion Rate and Decimal example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1 */
+    /** Token conversion rate and decimal example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1 */
     uint256 conversionRate;
     uint8 conversionRateDecimals;
 
@@ -114,30 +114,29 @@ contract Gateway is ProtocolVersioned, Owned {
     /**
      *  @notice External function requestStake.
      *
-     *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
-     *       Staked amount is transferred from staker address to Gateway contract.
-     *   Only part of stake amount is consumed which can minted to BT without any loss
+     *  @dev In order to request stake the staker needs to approve Gateway contract for request stake amount.
+     *       Maximum possible staked amount is transferred from staker address to Gateway contract given the conversion rate.
      *
-     *  @param _amount Staking amount.
+     *  @param _requestedAmount requested Staking amount.
      *  @param _beneficiary Beneficiary address.
      *
      *  @return bool Specifies status of the execution.
      */
     function requestStake(
-        uint256 _amount,
+        uint256 _requestedAmount,
         address _beneficiary)
         external
         returns (bool /* success */)
     {
 
-        require(_amount > uint256(0));
+        require(_requestedAmount > uint256(0));
         require(_beneficiary != address(0));
 
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
 
-        uint256 amountUT = TokenConversionLib.calculateUTAmount(_amount, conversionRate, conversionRateDecimals);
-        uint256 stakedAmount = TokenConversionLib.calculateSTAmount(amountUT, conversionRate, conversionRateDecimals);
+        uint256 amountUT = TokenConversionLib.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
+        uint256 stakedAmount = TokenConversionLib.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), stakedAmount));
 
@@ -148,7 +147,7 @@ contract Gateway is ProtocolVersioned, Owned {
             unlockHeight: 0
         });
 
-        emit StakeRequested(msg.sender, _amount, stakedAmount, _beneficiary);
+        emit StakeRequested(msg.sender, _requestedAmount, stakedAmount, _beneficiary);
 
         return true;
     }

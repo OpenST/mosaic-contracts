@@ -6,17 +6,17 @@ library TokenConversionLib {
     using SafeMath for uint256;
 
     /**
-     *	@notice Calculate Utility token amount based on stake OST amount, conversion rate and conversion decimal
+     *	@notice Calculate Utility token amount based on value token amount, conversion rate and conversion decimal
      *
-     *	@param amountST amount of ST needs to be staked and converted to UT
-     *	@param conversionRate rate which is used to convert ST to UT
-     *	@param conversionRateDecimals represents number of decimal in conversion rate
+     *	@param amount of value token needs to be converted to UT.
+     *	@param conversionRate rate which is used to convert value token to utility token.
+     *	@param conversionRateDecimals represents number of decimal in conversion rate.
      *
-     *	@return  amountUT number of utility token which can be minted from given amountST
+     *	@return amountUT  amount of Utility Token which is converted from value token given the conversion rate.
      */
 
     function calculateUTAmount(
-        uint256 amountST,
+        uint256 amount,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
         internal
@@ -24,36 +24,36 @@ library TokenConversionLib {
         returns(
         uint256 amountUT)
     {
-        require(amountST > 0, 'Amount that needs to be converted should be greater than zero');
+        require(amount > 0, 'Amount that needs to be converted should be greater than zero');
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
-        amountUT = (amountST.mul(conversionRate)).div(10 ** uint256(conversionRateDecimals));
+        amountUT = (amount.mul(conversionRate)).div(10 ** uint256(conversionRateDecimals));
         return amountUT;
     }
 
     /**
-      *	@notice Calculate Simple token amount based on unstake BT amount, conversion rate and conversion decimal
+      *	@notice Calculate Value token amount based on utility token amount, conversion rate and conversion decimal.
       *
-      *	@param amountUT amount of UT needs to be unstaked and converted to ST
-      *	@param conversionRate rate which is used to convert UT to ST
-      *	@param conversionRateDecimals represents number of decimal in conversion rate
+      *	@param amount  of UT will be converted to value token.
+      *	@param conversionRate rate which is used to convert utility token to value token.
+      *	@param conversionRateDecimals represents number of decimal in conversion rate.
       *
-      *	@return amountST number of ST token which can be unstaked from given amountUT
+      *	@return amountVT number of value tokens which is converted from amountUT given the conversion rate.
       */
 
-    function calculateSTAmount(
-        uint256 amountUT,
+    function calculateVTAmount(
+        uint256 amount,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
         internal
         pure
         returns(
-        uint256 amountST)
+        uint256 amountVT)
     {
-        require(amountUT > 0, 'Amount that needs to be converted should be greater than zero');
+        require(amount > 0, 'Amount that needs to be converted should be greater than zero');
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
-        amountST = (amountUT.mul(10 ** uint256(conversionRateDecimals))).div(conversionRate);
-        return amountST;
+        amountVT = (amount.mul(10 ** uint256(conversionRateDecimals))).div(conversionRate);
+        return amountVT;
     }
 }

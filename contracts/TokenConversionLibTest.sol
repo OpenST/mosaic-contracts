@@ -5,17 +5,17 @@ import "./TokenConversionLib.sol";
 library TokenConversionLibTest {
 
     /**
-      * @notice Calculate Utility token amount based on stake OST amount, conversion rate and conversion decimal
-      *
-      * @param amountST amount of ST needs to be staked and converted to UT
-      * @param conversionRate rate which is used to convert ST to UT
-      * @param conversionRateDecimals represents number of decimal in conversion rate
-      *
-      * @return  amountUT number of utility token which can be minted from given amountST
-      */
+     *	@notice Calculate utility token amount based on value token amount, conversion rate and conversion decimal
+     *
+     *	@param amount of value token needs to be converted to UT.
+     *	@param conversionRate rate which is used to convert value token to utility token.
+     *	@param conversionRateDecimals represents number of decimal in conversion rate.
+     *
+     *	@return amountUT  amount of Utility Token which is converted from value token given the conversion rate.
+     */
 
     function calculateUTAmount(
-        uint256 amountST,
+        uint256 amount,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
         public
@@ -24,21 +24,21 @@ library TokenConversionLibTest {
         uint256)
     {
 
-        return TokenConversionLib.calculateUTAmount(amountST, conversionRate, conversionRateDecimals);
+        return TokenConversionLib.calculateUTAmount(amount, conversionRate, conversionRateDecimals);
     }
 
     /**
-      *	@notice Calculate Simple token amount based on unstake BT amount, conversion rate and conversion decimal
+      *	@notice Calculate Value token amount based on utility token amount, conversion rate and conversion decimal.
       *
-      *	@param amountUT amount of UT needs to be unstaked and converted to ST
-      *	@param conversionRate rate which is used to convert UT to ST
-      *	@param conversionRateDecimals represents number of decimal in conversion rate
+      *	@param amount  of UT will be converted to value token.
+      *	@param conversionRate rate which is used to convert utility token to value token.
+      *	@param conversionRateDecimals represents number of decimal in conversion rate.
       *
-      *	@return amountST number of ST token which can be unstaked from given amountUT
+      *	@return amountVT number of value tokens which is converted from amountUT given the conversion rate.
       */
 
-    function calculateSTAmount(
-        uint256 amountUT,
+    function calculateVTAmount(
+        uint256 amount,
         uint256 conversionRate,
         uint8 conversionRateDecimals)
         public
@@ -46,6 +46,6 @@ library TokenConversionLibTest {
         returns(
         uint256)
     {
-        return TokenConversionLib.calculateSTAmount(amountUT, conversionRate, conversionRateDecimals);
+        return TokenConversionLib.calculateVTAmount(amount, conversionRate, conversionRateDecimals);
     }
 }

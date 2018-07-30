@@ -22,6 +22,16 @@ contract('TokenConversionLib Test', function (accounts) {
       assert.equal(result.toNumber(), 1);
     });
 
+    it('should convert ST to UT for 1.5ST = 1BT', async function () {
+
+      let amount = 2
+        , conversionRate = 66666
+        , conversionDecimal = 5;
+
+      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      assert.equal(result.toNumber(), 1);
+    });
+
     it('should convert ST to UT for 1ST = 5BT', async function () {
 
       let amount = 1
@@ -94,7 +104,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      let result = await contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
@@ -104,7 +114,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 5
         , conversionDecimal = 0;
 
-      let result = await contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
@@ -114,7 +124,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 35
         , conversionDecimal = 1;
 
-      let result = await contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
@@ -124,7 +134,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 20
         , conversionDecimal = 2;
 
-      let result = await contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 10);
     });
 
@@ -134,7 +144,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal));
+      utils.expectThrow(contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal));
     });
 
     it('should fail if conversion rate is zero', async function () {
@@ -143,7 +153,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 0
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateSTAmount.call(amount, conversionRate, conversionDecimal));
+      utils.expectThrow(contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal));
     });
 
   });
