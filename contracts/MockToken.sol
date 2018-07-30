@@ -24,10 +24,10 @@ pragma solidity ^0.4.23;
 
 import "./EIP20Interface.sol";
 import "./MockTokenConfig.sol";
-import "./OpsManaged.sol";
+import "./Owned.sol";
 import "./SafeMath.sol";
 
-contract MockToken is EIP20Interface, MockTokenConfig, OpsManaged {
+contract MockToken is EIP20Interface, MockTokenConfig, Owned {
 
 	using SafeMath for uint256;
 
@@ -39,12 +39,10 @@ contract MockToken is EIP20Interface, MockTokenConfig, OpsManaged {
 	mapping(address => uint256) balances;
 	mapping(address => mapping (address => uint256)) allowed;
 
-	// Event
-	event Burnt(address indexed _from, uint256 _amount);
 
-
-	constructor() public
-		OpsManaged()
+	constructor() 
+		public
+		Owned()
 	{
 		tokenSymbol      = TOKEN_SYMBOL;
 		tokenName        = TOKEN_NAME;

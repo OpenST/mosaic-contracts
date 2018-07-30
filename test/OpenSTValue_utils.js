@@ -40,8 +40,6 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
 	;
 
-	// Set MockToken admin in order to finalize MockToken
-	await valueToken.setAdminAddress(accounts[1]);
 
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 

@@ -33,22 +33,3 @@ module.exports.deployMockToken = async (artifacts, accounts) => {
       token : token
    }
 }
-
-module.exports.checkFinalizedEventGroup = (result) => {
-   assert.equal(result.logs.length, 1)
-
-   const event = result.logs[0]
-
-   assert.equal(event.event, "Finalized")
-}
-
-
-module.exports.checkBurntEventGroup = (result, _from, _value) => {
-   assert.equal(result.logs.length, 1)
-
-   const event = result.logs[0]
-
-   assert.equal(event.event, "Burnt")
-   assert.equal(event._from, _from)
-   assert.equal(event._value, _value)
-}

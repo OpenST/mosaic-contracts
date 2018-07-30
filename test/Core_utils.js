@@ -44,8 +44,6 @@ module.exports.deployCore = async (artifacts, accounts) => {
         , worker1 = accounts[7]
     ;
 
-    //Set SimpleToken admin in order to finalize SimpleToken
-    await valueToken.setAdminAddress(admin);
 
     // Deploy worker contract
     const workers = await Workers.new(valueToken.address);

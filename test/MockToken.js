@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: SimpleToken.js
+// Test: MockToken.js
 //
 // http://www.simpletoken.org/
 //
@@ -61,12 +61,10 @@ const MockToken = artifacts.require("./MockToken.sol")
 //
 // owner and operations
 //    check initial owner
-//    check initial admin
-//    check initial ops
-//    change ops address to some account
-//    change ops address to 0
-//    change ops address to account 3
-//
+//    initiate ownership transfer to some account
+//    complete ownership transfer to some account
+//    check new owner post transfer
+//    revert to initial owner
 
 
 contract('MockToken', (accounts) => {
@@ -252,15 +250,12 @@ contract('MockToken', (accounts) => {
   })
 
 
-  describe('owner and operations', async () => {
+  describe('owner actions', async () => {
 
     var token = null
 
     before(async () => {
       token = await createToken()
-
-      await token.setOpsAddress(ops)
-      await token.setAdminAddress(admin)
 
       await token.transfer(accounts[1], ST10000)
       await token.transfer(accounts[2], ST1000)
@@ -271,28 +266,25 @@ contract('MockToken', (accounts) => {
       assert.equal(await token.owner.call(), accounts[0])
     })
 
-    it("check initial admin", async () => {
-      assert.equal(await token.adminAddress.call(), accounts[1])
+    it("initiate ownership transfer to some account", async () => {
+      assert.equal(await token.initiateOwnershipTransfer.call(accounts[5]), true)
+      await token.initiateOwnershipTransfer(accounts[5])
     })
 
-    it("check initial ops", async () => {
-      assert.equal(await token.opsAddress.call(), accounts[2])
+    it("complete ownership transfer to some account", async () => {
+      assert.equal(await token.completeOwnershipTransfer.call({ from: accounts[5] }), true)
+      await token.completeOwnershipTransfer({ from: accounts[5] })
     })
 
-    it("change ops address to some account", async () => {
-      assert.equal(await token.setOpsAddress.call(accounts[5]), true)
-      await token.setOpsAddress(accounts[5])
+    it("check new owner post transfer", async () => {
+      assert.equal(await token.owner.call(), accounts[5])
     })
 
-    it("change ops address to 0", async () => {
-      assert.equal(await token.setOpsAddress.call(0), true)
-      await token.setOpsAddress(0)
-    })
-
-    it("change ops address to account 3", async () => {
-      assert.equal(await token.setOpsAddress.call(accounts[3]), true)
-      await token.setOpsAddress(accounts[3])
+    it("revert to initial owner", async () => {
+      assert.equal(await token.proposedOwner.call(), 0)
+      await token.initiateOwnershipTransfer(accounts[0], { from: accounts[5] })
+      await token.completeOwnershipTransfer({ from: accounts[0] })
+      assert.equal(await token.owner.call(), accounts[0])      
     })
   })
-
 })

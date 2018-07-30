@@ -43,8 +43,8 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     , chainIdRemote = 1410
     , openSTRemote  = accounts[4]
     , valueToken   = await MockToken.new()
-    , symbol = "ST"
-    , name = "Simple Token"
+    , symbol = "MOCK"
+    , name = "Mock Token"
     , conversionRateDecimals = 5
     , conversionRate = new BigNumber(10 * 10**conversionRateDecimals) // conversion rate => 10
     , bounty = 100
