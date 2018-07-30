@@ -12,7 +12,7 @@ library TokenConversionLib {
      *	@param conversionRate rate which is used to convert value token to utility token.
      *	@param conversionRateDecimals represents number of decimal in conversion rate.
      *
-     *	@return amountUT  amount of Utility Token which is converted from value token given the conversion rate.
+     *	@return amountUT amount of utility Token which is converted from value token given the conversion rate.
      */
 
     function calculateUTAmount(
@@ -24,7 +24,6 @@ library TokenConversionLib {
         returns(
         uint256 amountUT)
     {
-        require(amount > 0, 'Amount that needs to be converted should be greater than zero');
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
         amountUT = (amount.mul(conversionRate)).div(10 ** uint256(conversionRateDecimals));
@@ -34,7 +33,7 @@ library TokenConversionLib {
     /**
       *	@notice Calculate Value token amount based on utility token amount, conversion rate and conversion decimal.
       *
-      *	@param amount  of UT will be converted to value token.
+      *	@param amount of UT will be converted to value token.
       *	@param conversionRate rate which is used to convert utility token to value token.
       *	@param conversionRateDecimals represents number of decimal in conversion rate.
       *
@@ -50,7 +49,6 @@ library TokenConversionLib {
         returns(
         uint256 amountVT)
     {
-        require(amount > 0, 'Amount that needs to be converted should be greater than zero');
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
         amountVT = (amount.mul(10 ** uint256(conversionRateDecimals))).div(conversionRate);

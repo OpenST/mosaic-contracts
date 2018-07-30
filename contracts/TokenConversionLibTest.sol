@@ -11,7 +11,7 @@ library TokenConversionLibTest {
      *	@param conversionRate rate which is used to convert value token to utility token.
      *	@param conversionRateDecimals represents number of decimal in conversion rate.
      *
-     *	@return amountUT  amount of Utility Token which is converted from value token given the conversion rate.
+     *	@return amountUT amount of utility Token which is converted from value token given the conversion rate.
      */
 
     function calculateUTAmount(
