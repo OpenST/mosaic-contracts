@@ -31,14 +31,14 @@ library TokenConversionLib {
     }
 
     /**
-      *	@notice Calculate Value token amount based on utility token amount, conversion rate and conversion decimal.
-      *
-      *	@param amount of UT will be converted to value token.
-      *	@param conversionRate rate which is used to convert utility token to value token.
-      *	@param conversionRateDecimals represents number of decimal in conversion rate.
-      *
-      *	@return amountVT number of value tokens which is converted from amountUT given the conversion rate.
-      */
+     *	@notice Calculate Value token amount based on utility token amount, conversion rate and conversion decimal.
+     *
+     *	@param amount of UT will be converted to value token.
+     *	@param conversionRate rate which is used to convert utility token to value token.
+     *	@param conversionRateDecimals represents number of decimal in conversion rate.
+     *
+     *	@return amountVT number of value tokens which is converted from amountUT given the conversion rate.
+     */
 
     function calculateVTAmount(
         uint256 amount,

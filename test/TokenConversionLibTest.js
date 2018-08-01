@@ -4,82 +4,82 @@ const TokenConversionLibTest = artifacts.require("./TokenConversionLibTest.sol")
 
 contract('TokenConversionLib Test', function (accounts) {
 
-  let contract;
 
-  describe('ST to UT conversion Test', async () => {
 
+  describe('VT to UT conversion Test', async () => {
+    let contractInstance;
     before(async () => {
-      contract = await TokenConversionLibTest.new();
+      contractInstance = await TokenConversionLibTest.new();
     });
-
-    it('should convert ST to UT for 1ST = 1BT', async function () {
+    it('should convert VT to UT for 1VT = 1BT', async function () {
 
       let amount = 1
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert ST to UT for 1.5ST = 1BT', async function () {
+    it('should convert VT to UT for 1.5VT = 1BT with loss of 1 wei', async function () {
 
       let amount = 2
         , conversionRate = 66666
         , conversionDecimal = 5;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert ST to UT for 1ST = 5BT', async function () {
+    it('should convert VT to UT for 1VT = 5BT', async function () {
 
       let amount = 1
         , conversionRate = 5
         , conversionDecimal = 0;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 5);
     });
 
-    it('should convert ST to UT with loss of precision for 1ST = 3.5BT', async function () {
+    it('should convert VT to UT with loss of precision for 1VT = 3.5BT', async function () {
 
       let amount = 1
         , conversionRate = 35
         , conversionDecimal = 1;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 3);
     });
 
-    it('should convert ST to UT for 5ST = 1BT', async function () {
+    it('should convert VT to UT for 5VT = 1BT', async function () {
 
       let amount = 5
         , conversionRate = 20
         , conversionDecimal = 2;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert ST to UT with loss of precision for 5ST = 1BT', async function () {
+    it('should convert VT to UT with loss of precision for 5VT = 1BT', async function () {
 
       let amount = 9
         , conversionRate = 20
         , conversionDecimal = 2;
 
-      let result = await contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
 
-    it('should fail if amount that needs to converted is zero', async function () {
+    it('should return zero if amount that needs to be converted is zero', async function () {
 
       let amount = 0
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal));
+      let result = await contractInstance.calculateUTAmount.call(amount, conversionRate, conversionDecimal);
+      assert.equal(result.toNumber(), 0);
     });
 
     it('should fail if conversion rate is zero', async function () {
@@ -88,63 +88,65 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 0
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateUTAmount.call(amount, conversionRate, conversionDecimal));
+      await utils.expectThrow(contractInstance.calculateUTAmount(amount, conversionRate, conversionDecimal));
     });
 
   });
-  describe('UT to ST conversion Test', async () => {
+  describe('UT to VT conversion Test', async () => {
 
+    let contractInstance;
     before(async () => {
-      contract = await TokenConversionLibTest.new();
+      contractInstance = await TokenConversionLibTest.new();
     });
 
-    it('should convert UT to ST for 1ST = 1BT', async function () {
+    it('should convert UT to VT for 1VT = 1BT', async function () {
 
       let amount = 1
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert UT to ST for 1ST = 5BT', async function () {
+    it('should convert UT to VT for 1VT = 5BT', async function () {
 
       let amount = 5
         , conversionRate = 5
         , conversionDecimal = 0;
 
-      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert UT to ST with loss of precision for 1ST = 3.5BT', async function () {
+    it('should convert UT to VT with loss of precision for 1VT = 3.5BT', async function () {
 
       let amount = 4
         , conversionRate = 35
         , conversionDecimal = 1;
 
-      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 1);
     });
 
-    it('should convert UT to ST for 5ST = 1BT', async function () {
+    it('should convert UT to VT for 5VT = 1BT', async function () {
 
       let amount = 2
         , conversionRate = 20
         , conversionDecimal = 2;
 
-      let result = await contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
+      let result = await contractInstance.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
       assert.equal(result.toNumber(), 10);
     });
 
-    it('should fail if amount that needs to converted is zero', async function () {
+    it('should return zero if amount that needs to converted is zero', async function () {
 
       let amount = 0
         , conversionRate = 10
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal));
+      let result = await contractInstance.calculateVTAmount.call(amount, conversionRate, conversionDecimal);
+      assert.equal(result.toNumber(), 0);
     });
 
     it('should fail if conversion rate is zero', async function () {
@@ -153,7 +155,7 @@ contract('TokenConversionLib Test', function (accounts) {
         , conversionRate = 0
         , conversionDecimal = 1;
 
-      utils.expectThrow(contract.calculateVTAmount.call(amount, conversionRate, conversionDecimal));
+      await utils.expectThrow(contractInstance.calculateVTAmount(amount, conversionRate, conversionDecimal));
     });
 
   });
