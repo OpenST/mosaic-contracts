@@ -22,33 +22,14 @@
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
 
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var MockToken = artifacts.require("./MockToken.sol");
 
 /// @dev Deploy 
-module.exports.deploySimpleToken = async (artifacts, accounts) => {
+module.exports.deployMockToken = async (artifacts, accounts) => {
 
-   const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
+   const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
 
    return {
       token : token
    }
-}
-
-module.exports.checkFinalizedEventGroup = (result) => {
-   assert.equal(result.logs.length, 1)
-
-   const event = result.logs[0]
-
-   assert.equal(event.event, "Finalized")
-}
-
-
-module.exports.checkBurntEventGroup = (result, _from, _value) => {
-   assert.equal(result.logs.length, 1)
-
-   const event = result.logs[0]
-
-   assert.equal(event.event, "Burnt")
-   assert.equal(event._from, _from)
-   assert.equal(event._value, _value)
 }

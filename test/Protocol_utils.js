@@ -29,7 +29,7 @@ const rootPrefix = ".."
 const utils = require("./lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 
-var SimpleToken   = artifacts.require("./SimpleToken/SimpleToken.sol");
+var MockToken   = artifacts.require("./MockToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
 var CoreMock          = artifacts.require("./CoreMock.sol");
 var OpenSTValue   = artifacts.require("./OpenSTValueMock.sol");
@@ -53,14 +53,9 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 
 	var res = null;
 
-	const simpleToken = await SimpleToken.new({ from: deployMachine });
+	const simpleToken = await MockToken.new({ from: deployMachine });
 	await utils.logTransaction(simpleToken.transactionHash, "SimpleToken.new");
 	// finalize the tokens
-	utils.logResponse(await simpleToken.setAdminAddress(admin, { from: deployMachine }),
-		"SimpleToken.setAdminAddress");
-	utils.logResponse(await simpleToken.finalize({ from: admin }),
-		"SimpleToken.finalize");
-	// transfer ownership
 	utils.logResponse(await simpleToken.initiateOwnershipTransfer(owner, { from: deployMachine }),
 		"SimpleToken.initiateOwnershipTransfer");
 	utils.logResponse(await simpleToken.completeOwnershipTransfer({ from: owner }),

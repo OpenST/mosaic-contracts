@@ -27,28 +27,22 @@ const rootPrefix = ".."
 
 //var OpenSTValue = artifacts.require("./OpenSTValue.sol");
 var OpenSTValue = artifacts.require("./OpenSTValueMock.sol");
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var MockToken = artifacts.require("./MockToken.sol");
 var Workers = artifacts.require("./Workers.sol");
 
 /// @dev Deploy
 module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	const chainIdValue = 3
-		, valueToken   = await SimpleToken.new()
+		, valueToken   = await MockToken.new()
 		, registrar    = accounts[1]
 		, admin = accounts[2]
 		, ops = accounts[3]
 		, deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
 	;
 
-	// Set SimpleToken admin in order to finalize SimpleToken
-	await valueToken.setAdminAddress(accounts[1]);
-	// SimpleToken must be finalized to permit certain transfers
-	assert.ok(await valueToken.finalize({ from: accounts[1] }));
 
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
-  //Set SimpleToken admin in order to finalize SimpleToken
-  await valueToken.setAdminAddress(admin);
 
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)

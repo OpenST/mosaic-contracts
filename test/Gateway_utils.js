@@ -21,7 +21,7 @@
 
 const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , OpenSTValue = artifacts.require("./OpenSTValueMock.sol")
-  , SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol")
+  , MockToken = artifacts.require("./MockToken.sol")
   , Core = artifacts.require("./Core.sol")
   , SimpleStake = artifacts.require("./SimpleStake.sol")
   , Gateway = artifacts.require("./Gateway.sol")
@@ -42,9 +42,9 @@ module.exports.deployGateway = async (artifacts, accounts) => {
   const chainIdValue = 3
     , chainIdRemote = 1410
     , openSTRemote  = accounts[4]
-    , valueToken   = await SimpleToken.new()
-    , symbol = "ST"
-    , name = "Simple Token"
+    , valueToken   = await MockToken.new()
+    , symbol = "MOCK"
+    , name = "Mock Token"
     , conversionRateDecimals = 5
     , conversionRate = new BigNumber(10 * 10**conversionRateDecimals) // conversion rate => 10
     , bounty = 100
@@ -59,11 +59,8 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     , checkUuid = null
   ;
 
-  // Set SimpleToken admin in order to finalize SimpleToken
-  await valueToken.setAdminAddress(admin);
-  // SimpleToken must be finalized to permit certain transfers
-  assert.ok(await valueToken.finalize({ from: admin }));
   openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
+
 
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
