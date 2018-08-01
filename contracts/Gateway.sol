@@ -67,7 +67,8 @@ contract Gateway is ProtocolVersioned, Owned {
     uint256 public bounty;
     /** Storing utility token UUID */
     bytes32 public uuid;
-    /** Token conversion rate and decimal example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1 */
+    /** Token conversion rate and decimal
+    example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1. */
     uint256 conversionRate;
     uint8 conversionRateDecimals;
 
