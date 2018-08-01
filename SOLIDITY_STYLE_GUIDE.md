@@ -22,15 +22,17 @@
         5. [Event Names](#event-names)
         6. [Function Names](#function-names)
         7. [Function Argument Names](#function-argument-names)
-        8. [Local and State Variable Names](#local-and-state-variable-names)
-        9. [Constants](#constants)
-        10. [Modifier Names](#modifier-names)
-        11. [Enums](#enums)
-        12. [Avoiding Naming Collisions](#avoiding-naming-collisions)
+        8. [Function Return Parameters](#function-return-parameters)
+        9. [Local and State Variable Names](#local-and-state-variable-names)
+        10. [Constants](#constants)
+        11. [Modifier Names](#modifier-names)
+        12. [Enums](#enums)
+        13. [Avoiding Naming Collisions](#avoiding-naming-collisions)
   3. [Best Practices](#best-practices)
         1. [Variable Initialization](#variable-initialization)
         2. [Casting](#casting)
         3. [Require and Assert](#require-and-assert)
+        4. [Function Returns](#function-returns)
   4. [Documentation](#documentation)
         1. [Single Line](#single-line)
         2. [Multi Line](#multi-line)
@@ -1069,6 +1071,8 @@ Contracts and libraries should be named using the CapWords style.
 
     SimpleToken, MerklePatriciaProof, OpenSTValueInterface
 
+Library contracts' names should not include `Lib` prefix/postfix.
+
 ### Struct Names
 
 Structs should be named using the CapWords style.
@@ -1115,6 +1119,30 @@ function requestStake(
 
 When writing library functions that operate on a custom struct, the struct
 should be the first argument and should always be named `self`.
+
+### Function Return Parameters
+
+Function named return parameters should use mixedCase and end with underscore.
+
+`Example`
+
+    winningProposal_, winnerName_
+
+```solidity
+function winningProposal()
+    public
+    view
+    returns (uint winningProposal_)
+{
+    uint winningVoteCount = 0;
+    for (uint p = 0; p < proposals.length; p++) {
+        if (proposals[p].voteCount > winningVoteCount) {
+            winningVoteCount = proposals[p].voteCount;
+            winningProposal_ = p;
+        }
+    }
+}
+```
 
 ### Local and State Variable Names
 
@@ -1212,6 +1240,59 @@ contract state variables are not met, a failing external component.
 
 Specifying *message* parameter for `require` is mandatory.
 For `assert` use your best judgement.
+
+### Function Returns
+
+Solidity allows named return parameters.
+
+`Example`
+
+```solidity
+function winningProposal()
+    public
+    view
+    returns (uint winningProposal_)
+{
+    uint winningVoteCount = 0;
+    for (uint p = 0; p < proposals.length; p++) {
+        if (proposals[p].voteCount > winningVoteCount) {
+            winningVoteCount = proposals[p].voteCount;
+            winningProposal_ = p;
+        }
+    }
+}
+```
+
+We encourage to use named return parameters in all cases except the obvious ones, like:
+
+`Example`
+
+```solidity
+function winnerName()
+    public
+    view
+    returns (bytes32 winnerName_)
+{
+    winnerName_ = proposals[winningProposal()].name;
+}
+```
+
+In above example, one could use unnamed return parameter:
+
+```solidity
+function winnerName()
+    public
+    view
+    returns (bytes32)
+{
+    return proposals[winningProposal()].name;
+}
+```
+
+`NOTE` Multiple return parameters should be always named one.
+
+Only **empty** `return` statements are allowed from functions with named return parameters.
+This should be only used for early returns. Otherwise, no `return` statement.
 
 ## Documentation
 
@@ -1484,6 +1565,40 @@ function approve(address _spender, uint256 _value) returns (bool success);
  */
 function approve(address _spender, uint256 _value) returns (bool success);
 ```
+
+### Multiple Return Parameters
+
+Use the following format for multiple return parameter documentation.
+
+`Example`
+
+```solidity
+/**
+ * Calculates sum and production.
+ *
+ * @param _a First input to calculate sum and production.
+ * @param _b Second input to calculate sum and production.
+ *
+ * @return sum_     Sum of the input arguments.
+ *                  It's really sum of the input arguments.
+ *         product_ Product of the input arguments.
+ *                  It's really product of the input arguments.
+ */
+function arithmetics(uint _a, uint _b)
+    public
+    pure
+    returns (uint sum_, uint product_)
+{
+    sum_ = _a + _b;
+    product_ = _a * _b;
+}
+```
+
+`NOTE` The order of documenting the return parameters should be the same as a return order.
+
+`NOTE` No blank line between documentation of individual input parameters.
+
+`NOTE` Follow the alignment for return parameter documentation in above example.
 
 ## Comments
 
