@@ -1366,7 +1366,7 @@ Multi line documentation format is:
  *
  * @param _blockHeight Block height to return storage root.
  *
- * @returns bytes32(0) if a storage root for specified block height was not
+ * @return bytes32(0) if a storage root for specified block height was not
  *          verified otherwise saved storage root.
  */
 function getStorageRoot(uint256 _blockHeight)
@@ -1420,7 +1420,7 @@ All documentations starts with capital letter and end with `'.'` (dot).
  *
  * @param _blockHeight Block height to return storage root.
  *
- * @returns bytes32(0) if a storage root for specified block height was not
+ * @return bytes32(0) if a storage root for specified block height was not
  *          verified otherwise saved storage root.
  */
 function getStorageRoot(uint256 _blockHeight)
@@ -1440,7 +1440,7 @@ function getStorageRoot(uint256 _blockHeight)
  *
  * @param _blockHeight Block height to return storage root
  *
- * @returns bytes32(0) If a storage root for specified block height was not
+ * @return bytes32(0) If a storage root for specified block height was not
  *          verified otherwise saved storage root.
  */
 function getStorageRoot(uint256 _blockHeight)
