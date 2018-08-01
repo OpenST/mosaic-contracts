@@ -112,7 +112,7 @@ module.exports.checkRequestStakeEvent = (event, _staker, _amount, _stakedAmount,
   }
   assert.equal(event.event, "StakeRequested");
   assert.equal(event.args._staker, _staker);
-  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._requestedAmount.toNumber(10), _amount.toNumber(10));
   assert.equal(event.args._stakedAmount.toNumber(10), _stakedAmount.toNumber(10));
   assert.equal(event.args._beneficiary, _beneficiary);
 };

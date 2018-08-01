@@ -41,7 +41,7 @@ contract Gateway is ProtocolVersioned, Owned {
     /** Events */
 
     /** Below event is emitted after successful execution of requestStake */
-    event StakeRequested(address _staker, uint256 _amount, uint256 _stakedAmount, address _beneficiary);
+    event StakeRequested(address _staker, uint256 _requestedAmount, uint256 _stakedAmount, address _beneficiary);
     /** Below event is emitted after successful execution of revertStakeRequest */
     event StakeRequestReverted(address _staker, uint256 _amount);
     /** Below event is emitted after successful execution of rejectStakeRequest */
