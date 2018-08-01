@@ -22,7 +22,7 @@
         5. [Event Names](#event-names)
         6. [Function Names](#function-names)
         7. [Function Argument Names](#function-argument-names)
-        8. [Function Return Parameters](#function-return-parameters)
+        8. [Function Return Parameter Names](#function-return-parameter-names)
         9. [Local and State Variable Names](#local-and-state-variable-names)
         10. [Constants](#constants)
         11. [Modifier Names](#modifier-names)
@@ -1071,7 +1071,15 @@ Contracts and libraries should be named using the CapWords style.
 
     SimpleToken, MerklePatriciaProof, OpenSTValueInterface
 
-Library contracts' names should not include `Lib` prefix/postfix.
+Libraries' names should not include `Lib` prefix/postfix.
+
+`Good`
+
+    SafeMath, UpradableProxy
+
+`Bad`
+
+    SafeMathLib, LibUpgradableProxy
 
 ### Struct Names
 
@@ -1120,7 +1128,7 @@ function requestStake(
 When writing library functions that operate on a custom struct, the struct
 should be the first argument and should always be named `self`.
 
-### Function Return Parameters
+### Function Return Parameter Names
 
 Function named return parameters should use mixedCase and end with underscore.
 
