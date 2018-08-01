@@ -27,7 +27,7 @@ import "./OpenSTValueInterface.sol";
 import "./EIP20Interface.sol";
 import "./Owned.sol";
 import "./WorkersInterface.sol";
-import "./TokenConversionLib.sol";
+import "./TokenConversion.sol";
 
 /**
  *  @title Gateway contract which implements ProtocolVersioned, Owned.
@@ -67,8 +67,9 @@ contract Gateway is ProtocolVersioned, Owned {
     uint256 public bounty;
     /** Storing utility token UUID */
     bytes32 public uuid;
-    /** Token conversion rate and decimal
-    example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1. */
+    /** Token conversion rate and decimal.
+     *  Example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1.
+     */
     uint256 conversionRate;
     uint8 conversionRateDecimals;
 
@@ -90,6 +91,8 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
      *  @param _uuid UUID of utility token.
      *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
+     *  @param _conversionRate This is conversion rate at which VT is converted to UT.
+     *  @param _conversionRateDecimals This represents decimal in conversion rate.
      */
     constructor(
         WorkersInterface _workers,
@@ -116,9 +119,10 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function requestStake.
      *
      *  @dev In order to request stake the staker needs to approve Gateway contract for request stake amount.
-     *       Maximum possible staked amount is transferred from staker address to Gateway contract given the conversion rate.
+     *       Given the conversion rate and the requested stake amount as an upper limit, the maximum stakeable amount is calculated transferred.
+     *       It calculates the stakeable amount so that loss of funds is minimised.
      *
-     *  @param _requestedAmount requested Staking amount.
+     *  @param _requestedAmount Requested staking amount.
      *  @param _beneficiary Beneficiary address.
      *
      *  @return bool Specifies status of the execution.
@@ -136,13 +140,13 @@ contract Gateway is ProtocolVersioned, Owned {
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
 
-        uint256 amountUT = TokenConversionLib.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
-        uint256 stakedAmount = TokenConversionLib.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
+        uint256 amountUT = TokenConversion.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
+        uint256 stakedAmount = TokenConversion.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), stakedAmount));
 
         stakeRequests[msg.sender] = StakeRequest({
-            amount : stakedAmount,
+            amount: stakedAmount,
             beneficiary: _beneficiary,
             hashLock: 0,
             unlockHeight: 0

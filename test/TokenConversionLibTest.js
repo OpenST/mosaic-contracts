@@ -1,4 +1,4 @@
-const TokenConversionLibTest = artifacts.require("./TokenConversionLibTest.sol"),
+const TokenConversionTest = artifacts.require("./TokenConversionTest.sol"),
   utils = require("./lib/utils.js");
 
 
@@ -9,7 +9,7 @@ contract('TokenConversionLib Test', function (accounts) {
   describe('VT to UT conversion Test', async () => {
     let contractInstance;
     before(async () => {
-      contractInstance = await TokenConversionLibTest.new();
+      contractInstance = await TokenConversionTest.new();
     });
     it('should convert VT to UT for 1VT = 1BT', async function () {
 
@@ -96,7 +96,7 @@ contract('TokenConversionLib Test', function (accounts) {
 
     let contractInstance;
     before(async () => {
-      contractInstance = await TokenConversionLibTest.new();
+      contractInstance = await TokenConversionTest.new();
     });
 
     it('should convert UT to VT for 1VT = 1BT', async function () {
