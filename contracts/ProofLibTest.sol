@@ -20,17 +20,17 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./OpenSTHelper.sol";
+import "./ProofLib.sol";
 
 /**
-  *	@title OpenSTHelperTest
+  *	@title ProofLibTest
   *
-  *	@dev For testing of OpenSTHelper library
+  *	@dev For testing of ProofLib library
   */
-contract OpenSTHelperTest {
+contract ProofLibTest {
 
 /**
-  *	@notice Calls storageVariablePath of OpenSTHelper
+  *	@notice Calls storageVariablePath of ProofLib
   *
   *	@dev For testing only
   *
@@ -46,7 +46,7 @@ contract OpenSTHelperTest {
         pure
         returns(bytes32 /* storage path */)
     {
-        return OpenSTHelper.storageVariablePath(_index, _key);
+        return ProofLib.storageVariablePath(_index, _key);
     }
 
 
@@ -75,7 +75,7 @@ contract OpenSTHelperTest {
         pure
         returns (bool /* verification status */)
     {
-        require(OpenSTHelper.verifyIntentStorage(
+        require(ProofLib.verifyIntentStorage(
                 _intentIndex,
                 _address,
                 _addressNonce,

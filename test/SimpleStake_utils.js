@@ -21,7 +21,7 @@
 
 const Assert = require('assert');
 
-var SimpleToken = artifacts.require("./SimpleToken/SimpleToken.sol");
+var MockToken = artifacts.require("./MockToken.sol");
 var SimpleStake = artifacts.require("./SimpleStake.sol");
 
 /// @dev Deploy 
@@ -31,11 +31,7 @@ module.exports.deploySimpleStake = async (artifacts, accounts) => {
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol = accounts[4];
 
-	const token = await SimpleToken.new({ from: accounts[0], gas: 3500000 });
-	// Set Simple Token admin to account[1]
-	await token.setAdminAddress(accounts[1]);
-	// and finalize Simple Token
-	Assert.ok(await token.finalize({ from: accounts[1] }));
+	const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
 
 	const simpleStake = await SimpleStake.new(token.address, openSTProtocol, UUID, { from: accounts[0] });
 

@@ -23,7 +23,7 @@ pragma solidity ^0.4.23;
 
 import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
-import "./util.sol";
+import "./ProofLib.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
 import "./SafeMath.sol";
@@ -34,7 +34,7 @@ import "./SafeMath.sol";
  *  @notice Core is a minimal stub that will become the anchoring and consensus point for
  *          the utility chain to validate itself against.
  */
-contract Core is CoreInterface, Util {
+contract Core is CoreInterface {
 	using SafeMath for uint256;
 
 	/** Events */
@@ -94,7 +94,7 @@ contract Core is CoreInterface, Util {
 	/**
 	 *  @notice Contract constructor.
 	 *
-	 *  @dev bytes32ToBytes is util contract method.
+	 *  @dev bytes32ToBytes is ProofLib contract method.
 	 *
 	 *  @param _registrar Address of the registrar which registers for utility tokens.
 	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
@@ -130,7 +130,7 @@ contract Core is CoreInterface, Util {
 		remoteChainBlockGenerationTime = _remoteChainBlockGenerationTime;
 		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
 		// Encoded remote path.
-		encodedOpenSTRemotePath = bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
+		encodedOpenSTRemotePath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
 		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}

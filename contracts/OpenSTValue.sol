@@ -32,7 +32,7 @@ import "./TokenConversion.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-import "./OpenSTHelper.sol";
+import "./ProofLib.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {
@@ -448,7 +448,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // storageRoot cannot be 0
         require(storageRoot !=  bytes32(0), "storageRoot not found for given blockHeight");
 
-        require(OpenSTHelper.verifyIntentStorage(
+        require(ProofLib.verifyIntentStorage(
                 intentsMappingStorageIndexPosition,
                 _redeemer,
                 _redeemerNonce,
@@ -624,32 +624,40 @@ contract OpenSTValue is OpsManaged, Hasher {
         return uuid;
     }
 
-    /*
-     *  Administrative functions
+    /**
+     *  @notice Initiates protocol transfer.
+     *
+     *  @param _protocolVersioned The address of the current protocol.
+     *  @param _proposedProtocol The address of the proposed protocol.
+     *
+     *  @return bool true in case of success, otherwise throws an exception.
      */
     function initiateProtocolTransfer(
-        ProtocolVersioned _simpleStake,
+        ProtocolVersioned _protocolVersioned,
         address _proposedProtocol)
         public
         onlyAdmin
         returns (bool)
     {
-        _simpleStake.initiateProtocolTransfer(_proposedProtocol);
+        _protocolVersioned.initiateProtocolTransfer(_proposedProtocol);
 
         return true;
     }
 
-    // on the very first released version v0.9.1 there is no need
-    // to completeProtocolTransfer from a previous version
-
-    /* solhint-disable-next-line separate-by-one-line-in-contract */
+    /**
+     *  @notice Revokes protocol transfer.
+     *
+     *  @param _protocolVersioned The address of the current protocol.
+     *
+     *  @return bool true in case of success, otherwise throws an exception.
+     */
     function revokeProtocolTransfer(
-        ProtocolVersioned _simpleStake)
+        ProtocolVersioned _protocolVersioned)
         public
         onlyAdmin
         returns (bool)
     {
-        _simpleStake.revokeProtocolTransfer();
+        _protocolVersioned.revokeProtocolTransfer();
 
         return true;
     }
