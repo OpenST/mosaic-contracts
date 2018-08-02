@@ -23,6 +23,7 @@ library TokenConversion {
         returns(
         uint256 /*amountUT*/)
     {
+        // Conversion rate cannot be zero, as BT to VT conversion logic requires division by conversion rate.
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
         return (amount.mul(conversionRate)).div(10 ** uint256(conversionRateDecimals));
@@ -46,6 +47,7 @@ library TokenConversion {
         returns(
         uint256 /*amountVT*/)
     {
+        // Conversion rate cannot be zero, as BT to VT conversion logic requires division by conversion rate.
         require(conversionRate > 0, 'Conversion Rate should be greater than zero');
 
         return (amount.mul(10 ** uint256(conversionRateDecimals))).div(conversionRate);
