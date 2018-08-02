@@ -31,7 +31,7 @@ contract OpenSTUtilityInterface {
         bytes32 _uuid,
         address _staker,
         uint256 _stakerNonce,
-        address _beneciary,
+        address _beneficiary,
         uint256 _amountST,
         uint256 _amountUT,
         uint256 _stakingUnlockHeight,
