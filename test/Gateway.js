@@ -341,6 +341,16 @@ contract('Gateway', function(accounts) {
     }
   };
 
+  describe('construction', async () => {
+    it('should fail if conversion rate is zero', async () => {
+      const conversionRate = 0,
+        conversionRateDecimals = 2;
+
+      await Utils.expectThrow(deployGateway(conversionRate, conversionRateDecimals));
+
+    });
+  });
+
   describe('Properties', async () => {
 
     before (async () => {

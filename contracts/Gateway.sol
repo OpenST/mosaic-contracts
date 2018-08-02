@@ -90,9 +90,9 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @param _workers Workers contract address.
      *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
      *  @param _uuid UUID of utility token.
-     *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
      *  @param _conversionRate This is conversion rate at which VT is converted to UT.
      *  @param _conversionRateDecimals This represents decimal in conversion rate.
+     *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
      */
     constructor(
         WorkersInterface _workers,
@@ -107,6 +107,7 @@ contract Gateway is ProtocolVersioned, Owned {
     {
         require(_workers != address(0));
         require(_uuid.length != uint8(0));
+        require(_conversionRate != 0, 'Conversion Rate should be greater than zero');
 
         workers = _workers;
         bounty = _bounty;
@@ -118,7 +119,7 @@ contract Gateway is ProtocolVersioned, Owned {
     /**
      *  @notice External function requestStake.
      *
-     *  @dev In order to request stake the staker needs to approve Gateway contract for request stake amount.
+     *  @dev Prior to calling requestStake, the staker must approve the transfer of the requested stake amount to the Gateway.
      *       Given the conversion rate and the requested stake amount as an upper limit, the maximum stakeable amount is calculated transferred.
      *       It calculates the stakeable amount so that loss of funds is minimised.
      *
@@ -139,9 +140,10 @@ contract Gateway is ProtocolVersioned, Owned {
 
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
-        //todo explain in comment
-        uint256 amountUT = TokenConversion.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
 
+        //To calculate maximum stakeable amount, UT amount is first calculated with requested stake amount.
+        //This calculated UT amount is converted back to value token which used for staking process.
+        uint256 amountUT = TokenConversion.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
         uint256 stakedAmount = TokenConversion.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), stakedAmount));
