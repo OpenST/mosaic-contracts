@@ -139,8 +139,9 @@ contract Gateway is ProtocolVersioned, Owned {
 
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
-
+        //todo explain in comment
         uint256 amountUT = TokenConversion.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
+
         uint256 stakedAmount = TokenConversion.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
 
         require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), stakedAmount));
