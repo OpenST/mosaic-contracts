@@ -2,7 +2,7 @@ const TokenConversionTest = artifacts.require("./TokenConversionTest.sol"),
   utils = require("./lib/utils.js");
 
 
-contract('TokenConversionLib Test', function (accounts) {
+contract('TokenConversion Test', function (accounts) {
 
 
 
