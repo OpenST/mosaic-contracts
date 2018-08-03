@@ -31,7 +31,7 @@ module.exports.deploySimpleStake = async (artifacts, accounts) => {
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol = accounts[4];
 
-	const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
+	const token = await MockToken.new({ from: accounts[0]});
 
 	const simpleStake = await SimpleStake.new(token.address, openSTProtocol, UUID, { from: accounts[0] });
 

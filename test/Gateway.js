@@ -34,7 +34,9 @@ contract('Gateway', function(accounts) {
   var result, valueToken, openSTValue, uuid, gateway, workers, bounty, workerAddress1, ownerAddress;
 
   const deployGateway = async function() {
+    //console.log(" not deploy Gateway in testing")
     result   = await Gateway_utils.deployGateway(artifacts, accounts);
+    //console.log(" now deploy Gateway in testing")
     valueToken  = result.valueToken;
     openSTValue = result.openSTValue;
     uuid = result.uuid;

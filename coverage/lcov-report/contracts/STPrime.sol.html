@@ -20,28 +20,28 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">11.11% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>1/9</span>
+        <span class='fraction'>9/9</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">12.5% </span>
+        <span class="strong">75% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>1/8</span>
+        <span class='fraction'>6/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">33.33% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>2/6</span>
+        <span class='fraction'>6/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">9.09% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>1/11</span>
+        <span class='fraction'>11/11</span>
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -300,8 +300,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3×</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -347,8 +347,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">15×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -373,13 +373,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -403,7 +403,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -429,9 +429,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
@@ -495,7 +495,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *  @dev Checks if initialized is set to True to proceed.
      */    
     modifier onlyInitialized() {
-        <span class="missing-if-branch" title="if path not taken" >I</span>require(initialized);
+        require(initialized);
         _;
     }
 &nbsp;
@@ -538,12 +538,12 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *       On setup of the utility chain the base tokens need to be transfered 
      *       in full to STPrime for the base tokens to be minted as ST'
      */    
-<span class="fstat-no" title="function not covered" >    function initialize()</span>
+    function initialize()
         public
         payable
     {
-<span class="cstat-no" title="statement not covered" >        require(msg.value == TOKENS_MAX)</span>;
-<span class="cstat-no" title="statement not covered" >        initialized = true</span>;
+        require(msg.value == TOKENS_MAX);
+        initialized = true;
     }
 &nbsp;
 &nbsp;
@@ -562,19 +562,19 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *  @return bool True if claim successfully transfers amount calculated with claimInternal 
      *          to beneficiary, false otherwise.
      */
-<span class="fstat-no" title="function not covered" >    function claim(</span>
+    function claim(
         address _beneficiary)
         public
         onlyInitialized
         returns (bool /** success */)
     {
-<span class="cstat-no" title="statement not covered" >        uint256 amount = claimInternal(_beneficiary)</span>;
-<span class="cstat-no" title="statement not covered" >        assert(address(this).balance &gt;= amount)</span>;
+        uint256 amount = claimInternal(_beneficiary);
+        <span class="missing-if-branch" title="else path not taken" >E</span>assert(address(this).balance &gt;= amount);
 &nbsp;
         // transfer throws if insufficient funds
         _beneficiary.transfer(amount);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        return true;</span>
+        return true;
     }
 &nbsp;
     /**
@@ -589,7 +589,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *
      *  @return bool True if mint is successful for beneficiary, false otherwise.
      */
-<span class="fstat-no" title="function not covered" >    function mint(</span>
+    function mint(
         address _beneficiary,
         uint256 _amount)
         public
@@ -598,7 +598,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         returns (bool /** success */)
     {
         // add the minted amount to the beneficiary's claim 
-<span class="cstat-no" title="statement not covered" >        return mintInternal(_beneficiary, _amount);</span>
+        return mintInternal(_beneficiary, _amount);
     }
 &nbsp;
     /**
@@ -613,7 +613,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *
      *  @return bool True if burn is successful, false otherwise.
      */    
-<span class="fstat-no" title="function not covered" >    function burn(</span>
+    function burn(
         address _burner,
         uint256 _amount)
         public
@@ -624,9 +624,9 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     {
         // only accept the exact amount of base tokens to be returned
         // to the ST' minting contract
-<span class="cstat-no" title="statement not covered" >        require(msg.value == _amount)</span>;
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.value == _amount);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        return burnInternal(_burner, _amount);</span>
+        return burnInternal(_burner, _amount);
     }
 }</pre></td></tr>
 </table></pre>
@@ -634,7 +634,7 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Aug 02 2018 13:38:46 GMT+0200 (CEST)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Aug 03 2018 21:30:35 GMT+0200 (CEST)
 </div>
 </div>
 <script src="../prettify.js"></script>
