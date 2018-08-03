@@ -358,11 +358,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _redemptionUnlockHeight,
         bytes32 _hashLock,
         uint256 _blockHeight,
-        bytes _rlpParentNodes)
+        bytes _rlpParentNodes
+    )
         external
         returns (
-        uint256 amountST,
-        uint256 expirationHeight)
+            uint256 amountST,
+            uint256 expirationHeight
+        )
     {
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         require(utilityToken.simpleStake != address(0));
@@ -416,7 +418,10 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
             _beneficiary, amountST, _amountUT, expirationHeight);
 
-        return (amountST, expirationHeight);
+        return (
+            amountST,
+            expirationHeight
+        );
     }
 
     /**

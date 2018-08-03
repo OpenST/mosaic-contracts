@@ -67,7 +67,8 @@ contract Gateway is ProtocolVersioned, Owned {
     uint256 public bounty;
     /** Storing utility token UUID */
     bytes32 public uuid;
-    /** Token conversion rate and decimal.
+    /**
+     *  Token conversion rate and decimal.
      *  Example for 1ST = 3.5UT, conversion rate is 35 and conversion decimal is 1.
      */
     uint256 conversionRate;
@@ -100,7 +101,8 @@ contract Gateway is ProtocolVersioned, Owned {
         bytes32 _uuid,
         uint256 _conversionRate,
         uint8 _conversionRateDecimals,
-        address _openSTProtocol)
+        address _openSTProtocol
+    )
         public
         Owned()
         ProtocolVersioned(_openSTProtocol)
@@ -120,7 +122,7 @@ contract Gateway is ProtocolVersioned, Owned {
      *  @notice External function requestStake.
      *
      *  @dev Prior to calling requestStake, the staker must approve the transfer of the requested stake amount to the Gateway.
-     *       Given the conversion rate and the requested stake amount as an upper limit, the maximum stakeable amount is calculated transferred.
+     *       Given the conversion rate and the requested stake amount as an upper limit, the maximum stakeable amount is calculated.
      *       It calculates the stakeable amount so that loss of funds is minimised.
      *
      *  @param _requestedAmount Requested staking amount.
@@ -130,7 +132,8 @@ contract Gateway is ProtocolVersioned, Owned {
      */
     function requestStake(
         uint256 _requestedAmount,
-        address _beneficiary)
+        address _beneficiary
+    )
         external
         returns (bool /* success */)
     {
@@ -141,8 +144,8 @@ contract Gateway is ProtocolVersioned, Owned {
         // check if the stake request does not exists
         require(stakeRequests[msg.sender].beneficiary == address(0));
 
-        //To calculate maximum stakeable amount, UT amount is first calculated with requested stake amount.
-        //This calculated UT amount is converted back to value token which used for staking process.
+        // To calculate maximum stakeable amount, UT amount is first calculated with requested stake amount.
+        // This calculated UT amount is converted back to value token which used for staking process.
         uint256 amountUT = TokenConversion.calculateUTAmount(_requestedAmount, conversionRate, conversionRateDecimals);
         uint256 stakedAmount = TokenConversion.calculateVTAmount(amountUT, conversionRate, conversionRateDecimals);
 
