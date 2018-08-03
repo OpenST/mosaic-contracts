@@ -18,12 +18,10 @@ library TokenConversionTest {
         uint256 conversionRate,
         uint8 conversionRateDecimals
     )
-    internal
-    pure
-    returns(uint256 /*amountUT*/)
+        internal
+        pure
+        returns(uint256 /*amountUT*/)
     {
-
-
         return TokenConversion.calculateUTAmount(amount, conversionRate, conversionRateDecimals);
     }
 
@@ -41,9 +39,9 @@ library TokenConversionTest {
         uint256 conversionRate,
         uint8 conversionRateDecimals
     )
-    internal
-    pure
-    returns(uint256 /*amountVT*/)
+        internal
+        pure
+        returns(uint256 /*amountVT*/)
     {
         return TokenConversion.calculateVTAmount(amount, conversionRate, conversionRateDecimals);
     }
