@@ -16,12 +16,13 @@ library TokenConversionTest {
     function calculateUTAmount(
         uint256 amount,
         uint256 conversionRate,
-        uint8 conversionRateDecimals)
-        public
-        pure
-        returns(
-        uint256)
+        uint8 conversionRateDecimals
+    )
+    internal
+    pure
+    returns(uint256 /*amountUT*/)
     {
+
 
         return TokenConversion.calculateUTAmount(amount, conversionRate, conversionRateDecimals);
     }
@@ -38,11 +39,11 @@ library TokenConversionTest {
     function calculateVTAmount(
         uint256 amount,
         uint256 conversionRate,
-        uint8 conversionRateDecimals)
-        public
-        pure
-        returns(
-        uint256)
+        uint8 conversionRateDecimals
+    )
+    internal
+    pure
+    returns(uint256 /*amountVT*/)
     {
         return TokenConversion.calculateVTAmount(amount, conversionRate, conversionRateDecimals);
     }
