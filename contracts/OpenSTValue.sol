@@ -28,6 +28,7 @@ import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
 import "./ProtocolVersioned.sol";
+import "./TokenConversion.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
@@ -211,8 +212,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         if (utilityToken.stakingAccount != address(0)) require(msg.sender == utilityToken.stakingAccount);
         require(valueToken.transferFrom(msg.sender, address(this), _amountST));
 
-        amountUT = (_amountST.mul(utilityToken.conversionRate))
-            .div(10**uint256(utilityToken.conversionRateDecimals));
+        amountUT = TokenConversion.calculateUTAmount(_amountST, utilityToken.conversionRate, utilityToken.conversionRateDecimals);
         unlockHeight = block.number + blocksToWaitLong;
 
         nonces[_staker]++;
@@ -358,11 +358,13 @@ contract OpenSTValue is OpsManaged, Hasher {
         uint256 _redemptionUnlockHeight,
         bytes32 _hashLock,
         uint256 _blockHeight,
-        bytes _rlpParentNodes)
+        bytes _rlpParentNodes
+    )
         external
         returns (
-        uint256 amountST,
-        uint256 expirationHeight)
+            uint256 amountST,
+            uint256 expirationHeight
+        )
     {
         UtilityToken storage utilityToken = utilityTokens[_uuid];
         require(utilityToken.simpleStake != address(0));
@@ -390,9 +392,8 @@ contract OpenSTValue is OpsManaged, Hasher {
         expirationHeight = block.number + blocksToWaitShort;
 
         // minimal precision to unstake 1 STWei
-        require(_amountUT >= (utilityToken.conversionRate.div(10**uint256(utilityToken.conversionRateDecimals))));
-        amountST = (_amountUT
-            .mul(10**uint256(utilityToken.conversionRateDecimals))).div(utilityToken.conversionRate);
+        require(_amountUT >= TokenConversion.calculateUTAmount(1, utilityToken.conversionRate, utilityToken.conversionRateDecimals));
+        amountST = TokenConversion.calculateVTAmount(_amountUT, utilityToken.conversionRate, utilityToken.conversionRateDecimals);
 
         require(valueToken.balanceOf(address(utilityToken.simpleStake)) >= amountST);
 
@@ -417,7 +418,10 @@ contract OpenSTValue is OpsManaged, Hasher {
         emit RedemptionIntentConfirmed(_uuid, redemptionIntentHash, _redeemer,
             _beneficiary, amountST, _amountUT, expirationHeight);
 
-        return (amountST, expirationHeight);
+        return (
+            amountST,
+            expirationHeight
+        );
     }
 
     /**

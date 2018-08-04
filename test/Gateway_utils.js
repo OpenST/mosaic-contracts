@@ -37,16 +37,16 @@ const Assert 	= require('assert')
   ;
 
 /// @dev Deploy 
-module.exports.deployGateway = async (artifacts, accounts) => {
+module.exports.deployGateway = async (artifacts, accounts, conversionRate, conversionRateDecimals) => {
 
   const chainIdValue = 3
     , chainIdRemote = 1410
     , openSTRemote  = accounts[4]
+
     , valueToken   = await MockToken.new()
     , symbol = "MOCK"
     , name = "Mock Token"
-    , conversionRateDecimals = 5
-    , conversionRate = new BigNumber(10 * 10**conversionRateDecimals) // conversion rate => 10
+
     , bounty = 100
     , admin = accounts[3]
     , ops = accounts[1]
@@ -75,9 +75,10 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
 
-  const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address, {from:ownerAddress});
+  const gateway = await Gateway.new(workers.address, bounty, checkUuid, conversionRate, conversionRateDecimals, openSTValue.address, {from: ownerAddress});
 
-  assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar }), checkUuid);
+  assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, {from: registrar}), checkUuid);
+
   const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar });
 
   // Stake address is returned by UtilityTokenRegistered but verified below rather than by checkUtilityTokenRegisteredEvent
@@ -104,14 +105,14 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 };
 
 
-
-module.exports.checkRequestStakeEvent = (event, _staker, _amount, _beneficiary) => {
+module.exports.checkRequestStakeEvent = (event, _staker, _amount, _stakedAmount, _beneficiary) => {
   if (Number.isInteger(_amount)) {
     _amount = new BigNumber(_amount);
   }
   assert.equal(event.event, "StakeRequested");
   assert.equal(event.args._staker, _staker);
-  assert.equal(event.args._amount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._requestedAmount.toNumber(10), _amount.toNumber(10));
+  assert.equal(event.args._stakedAmount.toNumber(10), _stakedAmount.toNumber(10));
   assert.equal(event.args._beneficiary, _beneficiary);
 };
 
