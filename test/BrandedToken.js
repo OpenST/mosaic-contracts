@@ -50,16 +50,11 @@ contract('BrandedToken', function(accounts) {
 
 	describe ('Mint, Claim, Burn', async () => {
 		before(async () => {
-			//console.log("not deployed")
 	        contracts = await BrandedToken_utils.deployBrandedToken(artifacts, accounts);
-	        //console.log("now deployed")
 	        token = contracts.token;
-	        //console.log(token, "\n", contracts);
 		})
 
 		it('fails to mint by non-openSTProtocol', async () => {
-			//const data = await token.mint.getData(beneficiary, ST2, { from: accounts[0]});
-			//const gasEstimate = web3.eth.estimateGas({to: token.address, data: data});
             await Utils.expectThrow(token.mint(beneficiary, ST2, { from: accounts[0]}));
 		})
 

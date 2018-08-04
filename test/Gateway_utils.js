@@ -58,25 +58,20 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     , openSTValue = null
     , checkUuid = null
   ;
-//console.log("fails at point 0")
+
   openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
-//console.log("fails at point 1")
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
     , worker1 = accounts[7];
   await workers.setAdminAddress(admin);
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
-//console.log("fails at point 2")
   core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
-//console.log("fails at point 3")
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
-//console.log("not deploy Gateway in utils gateway.new")
   const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address, {from:ownerAddress});
-//console.log("now deploy Gateway in utils gateway.new")
   assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar }), checkUuid);
   const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar });
 

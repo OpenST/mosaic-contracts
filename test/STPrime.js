@@ -46,7 +46,7 @@ contract('STPrime', function(accounts) {
 	const beneficiary = accounts[19]; // set to 0 balance in runTestRpc.sh
 	const ST1		  = new BigNumber(web3.toWei(1, "ether"));
 	const ST2 		  = new BigNumber(web3.toWei(2, "ether"));
-	const ST800M	  = new BigNumber(web3.toWei(8000000000000, "ether"));
+	const ST800M	  = new BigNumber(web3.toWei(800000000, "ether"));
 	const sendGas 	  = new BigNumber(21000);
 
 	var result 				= null;

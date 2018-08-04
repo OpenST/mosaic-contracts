@@ -37,8 +37,6 @@ module.exports.deployBrandedToken = async (artifacts, accounts) => {
 	const genesisChainIdUtility = 1410;
 	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
 
-	//const data = 
-	//const gasEstimate = web3.eth.estimateGas({to.})
 	const token = await BrandedToken.new(UUID, "symbol", "name", 18, genesisChainIdValue, genesisChainIdUtility, conversionRate, conversionRateDecimals, { from: openSTProtocol});
 
    return {
