@@ -14,12 +14,13 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./CoreConfig.sol";
 import "./CoreInterface.sol";
 
 /**
- * @title Core is a PoS blockchain on Ethereum
+ * @title Core is a Proof-of-Stake blockchain on Ethereum
  */
-contract Core is CoreInterface {
+contract Core is CoreInterface, CoreConfig {
 
 	/* Structs */
 
@@ -33,18 +34,53 @@ contract Core is CoreInterface {
         address[] excludedValidators;
 	}
 
+    struct Seal {
+        address reporter;
+        uint256 reward;
+        uint256 votesCast;
+        bool sealed;
+    }
+
+    struct Block {
+        Header header;
+        Seal seal;
+    }
+
     struct Validator {
         uint256 stake;
-        uint128 start;
-        uint128 end;
+        bytes32 votedHeader;
+        uint128 inclusionHeight;
+        uint128 withdrawalHeight;
         bool hasEnded;
     }
 
+    mapping (bytes32 => Block) blocks;
+    mapping (uint256 => bytes32) chain;
     mapping (address => Validator) validators;
+    /* height of the open block*/
+    uint128 height;
+    /* head is the block hash of the last sealed block */
+    bytes32 head;
+    /* treat gas price as constant for now */
+    uint256 gasPrice;
 
 	constructor() public {
 
 	}
 
-
+    function reportBlock(
+        bytes32 _blockHash,
+        uint128 _height,
+        uint256 _gas,
+        bytes32 _signatureRoot,
+        bytes32 _transactionRoot,
+        bytes32 _stateRoot
+    )
+        external
+        returns (bool)
+    {
+        require(height == _height, "reported block at invalid height");
+        // require(ost.transferFrom(msg.sender, address(this), COST_REPORT_BLOCK));
+        return true;
+    }
 }
