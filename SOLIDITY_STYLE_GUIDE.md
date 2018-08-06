@@ -36,10 +36,11 @@
   4. [Documentation](#documentation)
         1. [Single Line](#single-line)
         2. [Multi Line](#multi-line)
-        3. [Spaces](#spaces)
-        4. [English Sentence](#english-sentence)
-        5. [Grouping](#grouping)
-        6. [Alignment](#alignment)
+        3. [Structs and Maps](#structs-and-maps)
+        4. [Spaces](#spaces)
+        5. [English Sentence](#english-sentence)
+        6. [Grouping](#grouping)
+        7. [Alignment](#alignment)
   5. [Comments](#comments)
 
 *The current style guide is mostly based on [Ethereum Solidity Style Guide](http://solidity.readthedocs.io/en/v0.4.24/style-guide.html)
@@ -1376,6 +1377,48 @@ function getStorageRoot(uint256 _blockHeight)
 {
     ...
 }
+```
+
+### Structs and Maps
+
+Document structs above the struct and struct fields above the respective field.
+
+`Good`
+
+```solidity
+/** A Bank has a single owner. You need to create one bank per person. */
+struct Bank {
+    /** The owner of the bank functions simultaniously as the owner of the funds in balance. */
+    address owner;
+    /** The balance of the owner in Ethereum Wei. */
+    uint256 balance;
+}
+```
+
+`Bad`
+
+```solidity
+/** A Bank has a single owner. You need to create one bank per person. */
+struct Bank {
+    address owner; /** The owner of the bank functions simultaniously as the owner of the funds in balance. */
+    uint256 balance; // The balance of the owner in Ethereum Wei.
+}
+```
+
+Document mappings above the mapping.
+
+`Good`
+
+```solidity
+/** balances stores per address the total balance in SimpleToken Wei. */
+mapping (address => uint) public balances;
+```
+
+`Bad`
+
+```solidity
+mapping (address => uint) public balances; /** balances stores per address the total balance in SimpleToken Wei. */
+mapping (address => uint) public balances; // balances stores per address the total balance in SimpleToken Wei.
 ```
 
 ### Spaces
