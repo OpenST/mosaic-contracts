@@ -5,6 +5,7 @@ branches:
   only:
   - master
   - develop
+  - pranay/mosa-153SolCover
 notifications:
   email:
     recipients:
@@ -23,5 +24,6 @@ before_script:
   - nohup ./tools/runGanacheCli.sh </dev/null >/dev/null 2>&1 &
 script:
   - truffle test
+  - ./node_modules/.bin/solidity-coverage
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
