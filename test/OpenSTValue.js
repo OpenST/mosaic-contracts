@@ -84,7 +84,7 @@ const rootPrefix = ".."
 /// 		fails to confirm when redemptionIntentHash does not match calculated hash
 /// 		fails to confirm when token balance of stake is not >= amountST
 ///			successfully confirms
-///			fails to confirm a replay <- need to fix this for solcover (stack too deep error on commented out on line 377 OpenSTValue.sol )
+///			fails to confirm a replay
 /// 		fails to confirm when amountUT does not convert into at least 1 STWei // Fails
 ///
 /// ProcessUnstaking
@@ -459,11 +459,11 @@ contract('OpenSTValue', function(accounts) {
 
 		})
 
-		// it('fails to confirm a replay', async () => {
-  //           unlockHeight = new BigNumber(redemptionUnlockHeight).plus(web3.eth.blockNumber);
-		// 	redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, unlockHeight, lockR.l);
-  //           await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, unlockHeight, lockR.l, 0, validRLPParentNodes, { from: registrar }));
-		// })
+		it('fails to confirm a replay', async () => {
+            unlockHeight = new BigNumber(redemptionUnlockHeight).plus(web3.eth.blockNumber);
+			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, unlockHeight, lockR.l);
+            await Utils.expectThrow(openSTValue.confirmRedemptionIntent(checkUuid, redeemer, nonce, redeemBeneficiary, amountUT, unlockHeight, lockR.l, 0, validRLPParentNodes, { from: registrar }));
+		})
 
 		// Fails because logic does not prevent attempting to redeem 1 UTWei when the conversion rate is greater than 1
 		it('fails to confirm when amountUT does not convert into at least 1 STWei', async () => {

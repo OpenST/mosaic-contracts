@@ -32,7 +32,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
 const rootPrefix = ".."
   , constants = require(rootPrefix + '/test/lib/constants')
 ;
-const Assert 	= require('assert')
+const Assert  = require('assert')
   , BigNumber = require('bignumber.js')
   ;
 
@@ -61,17 +61,22 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 
   openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar, constants.VALUE_CHAIN_BLOCK_TIME);
 
+
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
     , worker1 = accounts[7];
   await workers.setAdminAddress(admin);
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
+
   core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
+
   await openSTValue.addCore(core.address, { from: registrar });
 
   checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
+
   const gateway = await Gateway.new(workers.address, bounty, checkUuid, openSTValue.address, {from:ownerAddress});
+
   assert.equal(await openSTValue.registerUtilityToken.call(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar }), checkUuid);
   const result = await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, gateway.address, checkUuid, { from: registrar });
 

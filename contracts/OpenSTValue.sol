@@ -374,9 +374,9 @@ contract OpenSTValue is OpsManaged, Hasher {
 
         require(cores[utilityToken.chainIdUtility].safeUnlockHeight() < _redemptionUnlockHeight);
 
-        //require(nonces[_redeemer] + 1 == _redeemerNonce);
         nonces[_redeemer]++;
-
+        require(nonces[_redeemer] == _redeemerNonce);
+        
         bytes32 redemptionIntentHash = hashRedemptionIntent(
             _uuid,
             _redeemer,

@@ -55,7 +55,7 @@ contract('BrandedToken', function(accounts) {
 		})
 
 		it('fails to mint by non-openSTProtocol', async () => {
-            await Utils.expectThrow(token.mint(beneficiary, ST2, { from: accounts[0]}));
+            await Utils.expectThrow(token.mint(beneficiary, ST2, { from: accounts[0] }));
 		})
 
 		it('successfully mints', async () => {

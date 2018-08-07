@@ -6,7 +6,6 @@
     "abi-decoder": "1.0.9",
     "assert": "1.4.1",
     "bignumber.js": "4.1.0",
-    "coveralls": "^3.0.2",
     "ganache-cli": "6.1.0",
     "keccak": "1.4.0",
     "rlp": "2.1.0",
