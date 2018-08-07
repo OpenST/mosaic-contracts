@@ -1587,9 +1587,8 @@ Use the following format for multiple return parameter documentation.
  * @param _a First input to calculate sum and production.
  * @param _b Second input to calculate sum and production.
  *
- * @return sum_     Sum of the input arguments.
- *                  It's really sum of the input arguments.
- *         product_ Product of the input arguments.
+ * @return sum_ Sum of the input arguments.
+ * @return product_ Product of the input arguments.
  *                  It's really product of the input arguments.
  */
 function arithmetics(uint _a, uint _b)
@@ -1606,7 +1605,7 @@ function arithmetics(uint _a, uint _b)
 
 `NOTE` No blank line between documentation of individual input parameters.
 
-`NOTE` Follow the alignment for return parameter documentation in above example.
+`NOTE` Return parameter alignment should be the same as for function arguments.
 
 ## Comments
 
