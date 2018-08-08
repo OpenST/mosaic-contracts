@@ -172,6 +172,38 @@ contract A {
 }
 ```
 
+Within a struct, surround documented field declarations with a *single* blank
+line.
+
+`Example`
+
+```solidity
+/**
+ * Message stores the message content as well as additional data about the
+ * sender and the receiver. This way, it can be verified that the message has
+ * not been manipulated.
+ */
+struct Message {
+    /**
+     * The message content bytes encoded.
+     * The string encoding must be UTF-8.
+     */
+    bytes32 message;
+
+    /** Address where the message should be sent to. */
+    address receiver;
+
+    /** Address of the account that created this message. */
+    address sender;
+
+    /**
+     * The signature is created by the sender and is the signed hash of the
+     * message: sha3(message, receiver, sender).
+     */
+    bytes32 signature;
+}
+```
+
 Section declarations should follow with a single blank line:
 
 `Good`
@@ -1407,13 +1439,13 @@ struct Message {
      * The string encoding must be UTF-8.
      */
     bytes32 message;
-    
+
     /** Address where the message should be sent to. */
     address receiver;
-    
+
     /** Address of the account that created this message. */
     address sender;
-    
+
     /**
      * The signature is created by the sender and is the signed hash of the
      * message: sha3(message, receiver, sender).
