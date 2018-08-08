@@ -23,7 +23,7 @@ var ProtocolVersioned = artifacts.require("./ProtocolVersionedMock.sol");
 
 /// @dev Deploy 
 module.exports.deployProtocolVersioned = async (artifacts, accounts) => {
-	const protocolVersioned = await ProtocolVersioned.new(accounts[1], { from: accounts[0], gas: 3500000 });
+	const protocolVersioned = await ProtocolVersioned.new(accounts[1], { from: accounts[0]});
 
 	return {
 		protocolVersioned : protocolVersioned

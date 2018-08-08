@@ -26,7 +26,7 @@ var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
 
 /// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
-  const token = await EIP20Token.new("SYMBOL", "Name", 18, {from: accounts[0], gas: 3500000});
+  const token = await EIP20Token.new("SYMBOL", "Name", 18, {from: accounts[0]});
 
   return {
     token: token

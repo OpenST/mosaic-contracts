@@ -102,7 +102,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
     await utils.logTransaction(coreUC.transactionHash, "CoreVC.new");
 
 	const openSTUtility = await OpenSTUtility.new(CHAINID_VALUE, CHAINID_UTILITY,
-		registrarUC.address, coreUC.address, constants.UTILITY_CHAIN_BLOCK_TIME, { from: deployMachine, gas: 8500000 });
+		registrarUC.address, coreUC.address, constants.UTILITY_CHAIN_BLOCK_TIME, { from: deployMachine});
 
 	await utils.logTransaction(openSTUtility.transactionHash, "OpenSTUtility.new");
 	utils.logResponse(await openSTUtility.initiateOwnershipTransfer(owner, { from: deployMachine }),

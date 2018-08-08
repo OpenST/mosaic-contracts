@@ -9,6 +9,7 @@
     "ganache-cli": "6.1.0",
     "keccak": "1.4.0",
     "rlp": "2.1.0",
+    "solidity-coverage": "^0.5.5",
     "solparse": "2.2.5",
     "truffle": "4.1.8",
     "web3": "1.0.0-beta.33"

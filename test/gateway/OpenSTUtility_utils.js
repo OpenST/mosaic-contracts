@@ -36,7 +36,7 @@ const chainIdUtility = 1410;
 module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
     const registrar      = accounts[1];
     const coreForOpenSTUtility = await CoreMock.new(registrar, chainIdValue, chainIdUtility, accounts[10], constants.VALUE_CHAIN_BLOCK_TIME,  0, proof.account.stateRoot, accounts[11]);
-    const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME, { gas: 10000000 });
+    const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME);
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
     const stPrime = new STPrime(stPrimeAddress);
     await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
