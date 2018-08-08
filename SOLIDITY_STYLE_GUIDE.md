@@ -1381,7 +1381,7 @@ function getStorageRoot(uint256 _blockHeight)
 
 ### Structs and Mappings
 
-Document structs above the struct declaration
+Document structs above the struct declaration.
 Document struct fields above the respective field.
 
 `Good`
