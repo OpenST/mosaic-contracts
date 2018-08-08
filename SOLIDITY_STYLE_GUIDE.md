@@ -36,7 +36,7 @@
   4. [Documentation](#documentation)
         1. [Single Line](#single-line)
         2. [Multi Line](#multi-line)
-        3. [Structs and Maps](#structs-and-maps)
+        3. [Structs and Mappings](#structs-and-mappings)
         4. [Spaces](#spaces)
         5. [English Sentence](#english-sentence)
         6. [Grouping](#grouping)
@@ -1379,9 +1379,10 @@ function getStorageRoot(uint256 _blockHeight)
 }
 ```
 
-### Structs and Maps
+### Structs and Mappings
 
-Document structs above the struct and struct fields above the respective field.
+Document structs above the struct declaration
+Document struct fields above the respective field.
 
 `Good`
 
@@ -1390,8 +1391,34 @@ Document structs above the struct and struct fields above the respective field.
 struct Bank {
     /** The owner of the bank functions simultaniously as the owner of the funds in balance. */
     address owner;
+
     /** The balance of the owner in Ethereum Wei. */
     uint256 balance;
+}
+
+/**
+ * Message stores the message content as well as additional data about the
+ * sender and the receiver. This way, it can be verified that the message has
+ * not been manipulated.
+ */
+struct Message {
+    /**
+     * The message content bytes encoded.
+     * The string encoding must be UTF-8.
+     */
+    bytes32 message;
+    
+    /** Address where the message should be sent to. */
+    address receiver;
+    
+    /** Address of the account that created this message. */
+    address sender;
+    
+    /**
+     * The signature is created by the sender and is the signed hash of the
+     * message: sha3(message, receiver, sender).
+     */
+    bytes32 signature;
 }
 ```
 
@@ -1405,7 +1432,7 @@ struct Bank {
 }
 ```
 
-Document mappings above the mapping.
+Document mappings above the mappings' respective declaration.
 
 `Good`
 
