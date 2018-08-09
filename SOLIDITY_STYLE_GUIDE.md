@@ -36,10 +36,11 @@
   4. [Documentation](#documentation)
         1. [Single Line](#single-line)
         2. [Multi Line](#multi-line)
-        3. [Spaces](#spaces)
-        4. [English Sentence](#english-sentence)
-        5. [Grouping](#grouping)
-        6. [Alignment](#alignment)
+        3. [Structs and Mappings](#structs-and-mappings)
+        4. [Spaces](#spaces)
+        5. [English Sentence](#english-sentence)
+        6. [Grouping](#grouping)
+        7. [Alignment](#alignment)
   5. [Comments](#comments)
 
 *The current style guide is mostly based on [Ethereum Solidity Style Guide](http://solidity.readthedocs.io/en/v0.4.24/style-guide.html)
@@ -168,6 +169,38 @@ contract A {
     modifier onlyOwner() {
         ...
     }
+}
+```
+
+Within a struct, surround documented field declarations with a *single* blank
+line.
+
+`Example`
+
+```solidity
+/**
+ * Message stores the message content as well as additional data about the
+ * sender and the receiver. This way, it can be verified that the message has
+ * not been manipulated.
+ */
+struct Message {
+    /**
+     * The message content bytes encoded.
+     * The string encoding must be UTF-8.
+     */
+    bytes32 message;
+
+    /** Address where the message should be sent to. */
+    address receiver;
+
+    /** Address of the account that created this message. */
+    address sender;
+
+    /**
+     * The signature is created by the sender and is the signed hash of the
+     * message: sha3(message, receiver, sender).
+     */
+    bytes32 signature;
 }
 ```
 
@@ -1376,6 +1409,75 @@ function getStorageRoot(uint256 _blockHeight)
 {
     ...
 }
+```
+
+### Structs and Mappings
+
+Document structs above the struct declaration.
+Document struct fields above the respective field.
+
+`Good`
+
+```solidity
+/** A Bank has a single owner. You need to create one bank per person. */
+struct Bank {
+    /** The owner of the bank functions simultaniously as the owner of the funds in balance. */
+    address owner;
+
+    /** The balance of the owner in Ethereum Wei. */
+    uint256 balance;
+}
+
+/**
+ * Message stores the message content as well as additional data about the
+ * sender and the receiver. This way, it can be verified that the message has
+ * not been manipulated.
+ */
+struct Message {
+    /**
+     * The message content bytes encoded.
+     * The string encoding must be UTF-8.
+     */
+    bytes32 message;
+
+    /** Address where the message should be sent to. */
+    address receiver;
+
+    /** Address of the account that created this message. */
+    address sender;
+
+    /**
+     * The signature is created by the sender and is the signed hash of the
+     * message: sha3(message, receiver, sender).
+     */
+    bytes32 signature;
+}
+```
+
+`Bad`
+
+```solidity
+/** A Bank has a single owner. You need to create one bank per person. */
+struct Bank {
+    address owner; /** The owner of the bank functions simultaniously as the owner of the funds in balance. */
+    uint256 balance; // The balance of the owner in Ethereum Wei.
+}
+```
+
+Document mappings above the mappings' respective declaration.
+
+`Good`
+
+```solidity
+/** balances stores per address the total balance in SimpleToken Wei. */
+mapping (address => uint) public balances;
+```
+
+`Bad`
+
+```solidity
+mapping (address => uint) public balances; /** balances stores per address the total balance in SimpleToken Wei. */
+mapping (address => uint) public balances; // balances stores per address the total balance in SimpleToken Wei.
 ```
 
 ### Spaces
