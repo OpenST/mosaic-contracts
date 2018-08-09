@@ -59,6 +59,7 @@ contract('RLP', function (accounts) {
 			assert.equal('0x' + rlpItem.toString('hex'), itemAtIndex);
 			
 		});
+
 		it('should pass when list is RLP encoded', async () => {
 			let rlpItemOne = RLP.encode('5')
 				, rlpItemTwo = RLP.encode('6')
@@ -86,8 +87,8 @@ contract('RLP', function (accounts) {
 			await Utils.expectThrow(rlpTest.toList.call('0x' + hexDataArray, 0));
 		});
 		
-		it('should fail when input is empty ', async () => {
-			let data;
+		it('should fail when input is empty', async () => {
+			let data = "";
 			await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
 		});
 		
@@ -135,7 +136,13 @@ contract('RLP', function (accounts) {
 				, hexDataArray = RLP.encode(data).toString('hex');
 			await Utils.expectThrow(rlpTest.toData.call('0x' + hexDataArray));
 		})
-		
+
+		it('should fail when input array data is empty', async () => {
+			let hexDataArray = "";
+				//hexDataArray = RLP.encode(data).toString('hex');
+			await Utils.expectThrow(rlpTest.toData.call('0x' + hexDataArray));
+		})
+
 		it('should fail when input is in list form', async () => {
 			let dataArray = ['2', '5', '6'];
 			await Utils.expectThrow(rlpTest.toData.call('0x' + dataArray));

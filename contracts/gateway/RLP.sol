@@ -43,12 +43,6 @@ library RLP {
      self._unsafe_nextPtr = ptr + itemLength;
  }
 
- function next(Iterator memory self, bool strict) internal pure returns (RLPItem memory subItem) {
-     subItem = next(self);
-     require(!(strict && !_validate(subItem)));
-     return;
- }
-
  function hasNext(Iterator memory self) internal pure returns (bool) {
      RLPItem memory item = self._unsafe_item;
      return self._unsafe_nextPtr < item._unsafe_memPtr + item._unsafe_length;
@@ -75,35 +69,6 @@ library RLP {
      return RLPItem(memPtr, len);
  }
 
- /**
-  *  @dev Creates an RLPItem from an array of RLP encoded bytes.
-  *
-  *  @param self The RLP encoded bytes.
-  *  @param strict Will throw if the data is not RLP encoded.
-  *
-  *  @return An RLPItem.
-  */
- function toRLPItem(bytes memory self, bool strict) internal pure returns (RLPItem memory) {
-     RLPItem memory item = toRLPItem(self);
-     if(strict) {
-         uint len = self.length;
-         require(_payloadOffset(item) <= len);
-         require(_itemLength(item._unsafe_memPtr) == len);
-         require(_validate(item));
-     }
-     return item;
- }
-
- /**
-  *  @dev Check if the RLP item is null.
-  *
-  *  @param self The RLP item.
-  *
-  *  @return 'true' if the item is null.
-  */
- function isNull(RLPItem memory self) internal pure returns (bool ret) {
-     return self._unsafe_length == 0;
- }
 
  /**
   *  @dev Check if the RLP item is a list.
@@ -137,23 +102,6 @@ library RLP {
      }
  }
 
- /**
-  *  @dev Check if the RLP item is empty (string or list).
-  *
-  *  @param self The RLP item.
-  *
-  *  @return 'true' if the item is null.
-  */
- function isEmpty(RLPItem memory self) internal pure returns (bool ret) {
-     if(isNull(self))
-         return false;
-     uint b0;
-     uint memPtr = self._unsafe_memPtr;
-     assembly {
-         b0 := byte(0, mload(memPtr))
-     }
-     return (b0 == DATA_SHORT_START || b0 == LIST_SHORT_START);
- }
 
  /**
   *  @dev Get the number of items in an RLP encoded list.
@@ -163,8 +111,8 @@ library RLP {
   *  @return The number of items.
   */
  function items(RLPItem memory self) internal pure returns (uint) {
-     if (!isList(self))
-         return 0;
+     // if (!isList(self))
+     //     return 0;
      uint b0;
      uint memPtr = self._unsafe_memPtr;
      assembly {
@@ -246,24 +194,6 @@ library RLP {
  }
 
  /**
-  *  @dev Decode an RLPItem into an ascii string. This will not work if the
-  *       RLPItem is a list.
-  *
-  *  @param self The RLPItem.
-  *
-  *  @return The decoded string.
-  */
- function toAscii(RLPItem memory self) internal pure returns (string memory str) {
-     require(isData(self));
-     uint rStartPos;
-     uint len;
-     (rStartPos, len) = _decode(self);
-     bytes memory bts = new bytes(len);
-     _copyToBytes(rStartPos, bts, len);
-     str = string(bts);
- }
-
- /**
   *  @dev Decode an RLPItem into a uint. This will not work if the
   *  RLPItem is a list.
   *
@@ -283,60 +213,6 @@ library RLP {
      }
  }
 
- /**
-  *  @dev Decode an RLPItem into a boolean. This will not work if the
-  *       RLPItem is a list.
-  *
-  *  @param self The RLPItem.
-  *
-  *  @return The decoded string.
-  */
- function toBool(RLPItem memory self) internal pure returns (bool data) {
-     require(isData(self));
-     uint rStartPos;
-     uint len;
-     (rStartPos, len) = _decode(self);
-     require(len == 1);
-     uint temp;
-     assembly {
-         temp := byte(0, mload(rStartPos))
-     }
-     require (temp <= 1);
-     return temp == 1 ? true : false;
- }
-
- /**
-  *  @dev Decode an RLPItem into a byte. This will not work if the
-  *       RLPItem is a list.
-  *
-  *  @param self The RLPItem.
-  *
-  *  @return The decoded string.
-  */
- function toByte(RLPItem memory self) internal pure returns (byte data) {
-     require(isData(self));
-     uint rStartPos;
-     uint len;
-     (rStartPos, len) = _decode(self);
-     require(len == 1);
-     uint temp;
-     assembly {
-         temp := byte(0, mload(rStartPos))
-     }
-     return byte(temp);
- }
-
- /**
-  *  @dev Decode an RLPItem into an int. This will not work if the
-  *       RLPItem is a list.
-  *
-  *  @param self The RLPItem.
-  *
-  *  @return The decoded string.
-  */
- function toInt(RLPItem memory self) internal pure returns (int data) {
-     return int(toUint(self));
- }
 
  /**
   *  @dev Decode an RLPItem into a bytes32. This will not work if the
@@ -350,24 +226,6 @@ library RLP {
      return bytes32(toUint(self));
  }
 
- /**
-  *  @dev Decode an RLPItem into an address. This will not work if the
-  *       RLPItem is a list.
-  *
-  *  @param self The RLPItem.
-  *
-  *  @return The decoded string.
-  */
- function toAddress(RLPItem memory self) internal pure returns (address data) {
-     require(isData(self));
-     uint rStartPos;
-     uint len;
-     (rStartPos, len) = _decode(self);
-     require (len == 20);
-     assembly {
-         data := div(mload(rStartPos), exp(256, 12))
-     }
- }
 
  /**
   *  @dev Decode an RLPItem into an address. This will not work if the
@@ -485,23 +343,5 @@ library RLP {
                  }
      }
  }
- 
- /**
-  *  @dev Check that an RLP item is valid.
-  *
-  *  @param self The RLPItem.
-  */ 
- function _validate(RLPItem memory self) private pure returns (bool ret) {
-         // Check that RLP is well-formed.
-         uint b0;
-         uint b1;
-         uint memPtr = self._unsafe_memPtr;
-         assembly {
-             b0 := byte(0, mload(memPtr))
-             b1 := byte(1, mload(memPtr))
-         }
-         if(b0 == DATA_SHORT_START + 1 && b1 < DATA_SHORT_START)
-             return false;
-         return true;
-     }
+
 }
