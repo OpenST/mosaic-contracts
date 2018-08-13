@@ -177,7 +177,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     /*
      *  External functions
      */
-    /// @dev In order to stake the tx.origin needs to set an allowance
+    /// @dev In order to stake, the staking account needs to set an allowance
     ///      for the OpenSTValue contract to transfer to itself to hold
     ///      during the staking process.
     function stake(
