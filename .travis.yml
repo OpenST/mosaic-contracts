@@ -5,6 +5,7 @@ branches:
   only:
   - master
   - develop
+  - /^feature\/.*/
 notifications:
   email:
     recipients:
