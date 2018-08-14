@@ -90,7 +90,11 @@ contract Mosaic {
         external
         returns (uint256 chainId_)
     {
-        // TODO: should the contract require that a core contract exists at the given address?
+        require(
+            _coreAddress != address(0),
+            "The provided address should not be 0."
+        );
+
         chainId_ = nextChainId;
         nextChainId++;
 
