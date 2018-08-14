@@ -1400,7 +1400,7 @@ Multi line documentation format is:
  * @param _blockHeight Block height to return storage root.
  *
  * @return bytes32(0) if a storage root for specified block height was not
- *          verified otherwise saved storage root.
+ *         verified otherwise saved storage root.
  */
 function getStorageRoot(uint256 _blockHeight)
     public
