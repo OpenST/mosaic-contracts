@@ -19,7 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const assert = require('assert').strict;
 const Mosaic = artifacts.require('Mosaic');
 
 contract('Mosaic', async (accounts) => {
