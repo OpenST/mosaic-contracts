@@ -43,6 +43,29 @@ contract('EIP20Token', function(accounts) {
 	var tokenBalance = null;
 	var beneficiaryBalance = null;
 
+	describe ('Properties', async () => {
+		before(async () => {
+	        contracts = await EIP20Token_utils.deployEIP20Token(artifacts, accounts);
+	        token = contracts.token;
+		})
+
+		it('Has name for token', async () => {
+			result = await token.name.call();
+			assert.equal(result, "Name")
+		})
+
+		it('Has symbol for token', async () => {
+			result = await token.symbol.call();
+			assert.equal(result, "SYMBOL");
+		})
+
+		it('Has decimals places for token', async () => {
+			result = await token.decimals.call();
+			assert.equal(result, 18);
+		})
+
+	})
+
 	describe ('MintEIP20, ClaimEIP20, BurnEIP20', async () => {
 		before(async () => {
 	        contracts = await EIP20Token_utils.deployEIP20Token(artifacts, accounts);
