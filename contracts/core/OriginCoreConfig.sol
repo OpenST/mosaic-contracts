@@ -14,10 +14,13 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract CoreConfig {
+/** @title Configuration constants of the OriginCore contract. */
+contract OriginCoreConfig {
 
-    uint8   public constant TOKEN_DECIMALS = 18;
-    uint256 public constant DECIMALSFACTOR = 10 ** uint256(TOKEN_DECIMALS);
+    // TODO: take decimals() from OST
+    /** The number of decimals of the base token. */
+    uint256 public constant DECIMALSFACTOR = 10 ** uint256(18);
 
+    /** The cost in base tokens that it costs a validator to report a block. */
     uint256 public constant COST_REPORT_BLOCK = 1 * DECIMALSFACTOR;
 }

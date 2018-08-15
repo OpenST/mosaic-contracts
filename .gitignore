@@ -13,6 +13,9 @@ contracts/abi/
 # don't commit node_modules
 node_modules
 
+# Do not track builds
+build/
+
 # Do not track intelliJ files
 .idea/
 *.iml

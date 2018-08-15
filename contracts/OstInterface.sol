@@ -14,11 +14,61 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/** @title An interface to an OST ERC-20 token. */
 interface OstInterface {
 
-    function decimals() external view returns (uint8);
+    /**
+     * @return The number of decimals that this ERC-20 token has.
+     */
+    function decimals()
+        external
+        view
+        returns (uint8);
 
-    function transfer(address _to, uint256 _value) external returns (bool success);
-    function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
-    function burn(uint256 _value) external returns (bool success);
+    /**
+     * @notice Transfers the given amount of tokens to the given recipient.
+     *
+     * @param _to The recipient of the tokens.
+     * @param _value The amount of tokens to transfer.
+     *
+     * @return success Indicates whether the transfer was successful.
+     */
+    function transfer(
+        address _to,
+        uint256 _value
+    )
+        external
+        returns (bool success);
+
+    /**
+     * @notice Transfers the given amount of tokens from the given sender to
+     *         the given recipient.
+     *
+     * @param _from The sender of the tokens.
+     * @param _to The recipient of the tokens.
+     * @param _value The amount of tokens to transfer.
+     *
+     * @return success Indicates whether the transfer was successful.
+     */
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    )
+        external
+        returns (bool success);
+
+    /**
+     * @notice Burns the given amount of tokens and removes them from the total
+     *         supply.
+     *
+     * @param _value The amount of tokens to burn.
+     *
+     * @return success Indicates whether the burn was successful.
+     */
+    function burn(
+        uint256 _value
+    )
+        external
+        returns (bool success);
 }
