@@ -23,9 +23,9 @@ interface OriginCoreInterface {
 
     /**
      * @notice Returns the chain id of the remote chain that this core is
-	 *         tracking.
-	 *
-	 * @return The id of the remote chain.
+     *         tracking.
+     *
+     * @return The id of the remote chain.
      */
     function chainIdRemote()
         external
@@ -45,20 +45,4 @@ interface OriginCoreInterface {
         external
         view
         returns (uint256);
-
-    /**
-     * @notice Returns the root of the state tree at the given height.
-     *
-     * @param _blockHeight The height of the OSTblock for which the state root
-     *                     is desired.
-     *
-     * @return The hash that represents the state root at the given height.
-     *         `bytes32(0)` if a state root at the given height is unknown.
-     */
-    function stateRoot(
-        uint256 _blockHeight
-    )
-        external
-        view
-        returns (bytes32);
 }
