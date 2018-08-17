@@ -159,7 +159,7 @@ contract('OriginCore', async (accounts) => {
 
             await ost.approve(originCore.address, 10 ** 18);
 
-            utils.expectRevert(
+            await utils.expectRevert(
                 originCore.reportBlock(
                     expectedBlockHash,
                     blockHeight,
@@ -176,7 +176,7 @@ contract('OriginCore', async (accounts) => {
 
             await ost.approve(originCore.address, 10 ** 18);
 
-            utils.expectRevert(
+            await utils.expectRevert(
                 originCore.reportBlock(
                     invalidBlockHash,
                     blockHeight,
@@ -201,7 +201,7 @@ contract('OriginCore', async (accounts) => {
                 '0x82ba3527d2433d8a6c50502f341f165955585b1337512e5cd9550eef623c8fd0'
             );
 
-            utils.expectRevert(
+            await utils.expectRevert(
                 originCore.reportBlock(
                     expectedBlockHash,
                     blockHeight,
