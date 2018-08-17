@@ -88,7 +88,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     /* Constructor */
 
-    /** @param _ost The address of the OST ERC-20 token. */
+    /**
+     * @param _chainIdRemote The id of the auxiliary chain that this core
+     *                       contract tracks.
+     * @param _ost The address of the OST ERC-20 token.
+     */
     constructor(
         uint256 _chainIdRemote,
         address _ost
