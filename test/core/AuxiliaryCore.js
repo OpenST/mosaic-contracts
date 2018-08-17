@@ -20,6 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const eventsDecoder = require('../lib/event_decoder.js');
+const utils = require('../lib/utils.js');
 
 const AuxiliaryCore = artifacts.require('AuxiliaryCore');
 
@@ -127,28 +128,15 @@ contract('OriginCore', async (accounts) => {
             let invalidStateRoot = '0x0000000000000000000000000000000000000000000000000000000000000000';
             let chainHeight = 12;
 
-            let hadError = false;
-            try {
-                await auxiliaryCore.reportStateRoot(
+            await utils.expectRevert(
+                auxiliaryCore.reportStateRoot(
                     chainHeight,
                     invalidStateRoot,
                     {
                         from: accounts[0],
                         value: 10 ** 18
                     }
-                );
-            } catch (error) {
-                // TODO: Truffle v5 will support require messages with web3 1.0
-                assert(
-                    error.message.search('revert') > -1,
-                    'The contract should revert. Instead: ' + error.message
-                );
-                hadError = true;
-            }
-
-            assert(
-                hadError,
-                'The contract should throw an error when the state root is invalid.'
+                )
             );
         });
 
@@ -166,28 +154,15 @@ contract('OriginCore', async (accounts) => {
             );
 
             // Reporting the same state root again should lead to an error.
-            let hadError = false;
-            try {
-                await auxiliaryCore.reportStateRoot(
+            await utils.expectRevert(
+                auxiliaryCore.reportStateRoot(
                     chainHeight,
                     expectedStateRoot,
                     {
                         from: accounts[0],
                         value: 10 ** 18
                     }
-                );
-            } catch (error) {
-                // TODO: Truffle v5 will support require messages with web3 1.0
-                assert(
-                    error.message.search('revert') > -1,
-                    'The contract should revert. Instead: ' + error.message
-                );
-                hadError = true;
-            }
-
-            assert(
-                hadError,
-                'The contract should throw an error when the state root was reported before.'
+                )
             );
         });
 
@@ -195,30 +170,16 @@ contract('OriginCore', async (accounts) => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 3;
 
-            let hadError = false;
-            try {
-                await auxiliaryCore.reportStateRoot(
+            await utils.expectRevert(
+                auxiliaryCore.reportStateRoot(
                     chainHeight,
                     expectedStateRoot,
                     {
                         from: accounts[0],
                         value: 5 ** 18
                     }
-                );
-            } catch (error) {
-                // TODO: Truffle v5 will support require messages with web3 1.0
-                assert(
-                    error.message.search('revert') > -1,
-                    'The contract should revert. Instead: ' + error.message
-                );
-                hadError = true;
-            }
-
-            assert(
-                hadError,
-                'The contract should throw an error when the report is not paid sufficiently.'
+                )
             );
         });
-
     });
 });
