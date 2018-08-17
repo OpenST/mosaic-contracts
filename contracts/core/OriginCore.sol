@@ -19,7 +19,7 @@ import "./OriginCoreConfig.sol";
 import "./OriginCoreInterface.sol";
 
 /**
- * @title OriginCore is a proof of stake blockchain on Ethereum.
+ * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
  */
 contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
@@ -36,12 +36,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     // TODO: We want to find a way to store the transaction root.
     /** The header of an OSTblock. */
     struct Header {
-        // TODO: is recomputation better than storing the header?
-        /**
-         * The hash of this header. Stored as part of the header so it doesn't
-         * have to be recomputed when it is needed.
-         */
-        bytes32 hashed;
 
         /** The height of this header's block in the chain. */
         uint256 height;
@@ -56,14 +50,15 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint256 gas;
 
         /**
-         * The root hash of the tree of signatures of votes on the highest
-         * auxiliary checkpoint that is contained within this OSTblock.
+         * The root hash of the trie of signatures of votes on the highest
+         * finalised auxiliary checkpoint that is contained within this
+         * OSTblock.
          */
         bytes32 signatureRoot;
 
         /**
-         * The root hash of the state tree of the latest checkpoint on
-         * auxiliary that is part of this OSTblock.
+         * The root hash of the state trie of the latest finalised checkpoint
+         * on auxiliary that is part of this OSTblock.
          */
         bytes32 stateRoot;
     }
@@ -81,10 +76,10 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     bytes32 public head;
 
     /**
-     * Mapping of block heights to block headers that were reported at the
-     * respective height.
+     * Mapping of block hashes to block headers that were reported with the
+     * respective hash.
      */
-    mapping (uint256 => Header[]) public reportedBlocks;
+    mapping (bytes32 => Header) public reportedHeaders;
 
     /* Constructor */
 
@@ -111,16 +106,18 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @notice Report an OSTblock. A reported OSTblock can be committed by
      *         receiving a majority vote from the validators.
      *
+     * @dev The core contract must be approved for the `COST_REPORT_BLOCK`.
+     *
      * @param _blockHash The hash of the header of the block.
      * @param _height The OSTblock height of the reported block.
      * @param _gas The amount of gas consumed on the auxiliary system within
      *             this block.
-     * @param _signatureRoot The root hash of the tree of validator signatures
-     *                       of votes on the highest auxiliary checkpoint that
-     *                       is contained within this OSTblock.
-     * @param _stateRoot The root hash of the state tree of the highest
-     *                   auxiliary checkpoint that is contained within this
-     *                   OSTblock.
+     * @param _signatureRoot The root hash of the trie of validator signatures
+     *                       of votes on the highest finalised auxiliary
+     *                       checkpoint that is contained within this OSTblock.
+     * @param _stateRoot The root hash of the state trie of the highest
+     *                   finalised auxiliary checkpoint that is contained
+     *                   within this OSTblock.
      *
      * @return success_ Indicates whether the block report was processed
      *                  successfully.
@@ -133,14 +130,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 _stateRoot
     )
         external
+        returns (bool success_)
     {
         require(
             height == _height,
-            "Cannot report a block at a height that is not the current one."
+            "Cannot report a block at a height different from the open block height."
         );
 
         Header memory header = Header(
-            _blockHash,
             height,
             head,
             _gas,
@@ -152,7 +149,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             "The reported block hash must match the reported data."
         );
         require(
-            !blockHasBeenReported(height, _blockHash),
+            !blockHasBeenReported(_blockHash),
             "The given header has already been reported at the given height."
         );
 
@@ -161,8 +158,10 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             "It must be possible to transfer the cost of the report."
         );
 
-        reportedBlocks[height].push(header);
+        reportedHeaders[_blockHash] = header;
         emit BlockReported(height, _blockHash);
+
+        success_ = true;
     }
 
     /**
@@ -192,31 +191,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         view
         returns (uint256)
     {
+        /*
+         * `height` is the current open OSTblock. The latest committed block is
+         * therefore at `height - 1`.
+         */
         return height - 1;
-    }
-
-    /**
-     * @notice Get all reported block hashes at a given height.
-     *
-     * @param _height The height for which to get the reported block hashes.
-     *
-     * @return An array of hashes.
-     */
-    function getReportedBlockHashes(
-        uint256 _height
-    )
-        external
-        view
-        returns (bytes32[])
-    {
-        Header[] storage headers = reportedBlocks[_height];
-        bytes32[] memory hashes_ = new bytes32[](headers.length);
-
-        for (uint256 i = 0; i < headers.length; i++) {
-            hashes_[i] = headers[i].hashed;
-        }
-
-        return hashes_;
     }
 
     /* Internal Functions */
@@ -256,29 +235,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /* Private Functions */
 
     /**
-     * @notice Returns true if the given hash has already been reported at the
-     *         given height.
+     * @notice Returns true if the given hash has already been reported.
      *
-     * @param _height The height of the reported block in the chain.
      * @param _headerHash The hash of the header that should be checked.
      *
-     * @return `true` if the hash already exists at the given height.
+     * @return `true` if the header already exists.
      */
     function blockHasBeenReported(
-        uint256 _height,
         bytes32 _headerHash
     )
         private
         view
         returns (bool)
     {
-        // TODO: is there a better way than to iterate over the array every time?
-        for (uint256 i = 0; i < reportedBlocks[_height].length; i++) {
-            if (_headerHash == reportedBlocks[_height][i].hashed) {
-                return true;
-            }
-        }
-
-        return false;
+        return reportedHeaders[_headerHash].stateRoot != bytes32(0);
     }
 }
