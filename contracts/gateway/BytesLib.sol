@@ -135,22 +135,6 @@ library BytesLib {
       return concat(newBytes, _bytes);
     }
 
-    function toBytes32(bytes b) internal pure returns (bytes32) {
-      bytes32 out;
-      for (uint i = 0; i < 32; i++) {
-        out |= bytes32(b[i] & 0xFF) >> (i * 8);
-      }
-      return out;
-    }
-
-    function fromBytes32(bytes32 x) internal pure returns (bytes) {
-      bytes memory b = new bytes(32);
-      for (uint i = 0; i < 32; i++) {
-        b[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
-      }
-      return b;
-    }
-
     function toUint(bytes _bytes, uint _start) internal pure returns (uint256) {
       require(_bytes.length >= (_start + 32));
       uint256 tempUint;
