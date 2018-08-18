@@ -64,10 +64,13 @@ module.exports.deployGateway = async (artifacts, accounts) => {
 
   // Deploy worker contract
   const workers = await Workers.new(valueToken.address)
-    , worker1 = accounts[7];
+    , worker1 = accounts[7]
+    , worker2 = accounts[8];
+
   await workers.setAdminAddress(admin);
   await workers.setOpsAddress(ops);
   await workers.setWorker(worker1, new BigNumber(web3.toWei(10, "ether")), {from:ops});
+  await workers.setWorker(worker2, new BigNumber(web3.toWei(10, "ether")), {from:ops});
 
   core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address);
 
@@ -97,8 +100,10 @@ module.exports.deployGateway = async (artifacts, accounts) => {
     uuid: checkUuid,
     gateway: gateway,
     workers: workers.address,
+    workersContract: workers,
     bounty: bounty,
     workerAddress1: worker1,
+    workerAddress2: worker2,
     ownerAddress: ownerAddress
   }
 };
@@ -175,5 +180,3 @@ module.exports.checkWorkersSetEvent = (event, _workersAddress) => {
   assert.equal(event.event, "WorkersSet");
   assert.equal(event.args._workers, _workersAddress);
 };
-
-

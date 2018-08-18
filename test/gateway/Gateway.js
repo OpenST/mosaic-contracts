@@ -29,9 +29,13 @@ contract('Gateway', function(accounts) {
   var stakerAccount = accounts[0]
     , stakeAmount = new BigNumber(web3.toWei(1000, "ether"))
     , beneficiaryAccount = accounts[6]
+    , ops = accounts[1]
+    , admin = accounts[3]
+    , spender = accounts[7]
+    , spenderAmount = 10
   ;
 
-  var result, valueToken, openSTValue, uuid, gateway, workers, bounty, workerAddress1, ownerAddress;
+  var result, valueToken, openSTValue, uuid, gateway, workers, workersContract, bounty, workerAddress1, workerAddress2, ownerAddress;
 
   const deployGateway = async function() {
     result   = await Gateway_utils.deployGateway(artifacts, accounts);
@@ -40,8 +44,10 @@ contract('Gateway', function(accounts) {
     uuid = result.uuid;
     gateway = result.gateway;
     workers = result.workers;
+    workersContract = result.workersContract;
     bounty = result.bounty;
     workerAddress1 = result.workerAddress1;
+    workerAddress2 = result.workerAddress2;
     ownerAddress = result.ownerAddress;
   };
 
@@ -336,6 +342,7 @@ contract('Gateway', function(accounts) {
       await Utils.expectThrow(gateway.setWorkers(workersAddress, {from: messageSender}));
     }
   };
+
 
   describe('Properties', async () => {
 
@@ -731,9 +738,65 @@ contract('Gateway', function(accounts) {
         it('sucessfully sets workers when caller is owner', async () => {
             await setWorkers(accounts[8], ownerAddress, true);
         });
-
     });
 
+    describe('removeWorker', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to remove workers when caller is not ops', async () => {
+            await Utils.expectThrow(workersContract.removeWorker(workerAddress2, {from: workerAddress2}));
+        });
+
+        it('sucessfully removes workers when caller is ops', async () => {
+            await workersContract.removeWorker(workerAddress2, {from: ops});
+        });
+    });
+
+    describe('remove with ops', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to remove workers contract when caller is not ops', async () => {
+            await Utils.expectThrow(workersContract.remove({from: workerAddress1}));
+        });
+
+        it('successfully remove workers contract when caller is ops', async () => {
+            await workersContract.remove({from: ops});
+        });
+    });
+
+    describe('remove with admin', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to remove workers contract when caller is not admin', async () => {
+            await Utils.expectThrow(workersContract.remove({from: workerAddress2}));
+        });
+
+        it('successfully remove workers contract when caller is admin', async () => {
+            await workersContract.remove({from: admin});
+        });
+    });
+
+    describe('approve', async () => {
+
+        before (async () => {
+            await deployGateway();
+        });
+
+        it('fails to approve spender when caller is not ops', async () => {
+            await Utils.expectThrow(workersContract.approve(spender, spenderAmount, {from: workerAddress2}));
+        });
+
+        it('successfully approves spender when caller is ops', async () => {
+            await workersContract.approve(spender, spenderAmount, {from: ops});
+        });    
+    });
 });
-
-
