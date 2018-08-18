@@ -67,7 +67,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     OstInterface public Ost;
 
-    uint256 public chainIdRemote;
+    uint256 public chainIdAuxiliary;
 
     /** Height of the open block. */
     uint256 public height;
@@ -84,19 +84,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /* Constructor */
 
     /**
-     * @param _chainIdRemote The id of the auxiliary chain that this core
-     *                       contract tracks.
+     * @param _chainIdAuxiliary The id of the auxiliary chain that this core
+     *                          contract tracks.
      * @param _ost The address of the OST ERC-20 token.
      */
     constructor(
-        uint256 _chainIdRemote,
+        uint256 _chainIdAuxiliary,
         address _ost
     )
         public
     {
         require(_ost != address(0), "Address for OST should not be zero.");
 
-        chainIdRemote = _chainIdRemote;
+        chainIdAuxiliary = _chainIdAuxiliary;
         Ost = OstInterface(_ost);
     }
 
@@ -169,12 +169,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *
      * @return The id of the remote chain.
      */
-    function chainIdRemote()
+    function chainIdAuxiliary()
         external
         view
         returns (uint256)
     {
-        return chainIdRemote;
+        return chainIdAuxiliary;
     }
 
     /**

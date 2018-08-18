@@ -33,7 +33,7 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
     /* Public Variables */
 
     /** The id of the origin chain that this core tracks. */
-    uint256 public chainIdRemote;
+    uint256 public chainIdOrigin;
 
     /**
      * Maps heights on the Ethereum blockchain to their respoctive reported
@@ -48,9 +48,9 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
 
     /* Constructor */
 
-    /** @param _chainIdRemote The id of the tracked Ethereum chain. */
-    constructor (uint256 _chainIdRemote) public {
-        chainIdRemote = _chainIdRemote;
+    /** @param _chainIdOrigin The id of the tracked Ethereum chain. */
+    constructor (uint256 _chainIdOrigin) public {
+        chainIdOrigin = _chainIdOrigin;
     }
 
     /* External Functions */
