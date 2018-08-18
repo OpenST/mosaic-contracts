@@ -50,8 +50,8 @@ contract MerklePatriciaProofTest {
         bytes32 root)
         external
         pure
-        returns (bool)
+        returns (bool, uint, bytes)
     {
-        return MerklePatriciaProof.verify(value,encodedPath,rlpParentNodes,root);
+        return MerklePatriciaProof.verifyDebug(value,encodedPath,rlpParentNodes,root);
     }
 }
