@@ -63,7 +63,10 @@
 
       describe('Verify intent storage for redeem', function () {
           const dataSet1 = proofData.redemptionProof.dataSet1
-              , dataSet2 = proofData.redemptionProof.dataSet2;
+              , dataSet2 = proofData.redemptionProof.dataSet2
+              , dataSet3 = proofData.redemptionProof.dataSet3
+              , dataSet4 = proofData.redemptionProof.dataSet4;
+
           it('Should verify intent storage [Redemption dataSet1]', async function () {
               const result = await ProofLibContract.verifyIntentStorage.call(
                   dataSet1.storageIndex,
@@ -129,7 +132,9 @@
           });
 
           it('Should fail to verify intent storage when redemptionIntentHash is incorrect', async function () {
-              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
+              console.log(dataSet1.redemptionIntentHash.length);
+              console.log(dataSet1.redemptionIntentHash[0]);   
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(             
                   dataSet2.storageIndex,
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
@@ -147,5 +152,29 @@
                   dataSet1.rlpParentNodes,
                   dataSet2.storageRoot));
           });
+
+          it('Should fail to verify intent storage when redemptionIntentHash is of length 1', async function () {
+              console.log(dataSet3.redemptionIntentHash.length);
+              console.log(dataSet3.redemptionIntentHash[0]);
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
+                  dataSet2.storageIndex,
+                  dataSet2.redeemer,
+                  dataSet2.redeemerNonce,
+                  dataSet3.redemptionIntentHash,
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
+          });
+
+          it('Should fail to verify intent storage when redemptionIntentHash is of length greater than 56', async function () {
+              console.log(dataSet4.redemptionIntentHash.length);
+              console.log(dataSet4.redemptionIntentHash[0]);
+              await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
+                  dataSet2.storageIndex,
+                  dataSet2.redeemer,
+                  dataSet2.redeemerNonce,
+                  dataSet4.redemptionIntentHash,
+                  dataSet2.rlpParentNodes,
+                  dataSet2.storageRoot));
+          });          
       });
   });
