@@ -34,5 +34,5 @@ interface AuxiliaryCoreInterface {
     )
         external
         payable
-	returns (bool);
+        returns (bool);
 }
