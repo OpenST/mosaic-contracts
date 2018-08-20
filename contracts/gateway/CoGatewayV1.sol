@@ -60,6 +60,7 @@ contract CoGatewayV1 {
 	UtilityTokenAbstract utilityToken;
 
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
+	mapping(address /*address*/ => uint256) nonces;
 
 	constructor(
 		bytes32 _uuid,
@@ -84,7 +85,6 @@ contract CoGatewayV1 {
 		uint256 _amount,
 		uint256 _fee,
 		uint256 _gasPrice,
-		bytes32 _intentHash,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
 		bytes _rlpParentNodes,
@@ -95,18 +95,19 @@ contract CoGatewayV1 {
 	{
 
 		require(_staker != address(0));
-		require(_stakerNonce != 0);
+		require(_stakerNonce == nonces[_staker]);
 		require(_beneficiary != address(0));
 		require(_amount != 0);
 		require(_fee != 0);
 		require(_gasPrice != 0);
-		require(_intentHash != bytes32(0));
 		require(_blockHeight != 0);
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 		require(_signature.length != 0);
 
-		messageHash_ = MessageBus.messageDigest(STAKEREQUEST_TYPEHASH, _intentHash, _stakerNonce, _gasPrice);
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice, _fee));
+
+		messageHash_ = MessageBus.messageDigest(STAKEREQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
 		mints[messageHash_] = getMint(_amount, _beneficiary, _fee);
 
@@ -114,7 +115,7 @@ contract CoGatewayV1 {
 			_staker,
 			_stakerNonce,
 			_gasPrice,
-			_intentHash,
+			intentHash,
 			_hashLock,
 			_signature
 		);
@@ -144,6 +145,9 @@ contract CoGatewayV1 {
 
 		MessageBus.Message message = messages[_messageHash];
 
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender] = nonces[message.sender] + 1;
 
 		Mint storage mint = mints[_messageHash];
 
@@ -182,6 +186,7 @@ contract CoGatewayV1 {
 			_rlpParentNodes,
 			outboxOffset,
 			core.getStorageRoot(_blockHeight));
+		nonces[_message.sender] = _message.nonce + 1;
 	}
 
 	function getMessage(
