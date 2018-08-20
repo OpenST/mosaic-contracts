@@ -3,6 +3,9 @@ pragma solidity ^0.4.23;
 import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
+import "./MessageBus.sol";
+import "./CoreInterface.sol";
+import "./CoGatewayV1.sol" //this will become coGatewayInterface.
 
 contract GatewayV1 {
 
@@ -17,8 +20,8 @@ contract GatewayV1 {
 
 	//address of branded token
 	EIP20Interface public brandedToken;
-	//address of message bus library
-	address public messageBus;
+
+	MessageBus.MessageBox private messageBox;
 
 	mapping(address/*staker*/ => uint256) nonces;
 
@@ -32,22 +35,43 @@ contract GatewayV1 {
 	 *  @param _messageBus Message bus library address.
 	 */
 	constructor(
-		bytes32 _uuid,
-		uint256 _bounty,
-		WorkersInterface _workers,
 		EIP20Interface _brandedToken,
-		address _messageBus
+		WorkersInterface _workers,
+		CoreInterface _core,
+		uint256 _bounty
 	)
+	public
 	{
-		uuid = _uuid;
-		bounty = _bounty;
-		workers = _workers;
+		require(_brandedToken != address(0));
+		require(_workers != address(0));
+
 		brandedToken = _brandedToken;
-		messageBus = _messageBus;
+		workers = _workers;
+		bounty = _bounty;
+
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
 	}
 
+	function addCoGateway(
+		Cogateway _coGateway,
+		uint256 _blockHeight,
+		bytes _rlpParentNodesForAccount,
+		bytes _rlpParentNodesForStorage)
+	external
+	returns (bool)
+	{
+		//can be called by only workers
+		//require(_coGateway != address(0));
 
+		// do account merkle proof
+		// get the code hash and match it
+
+		// get the storage proof
+		// do the merkle proof for storage
+
+		return true;
+	}
+/*
 	function stake(
 		uint256 _amount,
 		address _beneficiary,
@@ -90,5 +114,21 @@ contract GatewayV1 {
 		if (v < 27) {
 			v += 27;
 		}
+	}
+
+*/
+
+	function revertStaking(
+		bytes32 _messageHash,
+		uint256 _nonce,
+		bytes _signature)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+
+
+
+
 	}
 }
