@@ -4,6 +4,7 @@ import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
 import "./MessageBus.sol";
+import "./CoreInterface.sol";
 
 contract GatewayV1 {
 
@@ -14,6 +15,12 @@ contract GatewayV1 {
 		address staker,
 		bytes32 intentHash
 	);
+
+	struct StakeRequest {
+		uint256 amount;
+		address beneficiary;
+		uint256 fee;
+	}
 
 	bytes32 constant STAKEREQUEST_TYPEHASH = keccak256
 	(
@@ -33,18 +40,13 @@ contract GatewayV1 {
 	//address of branded token
 	EIP20Interface public brandedToken;
 
+	CoreInterface core;
 
 	mapping(address/*staker*/ => uint256) nonces;
 
 	mapping(bytes32 /*intentHash*/ => MessageBus.Message) messages;
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
-
-	struct StakeRequest {
-		uint256 amount;
-		address beneficiary;
-		uint256 fee;
-	}
 
 	/**
 	 *  @notice Contract constructor.
@@ -58,13 +60,15 @@ contract GatewayV1 {
 		bytes32 _uuid,
 		uint256 _bounty,
 		WorkersInterface _workers,
-		EIP20Interface _brandedToken
+		EIP20Interface _brandedToken,
+		CoreInterface _core
 	)
 	{
 		uuid = _uuid;
 		bounty = _bounty;
 		workers = _workers;
 		brandedToken = _brandedToken;
+		core = _core;
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
 	}
 
@@ -75,6 +79,7 @@ contract GatewayV1 {
 		address _staker,
 		uint256 _gasPrice,
 		uint256 _fee,
+		uint256 _nonce,
 		bytes32 _hashLock,
 		bytes32 _intentHash,
 		bytes _signature
@@ -85,17 +90,18 @@ contract GatewayV1 {
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
 		require(_hashLock != bytes32(0));
-		require(_intentHash != bytes32(0));
 		require(_signature.length != 0);
+		require(nonces[msg.sender] + 1 == _nonce);
 
-		uint256 nonce = nonces[msg.sender];
-		nonces[msg.sender] = nonce ++;
+		nonces[msg.sender] = _nonce ++;
 
-		messageHash_ = MessageBus.messageDigest(STAKEREQUEST_TYPEHASH, _intentHash, nonce, _gasPrice);
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice, _fee));
+
+		messageHash_ = MessageBus.messageDigest(STAKEREQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
 		messages[messageHash_] = MessageBus.Message({
-			intentHash : _intentHash,
-			nonce : nonce,
+			intentHash : intentHash,
+			nonce : _nonce,
 			gasPrice : _gasPrice,
 			signature : _signature,
 			sender : _staker,
@@ -119,6 +125,6 @@ contract GatewayV1 {
 			_amount,
 			_beneficiary,
 			_staker,
-			_intentHash);
+			intentHash);
 	}
 }

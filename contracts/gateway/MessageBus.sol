@@ -1,5 +1,8 @@
 pragma solidity ^0.4.23;
 
+import "./ProofLib.sol";
+import "./MerklePatriciaProof.sol";
+
 library MessageBus {
 
 	enum MessageStatus {
@@ -43,6 +46,33 @@ library MessageBus {
 		_messageBox.outbox[messageHash_] = MessageStatus.Declared;
 	}
 
+	function confirmMessage(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes _rlpEncodedParentNodes,
+		uint8 _outboxOffset,
+		bytes32 _storageRoot
+	)
+	public
+	returns (bytes32 messageHash_)
+	{
+		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+		require(verifySignature(messageHash_, _message.signature, _message.sender));
+		require(_messageBox.inbox[messageHash_] == MessageStatus.Undeclared);
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(MessageStatus.Declared)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+		_messageBox.inbox[messageHash_] = MessageStatus.Declared;
+	}
+
 
 	function verifySignature(bytes32 _message, bytes _signature, address signer)
 	private
@@ -60,7 +90,6 @@ library MessageBus {
 		if (v < 27) {
 			v += 27;
 		}
-
 		return (ecrecover(_message, v, r, s) == signer);
 	}
 
@@ -84,6 +113,7 @@ library MessageBus {
 			)
 		);
 	}
-
-
 }
+
+
+
