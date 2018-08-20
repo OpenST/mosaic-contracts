@@ -9,7 +9,15 @@ import "./CoGatewayV1.sol" //this will become coGatewayInterface.
 
 contract GatewayV1 {
 
-	//uuid of branded token
+	event RevertStakeRequested(
+		bytes32 messageHash,
+		address staker
+		bytes32 intentHash;
+		uint256 nonce;
+		uint256 gasPrice;
+	);
+
+//uuid of branded token
 	bytes32 public uuid;
 	//Escrow address to lock staked fund
 	address stakeVault;
@@ -21,7 +29,14 @@ contract GatewayV1 {
 	//address of branded token
 	EIP20Interface public brandedToken;
 
+	mapping(address/*staker*/ => uint256) nonces;
+
+	mapping(bytes32 /*requestHash*/ => MessageBus.Message) messages;
+
 	MessageBus.MessageBox private messageBox;
+
+
+	bytes32 constant REVERTSTAKEREQUEST_TYPEHASH = keccak256(abi.encode("RevertStakeRequest(bytes32 requestHash,uint256 nonce)"));
 
 	mapping(address/*staker*/ => uint256) nonces;
 
@@ -123,12 +138,28 @@ contract GatewayV1 {
 		uint256 _nonce,
 		bytes _signature)
 	external
-	returns (bool /*TBD*/)
+	returns (address staker_, bytes32 intentHash_, uint256 gasPrice_)
 	{
 		require(_messageHash != bytes32(0));
+		Message storage message = messages[_messageHash];
+		require(message.intentHash != bytes32(0));
 
+		require(MessageBus.declareRevocationMessage (
+			messageBox,
+			message,
+			REVERTSTAKEREQUEST_TYPEHASH,
+			_messageHash,
+			_nonce,
+			_signature));
 
+		staker_ = message.sender;
+		intentHash_ = message.intentHash;
+		gasPrice_ = message.gasPrice;
 
-
+		emit RevertStakeRequested(_messageHash, staker_, intentHash_, _nonce, gasPrice_);
 	}
 }
+
+
+
+
