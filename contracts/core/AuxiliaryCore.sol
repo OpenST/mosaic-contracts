@@ -18,17 +18,34 @@ import "./AuxiliaryCoreConfig.sol";
 import "./AuxiliaryCoreInterface.sol";
 
 /**
- * @title AuxiliaryCore tracks an Ethereum blockchain on a proof of stake chain.
+ * @title AuxiliaryCore observes the origin chain in a smart contract on the auxiliary chain.
  */
 contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
 
     /* Events */
 
-    /** Emitted whenever a state root is successfully reported. */
-    event StateRootReported(
+    /** Emitted whenever a block from origin is successfully reported. */
+    event OriginBlockReported(
         uint256 indexed height,
         bytes32 indexed stateRoot
     );
+
+    /* Structs */
+
+    /**
+     * A block header of the origin chain at a height.
+     *
+     * As Ethereum can fork, multiple state roots can be reported for
+     * the same height.
+     * It is sufficient to only store the state roots of Ethereum. The Casper
+     * FFG rules will assert that only the correct state roots will be
+     * finalised. Falsely reported state roots will consume `msg.value` that
+     * won't ever be returned to the sender of the wrong state root.
+     */
+    struct OriginBlock {
+        uint256 height;
+        bytes32 rootHash;
+    }
 
     /* Public Variables */
 
@@ -36,15 +53,10 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
     uint256 public chainIdOrigin;
 
     /**
-     * Maps heights on the Ethereum blockchain to their respoctive reported
-     * state root. As Ethereum can fork, multiple state roots can be reported
-     * for the same height.
-     * It is sufficient to only store the state roots of Ethereum. The Casper
-     * FFG rules will assert that only the correct state roots will be
-     * finalised. Falsely reported state roots will consume `msg.value` that
-     * won't ever be returned to the sender of the wrong state root.
+     * Maps the hash of an Ethereum state root to their respective reported
+     * block.
      */
-    mapping (uint256 => bytes32[]) public reportedStateRoots;
+    mapping (bytes32 => OriginBlock) public reportedOriginBlocks;
 
     /* Constructor */
 
@@ -56,89 +68,65 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
     /* External Functions */
 
     /**
-     * @notice Report an Ethereum state root at a specific height. You need to
-     *         send the appropriate value with the transaction in order for the
-     *         state root to be reported.
+     * @notice Report an Ethereum block's state root at a specific height. You
+     *         need to send the appropriate value with the transaction in order
+     *         for the state root to be reported.
      *
-     * @param _height The height in the Ethereum blockchain that the state root
-     *                is reported for.
-     * @param _stateRoot The state root to report at the given height. Reverts
-     *                   if the same state root has been reported for this
-     *                   height before.
+     * @param _height The height in the Ethereum blockchain that the block is
+     *                reported for.
+     * @param _stateRootHash The state root to report at the given height.
+     *                       Reverts if the same state root has been reported
+     *                       before.
      */
-    function reportStateRoot(
+    function reportOriginBlock(
         uint256 _height,
-        bytes32 _stateRoot
+        bytes32 _stateRootHash
     )
         external
         payable
     {
         require(
-            _stateRoot != bytes32(0),
+            _stateRootHash != bytes32(0),
             "The state root should not be `0`."
         );
 
         require(
-            msg.value >= COST_REPORT_STATE_ROOT,
-            "You must send at least the required amount of value to report a state root."
+            msg.value == COST_REPORT_STATE_ROOT,
+            "You must send exactly the required amount of value to report a block."
+        );
+
+        OriginBlock memory reportedBlock = OriginBlock(
+            _height,
+            _stateRootHash
         );
 
         require(
-            !hasBeenReported(_height, _stateRoot),
+            !hasBeenReported(reportedBlock),
             "The given state root has already been reported at the same height."
         );
         
-        reportedStateRoots[_height].push(_stateRoot);
-        emit StateRootReported(_height, _stateRoot);
-    }
-
-    /**
-     * @notice Returns all the state roots that have been reported at a given
-     *         height.
-     *
-     * @param _height The height for which to get the reported state roots.
-     *
-     * @return The state roots that have been reported at the given height.
-     */
-    function getReportedStateRoots(
-        uint256 _height
-    )
-        external
-        view
-        returns (bytes32[])
-    {
-        return reportedStateRoots[_height];
+        reportedOriginBlocks[_stateRootHash] = reportedBlock;
+        emit OriginBlockReported(_height, _stateRootHash);
     }
 
     /* Private Functions */
 
     /**
-     * @notice Checks whether a state root is already recorded at a given
-     *         height of the origin blockchain.
+     * @notice Checks whether a block is already recorded.
      *
-     * @dev Iterates over all recorded state roots and returns true when one is
-     *      equal to the state root that is given.
+     * @param _block The block to check for.
      *
-     * @param _height The height for which to check.
-     * @param _stateRoot The state root to chekc for.
-     *
-     * @return `true` if the state root is already recorded at the given
-     *         height.
+     * @return `true` if the state root hash is already recorded.
      */
     function hasBeenReported(
-        uint256 _height,
-        bytes32 _stateRoot
+        OriginBlock _block
     )
         private
         view
         returns (bool)
     {
-        for (uint256 i = 0; i < reportedStateRoots[_height].length; i++) {
-            if (reportedStateRoots[_height][i] == _stateRoot) {
-                return true;
-            }
-        }
+        OriginBlock storage storedBlock = reportedOriginBlocks[_block.rootHash];
 
-        return false;
+        return storedBlock.rootHash == _block.rootHash;
     }
 }

@@ -19,109 +19,123 @@
 //
 // ----------------------------------------------------------------------------
 
+const BigNumber = require('bignumber.js');
 const eventsDecoder = require('../lib/event_decoder.js');
 const utils = require('../lib/utils.js');
 
 const AuxiliaryCore = artifacts.require('AuxiliaryCore');
 
-contract('OriginCore', async (accounts) => {
-    describe('reporting a block', async () => {
+contract('AuxiliaryCore', async (accounts) => {
+    describe('reporting an origin block', async () => {
         let auxiliaryCore;
 
         beforeEach(async () => {
             auxiliaryCore = await AuxiliaryCore.new(1);
         });
 
-        it('should accept a correct state root report', async () => {
+        it('should accept a correct block report', async () => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 37;
 
-            await auxiliaryCore.reportStateRoot(
+            await auxiliaryCore.reportOriginBlock(
                 chainHeight,
                 expectedStateRoot,
                 {
                     from: accounts[0],
-                    value: 10 ** 18
+                    value: new BigNumber('1000000000000000000')
                 }
             );
 
-            let reportedStateRoots = await auxiliaryCore.getReportedStateRoots.call(chainHeight);
-            // There was only a single block reported.
+            let reportedOriginBlock = await auxiliaryCore.reportedOriginBlocks.call(expectedStateRoot);
+
+            // Access properties by index
             assert.strictEqual(
-                reportedStateRoots[0],
+                reportedOriginBlock[0].toNumber(),
+                chainHeight,
+                'The contract did not store the height that was reported.'
+            );
+            assert.strictEqual(
+                reportedOriginBlock[1],
                 expectedStateRoot,
                 'The contract did not store the state root that was reported.'
             );
         });
 
-        it('should emit an event for a correct state root report', async () => {
+        it('should emit an event for a correct block report', async () => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 37;
 
-            let tx = await auxiliaryCore.reportStateRoot(
+            let tx = await auxiliaryCore.reportOriginBlock(
                 chainHeight,
                 expectedStateRoot,
                 {
                     from: accounts[0],
-                    value: 10 ** 18
+                    value: new BigNumber('1000000000000000000')
                 }
             );
 
             let events = eventsDecoder.perform(tx.receipt, auxiliaryCore.address, auxiliaryCore.abi);
             assert.strictEqual(
-                Number(events.StateRootReported.height),
+                Number(events.OriginBlockReported.height),
                 chainHeight,
                 'The contract did not emit an event with the given chain height.'
             );
             assert.strictEqual(
-                events.StateRootReported.stateRoot,
+                events.OriginBlockReported.stateRoot,
                 expectedStateRoot,
                 'The contract did not emit an event with the given state root.'
             );
 
         });
 
-        it('should record all roots at a single height', async () => {
+        it('should record all blocks at a single height', async () => {
             let expectedStateRootOne = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let expectedStateRootTwo = '0xdedde29f6dd592919e6d855b65aa8f1b55172a83f2f4810a13758d9f58c13f54';
             let chainHeight = 33;
 
             // Report two different state roots
-            await auxiliaryCore.reportStateRoot(
+            await auxiliaryCore.reportOriginBlock(
                 chainHeight,
                 expectedStateRootOne,
                 {
                     from: accounts[0],
-                    value: 10 ** 18
+                    value: new BigNumber('1000000000000000000')
                 }
             );
-            await auxiliaryCore.reportStateRoot(
+            await auxiliaryCore.reportOriginBlock(
                 chainHeight,
                 expectedStateRootTwo,
                 {
                     from: accounts[0],
-                    value: 10 ** 18
+                    value: new BigNumber('1000000000000000000')
                 }
             );
 
-            let reportedStateRoots = await auxiliaryCore.getReportedStateRoots.call(chainHeight);
-            // There were two roots reported in order.
+            let reportedOriginBlock = await auxiliaryCore.reportedOriginBlocks.call(expectedStateRootOne);
+            // Access properties by index
             assert.strictEqual(
-                reportedStateRoots.length,
-                2,
-                'Reporting two state roots should lead to two stored roots.'
+                reportedOriginBlock[0].toNumber(),
+                chainHeight,
+                'The contract did not store the height that was reported.'
             );
             assert.strictEqual(
-                reportedStateRoots[0],
+                reportedOriginBlock[1],
                 expectedStateRootOne,
-                'The first state root of the reported roots was not stored correctly.'
-            );
-            assert.equal(
-                reportedStateRoots[1],
-                expectedStateRootTwo,
-                'The second state root of the reported roots was not stored correctly.'
+                'The contract did not store the state root that was reported.'
             );
 
+            reportedOriginBlock = await auxiliaryCore.reportedOriginBlocks.call(expectedStateRootTwo);
+            // Access properties by index
+            assert.strictEqual(
+                reportedOriginBlock[0].toNumber(),
+                chainHeight,
+                'The contract did not store the height that was reported.'
+            );
+            assert.strictEqual(
+                reportedOriginBlock[1],
+                expectedStateRootTwo,
+                'The contract did not store the state root that was reported.'
+            );
         });
 
         it('should reject a report with an invalid state root', async () => {
@@ -129,12 +143,12 @@ contract('OriginCore', async (accounts) => {
             let chainHeight = 12;
 
             await utils.expectRevert(
-                auxiliaryCore.reportStateRoot(
+                auxiliaryCore.reportOriginBlock(
                     chainHeight,
                     invalidStateRoot,
                     {
                         from: accounts[0],
-                        value: 10 ** 18
+                        value: new BigNumber('1000000000000000000')
                     }
                 )
             );
@@ -144,39 +158,55 @@ contract('OriginCore', async (accounts) => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 3;
 
-            await auxiliaryCore.reportStateRoot(
+            await auxiliaryCore.reportOriginBlock(
                 chainHeight,
                 expectedStateRoot,
                 {
                     from: accounts[0],
-                    value: 10 ** 18
+                    value: new BigNumber('1000000000000000000')
                 }
             );
 
             // Reporting the same state root again should lead to an error.
             await utils.expectRevert(
-                auxiliaryCore.reportStateRoot(
+                auxiliaryCore.reportOriginBlock(
                     chainHeight,
                     expectedStateRoot,
                     {
                         from: accounts[0],
-                        value: 10 ** 18
+                        value: new BigNumber('1000000000000000000')
                     }
                 )
             );
         });
 
-        it('should reject a report that is not paid for sufficiently', async () => {
+        it('should reject a report where the sent value is too low', async () => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 3;
 
             await utils.expectRevert(
-                auxiliaryCore.reportStateRoot(
+                auxiliaryCore.reportOriginBlock(
                     chainHeight,
                     expectedStateRoot,
                     {
                         from: accounts[0],
-                        value: 5 ** 18
+                        value: new BigNumber('999999999999999999')
+                    }
+                )
+            );
+        });
+
+        it('should reject a report where the sent value is too high', async () => {
+            let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let chainHeight = 3;
+
+            await utils.expectRevert(
+                auxiliaryCore.reportOriginBlock(
+                    chainHeight,
+                    expectedStateRoot,
+                    {
+                        from: accounts[0],
+                        value: new BigNumber('1000000000000000001')
                     }
                 )
             );

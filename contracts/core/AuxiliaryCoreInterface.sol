@@ -18,35 +18,20 @@ pragma solidity ^0.4.23;
 interface AuxiliaryCoreInterface {
 
     /**
-     * @notice Report an Ethereum state root at a specific height. You need to
-     *         send the appropriate value with the transaction in order for the
-     *         state root to be reported.
+     * @notice Report an Ethereum block's state root at a specific height. You
+     *         need to send the appropriate value with the transaction in order
+     *         for the state root to be reported.
      *
      * @param _height The height in the Ethereum blockchain that the state root
      *                is reported for.
-     * @param _stateRoot The state root to report at the given height. Reverts
-     *                   if the same state root has been reported for this
-     *                   height before.
+     * @param _stateRootHash The state root to report at the given height.
+     *                       Reverts if the same state root has been reported
+     *                       for this height before.
      */
-    function reportStateRoot(
+    function reportOriginBlock(
         uint256 _height,
-        bytes32 _stateRoot
+        bytes32 _stateRootHash
     )
         external
         payable;
-
-    /**
-     * @notice Returns all the state roots that have been reported at a given
-     *         height.
-     *
-     * @param _height The height for which to get the reported state roots.
-     *
-     * @return The state roots that have been reported at the given height.
-     */
-    function getReportedStateRoots(
-        uint256 _height
-    )
-        external
-        view
-        returns (bytes32[]);
 }
