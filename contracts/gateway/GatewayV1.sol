@@ -68,11 +68,13 @@ contract GatewayV1 {
 		bytes32 r;
 		bytes32 s;
 		uint8 v;
-		(r, s, v) = fetchSignatureParam(_signature);
+		(r, s, v) = fetchSignatureComponents(_signature);
 
 	}
 
-	function fetchSignatureParam(bytes _signature)
+	
+	function fetchSignatureComponents(bytes _signature)
+	private
 	returns (
 		bytes32 r,
 		bytes32 s,
