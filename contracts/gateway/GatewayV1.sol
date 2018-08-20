@@ -16,6 +16,13 @@ contract GatewayV1 {
 		bytes32 intentHash
 	);
 
+	event StakeProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee
+	);
+
 	struct StakeRequest {
 		uint256 amount;
 		address beneficiary;
@@ -26,6 +33,13 @@ contract GatewayV1 {
 	(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,address staker,uint256 fee,uint256 nonce,uint8 v,bytes32 r,bytes32 s)"
+		)
+	);
+
+	bytes32 constant PROCESSSTAKING_TYPEHASH = keccak256
+	(
+		abi.encode(
+			"function processStaking(bytes32 _messageHash,bytes32 _unlockSecret)"
 		)
 	);
 	//uuid of branded token
@@ -127,4 +141,36 @@ contract GatewayV1 {
 			_staker,
 			intentHash);
 	}
+
+	function processStaking(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (uint256 stakeRequestAmount)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message storage message = messages[_messageHash];
+
+		stakeRequestAmount = stakeRequests[_messageHash].amount;
+
+		MessageBus.progressOutbox(messageBox, PROCESSSTAKING_TYPEHASH, messages[_messageHash], _unlockSecret);
+
+		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
+
+
+		emit StakeProcessed(
+			_messageHash,
+			stakeRequests[_messageHash].amount,
+			stakeRequests[_messageHash].beneficiary,
+			stakeRequests[_messageHash].fee
+		);
+		delete stakeRequests[_messageHash];
+		delete messages[_messageHash];
+		delete messageBox.outbox[_messageHash];
+
+	}
+
 }

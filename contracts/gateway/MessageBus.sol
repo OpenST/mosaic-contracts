@@ -74,6 +74,41 @@ library MessageBus {
 	}
 
 
+	function progressOutbox(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes32 _unlockSecret
+	)
+	returns (bytes32 messageHash_)
+	{
+		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
+
+		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+
+		require(_messageBox.outbox[messageHash_] == MessageStatus.Declared);
+
+		_messageBox.outbox[messageHash_] = MessageStatus.Progressed;
+	}
+
+
+	function progressInbox(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes32 _unlockSecret
+	)
+	returns (bytes32 messageHash_)
+	{
+		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
+		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+
+		require(_messageBox.inbox[messageHash_] == MessageStatus.Declared);
+
+		_messageBox.inbox[messageHash_] = MessageStatus.Progressed;
+	}
+
+
 	function verifySignature(bytes32 _message, bytes _signature, address signer)
 	private
 	returns (bool /*success*/)

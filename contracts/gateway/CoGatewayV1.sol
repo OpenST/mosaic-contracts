@@ -19,6 +19,12 @@ contract CoGatewayV1 {
 		bytes32 hashLock
 	);
 
+	event MintProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee
+	);
 	struct Mint {
 		uint256 amount;
 		address beneficiary;
@@ -35,6 +41,12 @@ contract CoGatewayV1 {
 	(
 		abi.encode(
 			"Mint(uint256 amount,address beneficiary,uint256 fee)"
+		)
+	);
+	bytes32 constant PROCESSMINT_TYPEHASH = keccak256
+	(
+		abi.encode(
+			"function processMinting(bytes32 _messageHash,bytes32 _unlockSecret)"
 		)
 	);
 	
@@ -119,6 +131,38 @@ contract CoGatewayV1 {
 			_blockHeight,
 			_hashLock
 		);
+	}
+
+	function processMinting(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret)
+	external
+	returns (uint256 amount)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message message = messages[_messageHash];
+
+
+		Mint storage mint = mints[_messageHash];
+
+		amount = mint.amount;
+
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mint.amount));
+
+		MessageBus.progressInbox(messageBox, PROCESSMINT_TYPEHASH, messages[_messageHash], _unlockSecret);
+
+		emit MintProcessed(
+			_messageHash,
+			mint.amount,
+			mint.beneficiary,
+			mint.fee
+		);
+
+		delete mints[_messageHash];
+		delete messages[_messageHash];
+		delete messageBox.inbox[_messageHash];
 	}
 
 	function executeConfirmStakingIntent(
