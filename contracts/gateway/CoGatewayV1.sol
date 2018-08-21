@@ -74,6 +74,7 @@ contract CoGatewayV1 {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
+		MessageBus.Message message;
 	}
 
 
@@ -89,6 +90,7 @@ contract CoGatewayV1 {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
+		MessageBus.Message message;
 	}
 
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
@@ -107,7 +109,6 @@ contract CoGatewayV1 {
 	uint256 bounty;
 	WorkersInterface public workers;
 	MessageBus.MessageBox messageBox;
-	mapping(bytes32 /*intentHash*/ => MessageBus.Message) messages;
 	uint8 outboxOffset = 4;
 	CoreInterface core;
 	UtilityTokenInterface utilityToken;
@@ -149,10 +150,10 @@ contract CoGatewayV1 {
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes _rlpParentNodes,
-		bytes _signature
+		bytes memory _rlpParentNodes,
+		bytes memory _signature
 	)
-	external
+	public
 	returns (bytes32 messageHash_)
 	{
 
@@ -172,9 +173,9 @@ contract CoGatewayV1 {
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
-		mints[messageHash_] = getMint(_amount, _beneficiary, _fee);
-
-		messages[messageHash_] = getMessage(
+		mints[messageHash_] = getMint(_amount,
+			_beneficiary,
+			_fee,
 			_staker,
 			_stakerNonce,
 			_gasPrice,
@@ -183,7 +184,8 @@ contract CoGatewayV1 {
 			_signature
 		);
 
-		executeConfirmStakingIntent(messages[messageHash_], _blockHeight, _rlpParentNodes);
+
+		executeConfirmStakingIntent(mints[messageHash_].message, _blockHeight, _rlpParentNodes);
 
 		emit StakingIntentConfirmed(
 			messageHash_,
@@ -209,13 +211,12 @@ contract CoGatewayV1 {
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
-		MessageBus.Message storage message = messages[_messageHash];
+		Mint storage mint = mints[_messageHash];
+		MessageBus.Message storage message = mint.message;
 
 		require(nonces[message.sender] == message.nonce + 1);
 
 		nonces[message.sender]++;
-
-		Mint storage mint = mints[_messageHash];
 
 		mintRequestedAmount_ = mint.amount;
 		mintedAmount_ = mint.amount.sub(mint.fee);
@@ -224,7 +225,7 @@ contract CoGatewayV1 {
 		//reward beneficiary with the fee
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
 
-		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
 
 		emit MintProcessed(
 			_messageHash,
@@ -234,7 +235,6 @@ contract CoGatewayV1 {
 		);
 
 		delete mints[_messageHash];
-		delete messages[_messageHash];
 		//todo don't delete, due to revocation message
 		//delete messageBox.inbox[_messageHash];
 	}
@@ -280,13 +280,18 @@ contract CoGatewayV1 {
 			sender : _staker,
 			hashLock : _hashLock
 			});
-
 	}
 
 	function getMint(
 		uint256 _amount,
 		address _beneficiary,
-		uint256 _fee
+		uint256 _fee,
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock,
+		bytes _signature
 	)
 	private
 	pure
@@ -295,7 +300,8 @@ contract CoGatewayV1 {
 		return Mint({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee
+			fee : _fee,
+			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock, _signature)
 			});
 	}
 
@@ -310,8 +316,8 @@ contract CoGatewayV1 {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 		require(_signature.length > 0);
-
-		MessageBus.Message storage message = messages[_messageHash];
+		Mint storage mint = mints[_messageHash];
+		MessageBus.Message storage message = mint.message;
 		require(message.intentHash !=  bytes32(0));
 
 		require(nonces[message.sender] == message.nonce + 1);
@@ -337,7 +343,7 @@ contract CoGatewayV1 {
 		);
 
 		// TODO: deletion
-
+		delete mints[_messageHash];
 		return true;
 	}
 
@@ -368,22 +374,14 @@ contract CoGatewayV1 {
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		messages[messageHash_] = MessageBus.Message({
-			intentHash : intentHash,
-			nonce : _nonce,
-			gasPrice : _gasPrice,
-			signature : _signature,
-			sender : _redeemer,
-			hashLock : _hashLock
-			});
-
 		redeemRequests[messageHash_] = RedeemRequest({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee
+			fee : _fee,
+			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock, _signature)
 			});
 
-		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, messages[messageHash_]);
+		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[messageHash_].message);
 		//transfer redeem amount to Co-Gateway
 		require(EIP20Interface(utilityToken).transferFrom(_redeemer, this, _amount));
 		//transfer bounty to Co-Gateway
@@ -409,7 +407,7 @@ contract CoGatewayV1 {
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 
 		require(nonces[message.sender] == message.nonce + 1);
 
@@ -417,7 +415,7 @@ contract CoGatewayV1 {
 
 		redeemAmount = redeemRequests[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[_messageHash].message, _unlockSecret);
 
 		require(utilityToken.burn(this, redeemAmount));
 
@@ -431,7 +429,6 @@ contract CoGatewayV1 {
 			redeemRequests[_messageHash].fee
 		);
 		delete redeemRequests[_messageHash];
-		delete messages[_messageHash];
 		//todo discuss not delete due to revocation message
 		//delete messageBox.outbox[_messageHash];
 
@@ -449,7 +446,7 @@ contract CoGatewayV1 {
 	)
 	{
 		require(_messageHash != bytes32(0));
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 
 		require(message.intentHash != bytes32(0));
 
@@ -483,7 +480,7 @@ contract CoGatewayV1 {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		require(nonces[message.sender] == message.nonce + 1);
@@ -519,7 +516,7 @@ contract CoGatewayV1 {
 			message.gasPrice);
 
 		// TODO: discuss deletion
-		delete messages[_messageHash];
+
 		delete redeemRequests[_messageHash];
 	}
 
