@@ -1,5 +1,27 @@
 pragma solidity ^0.4.23;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Value Chain: Gateway Contract
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
+
 import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
@@ -7,51 +29,71 @@ import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./HasherV1.sol";
 
+/**
+ * @title Gateway Contract
+ *
+ *  @notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor.
+ *          Stake process is executed through Gateway contract rather than directly with the protocol contract.
+ *          The Gateway contract will serve the role of staking account rather than an external account.
+ *
+ */
 contract GatewayV1 {
 
+	/* Events */
+
 	event  StakeRequestedEvent(
-		bytes32 messageHash,
-		uint256 amount,
-		uint256 fee,
-		address beneficiary,
-		address staker,
-		bytes32 intentHash
+		bytes32 _messageHash,
+		uint256 _amount,
+		uint256 _fee,
+		address _beneficiary,
+		address _staker,
+		bytes32 _intentHash
 	);
 
 	event StakeProcessed(
-		bytes32 messageHash,
-		uint256 amount,
-		address beneficiary,
-		uint256 fee
+		bytes32 _messageHash,
+		uint256 _amount,
+		address _beneficiary,
+		uint256 _fee
 	);
 
+	/* Struct */
+	/**
+	 *  It denotes the stake request.
+	 *  Status values could be :-
+	 *  0 :- amount used for staking
+	 *  1 :- beneficiary is the address in the target chain where token will be minted.
+	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
+	 */
 	struct StakeRequest {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
 	}
+	/* Storage */
 
+	// It is a hash used to represent operation type.
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
 		)
 	);
 
-	//uuid of branded token
+	//uuid of branded token.
 	bytes32 public uuid;
-	//Escrow address to lock staked fund
+	//Escrow address to lock staked fund.
 	address stakeVault;
-	//amount in BT which is staked by facilitator
+	//Amount in BT which is staked by facilitator.
 	uint256 public bounty;
-	//white listed addresses which can act as facilitator
+	//White listed addresses which can act as facilitator.
 	WorkersInterface public workers;
-	//address of branded token
+	//address of branded token.
 	EIP20Interface public brandedToken;
-
+	//address of core contract.
 	CoreInterface core;
-
+	//It stores the nonces for each staker.
 	mapping(address/*staker*/ => uint256) nonces;
-
+	//It stores message used by message bus.
 	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
@@ -63,6 +105,7 @@ contract GatewayV1 {
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
 	 *  @param _workers Workers contract address.
 	 *  @param _brandedToken Branded token contract address.
+	 *  @param _core Core contract address.
 	 */
 	constructor(
 		bytes32 _uuid,
@@ -85,8 +128,25 @@ contract GatewayV1 {
 		core = _core;
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
 	}
+	/* Public functions */
 
-
+	/**
+	 * @notice external function stake
+	 *
+	 * @dev In order to stake the staker needs to approve Gateway contract for stake amount.
+     *   Staked amount is transferred from staker address to Gateway contract.
+	 *
+	 * @param _amount Staking amount.
+	 * @param _beneficiary Beneficiary address.
+	 * @param _staker Staker address.
+	 * @param _gasPrice Gas price
+	 * @param _fee Fee for facilitation of stake process.
+	 * @param _nonce Staker nonce.
+	 * @param _hashLock Hash Lock
+	 * @param _signature Signature signed by staker.
+	 *
+	 * @return messageHash_ which is unique for each request.
+	 */
 	function stake(
 		uint256 _amount,
 		address _beneficiary,
@@ -97,6 +157,7 @@ contract GatewayV1 {
 		bytes32 _hashLock,
 		bytes _signature
 	)
+	external
 	returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
