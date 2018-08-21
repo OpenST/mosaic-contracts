@@ -84,6 +84,7 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
     )
         external
         payable
+        returns (bool success_)
     {
         require(
             _stateRoot != bytes32(0),
@@ -107,6 +108,8 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         
         reportedOriginBlocks[_stateRoot] = reportedBlock;
         emit OriginBlockReported(_height, _stateRoot);
+
+        success_ = true;
     }
 
     /* Private Functions */
