@@ -119,7 +119,7 @@ contract Registrar is OpsManaged {
     	// OpenSTValue function:
 		bytes32 _stakingIntentHash)
 		external
-		onlyAdmin
+		onlyAdminOrOps
 		returns (
 		address stakeAddress)
 	{
