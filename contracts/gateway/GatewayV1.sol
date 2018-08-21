@@ -28,6 +28,8 @@ import "./SimpleStake.sol";
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./HasherV1.sol";
+import "./SimpleStake.sol";
+import "./SafeMath.sol";
 
 /**
  * @title Gateway Contract
@@ -38,6 +40,8 @@ import "./HasherV1.sol";
  *
  */
 contract GatewayV1 {
+
+	using SafeMath for uint256;
 
 	/* Events */
 
@@ -73,6 +77,24 @@ contract GatewayV1 {
 		uint256 gasPrice
 	);
 
+	event RedemptionIntentConfirmed(
+		bytes32 messageHash,
+		address redeemer,
+		uint256 redeemerNonce,
+		address beneficiary,
+		uint256 amount,
+		uint256 fee,
+		uint256 blockHeight,
+		bytes32 hashLock
+	);
+
+	event UnStakeProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee
+	);
+
 	event RevertRedemptionIntentConfirmed(
 		bytes32 messageHash,
 		address redeemer,
@@ -89,6 +111,12 @@ contract GatewayV1 {
 	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
 	 */
 	struct StakeRequest {
+		uint256 amount;
+		address beneficiary;
+		uint256 fee;
+	}
+
+	struct UnStakes {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
@@ -110,9 +138,9 @@ contract GatewayV1 {
 
 	//uuid of branded token.
 	bytes32 public uuid;
-	//Escrow address to lock staked fund.
-	address stakeVault;
-	//Amount in BT which is staked by facilitator.
+	//Escrow address to lock staked fund
+	SimpleStake stakeVault;
+	//amount in BT which is staked by facilitator
 	uint256 public bounty;
 	//White listed addresses which can act as facilitator.
 	WorkersInterface public workers;
@@ -126,6 +154,8 @@ contract GatewayV1 {
 	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
+
+	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
 	uint8 outboxOffset = 4;
 
@@ -389,6 +419,164 @@ contract GatewayV1 {
 		return true;
 	}
 
+
+
+	function confirmRedemptionIntent(
+		address _redeemer,
+		uint256 _redeemerNonce,
+		address _beneficiary,
+		uint256 _amount,
+		uint256 _fee,
+		uint256 _gasPrice,
+		uint256 _blockHeight,
+		bytes32 _hashLock,
+		bytes _rlpParentNodes,
+		bytes _signature
+	)
+	external
+	returns (bytes32 messageHash_)
+	{
+
+		require(_redeemer != address(0));
+		require(_redeemerNonce == nonces[_redeemer]);
+		require(_beneficiary != address(0));
+		require(_amount != 0);
+		require(_fee != 0);
+		require(_gasPrice != 0);
+		require(_blockHeight != 0);
+		require(_hashLock != bytes32(0));
+		require(_rlpParentNodes.length != 0);
+		require(_signature.length != 0);
+
+		//todo change to library call, stake too deep error
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice, _fee));
+
+		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+
+		unStakes[messageHash_] = getUnStake(_amount, _beneficiary, _fee);
+
+		messages[messageHash_] = getMessage(
+			_redeemer,
+			_redeemerNonce,
+			_gasPrice,
+			intentHash,
+			_hashLock,
+			_signature
+		);
+
+		executeConfirmRedemptionIntent(messages[messageHash_], _blockHeight, _rlpParentNodes);
+
+		emit RedemptionIntentConfirmed(
+			messageHash_,
+			_redeemer,
+			_redeemerNonce,
+			_beneficiary,
+			_amount,
+			_fee,
+			_blockHeight,
+			_hashLock
+		);
+	}
+
+	function executeConfirmRedemptionIntent(
+		MessageBus.Message storage _message,
+		uint256 _blockHeight,
+		bytes _rlpParentNodes
+	)
+	private
+	{
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.confirmMessage(
+			messageBox,
+			REDEEM_REQUEST_TYPEHASH,
+			_message,
+			_rlpParentNodes,
+			outboxOffset,
+			core.getStorageRoot(_blockHeight));
+
+		nonces[_message.sender] = _message.nonce + 1;
+	}
+
+	function getUnStake(
+		uint256 _amount,
+		address _beneficiary,
+		uint256 _fee
+	)
+	private
+	pure
+	returns (UnStakes)
+	{
+		return UnStakes({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			fee : _fee
+			});
+	}
+
+
+	function getMessage(
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock,
+		bytes _signature
+	)
+	private
+	pure
+	returns (MessageBus.Message)
+	{
+		return MessageBus.Message({
+			intentHash : _intentHash,
+			nonce : _redeemerNonce,
+			gasPrice : _gasPrice,
+			signature : _signature,
+			sender : _redeemer,
+			hashLock : _hashLock
+			});
+
+	}
+
+	function processUnstake(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret)
+	external
+	returns (uint256 unstakeRequestedAmount_, uint256 unstakeAmount_)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message storage message = messages[_messageHash];
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		UnStakes storage unStake = unStakes[_messageHash];
+
+		unstakeRequestedAmount_ = unStake.amount;
+		unstakeAmount_ = unStake.amount.sub(unStake.fee);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the fee
+		require(brandedToken.transfer(msg.sender, unStake.fee));
+
+		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unStake.amount,
+			unStake.beneficiary,
+			unStake.fee
+		);
+
+		delete unStakes[_messageHash];
+		delete messages[_messageHash];
+		//todo don't delete, due to revocation message
+		//delete messageBox.inbox[_messageHash];
+	}
 }
 
 

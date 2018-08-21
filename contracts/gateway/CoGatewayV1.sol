@@ -5,8 +5,12 @@ import "./WorkersInterface.sol";
 import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./UtilityTokenAbstract.sol";
+import "./EIP20Interface.sol";
+import "./HasherV1.sol";
 
 contract CoGatewayV1 {
+
+	using SafeMath for uint256;
 
 	event  StakingIntentConfirmed(
 		bytes32 messageHash,
@@ -33,6 +37,22 @@ contract CoGatewayV1 {
 		uint256 blockHeight
 	);
 
+	event RedeemRequested(
+		bytes32 messageHash,
+		uint256 amount,
+		uint256 fee,
+		address beneficiary,
+		address redeemer,
+		bytes32 intentHash
+	);
+
+	event RedeemProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee
+	);
+
 
 	event RevertRedeemRequested(
 		bytes32 messageHash,
@@ -55,6 +75,7 @@ contract CoGatewayV1 {
 		address beneficiary;
 		uint256 fee;
 	}
+
 
 	/* Struct */
 	/**
@@ -180,7 +201,7 @@ contract CoGatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 mintRequestedAmount_)
+	returns (uint256 mintRequestedAmount_, uint256 mintedAmount_)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -194,8 +215,9 @@ contract CoGatewayV1 {
 		Mint storage mint = mints[_messageHash];
 
 		mintRequestedAmount_ = mint.amount;
+		mintedAmount_ = mint.amount.sub(mint.fee);
 		//Mint token after subtracting fee
-		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mint.amount - mint.fee));
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
 		//reward beneficiary with the fee
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
 
@@ -316,6 +338,101 @@ contract CoGatewayV1 {
 		return true;
 	}
 
+
+	function redeem(
+		uint256 _amount,
+		address _beneficiary,
+		address _redeemer,
+		uint256 _gasPrice,
+		uint256 _fee,
+		uint256 _nonce,
+		bytes32 _hashLock,
+		bytes _signature
+	)
+	public
+	returns (bytes32 messageHash_)
+	{
+		require(_amount > uint256(0));
+		require(_beneficiary != address(0));
+		require(_redeemer != address(0));
+		require(_hashLock != bytes32(0));
+		require(_signature.length != 0);
+		require(nonces[msg.sender] == _nonce);
+
+		nonces[msg.sender]++;
+
+		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _redeemer, _gasPrice, _fee);
+
+		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		messages[messageHash_] = MessageBus.Message({
+			intentHash : intentHash,
+			nonce : _nonce,
+			gasPrice : _gasPrice,
+			signature : _signature,
+			sender : _redeemer,
+			hashLock : _hashLock
+			});
+
+		redeemRequests[messageHash_] = RedeemRequest({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			fee : _fee
+			});
+
+		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, messages[messageHash_]);
+		//transfer redeem amount to Co-Gateway
+		require(EIP20Interface(utilityToken).transferFrom(_redeemer, this, _amount));
+		//transfer bounty to Co-Gateway
+		require(EIP20Interface(utilityToken).transferFrom(msg.sender, this, bounty));
+
+		emit RedeemRequested(
+			messageHash_,
+			_amount,
+			_fee,
+			_beneficiary,
+			_redeemer,
+			intentHash
+		);
+	}
+
+
+	function processRedemption(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (uint256 redeemAmount)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+		MessageBus.Message storage message = messages[_messageHash];
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		redeemAmount = redeemRequests[_messageHash].amount;
+
+		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+
+		require(utilityToken.burn(this, redeemAmount));
+
+		//TODO: think around bounty
+		require(EIP20Interface(utilityToken).transfer(msg.sender, bounty));
+
+		emit RedeemProcessed(
+			_messageHash,
+			redeemAmount,
+			redeemRequests[_messageHash].beneficiary,
+			redeemRequests[_messageHash].fee
+		);
+		delete redeemRequests[_messageHash];
+		delete messages[_messageHash];
+		//todo discuss not delete due to revocation message
+		//delete messageBox.outbox[_messageHash];
+
+	}
 	function revertRedemption(
 		bytes32 _messageHash,
 		bytes _signature
