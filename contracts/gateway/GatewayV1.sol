@@ -3,8 +3,39 @@ pragma solidity ^0.4.23;
 import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
+import "./MessageBus.sol";
+import "./CoreInterface.sol";
+import "./HasherV1.sol";
 
 contract GatewayV1 {
+
+	event  StakeRequestedEvent(
+		bytes32 messageHash,
+		uint256 amount,
+		uint256 fee,
+		address beneficiary,
+		address staker,
+		bytes32 intentHash
+	);
+
+	event StakeProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee
+	);
+
+	struct StakeRequest {
+		uint256 amount;
+		address beneficiary;
+		uint256 fee;
+	}
+
+	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
+		abi.encode(
+			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
+		)
+	);
 
 	//uuid of branded token
 	bytes32 public uuid;
@@ -14,13 +45,16 @@ contract GatewayV1 {
 	uint256 public bounty;
 	//white listed addresses which can act as facilitator
 	WorkersInterface public workers;
-
 	//address of branded token
 	EIP20Interface public brandedToken;
-	//address of message bus library
-	address public messageBus;
+
+	CoreInterface core;
 
 	mapping(address/*staker*/ => uint256) nonces;
+
+	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
+	MessageBus.MessageBox messageBox;
+	mapping(bytes32 => StakeRequest) stakeRequests;
 
 	/**
 	 *  @notice Contract constructor.
@@ -29,21 +63,26 @@ contract GatewayV1 {
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
 	 *  @param _workers Workers contract address.
 	 *  @param _brandedToken Branded token contract address.
-	 *  @param _messageBus Message bus library address.
 	 */
 	constructor(
 		bytes32 _uuid,
 		uint256 _bounty,
 		WorkersInterface _workers,
 		EIP20Interface _brandedToken,
-		address _messageBus
+		CoreInterface _core
 	)
 	{
+		//todo generate uuid from branded Token ?
+		require(_uuid != bytes32(0));
+		require(_workers != address(0));
+		require(_brandedToken != address(0));
+		require(_core != address(0));
+
 		uuid = _uuid;
 		bounty = _bounty;
 		workers = _workers;
 		brandedToken = _brandedToken;
-		messageBus = _messageBus;
+		core = _core;
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
 	}
 
@@ -52,43 +91,93 @@ contract GatewayV1 {
 		uint256 _amount,
 		address _beneficiary,
 		address _staker,
+		uint256 _gasPrice,
+		uint256 _fee,
+		uint256 _nonce,
 		bytes32 _hashLock,
-		bytes32 _intentHash,
 		bytes _signature
 	)
+	returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
 		require(_hashLock != bytes32(0));
-		require(_intentHash != bytes32(0));
-		require(_signature != bytes(0));
+		require(_signature.length != 0);
+		require(nonces[msg.sender] == _nonce);
 
+		nonces[msg.sender]++;
 
-		bytes32 r;
-		bytes32 s;
-		uint8 v;
-		(r, s, v) = fetchSignatureComponents(_signature);
+		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
 
+		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		messages[messageHash_] = MessageBus.Message({
+			intentHash : intentHash,
+			nonce : _nonce,
+			gasPrice : _gasPrice,
+			signature : _signature,
+			sender : _staker,
+			hashLock : _hashLock
+			});
+
+		stakeRequests[messageHash_] = StakeRequest({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			fee : _fee
+			});
+
+		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, messages[messageHash_]);
+		//transfer staker amount to gateway
+		require(brandedToken.transferFrom(_staker, this, _amount));
+		//transfer bounty to gateway
+		require(brandedToken.transferFrom(msg.sender, this, bounty));
+
+		emit StakeRequestedEvent(
+			messageHash_,
+			_amount,
+			_fee,
+			_beneficiary,
+			_staker,
+			intentHash
+		);
 	}
 
-	
-	function fetchSignatureComponents(bytes _signature)
-	private
-	returns (
-		bytes32 r,
-		bytes32 s,
-		uint8 v
+	function processStaking(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
 	)
+	external
+	returns (uint256 stakeRequestAmount)
 	{
-		assembly {
-			r := mload(add(_signature, 32))
-			s := mload(add(_signature, 64))
-			v := byte(0, mload(add(_signature, 96)))
-		}
-		// Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-		if (v < 27) {
-			v += 27;
-		}
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+		MessageBus.Message storage message = messages[_messageHash];
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		stakeRequestAmount = stakeRequests[_messageHash].amount;
+
+		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+
+		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
+
+		//return bounty
+		require(EIP20Interface(brandedToken).transfer(msg.sender, bounty));
+
+		emit StakeProcessed(
+			_messageHash,
+			stakeRequests[_messageHash].amount,
+			stakeRequests[_messageHash].beneficiary,
+			stakeRequests[_messageHash].fee
+		);
+		delete stakeRequests[_messageHash];
+		delete messages[_messageHash];
+		//todo discuss not delete due to revocation message
+		//delete messageBox.outbox[_messageHash];
+
 	}
+
 }
