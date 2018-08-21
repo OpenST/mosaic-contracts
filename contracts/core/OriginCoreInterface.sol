@@ -22,12 +22,12 @@ pragma solidity ^0.4.23;
 interface OriginCoreInterface {
 
     /**
-     * @notice Returns the chain id of the remote chain that this core is
+     * @notice Returns the chain id of the auxiliary chain that this core is
      *         tracking.
      *
      * @return The id of the remote chain.
      */
-    function chainIdRemote()
+    function chainIdAuxiliary()
         external
         view
         returns (uint256);
