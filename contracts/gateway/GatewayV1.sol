@@ -50,6 +50,7 @@ contract GatewayV1 {
 
 	MessageBus.MessageBox private messageBox;
 
+	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(abi.encode("StakeRequest(uint256 amount,address beneficiary,address staker,uint256 fee,uint256 nonce,uint8 v,bytes32 r,bytes32 s)"));
 
 	bytes32 constant REVERTSTAKEREQUEST_TYPEHASH = keccak256(abi.encode("RevertStakeRequest(bytes32 requestHash,uint256 nonce)"));
 
@@ -162,16 +163,15 @@ contract GatewayV1 {
 
 		require(MessageBus.declareRevocationMessage (
 			messageBox,
+			STAKE_REQUEST_TYPEHASH,
 			message,
-			REVERTSTAKEREQUEST_TYPEHASH,
-			_messageHash,
 			nonces[message.sender],
 			_signature));
 
 		staker_ = message.sender;
 		intentHash_ = message.intentHash;
+		nonce_ = nonces[message.sender];
 		gasPrice_ = message.gasPrice;
-		nonces[message.sender]++;
 
 		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonces[message.sender], gasPrice_);
 	}

@@ -197,10 +197,13 @@ contract CoGatewayV1 {
 		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash !=  bytes32(0));
 
+		require(nonces[message.sender] == _nonce);
+
 		require(MessageBus.confirmRevocation(
 			messageBox,
-			_messageHash,
+			_messageTypeHash,
 			message,
+			_nonce,
 			_blockHeight,
 			_rlpEncodedParentNodes,
 			_outboxOffset,

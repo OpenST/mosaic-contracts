@@ -48,30 +48,31 @@ library MessageBus {
 
 	function declareRevocationMessage (
 		MessageBox storage _messageBox,
-		Message storage _declaredMessage,
 		bytes32 _messageTypeHash,
-		bytes32 _messageHash,
+		Message storage _declaredMessage,
 		uint256 _nonce,
 		bytes _signature
 	)
 	external
 	returns (bool /* TBD */)
 	{
-		require(_messageHash != bytes32(0));
+
+		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
 
 		// outbox should be declared
-		require(_messageBox.outbox[_messageHash] == Declared);
+		require(_messageBox.outbox[messageHash] == Declared);
 
-		// validate if the revocation is possible for the given nonce.
-		require(_declaredMessage.nonce == _nonce+1);
+		require(_nonce == _declaredMessage.nonce);
 
-		bytes32 hash = messageRevocationDigest(_messageTypeHash, _declaredMessage);
+		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
 		// verify if revocation is signed by the same address that declared the message
 		require(verifySignature(hash, _signature, _declaredMessage.sender));
 
 		// change the status of outbox
 		_messageBox[_messageHash] == MessageStatus.DeclaredRevocation;
+
+		return true;
 	}
 
 
@@ -122,10 +123,11 @@ library MessageBus {
 	pure
 	returns (bytes32 /* messageRevocationHash */)
 	{
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message);
 		return keccak256(
 			abi.encode(
-				messageTypeHash,
-				_message.nonce+1
+				messageHash,
+				"revert"
 			)
 		);
 	}
@@ -133,8 +135,9 @@ library MessageBus {
 
 	function confirmRevocation(
 		MessageBox storage _messageBox,
-		bytes32 _messageHash,
+		bytes32 _messageTypeHash,
 		Message storage _declaredMessage,
+		uint256 _nonce,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
@@ -143,9 +146,13 @@ library MessageBus {
 	external
 	returns (bool /*TBD*/)
 	{
-		require(_messageBox.inbox[_messageHash] == MessageStatus.Declared);
+		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
 
-		bytes32 hash = messageRevocationDigest(_messageHash, _declaredMessage);
+		require(_messageBox.inbox[messageHash] == MessageStatus.Declared);
+
+		require(_nonce == _declaredMessage.nonce);
+
+		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
 		require(verifySignature(hash, _message.signature, _message.sender));
 
@@ -167,7 +174,7 @@ library MessageBus {
 	function executeRevocationMessage (
 		MessageBox storage _messageBox,
 		Message storage _declaredMessage,
-		bytes32 _messageHash,
+		bytes32 _messageTypeHash,
 		uint256 _nonce,
 		uint8 _outboxOffset,
 		uint256 _blockHeight,
@@ -176,8 +183,12 @@ library MessageBus {
 	external
 	returns (bool /*TBD*/)
 	{
-		require(_messageBox.inbox[_messageHash] == MessageStatus.DeclaredRevocation);
-		require(_nonce == _messageBox.nonce + 2);
+		require(_messageTypeHash != bytes32(0));
+
+		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
+
+		require(_messageBox.inbox[messageHash] == MessageStatus.DeclaredRevocation);
+		require(_nonce == _messageBox.nonce + 1);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
 			ProofLib.storageVariablePath(_outboxOffset, _messageHash));
