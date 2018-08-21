@@ -25,4 +25,7 @@ contract AuxiliaryCoreConfig {
      * root.
      */
     uint256 public constant COST_REPORT_STATE_ROOT = 1 * DECIMALS_FACTOR;
+
+    /** The length of a Casper FFG epoch on auxiliary (in blocks). */
+    uint256 public constant AUXILIARY_EPOCH_LENGTH = 100;
 }

@@ -30,6 +30,12 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         bytes32 indexed stateRoot
     );
 
+    /** Emitted whenever an auxiliary checkpoint is successfully reported. */
+    event AuxiliaryCheckpointReported(
+        uint256 indexed height,
+        bytes32 indexed blockHash
+    );
+
     /* Structs */
 
     /**
@@ -47,6 +53,17 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         bytes32 stateRoot;
     }
 
+    /**
+     * An auxiliary checkpoint.
+     *
+     * The blockhash is sufficient to identify the checkpoint. The height is
+     * required to know the epoch and enforce slashing conditions.
+     */
+    struct AuxiliaryCheckpoint {
+        uint256 height;
+        bytes32 blockHash;
+    }
+
     /* Public Variables */
 
     /** The id of the origin chain that this core tracks. */
@@ -57,6 +74,11 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
      * block.
      */
     mapping (bytes32 => OriginBlock) public reportedOriginBlocks;
+
+    /** Maps the block hash of an auxiliary block at an epoch height to its
+     * reported checkpoint.
+     */
+    mapping (bytes32 => AuxiliaryCheckpoint) public reportedAuxiliaryCheckpoints;
 
     /* Constructor */
 
@@ -102,12 +124,56 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         );
 
         require(
-            !hasBeenReported(reportedBlock),
+            !originBlockHasBeenReported(reportedBlock),
             "The given state root has already been reported at the same height."
         );
         
         reportedOriginBlocks[_stateRoot] = reportedBlock;
         emit OriginBlockReported(_height, _stateRoot);
+
+        success_ = true;
+    }
+
+    /**
+     * @notice Report a checkpoint of auxiliary to this core contract. A
+     *         checkpoint must be at a height that is a multiple of the epoch
+     *         length. You can report every checkpoint only once.
+     *
+     * @param _height The block height of the checkpoint.
+     * @param _blockHash The block hash of the block at the checkpoint.
+     *
+     * @return `true` if the report succeeded. Reverts if it fails.
+     */
+    function reportAuxiliaryCheckpoint(
+        uint256 _height,
+        bytes32 _blockHash
+    )
+        external
+        payable
+        returns (bool success_)
+    {
+        require(
+            _blockHash != bytes32(0),
+            "The block hash should not be `0`."
+        );
+
+        require(
+            _height % AUXILIARY_EPOCH_LENGTH == 0,
+            "The reported height should be a multiple of the epoch length."
+        );
+
+        AuxiliaryCheckpoint memory reportedCheckpoint = AuxiliaryCheckpoint(
+            _height,
+            _blockHash
+        );
+
+        require(
+            !auxiliaryCheckpointHasBeenReported(reportedCheckpoint),
+            "The given checkpoint has already been reported at the same height."
+        );
+
+        reportedAuxiliaryCheckpoints[_blockHash] = reportedCheckpoint;
+        emit AuxiliaryCheckpointReported(_height, _blockHash);
 
         success_ = true;
     }
@@ -121,7 +187,7 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
      *
      * @return `true` if the state root hash is already recorded.
      */
-    function hasBeenReported(
+    function originBlockHasBeenReported(
         OriginBlock _block
     )
         private
@@ -131,5 +197,24 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         OriginBlock storage storedBlock = reportedOriginBlocks[_block.stateRoot];
 
         return storedBlock.stateRoot == _block.stateRoot;
+    }
+
+    /**
+     * @notice Checks whether an auxiliary checkpoint is already recorded.
+     *
+     * @param _checkpoint The checkpoint to check for.
+     *
+     * @return `true` if the checkpoint is already recorded.
+     */
+    function auxiliaryCheckpointHasBeenReported(
+        AuxiliaryCheckpoint _checkpoint
+    )
+        private
+        view
+        returns (bool)
+    {
+        AuxiliaryCheckpoint storage checkpoint = reportedAuxiliaryCheckpoints[_checkpoint.blockHash];
+
+        return checkpoint.blockHash == _checkpoint.blockHash;
     }
 }
