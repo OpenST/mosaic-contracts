@@ -430,7 +430,7 @@ contract GatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 unstakeAmount_)
+	returns (uint256 unstakeRequestedAmount_, uint256 unstakeAmount_)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -443,6 +443,7 @@ contract GatewayV1 {
 
 		UnStakes storage unStake = unStakes[_messageHash];
 
+		unstakeRequestedAmount_ = unStake.amount;
 		unstakeAmount_ = unStake.amount.sub(unStake.fee);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));

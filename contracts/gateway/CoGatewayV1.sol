@@ -10,6 +10,8 @@ import "./HasherV1.sol";
 
 contract CoGatewayV1 {
 
+	using SafeMath for uint256;
+
 	event  StakingIntentConfirmed(
 		bytes32 messageHash,
 		address staker,
@@ -173,7 +175,7 @@ contract CoGatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 mintRequestedAmount_)
+	returns (uint256 mintRequestedAmount_, uint256 mintedAmount_)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -187,8 +189,9 @@ contract CoGatewayV1 {
 		Mint storage mint = mints[_messageHash];
 
 		mintRequestedAmount_ = mint.amount;
+		mintedAmount_ = mint.amount.sub(mint.fee);
 		//Mint token after subtracting fee
-		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mint.amount - mint.fee));
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
 		//reward beneficiary with the fee
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
 
