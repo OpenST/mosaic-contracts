@@ -162,6 +162,9 @@ contract GatewayV1 {
 
 		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
 
+		//return bounty
+		require(EIP20Interface(brandedToken).transfer(msg.sender, bounty));
+
 		emit StakeProcessed(
 			_messageHash,
 			stakeRequests[_messageHash].amount,

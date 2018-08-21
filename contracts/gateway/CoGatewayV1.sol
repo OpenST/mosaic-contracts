@@ -31,19 +31,19 @@ contract CoGatewayV1 {
 		uint256 fee;
 	}
 
-	bytes32 constant STAKEREQUEST_TYPEHASH = keccak256
+	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256
 	(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,address staker,uint256 fee,uint256 nonce,uint8 v,bytes32 r,bytes32 s)"
 		)
 	);
-	bytes32 constant MINTREQUEST_TYPEHASH = keccak256
+	bytes32 constant MINT_REQUEST_TYPEHASH = keccak256
 	(
 		abi.encode(
 			"Mint(uint256 amount,address beneficiary,uint256 fee)"
 		)
 	);
-	bytes32 constant PROCESSMINT_TYPEHASH = keccak256
+	bytes32 constant PROCESS_MINT_TYPEHASH = keccak256
 	(
 		abi.encode(
 			"function processMinting(bytes32 _messageHash,bytes32 _unlockSecret)"
@@ -107,7 +107,7 @@ contract CoGatewayV1 {
 
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice, _fee));
 
-		messageHash_ = MessageBus.messageDigest(STAKEREQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
 		mints[messageHash_] = getMint(_amount, _beneficiary, _fee);
 
@@ -153,9 +153,12 @@ contract CoGatewayV1 {
 
 		amount = mint.amount;
 
-		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mint.amount));
+		//Mint token after subtracting fee
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mint.amount - mint.fee));
+		//reward beneficiary with the fee
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
 
-		MessageBus.progressInbox(messageBox, PROCESSMINT_TYPEHASH, messages[_messageHash], _unlockSecret);
+		MessageBus.progressInbox(messageBox, PROCESS_MINT_TYPEHASH, messages[_messageHash], _unlockSecret);
 
 		emit MintProcessed(
 			_messageHash,
@@ -181,7 +184,7 @@ contract CoGatewayV1 {
 		require(storageRoot != bytes32(0));
 		MessageBus.confirmMessage(
 			messageBox,
-			MINTREQUEST_TYPEHASH,
+			MINT_REQUEST_TYPEHASH,
 			_message,
 			_rlpParentNodes,
 			outboxOffset,
@@ -195,7 +198,8 @@ contract CoGatewayV1 {
 		uint256 _gasPrice,
 		bytes32 _intentHash,
 		bytes32 _hashLock,
-		bytes _signature)
+		bytes _signature
+	)
 	private
 	returns (MessageBus.Message)
 	{
@@ -213,7 +217,8 @@ contract CoGatewayV1 {
 	function getMint(
 		uint256 _amount,
 		address _beneficiary,
-		uint256 _fee)
+		uint256 _fee
+	)
 	private
 	returns (Mint)
 	{
