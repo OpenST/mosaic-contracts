@@ -16,13 +16,4 @@ pragma solidity ^0.4.23;
 
 /** @title Configuration constants for the AuxiliaryCore contract. */
 contract AuxiliaryCoreConfig {
-
-    /** The number of decimals of the base token. */
-    uint256 public constant DECIMALS_FACTOR = 10 ** uint256(18);
-
-    /**
-     * The cost in base tokens that it costs a validator to report a state
-     * root.
-     */
-    uint256 public constant COST_REPORT_STATE_ROOT = 1 * DECIMALS_FACTOR;
 }
