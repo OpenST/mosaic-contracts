@@ -12,6 +12,7 @@ contract GatewayV1 {
 	event  StakeRequestedEvent(
 		bytes32 messageHash,
 		uint256 amount,
+		uint256 fee,
 		address beneficiary,
 		address staker,
 		bytes32 intentHash
@@ -32,15 +33,10 @@ contract GatewayV1 {
 
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,address staker,uint256 fee,uint256 nonce,uint8 v,bytes32 r,bytes32 s)"
+			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
 		)
 	);
 
-	bytes32 constant PROCESS_STAKING_TYPEHASH = keccak256(
-		abi.encode(
-			"function processStaking(bytes32 _messageHash,bytes32 _unlockSecret)"
-		)
-	);
 	//uuid of branded token
 	bytes32 public uuid;
 	//Escrow address to lock staked fund
@@ -76,6 +72,12 @@ contract GatewayV1 {
 		CoreInterface _core
 	)
 	{
+		//todo generate uuid from branded Token ?
+		require(_uuid != bytes32(0));
+		require(_workers != address(0));
+		require(_brandedToken != address(0));
+		require(_core != address(0));
+
 		uuid = _uuid;
 		bounty = _bounty;
 		workers = _workers;
@@ -93,7 +95,6 @@ contract GatewayV1 {
 		uint256 _fee,
 		uint256 _nonce,
 		bytes32 _hashLock,
-		bytes32 _intentHash,
 		bytes _signature
 	)
 	returns (bytes32 messageHash_)
@@ -105,7 +106,7 @@ contract GatewayV1 {
 		require(_signature.length != 0);
 		require(nonces[msg.sender] == _nonce);
 
-		nonces[msg.sender] = _nonce ++;
+		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
 
@@ -128,13 +129,14 @@ contract GatewayV1 {
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, messages[messageHash_]);
 		//transfer staker amount to gateway
-		require(EIP20Interface(brandedToken).transferFrom(_staker, this, _amount));
+		require(brandedToken.transferFrom(_staker, this, _amount));
 		//transfer bounty to gateway
-		require(EIP20Interface(brandedToken).transferFrom(msg.sender, this, bounty));
+		require(brandedToken.transferFrom(msg.sender, this, bounty));
 
 		emit StakeRequestedEvent(
 			messageHash_,
 			_amount,
+			_fee,
 			_beneficiary,
 			_staker,
 			intentHash
@@ -154,11 +156,11 @@ contract GatewayV1 {
 
 		require(nonces[message.sender] == message.nonce + 1);
 
-		nonces[message.sender] = nonces[message.sender] + 1;
+		nonces[message.sender]++;
 
 		stakeRequestAmount = stakeRequests[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, PROCESS_STAKING_TYPEHASH, messages[_messageHash], _unlockSecret);
+		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
 
 		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
 
@@ -173,7 +175,8 @@ contract GatewayV1 {
 		);
 		delete stakeRequests[_messageHash];
 		delete messages[_messageHash];
-		delete messageBox.outbox[_messageHash];
+		//todo discuss not delete due to revocation message
+		//delete messageBox.outbox[_messageHash];
 
 	}
 

@@ -34,7 +34,7 @@ library MessageBus {
 		bytes32 _messageTypeHash,
 		Message storage _message
 	)
-	public
+	external
 	returns (bytes32 messageHash_)
 	{
 
@@ -54,7 +54,7 @@ library MessageBus {
 		uint8 _outboxOffset,
 		bytes32 _storageRoot
 	)
-	public
+	external
 	returns (bytes32 messageHash_)
 	{
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
@@ -80,6 +80,7 @@ library MessageBus {
 		Message storage _message,
 		bytes32 _unlockSecret
 	)
+	external
 	returns (bytes32 messageHash_)
 	{
 		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
@@ -98,6 +99,7 @@ library MessageBus {
 		Message storage _message,
 		bytes32 _unlockSecret
 	)
+	external
 	returns (bytes32 messageHash_)
 	{
 		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
