@@ -177,7 +177,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     /*
      *  External functions
      */
-    /// @dev In order to stake the tx.origin needs to set an allowance
+    /// @dev In order to stake, msg.sender needs to set an allowance
     ///      for the OpenSTValue contract to transfer to itself to hold
     ///      during the staking process.
     function stake(
@@ -194,7 +194,6 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 stakingIntentHash)
         /* solhint-disable-next-line function-max-lines */
     {
-        /* solhint-disable avoid-tx-origin */
         // check the staking contract has been approved to spend the amount to stake
         // OpenSTValue needs to be able to transfer the stake into its balance for
         // keeping until the two-phase process is completed on both chains.
@@ -249,7 +248,6 @@ contract OpenSTValue is OpsManaged, Hasher {
             _amountST, amountUT, unlockHeight, stakingIntentHash, utilityToken.chainIdUtility);
 
         return (amountUT, nonce, unlockHeight, stakingIntentHash);
-        /* solhint-enable avoid-tx-origin */
     }
 
     function processStaking(
