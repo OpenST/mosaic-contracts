@@ -19,7 +19,7 @@ contract CoGatewayV1 {
 		bytes32 hashLock
 	);
 
-	event RevocationIntentConfirmed(
+	event RevertStakingIntentConfirmed(
 		bytes32 messageHash,
 		address staker,
 		uint256 stakerNonce,
@@ -184,7 +184,7 @@ contract CoGatewayV1 {
 
 	}
 
-	function confirmRevocationIntent(
+	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
 		uint256 _nonce,
 		bytes _signature,
@@ -207,7 +207,7 @@ contract CoGatewayV1 {
 			_storageRoot
 		));
 
-		emit RevocationIntentConfirmed(
+		emit RevertStakingIntentConfirmed(
 			_messageHash,
 			message.sender,
 			_nonce,
@@ -216,4 +216,5 @@ contract CoGatewayV1 {
 
 		return true;
 	}
+
 }

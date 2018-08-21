@@ -125,7 +125,7 @@ library MessageBus {
 		return keccak256(
 			abi.encode(
 				messageTypeHash,
-				_message.nonce+1,
+				_message.nonce+1
 			)
 		);
 	}
@@ -163,5 +163,36 @@ library MessageBus {
 
 		return true;
 	}
+
+	function executeRevocationMessage (
+		MessageBox storage _messageBox,
+		Message storage _declaredMessage,
+		bytes32 _messageHash,
+		uint256 _nonce,
+		uint8 _outboxOffset,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes,
+		bytes32 _storageRoot)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageBox.inbox[_messageHash] == MessageStatus.DeclaredRevocation);
+		require(_nonce == _messageBox.nonce + 2);
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, _messageHash));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+
+		_messageBox.inbox[_messageHash] = MessageStatus.Revoked;
+
+		return true;
+	}
+
 
 }
