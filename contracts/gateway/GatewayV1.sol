@@ -73,6 +73,13 @@ contract GatewayV1 {
 		uint256 gasPrice
 	);
 
+	event RevertRedemptionIntentConfirmed(
+		bytes32 messageHash,
+		address redeemer,
+		uint256 redeemerNonce,
+		uint256 blockHeight
+	);
+
 	/* Struct */
 	/**
 	 *  It denotes the stake request.
@@ -92,6 +99,12 @@ contract GatewayV1 {
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
+		)
+	);
+
+	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
+		abi.encode(
+			"RedeemRequest(uint256 amount,address beneficiary,uint256 fee)"
 		)
 	);
 
@@ -328,6 +341,48 @@ contract GatewayV1 {
 			stakeRequest.beneficiary,
 			stakeRequest.fee,
 			message.gasPrice);
+	}
+
+	function confirmRevertRedemptionIntent(
+		bytes32 _messageHash,
+		bytes _signature,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+		require(_signature.length > 0);
+
+		MessageBus.Message storage message = messages[_messageHash];
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.confirmRevocation(
+				messageBox,
+				REDEEM_REQUEST_TYPEHASH,
+				message,
+				_signature,
+				_rlpEncodedParentNodes,
+				outboxOffset,
+				storageRoot
+			));
+
+		emit RevertRedemptionIntentConfirmed(
+			_messageHash,
+			message.sender,
+			nonces[message.sender],
+			_blockHeight
+		);
+
+		// TODO: deletion
+
+		return true;
 	}
 
 }
