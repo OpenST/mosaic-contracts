@@ -44,7 +44,7 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
      */
     struct OriginBlock {
         uint256 height;
-        bytes32 rootHash;
+        bytes32 stateRoot;
     }
 
     /* Public Variables */
@@ -74,19 +74,19 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
      *
      * @param _height The height in the Ethereum blockchain that the block is
      *                reported for.
-     * @param _stateRootHash The state root to report at the given height.
-     *                       Reverts if the same state root has been reported
-     *                       before.
+     * @param _stateRoot The state root to report at the given height.
+     *                   Reverts if the same state root has been reported
+     *                   before.
      */
     function reportOriginBlock(
         uint256 _height,
-        bytes32 _stateRootHash
+        bytes32 _stateRoot
     )
         external
         payable
     {
         require(
-            _stateRootHash != bytes32(0),
+            _stateRoot != bytes32(0),
             "The state root should not be `0`."
         );
 
@@ -97,7 +97,7 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
 
         OriginBlock memory reportedBlock = OriginBlock(
             _height,
-            _stateRootHash
+            _stateRoot
         );
 
         require(
@@ -105,8 +105,8 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
             "The given state root has already been reported at the same height."
         );
         
-        reportedOriginBlocks[_stateRootHash] = reportedBlock;
-        emit OriginBlockReported(_height, _stateRootHash);
+        reportedOriginBlocks[_stateRoot] = reportedBlock;
+        emit OriginBlockReported(_height, _stateRoot);
     }
 
     /* Private Functions */
@@ -125,8 +125,8 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         view
         returns (bool)
     {
-        OriginBlock storage storedBlock = reportedOriginBlocks[_block.rootHash];
+        OriginBlock storage storedBlock = reportedOriginBlocks[_block.stateRoot];
 
-        return storedBlock.rootHash == _block.rootHash;
+        return storedBlock.stateRoot == _block.stateRoot;
     }
 }
