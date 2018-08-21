@@ -26,3 +26,5 @@ node_modules
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+build/

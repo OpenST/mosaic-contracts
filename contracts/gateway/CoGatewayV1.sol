@@ -25,6 +25,14 @@ contract CoGatewayV1 {
 		address beneficiary,
 		uint256 fee
 	);
+
+	event RevertStakingIntentConfirmed(
+		bytes32 messageHash,
+		address staker,
+		uint256 stakerNonce,
+		uint256 blockHeight
+	);
+
 	struct Mint {
 		uint256 amount;
 		address beneficiary;
@@ -55,7 +63,9 @@ contract CoGatewayV1 {
 		WorkersInterface _workers,
 		UtilityTokenAbstract _utilityToken,
 		CoreInterface _core
-	){
+	)
+	public
+	{
 		require(_uuid != bytes32(0));
 		require(_bounty != 0);
 		require(_workers != address(0));
@@ -114,7 +124,7 @@ contract CoGatewayV1 {
 			_signature
 		);
 
-		executeConfirmStakingIntent(messageHash_, messages[messageHash_], _blockHeight, _rlpParentNodes);
+		executeConfirmStakingIntent(messages[messageHash_], _blockHeight, _rlpParentNodes);
 
 		emit StakingIntentConfirmed(
 			messageHash_,
@@ -137,7 +147,7 @@ contract CoGatewayV1 {
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
-		MessageBus.Message message = messages[_messageHash];
+		MessageBus.Message storage message = messages[_messageHash];
 
 		require(nonces[message.sender] == message.nonce + 1);
 
@@ -167,7 +177,6 @@ contract CoGatewayV1 {
 	}
 
 	function executeConfirmStakingIntent(
-		bytes32 _messageHash,
 		MessageBus.Message storage _message,
 		uint256 _blockHeight,
 		bytes _rlpParentNodes
@@ -197,6 +206,7 @@ contract CoGatewayV1 {
 		bytes _signature
 	)
 	private
+	pure
 	returns (MessageBus.Message)
 	{
 		return MessageBus.Message({
@@ -216,6 +226,7 @@ contract CoGatewayV1 {
 		uint256 _fee
 	)
 	private
+	pure
 	returns (Mint)
 	{
 		return Mint({
@@ -223,6 +234,49 @@ contract CoGatewayV1 {
 			beneficiary : _beneficiary,
 			fee : _fee
 			});
+	}
+
+
+	function confirmRevertStakingIntent(
+		bytes32 _messageHash,
+		bytes _signature,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+		require(_signature.length > 0);
+
+		MessageBus.Message storage message = messages[_messageHash];
+		require(message.intentHash !=  bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.confirmRevocation(
+				messageBox,
+				STAKE_REQUEST_TYPEHASH,
+				message,
+				_signature,
+				_rlpEncodedParentNodes,
+				outboxOffset,
+				storageRoot
+			));
+
+		emit RevertStakingIntentConfirmed(
+			_messageHash,
+			message.sender,
+			nonces[message.sender],
+			_blockHeight
+		);
+
+		// TODO: deletion
+
+		return true;
 	}
 
 }

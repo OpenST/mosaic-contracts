@@ -113,6 +113,7 @@ library MessageBus {
 
 	function verifySignature(bytes32 _message, bytes _signature, address signer)
 	private
+	pure
 	returns (bool /*success*/)
 	{
 		bytes32 r;
@@ -150,6 +151,101 @@ library MessageBus {
 			)
 		);
 	}
+
+
+	function declareRevocationMessage (
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes _signature
+	)
+	external
+	returns (bool /* TBD */)
+	{
+
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+
+		// outbox should be declared
+		require(_messageBox.outbox[messageHash] == MessageStatus.Declared);
+
+		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
+
+		// verify if revocation is signed by the same address that declared the message
+		require(verifySignature(hash, _signature, _message.sender));
+
+		// change the status of outbox
+		_messageBox.outbox[messageHash] = MessageStatus.DeclaredRevocation;
+
+		return true;
+	}
+
+	function confirmRevocation(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes _signature,
+		bytes _rlpEncodedParentNodes,
+		uint8 _outboxOffset,
+		bytes32 _storageRoot
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+		//bytes32 messageHash = messageDigest(_messageTypeHash, _message);
+
+		require(_messageBox.inbox[messageHash] == MessageStatus.Declared);
+
+		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
+
+		require(verifySignature(hash, _signature, _message.sender));
+
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, messageHash));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+		_messageBox.inbox[messageHash] = MessageStatus.DeclaredRevocation;
+
+		return true;
+	}
+
+	function progressRevocationMessage (
+		MessageBox storage _messageBox,
+		Message storage _message,
+		bytes32 _messageTypeHash,
+		uint8 _outboxOffset,
+		bytes _rlpEncodedParentNodes,
+		bytes32 _storageRoot)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageTypeHash != bytes32(0));
+
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+
+		require(_messageBox.inbox[messageHash] == MessageStatus.DeclaredRevocation);
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, messageHash));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+
+		_messageBox.outbox[messageHash] = MessageStatus.Revoked;
+
+		return true;
+	}
+
 }
 
 
