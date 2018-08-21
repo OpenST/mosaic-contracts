@@ -113,6 +113,7 @@ library MessageBus {
 
 	function verifySignature(bytes32 _message, bytes _signature, address signer)
 	private
+	pure
 	returns (bool /*success*/)
 	{
 		bytes32 r;
@@ -155,7 +156,7 @@ library MessageBus {
 	function declareRevocationMessage (
 		MessageBox storage _messageBox,
 		bytes32 _messageTypeHash,
-		Message storage _declaredMessage,
+		Message storage _message,
 		uint256 _nonce,
 		bytes _signature
 	)
@@ -163,49 +164,30 @@ library MessageBus {
 	returns (bool /* TBD */)
 	{
 
-		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
 		// outbox should be declared
-		require(_messageBox.outbox[messageHash] == Declared);
+		require(_messageBox.outbox[messageHash] == MessageStatus.Declared);
 
-		require(_nonce == _declaredMessage.nonce);
+		require(_nonce == _message.nonce);
 
 		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
 		// verify if revocation is signed by the same address that declared the message
-		require(verifySignature(hash, _signature, _declaredMessage.sender));
+		require(verifySignature(hash, _signature, _message.sender));
 
 		// change the status of outbox
-		_messageBox[_messageHash] == MessageStatus.DeclaredRevocation;
+		_messageBox.outbox[messageHash] = MessageStatus.DeclaredRevocation;
 
 		return true;
 	}
 
-
-	function messageRevocationDigest(
-		bytes32 _messageHash,
-		Message storage _message
-	)
-	internal
-	pure
-	returns (bytes32 /* messageRevocationHash */)
-	{
-		bytes32 messageHash = messageDigest(_messageTypeHash, _message);
-		return keccak256(
-			abi.encode(
-				messageHash,
-				"revert"
-			)
-		);
-	}
-
-
 	function confirmRevocation(
 		MessageBox storage _messageBox,
 		bytes32 _messageTypeHash,
-		Message storage _declaredMessage,
+		Message storage _message,
+		bytes _signature,
 		uint256 _nonce,
-		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
 		bytes32 _storageRoot
@@ -213,19 +195,20 @@ library MessageBus {
 	external
 	returns (bool /*TBD*/)
 	{
-		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+		//bytes32 messageHash = messageDigest(_messageTypeHash, _message);
 
 		require(_messageBox.inbox[messageHash] == MessageStatus.Declared);
 
-		require(_nonce == _declaredMessage.nonce);
+		require(_nonce == _message.nonce);
 
 		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
-		require(verifySignature(hash, _message.signature, _message.sender));
+		require(verifySignature(hash, _signature, _message.sender));
 
 
 		bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
+			ProofLib.storageVariablePath(_outboxOffset, messageHash));
 
 		require(MerklePatriciaProof.verify(
 				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
@@ -233,18 +216,17 @@ library MessageBus {
 				_rlpEncodedParentNodes,
 				_storageRoot)
 		);
-		_messageBox.inbox[_messageHash] = MessageStatus.DeclaredRevocation;
+		_messageBox.inbox[messageHash] = MessageStatus.DeclaredRevocation;
 
 		return true;
 	}
 
-	function executeRevocationMessage (
+	function progressRevocationMessage (
 		MessageBox storage _messageBox,
-		Message storage _declaredMessage,
+		Message storage _message,
 		bytes32 _messageTypeHash,
 		uint256 _nonce,
 		uint8 _outboxOffset,
-		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes,
 		bytes32 _storageRoot)
 	external
@@ -252,13 +234,13 @@ library MessageBus {
 	{
 		require(_messageTypeHash != bytes32(0));
 
-		bytes32 messageHash = messageDigest(_messageTypeHash, _declaredMessage);
+		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
 		require(_messageBox.inbox[messageHash] == MessageStatus.DeclaredRevocation);
-		require(_nonce == _messageBox.nonce + 1);
+		require(_nonce == _message.nonce + 1);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(_outboxOffset, _messageHash));
+			ProofLib.storageVariablePath(_outboxOffset, messageHash));
 
 		require(MerklePatriciaProof.verify(
 				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
@@ -267,7 +249,7 @@ library MessageBus {
 				_storageRoot)
 		);
 
-		_messageBox.inbox[_messageHash] = MessageStatus.Revoked;
+		_messageBox.outbox[messageHash] = MessageStatus.Revoked;
 
 		return true;
 	}

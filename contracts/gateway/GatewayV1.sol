@@ -38,7 +38,6 @@ contract GatewayV1 {
 		uint256 amount,
 		address beneficiary,
 		uint256 fee,
-		bytes32 intentHash,
 		uint256 gasPrice
 	);
 
@@ -72,6 +71,8 @@ contract GatewayV1 {
 	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
+
+	uint8 outboxOffset = 4;
 
 	/**
          *  @notice Contract constructor.
@@ -115,6 +116,7 @@ contract GatewayV1 {
 		bytes32 _hashLock,
 		bytes _signature
 	)
+	public
 	returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
@@ -205,7 +207,7 @@ contract GatewayV1 {
 	returns (address staker_, bytes32 intentHash_, uint256 nonce_, uint256 gasPrice_)
 	{
 		require(_messageHash != bytes32(0));
-		Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash != bytes32(0));
 
 		require(MessageBus.declareRevocationMessage (
@@ -223,50 +225,44 @@ contract GatewayV1 {
 		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonces[message.sender], gasPrice_);
 	}
 
-	function executeRevertStaking(
+	function processRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes)
 	external
-	returns (address staker_, uint256 amount_, address beneficiary_, uint256 fee_, bytes32 intentHash_, uint256 gasPrice_)
+	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
 
-		Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash != bytes32(0));
 
-		require(MessageBus.executeRevocationMessage (
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.progressRevocationMessage (
 			messageBox,
 			message,
-			_messageHash,
+			STAKE_REQUEST_TYPEHASH,
 			nonces[message.sender],
 			outboxOffset,
-			_blockHeight,
 			_rlpEncodedParentNodes,
-			_storageRoot);
+			storageRoot));
 
 		nonces[message.sender]++;
 
 		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
 
-		staker_ = message.sender;
-		amount_ = stakeRequest.amount;
-		beneficiary_ = stakeRequest.beneficiary;
-		fee_ = stakeRequest.fee;
-		intentHash_ = message.intentHash;
-		gasPrice_ = message.gasPrice;
-
-		require(brandedToken.transfer(staker_, amount_));
+		require(brandedToken.transfer(message.sender, stakeRequest.amount));
 
 		// TODO: think about bounty.
 
-		event StakeReverted(
-			staker_,
-			amount_,
-			beneficiary_,
-			fee_,
-			intentHash_,
-			gasPrice_);
+		emit StakeReverted(
+			message.sender,
+			stakeRequest.amount,
+			stakeRequest.beneficiary,
+			stakeRequest.fee,
+			message.gasPrice);
 	}
 
 }
