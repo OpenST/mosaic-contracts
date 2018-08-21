@@ -25,6 +25,22 @@ contract GatewayV1 {
 		uint256 fee
 	);
 
+	event RevertStakeRequested(
+		bytes32 messageHash,
+		address staker,
+		bytes32 intentHash,
+		uint256 nonce,
+		uint256 gasPrice
+	);
+
+	event StakeReverted(
+		address staker,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee,
+		uint256 gasPrice
+	);
+
 	struct StakeRequest {
 		uint256 amount;
 		address beneficiary;
@@ -56,14 +72,16 @@ contract GatewayV1 {
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
 
+	uint8 outboxOffset = 4;
+
 	/**
-	 *  @notice Contract constructor.
-	 *
-	 *  @param  _uuid UUID of utility token.
-	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _workers Workers contract address.
-	 *  @param _brandedToken Branded token contract address.
-	 */
+         *  @notice Contract constructor.
+         *
+         *  @param  _uuid UUID of utility token.
+         *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+         *  @param _workers Workers contract address.
+         *  @param _brandedToken Branded token contract address.
+         */
 	constructor(
 		bytes32 _uuid,
 		uint256 _bounty,
@@ -71,6 +89,7 @@ contract GatewayV1 {
 		EIP20Interface _brandedToken,
 		CoreInterface _core
 	)
+	public
 	{
 		//todo generate uuid from branded Token ?
 		require(_uuid != bytes32(0));
@@ -97,6 +116,7 @@ contract GatewayV1 {
 		bytes32 _hashLock,
 		bytes _signature
 	)
+	public
 	returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
@@ -180,4 +200,78 @@ contract GatewayV1 {
 
 	}
 
+	function revertStaking(
+		bytes32 _messageHash,
+		bytes _signature)
+	external
+	returns (address staker_, bytes32 intentHash_, uint256 nonce_, uint256 gasPrice_)
+	{
+		require(_messageHash != bytes32(0));
+		MessageBus.Message storage message = messages[_messageHash];
+
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce+1);
+
+		require(MessageBus.declareRevocationMessage (
+			messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			message,
+			_signature));
+
+		staker_ = message.sender;
+		intentHash_ = message.intentHash;
+		nonce_ = nonces[message.sender];
+		gasPrice_ = message.gasPrice;
+
+		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonces[message.sender], gasPrice_);
+	}
+
+	function processRevertStaking(
+		bytes32 _messageHash,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = messages[_messageHash];
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.progressRevocationMessage (
+			messageBox,
+			message,
+			STAKE_REQUEST_TYPEHASH,
+			outboxOffset,
+			_rlpEncodedParentNodes,
+			storageRoot));
+
+		nonces[message.sender]++;
+
+		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
+
+		require(brandedToken.transfer(message.sender, stakeRequest.amount));
+
+		// TODO: think about bounty.
+
+		// TODO: deletion
+		emit StakeReverted(
+			message.sender,
+			stakeRequest.amount,
+			stakeRequest.beneficiary,
+			stakeRequest.fee,
+			message.gasPrice);
+	}
+
 }
+
+
+
+
