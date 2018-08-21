@@ -201,7 +201,10 @@ contract CoGatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 mintRequestedAmount_, uint256 mintedAmount_)
+	returns (
+		uint256 mintRequestedAmount_,
+		uint256 mintedAmount_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -438,7 +441,12 @@ contract CoGatewayV1 {
 		bytes _signature
 	)
 	external
-	returns (address redeemer_, bytes32 intentHash_, uint256 nonce_, uint256 gasPrice_)
+	returns (
+		address redeemer_,
+		bytes32 intentHash_,
+		uint256 nonce_,
+		uint256 gasPrice_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = messages[_messageHash];

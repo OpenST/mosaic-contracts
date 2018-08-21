@@ -307,7 +307,12 @@ contract GatewayV1 {
 		bytes32 _messageHash,
 		bytes _signature)
 	external
-	returns (address staker_, bytes32 intentHash_, uint256 nonce_, uint256 gasPrice_)
+	returns (
+		address staker_,
+		bytes32 intentHash_,
+		uint256 nonce_,
+		uint256 gasPrice_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = messages[_messageHash];
@@ -543,7 +548,10 @@ contract GatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 unstakeRequestedAmount_, uint256 unstakeAmount_)
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
