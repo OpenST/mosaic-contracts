@@ -333,21 +333,25 @@ contract GatewayV1 {
 		require(brandedToken.transfer(message.sender, stakeRequest.amount));
 
 		// TODO: think about bounty.
-
-		// TODO: deletion
 		emit StakeReverted(
 			message.sender,
 			stakeRequest.amount,
 			stakeRequest.beneficiary,
 			stakeRequest.fee,
-			message.gasPrice);
+			message.gasPrice
+		);
+
+		// TODO: discuss deletion
+		delete stakeRequests[_messageHash];
+		delete messages[_messageHash];
 	}
 
 	function confirmRevertRedemptionIntent(
 		bytes32 _messageHash,
 		bytes _signature,
 		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes)
+		bytes _rlpEncodedParentNodes
+	)
 	external
 	returns (bool /*TBD*/)
 	{

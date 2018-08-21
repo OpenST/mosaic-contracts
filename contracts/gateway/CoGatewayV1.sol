@@ -385,13 +385,17 @@ contract CoGatewayV1 {
 
 		// TODO: think about bounty.
 
-		// TODO: deletion
+
 		emit RedeemReverted(
 			message.sender,
 			redeemRequest.amount,
 			redeemRequest.beneficiary,
 			redeemRequest.fee,
 			message.gasPrice);
+
+		// TODO: discuss deletion
+		delete messages[_messageHash];
+		delete redeemRequests[_messageHash];
 	}
 
 
