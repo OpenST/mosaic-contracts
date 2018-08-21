@@ -9,6 +9,7 @@ library HasherV1 {
 		uint256 _gasPrice,
 		uint256 _fee)
 	external
+	pure
 	returns (bytes32 /*hash*/){
 
 		return keccak256(abi.encodePacked(_amount, _beneficiary, _sender, _gasPrice, _fee));

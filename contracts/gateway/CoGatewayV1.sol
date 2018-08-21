@@ -239,7 +239,6 @@ contract CoGatewayV1 {
 
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
-		uint256 _nonce,
 		bytes _signature,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes)
@@ -247,10 +246,13 @@ contract CoGatewayV1 {
 	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+		require(_signature.length > 0);
+
 		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash !=  bytes32(0));
 
-		require(nonces[message.sender] == _nonce);
+		require(nonces[message.sender] == message.nonce + 1);
 
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
@@ -260,7 +262,6 @@ contract CoGatewayV1 {
 				STAKE_REQUEST_TYPEHASH,
 				message,
 				_signature,
-				_nonce,
 				_rlpEncodedParentNodes,
 				outboxOffset,
 				storageRoot
@@ -269,9 +270,11 @@ contract CoGatewayV1 {
 		emit RevertStakingIntentConfirmed(
 			_messageHash,
 			message.sender,
-			_nonce,
+			nonces[message.sender],
 			_blockHeight
 		);
+
+		// TODO: deletion
 
 		return true;
 	}

@@ -157,7 +157,6 @@ library MessageBus {
 		MessageBox storage _messageBox,
 		bytes32 _messageTypeHash,
 		Message storage _message,
-		uint256 _nonce,
 		bytes _signature
 	)
 	external
@@ -168,8 +167,6 @@ library MessageBus {
 
 		// outbox should be declared
 		require(_messageBox.outbox[messageHash] == MessageStatus.Declared);
-
-		require(_nonce == _message.nonce);
 
 		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
@@ -187,7 +184,6 @@ library MessageBus {
 		bytes32 _messageTypeHash,
 		Message storage _message,
 		bytes _signature,
-		uint256 _nonce,
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
 		bytes32 _storageRoot
@@ -199,8 +195,6 @@ library MessageBus {
 		//bytes32 messageHash = messageDigest(_messageTypeHash, _message);
 
 		require(_messageBox.inbox[messageHash] == MessageStatus.Declared);
-
-		require(_nonce == _message.nonce);
 
 		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
 
@@ -225,7 +219,6 @@ library MessageBus {
 		MessageBox storage _messageBox,
 		Message storage _message,
 		bytes32 _messageTypeHash,
-		uint256 _nonce,
 		uint8 _outboxOffset,
 		bytes _rlpEncodedParentNodes,
 		bytes32 _storageRoot)
@@ -237,7 +230,6 @@ library MessageBus {
 		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
 		require(_messageBox.inbox[messageHash] == MessageStatus.DeclaredRevocation);
-		require(_nonce == _message.nonce + 1);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
 			ProofLib.storageVariablePath(_outboxOffset, messageHash));

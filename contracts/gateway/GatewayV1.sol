@@ -208,13 +208,15 @@ contract GatewayV1 {
 	{
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = messages[_messageHash];
+
 		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce+1);
 
 		require(MessageBus.declareRevocationMessage (
 			messageBox,
 			STAKE_REQUEST_TYPEHASH,
 			message,
-			nonces[message.sender],
 			_signature));
 
 		staker_ = message.sender;
@@ -237,6 +239,8 @@ contract GatewayV1 {
 		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash != bytes32(0));
 
+		require(nonces[message.sender] == message.nonce + 1);
+
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
 
@@ -244,7 +248,6 @@ contract GatewayV1 {
 			messageBox,
 			message,
 			STAKE_REQUEST_TYPEHASH,
-			nonces[message.sender],
 			outboxOffset,
 			_rlpEncodedParentNodes,
 			storageRoot));
@@ -257,6 +260,7 @@ contract GatewayV1 {
 
 		// TODO: think about bounty.
 
+		// TODO: deletion
 		emit StakeReverted(
 			message.sender,
 			stakeRequest.amount,
