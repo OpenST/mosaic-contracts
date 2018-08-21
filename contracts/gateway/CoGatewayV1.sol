@@ -53,12 +53,38 @@ contract CoGatewayV1 {
 		uint256 fee
 	);
 
+
+	event RevertRedeemRequested(
+		bytes32 messageHash,
+		address redeemer,
+		bytes32 intentHash,
+		uint256 nonce,
+		uint256 gasPrice
+	);
+
+	event RedeemReverted(
+		address redeemer,
+		uint256 amount,
+		address beneficiary,
+		uint256 fee,
+		uint256 gasPrice
+	);
+
 	struct Mint {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
 	}
 
+
+	/* Struct */
+	/**
+	 *  It denotes the redeem request.
+	 *  Status values could be :-
+	 *  0 :- amount used for redemption
+	 *  1 :- beneficiary is the address in the target chain where token will be minted.
+	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
+	 */
 	struct RedeemRequest {
 		uint256 amount;
 		address beneficiary;
@@ -84,17 +110,17 @@ contract CoGatewayV1 {
 	mapping(bytes32 /*intentHash*/ => MessageBus.Message) messages;
 	uint8 outboxOffset = 4;
 	CoreInterface core;
-	UtilityTokenAbstract utilityToken;
+	UtilityTokenInterface utilityToken;
 
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
 	mapping(address /*address*/ => uint256) nonces;
-	mapping(bytes32 /*requestHash*/ => RedeemRequest) redeemRequests;
+	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 
 	constructor(
 		bytes32 _uuid,
 		uint256 _bounty,
 		WorkersInterface _workers,
-		UtilityTokenAbstract _utilityToken,
+		UtilityTokenInterface _utilityToken,
 		CoreInterface _core
 	)
 	public
@@ -175,7 +201,10 @@ contract CoGatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 mintRequestedAmount_, uint256 mintedAmount_)
+	returns (
+		uint256 mintRequestedAmount_,
+		uint256 mintedAmount_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -269,7 +298,6 @@ contract CoGatewayV1 {
 			fee : _fee
 			});
 	}
-
 
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
@@ -408,4 +436,92 @@ contract CoGatewayV1 {
 		//delete messageBox.outbox[_messageHash];
 
 	}
+	function revertRedemption(
+		bytes32 _messageHash,
+		bytes _signature
+	)
+	external
+	returns (
+		address redeemer_,
+		bytes32 intentHash_,
+		uint256 nonce_,
+		uint256 gasPrice_
+	)
+	{
+		require(_messageHash != bytes32(0));
+		MessageBus.Message storage message = messages[_messageHash];
+
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		require(
+			MessageBus.declareRevocationMessage(
+				messageBox,
+				REDEEM_REQUEST_TYPEHASH,
+				message,
+				_signature
+			)
+		);
+
+		redeemer_ = message.sender;
+		intentHash_ = message.intentHash;
+		nonce_ = nonces[message.sender];
+		gasPrice_ = message.gasPrice;
+
+		emit RevertRedeemRequested(_messageHash, redeemer_, intentHash_, nonces[message.sender], gasPrice_);
+	}
+
+	function processRevertRedemption(
+		bytes32 _messageHash,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = messages[_messageHash];
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(
+			MessageBus.progressRevocationMessage(
+				messageBox,
+				message,
+				REDEEM_REQUEST_TYPEHASH,
+				outboxOffset,
+				_rlpEncodedParentNodes,
+				storageRoot
+			)
+		);
+
+		nonces[message.sender]++;
+
+		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
+
+		require(EIP20Interface(utilityToken).transfer(message.sender, redeemRequest.amount));
+
+		// TODO: think about bounty.
+
+
+		emit RedeemReverted(
+			message.sender,
+			redeemRequest.amount,
+			redeemRequest.beneficiary,
+			redeemRequest.fee,
+			message.gasPrice);
+
+		// TODO: discuss deletion
+		delete messages[_messageHash];
+		delete redeemRequests[_messageHash];
+	}
+
+
 }

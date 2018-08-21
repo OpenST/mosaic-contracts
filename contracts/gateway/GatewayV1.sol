@@ -1,5 +1,27 @@
 pragma solidity ^0.4.23;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Value Chain: Gateway Contract
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
+
 import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
@@ -9,24 +31,34 @@ import "./HasherV1.sol";
 import "./SimpleStake.sol";
 import "./SafeMath.sol";
 
+/**
+ * @title Gateway Contract
+ *
+ *  @notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor.
+ *          Stake process is executed through Gateway contract rather than directly with the protocol contract.
+ *          The Gateway contract will serve the role of staking account rather than an external account.
+ *
+ */
 contract GatewayV1 {
 
 	using SafeMath for uint256;
 
+	/* Events */
+
 	event  StakeRequestedEvent(
-		bytes32 messageHash,
-		uint256 amount,
-		uint256 fee,
-		address beneficiary,
-		address staker,
-		bytes32 intentHash
+		bytes32 _messageHash,
+		uint256 _amount,
+		uint256 _fee,
+		address _beneficiary,
+		address _staker,
+		bytes32 _intentHash
 	);
 
 	event StakeProcessed(
-		bytes32 messageHash,
-		uint256 amount,
-		address beneficiary,
-		uint256 fee
+		bytes32 _messageHash,
+		uint256 _amount,
+		address _beneficiary,
+		uint256 _fee
 	);
 
 	event RevertStakeRequested(
@@ -63,6 +95,21 @@ contract GatewayV1 {
 		uint256 fee
 	);
 
+	event RevertRedemptionIntentConfirmed(
+		bytes32 messageHash,
+		address redeemer,
+		uint256 redeemerNonce,
+		uint256 blockHeight
+	);
+
+	/* Struct */
+	/**
+	 *  It denotes the stake request.
+	 *  Status values could be :-
+	 *  0 :- amount used for staking
+	 *  1 :- beneficiary is the address in the target chain where token will be minted.
+	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
+	 */
 	struct StakeRequest {
 		uint256 amount;
 		address beneficiary;
@@ -74,7 +121,9 @@ contract GatewayV1 {
 		address beneficiary;
 		uint256 fee;
 	}
+	/* Storage */
 
+	// It is a hash used to represent operation type.
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
@@ -87,21 +136,21 @@ contract GatewayV1 {
 		)
 	);
 
-	//uuid of branded token
+	//uuid of branded token.
 	bytes32 public uuid;
 	//Escrow address to lock staked fund
 	SimpleStake stakeVault;
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
-	//white listed addresses which can act as facilitator
+	//White listed addresses which can act as facilitator.
 	WorkersInterface public workers;
-	//address of branded token
+	//address of branded token.
 	EIP20Interface public brandedToken;
-
+	//address of core contract.
 	CoreInterface core;
-
+	//It stores the nonces for each staker.
 	mapping(address/*staker*/ => uint256) nonces;
-
+	//It stores message used by message bus.
 	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 => StakeRequest) stakeRequests;
@@ -111,13 +160,14 @@ contract GatewayV1 {
 	uint8 outboxOffset = 4;
 
 	/**
-         *  @notice Contract constructor.
-         *
-         *  @param  _uuid UUID of utility token.
-         *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-         *  @param _workers Workers contract address.
-         *  @param _brandedToken Branded token contract address.
-         */
+	 *  @notice Contract constructor.
+	 *
+	 *  @param  _uuid UUID of utility token.
+	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+	 *  @param _workers Workers contract address.
+	 *  @param _brandedToken Branded token contract address.
+	 *  @param _core Core contract address.
+	 */
 	constructor(
 		bytes32 _uuid,
 		uint256 _bounty,
@@ -140,8 +190,25 @@ contract GatewayV1 {
 		core = _core;
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
 	}
+	/* Public functions */
 
-
+	/**
+	 * @notice external function stake
+	 *
+	 * @dev In order to stake the staker needs to approve Gateway contract for stake amount.
+     *   Staked amount is transferred from staker address to Gateway contract.
+	 *
+	 * @param _amount Staking amount.
+	 * @param _beneficiary Beneficiary address.
+	 * @param _staker Staker address.
+	 * @param _gasPrice Gas price
+	 * @param _fee Fee for facilitation of stake process.
+	 * @param _nonce Staker nonce.
+	 * @param _hashLock Hash Lock
+	 * @param _signature Signature signed by staker.
+	 *
+	 * @return messageHash_ which is unique for each request.
+	 */
 	function stake(
 		uint256 _amount,
 		address _beneficiary,
@@ -152,7 +219,7 @@ contract GatewayV1 {
 		bytes32 _hashLock,
 		bytes _signature
 	)
-	public
+	external
 	returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
@@ -240,7 +307,12 @@ contract GatewayV1 {
 		bytes32 _messageHash,
 		bytes _signature)
 	external
-	returns (address staker_, bytes32 intentHash_, uint256 nonce_, uint256 gasPrice_)
+	returns (
+		address staker_,
+		bytes32 intentHash_,
+		uint256 nonce_,
+		uint256 gasPrice_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = messages[_messageHash];
@@ -296,14 +368,60 @@ contract GatewayV1 {
 		require(brandedToken.transfer(message.sender, stakeRequest.amount));
 
 		// TODO: think about bounty.
-
-		// TODO: deletion
 		emit StakeReverted(
 			message.sender,
 			stakeRequest.amount,
 			stakeRequest.beneficiary,
 			stakeRequest.fee,
-			message.gasPrice);
+			message.gasPrice
+		);
+
+		// TODO: discuss deletion
+		delete stakeRequests[_messageHash];
+		delete messages[_messageHash];
+	}
+
+	function confirmRevertRedemptionIntent(
+		bytes32 _messageHash,
+		bytes _signature,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+		require(_signature.length > 0);
+
+		MessageBus.Message storage message = messages[_messageHash];
+		require(message.intentHash != bytes32(0));
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.confirmRevocation(
+				messageBox,
+				REDEEM_REQUEST_TYPEHASH,
+				message,
+				_signature,
+				_rlpEncodedParentNodes,
+				outboxOffset,
+				storageRoot
+			));
+
+		emit RevertRedemptionIntentConfirmed(
+			_messageHash,
+			message.sender,
+			nonces[message.sender],
+			_blockHeight
+		);
+
+		// TODO: deletion
+
+		return true;
 	}
 
 
@@ -430,7 +548,10 @@ contract GatewayV1 {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	returns (uint256 unstakeRequestedAmount_, uint256 unstakeAmount_)
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_
+	)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
