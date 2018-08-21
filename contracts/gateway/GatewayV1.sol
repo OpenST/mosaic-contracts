@@ -236,7 +236,7 @@ contract GatewayV1 {
 	{
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
-		
+
 		MessageBus.Message storage message = messages[_messageHash];
 		require(message.intentHash != bytes32(0));
 
