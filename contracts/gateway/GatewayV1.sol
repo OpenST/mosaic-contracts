@@ -27,7 +27,7 @@ import "./SimpleStake.sol";
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./HasherV1.sol";
-import "./SimpleStake.sol";
+import "./SimpleStakeV1.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
 
@@ -157,8 +157,7 @@ contract GatewayV1 is Owned{
 		)
 	);
 
-	//uuid of branded token.
-	bytes32 public uuid; // TODO: delete this uuid
+
 	address coGateway;
 	bytes32 codeHashUT;
 	bytes32 codeHashMessageBus;
@@ -166,7 +165,7 @@ contract GatewayV1 is Owned{
 	GatewayLink gatewayLink;
 
 	//Escrow address to lock staked fund
-	SimpleStake stakeVault;
+	SimpleStakeV1 stakeVault;
 
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
@@ -218,7 +217,7 @@ contract GatewayV1 is Owned{
 		codeHashUT = _codeHashUT;
 		codeHashMessageBus = MessageBus.getCodeHash();
 
-		stakeVault = new SimpleStake(token, address(this), uuid);
+		stakeVault = new SimpleStakeV1(token, address(this));
 	}
 
 	/* Public functions */
