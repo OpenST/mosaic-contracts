@@ -114,12 +114,14 @@ contract GatewayV1 {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
+		MessageBus.Message message;
 	}
 
 	struct UnStakes {
 		uint256 amount;
 		address beneficiary;
 		uint256 fee;
+		MessageBus.Message message;
 	}
 	/* Storage */
 
@@ -150,10 +152,9 @@ contract GatewayV1 {
 	CoreInterface core;
 	//It stores the nonces for each staker.
 	mapping(address/*staker*/ => uint256) nonces;
-	//It stores message used by message bus.
-	mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
+
 	MessageBus.MessageBox messageBox;
-	mapping(bytes32 => StakeRequest) stakeRequests;
+	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
 
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
@@ -235,22 +236,14 @@ contract GatewayV1 {
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		messages[messageHash_] = MessageBus.Message({
-			intentHash : intentHash,
-			nonce : _nonce,
-			gasPrice : _gasPrice,
-			signature : _signature,
-			sender : _staker,
-			hashLock : _hashLock
-			});
-
 		stakeRequests[messageHash_] = StakeRequest({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee
+			fee : _fee,
+			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock, _signature)
 			});
 
-		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, messages[messageHash_]);
+		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message);
 		//transfer staker amount to gateway
 		require(brandedToken.transferFrom(_staker, this, _amount));
 		//transfer bounty to gateway
@@ -275,7 +268,7 @@ contract GatewayV1 {
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 
 		require(nonces[message.sender] == message.nonce + 1);
 
@@ -283,7 +276,7 @@ contract GatewayV1 {
 
 		stakeRequestAmount = stakeRequests[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
+		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[_messageHash].message, _unlockSecret);
 
 		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
 
@@ -297,7 +290,7 @@ contract GatewayV1 {
 			stakeRequests[_messageHash].fee
 		);
 		delete stakeRequests[_messageHash];
-		delete messages[_messageHash];
+
 		//todo discuss not delete due to revocation message
 		//delete messageBox.outbox[_messageHash];
 
@@ -315,17 +308,20 @@ contract GatewayV1 {
 	)
 	{
 		require(_messageHash != bytes32(0));
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 
 		require(message.intentHash != bytes32(0));
 
 		require(nonces[message.sender] == message.nonce+1);
 
-		require(MessageBus.declareRevocationMessage (
+		require(
+			MessageBus.declareRevocationMessage(
 			messageBox,
 			STAKE_REQUEST_TYPEHASH,
 			message,
-			_signature));
+				_signature
+			)
+		);
 
 		staker_ = message.sender;
 		intentHash_ = message.intentHash;
@@ -345,7 +341,7 @@ contract GatewayV1 {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		require(nonces[message.sender] == message.nonce + 1);
@@ -378,7 +374,6 @@ contract GatewayV1 {
 
 		// TODO: discuss deletion
 		delete stakeRequests[_messageHash];
-		delete messages[_messageHash];
 	}
 
 	function confirmRevertRedemptionIntent(
@@ -394,7 +389,7 @@ contract GatewayV1 {
 		require(_rlpEncodedParentNodes.length > 0);
 		require(_signature.length > 0);
 
-		MessageBus.Message storage message = messages[_messageHash];
+		MessageBus.Message storage message = unStakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		require(nonces[message.sender] == message.nonce + 1);
@@ -420,11 +415,9 @@ contract GatewayV1 {
 		);
 
 		// TODO: deletion
-
+		delete unStakes[_messageHash];
 		return true;
 	}
-
-
 
 	function confirmRedemptionIntent(
 		address _redeemer,
@@ -435,10 +428,10 @@ contract GatewayV1 {
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes _rlpParentNodes,
-		bytes _signature
+		bytes memory _rlpParentNodes,
+		bytes memory _signature
 	)
-	external
+	public
 	returns (bytes32 messageHash_)
 	{
 
@@ -458,9 +451,10 @@ contract GatewayV1 {
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
 
-		unStakes[messageHash_] = getUnStake(_amount, _beneficiary, _fee);
-
-		messages[messageHash_] = getMessage(
+		unStakes[messageHash_] = getUnStake(
+			_amount,
+			_beneficiary,
+			_fee,
 			_redeemer,
 			_redeemerNonce,
 			_gasPrice,
@@ -469,7 +463,7 @@ contract GatewayV1 {
 			_signature
 		);
 
-		executeConfirmRedemptionIntent(messages[messageHash_], _blockHeight, _rlpParentNodes);
+		executeConfirmRedemptionIntent(unStakes[messageHash_].message, _blockHeight, _rlpParentNodes);
 
 		emit RedemptionIntentConfirmed(
 			messageHash_,
@@ -482,6 +476,48 @@ contract GatewayV1 {
 			_hashLock
 		);
 	}
+
+	function processUnstake(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret)
+	external
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_
+	)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		UnStakes storage unStake = unStakes[_messageHash];
+
+		unstakeRequestedAmount_ = unStake.amount;
+		unstakeAmount_ = unStake.amount.sub(unStake.fee);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the fee
+		require(brandedToken.transfer(msg.sender, unStake.fee));
+
+		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unStake.amount,
+			unStake.beneficiary,
+			unStake.fee
+		);
+
+		delete unStakes[_messageHash];
+		//todo don't delete, due to revocation message
+		//delete messageBox.inbox[_messageHash];
+	}
+
 
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
@@ -507,7 +543,13 @@ contract GatewayV1 {
 	function getUnStake(
 		uint256 _amount,
 		address _beneficiary,
-		uint256 _fee
+		uint256 _fee,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock,
+		bytes _signature
 	)
 	private
 	pure
@@ -516,7 +558,8 @@ contract GatewayV1 {
 		return UnStakes({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee
+			fee : _fee,
+			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock, _signature)//message// MessageBus.Message()//getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock, _signature)
 			});
 	}
 
@@ -544,47 +587,6 @@ contract GatewayV1 {
 
 	}
 
-	function processUnstake(
-		bytes32 _messageHash,
-		bytes32 _unlockSecret)
-	external
-	returns (
-		uint256 unstakeRequestedAmount_,
-		uint256 unstakeAmount_
-	)
-	{
-		require(_messageHash != bytes32(0));
-		require(_unlockSecret != bytes32(0));
-
-		MessageBus.Message storage message = messages[_messageHash];
-
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
-
-		UnStakes storage unStake = unStakes[_messageHash];
-
-		unstakeRequestedAmount_ = unStake.amount;
-		unstakeAmount_ = unStake.amount.sub(unStake.fee);
-
-		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
-		//reward beneficiary with the fee
-		require(brandedToken.transfer(msg.sender, unStake.fee));
-
-		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, messages[_messageHash], _unlockSecret);
-
-		emit UnStakeProcessed(
-			_messageHash,
-			unStake.amount,
-			unStake.beneficiary,
-			unStake.fee
-		);
-
-		delete unStakes[_messageHash];
-		delete messages[_messageHash];
-		//todo don't delete, due to revocation message
-		//delete messageBox.inbox[_messageHash];
-	}
 }
 
 
