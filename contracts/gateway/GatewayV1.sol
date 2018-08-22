@@ -30,6 +30,7 @@ import "./CoreInterface.sol";
 import "./HasherV1.sol";
 import "./SimpleStake.sol";
 import "./SafeMath.sol";
+import "./Owned.sol";
 
 /**
  * @title Gateway Contract
@@ -39,7 +40,7 @@ import "./SafeMath.sol";
  *          The Gateway contract will serve the role of staking account rather than an external account.
  *
  */
-contract GatewayV1 {
+contract GatewayV1 is Owned{
 
 	using SafeMath for uint256;
 
@@ -195,6 +196,7 @@ contract GatewayV1 {
 		uint256 _bounty,
 		bytes32 _codeHashUT
 	)
+	Owned()
 	public
 	{
 		require(_token != address(0));
@@ -219,12 +221,15 @@ contract GatewayV1 {
 		uint256 _gasPrice,
 		uint256 _fee,
 		uint256 _nonce,
-		address _sender,//owner
+		address _sender,
 		bytes32 _hashLock,
 		bytes _signature)
 	external
 	returns (bytes32 messageHash_)
 	{
+		require(_sender == owner);
+		require(gatewayLink.messageHash == bytes32(0));
+		require(nonces[_sender] == _nonce);
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(address(this),
 				coGateway,
@@ -321,6 +326,7 @@ contract GatewayV1 {
 	external
 	returns (bytes32 messageHash_)
 	{
+		require(isActivated);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
@@ -364,6 +370,7 @@ contract GatewayV1 {
 	external
 	returns (uint256 stakeRequestAmount)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
@@ -405,6 +412,7 @@ contract GatewayV1 {
 		uint256 gasPrice_
 	)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 
@@ -436,6 +444,7 @@ contract GatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -483,6 +492,7 @@ contract GatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 		require(_signature.length > 0);
@@ -532,7 +542,7 @@ contract GatewayV1 {
 	public
 	returns (bytes32 messageHash_)
 	{
-
+		require(isActivated);
 		require(_redeemer != address(0));
 		require(_redeemerNonce == nonces[_redeemer]);
 		require(_beneficiary != address(0));
@@ -584,6 +594,7 @@ contract GatewayV1 {
 		uint256 unstakeAmount_
 	)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
