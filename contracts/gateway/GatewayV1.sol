@@ -102,6 +102,13 @@ contract GatewayV1 {
 		uint256 blockHeight
 	);
 
+	event GatewayLinkInitiated(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
+
 	/* Struct */
 	/**
 	 *  It denotes the stake request.
@@ -138,6 +145,12 @@ contract GatewayV1 {
 		)
 	);
 
+	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
+		abi.encode(
+			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
+		)
+	);
+
 	//uuid of branded token.
 	bytes32 public uuid;
 	//Escrow address to lock staked fund
@@ -146,8 +159,8 @@ contract GatewayV1 {
 	uint256 public bounty;
 	//White listed addresses which can act as facilitator.
 	WorkersInterface public workers;
-	//address of branded token.
-	EIP20Interface public brandedToken;
+	//address of token.
+	EIP20Interface public token;
 	//address of core contract.
 	CoreInterface core;
 	//It stores the nonces for each staker.
@@ -160,38 +173,123 @@ contract GatewayV1 {
 
 	uint8 outboxOffset = 4;
 
+	address coGateway;
+	bytes32 codeHashUT;
+	bytes32 codeHashMessageBus;
+	bool isActivated;
+
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
+	GatewayLink gatewayLink;
+
 	/**
 	 *  @notice Contract constructor.
-	 *
-	 *  @param  _uuid UUID of utility token.
-	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _workers Workers contract address.
-	 *  @param _brandedToken Branded token contract address.
-	 *  @param _core Core contract address.
 	 */
 	constructor(
-		bytes32 _uuid,
+		EIP20Interface _token,
+		address _coGateway,
+		CoreInterface _core,
 		uint256 _bounty,
-		WorkersInterface _workers,
-		EIP20Interface _brandedToken,
-		CoreInterface _core
+		bytes32 _codeHashUT
 	)
 	public
 	{
-		//todo generate uuid from branded Token ?
-		require(_uuid != bytes32(0));
-		require(_workers != address(0));
-		require(_brandedToken != address(0));
+		require(_token != address(0));
+		require(_coGateway != address(0));
 		require(_core != address(0));
+		require(_codeHashUT != bytes32(0));
 
-		uuid = _uuid;
-		bounty = _bounty;
-		workers = _workers;
-		brandedToken = _brandedToken;
+		isActivated = false;
+		token = _token;
+		coGateway = _coGateway;
 		core = _core;
-		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
+		bounty = _bounty;
+		codeHashUT = _codeHashUT;
+		codeHashMessageBus = MessageBus.getCodeHash();
+
+		stakeVault = new SimpleStake(token, address(this), uuid);
 	}
 	/* Public functions */
+
+	function initiateGatewayLink(
+		bytes32 _intentHash,
+		uint256 _gasPrice,
+		uint256 _fee,
+		uint256 _nonce,
+		address _sender,//owner
+		bytes32 _hashLock,
+		bytes _signature)
+	external
+	returns (bytes32 messageHash_)
+	{
+		bytes32 intentHash = keccak256(
+			abi.encodePacked(address(this),
+				coGateway,
+				bounty,
+				codeHashUT,
+				codeHashMessageBus,
+				_gasPrice,
+				_fee,
+				_nonce
+			)
+		);
+		require(intentHash == _intentHash);
+
+		// check nonces
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		gatewayLink = GatewayLink ({
+		 	messageHash: messageHash_,
+			message: MessageBus.Message({
+				intentHash : intentHash,
+				nonce : _nonce,
+				gasPrice : _gasPrice,
+				signature : _signature,
+				sender : _sender,
+				hashLock : _hashLock
+				})
+		});
+
+		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message);
+
+		nonces[_sender]++;
+
+		emit GatewayLinkInitiated(
+			messageHash_,
+			address(this),
+			coGateway,
+			token
+		);
+
+	}
+
+	function processGatewayLink(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		require(gatewayLink.messageHash == _messageHash);
+
+		require(nonces[gatewayLink.message.sender] == gatewayLink.message.nonce + 1);
+		nonces[gatewayLink.message.sender]++;
+
+		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
+
+		isActivated = true;
+
+		//return bounty
+		require(token.transfer(msg.sender, bounty));
+
+		return true;
+	}
 
 	/**
 	 * @notice external function stake
@@ -245,9 +343,9 @@ contract GatewayV1 {
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message);
 		//transfer staker amount to gateway
-		require(brandedToken.transferFrom(_staker, this, _amount));
+		require(token.transferFrom(_staker, this, _amount));
 		//transfer bounty to gateway
-		require(brandedToken.transferFrom(msg.sender, this, bounty));
+		require(token.transferFrom(msg.sender, this, bounty));
 
 		emit StakeRequestedEvent(
 			messageHash_,
@@ -278,10 +376,10 @@ contract GatewayV1 {
 
 		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[_messageHash].message, _unlockSecret);
 
-		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
+		require(token.transfer(stakeVault, stakeRequestAmount));
 
 		//return bounty
-		require(EIP20Interface(brandedToken).transfer(msg.sender, bounty));
+		require(token.transfer(msg.sender, bounty));
 
 		emit StakeProcessed(
 			_messageHash,
@@ -361,7 +459,7 @@ contract GatewayV1 {
 
 		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
 
-		require(brandedToken.transfer(message.sender, stakeRequest.amount));
+		require(token.transfer(message.sender, stakeRequest.amount));
 
 		// TODO: think about bounty.
 		emit StakeReverted(
@@ -502,7 +600,7 @@ contract GatewayV1 {
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
 		//reward beneficiary with the fee
-		require(brandedToken.transfer(msg.sender, unStake.fee));
+		require(token.transfer(msg.sender, unStake.fee));
 
 		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
 

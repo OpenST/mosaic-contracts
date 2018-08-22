@@ -77,6 +77,12 @@ contract CoGatewayV1 {
 		MessageBus.Message message;
 	}
 
+	event GatewayLinkConfirmed(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
 
 	/* Struct */
 	/**
@@ -104,6 +110,11 @@ contract CoGatewayV1 {
 			"RedeemRequest(uint256 amount,address beneficiary,uint256 fee)"
 		)
 	);
+	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
+		abi.encode(
+			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
+		)
+	);
 
 	bytes32 uuid;
 	uint256 bounty;
@@ -117,27 +128,42 @@ contract CoGatewayV1 {
 	mapping(address /*address*/ => uint256) nonces;
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 
+
+
+	address token;
+	address gateway;
+	bytes32 codeHashUT;
+	bytes32 codeHashMessageBus;
+	bool isActivated;
+
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
+	GatewayLink gatewayLink;
+
 	constructor(
-		bytes32 _uuid,
+		EIP20Interface _token,
+		address _gateway,
+		CoreInterface _core,
 		uint256 _bounty,
-		WorkersInterface _workers,
-		UtilityTokenInterface _utilityToken,
-		CoreInterface _core
+		bytes32 _codeHashUT
 	)
 	public
 	{
-		require(_uuid != bytes32(0));
-		require(_bounty != 0);
-		require(_workers != address(0));
-		require(_utilityToken != address(0));
+		require(_token != address(0));
+		require(_gateway != address(0));
 		require(_core != address(0));
+		require(_codeHashUT != bytes32(0));
 
-		//todo generate uuid from branded token
-		uuid = _uuid;
-		bounty = _bounty;
-		workers = _workers;
-		utilityToken = _utilityToken;
+		isActivated = false;
+		token = _token;
+		gateway = _gateway;
 		core = _core;
+		bounty = _bounty;
+		codeHashUT = _codeHashUT;
+		codeHashMessageBus = MessageBus.getCodeHash();
 
 	}
 
@@ -517,5 +543,96 @@ contract CoGatewayV1 {
 			fee : _fee,
 			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock, _signature)
 			});
+	}
+
+
+	function confirmGatewayLinkIntent(
+		bytes32 _intentHash,
+		uint256 _gasPrice,
+		uint256 _fee,
+		uint256 _nonce,
+		address _sender, //owener
+		bytes32 _hashLock,
+		bytes _signature,
+		uint256 _blockHeight,
+		bytes memory _rlpParentNodes
+	)
+	public
+	returns(bytes32 messageHash_)
+	{
+
+		bytes32 intentHash = keccak256(
+			abi.encodePacked(gateway,
+			address(this),
+			bounty,
+			codeHashUT,
+			codeHashMessageBus,
+			_gasPrice,
+			_fee,
+			_nonce
+			)
+		);
+
+		// check nonce.
+
+		require(intentHash == _intentHash);
+
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		gatewayLink = GatewayLink ({
+			messageHash: messageHash_,
+			message: MessageBus.Message({
+				intentHash : intentHash,
+				nonce : _nonce,
+				gasPrice : _gasPrice,
+				signature : _signature,
+				sender : _sender,
+				hashLock : _hashLock
+				})
+			});
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.confirmMessage(
+			messageBox,
+			GATEWAY_LINK_TYPEHASH,
+			gatewayLink.message,
+			_rlpParentNodes,
+			outboxOffset,
+			storageRoot);
+
+		nonces[_sender]++;
+
+		emit GatewayLinkConfirmed(
+			messageHash_,
+			gateway,
+			address(this),
+			token
+		);
+	}
+
+	function processGatewayLink(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		require(gatewayLink.messageHash == _messageHash);
+
+		require(nonces[gatewayLink.message.sender] == gatewayLink.message.nonce + 1);
+		nonces[gatewayLink.message.sender]++;
+
+		MessageBus.progressInbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
+
+		// TODO: think about fee transfer
+
+		isActivated = true;
+
+		return true;
 	}
 }
