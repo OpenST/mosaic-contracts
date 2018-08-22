@@ -239,72 +239,6 @@ contract CoGatewayV1 {
 		//delete messageBox.inbox[_messageHash];
 	}
 
-	function executeConfirmStakingIntent(
-		MessageBus.Message storage _message,
-		uint256 _blockHeight,
-		bytes _rlpParentNodes
-	)
-	private
-	{
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-		require(storageRoot != bytes32(0));
-
-		MessageBus.confirmMessage(
-			messageBox,
-			STAKE_REQUEST_TYPEHASH,
-			_message,
-			_rlpParentNodes,
-			outboxOffset,
-			core.getStorageRoot(_blockHeight));
-
-		nonces[_message.sender] = _message.nonce + 1;
-	}
-
-	function getMessage(
-		address _staker,
-		uint256 _stakerNonce,
-		uint256 _gasPrice,
-		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
-	)
-	private
-	pure
-	returns (MessageBus.Message)
-	{
-		return MessageBus.Message({
-			intentHash : _intentHash,
-			nonce : _stakerNonce,
-			gasPrice : _gasPrice,
-			signature : _signature,
-			sender : _staker,
-			hashLock : _hashLock
-			});
-	}
-
-	function getMint(
-		uint256 _amount,
-		address _beneficiary,
-		uint256 _fee,
-		address _staker,
-		uint256 _stakerNonce,
-		uint256 _gasPrice,
-		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
-	)
-	private
-	pure
-	returns (Mint)
-	{
-		return Mint({
-			amount : _amount,
-			beneficiary : _beneficiary,
-			fee : _fee,
-			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock, _signature)
-			});
-	}
-
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
 		bytes _signature,
@@ -346,7 +280,6 @@ contract CoGatewayV1 {
 		delete mints[_messageHash];
 		return true;
 	}
-
 
 	function redeem(
 		uint256 _amount,
@@ -397,7 +330,6 @@ contract CoGatewayV1 {
 		);
 	}
 
-
 	function processRedemption(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
@@ -433,6 +365,7 @@ contract CoGatewayV1 {
 		//delete messageBox.outbox[_messageHash];
 
 	}
+
 	function revertRedemption(
 		bytes32 _messageHash,
 		bytes _signature
@@ -520,5 +453,69 @@ contract CoGatewayV1 {
 		delete redeemRequests[_messageHash];
 	}
 
+	function executeConfirmStakingIntent(
+		MessageBus.Message storage _message,
+		uint256 _blockHeight,
+		bytes _rlpParentNodes
+	)
+	private
+	{
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
 
+		MessageBus.confirmMessage(
+			messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			_message,
+			_rlpParentNodes,
+			outboxOffset,
+			core.getStorageRoot(_blockHeight));
+
+		nonces[_message.sender] = _message.nonce + 1;
+	}
+
+	function getMessage(
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock,
+		bytes _signature
+	)
+	private
+	pure
+	returns (MessageBus.Message)
+	{
+		return MessageBus.Message({
+			intentHash : _intentHash,
+			nonce : _stakerNonce,
+			gasPrice : _gasPrice,
+			signature : _signature,
+			sender : _staker,
+			hashLock : _hashLock
+			});
+	}
+
+	function getMint(
+		uint256 _amount,
+		address _beneficiary,
+		uint256 _fee,
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock,
+		bytes _signature
+	)
+	private
+	pure
+	returns (Mint)
+	{
+		return Mint({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			fee : _fee,
+			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock, _signature)
+			});
+	}
 }

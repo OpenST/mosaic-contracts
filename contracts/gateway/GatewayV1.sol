@@ -154,7 +154,7 @@ contract GatewayV1 {
 	mapping(address/*staker*/ => uint256) nonces;
 
 	MessageBus.MessageBox messageBox;
-	mapping(bytes32 => StakeRequest) stakeRequests;
+	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
 
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
@@ -419,8 +419,6 @@ contract GatewayV1 {
 		return true;
 	}
 
-
-
 	function confirmRedemptionIntent(
 		address _redeemer,
 		uint256 _redeemerNonce,
@@ -478,6 +476,48 @@ contract GatewayV1 {
 			_hashLock
 		);
 	}
+
+	function processUnstake(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret)
+	external
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_
+	)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		UnStakes storage unStake = unStakes[_messageHash];
+
+		unstakeRequestedAmount_ = unStake.amount;
+		unstakeAmount_ = unStake.amount.sub(unStake.fee);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the fee
+		require(brandedToken.transfer(msg.sender, unStake.fee));
+
+		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unStake.amount,
+			unStake.beneficiary,
+			unStake.fee
+		);
+
+		delete unStakes[_messageHash];
+		//todo don't delete, due to revocation message
+		//delete messageBox.inbox[_messageHash];
+	}
+
 
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
@@ -547,46 +587,6 @@ contract GatewayV1 {
 
 	}
 
-	function processUnstake(
-		bytes32 _messageHash,
-		bytes32 _unlockSecret)
-	external
-	returns (
-		uint256 unstakeRequestedAmount_,
-		uint256 unstakeAmount_
-	)
-	{
-		require(_messageHash != bytes32(0));
-		require(_unlockSecret != bytes32(0));
-
-		MessageBus.Message storage message = unStakes[_messageHash].message;
-
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
-
-		UnStakes storage unStake = unStakes[_messageHash];
-
-		unstakeRequestedAmount_ = unStake.amount;
-		unstakeAmount_ = unStake.amount.sub(unStake.fee);
-
-		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
-		//reward beneficiary with the fee
-		require(brandedToken.transfer(msg.sender, unStake.fee));
-
-		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
-
-		emit UnStakeProcessed(
-			_messageHash,
-			unStake.amount,
-			unStake.beneficiary,
-			unStake.fee
-		);
-
-		delete unStakes[_messageHash];
-		//todo don't delete, due to revocation message
-		//delete messageBox.inbox[_messageHash];
-	}
 }
 
 
