@@ -155,6 +155,7 @@ contract GatewayV1 {
 
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
+	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeRequests;
 
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
@@ -230,11 +231,15 @@ contract GatewayV1 {
 		require(_signature.length != 0);
 		require(nonces[msg.sender] == _nonce);
 
+		require(cleanProcessedStakeRequest(_staker));
+
 		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		activeRequests[_staker] = messageHash_;
 
 		stakeRequests[messageHash_] = StakeRequest({
 			amount : _amount,
@@ -289,16 +294,12 @@ contract GatewayV1 {
 			stakeRequests[_messageHash].beneficiary,
 			stakeRequests[_messageHash].fee
 		);
-		delete stakeRequests[_messageHash];
-
-		//todo discuss not delete due to revocation message
-		//delete messageBox.outbox[_messageHash];
-
 	}
 
 	function revertStaking(
 		bytes32 _messageHash,
-		bytes _signature)
+		bytes _signature
+	)
 	external
 	returns (
 		address staker_,
@@ -371,9 +372,6 @@ contract GatewayV1 {
 			stakeRequest.fee,
 			message.gasPrice
 		);
-
-		// TODO: discuss deletion
-		delete stakeRequests[_messageHash];
 	}
 
 	function confirmRevertRedemptionIntent(
@@ -414,8 +412,6 @@ contract GatewayV1 {
 			_blockHeight
 		);
 
-		// TODO: deletion
-		delete unStakes[_messageHash];
 		return true;
 	}
 
@@ -446,10 +442,14 @@ contract GatewayV1 {
 		require(_rlpParentNodes.length != 0);
 		require(_signature.length != 0);
 
+		require(cleanProcessedRedeemRequest(_redeemer));
+
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice, _fee));
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+
+		activeRequests[_redeemer] = messageHash_;
 
 		unStakes[messageHash_] = getUnStake(
 			_amount,
@@ -512,12 +512,7 @@ contract GatewayV1 {
 			unStake.beneficiary,
 			unStake.fee
 		);
-
-		delete unStakes[_messageHash];
-		//todo don't delete, due to revocation message
-		//delete messageBox.inbox[_messageHash];
 	}
-
 
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
@@ -587,6 +582,39 @@ contract GatewayV1 {
 
 	}
 
+	function cleanProcessedStakeRequest(address staker)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[staker];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete stakeRequests[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
+
+	function cleanProcessedRedeemRequest(address redeemer)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[redeemer];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete unStakes[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
 }
 
 
