@@ -99,6 +99,12 @@ contract CoGatewayV1 is Owned {
 		MessageBus.Message message;
 	}
 
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
+
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
 			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
@@ -116,7 +122,12 @@ contract CoGatewayV1 is Owned {
 		)
 	);
 
-	bytes32 uuid;
+	address token;
+	address gateway;
+	bytes32 codeHashUT;
+	bytes32 codeHashMessageBus;
+	bool isActivated;
+	GatewayLink gatewayLink;
 	uint256 bounty;
 	WorkersInterface public workers;
 	MessageBus.MessageBox messageBox;
@@ -128,21 +139,6 @@ contract CoGatewayV1 is Owned {
 	mapping(address /*address*/ => uint256) nonces;
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
-
-
-
-	address token;
-	address gateway;
-	bytes32 codeHashUT;
-	bytes32 codeHashMessageBus;
-	bool isActivated;
-
-	struct GatewayLink {
-		bytes32 messageHash;
-		MessageBus.Message message;
-	}
-
-	GatewayLink gatewayLink;
 
 	constructor(
 		EIP20Interface _token,

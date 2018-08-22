@@ -130,6 +130,12 @@ contract GatewayV1 is Owned{
 		uint256 fee;
 		MessageBus.Message message;
 	}
+
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
 	/* Storage */
 
 	// It is a hash used to represent operation type.
@@ -152,11 +158,19 @@ contract GatewayV1 is Owned{
 	);
 
 	//uuid of branded token.
-	bytes32 public uuid;
+	bytes32 public uuid; // TODO: delete this uuid
+	address coGateway;
+	bytes32 codeHashUT;
+	bytes32 codeHashMessageBus;
+	bool isActivated;
+	GatewayLink gatewayLink;
+
 	//Escrow address to lock staked fund
 	SimpleStake stakeVault;
+
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
+
 	//address of branded token.
 	EIP20Interface public token;
 	//address of core contract.
@@ -171,18 +185,6 @@ contract GatewayV1 is Owned{
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
 	uint8 outboxOffset = 4;
-
-	address coGateway;
-	bytes32 codeHashUT;
-	bytes32 codeHashMessageBus;
-	bool isActivated;
-
-	struct GatewayLink {
-		bytes32 messageHash;
-		MessageBus.Message message;
-	}
-
-	GatewayLink gatewayLink;
 
 	/**
 	 *  @notice Contract constructor.
