@@ -28,7 +28,7 @@ contract CoGatewayV1 is Owned {
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee
+		uint256 reward
 	);
 
 	event RevertStakingIntentConfirmed(
@@ -53,7 +53,6 @@ contract CoGatewayV1 is Owned {
 		address beneficiary,
 		uint256 fee
 	);
-
 
 	event RevertRedeemRequested(
 		bytes32 messageHash,
@@ -128,6 +127,7 @@ contract CoGatewayV1 is Owned {
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
 	mapping(address /*address*/ => uint256) nonces;
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
+	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
 
 
 
@@ -288,10 +288,14 @@ contract CoGatewayV1 is Owned {
 		require(_rlpParentNodes.length != 0);
 		require(_signature.length != 0);
 
+		require(cleanProcessedStakingRequest(_staker));
+
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice, _fee));
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
+
+		activeRequests[_staker] = messageHash_;
 
 		mints[messageHash_] = getMint(_amount,
 			_beneficiary,
@@ -303,7 +307,6 @@ contract CoGatewayV1 is Owned {
 			_hashLock,
 			_signature
 		);
-
 
 		executeConfirmStakingIntent(mints[messageHash_].message, _blockHeight, _rlpParentNodes);
 
@@ -321,11 +324,13 @@ contract CoGatewayV1 is Owned {
 
 	function processMinting(
 		bytes32 _messageHash,
-		bytes32 _unlockSecret)
+		bytes32 _unlockSecret
+	)
 	external
 	returns (
 		uint256 mintRequestedAmount_,
-		uint256 mintedAmount_
+		uint256 mintedAmount_,
+		uint256 rewardAmount_
 	)
 	{
 		require(isActivated);
@@ -340,11 +345,13 @@ contract CoGatewayV1 is Owned {
 		nonces[message.sender]++;
 
 		mintRequestedAmount_ = mint.amount;
-		mintedAmount_ = mint.amount.sub(mint.fee);
+		rewardAmount_ = mint.fee.mul(message.gasPrice);
+
+		mintedAmount_ = mint.amount.sub(rewardAmount_);
 		//Mint token after subtracting fee
 		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
 		//reward beneficiary with the fee
-		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
 
@@ -352,19 +359,16 @@ contract CoGatewayV1 is Owned {
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
-			mint.fee
+			rewardAmount_
 		);
-
-		delete mints[_messageHash];
-		//todo don't delete, due to revocation message
-		//delete messageBox.inbox[_messageHash];
 	}
 
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
 		bytes _signature,
 		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes)
+		bytes _rlpEncodedParentNodes
+	)
 	external
 	returns (bool /*TBD*/)
 	{
@@ -397,9 +401,6 @@ contract CoGatewayV1 is Owned {
 			nonces[message.sender],
 			_blockHeight
 		);
-
-		// TODO: deletion
-		delete mints[_messageHash];
 		return true;
 	}
 
@@ -423,12 +424,15 @@ contract CoGatewayV1 is Owned {
 		require(_hashLock != bytes32(0));
 		require(_signature.length != 0);
 		require(nonces[msg.sender] == _nonce);
+		require(cleanProcessedRedeemRequest(_redeemer));
 
 		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _redeemer, _gasPrice, _fee);
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		activeRequests[_redeemer] = messageHash_;
 
 		redeemRequests[messageHash_] = RedeemRequest({
 			amount : _amount,
@@ -484,10 +488,6 @@ contract CoGatewayV1 is Owned {
 			redeemRequests[_messageHash].beneficiary,
 			redeemRequests[_messageHash].fee
 		);
-		delete redeemRequests[_messageHash];
-		//todo discuss not delete due to revocation message
-		//delete messageBox.outbox[_messageHash];
-
 	}
 
 	function revertRedemption(
@@ -573,10 +573,6 @@ contract CoGatewayV1 is Owned {
 			redeemRequest.beneficiary,
 			redeemRequest.fee,
 			message.gasPrice);
-
-		// TODO: discuss deletion
-
-		delete redeemRequests[_messageHash];
 	}
 
 	function executeConfirmStakingIntent(
@@ -645,4 +641,38 @@ contract CoGatewayV1 is Owned {
 			});
 	}
 
+	function cleanProcessedRedeemRequest(address redeemer)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[redeemer];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete redeemRequests[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
+
+	function cleanProcessedStakingRequest(address staker)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[staker];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete mints[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+		return true;
+	}
 }

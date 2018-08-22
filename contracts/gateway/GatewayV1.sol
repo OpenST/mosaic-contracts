@@ -22,7 +22,6 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 
-import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
 import "./MessageBus.sol";
@@ -93,7 +92,7 @@ contract GatewayV1 is Owned{
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee
+		uint256 reward
 	);
 
 	event RevertRedemptionIntentConfirmed(
@@ -158,9 +157,7 @@ contract GatewayV1 is Owned{
 	SimpleStake stakeVault;
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
-	//White listed addresses which can act as facilitator.
-	WorkersInterface public workers;
-	//address of token.
+	//address of branded token.
 	EIP20Interface public token;
 	//address of core contract.
 	CoreInterface core;
@@ -169,6 +166,7 @@ contract GatewayV1 is Owned{
 
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
+	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeRequests;
 
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
@@ -188,6 +186,12 @@ contract GatewayV1 is Owned{
 
 	/**
 	 *  @notice Contract constructor.
+	 *
+	 *  @param _token Branded token contract address.
+	 *  @param _coGateway CoGateway contract address.
+	 *  @param _core Core contract address.
+	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+	 *  @param _codeHashUT code hash of utility token contract.
 	 */
 	constructor(
 		EIP20Interface _token,
@@ -214,6 +218,7 @@ contract GatewayV1 is Owned{
 
 		stakeVault = new SimpleStake(token, address(this), uuid);
 	}
+
 	/* Public functions */
 
 	function initiateGatewayLink(
@@ -334,11 +339,15 @@ contract GatewayV1 is Owned{
 		require(_signature.length != 0);
 		require(nonces[msg.sender] == _nonce);
 
+		require(cleanProcessedStakeRequest(_staker));
+
 		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		activeRequests[_staker] = messageHash_;
 
 		stakeRequests[messageHash_] = StakeRequest({
 			amount : _amount,
@@ -394,16 +403,12 @@ contract GatewayV1 is Owned{
 			stakeRequests[_messageHash].beneficiary,
 			stakeRequests[_messageHash].fee
 		);
-		delete stakeRequests[_messageHash];
-
-		//todo discuss not delete due to revocation message
-		//delete messageBox.outbox[_messageHash];
-
 	}
 
 	function revertStaking(
 		bytes32 _messageHash,
-		bytes _signature)
+		bytes _signature
+	)
 	external
 	returns (
 		address staker_,
@@ -478,9 +483,6 @@ contract GatewayV1 is Owned{
 			stakeRequest.fee,
 			message.gasPrice
 		);
-
-		// TODO: discuss deletion
-		delete stakeRequests[_messageHash];
 	}
 
 	function confirmRevertRedemptionIntent(
@@ -522,8 +524,6 @@ contract GatewayV1 is Owned{
 			_blockHeight
 		);
 
-		// TODO: deletion
-		delete unStakes[_messageHash];
 		return true;
 	}
 
@@ -554,10 +554,14 @@ contract GatewayV1 is Owned{
 		require(_rlpParentNodes.length != 0);
 		require(_signature.length != 0);
 
+		require(cleanProcessedRedeemRequest(_redeemer));
+
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice, _fee));
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+
+		activeRequests[_redeemer] = messageHash_;
 
 		unStakes[messageHash_] = getUnStake(
 			_amount,
@@ -591,7 +595,8 @@ contract GatewayV1 is Owned{
 	external
 	returns (
 		uint256 unstakeRequestedAmount_,
-		uint256 unstakeAmount_
+		uint256 unstakeAmount_,
+		uint256 rewardAmount_
 	)
 	{
 		require(isActivated);
@@ -607,26 +612,22 @@ contract GatewayV1 is Owned{
 		UnStakes storage unStake = unStakes[_messageHash];
 
 		unstakeRequestedAmount_ = unStake.amount;
-		unstakeAmount_ = unStake.amount.sub(unStake.fee);
+		rewardAmount_ = unStake.fee.mul(message.gasPrice);
+		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
 		//reward beneficiary with the fee
-		require(token.transfer(msg.sender, unStake.fee));
+		require(token.transfer(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
 
 		emit UnStakeProcessed(
 			_messageHash,
-			unStake.amount,
+			unstakeAmount_,
 			unStake.beneficiary,
-			unStake.fee
+			rewardAmount_
 		);
-
-		delete unStakes[_messageHash];
-		//todo don't delete, due to revocation message
-		//delete messageBox.inbox[_messageHash];
 	}
-
 
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
@@ -696,6 +697,39 @@ contract GatewayV1 is Owned{
 
 	}
 
+	function cleanProcessedStakeRequest(address staker)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[staker];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete stakeRequests[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
+
+	function cleanProcessedRedeemRequest(address redeemer)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[redeemer];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete unStakes[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
 }
 
 
