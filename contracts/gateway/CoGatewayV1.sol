@@ -163,6 +163,8 @@ contract CoGatewayV1 is Owned {
 		core = _core;
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
+
+		// TODO: should we check the code hash with declared codeHash constants.
 	}
 
 	function confirmGatewayLinkIntent(
