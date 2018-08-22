@@ -89,6 +89,7 @@ contract CoGatewayV1 {
 		address beneficiary;
 		uint256 fee;
 		MessageBus.Message message;
+		address facilitator;
 	}
 
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
@@ -312,7 +313,8 @@ contract CoGatewayV1 {
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock)
+			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : msg.sender
 			});
 
 		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[messageHash_].message, _signature);
@@ -434,9 +436,7 @@ contract CoGatewayV1 {
 		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
 
 		require(EIP20Interface(utilityToken).transfer(message.sender, redeemRequest.amount));
-
-		// TODO: think about bounty.
-
+		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
 
 		emit RedeemReverted(
 			message.sender,

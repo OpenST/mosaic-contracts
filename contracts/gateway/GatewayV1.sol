@@ -114,6 +114,7 @@ contract GatewayV1 {
 		address beneficiary;
 		uint256 fee;
 		MessageBus.Message message;
+		address facilitator;
 	}
 
 	struct UnStakes {
@@ -238,7 +239,8 @@ contract GatewayV1 {
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock)
+			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : msg.sender
 			});
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
@@ -357,6 +359,7 @@ contract GatewayV1 {
 
 		require(brandedToken.transfer(message.sender, stakeRequest.amount));
 
+		require(brandedToken.transfer(stakeRequests[_messageHash].facilitator, bounty));
 		// TODO: think about bounty.
 		emit StakeReverted(
 			message.sender,
