@@ -30,6 +30,7 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	const chainIdValue = 3;
 	const valueToken   = await SimpleToken.new();
 	const registrar    = accounts[1]
+	const admin 	   = accounts[2]
 
 	// Set SimpleToken admin in order to finalize SimpleToken
 	await valueToken.setAdminAddress(accounts[1]);
@@ -37,6 +38,7 @@ module.exports.deployOpenSTValue = async (artifacts, accounts) => {
 	assert.ok(await valueToken.finalize({ from: accounts[1] }));
 
 	const openSTValue = await OpenSTValue.new(chainIdValue, valueToken.address, registrar);
+	await openSTValue.setAdminAddress(admin);
 
 	return {
 		valueToken  : valueToken,

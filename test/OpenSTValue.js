@@ -61,6 +61,8 @@ const BigNumber = require('bignumber.js');
 ///		when the staking account is not null
 ///			fails to stake when msg.sender is not the stakingAccount
 ///			successfully stakes
+///		when deactivated is set to true
+///			fails to stake
 ///
 /// ProcessStaking
 ///		fails to process when stakingIntentHash is empty
@@ -93,12 +95,16 @@ const BigNumber = require('bignumber.js');
 ///			fails to reprocess
 /// 	when expirationHeight is < block number // TBD: how or where to test this practically
 ///
+/// Deactivate
+/// 	fails to set deactivated to true by non-admin
+/// 	successfully sets deactivated to true
 
 contract('OpenSTValue', function(accounts) {
 	const chainIdValue  = 3;
 	const chainIdRemote = 1410;
 	const openSTRemote  = accounts[4];
 	const registrar     = accounts[1];
+	const admin 	   	= accounts[2];
 
 	const symbol = "ST";
 	const name = "Simple Token";
@@ -288,6 +294,25 @@ contract('OpenSTValue', function(accounts) {
 
 	            await OpenSTValue_utils.checkStakingIntentDeclaredEvent(result.logs[0], checkUuid, accounts[0], nonce, accounts[0],
 								amountST, amountUT, unlockHeight, stakingIntentHash, chainIdRemote);
+			})
+		})
+
+		context('when deactivated is set to true', async () => {
+
+			before(async () => {
+		        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+		        valueToken  = contracts.valueToken;
+		        openSTValue = contracts.openSTValue;
+	        	core = await Core.new(registrar, chainIdValue, chainIdRemote, openSTRemote);
+	            await openSTValue.addCore(core.address, { from: registrar });
+	        	checkUuid = await openSTValue.hashUuid.call(symbol, name, chainIdValue, chainIdRemote, openSTRemote, conversionRate, conversionRateDecimals);
+				await openSTValue.registerUtilityToken(symbol, name, conversionRate, conversionRateDecimals, chainIdRemote, accounts[0], checkUuid, { from: registrar });
+				await valueToken.approve(openSTValue.address,amountST, { from: accounts[0] });
+				await openSTValue.deactivate({ from: admin });
+		    })
+
+			it('fails to stake', async () => {
+	            await Utils.expectThrow(openSTValue.stake(checkUuid, amountST, accounts[0], { from: accounts[1] }));
 			})
 		})
 	})
@@ -772,4 +797,26 @@ contract('OpenSTValue', function(accounts) {
 
 	});
 
+	describe('Deactivate', async () => {
+		before(async () => {
+	        contracts   = await OpenSTValue_utils.deployOpenSTValue(artifacts, accounts);
+	        openSTValue = contracts.openSTValue;
+	    })
+
+		it('fails to set deactivated to true by non-admin', async () => {
+            await Utils.expectThrow(openSTValue.deactivate({ from: accounts[0] }));
+		})
+
+		it ('successfully sets deactivated to true', async () => {
+			var deactivated = await openSTValue.deactivated.call();
+			assert.equal(deactivated, false);
+
+			var deactivatedResult = await openSTValue.deactivate.call({ from: admin });
+			await openSTValue.deactivate({ from: admin });
+			deactivated = await openSTValue.deactivated.call();
+
+			assert.equal(deactivatedResult, true);
+			assert.equal(deactivatedResult, deactivated);
+		})
+	})
 })

@@ -115,6 +115,7 @@ contract OpenSTValue is OpsManaged, Hasher {
     EIP20Interface public valueToken;
     address public registrar;
     bytes32[] public uuids;
+    bool public deactivated;
     mapping(uint256 /* chainIdUtility */ => CoreInterface) internal cores;
     mapping(bytes32 /* uuid */ => UtilityToken) public utilityTokens;
     /// nonce makes the staking process atomic across the two-phased process
@@ -152,6 +153,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         // registrar cannot be reset
         // TODO: require it to be a contract
         registrar = _registrar;
+        deactivated = false;
     }
 
     /*
@@ -172,6 +174,7 @@ contract OpenSTValue is OpsManaged, Hasher {
         bytes32 stakingIntentHash)
         /* solhint-disable-next-line function-max-lines */
     {
+        require(!deactivated);
         /* solhint-disable avoid-tx-origin */
         // check the staking contract has been approved to spend the amount to stake
         // OpenSTValue needs to be able to transfer the stake into its balance for
@@ -556,5 +559,15 @@ contract OpenSTValue is OpsManaged, Hasher {
         _simpleStake.revokeProtocolTransfer();
 
         return true;
+    }
+
+    function deactivate()
+        public
+        onlyAdmin
+        returns (
+        bool result)
+    {
+        deactivated = true;
+        return deactivated;
     }
 }
