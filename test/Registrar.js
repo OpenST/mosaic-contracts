@@ -38,6 +38,10 @@ const Registrar_utils = require('./Registrar_utils.js');
 /// 	fails to register if non-adminOrOps
 /// 	successfully registers
 ///
+/// ProcessStaking
+/// 	fails to process by non-adminOrOps
+/// 	successfully processes
+///
 /// ConfirmStakingIntent
 /// 	fails to confirm by non-ops
 /// 	successfully confirms
@@ -53,7 +57,7 @@ contract('Registrar', function(accounts) {
 	const ops 		   		= accounts[1];
 	const admin 	   		= accounts[3];
 	const staker	  		= accounts[2];
-  const redeemBeneficiary = accounts[4];
+	const redeemBeneficiary = accounts[4];
 	const symbol 			= "MCC";
 	const name 				= "Member Company Coin";
 	const conversionRateDecimals = 5;
@@ -180,6 +184,60 @@ contract('Registrar', function(accounts) {
             var expirationHeight = await registrar.confirmStakingIntent.call(openSTUtility.address, uuid, staker, nonce, staker, amountST, amountUT, unlockHeight, stakingIntentHash, { from: ops });
 
             assert.ok(expirationHeight > BLOCKS_TO_WAIT_SHORT);
+		})
+	})
+
+	describe('ProcessStaking for value chain', async() => {
+		var contracts 			= null;
+		var valueToken			= null;
+		var registrar 			= null;
+		var openSTUtility 		= null;
+		var openSTValue			= null;
+		var core 				= null;
+		var uuid 				= null;
+		var brandedToken 		= null;
+		var nonce 				= null;
+		var amountUT 	 		= null;
+		var unlockHeight 		= null;
+		var stakingIntentHash 	= null;
+
+		before(async() => {
+	        contracts   	= await Registrar_utils.deployRegistrar(artifacts, accounts);
+	        valueToken  	= contracts.valueToken;
+			registrar 		= contracts.registrar;
+	        openSTUtility 	= contracts.openSTUtility;
+	        openSTValue 	= contracts.openSTValue;
+	        core 			= contracts.core;
+	        uuid 			= await openSTUtility.proposeBrandedToken.call(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
+	        var result 		= await openSTUtility.proposeBrandedToken(symbol, name, conversionRate, conversionRateDecimals, { from: staker });
+	        brandedToken 	= result.logs[0].args._token;
+
+			await registrar.registerBrandedToken(openSTUtility.address, symbol, name, conversionRate, conversionRateDecimals, staker, brandedToken, uuid, { from: ops })
+	        await registrar.addCore(openSTValue.address, core.address, { from: ops });
+	        await registrar.registerUtilityToken(openSTValue.address, symbol, name, conversionRate, conversionRateDecimals, chainIdUtility, staker, uuid, { from: ops });
+	        await valueToken.approve(openSTValue.address, amountST, { from: staker });
+	        result = await openSTValue.stake(uuid, amountST, staker, { from: staker });
+	        nonce = result.logs[0].args._stakerNonce;
+	        amountUT = result.logs[0].args._amountUT;
+	        unlockHeight = result.logs[0].args._unlockHeight;
+	        stakingIntentHash = result.logs[0].args._stakingIntentHash;
+		})
+
+		it('fails to process by non-adminOrOps', async () => {
+            await Utils.expectThrow(registrar.processStaking(openSTValue.address, stakingIntentHash));
+		})
+
+		it('successfully processes', async () => {
+            var utilityToken = await openSTValue.utilityTokens.call(uuid);
+            var simpleStake  = utilityToken[6];
+
+			// by admin
+            var stakeAddress = await registrar.processStaking.call(openSTValue.address, stakingIntentHash, { from: admin });
+            assert.equal(stakeAddress, simpleStake);
+
+			// by ops
+            stakeAddress = await registrar.processStaking.call(openSTValue.address, stakingIntentHash, { from: ops });
+            assert.equal(stakeAddress, simpleStake);
 		})
 	})
 
