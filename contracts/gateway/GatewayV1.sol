@@ -22,7 +22,6 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 
-import "./WorkersInterface.sol";
 import "./EIP20Interface.sol";
 import "./SimpleStake.sol";
 import "./MessageBus.sol";
@@ -92,7 +91,7 @@ contract GatewayV1 {
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee
+		uint256 reward
 	);
 
 	event RevertRedemptionIntentConfirmed(
@@ -144,8 +143,6 @@ contract GatewayV1 {
 	SimpleStake stakeVault;
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
-	//White listed addresses which can act as facilitator.
-	WorkersInterface public workers;
 	//address of branded token.
 	EIP20Interface public brandedToken;
 	//address of core contract.
@@ -166,14 +163,12 @@ contract GatewayV1 {
 	 *
 	 *  @param  _uuid UUID of utility token.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _workers Workers contract address.
 	 *  @param _brandedToken Branded token contract address.
 	 *  @param _core Core contract address.
 	 */
 	constructor(
 		bytes32 _uuid,
 		uint256 _bounty,
-		WorkersInterface _workers,
 		EIP20Interface _brandedToken,
 		CoreInterface _core
 	)
@@ -181,13 +176,11 @@ contract GatewayV1 {
 	{
 		//todo generate uuid from branded Token ?
 		require(_uuid != bytes32(0));
-		require(_workers != address(0));
 		require(_brandedToken != address(0));
 		require(_core != address(0));
 
 		uuid = _uuid;
 		bounty = _bounty;
-		workers = _workers;
 		brandedToken = _brandedToken;
 		core = _core;
 		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
@@ -483,7 +476,8 @@ contract GatewayV1 {
 	external
 	returns (
 		uint256 unstakeRequestedAmount_,
-		uint256 unstakeAmount_
+		uint256 unstakeAmount_,
+		uint256 rewardAmount_
 	)
 	{
 		require(_messageHash != bytes32(0));
@@ -498,19 +492,20 @@ contract GatewayV1 {
 		UnStakes storage unStake = unStakes[_messageHash];
 
 		unstakeRequestedAmount_ = unStake.amount;
-		unstakeAmount_ = unStake.amount.sub(unStake.fee);
+		rewardAmount_ = unStake.fee.mul(message.gasPrice);
+		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
 		//reward beneficiary with the fee
-		require(brandedToken.transfer(msg.sender, unStake.fee));
+		require(brandedToken.transfer(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
 
 		emit UnStakeProcessed(
 			_messageHash,
-			unStake.amount,
+			unstakeAmount_,
 			unStake.beneficiary,
-			unStake.fee
+			rewardAmount_
 		);
 	}
 

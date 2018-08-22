@@ -27,7 +27,7 @@ contract CoGatewayV1 {
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee
+		uint256 reward
 	);
 
 	event RevertStakingIntentConfirmed(
@@ -208,7 +208,8 @@ contract CoGatewayV1 {
 	external
 	returns (
 		uint256 mintRequestedAmount_,
-		uint256 mintedAmount_
+		uint256 mintedAmount_,
+		uint256 rewardAmount_
 	)
 	{
 		require(_messageHash != bytes32(0));
@@ -222,11 +223,13 @@ contract CoGatewayV1 {
 		nonces[message.sender]++;
 
 		mintRequestedAmount_ = mint.amount;
-		mintedAmount_ = mint.amount.sub(mint.fee);
+		rewardAmount_ = mint.fee.mul(message.gasPrice);
+
+		mintedAmount_ = mint.amount.sub(rewardAmount_);
 		//Mint token after subtracting fee
 		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
 		//reward beneficiary with the fee
-		require(UtilityTokenInterface(utilityToken).mint(msg.sender, mint.fee));
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
 
@@ -234,7 +237,7 @@ contract CoGatewayV1 {
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
-			mint.fee
+			rewardAmount_
 		);
 	}
 
