@@ -160,7 +160,7 @@ contract GatewayV1 is Owned{
 
 	address coGateway;
 	bytes32 codeHashUT;
-	bytes32 codeHashMessageBus;
+	bytes32 codeHashVT;
 	bool isActivated;
 	GatewayLink gatewayLink;
 
@@ -199,7 +199,8 @@ contract GatewayV1 is Owned{
 		address _coGateway,
 		CoreInterface _core,
 		uint256 _bounty,
-		bytes32 _codeHashUT
+		bytes32 _codeHashUT,
+		bytes32 _codeHashVT
 	)
 	Owned()
 	public
@@ -208,6 +209,7 @@ contract GatewayV1 is Owned{
 		require(_coGateway != address(0));
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
+		require(_codeHashVT != bytes32(0));
 
 		isActivated = false;
 		token = _token;
@@ -215,7 +217,7 @@ contract GatewayV1 is Owned{
 		core = _core;
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
-		codeHashMessageBus = MessageBus.getCodeHash();
+		codeHashVT = _codeHashVT;
 
 		stakeVault = new SimpleStakeV1(token, address(this));
 	}
@@ -241,7 +243,8 @@ contract GatewayV1 is Owned{
 				coGateway,
 				bounty,
 				codeHashUT,
-				codeHashMessageBus,
+				codeHashVT,
+			    MessageBus.getCodeHash(),
 				_gasPrice,
 				_fee,
 				_nonce

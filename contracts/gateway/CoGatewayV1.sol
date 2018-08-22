@@ -125,7 +125,7 @@ contract CoGatewayV1 is Owned {
 	address token;
 	address gateway;
 	bytes32 codeHashUT;
-	bytes32 codeHashMessageBus;
+	bytes32 codeHashVT;
 	bool isActivated;
 	GatewayLink gatewayLink;
 	uint256 bounty;
@@ -145,7 +145,8 @@ contract CoGatewayV1 is Owned {
 		address _gateway,
 		CoreInterface _core,
 		uint256 _bounty,
-		bytes32 _codeHashUT
+		bytes32 _codeHashUT,
+		bytes32 _codeHashVT
 	)
 	Owned()
 	public
@@ -154,6 +155,7 @@ contract CoGatewayV1 is Owned {
 		require(_gateway != address(0));
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
+		require(_codeHashVT != bytes32(0));
 
 		isActivated = false;
 		token = _token;
@@ -161,8 +163,6 @@ contract CoGatewayV1 is Owned {
 		core = _core;
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
-		codeHashMessageBus = MessageBus.getCodeHash();
-
 	}
 
 	function confirmGatewayLinkIntent(
@@ -188,7 +188,8 @@ contract CoGatewayV1 is Owned {
 			address(this),
 			bounty,
 			codeHashUT,
-			codeHashMessageBus,
+			codeHashVT,
+			MessageBus.getCodeHash(),
 			_gasPrice,
 			_fee,
 			_nonce
@@ -211,16 +212,13 @@ contract CoGatewayV1 is Owned {
 				})
 			});
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-		require(storageRoot != bytes32(0));
-
 		MessageBus.confirmMessage(
 			messageBox,
 			GATEWAY_LINK_TYPEHASH,
 			gatewayLink.message,
 			_rlpParentNodes,
 			outboxOffset,
-			storageRoot);
+			core.getStorageRoot(_blockHeight));
 
 		nonces[_sender]++;
 
