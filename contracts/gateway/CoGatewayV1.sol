@@ -176,7 +176,6 @@ contract CoGatewayV1 is Owned {
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
-		bytes _signature,
 		uint256 _blockHeight,
 		bytes memory _rlpParentNodes
 	)
@@ -269,8 +268,7 @@ contract CoGatewayV1 is Owned {
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes memory _rlpParentNodes,
-		bytes memory _signature
+		bytes memory _rlpParentNodes
 	)
 	public
 	returns (bytes32 messageHash_)
@@ -285,7 +283,6 @@ contract CoGatewayV1 is Owned {
 		require(_blockHeight != 0);
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
-		require(_signature.length != 0);
 
 		require(cleanProcessedStakingRequest(_staker));
 
@@ -363,7 +360,6 @@ contract CoGatewayV1 is Owned {
 
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
-		bytes _signature,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
@@ -373,7 +369,6 @@ contract CoGatewayV1 is Owned {
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
-		require(_signature.length > 0);
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
 		require(message.intentHash !=  bytes32(0));

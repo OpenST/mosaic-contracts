@@ -539,8 +539,7 @@ contract GatewayV1 is Owned{
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes memory _rlpParentNodes,
-		bytes memory _signature
+		bytes memory _rlpParentNodes
 	)
 	public
 	returns (bytes32 messageHash_)
@@ -555,7 +554,6 @@ contract GatewayV1 is Owned{
 		require(_blockHeight != 0);
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
-		require(_signature.length != 0);
 
 		require(cleanProcessedRedeemRequest(_redeemer));
 
