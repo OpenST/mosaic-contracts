@@ -677,6 +677,60 @@ contract GatewayV1 is Owned{
 		);
 	}
 
+	function processUnstakeWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint messageStatus
+	)
+	external
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_,
+		uint256 rewardAmount_
+	)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		UnStakes storage unStake = unStakes[_messageHash];
+
+		unstakeRequestedAmount_ = unStake.amount;
+		rewardAmount_ = unStake.fee.mul(message.gasPrice);
+		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the fee
+		require(token.transfer(msg.sender, rewardAmount_));
+
+		MessageBus.progressInboxWithProof(
+			messageBox,
+			REDEEM_REQUEST_TYPEHASH,
+			unStake.message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(messageStatus)
+		);
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unstakeAmount_,
+			unStake.beneficiary,
+			rewardAmount_
+		);
+	}
+
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
 		uint256 _blockHeight,

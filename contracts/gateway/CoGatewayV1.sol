@@ -358,7 +358,6 @@ contract CoGatewayV1 is Owned {
 		);
 	}
 
-
 	function processMintingWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
@@ -529,6 +528,54 @@ contract CoGatewayV1 is Owned {
 
 		//TODO: think around bounty
 		require(EIP20Interface(utilityToken).transfer(msg.sender, bounty));
+
+		emit RedeemProcessed(
+			_messageHash,
+			redeemAmount,
+			redeemRequests[_messageHash].beneficiary,
+			redeemRequests[_messageHash].fee
+		);
+	}
+
+
+	function processRedemptionWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint messageStatus
+	)
+	external
+	returns (uint256 redeemAmount)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = redeemRequests[_messageHash].message;
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		redeemAmount = redeemRequests[_messageHash].amount;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.progressOutboxWithProof(
+			messageBox,
+			REDEEM_REQUEST_TYPEHASH,
+			redeemRequests[_messageHash].message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(messageStatus)
+		);
+
+		require(utilityToken.burn(this, redeemAmount));
+
+		//TODO: think around bounty
+		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
 
 		emit RedeemProcessed(
 			_messageHash,
