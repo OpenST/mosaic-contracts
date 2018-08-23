@@ -1,68 +1,29 @@
-# [OpenST protocol](https://simpletoken.org) - staking value for utility
+<h1 align="center">OpenST - Empowering Decentralized Economies</h1>
 
 [![Gitter: JOIN CHAT](https://img.shields.io/badge/gitter-JOIN%20CHAT-brightgreen.svg)](https://gitter.im/OpenSTFoundation/SimpleToken)
 
-While OpenST 0.9 is available as-is for anyone to use, we caution that this is early stage software and under heavy ongoing development and improvement. Please report bugs and suggested improvements.
+[OpenST](https://openst.org/) blockchain infrastructure empowers decentralized economies. The central component of this infrastructure is the OpenST Protocol, a framework for building scalable blockchain token economies.
 
-OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
-activation of Simple Token to power the OpenST platform.  The OpenST platform
-allows Ethereum smart contracts to runs faster and cheaper while leveraging
-the security properties of Ethereum's Proof-of-Work.  In this release we implement
-the first corner stone of the protocol: the ability to stake value on Ethereum
-mainnet and mint a new representation of that value on a utility chain,
-effectively increasing the computational throughput of Ethereum smart contracts
-by allowing parallel execution across chains.
-
-OpenST smart contracts have been restructured to store value separately from
-the logic that implements the protocol.  v0.9.1 is not yet protocol complete
-as the validators are whitelisted and not yet open with stake put forward on
-Ethereum mainnet.  However, by splitting the protocol implementation into
-these two logically separate problems, we can already start working with
-member companies and developers to fine-tune the APIs and the developer
-experience to build mainstream applications on Ethereum.
-
-```
-  Ethereum mainnet (value)   |  OpenST platform (utility)
-  ---------------------------------------------------------------------
-      Core - - - - - - - - - - - (Core)
-      /                      |      \
-     /                       |       \
-  Registrar                  |  Registrar
-    |                        |        |
-  OpenSTValue                |  OpenSTUtility
-    \_ SimpleStake           |    \_ UtilityTokenAbstract
-                             |         \_ SimpleTokenPrime (base token)
-                             |         \_ BrandedToken
-```
-
-Watch demo video of milestone 1 (v0.9.0 - will take you to [https://www.youtube.com/watch?v=-SxJ8c1Xh_A](https://www.youtube.com/watch?v=-SxJ8c1Xh_A))
-
-[![Milestone 1 demo video](https://img.youtube.com/vi/-SxJ8c1Xh_A/0.jpg)](https://www.youtube.com/watch?v=-SxJ8c1Xh_A)
-
-## About Simple Token
-
-Simple Token [“ST”] is an EIP20 token and OpenST is a protocol to support token economies in mainstream consumer applications. The business and technical challenge we set out to solve is to enable mainstream consumer applications to benefit from deploying their own branded crypto-backed token economies, in a scalable and cryptographically auditable manner, without needing to mint and maintain their own publicly-tradeable EIP20 tokens.
-
-The OpenST protocol enables the creation of utility tokens on a utility blockchain while the value of those tokens is backed by staked crypto-assets on a value blockchain.
-
-The OpenST Protocol establishes a bridge between two differently purposed blockchains.  A value blockchain, which is required in order to hold cryptographically secured valuable assets; and a utility blockchain, which has utility tokens in favor of which the assets are held on the value blockchain.
+_While OpenST is available as-is for anyone to use, we caution that this is early stage software and under heavy ongoing development and improvement. Please report bugs and suggested improvements._
 
 ## OpenST Protocol
+The OpenST Protocol enables building scalable blockchain token economies through the bidirectional transposition of value tokens on one blockchain, the "value chain", and a utility token representation on another blockchain, the "utility chain".
 
-To mint utility tokens on a utility chain out of value staked on a value chain, or to redeem value on the value chain by redeeming ownership of utility tokens on the utility chain, the protocol needs to atomically act on two blockchains.  OpenST Protocol requires a two-phased commit for either action.
+In order to transpose value for utility, the Protocol defines a set of actions that are performed atomically across a gateway. A gateway for a given token is comprised of a gateway contract on the value chain, a corresponding co-gateway contract on a utility chain, and and an ERC20 contract on the utility chain that mints and burns utility tokens for an equivalent value of ERC20 tokens staked and unstaked on the value chain. Atomicity is achieved by combining performance of the transpositional actions in a 2-phase-commit structure with a hash-timelock on each of the value and utility chains.
 
-`openst-protocol` provides the smart contracts that implement the OpenST protocol which enables staking and redeeming utility tokens. For more details see the technical white paper on [simpletoken.org/documents](https://simpletoken.org/documents).
+In addition to the gateway, the Protocol incorporates the concept of a `facilitator`. The facilitator relieves the end-user from the requirement to be online and act on multiple blockchains by staking a `bounty` in order to act on behalf of the user. This bounty is an economic incentive that ensures compliance with the Protocol.
 
-![](docs/protocol.png)
+For more information on the fundamentals and mission of the Protocol, please consult the [whitepaper](https://drive.google.com/file/d/0Bwgf8QuAEOb7Z2xIeUlLd21DSjQ/view).
 
-## Roadmap
+## Related Work
+Significant implementations of and projects related to the OpenST Protocol are:
 
-Milestone 1 : OpenST Platform v0.9 (7 November 2017)
+- [openst-platform](https://github.com/OpenSTFoundation/openst-platform): middleware and an API for applications to integrate the OpenST protocol
+- [openst-payments](https://github.com/OpenSTFoundation/openst-payments): smart contracts and JS modules for managing and interacting with a token economy
 
-Milestone 2 : OpenST Platform v1.0 (Q1 2018)
+## Contributing
+There are multiple ways to contribute to this project. However, before contributing, please first review the [Code of Conduct](https://github.com/OpenSTFoundation/openst-protocol/blob/develop/CODE_OF_CONDUCT.md).
 
-Milestone 3 : Public Launch of Initial Member Companies (Q2 2018)
+To participate in the discussion on technical matters, please join the project's [Gitter](https://gitter.im/OpenSTFoundation/SimpleToken) channel or review the project's [issues](https://github.com/OpenSTFoundation/openst-protocol/issues).
 
-Milestone 4 : 10 Founding Member Companies (Q3-Q4 2018)
-
-Milestone 5 : Consolidation of OpenST as open platform (2019)
+To contribute code, please ensure that your submissions adhere to the [Style Guide](https://github.com/OpenSTFoundation/openst-protocol/blob/develop/SOLIDITY_STYLE_GUIDE.md); please also be aware, this project is under active development and we have not yet established firm contribution guidelines or acceptance criteria.

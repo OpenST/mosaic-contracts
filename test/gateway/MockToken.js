@@ -287,4 +287,21 @@ contract('MockToken', (accounts) => {
       assert.equal(await token.owner.call(), accounts[0])      
     })
   })
+
+  describe('remove', async () => {
+    var token = null;
+
+    before(async () => {
+      token = await createToken();
+
+    })
+
+        it('fails to remove MockToken contract when caller is not owner', async () => {
+            await Utils.expectThrow(token.remove({from: ops}));
+        })
+
+        it('successfully removes MockToken contract when caller is owner', async () => {
+            await token.remove({from: owner});
+        })
+    })
 })
