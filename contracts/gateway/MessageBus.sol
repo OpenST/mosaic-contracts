@@ -92,6 +92,37 @@ library MessageBus {
 		_messageBox.outbox[messageHash_] = MessageStatus.Progressed;
 	}
 
+	function progressOutboxWithProof(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes _rlpEncodedParentNodes,
+		uint8 _outboxOffset,
+		bytes32 _storageRoot,
+		MessageStatus messageStatus
+	)
+	external
+	returns (bytes32 messageHash_)
+	{
+		require(messageStatus == MessageStatus.Declared || messageStatus == MessageStatus.Progressed);
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(messageStatus)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+
+		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
+
+		require(_messageBox.outbox[messageHash_] == MessageStatus.Declared);
+
+		_messageBox.outbox[messageHash_] = MessageStatus.Progressed;
+	}
+
 
 	function progressInbox(
 		MessageBox storage _messageBox,
@@ -105,6 +136,37 @@ library MessageBus {
 		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
+		require(_messageBox.inbox[messageHash_] == MessageStatus.Declared);
+
+		_messageBox.inbox[messageHash_] = MessageStatus.Progressed;
+	}
+
+
+	function progressInboxWithProof(
+		MessageBox storage _messageBox,
+		bytes32 _messageTypeHash,
+		Message storage _message,
+		bytes _rlpEncodedParentNodes,
+		uint8 _outboxOffset,
+		bytes32 _storageRoot,
+		MessageStatus messageStatus
+	)
+	external
+	returns (bytes32 messageHash_)
+	{
+		require(messageStatus == MessageStatus.Declared || messageStatus == MessageStatus.Progressed);
+
+		bytes memory path = ProofLib.bytes32ToBytes(
+			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
+
+		require(MerklePatriciaProof.verify(
+				keccak256(abi.encodePacked(messageStatus)),
+				path,
+				_rlpEncodedParentNodes,
+				_storageRoot)
+		);
+
+		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 		require(_messageBox.inbox[messageHash_] == MessageStatus.Declared);
 
 		_messageBox.inbox[messageHash_] = MessageStatus.Progressed;

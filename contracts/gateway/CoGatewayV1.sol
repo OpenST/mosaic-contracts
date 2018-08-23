@@ -358,6 +358,59 @@ contract CoGatewayV1 is Owned {
 		);
 	}
 
+
+	function processMintingWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint messageStatus
+	)
+	external
+	returns (
+		uint256 mintRequestedAmount_,
+		uint256 mintedAmount_,
+		uint256 rewardAmount_
+	)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		Mint storage mint = mints[_messageHash];
+		MessageBus.Message storage message = mint.message;
+
+		require(nonces[message.sender] == message.nonce + 1);
+
+		nonces[message.sender]++;
+
+		mintRequestedAmount_ = mint.amount;
+		rewardAmount_ = mint.fee.mul(message.gasPrice);
+
+		mintedAmount_ = mint.amount.sub(rewardAmount_);
+		//Mint token after subtracting fee
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
+		//reward beneficiary with the fee
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.progressInboxWithProof(messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			mint.message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(messageStatus));
+
+		emit MintProcessed(
+			_messageHash,
+			mint.amount,
+			mint.beneficiary,
+			rewardAmount_
+		);
+	}
+
 	function confirmRevertStakingIntent(
 		bytes32 _messageHash,
 		bytes _signature,

@@ -382,7 +382,7 @@ contract GatewayV1 is Owned{
 		bytes32 _unlockSecret
 	)
 	external
-	returns (uint256 stakeRequestAmount)
+	returns (uint256 stakeRequestAmount_)
 	{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
@@ -393,14 +393,59 @@ contract GatewayV1 is Owned{
 
 		nonces[message.sender]++;
 
-		stakeRequestAmount = stakeRequests[_messageHash].amount;
+		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
 
 		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[_messageHash].message, _unlockSecret);
 
-		require(token.transfer(stakeVault, stakeRequestAmount));
+		require(token.transfer(stakeVault, stakeRequestAmount_));
 
 		//return bounty
 		require(token.transfer(msg.sender, bounty));
+
+		emit StakeProcessed(
+			_messageHash,
+			stakeRequests[_messageHash].amount,
+			stakeRequests[_messageHash].beneficiary,
+			stakeRequests[_messageHash].fee
+		);
+	}
+
+	function processStakingWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint messageStatus
+	)
+	external
+	returns (uint256 stakeRequestAmount_)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+
+		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		//staker has started the revocation and facilitator has processed on utility chain
+		//staker has to process with proof
+		MessageBus.progressOutboxWithProof(
+			messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			stakeRequests[_messageHash].message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(messageStatus)
+		);
+
+		require(token.transfer(stakeVault, stakeRequestAmount_));
+
+		//todo discuss return bounty
+		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
 
 		emit StakeProcessed(
 			_messageHash,
@@ -450,7 +495,8 @@ contract GatewayV1 is Owned{
 	function processRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes)
+		bytes _rlpEncodedParentNodes
+	)
 	external
 	returns (bool /*TBD*/)
 	{
