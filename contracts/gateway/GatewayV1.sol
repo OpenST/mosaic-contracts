@@ -175,8 +175,6 @@ contract GatewayV1 is Owned{
 	EIP20Interface public token;
 	//address of core contract.
 	CoreInterface core;
-	//It stores the nonces for each staker.
-	mapping(address/*staker*/ => uint256) nonces;
 
 	MessageBus.MessageBox messageBox;
 	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
@@ -238,7 +236,6 @@ contract GatewayV1 is Owned{
 	{
 		require(_sender == owner);
 		require(gatewayLink.messageHash == bytes32(0));
-		require(nonces[_sender] == _nonce);
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(address(this),
 				coGateway,
@@ -269,8 +266,6 @@ contract GatewayV1 is Owned{
 
 		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
 
-		nonces[_sender]++;
-
 		emit GatewayLinkInitiated(
 			messageHash_,
 			address(this),
@@ -291,9 +286,6 @@ contract GatewayV1 is Owned{
 		require(_unlockSecret != bytes32(0));
 
 		require(gatewayLink.messageHash == _messageHash);
-
-		require(nonces[gatewayLink.message.sender] == gatewayLink.message.nonce + 1);
-		nonces[gatewayLink.message.sender]++;
 
 		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
 
@@ -341,11 +333,8 @@ contract GatewayV1 is Owned{
 		require(_staker != address(0));
 		require(_hashLock != bytes32(0));
 		require(_signature.length != 0);
-		require(nonces[msg.sender] == _nonce);
 
 		require(cleanProcessedStakeRequest(_staker));
-
-		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
 
@@ -388,10 +377,6 @@ contract GatewayV1 is Owned{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
-
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
 
 		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
 
@@ -473,8 +458,6 @@ contract GatewayV1 is Owned{
 
 		require(message.intentHash != bytes32(0));
 
-		require(nonces[message.sender] == message.nonce+1);
-
 		require(
 			MessageBus.declareRevocationMessage(
 			messageBox,
@@ -486,10 +469,9 @@ contract GatewayV1 is Owned{
 
 		staker_ = message.sender;
 		intentHash_ = message.intentHash;
-		nonce_ = nonces[message.sender];
 		gasPrice_ = message.gasPrice;
 
-		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonces[message.sender], gasPrice_);
+		emit RevertStakeRequested(_messageHash, staker_, intentHash_, message.nonce, gasPrice_);
 	}
 
 	function processRevertStaking(
@@ -507,20 +489,19 @@ contract GatewayV1 is Owned{
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		require(nonces[message.sender] == message.nonce + 1);
-
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
 
-		require(MessageBus.progressRevocationMessage (
+		require(
+			MessageBus.progressRevocationMessage(
 			messageBox,
 			message,
 			STAKE_REQUEST_TYPEHASH,
 			outboxOffset,
 			_rlpEncodedParentNodes,
-			storageRoot));
-
-		nonces[message.sender]++;
+				storageRoot
+			)
+		);
 
 		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
 
@@ -552,8 +533,6 @@ contract GatewayV1 is Owned{
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		require(nonces[message.sender] == message.nonce + 1);
-
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
 
@@ -569,7 +548,7 @@ contract GatewayV1 is Owned{
 		emit RevertRedemptionIntentConfirmed(
 			_messageHash,
 			message.sender,
-			nonces[message.sender],
+			message.nonce,
 			_blockHeight
 		);
 
@@ -593,7 +572,6 @@ contract GatewayV1 is Owned{
 	{
 		require(isActivated);
 		require(_redeemer != address(0));
-		require(_redeemerNonce == nonces[_redeemer]);
 		require(_beneficiary != address(0));
 		require(_amount != 0);
 		require(_fee != 0);
@@ -653,10 +631,6 @@ contract GatewayV1 is Owned{
 
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
-
 		UnStakes storage unStake = unStakes[_messageHash];
 
 		unstakeRequestedAmount_ = unStake.amount;
@@ -695,10 +669,6 @@ contract GatewayV1 is Owned{
 		require(_rlpEncodedParentNodes.length > 0);
 
 		MessageBus.Message storage message = unStakes[_messageHash].message;
-
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
 
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
@@ -748,8 +718,6 @@ contract GatewayV1 is Owned{
 			_rlpParentNodes,
 			outboxOffset,
 			core.getStorageRoot(_blockHeight));
-
-		nonces[_message.sender] = _message.nonce + 1;
 	}
 
 	function getUnStake(
