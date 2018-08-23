@@ -474,8 +474,7 @@ contract CoGatewayV1 {
 
 		require(utilityToken.burn(this, redeemAmount));
 
-		//TODO: think around bounty
-		require(EIP20Interface(utilityToken).transfer(msg.sender, bounty));
+		msg.sender.transfer(bounty);
 
 		emit RedeemProcessed(
 			_messageHash,
@@ -554,7 +553,8 @@ contract CoGatewayV1 {
 		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
 
 		require(EIP20Interface(utilityToken).transfer(message.sender, redeemRequest.amount));
-		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
+
+		require(msg.sender.transfer(bounty));
 
 		emit RedeemReverted(
 			message.sender,

@@ -237,9 +237,11 @@ contract GatewayV1 {
 		bytes32 _hashLock,
 		bytes _signature)
 	external
+	payable
 	returns (bytes32 messageHash_)
 	{
 		require(_sender == organisation);
+		require(msg.value == bounty);
 		require(gatewayLink.messageHash == bytes32(0));
 		require(nonces[_sender] == _nonce);
 		bytes32 intentHash = keccak256(
@@ -303,7 +305,7 @@ contract GatewayV1 {
 		isActivated = true;
 
 		//return bounty
-		require(token.transfer(msg.sender, bounty));
+		require(msg.sender.transfer(bounty));
 
 		return true;
 	}
@@ -336,9 +338,11 @@ contract GatewayV1 {
 		bytes _signature
 	)
 	external
+	payable
 	returns (bytes32 messageHash_)
 	{
 		require(isActivated);
+		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
@@ -367,8 +371,6 @@ contract GatewayV1 {
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, this, _amount));
-		//transfer bounty to gateway
-		require(token.transferFrom(msg.sender, this, bounty));
 
 		emit StakeRequestedEvent(
 			messageHash_,
@@ -403,7 +405,7 @@ contract GatewayV1 {
 		require(token.transfer(stakeVault, stakeRequestAmount));
 
 		//return bounty
-		require(token.transfer(msg.sender, bounty));
+		require(msg.sender.transfer(bounty));
 
 		emit StakeProcessed(
 			_messageHash,
@@ -483,8 +485,8 @@ contract GatewayV1 {
 
 		require(token.transfer(message.sender, stakeRequest.amount));
 
-		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
-		// TODO: think about bounty.
+		require(msg.sender.transfer(bounty));
+
 		emit StakeReverted(
 			message.sender,
 			stakeRequest.amount,
