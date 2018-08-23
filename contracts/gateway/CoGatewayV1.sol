@@ -142,7 +142,7 @@ contract CoGatewayV1 is Owned {
 
 	constructor(
 		EIP20Interface _token,
-		address _gateway,
+		//address _gateway,
 		CoreInterface _core,
 		uint256 _bounty,
 		bytes32 _codeHashUT,
@@ -152,14 +152,14 @@ contract CoGatewayV1 is Owned {
 	public
 	{
 		require(_token != address(0));
-		require(_gateway != address(0));
+		//require(_gateway != address(0));
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
 		require(_codeHashVT != bytes32(0));
 
 		isActivated = false;
 		token = _token;
-		gateway = _gateway;
+		//gateway = _gateway;
 		core = _core;
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
@@ -168,6 +168,7 @@ contract CoGatewayV1 is Owned {
 	}
 
 	function confirmGatewayLinkIntent(
+		address _gateway,
 		bytes32 _intentHash,
 		uint256 _gasPrice,
 		uint256 _fee,
@@ -182,11 +183,12 @@ contract CoGatewayV1 is Owned {
 	returns(bytes32 messageHash_)
 	{
 		require(_sender == owner);
+		require(_gateway != address(0));
 		require(gatewayLink.messageHash == bytes32(0));
 		require(nonces[_sender] == _nonce);
 
 		bytes32 intentHash = keccak256(
-			abi.encodePacked(gateway,
+			abi.encodePacked(_gateway,
 			address(this),
 			bounty,
 			codeHashUT,
@@ -224,6 +226,7 @@ contract CoGatewayV1 is Owned {
 
 		nonces[_sender]++;
 
+		gateway = _gateway;
 		emit GatewayLinkConfirmed(
 			messageHash_,
 			gateway,
