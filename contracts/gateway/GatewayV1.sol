@@ -29,7 +29,6 @@ import "./CoreInterface.sol";
 import "./HasherV1.sol";
 import "./SimpleStakeV1.sol";
 import "./SafeMath.sol";
-import "./Owned.sol";
 
 /**
  * @title Gateway Contract
@@ -39,7 +38,7 @@ import "./Owned.sol";
  *          The Gateway contract will serve the role of staking account rather than an external account.
  *
  */
-contract GatewayV1 is Owned{
+contract GatewayV1 {
 
 	using SafeMath for uint256;
 
@@ -159,10 +158,11 @@ contract GatewayV1 is Owned{
 	);
 
 
-	address coGateway;
-	bytes32 codeHashUT;
-	bytes32 codeHashVT;
-	bool isActivated;
+	address public coGateway;
+	bytes32 public codeHashUT;
+	bytes32 public codeHashVT;
+	bool public isActivated;
+	address public organisation;
 	GatewayLink gatewayLink;
 
 	//Escrow address to lock staked fund
@@ -194,6 +194,7 @@ contract GatewayV1 is Owned{
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
 	 *  @param _codeHashUT code hash of utility token contract.
+	 *  @param _organisation organisation address.
 	 */
 	constructor(
 		EIP20Interface _token,
@@ -201,9 +202,9 @@ contract GatewayV1 is Owned{
 		CoreInterface _core,
 		uint256 _bounty,
 		bytes32 _codeHashUT,
-		bytes32 _codeHashVT
+		bytes32 _codeHashVT,
+		address _organisation
 	)
-	Owned()
 	public
 	{
 		require(_token != address(0));
@@ -211,6 +212,7 @@ contract GatewayV1 is Owned{
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
 		require(_codeHashVT != bytes32(0));
+		require(_organisation != address(0));
 
 		isActivated = false;
 		token = _token;
@@ -219,6 +221,7 @@ contract GatewayV1 is Owned{
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
 		codeHashVT = _codeHashVT;
+		organisation = _organisation;
 
 		stakeVault = new SimpleStakeV1(token, address(this));
 	}
@@ -236,7 +239,7 @@ contract GatewayV1 is Owned{
 	external
 	returns (bytes32 messageHash_)
 	{
-		require(_sender == owner);
+		require(_sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
 		require(nonces[_sender] == _nonce);
 		bytes32 intentHash = keccak256(

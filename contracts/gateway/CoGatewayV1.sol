@@ -7,9 +7,8 @@ import "./EIP20Interface.sol";
 import "./UtilityTokenAbstract.sol";
 import "./EIP20Interface.sol";
 import "./HasherV1.sol";
-import "./Owned.sol";
 
-contract CoGatewayV1 is Owned {
+contract CoGatewayV1 {
 
 	using SafeMath for uint256;
 
@@ -123,11 +122,12 @@ contract CoGatewayV1 is Owned {
 		)
 	);
 
-	address token;
-	address gateway;
-	bytes32 codeHashUT;
-	bytes32 codeHashVT;
-	bool isActivated;
+	address public token;
+	address public gateway;
+	bytes32 public codeHashUT;
+	bytes32 public codeHashVT;
+	address public organisation;
+	bool public isActivated;
 	GatewayLink gatewayLink;
 	uint256 bounty;
 	WorkersInterface public workers;
@@ -143,13 +143,12 @@ contract CoGatewayV1 is Owned {
 
 	constructor(
 		EIP20Interface _token,
-		//address _gateway,
 		CoreInterface _core,
 		uint256 _bounty,
 		bytes32 _codeHashUT,
-		bytes32 _codeHashVT
+		bytes32 _codeHashVT,
+		address _organisation
 	)
-	Owned()
 	public
 	{
 		require(_token != address(0));
@@ -157,6 +156,7 @@ contract CoGatewayV1 is Owned {
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
 		require(_codeHashVT != bytes32(0));
+		require(_organisation != address(0));
 
 		isActivated = false;
 		token = _token;
@@ -164,6 +164,7 @@ contract CoGatewayV1 is Owned {
 		core = _core;
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
+		organisation = _organisation;
 
 		// TODO: should we check the code hash with declared codeHash constants.
 	}
@@ -182,7 +183,7 @@ contract CoGatewayV1 is Owned {
 	public
 	returns(bytes32 messageHash_)
 	{
-		require(_sender == owner);
+		require(_sender == organisation);
 		require(_gateway != address(0));
 		require(gatewayLink.messageHash == bytes32(0));
 		require(nonces[_sender] == _nonce);
