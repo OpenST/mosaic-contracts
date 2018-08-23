@@ -24,7 +24,6 @@ library MessageBus {
 		bytes32 intentHash;
 		uint256 nonce;
 		uint256 gasPrice;
-		bytes signature;
 		address sender;
 		bytes32 hashLock;
 	}
@@ -32,7 +31,8 @@ library MessageBus {
 	function declareMessage(
 		MessageBox storage _messageBox,
 		bytes32 _messageTypeHash,
-		Message storage _message
+		Message storage _message,
+		bytes _signature
 	)
 	external
 	returns (bytes32 messageHash_)
@@ -40,7 +40,7 @@ library MessageBus {
 
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
-		require(verifySignature(messageHash_, _message.signature, _message.sender));
+		require(verifySignature(messageHash_, _signature, _message.sender));
 		require(_messageBox.outbox[messageHash_] == MessageStatus.Undeclared);
 
 		_messageBox.outbox[messageHash_] = MessageStatus.Declared;
@@ -58,7 +58,7 @@ library MessageBus {
 	returns (bytes32 messageHash_)
 	{
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
-		require(verifySignature(messageHash_, _message.signature, _message.sender));
+
 		require(_messageBox.inbox[messageHash_] == MessageStatus.Undeclared);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
@@ -163,16 +163,11 @@ library MessageBus {
 	returns (bool /* TBD */)
 	{
 
-		bytes32 messageHash = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
-
+		bytes32 messageHash = revocationMessageDigest(_messageTypeHash, _message.intentHash, _message.nonce);
 		// outbox should be declared
 		require(_messageBox.outbox[messageHash] == MessageStatus.Declared);
-
-		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
-
 		// verify if revocation is signed by the same address that declared the message
-		require(verifySignature(hash, _signature, _message.sender));
-
+		require(verifySignature(messageHash, _signature, _message.sender));
 		// change the status of outbox
 		_messageBox.outbox[messageHash] = MessageStatus.DeclaredRevocation;
 
@@ -183,7 +178,6 @@ library MessageBus {
 		MessageBox storage _messageBox,
 		bytes32 _messageTypeHash,
 		Message storage _message,
-		bytes _signature,
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
 		bytes32 _storageRoot
@@ -195,11 +189,6 @@ library MessageBus {
 		//bytes32 messageHash = messageDigest(_messageTypeHash, _message);
 
 		require(_messageBox.inbox[messageHash] == MessageStatus.Declared);
-
-		bytes32 hash = keccak256(abi.encode(messageHash, "revert"));
-
-		require(verifySignature(hash, _signature, _message.sender));
-
 
 		bytes memory path = ProofLib.bytes32ToBytes(
 			ProofLib.storageVariablePath(_outboxOffset, messageHash));
@@ -253,6 +242,25 @@ library MessageBus {
 		//TODO: update code to return proper codeHash
 		return bytes32(0);
 	}
+
+	function revocationMessageDigest(
+		bytes32 _messageTypeHash,
+		bytes32 _intentHash,
+		uint256 _nonce
+	)
+	internal
+	pure
+	returns (bytes32 /* messageHash */)
+	{
+		return keccak256(
+			abi.encode(
+				_messageTypeHash,
+				_intentHash,
+				_nonce
+			)
+		);
+	}
+
 }
 
 

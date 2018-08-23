@@ -122,6 +122,7 @@ contract GatewayV1 is Owned{
 		address beneficiary;
 		uint256 fee;
 		MessageBus.Message message;
+		address facilitator;
 	}
 
 	struct UnStakes {
@@ -261,13 +262,12 @@ contract GatewayV1 is Owned{
 				intentHash : intentHash,
 				nonce : _nonce,
 				gasPrice : _gasPrice,
-				signature : _signature,
 				sender : _sender,
 				hashLock : _hashLock
 				})
 		});
 
-		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message);
+		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
 
 		nonces[_sender]++;
 
@@ -357,10 +357,11 @@ contract GatewayV1 is Owned{
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock, _signature)
+			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : msg.sender
 			});
 
-		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message);
+		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, this, _amount));
 		//transfer bounty to gateway
@@ -479,6 +480,7 @@ contract GatewayV1 is Owned{
 
 		require(token.transfer(message.sender, stakeRequest.amount));
 
+		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
 		// TODO: think about bounty.
 		emit StakeReverted(
 			message.sender,
@@ -491,7 +493,6 @@ contract GatewayV1 is Owned{
 
 	function confirmRevertRedemptionIntent(
 		bytes32 _messageHash,
-		bytes _signature,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
@@ -501,7 +502,6 @@ contract GatewayV1 is Owned{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
-		require(_signature.length > 0);
 
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
@@ -515,7 +515,6 @@ contract GatewayV1 is Owned{
 				messageBox,
 				REDEEM_REQUEST_TYPEHASH,
 				message,
-				_signature,
 				_rlpEncodedParentNodes,
 				outboxOffset,
 				storageRoot
@@ -575,8 +574,7 @@ contract GatewayV1 is Owned{
 			_redeemerNonce,
 			_gasPrice,
 			intentHash,
-			_hashLock,
-			_signature
+			_hashLock
 		);
 
 		executeConfirmRedemptionIntent(unStakes[messageHash_].message, _blockHeight, _rlpParentNodes);
@@ -662,8 +660,7 @@ contract GatewayV1 is Owned{
 		uint256 _redeemerNonce,
 		uint256 _gasPrice,
 		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
+		bytes32 _hashLock
 	)
 	private
 	pure
@@ -673,7 +670,7 @@ contract GatewayV1 is Owned{
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock, _signature)//message// MessageBus.Message()//getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock, _signature)
+			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}
 
@@ -683,8 +680,7 @@ contract GatewayV1 is Owned{
 		uint256 _redeemerNonce,
 		uint256 _gasPrice,
 		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
+		bytes32 _hashLock
 	)
 	private
 	pure
@@ -694,7 +690,6 @@ contract GatewayV1 is Owned{
 			intentHash : _intentHash,
 			nonce : _redeemerNonce,
 			gasPrice : _gasPrice,
-			signature : _signature,
 			sender : _redeemer,
 			hashLock : _hashLock
 			});

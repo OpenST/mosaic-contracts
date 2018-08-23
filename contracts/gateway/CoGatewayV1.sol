@@ -97,6 +97,7 @@ contract CoGatewayV1 is Owned {
 		address beneficiary;
 		uint256 fee;
 		MessageBus.Message message;
+		address facilitator;
 	}
 
 	struct GatewayLink {
@@ -210,7 +211,6 @@ contract CoGatewayV1 is Owned {
 				intentHash : intentHash,
 				nonce : _nonce,
 				gasPrice : _gasPrice,
-				signature : _signature,
 				sender : _sender,
 				hashLock : _hashLock
 				})
@@ -303,8 +303,7 @@ contract CoGatewayV1 is Owned {
 			_stakerNonce,
 			_gasPrice,
 			intentHash,
-			_hashLock,
-			_signature
+			_hashLock
 		);
 
 		executeConfirmStakingIntent(mints[messageHash_].message, _blockHeight, _rlpParentNodes);
@@ -388,7 +387,6 @@ contract CoGatewayV1 is Owned {
 				messageBox,
 				STAKE_REQUEST_TYPEHASH,
 				message,
-				_signature,
 				_rlpEncodedParentNodes,
 				outboxOffset,
 				storageRoot
@@ -437,10 +435,11 @@ contract CoGatewayV1 is Owned {
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock, _signature)
+			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : msg.sender
 			});
 
-		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[messageHash_].message);
+		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[messageHash_].message, _signature);
 		//transfer redeem amount to Co-Gateway
 		require(EIP20Interface(utilityToken).transferFrom(_redeemer, this, _amount));
 		//transfer bounty to Co-Gateway
@@ -562,9 +561,7 @@ contract CoGatewayV1 is Owned {
 		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
 
 		require(EIP20Interface(utilityToken).transfer(message.sender, redeemRequest.amount));
-
-		// TODO: think about bounty.
-
+		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
 
 		emit RedeemReverted(
 			message.sender,
@@ -600,8 +597,7 @@ contract CoGatewayV1 is Owned {
 		uint256 _stakerNonce,
 		uint256 _gasPrice,
 		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
+		bytes32 _hashLock
 	)
 	private
 	pure
@@ -611,7 +607,6 @@ contract CoGatewayV1 is Owned {
 			intentHash : _intentHash,
 			nonce : _stakerNonce,
 			gasPrice : _gasPrice,
-			signature : _signature,
 			sender : _staker,
 			hashLock : _hashLock
 			});
@@ -625,8 +620,7 @@ contract CoGatewayV1 is Owned {
 		uint256 _stakerNonce,
 		uint256 _gasPrice,
 		bytes32 _intentHash,
-		bytes32 _hashLock,
-		bytes _signature
+		bytes32 _hashLock
 	)
 	private
 	pure
@@ -636,7 +630,7 @@ contract CoGatewayV1 is Owned {
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock, _signature)
+			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}
 
