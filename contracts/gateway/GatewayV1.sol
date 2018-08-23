@@ -27,8 +27,9 @@ import "./SimpleStake.sol";
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./HasherV1.sol";
-import "./SimpleStake.sol";
+import "./SimpleStakeV1.sol";
 import "./SafeMath.sol";
+import "./Owned.sol";
 
 /**
  * @title Gateway Contract
@@ -38,7 +39,7 @@ import "./SafeMath.sol";
  *          The Gateway contract will serve the role of staking account rather than an external account.
  *
  */
-contract GatewayV1 {
+contract GatewayV1 is Owned{
 
 	using SafeMath for uint256;
 
@@ -101,6 +102,13 @@ contract GatewayV1 {
 		uint256 blockHeight
 	);
 
+	event GatewayLinkInitiated(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
+
 	/* Struct */
 	/**
 	 *  It denotes the stake request.
@@ -123,6 +131,12 @@ contract GatewayV1 {
 		uint256 fee;
 		MessageBus.Message message;
 	}
+
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
 	/* Storage */
 
 	// It is a hash used to represent operation type.
@@ -138,14 +152,27 @@ contract GatewayV1 {
 		)
 	);
 
-	//uuid of branded token.
-	bytes32 public uuid;
+	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
+		abi.encode(
+			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
+		)
+	);
+
+
+	address coGateway;
+	bytes32 codeHashUT;
+	bytes32 codeHashVT;
+	bool isActivated;
+	GatewayLink gatewayLink;
+
 	//Escrow address to lock staked fund
-	SimpleStake stakeVault;
+	SimpleStakeV1 stakeVault;
+
 	//amount in BT which is staked by facilitator
 	uint256 public bounty;
+
 	//address of branded token.
-	EIP20Interface public brandedToken;
+	EIP20Interface public token;
 	//address of core contract.
 	CoreInterface core;
 	//It stores the nonces for each staker.
@@ -162,31 +189,122 @@ contract GatewayV1 {
 	/**
 	 *  @notice Contract constructor.
 	 *
-	 *  @param  _uuid UUID of utility token.
-	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _brandedToken Branded token contract address.
+	 *  @param _token Branded token contract address.
+	 *  @param _coGateway CoGateway contract address.
 	 *  @param _core Core contract address.
+	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+	 *  @param _codeHashUT code hash of utility token contract.
 	 */
 	constructor(
-		bytes32 _uuid,
+		EIP20Interface _token,
+		address _coGateway,
+		CoreInterface _core,
 		uint256 _bounty,
-		EIP20Interface _brandedToken,
-		CoreInterface _core
+		bytes32 _codeHashUT,
+		bytes32 _codeHashVT
 	)
+	Owned()
 	public
 	{
-		//todo generate uuid from branded Token ?
-		require(_uuid != bytes32(0));
-		require(_brandedToken != address(0));
+		require(_token != address(0));
+		require(_coGateway != address(0));
 		require(_core != address(0));
+		require(_codeHashUT != bytes32(0));
+		require(_codeHashVT != bytes32(0));
 
-		uuid = _uuid;
-		bounty = _bounty;
-		brandedToken = _brandedToken;
+		isActivated = false;
+		token = _token;
+		coGateway = _coGateway;
 		core = _core;
-		stakeVault = new SimpleStake(brandedToken, address(this), uuid);
+		bounty = _bounty;
+		codeHashUT = _codeHashUT;
+		codeHashVT = _codeHashVT;
+
+		stakeVault = new SimpleStakeV1(token, address(this));
 	}
+
 	/* Public functions */
+
+	function initiateGatewayLink(
+		bytes32 _intentHash,
+		uint256 _gasPrice,
+		uint256 _fee,
+		uint256 _nonce,
+		address _sender,
+		bytes32 _hashLock,
+		bytes _signature)
+	external
+	returns (bytes32 messageHash_)
+	{
+		require(_sender == owner);
+		require(gatewayLink.messageHash == bytes32(0));
+		require(nonces[_sender] == _nonce);
+		bytes32 intentHash = keccak256(
+			abi.encodePacked(address(this),
+				coGateway,
+				bounty,
+				codeHashUT,
+				codeHashVT,
+			    MessageBus.getCodeHash(),
+				_gasPrice,
+				_fee,
+				_nonce
+			)
+		);
+		require(intentHash == _intentHash);
+
+		// check nonces
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		gatewayLink = GatewayLink ({
+		 	messageHash: messageHash_,
+			message: MessageBus.Message({
+				intentHash : intentHash,
+				nonce : _nonce,
+				gasPrice : _gasPrice,
+				signature : _signature,
+				sender : _sender,
+				hashLock : _hashLock
+				})
+		});
+
+		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message);
+
+		nonces[_sender]++;
+
+		emit GatewayLinkInitiated(
+			messageHash_,
+			address(this),
+			coGateway,
+			token
+		);
+
+	}
+
+	function processGatewayLink(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		require(gatewayLink.messageHash == _messageHash);
+
+		require(nonces[gatewayLink.message.sender] == gatewayLink.message.nonce + 1);
+		nonces[gatewayLink.message.sender]++;
+
+		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
+
+		isActivated = true;
+
+		//return bounty
+		require(token.transfer(msg.sender, bounty));
+
+		return true;
+	}
 
 	/**
 	 * @notice external function stake
@@ -218,6 +336,7 @@ contract GatewayV1 {
 	external
 	returns (bytes32 messageHash_)
 	{
+		require(isActivated);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
@@ -245,9 +364,9 @@ contract GatewayV1 {
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
-		require(brandedToken.transferFrom(_staker, this, _amount));
+		require(token.transferFrom(_staker, this, _amount));
 		//transfer bounty to gateway
-		require(brandedToken.transferFrom(msg.sender, this, bounty));
+		require(token.transferFrom(msg.sender, this, bounty));
 
 		emit StakeRequestedEvent(
 			messageHash_,
@@ -266,6 +385,7 @@ contract GatewayV1 {
 	external
 	returns (uint256 stakeRequestAmount)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
@@ -278,10 +398,10 @@ contract GatewayV1 {
 
 		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[_messageHash].message, _unlockSecret);
 
-		require(EIP20Interface(brandedToken).transfer(stakeVault, stakeRequestAmount));
+		require(token.transfer(stakeVault, stakeRequestAmount));
 
 		//return bounty
-		require(EIP20Interface(brandedToken).transfer(msg.sender, bounty));
+		require(token.transfer(msg.sender, bounty));
 
 		emit StakeProcessed(
 			_messageHash,
@@ -303,6 +423,7 @@ contract GatewayV1 {
 		uint256 gasPrice_
 	)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 
@@ -334,6 +455,7 @@ contract GatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -357,7 +479,7 @@ contract GatewayV1 {
 
 		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
 
-		require(brandedToken.transfer(message.sender, stakeRequest.amount));
+		require(token.transfer(message.sender, stakeRequest.amount));
 
 		require(brandedToken.transfer(stakeRequests[_messageHash].facilitator, bounty));
 		// TODO: think about bounty.
@@ -378,6 +500,7 @@ contract GatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -423,7 +546,7 @@ contract GatewayV1 {
 	public
 	returns (bytes32 messageHash_)
 	{
-
+		require(isActivated);
 		require(_redeemer != address(0));
 		require(_redeemerNonce == nonces[_redeemer]);
 		require(_beneficiary != address(0));
@@ -479,6 +602,7 @@ contract GatewayV1 {
 		uint256 rewardAmount_
 	)
 	{
+		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
@@ -496,7 +620,7 @@ contract GatewayV1 {
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
 		//reward beneficiary with the fee
-		require(brandedToken.transfer(msg.sender, rewardAmount_));
+		require(token.transfer(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
 
