@@ -246,6 +246,13 @@ library MessageBus {
 		return true;
 	}
 
+	function getCodeHash()
+	external
+	pure
+	returns (bytes32) {
+		//TODO: update code to return proper codeHash
+		return bytes32(0);
+	}
 }
 
 
