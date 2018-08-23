@@ -400,53 +400,54 @@ contract CoGatewayV1 {
 	function redeem(
 		uint256 _amount,
 		address _beneficiary,
-		address _redeemer,
+		address _facilitator,
 		uint256 _gasPrice,
 		uint256 _fee,
 		uint256 _nonce,
-		bytes32 _hashLock,
-		bytes _signature
+		bytes32 _hashLock
 	)
 	public
+	payable
 	returns (bytes32 messageHash_)
 	{
 		require(isActivated);
+		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
-		require(_redeemer != address(0));
+		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
-		require(_signature.length != 0);
 		require(nonces[msg.sender] == _nonce);
-		require(cleanProcessedRedeemRequest(_redeemer));
+		require(cleanProcessedRedeemRequest(msg.sender));
 
 		nonces[msg.sender]++;
 
-		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _redeemer, _gasPrice, _fee);
+		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, msg.sender, _gasPrice, _fee);
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		activeRequests[_redeemer] = messageHash_;
+		activeRequests[msg.sender] = messageHash_;
 
 		redeemRequests[messageHash_] = RedeemRequest({
 			amount : _amount,
 			beneficiary : _beneficiary,
 			fee : _fee,
-			message : getMessage(_redeemer, _nonce, _gasPrice, intentHash, _hashLock),
-			facilitator : msg.sender
+			message : getMessage(msg.sender, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : _facilitator
 			});
 
-		MessageBus.declareMessage(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[messageHash_].message, _signature);
+		//New implementation changing the state here
+		require(messageBox.outbox[messageHash_] == MessageBus.MessageStatus.Undeclared);
+		messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
+
 		//transfer redeem amount to Co-Gateway
-		require(EIP20Interface(utilityToken).transferFrom(_redeemer, this, _amount));
-		//transfer bounty to Co-Gateway
-		require(EIP20Interface(utilityToken).transferFrom(msg.sender, this, bounty));
+		require(EIP20Interface(utilityToken).transferFrom(msg.sender, this, _amount));
 
 		emit RedeemRequested(
 			messageHash_,
 			_amount,
 			_fee,
 			_beneficiary,
-			_redeemer,
+			msg.sender,
 			intentHash
 		);
 	}
@@ -485,8 +486,7 @@ contract CoGatewayV1 {
 	}
 
 	function revertRedemption(
-		bytes32 _messageHash,
-		bytes _signature
+		bytes32 _messageHash
 	)
 	external
 	returns (
@@ -504,14 +504,11 @@ contract CoGatewayV1 {
 
 		require(nonces[message.sender] == message.nonce + 1);
 
-		require(
-			MessageBus.declareRevocationMessage(
-				messageBox,
-				REDEEM_REQUEST_TYPEHASH,
-				message,
-				_signature
-			)
-		);
+		require(message.sender == msg.sender);
+
+		//New implementation changing the state here as we dont have signature verification
+		require(messageBox.outbox[_messageHash] == MessageBus.MessageStatus.Undeclared);
+		messageBox.outbox[_messageHash] = MessageBus.MessageStatus.Declared;
 
 		redeemer_ = message.sender;
 		intentHash_ = message.intentHash;
