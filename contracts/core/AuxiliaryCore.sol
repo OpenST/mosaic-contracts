@@ -105,17 +105,11 @@ contract AuxiliaryCore is AuxiliaryCoreInterface, AuxiliaryCoreConfig {
         bytes32 _stateRoot
     )
         external
-        payable
         returns (bool success_)
     {
         require(
             _stateRoot != bytes32(0),
             "The state root should not be `0`."
-        );
-
-        require(
-            msg.value == COST_REPORT_STATE_ROOT,
-            "You must send exactly the required amount of value to report a block."
         );
 
         OriginBlock memory reportedBlock = OriginBlock(

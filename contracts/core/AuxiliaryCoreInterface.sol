@@ -33,7 +33,6 @@ interface AuxiliaryCoreInterface {
         bytes32 _stateRootHash
     )
         external
-        payable
         returns (bool);
 
     /**
