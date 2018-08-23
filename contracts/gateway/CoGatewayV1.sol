@@ -362,7 +362,7 @@ contract CoGatewayV1 is Owned {
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
-		uint messageStatus
+		uint256 _messageStatus
 	)
 	external
 	returns (
@@ -400,7 +400,7 @@ contract CoGatewayV1 is Owned {
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
-			MessageBus.MessageStatus(messageStatus));
+			MessageBus.MessageStatus(_messageStatus));
 
 		emit MintProcessed(
 			_messageHash,
@@ -542,7 +542,7 @@ contract CoGatewayV1 is Owned {
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
-		uint messageStatus
+		uint256 _messageStatus
 	)
 	external
 	returns (uint256 redeemAmount)
@@ -569,7 +569,7 @@ contract CoGatewayV1 is Owned {
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
-			MessageBus.MessageStatus(messageStatus)
+			MessageBus.MessageStatus(_messageStatus)
 		);
 
 		require(utilityToken.burn(this, redeemAmount));

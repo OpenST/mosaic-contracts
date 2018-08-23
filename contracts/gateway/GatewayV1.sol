@@ -414,7 +414,7 @@ contract GatewayV1 is Owned{
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
-		uint messageStatus
+		uint256 _messageStatus
 	)
 	external
 	returns (uint256 stakeRequestAmount_)
@@ -439,7 +439,7 @@ contract GatewayV1 is Owned{
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
-			MessageBus.MessageStatus(messageStatus)
+			MessageBus.MessageStatus(_messageStatus)
 		);
 
 		require(token.transfer(stakeVault, stakeRequestAmount_));
@@ -681,7 +681,7 @@ contract GatewayV1 is Owned{
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
-		uint messageStatus
+		uint256 _messageStatus
 	)
 	external
 	returns (
@@ -720,7 +720,7 @@ contract GatewayV1 is Owned{
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
-			MessageBus.MessageStatus(messageStatus)
+			MessageBus.MessageStatus(_messageStatus)
 		);
 
 		emit UnStakeProcessed(

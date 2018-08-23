@@ -99,18 +99,18 @@ library MessageBus {
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
 		bytes32 _storageRoot,
-		MessageStatus messageStatus
+		MessageStatus _messageStatus
 	)
 	external
 	returns (bytes32 messageHash_)
 	{
-		require(messageStatus == MessageStatus.Declared || messageStatus == MessageStatus.Progressed);
+		require(_messageStatus == MessageStatus.Declared || _messageStatus == MessageStatus.Progressed);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
 			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
 
 		require(MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(messageStatus)),
+				keccak256(abi.encodePacked(_messageStatus)),
 				path,
 				_rlpEncodedParentNodes,
 				_storageRoot)
@@ -149,18 +149,18 @@ library MessageBus {
 		bytes _rlpEncodedParentNodes,
 		uint8 _outboxOffset,
 		bytes32 _storageRoot,
-		MessageStatus messageStatus
+		MessageStatus _messageStatus
 	)
 	external
 	returns (bytes32 messageHash_)
 	{
-		require(messageStatus == MessageStatus.Declared || messageStatus == MessageStatus.Progressed);
+		require(_messageStatus == MessageStatus.Declared || _messageStatus == MessageStatus.Progressed);
 
 		bytes memory path = ProofLib.bytes32ToBytes(
 			ProofLib.storageVariablePath(_outboxOffset, messageHash_));
 
 		require(MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(messageStatus)),
+				keccak256(abi.encodePacked(_messageStatus)),
 				path,
 				_rlpEncodedParentNodes,
 				_storageRoot)
