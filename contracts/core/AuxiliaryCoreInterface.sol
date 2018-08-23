@@ -34,4 +34,22 @@ interface AuxiliaryCoreInterface {
     )
         external
         returns (bool);
+
+    /**
+     * @notice Report a checkpoint of auxiliary to this core contract. A
+     *         checkpoint must be at a height that is a multiple of the epoch
+     *         length. You can report every checkpoint only once.
+     *
+     * @param _height The block height of the checkpoint.
+     * @param _blockHash The block hash of the block at the checkpoint.
+     *
+     * @return `true` if the report succeeded. Reverts if it fails.
+     */
+    function reportAuxiliaryCheckpoint(
+        uint256 _height,
+        bytes32 _blockHash
+    )
+        external
+        payable
+        returns (bool success_);
 }

@@ -152,4 +152,143 @@ contract('AuxiliaryCore', async (accounts) => {
             );
         });
     });
+
+    describe('reporting an auxiliary checkpoint', async () => {
+        let auxiliaryCore;
+
+        beforeEach(async () => {
+            auxiliaryCore = await AuxiliaryCore.new(1);
+        });
+
+        it('should accept a correct checkpoint report', async () => {
+            let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let blockHeight = 300;
+
+            await auxiliaryCore.reportAuxiliaryCheckpoint(
+                blockHeight,
+                expectedBlockHash
+            );
+
+            let reportedAuxiliaryCheckpoint = await auxiliaryCore.reportedAuxiliaryCheckpoints.call(expectedBlockHash);
+
+            // Access properties by index
+            assert.strictEqual(
+                reportedAuxiliaryCheckpoint[0].toNumber(),
+                blockHeight,
+                'The contract did not store the height that was reported.'
+            );
+            assert.strictEqual(
+                reportedAuxiliaryCheckpoint[1],
+                expectedBlockHash,
+                'The contract did not store the block hash that was reported.'
+            );
+        });
+
+        it('should emit an event for a correct checkpoint report', async () => {
+            let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let blockHeight = 1200;
+
+            let tx = await auxiliaryCore.reportAuxiliaryCheckpoint(
+                blockHeight,
+                expectedBlockHash
+            );
+
+            let events = eventsDecoder.perform(tx.receipt, auxiliaryCore.address, auxiliaryCore.abi);
+            assert.strictEqual(
+                Number(events.AuxiliaryCheckpointReported.height),
+                blockHeight,
+                'The contract did not emit an event with the given block height.'
+            );
+            assert.strictEqual(
+                events.AuxiliaryCheckpointReported.blockHash,
+                expectedBlockHash,
+                'The contract did not emit an event with the given block hash.'
+            );
+
+        });
+
+        it('should record all checkpoints at a single height', async () => {
+            let expectedBlockHashOne = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let expectedBlockHashTwo = '0xdedde29f6dd592919e6d855b65aa8f1b55172a83f2f4810a13758d9f58c13f54';
+            let blockHeight = 700;
+
+            // Report two different block hashes
+            await auxiliaryCore.reportAuxiliaryCheckpoint(
+                blockHeight,
+                expectedBlockHashOne
+            );
+            await auxiliaryCore.reportAuxiliaryCheckpoint(
+                blockHeight,
+                expectedBlockHashTwo
+            );
+
+            let reportedCheckpoint = await auxiliaryCore.reportedAuxiliaryCheckpoints.call(expectedBlockHashOne);
+            // Access properties by index
+            assert.strictEqual(
+                reportedCheckpoint[0].toNumber(),
+                blockHeight,
+                'The contract did not store the height that was reported.'
+            );
+            assert.strictEqual(
+                reportedCheckpoint[1],
+                expectedBlockHashOne,
+                'The contract did not store the block hash that was reported.'
+            );
+
+            reportedCheckpoint = await auxiliaryCore.reportedAuxiliaryCheckpoints.call(expectedBlockHashTwo);
+            // Access properties by index
+            assert.strictEqual(
+                reportedCheckpoint[0].toNumber(),
+                blockHeight,
+                'The contract did not store the height that was reported.'
+            );
+            assert.strictEqual(
+                reportedCheckpoint[1],
+                expectedBlockHashTwo,
+                'The contract did not store the block hash that was reported.'
+            );
+        });
+
+        it('should reject a report with an invalid block hash', async () => {
+            let invalidBlockHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            let blockHeight = 700;
+
+            await utils.expectRevert(
+                auxiliaryCore.reportAuxiliaryCheckpoint(
+                    blockHeight,
+                    invalidBlockHash
+                )
+            );
+        });
+
+        it('should reject a duplicate report', async () => {
+            let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let blockHeight = 700;
+
+            await auxiliaryCore.reportAuxiliaryCheckpoint(
+                blockHeight,
+                expectedBlockHash
+            );
+
+            // Reporting the same block hash again should lead to an error.
+            await utils.expectRevert(
+                auxiliaryCore.reportAuxiliaryCheckpoint(
+                    blockHeight,
+                    expectedBlockHash
+                )
+            );
+        });
+
+        it('should reject a report where block height is not a multiple of the epoch length', async () => {
+            let blockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
+            let blockHeight = 750;
+
+            await utils.expectRevert(
+                auxiliaryCore.reportAuxiliaryCheckpoint(
+                    blockHeight,
+                    blockHash
+                )
+            );
+        });
+    });
 });

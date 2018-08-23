@@ -16,4 +16,7 @@ pragma solidity ^0.4.23;
 
 /** @title Configuration constants for the AuxiliaryCore contract. */
 contract AuxiliaryCoreConfig {
+
+    /** The length of a Casper FFG epoch on auxiliary (in blocks). */
+    uint256 public constant AUXILIARY_EPOCH_LENGTH = 100;
 }
