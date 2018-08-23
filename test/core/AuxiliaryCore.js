@@ -39,11 +39,7 @@ contract('AuxiliaryCore', async (accounts) => {
 
             await auxiliaryCore.reportOriginBlock(
                 chainHeight,
-                expectedStateRoot,
-                {
-                    from: accounts[0],
-                    value: new BigNumber('1000000000000000000')
-                }
+                expectedStateRoot
             );
 
             let reportedOriginBlock = await auxiliaryCore.reportedOriginBlocks.call(expectedStateRoot);
@@ -67,11 +63,7 @@ contract('AuxiliaryCore', async (accounts) => {
 
             let tx = await auxiliaryCore.reportOriginBlock(
                 chainHeight,
-                expectedStateRoot,
-                {
-                    from: accounts[0],
-                    value: new BigNumber('1000000000000000000')
-                }
+                expectedStateRoot
             );
 
             let events = eventsDecoder.perform(tx.receipt, auxiliaryCore.address, auxiliaryCore.abi);
@@ -96,19 +88,11 @@ contract('AuxiliaryCore', async (accounts) => {
             // Report two different state roots
             await auxiliaryCore.reportOriginBlock(
                 chainHeight,
-                expectedStateRootOne,
-                {
-                    from: accounts[0],
-                    value: new BigNumber('1000000000000000000')
-                }
+                expectedStateRootOne
             );
             await auxiliaryCore.reportOriginBlock(
                 chainHeight,
-                expectedStateRootTwo,
-                {
-                    from: accounts[0],
-                    value: new BigNumber('1000000000000000000')
-                }
+                expectedStateRootTwo
             );
 
             let reportedOriginBlock = await auxiliaryCore.reportedOriginBlocks.call(expectedStateRootOne);
@@ -145,11 +129,7 @@ contract('AuxiliaryCore', async (accounts) => {
             await utils.expectRevert(
                 auxiliaryCore.reportOriginBlock(
                     chainHeight,
-                    invalidStateRoot,
-                    {
-                        from: accounts[0],
-                        value: new BigNumber('1000000000000000000')
-                    }
+                    invalidStateRoot
                 )
             );
         });
@@ -160,54 +140,14 @@ contract('AuxiliaryCore', async (accounts) => {
 
             await auxiliaryCore.reportOriginBlock(
                 chainHeight,
-                expectedStateRoot,
-                {
-                    from: accounts[0],
-                    value: new BigNumber('1000000000000000000')
-                }
+                expectedStateRoot
             );
 
             // Reporting the same state root again should lead to an error.
             await utils.expectRevert(
                 auxiliaryCore.reportOriginBlock(
                     chainHeight,
-                    expectedStateRoot,
-                    {
-                        from: accounts[0],
-                        value: new BigNumber('1000000000000000000')
-                    }
-                )
-            );
-        });
-
-        it('should reject a report where the sent value is too low', async () => {
-            let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
-            let chainHeight = 3;
-
-            await utils.expectRevert(
-                auxiliaryCore.reportOriginBlock(
-                    chainHeight,
-                    expectedStateRoot,
-                    {
-                        from: accounts[0],
-                        value: new BigNumber('999999999999999999')
-                    }
-                )
-            );
-        });
-
-        it('should reject a report where the sent value is too high', async () => {
-            let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
-            let chainHeight = 3;
-
-            await utils.expectRevert(
-                auxiliaryCore.reportOriginBlock(
-                    chainHeight,
-                    expectedStateRoot,
-                    {
-                        from: accounts[0],
-                        value: new BigNumber('1000000000000000001')
-                    }
+                    expectedStateRoot
                 )
             );
         });
