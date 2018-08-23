@@ -262,13 +262,12 @@ contract GatewayV1 is Owned{
 				intentHash : intentHash,
 				nonce : _nonce,
 				gasPrice : _gasPrice,
-				signature : _signature,
 				sender : _sender,
 				hashLock : _hashLock
 				})
 		});
 
-		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message);
+		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
 
 		nonces[_sender]++;
 
@@ -481,7 +480,7 @@ contract GatewayV1 is Owned{
 
 		require(token.transfer(message.sender, stakeRequest.amount));
 
-		require(brandedToken.transfer(stakeRequests[_messageHash].facilitator, bounty));
+		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
 		// TODO: think about bounty.
 		emit StakeReverted(
 			message.sender,

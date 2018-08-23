@@ -242,7 +242,7 @@ library MessageBus {
 		//TODO: update code to return proper codeHash
 		return bytes32(0);
 	}
-	
+
 	function revocationMessageDigest(
 		bytes32 _messageTypeHash,
 		bytes32 _intentHash,

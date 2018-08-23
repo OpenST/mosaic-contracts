@@ -209,7 +209,6 @@ contract CoGatewayV1 is Owned {
 				intentHash : intentHash,
 				nonce : _nonce,
 				gasPrice : _gasPrice,
-				signature : _signature,
 				sender : _sender,
 				hashLock : _hashLock
 				})
