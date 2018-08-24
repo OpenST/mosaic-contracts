@@ -69,10 +69,10 @@ contract OpenSTValue is OpsManaged, Hasher {
      */
     uint8 public constant TOKEN_DECIMALS = 18;
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    // ~2 weeks, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 private constant BLOCKS_TO_WAIT_SHORT = 240;
+    // ~3 weeks, assuming ~15s per block
+    uint256 private constant BLOCKS_TO_WAIT_LONG = 120960;
+    // ~3 days, assuming ~15s per block
+    uint256 private constant BLOCKS_TO_WAIT_SHORT = 17280;
 
     /*
      *  Structures

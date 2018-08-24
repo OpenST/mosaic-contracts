@@ -94,10 +94,10 @@ contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {
     /*
      *  Constants
      */
-    // ~2 weeks, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_LONG = 80667;
-    // ~1hour, assuming ~15s per block
-    uint256 public constant BLOCKS_TO_WAIT_SHORT = 240;
+    // ~3 weeks, assuming ~2s per block
+    uint256 public constant BLOCKS_TO_WAIT_LONG = 907200;
+    // ~3 days, assuming ~2s per block
+    uint256 public constant BLOCKS_TO_WAIT_SHORT = 129600;
 
     /*
      *  Storage
