@@ -1,14 +1,13 @@
 pragma solidity ^0.4.23;
 
 import "./MessageBus.sol";
-import "./WorkersInterface.sol";
 import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./UtilityTokenAbstract.sol";
-import "./EIP20Interface.sol";
 import "./HasherV1.sol";
+import "./CoGatewayV1Interface.sol";
 
-contract CoGatewayV1 {
+contract CoGatewayV1 is CoGatewayV1Interface {
 
 	using SafeMath for uint256;
 
@@ -115,19 +114,18 @@ contract CoGatewayV1 {
 		)
 	);
 
-	address public token;
-	address public gateway;
-	bytes32 public codeHashUT;
-	bytes32 public codeHashVT;
-	address public organisation;
-	bool public isActivated;
+	address private token;
+	address private gateway;
+	bytes32 private codeHashUT;
+	bytes32 private codeHashVT;
+	address private organisation;
+	bool private isActivated;
 	GatewayLink gatewayLink;
-	uint256 bounty;
-	WorkersInterface public workers;
+	uint256 private bounty;
 	MessageBus.MessageBox messageBox;
 	uint8 outboxOffset = 4;
-	CoreInterface core;
-	UtilityTokenInterface utilityToken;
+	CoreInterface private core;
+	UtilityTokenInterface  private utilityToken;
 
 	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
