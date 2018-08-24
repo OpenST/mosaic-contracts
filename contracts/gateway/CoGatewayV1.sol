@@ -141,6 +141,11 @@ contract CoGatewayV1 {
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
 
+	modifier onlyOrganisation() {
+		require(msg.sender == organisation);
+		_;
+	}
+
 	constructor(
 		EIP20Interface _token,
 		CoreInterface _core,
