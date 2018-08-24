@@ -137,7 +137,6 @@ contract CoGatewayV1 is Owned {
 	UtilityTokenInterface utilityToken;
 
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
-	mapping(address /*address*/ => uint256) nonces;
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
 
@@ -184,7 +183,6 @@ contract CoGatewayV1 is Owned {
 	{
 		require(_sender == owner);
 		require(gatewayLink.messageHash == bytes32(0));
-		require(nonces[_sender] == _nonce);
 
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(gateway,
@@ -222,8 +220,6 @@ contract CoGatewayV1 is Owned {
 			outboxOffset,
 			core.getStorageRoot(_blockHeight));
 
-		nonces[_sender]++;
-
 		emit GatewayLinkConfirmed(
 			messageHash_,
 			gateway,
@@ -244,9 +240,6 @@ contract CoGatewayV1 is Owned {
 		require(_unlockSecret != bytes32(0));
 
 		require(gatewayLink.messageHash == _messageHash);
-
-		require(nonces[gatewayLink.message.sender] == gatewayLink.message.nonce + 1);
-		nonces[gatewayLink.message.sender]++;
 
 		MessageBus.progressInbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
 
@@ -274,7 +267,6 @@ contract CoGatewayV1 is Owned {
 	{
 		require(isActivated);
 		require(_staker != address(0));
-		require(_stakerNonce == nonces[_staker]);
 		require(_beneficiary != address(0));
 		require(_amount != 0);
 		require(_fee != 0);
@@ -335,10 +327,6 @@ contract CoGatewayV1 is Owned {
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
 
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
-
 		mintRequestedAmount_ = mint.amount;
 		rewardAmount_ = mint.fee.mul(message.gasPrice);
 
@@ -349,6 +337,54 @@ contract CoGatewayV1 is Owned {
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
 		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
+
+		emit MintProcessed(
+			_messageHash,
+			mint.amount,
+			mint.beneficiary,
+			rewardAmount_
+		);
+	}
+
+	function processMintingWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint256 _messageStatus
+	)
+	external
+	returns (
+		uint256 mintRequestedAmount_,
+		uint256 mintedAmount_,
+		uint256 rewardAmount_
+	)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		Mint storage mint = mints[_messageHash];
+		MessageBus.Message storage message = mint.message;
+
+		mintRequestedAmount_ = mint.amount;
+		rewardAmount_ = mint.fee.mul(message.gasPrice);
+
+		mintedAmount_ = mint.amount.sub(rewardAmount_);
+		//Mint token after subtracting fee
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
+		//reward beneficiary with the fee
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.progressInboxWithProof(messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			mint.message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(_messageStatus));
 
 		emit MintProcessed(
 			_messageHash,
@@ -375,8 +411,6 @@ contract CoGatewayV1 is Owned {
 		MessageBus.Message storage message = mint.message;
 		require(message.intentHash !=  bytes32(0));
 
-		require(nonces[message.sender] == message.nonce + 1);
-
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
 
@@ -392,7 +426,7 @@ contract CoGatewayV1 is Owned {
 		emit RevertStakingIntentConfirmed(
 			_messageHash,
 			message.sender,
-			nonces[message.sender],
+			message.nonce,
 			_blockHeight
 		);
 		return true;
@@ -417,10 +451,7 @@ contract CoGatewayV1 is Owned {
 		require(_redeemer != address(0));
 		require(_hashLock != bytes32(0));
 		require(_signature.length != 0);
-		require(nonces[msg.sender] == _nonce);
 		require(cleanProcessedRedeemRequest(_redeemer));
-
-		nonces[msg.sender]++;
 
 		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _redeemer, _gasPrice, _fee);
 
@@ -464,10 +495,6 @@ contract CoGatewayV1 is Owned {
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 
-		require(nonces[message.sender] == message.nonce + 1);
-
-		nonces[message.sender]++;
-
 		redeemAmount = redeemRequests[_messageHash].amount;
 
 		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, redeemRequests[_messageHash].message, _unlockSecret);
@@ -476,6 +503,50 @@ contract CoGatewayV1 is Owned {
 
 		//TODO: think around bounty
 		require(EIP20Interface(utilityToken).transfer(msg.sender, bounty));
+
+		emit RedeemProcessed(
+			_messageHash,
+			redeemAmount,
+			redeemRequests[_messageHash].beneficiary,
+			redeemRequests[_messageHash].fee
+		);
+	}
+
+
+	function processRedemptionWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint256 _messageStatus
+	)
+	external
+	returns (uint256 redeemAmount)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = redeemRequests[_messageHash].message;
+
+		redeemAmount = redeemRequests[_messageHash].amount;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.progressOutboxWithProof(
+			messageBox,
+			REDEEM_REQUEST_TYPEHASH,
+			redeemRequests[_messageHash].message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(_messageStatus)
+		);
+
+		require(utilityToken.burn(this, redeemAmount));
+
+		//TODO: think around bounty
+		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
 
 		emit RedeemProcessed(
 			_messageHash,
@@ -503,8 +574,6 @@ contract CoGatewayV1 is Owned {
 
 		require(message.intentHash != bytes32(0));
 
-		require(nonces[message.sender] == message.nonce + 1);
-
 		require(
 			MessageBus.declareRevocationMessage(
 				messageBox,
@@ -516,10 +585,10 @@ contract CoGatewayV1 is Owned {
 
 		redeemer_ = message.sender;
 		intentHash_ = message.intentHash;
-		nonce_ = nonces[message.sender];
+		nonce_ = message.nonce;
 		gasPrice_ = message.gasPrice;
 
-		emit RevertRedeemRequested(_messageHash, redeemer_, intentHash_, nonces[message.sender], gasPrice_);
+		emit RevertRedeemRequested(_messageHash, redeemer_, intentHash_, message.nonce, gasPrice_);
 	}
 
 	function processRevertRedemption(
@@ -537,8 +606,6 @@ contract CoGatewayV1 is Owned {
 		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		require(nonces[message.sender] == message.nonce + 1);
-
 		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
 		require(storageRoot != bytes32(0));
 
@@ -552,8 +619,6 @@ contract CoGatewayV1 is Owned {
 				storageRoot
 			)
 		);
-
-		nonces[message.sender]++;
 
 		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
 
@@ -585,8 +650,6 @@ contract CoGatewayV1 is Owned {
 			_rlpParentNodes,
 			outboxOffset,
 			core.getStorageRoot(_blockHeight));
-
-		nonces[_message.sender] = _message.nonce + 1;
 	}
 
 	function getMessage(
