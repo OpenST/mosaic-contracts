@@ -18,7 +18,6 @@ contract CoGatewayV1 {
 		uint256 stakerNonce,
 		address beneficiary,
 		uint256 amount,
-		uint256 fee,
 		uint256 blockHeight,
 		bytes32 hashLock
 	);
@@ -40,7 +39,6 @@ contract CoGatewayV1 {
 	event RedeemRequested(
 		bytes32 messageHash,
 		uint256 amount,
-		uint256 fee,
 		address beneficiary,
 		address redeemer,
 		bytes32 intentHash
@@ -49,8 +47,7 @@ contract CoGatewayV1 {
 	event RedeemProcessed(
 		bytes32 messageHash,
 		uint256 amount,
-		address beneficiary,
-		uint256 fee
+		address beneficiary
 	);
 
 	event RevertRedeemRequested(
@@ -65,14 +62,12 @@ contract CoGatewayV1 {
 		address redeemer,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee,
 		uint256 gasPrice
 	);
 
 	struct Mint {
 		uint256 amount;
 		address beneficiary;
-		uint256 fee;
 		MessageBus.Message message;
 	}
 
@@ -89,12 +84,10 @@ contract CoGatewayV1 {
 	 *  Status values could be :-
 	 *  0 :- amount used for redemption
 	 *  1 :- beneficiary is the address in the target chain where token will be minted.
-	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
 	 */
 	struct RedeemRequest {
 		uint256 amount;
 		address beneficiary;
-		uint256 fee;
 		MessageBus.Message message;
 		address facilitator;
 	}
@@ -107,13 +100,13 @@ contract CoGatewayV1 {
 
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
+			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
 		)
 	);
 
 	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,uint256 fee)"
+			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
 		)
 	);
 	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
@@ -136,6 +129,7 @@ contract CoGatewayV1 {
 	CoreInterface core;
 	UtilityTokenInterface utilityToken;
 
+	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
 	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
 	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
@@ -177,7 +171,6 @@ contract CoGatewayV1 {
 		address _gateway,
 		bytes32 _intentHash,
 		uint256 _gasPrice,
-		uint256 _fee,
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
@@ -199,7 +192,6 @@ contract CoGatewayV1 {
 			codeHashVT,
 			MessageBus.getCodeHash(),
 			_gasPrice,
-			_fee,
 			_nonce
 			)
 		);
@@ -210,14 +202,14 @@ contract CoGatewayV1 {
 
 		gatewayLink = GatewayLink ({
 			messageHash: messageHash_,
-			message: MessageBus.Message({
-				intentHash : intentHash,
-				nonce : _nonce,
-				gasPrice : _gasPrice,
-				sender : _sender,
-				hashLock : _hashLock
-				})
+			message: getMessage(
+				_sender,
+				_nonce,
+				_gasPrice,
+				_intentHash, _hashLock
+				)
 			});
+
 
 		MessageBus.confirmMessage(
 			messageBox,
@@ -264,7 +256,6 @@ contract CoGatewayV1 {
 		uint256 _stakerNonce,
 		address _beneficiary,
 		uint256 _amount,
-		uint256 _fee,
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
@@ -273,11 +264,11 @@ contract CoGatewayV1 {
 	public
 	returns (bytes32 messageHash_)
 	{
+		uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_staker != address(0));
 		require(_beneficiary != address(0));
 		require(_amount != 0);
-		require(_fee != 0);
 		require(_gasPrice != 0);
 		require(_blockHeight != 0);
 		require(_hashLock != bytes32(0));
@@ -286,7 +277,7 @@ contract CoGatewayV1 {
 		require(cleanProcessedStakingRequest(_staker));
 
 		//todo change to library call, stake too deep error
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice, _fee));
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
@@ -294,7 +285,6 @@ contract CoGatewayV1 {
 
 		mints[messageHash_] = getMint(_amount,
 			_beneficiary,
-			_fee,
 			_staker,
 			_stakerNonce,
 			_gasPrice,
@@ -310,10 +300,11 @@ contract CoGatewayV1 {
 			_stakerNonce,
 			_beneficiary,
 			_amount,
-			_fee,
 			_blockHeight,
 			_hashLock
 		);
+
+		mints[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
 	}
 
 	function processMinting(
@@ -327,6 +318,7 @@ contract CoGatewayV1 {
 		uint256 rewardAmount_
 	)
 	{
+		uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -334,16 +326,18 @@ contract CoGatewayV1 {
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
 
+		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
+
 		mintRequestedAmount_ = mint.amount;
-		rewardAmount_ = mint.fee.mul(message.gasPrice);
+
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 
 		mintedAmount_ = mint.amount.sub(rewardAmount_);
-		//Mint token after subtracting fee
+		//Mint token after subtracting reward amount
 		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
-		//reward beneficiary with the fee
+		//reward beneficiary with the reward amount
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
-		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
 
 		emit MintProcessed(
 			_messageHash,
@@ -359,31 +353,20 @@ contract CoGatewayV1 {
 		uint256 _blockHeight,
 		uint256 _messageStatus
 	)
-	external
+	public
 	returns (
 		uint256 mintRequestedAmount_,
 		uint256 mintedAmount_,
 		uint256 rewardAmount_
 	)
 	{
+		uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
-
-		mintRequestedAmount_ = mint.amount;
-		rewardAmount_ = mint.fee.mul(message.gasPrice);
-
-		mintedAmount_ = mint.amount.sub(rewardAmount_);
-		//Mint token after subtracting fee
-		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
-		//reward beneficiary with the fee
-		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
-
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
-		require(storageRoot != bytes32(0));
 
 		MessageBus.progressInboxWithProof(messageBox,
 			STAKE_REQUEST_TYPEHASH,
@@ -392,6 +375,18 @@ contract CoGatewayV1 {
 			outboxOffset,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus));
+
+		mintRequestedAmount_ = mint.amount;
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+
+		mintedAmount_ = mint.amount.sub(rewardAmount_);
+		//Mint token after subtracting reward amount
+		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
+		//reward beneficiary with the reward amount
+		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
 
 		emit MintProcessed(
 			_messageHash,
@@ -409,6 +404,7 @@ contract CoGatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
+		uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
@@ -434,6 +430,7 @@ contract CoGatewayV1 {
 			message.nonce,
 			_blockHeight
 		);
+		message.gasConsumed = gasleft().sub(initialGas);
 		return true;
 	}
 
@@ -442,7 +439,6 @@ contract CoGatewayV1 {
 		address _beneficiary,
 		address _facilitator,
 		uint256 _gasPrice,
-		uint256 _fee,
 		uint256 _nonce,
 		bytes32 _hashLock
 	)
@@ -458,7 +454,7 @@ contract CoGatewayV1 {
 		require(_hashLock != bytes32(0));
 		require(cleanProcessedRedeemRequest(msg.sender));
 
-		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, msg.sender, _gasPrice, _fee);
+		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, msg.sender, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
@@ -467,7 +463,6 @@ contract CoGatewayV1 {
 		redeemRequests[messageHash_] = RedeemRequest({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee,
 			message : getMessage(msg.sender, _nonce, _gasPrice, intentHash, _hashLock),
 			facilitator : _facilitator
 			});
@@ -482,7 +477,6 @@ contract CoGatewayV1 {
 		emit RedeemRequested(
 			messageHash_,
 			_amount,
-			_fee,
 			_beneficiary,
 			msg.sender,
 			intentHash
@@ -512,8 +506,7 @@ contract CoGatewayV1 {
 		emit RedeemProcessed(
 			_messageHash,
 			redeemAmount,
-			redeemRequests[_messageHash].beneficiary,
-			redeemRequests[_messageHash].fee
+			redeemRequests[_messageHash].beneficiary
 		);
 	}
 
@@ -554,8 +547,7 @@ contract CoGatewayV1 {
 		emit RedeemProcessed(
 			_messageHash,
 			redeemAmount,
-			redeemRequests[_messageHash].beneficiary,
-			redeemRequests[_messageHash].fee
+			redeemRequests[_messageHash].beneficiary
 		);
 	}
 
@@ -629,7 +621,6 @@ contract CoGatewayV1 {
 			message.sender,
 			redeemRequest.amount,
 			redeemRequest.beneficiary,
-			redeemRequest.fee,
 			message.gasPrice);
 	}
 
@@ -668,14 +659,14 @@ contract CoGatewayV1 {
 			nonce : _stakerNonce,
 			gasPrice : _gasPrice,
 			sender : _staker,
-			hashLock : _hashLock
+			hashLock : _hashLock,
+			gasConsumed: 0
 			});
 	}
 
 	function getMint(
 		uint256 _amount,
 		address _beneficiary,
-		uint256 _fee,
 		address _staker,
 		uint256 _stakerNonce,
 		uint256 _gasPrice,
@@ -689,7 +680,6 @@ contract CoGatewayV1 {
 		return Mint({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee,
 			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}

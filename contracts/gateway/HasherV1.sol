@@ -6,13 +6,13 @@ library HasherV1 {
 		uint256 _amount,
 		address _beneficiary,
 		address _sender,
-		uint256 _gasPrice,
-		uint256 _fee)
+		uint256 _gasPrice
+	)
 	external
 	pure
 	returns (bytes32 /*hash*/){
 
-		return keccak256(abi.encodePacked(_amount, _beneficiary, _sender, _gasPrice, _fee));
+		return keccak256(abi.encodePacked(_amount, _beneficiary, _sender, _gasPrice));
 
 	}
 }
