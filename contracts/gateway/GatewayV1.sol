@@ -29,7 +29,6 @@ import "./CoreInterface.sol";
 import "./HasherV1.sol";
 import "./SimpleStakeV1.sol";
 import "./SafeMath.sol";
-import "./Owned.sol";
 
 /**
  * @title Gateway Contract
@@ -39,7 +38,7 @@ import "./Owned.sol";
  *          The Gateway contract will serve the role of staking account rather than an external account.
  *
  */
-contract GatewayV1 is Owned{
+contract GatewayV1 {
 
 	using SafeMath for uint256;
 
@@ -48,7 +47,6 @@ contract GatewayV1 is Owned{
 	event  StakeRequestedEvent(
 		bytes32 _messageHash,
 		uint256 _amount,
-		uint256 _fee,
 		address _beneficiary,
 		address _staker,
 		bytes32 _intentHash
@@ -57,8 +55,7 @@ contract GatewayV1 is Owned{
 	event StakeProcessed(
 		bytes32 _messageHash,
 		uint256 _amount,
-		address _beneficiary,
-		uint256 _fee
+		address _beneficiary
 	);
 
 	event RevertStakeRequested(
@@ -73,7 +70,6 @@ contract GatewayV1 is Owned{
 		address staker,
 		uint256 amount,
 		address beneficiary,
-		uint256 fee,
 		uint256 gasPrice
 	);
 
@@ -83,7 +79,6 @@ contract GatewayV1 is Owned{
 		uint256 redeemerNonce,
 		address beneficiary,
 		uint256 amount,
-		uint256 fee,
 		uint256 blockHeight,
 		bytes32 hashLock
 	);
@@ -115,12 +110,10 @@ contract GatewayV1 is Owned{
 	 *  Status values could be :-
 	 *  0 :- amount used for staking
 	 *  1 :- beneficiary is the address in the target chain where token will be minted.
-	 *  2 :- fee is the amount rewarded to facilitator after successful stake and mint.
 	 */
 	struct StakeRequest {
 		uint256 amount;
 		address beneficiary;
-		uint256 fee;
 		MessageBus.Message message;
 		address facilitator;
 	}
@@ -128,7 +121,6 @@ contract GatewayV1 is Owned{
 	struct UnStakes {
 		uint256 amount;
 		address beneficiary;
-		uint256 fee;
 		MessageBus.Message message;
 	}
 
@@ -142,13 +134,13 @@ contract GatewayV1 is Owned{
 	// It is a hash used to represent operation type.
 	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,uint256 fee)"
+			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message,address facilitator)"
 		)
 	);
 
 	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
 		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,uint256 fee)"
+			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
 		)
 	);
 
@@ -159,10 +151,11 @@ contract GatewayV1 is Owned{
 	);
 
 
-	address coGateway;
-	bytes32 codeHashUT;
-	bytes32 codeHashVT;
-	bool isActivated;
+	address public coGateway;
+	bytes32 public codeHashUT;
+	bytes32 public codeHashVT;
+	bool public isActivated;
+	address public organisation;
 	GatewayLink gatewayLink;
 
 	//Escrow address to lock staked fund
@@ -182,6 +175,8 @@ contract GatewayV1 is Owned{
 
 	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
 
+    uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
+
 	uint8 outboxOffset = 4;
 
 	/**
@@ -192,6 +187,7 @@ contract GatewayV1 is Owned{
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
 	 *  @param _codeHashUT code hash of utility token contract.
+	 *  @param _organisation organisation address.
 	 */
 	constructor(
 		EIP20Interface _token,
@@ -199,9 +195,9 @@ contract GatewayV1 is Owned{
 		CoreInterface _core,
 		uint256 _bounty,
 		bytes32 _codeHashUT,
-		bytes32 _codeHashVT
+		bytes32 _codeHashVT,
+		address _organisation
 	)
-	Owned()
 	public
 	{
 		require(_token != address(0));
@@ -209,6 +205,7 @@ contract GatewayV1 is Owned{
 		require(_core != address(0));
 		require(_codeHashUT != bytes32(0));
 		require(_codeHashVT != bytes32(0));
+		require(_organisation != address(0));
 
 		isActivated = false;
 		token = _token;
@@ -217,6 +214,7 @@ contract GatewayV1 is Owned{
 		bounty = _bounty;
 		codeHashUT = _codeHashUT;
 		codeHashVT = _codeHashVT;
+		organisation = _organisation;
 
 		stakeVault = new SimpleStakeV1(token, address(this));
 	}
@@ -226,15 +224,16 @@ contract GatewayV1 is Owned{
 	function initiateGatewayLink(
 		bytes32 _intentHash,
 		uint256 _gasPrice,
-		uint256 _fee,
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
 		bytes _signature)
 	external
+	payable
 	returns (bytes32 messageHash_)
 	{
-		require(_sender == owner);
+		require(_sender == organisation);
+		require(msg.value == bounty);
 		require(gatewayLink.messageHash == bytes32(0));
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(address(this),
@@ -244,7 +243,6 @@ contract GatewayV1 is Owned{
 				codeHashVT,
 			    MessageBus.getCodeHash(),
 				_gasPrice,
-				_fee,
 				_nonce
 			)
 		);
@@ -255,13 +253,12 @@ contract GatewayV1 is Owned{
 
 		gatewayLink = GatewayLink ({
 		 	messageHash: messageHash_,
-			message: MessageBus.Message({
-				intentHash : intentHash,
-				nonce : _nonce,
-				gasPrice : _gasPrice,
-				sender : _sender,
-				hashLock : _hashLock
-				})
+			message:getMessage(
+                _sender,
+                _nonce,
+                _gasPrice,
+                _intentHash, _hashLock
+            )
 		});
 
 		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
@@ -292,7 +289,7 @@ contract GatewayV1 is Owned{
 		isActivated = true;
 
 		//return bounty
-		require(token.transfer(msg.sender, bounty));
+		msg.sender.transfer(bounty);
 
 		return true;
 	}
@@ -307,7 +304,6 @@ contract GatewayV1 is Owned{
 	 * @param _beneficiary Beneficiary address.
 	 * @param _staker Staker address.
 	 * @param _gasPrice Gas price
-	 * @param _fee Fee for facilitation of stake process.
 	 * @param _nonce Staker nonce.
 	 * @param _hashLock Hash Lock
 	 * @param _signature Signature signed by staker.
@@ -319,15 +315,16 @@ contract GatewayV1 is Owned{
 		address _beneficiary,
 		address _staker,
 		uint256 _gasPrice,
-		uint256 _fee,
 		uint256 _nonce,
 		bytes32 _hashLock,
 		bytes _signature
 	)
 	external
+	payable
 	returns (bytes32 messageHash_)
 	{
 		require(isActivated);
+		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
@@ -336,7 +333,7 @@ contract GatewayV1 is Owned{
 
 		require(cleanProcessedStakeRequest(_staker));
 
-		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice, _fee);
+		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
@@ -345,7 +342,6 @@ contract GatewayV1 is Owned{
 		stakeRequests[messageHash_] = StakeRequest({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee,
 			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
 			facilitator : msg.sender
 			});
@@ -353,13 +349,10 @@ contract GatewayV1 is Owned{
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, this, _amount));
-		//transfer bounty to gateway
-		require(token.transferFrom(msg.sender, this, bounty));
 
 		emit StakeRequestedEvent(
 			messageHash_,
 			_amount,
-			_fee,
 			_beneficiary,
 			_staker,
 			intentHash
@@ -380,18 +373,17 @@ contract GatewayV1 is Owned{
 
 		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[_messageHash].message, _unlockSecret);
+		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, message, _unlockSecret);
 
 		require(token.transfer(stakeVault, stakeRequestAmount_));
 
 		//return bounty
-		require(token.transfer(msg.sender, bounty));
+		msg.sender.transfer(bounty);
 
 		emit StakeProcessed(
 			_messageHash,
 			stakeRequests[_messageHash].amount,
-			stakeRequests[_messageHash].beneficiary,
-			stakeRequests[_messageHash].fee
+			stakeRequests[_messageHash].beneficiary
 		);
 	}
 
@@ -407,8 +399,6 @@ contract GatewayV1 is Owned{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
-
-		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 
 		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
 
@@ -435,8 +425,7 @@ contract GatewayV1 is Owned{
 		emit StakeProcessed(
 			_messageHash,
 			stakeRequests[_messageHash].amount,
-			stakeRequests[_messageHash].beneficiary,
-			stakeRequests[_messageHash].fee
+			stakeRequests[_messageHash].beneficiary
 		);
 	}
 
@@ -470,8 +459,8 @@ contract GatewayV1 is Owned{
 		staker_ = message.sender;
 		intentHash_ = message.intentHash;
 		gasPrice_ = message.gasPrice;
-
-		emit RevertStakeRequested(_messageHash, staker_, intentHash_, message.nonce, gasPrice_);
+		nonce_ = message.nonce;
+		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
 	}
 
 	function processRevertStaking(
@@ -507,13 +496,12 @@ contract GatewayV1 is Owned{
 
 		require(token.transfer(message.sender, stakeRequest.amount));
 
-		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
-		// TODO: think about bounty.
+		msg.sender.transfer(bounty);
+
 		emit StakeReverted(
 			message.sender,
 			stakeRequest.amount,
 			stakeRequest.beneficiary,
-			stakeRequest.fee,
 			message.gasPrice
 		);
 	}
@@ -526,6 +514,7 @@ contract GatewayV1 is Owned{
 	external
 	returns (bool /*TBD*/)
 	{
+        uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
@@ -552,6 +541,7 @@ contract GatewayV1 is Owned{
 			_blockHeight
 		);
 
+        message.gasConsumed = gasleft().sub(initialGas);
 		return true;
 	}
 
@@ -560,31 +550,28 @@ contract GatewayV1 is Owned{
 		uint256 _redeemerNonce,
 		address _beneficiary,
 		uint256 _amount,
-		uint256 _fee,
 		uint256 _gasPrice,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes memory _rlpParentNodes,
-		bytes memory _signature
+		bytes memory _rlpParentNodes
 	)
 	public
 	returns (bytes32 messageHash_)
 	{
+        uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_redeemer != address(0));
 		require(_beneficiary != address(0));
 		require(_amount != 0);
-		require(_fee != 0);
 		require(_gasPrice != 0);
 		require(_blockHeight != 0);
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
-		require(_signature.length != 0);
 
 		require(cleanProcessedRedeemRequest(_redeemer));
 
 		//todo change to library call, stake too deep error
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice, _fee));
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
 
@@ -593,7 +580,6 @@ contract GatewayV1 is Owned{
 		unStakes[messageHash_] = getUnStake(
 			_amount,
 			_beneficiary,
-			_fee,
 			_redeemer,
 			_redeemerNonce,
 			_gasPrice,
@@ -609,10 +595,11 @@ contract GatewayV1 is Owned{
 			_redeemerNonce,
 			_beneficiary,
 			_amount,
-			_fee,
 			_blockHeight,
 			_hashLock
 		);
+
+        unStakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
 	}
 
 	function processUnstake(
@@ -625,23 +612,25 @@ contract GatewayV1 is Owned{
 		uint256 rewardAmount_
 	)
 	{
+        uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 
-		UnStakes storage unStake = unStakes[_messageHash];
+        UnStakes storage unStake = unStakes[_messageHash];
+        MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
 
-		unstakeRequestedAmount_ = unStake.amount;
-		rewardAmount_ = unStake.fee.mul(message.gasPrice);
+        unstakeRequestedAmount_ = unStake.amount;
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
-		//reward beneficiary with the fee
+		//reward beneficiary with the reward amount
 		require(token.transfer(msg.sender, rewardAmount_));
 
-		MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
+
 
 		emit UnStakeProcessed(
 			_messageHash,
@@ -657,13 +646,14 @@ contract GatewayV1 is Owned{
 		uint256 _blockHeight,
 		uint256 _messageStatus
 	)
-	external
+	public
 	returns (
 		uint256 unstakeRequestedAmount_,
 		uint256 unstakeAmount_,
 		uint256 rewardAmount_
 	)
 	{
+        uint256 initialGas = gasleft();
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
@@ -675,23 +665,23 @@ contract GatewayV1 is Owned{
 
 		UnStakes storage unStake = unStakes[_messageHash];
 
-		unstakeRequestedAmount_ = unStake.amount;
-		rewardAmount_ = unStake.fee.mul(message.gasPrice);
+        MessageBus.progressInboxWithProof(
+            messageBox,
+            REDEEM_REQUEST_TYPEHASH,
+            unStake.message,
+            _rlpEncodedParentNodes,
+            outboxOffset,
+            storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
+        );
+
+        unstakeRequestedAmount_ = unStake.amount;
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
 		//reward beneficiary with the fee
 		require(token.transfer(msg.sender, rewardAmount_));
-
-		MessageBus.progressInboxWithProof(
-			messageBox,
-			REDEEM_REQUEST_TYPEHASH,
-			unStake.message,
-			_rlpEncodedParentNodes,
-			outboxOffset,
-			storageRoot,
-			MessageBus.MessageStatus(_messageStatus)
-		);
 
 		emit UnStakeProcessed(
 			_messageHash,
@@ -723,7 +713,6 @@ contract GatewayV1 is Owned{
 	function getUnStake(
 		uint256 _amount,
 		address _beneficiary,
-		uint256 _fee,
 		address _redeemer,
 		uint256 _redeemerNonce,
 		uint256 _gasPrice,
@@ -737,7 +726,6 @@ contract GatewayV1 is Owned{
 		return UnStakes({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			fee : _fee,
 			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}
@@ -759,7 +747,8 @@ contract GatewayV1 is Owned{
 			nonce : _redeemerNonce,
 			gasPrice : _gasPrice,
 			sender : _redeemer,
-			hashLock : _hashLock
+			hashLock : _hashLock,
+            gasConsumed: 0
 			});
 
 	}

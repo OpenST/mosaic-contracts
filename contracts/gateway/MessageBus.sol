@@ -2,8 +2,11 @@ pragma solidity ^0.4.23;
 
 import "./ProofLib.sol";
 import "./MerklePatriciaProof.sol";
+import "./SafeMath.sol";
 
 library MessageBus {
+
+	using SafeMath for uint256;
 
 	enum MessageStatus {
 		Undeclared,
@@ -26,6 +29,7 @@ library MessageBus {
 		uint256 gasPrice;
 		address sender;
 		bytes32 hashLock;
+		uint256 gasConsumed;
 	}
 
 	function declareMessage(
@@ -321,6 +325,20 @@ library MessageBus {
 				_nonce
 			)
 		);
+	}
+
+	function feeAmount(
+		Message storage _message,
+		uint256 _initalGas,
+		uint256 _estimatedAdditionalGasUsage,
+		uint256 _gasLimit)
+	external
+	returns (uint256 fee_)
+	{
+		_message.gasConsumed = gasleft().sub(_initalGas).add(_estimatedAdditionalGasUsage).add(_message.gasConsumed);
+		require(_message.gasConsumed < _gasLimit);
+		return _message.gasConsumed.mul(_message.gasPrice);
+
 	}
 
 }
