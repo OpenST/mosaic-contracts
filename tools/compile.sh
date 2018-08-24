@@ -1,8 +1,8 @@
 #!/bin/sh
 
 CONTRACT_DIR=./contracts/*/*.sol
-ABI_DIR=./contracts/abi
-BIN_DIR=./contracts/bin
+ABI_DIR=./build/abi
+BIN_DIR=./build/bin
 
 mkdir -p "$ABI_DIR"
 mkdir -p "$BIN_DIR"
