@@ -32,6 +32,13 @@ const ValidatorIndexEndHeight = 4;
 
 contract('AuxiliaryStake', async (accounts) => {
     describe('deploying an auxiliary stake contract', async () => {
+        /*
+         * Make the first address the default OSTblock gate to be able to
+         * call methods that change the set of validators from the default
+         * message caller address.
+         */
+        let defaultOstBlockGate = accounts[0];
+
         it('should store a correct list of initial validators', async () => {
             let expectedStakes = {
                 addresses: [
@@ -79,8 +86,16 @@ contract('AuxiliaryStake', async (accounts) => {
             };
 
             let auxiliaryStake = await AuxiliaryStake.new(
+                defaultOstBlockGate,
                 expectedStakes.addresses,
                 expectedStakes.values
+            );
+
+            let ostBlockGate = await auxiliaryStake.ostBlockGate.call();
+            assert.strictEqual(
+                ostBlockGate,
+                defaultOstBlockGate,
+                'The contract must store the correct OSTblock gate.'
             );
 
             // Check for all individual stakes to be recorded
@@ -118,9 +133,26 @@ contract('AuxiliaryStake', async (accounts) => {
             );
         });
 
+        it('should not accept a zero OSTblock gate', async () => {
+            await utils.expectRevert(
+                AuxiliaryStake.new(
+                    '0x0000000000000000000000000000000000000000',
+                    [
+                        '0x0000000000000000000000000000000000000001',
+                        '0x0000000000000000000000000000000000000002',
+                    ],
+                    [
+                        new BigNumber('1'),
+                        new BigNumber('2'),
+                    ]
+                )
+            );
+        });
+
         it('should not accept an empty validator set', async () => {
             await utils.expectRevert(
                 AuxiliaryStake.new(
+                    defaultOstBlockGate,
                     [],
                     []
                 )
@@ -130,6 +162,7 @@ contract('AuxiliaryStake', async (accounts) => {
         it('should not accept two arrays of different length', async () => {
             await utils.expectRevert(
                 AuxiliaryStake.new(
+                    defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -144,6 +177,7 @@ contract('AuxiliaryStake', async (accounts) => {
         it('should not accept a zero stake', async () => {
             await utils.expectRevert(
                 AuxiliaryStake.new(
+                    defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -159,6 +193,7 @@ contract('AuxiliaryStake', async (accounts) => {
         it('should not accept a zero address', async () => {
             await utils.expectRevert(
                 AuxiliaryStake.new(
+                    defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000000',
@@ -174,6 +209,7 @@ contract('AuxiliaryStake', async (accounts) => {
         it('should not accept the same address more than once', async () => {
             await utils.expectRevert(
                 AuxiliaryStake.new(
+                    defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',

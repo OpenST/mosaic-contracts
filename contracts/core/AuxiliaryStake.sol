@@ -62,6 +62,19 @@ contract AuxiliaryStake {
     /* Public Variables */
 
     /**
+     * The OSTblock gate is the only contract that is allowed to update the
+     * OSTblock height.
+     */
+    address public ostBlockGate;
+
+    /**
+     * Tracks the current height of the OSTblock within this contract. We track
+     * this here to make certain assertions about newly reported OSTblocks and
+     * to know what current height we are voting on.
+     */
+    uint256 public currentOstBlockHeight;
+
+    /**
      * Maps auxiliary addresses of validators to their details.
      *
      * The initial set will be given at construction. Later, validators can
@@ -89,22 +102,94 @@ contract AuxiliaryStake {
      *         address and a stake have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
+     * @param _ostBlockGate The OSTblock gate is the only address that is
+     *                      allowed to call methods that update the current
+     *                      height of the OSTblock chain.
      * @param _auxiliaryAddresses An array of validators' addresses on
      *                            auxiliary.
      * @param _stakes The stakes of the validators on origin. Indexed the same
      *                way as the _auxiliaryAddresses.
      */
     constructor (
+        address _ostBlockGate,
         address[] _auxiliaryAddresses,
         uint256[] _stakes
     )
         public
     {
         require(
+            _ostBlockGate != address(0),
+            "The address of the validator manager must not be zero."
+        );
+
+        require(
             _auxiliaryAddresses.length > 0,
             "The count of initial validators must be at least one."
         );
 
+        ostBlockGate = _ostBlockGate;
+
+        addValidators(_auxiliaryAddresses, _stakes);
+    }
+
+    /* External Functions */
+
+    /**
+     * @notice Updates the OSTblock height by one and adds the new validators
+     *         that should join at this height.
+     *         Provide two arrays with the validators' addresses on auxiliary
+     *         and their respective stakes at the same index. If an auxiliary
+     *         address and a stake have the same index in the provided arrays,
+     *         they are regarded as belonging to the same validator.
+     *
+     * @param _auxiliaryAddresses The addresses of the new validators on the
+     *                            auxiliary chain.
+     * @param _stakes The stakes of the validators on origin.
+     *
+     * @return `true` if the update was successful. Reverts otherwise.
+     */
+    function updateOstBlockHeight(
+        address[] _auxiliaryAddresses,
+        uint256[] _stakes
+    )
+        external
+        returns (bool success_)
+    {
+        require(
+            msg.sender == ostBlockGate,
+            "OSTblock updates must be done by the registered OSTblock gate."
+        );
+
+        currentOstBlockHeight++;
+
+        /*
+         * Before adding the new validators, copy the total stakes from the
+         * previous height. The new validators' stakes for this height will be
+         * added on top.
+         */
+        totalStakes[currentOstBlockHeight] = totalStakes[currentOstBlockHeight - 1];
+
+        addValidators(_auxiliaryAddresses, _stakes);
+
+        success_ = true;
+    }
+
+    /* Private Functions */
+
+    /**
+     * @notice Add validators to the set of validators. Starting from the
+     *         current OSTblock height.
+     *
+     * @param _auxiliaryAddresses The addresses of the new validators on the
+     *                            auxiliary chain.
+     * @param _stakes The stakes of the validators on origin.
+     */
+    function addValidators(
+        address[] _auxiliaryAddresses,
+        uint256[] _stakes
+    )
+        private
+    {
         require(
             _auxiliaryAddresses.length == _stakes.length,
             "The lengths of the addresses and stakes arrays must be identical."
@@ -116,33 +201,30 @@ contract AuxiliaryStake {
 
             require(
                 stake > 0,
-                "The stake on initialisation must be greater zero for all validators."
+                "The stake must be greater zero for all validators."
             );
 
             require(
                 auxiliaryAddress != address(0),
-                "The auxiliary address of a validator may not be zero."
+                "The auxiliary address of a validator must not be zero."
             );
 
             require(
                 !validatorExists(auxiliaryAddress),
-                "There must not be duplicate addresses in the given list."
+                "There must not be duplicate addresses in the set of validators."
             );
 
-            // Initial height is zero here and below.
             validators[auxiliaryAddress] = Validator(
                 auxiliaryAddress,
                 stake,
                 false,
-                0,
+                currentOstBlockHeight,
                 0
             );
 
-            totalStakes[0] += stake;
+            totalStakes[currentOstBlockHeight] += stake;
         }
     }
-
-    /* Private Functions */
 
     /**
      * @notice Returns true if the validator is already stored.
