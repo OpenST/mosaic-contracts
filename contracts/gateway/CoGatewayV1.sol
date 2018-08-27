@@ -5,9 +5,8 @@ import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./UtilityTokenAbstract.sol";
 import "./HasherV1.sol";
-import "./CoGatewayV1Interface.sol";
 
-contract CoGatewayV1 is CoGatewayV1Interface {
+contract CoGatewayV1 {
 
 	using SafeMath for uint256;
 

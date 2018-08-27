@@ -8,7 +8,7 @@ library HasherV1 {
 		address _sender,
 		uint256 _gasPrice
 	)
-	external
+	internal
 	pure
 	returns (bytes32 /*hash*/){
 
