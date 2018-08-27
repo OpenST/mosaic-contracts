@@ -184,7 +184,6 @@ contract GatewayV1 {
 	 *  @param _coGateway CoGateway contract address.
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _codeHashUT code hash of utility token contract.
 	 *  @param _organisation organisation address.
 	 */
 	constructor(

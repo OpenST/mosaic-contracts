@@ -142,7 +142,7 @@ contract CoGatewayV1 {
 	)
 	public
 	{
-		require(_utilityToken != address(0));
+		require(_token != address(0));
 		//require(_gateway != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
