@@ -152,8 +152,6 @@ contract GatewayV1 {
 
 
 	address public coGateway;
-	bytes32 public codeHashUT;
-	bytes32 public codeHashVT;
 	bool public isActivated;
 	address public organisation;
 	GatewayLink gatewayLink;
@@ -186,7 +184,6 @@ contract GatewayV1 {
 	 *  @param _coGateway CoGateway contract address.
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-	 *  @param _codeHashUT code hash of utility token contract.
 	 *  @param _organisation organisation address.
 	 */
 	constructor(
@@ -194,8 +191,6 @@ contract GatewayV1 {
 		address _coGateway,
 		CoreInterface _core,
 		uint256 _bounty,
-		bytes32 _codeHashUT,
-		bytes32 _codeHashVT,
 		address _organisation
 	)
 	public
@@ -203,8 +198,6 @@ contract GatewayV1 {
 		require(_token != address(0));
 		require(_coGateway != address(0));
 		require(_core != address(0));
-		require(_codeHashUT != bytes32(0));
-		require(_codeHashVT != bytes32(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
@@ -212,8 +205,6 @@ contract GatewayV1 {
 		coGateway = _coGateway;
 		core = _core;
 		bounty = _bounty;
-		codeHashUT = _codeHashUT;
-		codeHashVT = _codeHashVT;
 		organisation = _organisation;
 
 		stakeVault = new SimpleStakeV1(token, address(this));
@@ -235,15 +226,17 @@ contract GatewayV1 {
 		require(_sender == organisation);
 		require(msg.value == bounty);
 		require(gatewayLink.messageHash == bytes32(0));
+
+        // TODO: need to add check for MessageBus.
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(address(this),
 				coGateway,
 				bounty,
-				codeHashUT,
-				codeHashVT,
-			    MessageBus.getCodeHash(),
-				_gasPrice,
-				_nonce
+                token.name(),
+                token.symbol(),
+                token.decimals(),
+                _gasPrice,
+                _nonce
 			)
 		);
 		require(intentHash == _intentHash);
@@ -257,7 +250,8 @@ contract GatewayV1 {
                 _sender,
                 _nonce,
                 _gasPrice,
-                _intentHash, _hashLock
+                _intentHash,
+                _hashLock
             )
 		});
 

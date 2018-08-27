@@ -113,10 +113,8 @@ contract CoGatewayV1 {
 		)
 	);
 
-	address private token;
+	EIP20Interface private token;
 	address private gateway;
-	bytes32 private codeHashUT;
-	bytes32 private codeHashVT;
 	address private organisation;
 	bool private isActivated;
 	GatewayLink gatewayLink;
@@ -140,8 +138,6 @@ contract CoGatewayV1 {
 		EIP20Interface _token,
 		CoreInterface _core,
 		uint256 _bounty,
-		bytes32 _codeHashUT,
-		bytes32 _codeHashVT,
 		address _organisation
 	)
 	public
@@ -149,8 +145,6 @@ contract CoGatewayV1 {
 		require(_token != address(0));
 		//require(_gateway != address(0));
 		require(_core != address(0));
-		require(_codeHashUT != bytes32(0));
-		require(_codeHashVT != bytes32(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
@@ -158,7 +152,6 @@ contract CoGatewayV1 {
 		//gateway = _gateway;
 		core = _core;
 		bounty = _bounty;
-		codeHashUT = _codeHashUT;
 		organisation = _organisation;
 
 		// TODO: should we check the code hash with declared codeHash constants.
@@ -177,17 +170,19 @@ contract CoGatewayV1 {
 	public
 	returns(bytes32 messageHash_)
 	{
+		uint256 initialGas = gasleft();
 		require(_sender == organisation);
 		require(_gateway != address(0));
 		require(gatewayLink.messageHash == bytes32(0));
 
+		// TODO: need to add check for MessageBus.
 		bytes32 intentHash = keccak256(
 			abi.encodePacked(_gateway,
 			address(this),
 			bounty,
-			codeHashUT,
-			codeHashVT,
-			MessageBus.getCodeHash(),
+			token.name(),
+			token.symbol(),
+			token.decimals(),
 			_gasPrice,
 			_nonce
 			)
@@ -224,6 +219,7 @@ contract CoGatewayV1 {
 			address(this),
 			token
 		);
+		gatewayLink.message.gasConsumed = gasleft().sub(initialGas);
 	}
 
 	function processGatewayLink(
@@ -233,7 +229,7 @@ contract CoGatewayV1 {
 	external
 	returns (bool /*TBD*/)
 	{
-
+		// TODO: think about fee transfer
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
