@@ -441,7 +441,7 @@ contract CoGateway {
 		require(isActivated);
 		require(msg.value == bounty);
 		require(_amount > uint256(0));
-		require(_beneficiary != address(0));
+		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
 		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
 		require(cleanProcessedRedeemRequest(msg.sender));
