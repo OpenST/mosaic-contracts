@@ -61,6 +61,9 @@ contract Core is CoreInterface {
 	/** Workers contract address. */
 	WorkersInterface public workers;
 
+	/** Address of the core on the auxiliary chain. Can be zero. */
+	address public coCore;
+
 	/**
 	 *  OpenSTRemote encoded path. Constructed with below flow:
 	 *  coreOpenSTRemote => sha3 => bytes32 => bytes
@@ -133,6 +136,20 @@ contract Core is CoreInterface {
 		encodedOpenSTRemotePath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
 		stateRoots[latestStateRootBlockHeight] = _stateRoot;
+	}
+
+	/** External functions */
+
+	/**
+	 *  @notice The Co-Core address is the address of the core that is
+	 *          deployed on the auxiliary chain. Should only be set if this
+	 *          contract is deployed on the origin chain.
+	 *
+	 *  @param _coCore Address of the Co-Core on auxiliary.
+	 */
+	function setCoCoreAddress(address _coCore) external {
+		require(_coCore != address(0), "Co-Core address is 0");
+		coCore = _coCore;
 	}
 
 	/** Public functions */

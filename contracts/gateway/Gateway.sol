@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
 
 // Copyright 2018 OpenST Ltd.
@@ -16,383 +15,772 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Value chain: Gateway
+// Value Chain: Gateway Contract
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./ProtocolVersioned.sol";
-import "./OpenSTValueInterface.sol";
+
 import "./EIP20Interface.sol";
-import "./Owned.sol";
-import "./WorkersInterface.sol";
+import "./MessageBus.sol";
+import "./CoreInterface.sol";
+import "./SimpleStake.sol";
+import "./SafeMath.sol";
 
 /**
- *  @title Gateway contract which implements ProtocolVersioned, Owned.
+ * @title Gateway Contract
  *
  *  @notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor.
  *          Stake process is executed through Gateway contract rather than directly with the protocol contract.
  *          The Gateway contract will serve the role of staking account rather than an external account.
+ *
  */
-contract Gateway is ProtocolVersioned, Owned {
-
-    /** Events */
-
-    /** Below event is emitted after successful execution of requestStake */
-    event StakeRequested(address _staker, uint256 _amount, address _beneficiary);
-    /** Below event is emitted after successful execution of revertStakeRequest */
-    event StakeRequestReverted(address _staker, uint256 _amount);
-    /** Below event is emitted after successful execution of rejectStakeRequest */
-    event StakeRequestRejected(address _staker, uint256 _amount, uint8 _reason);
-    /** Below event is emitted after successful execution of acceptStakeRequest */
-    event StakeRequestAccepted(
-      address _staker,
-      uint256 _amountST,
-      uint256 _amountUT,
-      uint256 _nonce,
-      uint256 _unlockHeight,
-      bytes32 _stakingIntentHash);
-    /** Below event is emitted after successful execution of setWorkers */
-    event WorkersSet(WorkersInterface _workers);
-
-    /** Storage */
-
-    /** Storing stake requests */
-    mapping(address /*staker */ => StakeRequest) public stakeRequests;
-    /** Storing workers contract address */
-    WorkersInterface public workers;
-    /** Storing bounty amount that will be used while accepting stake */
-    uint256 public bounty;
-    /** Storing utility token UUID */
-    bytes32 public uuid;
-
-    /** Structures */
-
-    struct StakeRequest {
-        uint256 amount;
-        uint256 unlockHeight;
-        address beneficiary;
-        bytes32 hashLock;
-    }
-
-    /** Public functions */
-
-    /**
-     *  @notice Contract constructor.
-     *
-     *  @param _workers Workers contract address.
-     *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
-     *  @param _uuid UUID of utility token.
-     *  @param _openSTProtocol OpenSTProtocol address contract that governs staking.
-     */
-    constructor(
-        WorkersInterface _workers,
-        uint256 _bounty,
-        bytes32 _uuid,
-        address _openSTProtocol)
-        public
-        Owned()
-        ProtocolVersioned(_openSTProtocol)
-    {
-        require(_workers != address(0));
-        require(_uuid.length != uint8(0));
-
-        workers = _workers;
-        bounty = _bounty;
-        uuid = _uuid;
-
-    }
-
-    /**
-     *  @notice External function requestStake.
-     *
-     *  @dev In order to request stake the staker needs to approve Gateway contract for stake amount.
-     *       Staked amount is transferred from staker address to Gateway contract.
-     *
-     *  @param _amount Staking amount.
-     *  @param _beneficiary Beneficiary address.
-     *
-     *  @return bool Specifies status of the execution.
-     */
-    function requestStake(
-        uint256 _amount,
-        address _beneficiary)
-        external
-        returns (bool /* success */)
-    {
-
-        require(_amount > uint256(0));
-        require(_beneficiary != address(0));
-
-        // check if the stake request does not exists
-        require(stakeRequests[msg.sender].beneficiary == address(0));
-
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), _amount));
-
-        stakeRequests[msg.sender] = StakeRequest({
-            amount: _amount,
-            beneficiary: _beneficiary,
-            hashLock: 0,
-            unlockHeight: 0
-        });
-
-        emit StakeRequested(msg.sender, _amount, _beneficiary);
-
-        return true;
-    }
-
-    /**
-     *  @notice External function to revert requested stake.
-     *
-     *  @dev This can be called only by staker. Staked amount is transferred back
-     *       to staker address from Gateway contract.
-     *
-     *  @return stakeRequestAmount Staking amount.
-     */
-    function revertStakeRequest()
-        external
-        returns (uint256 stakeRequestAmount)
-    {
-        // only staker can do revertStakeRequest, msg.sender == staker
-        StakeRequest storage stakeRequest = stakeRequests[msg.sender];
-
-        // check if the stake request exists for the msg.sender
-        require(stakeRequest.beneficiary != address(0));
-
-        // check if the stake request was not accepted
-        require(stakeRequest.hashLock == bytes32(0));
-
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, stakeRequest.amount));
-
-        stakeRequestAmount = stakeRequest.amount;
-        delete stakeRequests[msg.sender];
-
-        emit StakeRequestReverted(msg.sender, stakeRequestAmount);
-
-        return stakeRequestAmount;
-    }
-
-    /**
-     *  @notice External function to reject requested stake.
-     *
-     *  @dev This can be called only by whitelisted worker address.
-     *       Staked amount is transferred back to staker address from Gateway contract.
-     *
-     *  @param _staker Staker address.
-     *  @param _reason Reason for rejection.
-     *
-     *  @return stakeRequestAmount Staking amount.
-     */
-    function rejectStakeRequest(address _staker, uint8 _reason)
-        external
-        returns (uint256 stakeRequestAmount)
-    {
-        // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender));
-
-        StakeRequest storage stakeRequest = stakeRequests[_staker];
-
-        // check if the stake request exists
-        require(stakeRequest.beneficiary != address(0));
-
-        // check if the stake request was not accepted
-        require(stakeRequest.hashLock == bytes32(0));
-
-        // transfer the amount back
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(_staker, stakeRequest.amount));
-
-        stakeRequestAmount = stakeRequest.amount;
-        // delete the stake request from the mapping storage
-        delete stakeRequests[_staker];
-
-        emit StakeRequestRejected(_staker, stakeRequestAmount, _reason);
-
-        return stakeRequestAmount;
-    }
-
-    /**
-     *  @notice External function to accept requested stake.
-     *
-     *  @dev This can be called only by whitelisted worker address.
-     *       Bounty amount is transferred from msg.sender to Gateway contract.
-     *       openSTProtocol is approved for staking amount by Gateway contract.
-     *
-     *  @param _staker Staker address.
-     *  @param _hashLock Hash lock.
-     *
-     *  @return amountUT Branded token amount.
-     *  @return nonce Staker nonce count.
-     *  @return unlockHeight Height till what the amount is locked.
-     *  @return stakingIntentHash Staking intent hash.
-     */
-    function acceptStakeRequest(address _staker, bytes32 _hashLock)
-        external
-        returns (
-        uint256 amountUT,
-        uint256 nonce,
-        uint256 unlockHeight,
-        bytes32 stakingIntentHash)
-    {
-        // check if the caller is whitelisted worker
-        require(workers.isWorker(msg.sender));
-
-        StakeRequest storage stakeRequest = stakeRequests[_staker];
-
-        // check if the stake request exists
-        require(stakeRequest.beneficiary != address(0));
-
-        // check if the stake request was not accepted
-        require(stakeRequest.hashLock == bytes32(0));
-
-        // check if _hashLock is not 0
-        require(_hashLock != bytes32(0));
-
-        // Transfer bounty amount from worker to Gateway contract
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transferFrom(msg.sender, address(this), bounty));
-
-        // Approve OpenSTValue contract for stake amount
-        require(OpenSTValueInterface(openSTProtocol).valueToken().approve(openSTProtocol, stakeRequest.amount));
-
-
-        (amountUT, nonce, unlockHeight, stakingIntentHash) = OpenSTValueInterface(openSTProtocol).stake(
-            uuid,
-            stakeRequest.amount,
-            stakeRequest.beneficiary,
-            _hashLock,
-            _staker);
-
-        // Check if the stake function call did not result in to error.
-        require(stakingIntentHash != bytes32(0));
-
-        stakeRequests[_staker].unlockHeight = unlockHeight;
-        stakeRequests[_staker].hashLock = _hashLock;
-
-        emit StakeRequestAccepted(_staker, stakeRequest.amount, amountUT, nonce, unlockHeight, stakingIntentHash);
-
-        return (amountUT, nonce, unlockHeight, stakingIntentHash);
-    }
-
-    /**
-     *  @notice External function to process staking.
-     *
-     *  @dev Bounty amount is transferred to msg.sender if msg.sender is not a whitelisted worker.
-     *       Bounty amount is transferred to workers contract if msg.sender is a whitelisted worker.
-     *
-     *  @param _stakingIntentHash Staking intent hash.
-     *  @param _unlockSecret Unlock secret.
-     *
-     *  @return stakeRequestAmount Stake amount.
-     */
-    function processStaking(
-        bytes32 _stakingIntentHash,
-        bytes32 _unlockSecret)
-        external
-        returns (uint256 stakeRequestAmount)
-      {
-        require(_stakingIntentHash != bytes32(0));
-
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
-        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
-        //and making this call obsolete
-        address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
-
-        StakeRequest storage stakeRequest = stakeRequests[staker];
-
-        // check if the stake request exists
-        require(stakeRequest.beneficiary != address(0));
-
-        // check if the stake request was accepted
-        require(stakeRequest.hashLock != bytes32(0));
-
-        // we call processStaking for OpenSTValue and get the stakeAddress on success.
-        address stakerAddress = OpenSTValueInterface(openSTProtocol).processStaking(_stakingIntentHash, _unlockSecret);
-
-        // check if the stake address is not 0
-        require(stakerAddress != address(0));
-
-        //If the msg.sender is whitelited worker then transfer the bounty amount to Workers contract
-        //else transfer the bounty to msg.sender.
-        if (workers.isWorker(msg.sender)) {
-          // Transfer bounty amount to the workers contract address
-          require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
-        } else {
-          //Transfer bounty amount to the msg.sender account
-          require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(msg.sender, bounty));
-        }
-        stakeRequestAmount = stakeRequest.amount;
-        // delete the stake request from the mapping storage
-        delete stakeRequests[staker];
-
-        return stakeRequestAmount;
-      }
-
-    /**
-     *  @notice External function to revert staking.
-     *
-     *  @dev Staked amount is transferred to the staker address.
-     *       Bounty amount is transferred to workers contract.
-     *
-     *  @param _stakingIntentHash Staking intent hash.
-     *
-     *  @return stakeRequestAmount Staking amount.
-     */
-    function revertStaking(
-        bytes32 _stakingIntentHash)
-        external
-        returns (uint256 amountST)
-      {
-
-        require(_stakingIntentHash != bytes32(0));
-
-        //the hash timelock for staking and bounty are respectively in the openstvalue contract and Gateway contract in v0.9.3;
-        //but all staking stateful information will move to the Gateway contract in v0.9.4 (making OpenST a library call)
-        //and making this call obsolete
-        address staker = OpenSTValueInterface(openSTProtocol).getStakerAddress(_stakingIntentHash);
-
-        StakeRequest storage stakeRequest = stakeRequests[staker];
-
-        // check if the stake request exists
-        require(stakeRequest.beneficiary != address(0));
-
-        // check if the stake request was accepted
-        require(stakeRequest.hashLock != bytes32(0));
-
-        address stakerAddress = address(0);
-        (, amountST, stakerAddress) = OpenSTValueInterface(openSTProtocol).revertStaking(_stakingIntentHash);
-
-        // check if the stake address is correct
-        assert(stakerAddress == staker);
-
-        assert(amountST == stakeRequest.amount);
-
-        require(OpenSTValueInterface(openSTProtocol).valueToken().transfer(workers, bounty));
-
-        // delete the stake request from the mapping storage
-        delete stakeRequests[staker];
-
-        return amountST;
-      }
-
-    /**
-     *  @notice External function to set workers.
-     *
-     *  @dev Only callable by owner.
-     *
-     *  @param _workers Workers contract address.
-     *
-     *  @return bool Specifies status of the execution.
-     */
-    function setWorkers(WorkersInterface _workers)
-        external
-        onlyOwner()
-        returns (bool /* success */)
-    {
-        workers = _workers;
-
-        //Event for workers set
-        emit WorkersSet(_workers);
-
-        return true;
-    }
+contract Gateway {
+
+	using SafeMath for uint256;
+
+	/* Events */
+
+	event  StakeRequestedEvent(
+		bytes32 _messageHash,
+		uint256 _amount,
+		address _beneficiary,
+		address _staker,
+		bytes32 _intentHash
+	);
+
+	event StakeProcessed(
+		bytes32 _messageHash,
+		uint256 _amount,
+		address _beneficiary
+	);
+
+	event RevertStakeRequested(
+		bytes32 messageHash,
+		address staker,
+		bytes32 intentHash,
+		uint256 nonce,
+		uint256 gasPrice
+	);
+
+	event StakeReverted(
+		address staker,
+		uint256 amount,
+		address beneficiary,
+		uint256 gasPrice
+	);
+
+	event RedemptionIntentConfirmed(
+		bytes32 messageHash,
+		address redeemer,
+		uint256 redeemerNonce,
+		address beneficiary,
+		uint256 amount,
+		uint256 blockHeight,
+		bytes32 hashLock
+	);
+
+	event UnStakeProcessed(
+		bytes32 messageHash,
+		uint256 amount,
+		address beneficiary,
+		uint256 reward
+	);
+
+	event RevertRedemptionIntentConfirmed(
+		bytes32 messageHash,
+		address redeemer,
+		uint256 redeemerNonce,
+		uint256 blockHeight
+	);
+
+	event GatewayLinkInitiated(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
+
+	/* Struct */
+	/**
+	 *  It denotes the stake request.
+	 *  Status values could be :-
+	 *  0 :- amount used for staking
+	 *  1 :- beneficiary is the address in the target chain where token will be minted.
+	 */
+	struct StakeRequest {
+		uint256 amount;
+		address beneficiary;
+		MessageBus.Message message;
+		address facilitator;
+	}
+
+	struct UnStakes {
+		uint256 amount;
+		address beneficiary;
+		MessageBus.Message message;
+	}
+
+	struct GatewayLink {
+		bytes32 messageHash;
+		MessageBus.Message message;
+	}
+
+	/* Storage */
+
+	// It is a hash used to represent operation type.
+	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
+		abi.encode(
+			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message,address facilitator)"
+		)
+	);
+
+	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
+		abi.encode(
+			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
+		)
+	);
+
+	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
+		abi.encode(
+			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
+		)
+	);
+
+
+	address public coGateway;
+	bool public isActivated;
+	address public organisation;
+	GatewayLink gatewayLink;
+
+	//Escrow address to lock staked fund
+	SimpleStake stakeVault;
+
+	//amount in BT which is staked by facilitator
+	uint256 public bounty;
+
+	//address of branded token.
+	EIP20Interface public token;
+	//address of core contract.
+	CoreInterface core;
+
+	MessageBus.MessageBox messageBox;
+	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
+	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeRequests;
+
+	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
+
+    uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
+
+	uint8 outboxOffset = 4;
+
+	/**
+	 *  @notice Contract constructor.
+	 *
+	 *  @param _token Branded token contract address.
+	 *  @param _coGateway CoGateway contract address.
+	 *  @param _core Core contract address.
+	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+	 *  @param _organisation organisation address.
+	 */
+	constructor(
+		EIP20Interface _token,
+		address _coGateway,
+		CoreInterface _core,
+		uint256 _bounty,
+		address _organisation
+	)
+	public
+	{
+		require(_token != address(0));
+		require(_coGateway != address(0));
+		require(_core != address(0));
+		require(_organisation != address(0));
+
+		isActivated = false;
+		token = _token;
+		coGateway = _coGateway;
+		core = _core;
+		bounty = _bounty;
+		organisation = _organisation;
+
+		stakeVault = new SimpleStake(token, address(this));
+	}
+
+	/* Public functions */
+
+	function initiateGatewayLink(
+		bytes32 _intentHash,
+		uint256 _gasPrice,
+		uint256 _nonce,
+		address _sender,
+		bytes32 _hashLock,
+		bytes _signature)
+	external
+	payable
+	returns (bytes32 messageHash_)
+	{
+		require(_sender == organisation);
+		require(msg.value == bounty);
+		require(gatewayLink.messageHash == bytes32(0));
+
+        // TODO: need to add check for MessageBus.
+		bytes32 intentHash = keccak256(
+			abi.encodePacked(address(this),
+				coGateway,
+				bounty,
+                token.name(),
+                token.symbol(),
+                token.decimals(),
+                _gasPrice,
+                _nonce
+			)
+		);
+		require(intentHash == _intentHash);
+
+		// check nonces
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		gatewayLink = GatewayLink ({
+		 	messageHash: messageHash_,
+			message:getMessage(
+                _sender,
+                _nonce,
+                _gasPrice,
+                _intentHash,
+                _hashLock
+            )
+		});
+
+		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
+
+		emit GatewayLinkInitiated(
+			messageHash_,
+			address(this),
+			coGateway,
+			token
+		);
+
+	}
+
+	function processGatewayLink(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		require(gatewayLink.messageHash == _messageHash);
+
+		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
+
+		isActivated = true;
+
+		//return bounty
+		msg.sender.transfer(bounty);
+
+		return true;
+	}
+
+	/**
+	 * @notice external function stake
+	 *
+	 * @dev In order to stake the staker needs to approve Gateway contract for stake amount.
+     *   Staked amount is transferred from staker address to Gateway contract.
+	 *
+	 * @param _amount Staking amount.
+	 * @param _beneficiary Beneficiary address.
+	 * @param _staker Staker address.
+	 * @param _gasPrice Gas price
+	 * @param _nonce Staker nonce.
+	 * @param _hashLock Hash Lock
+	 * @param _signature Signature signed by staker.
+	 *
+	 * @return messageHash_ which is unique for each request.
+	 */
+	function stake(
+		uint256 _amount,
+		address _beneficiary,
+		address _staker,
+		uint256 _gasPrice,
+		uint256 _nonce,
+		bytes32 _hashLock,
+		bytes _signature
+	)
+	external
+	payable
+	returns (bytes32 messageHash_)
+	{
+		require(isActivated);
+		require(msg.value == bounty);
+		require(_amount > uint256(0));
+		require(_beneficiary != address(0));
+		require(_staker != address(0));
+		require(_hashLock != bytes32(0));
+		require(_signature.length != 0);
+
+		require(cleanProcessedStakeRequest(_staker));
+
+        //TODO: Move the hashing code in to hasher library
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+
+		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		activeRequests[_staker] = messageHash_;
+
+		stakeRequests[messageHash_] = StakeRequest({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
+			facilitator : msg.sender
+			});
+
+		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
+		//transfer staker amount to gateway
+		require(token.transferFrom(_staker, this, _amount));
+
+		emit StakeRequestedEvent(
+			messageHash_,
+			_amount,
+			_beneficiary,
+			_staker,
+			intentHash
+		);
+	}
+
+	function processStaking(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret
+	)
+	external
+	returns (uint256 stakeRequestAmount_)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+
+		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
+
+		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, message, _unlockSecret);
+
+		require(token.transfer(stakeVault, stakeRequestAmount_));
+
+		//return bounty
+		msg.sender.transfer(bounty);
+
+		emit StakeProcessed(
+			_messageHash,
+			stakeRequests[_messageHash].amount,
+			stakeRequests[_messageHash].beneficiary
+		);
+	}
+
+	function processStakingWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint256 _messageStatus
+	)
+	external
+	returns (uint256 stakeRequestAmount_)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		//staker has started the revocation and facilitator has processed on utility chain
+		//staker has to process with proof
+		MessageBus.progressOutboxWithProof(
+			messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			stakeRequests[_messageHash].message,
+			_rlpEncodedParentNodes,
+			outboxOffset,
+			storageRoot,
+			MessageBus.MessageStatus(_messageStatus)
+		);
+
+		require(token.transfer(stakeVault, stakeRequestAmount_));
+
+		//todo discuss return bounty
+		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
+
+		emit StakeProcessed(
+			_messageHash,
+			stakeRequests[_messageHash].amount,
+			stakeRequests[_messageHash].beneficiary
+		);
+	}
+
+	function revertStaking(
+		bytes32 _messageHash,
+		bytes _signature
+	)
+	external
+	returns (
+		address staker_,
+		bytes32 intentHash_,
+		uint256 nonce_,
+		uint256 gasPrice_
+	)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+
+		require(message.intentHash != bytes32(0));
+
+		require(
+			MessageBus.declareRevocationMessage(
+			messageBox,
+			STAKE_REQUEST_TYPEHASH,
+			message,
+				_signature
+			)
+		);
+
+		staker_ = message.sender;
+		intentHash_ = message.intentHash;
+		gasPrice_ = message.gasPrice;
+		nonce_ = message.nonce;
+		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
+	}
+
+	function processRevertStaking(
+		bytes32 _messageHash,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+		require(message.intentHash != bytes32(0));
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(
+			MessageBus.progressRevocationMessage(
+			messageBox,
+			message,
+			STAKE_REQUEST_TYPEHASH,
+			outboxOffset,
+			_rlpEncodedParentNodes,
+				storageRoot
+			)
+		);
+
+		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
+
+		require(token.transfer(message.sender, stakeRequest.amount));
+
+		msg.sender.transfer(bounty);
+
+		emit StakeReverted(
+			message.sender,
+			stakeRequest.amount,
+			stakeRequest.beneficiary,
+			message.gasPrice
+		);
+	}
+
+	function confirmRevertRedemptionIntent(
+		bytes32 _messageHash,
+		uint256 _blockHeight,
+		bytes _rlpEncodedParentNodes
+	)
+	external
+	returns (bool /*TBD*/)
+	{
+        uint256 initialGas = gasleft();
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+		require(message.intentHash != bytes32(0));
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		require(MessageBus.confirmRevocation(
+				messageBox,
+				REDEEM_REQUEST_TYPEHASH,
+				message,
+				_rlpEncodedParentNodes,
+				outboxOffset,
+				storageRoot
+			));
+
+		emit RevertRedemptionIntentConfirmed(
+			_messageHash,
+			message.sender,
+			message.nonce,
+			_blockHeight
+		);
+
+        message.gasConsumed = gasleft().sub(initialGas);
+		return true;
+	}
+
+	function confirmRedemptionIntent(
+		address _redeemer,
+		uint256 _redeemerNonce,
+		address _beneficiary,
+		uint256 _amount,
+		uint256 _gasPrice,
+		uint256 _blockHeight,
+		bytes32 _hashLock,
+		bytes memory _rlpParentNodes
+	)
+	public
+	returns (bytes32 messageHash_)
+	{
+        uint256 initialGas = gasleft();
+		require(isActivated);
+		require(_redeemer != address(0));
+		require(_beneficiary != address(0));
+		require(_amount != 0);
+		require(_gasPrice != 0);
+		require(_blockHeight != 0);
+		require(_hashLock != bytes32(0));
+		require(_rlpParentNodes.length != 0);
+
+		require(cleanProcessedRedeemRequest(_redeemer));
+
+		//todo change to library call, stake too deep error
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
+
+		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+
+		activeRequests[_redeemer] = messageHash_;
+
+		unStakes[messageHash_] = getUnStake(
+			_amount,
+			_beneficiary,
+			_redeemer,
+			_redeemerNonce,
+			_gasPrice,
+			intentHash,
+			_hashLock
+		);
+
+		executeConfirmRedemptionIntent(unStakes[messageHash_].message, _blockHeight, _rlpParentNodes);
+
+		emit RedemptionIntentConfirmed(
+			messageHash_,
+			_redeemer,
+			_redeemerNonce,
+			_beneficiary,
+			_amount,
+			_blockHeight,
+			_hashLock
+		);
+
+        unStakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
+	}
+
+	function processUnstake(
+		bytes32 _messageHash,
+		bytes32 _unlockSecret)
+	external
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_,
+		uint256 rewardAmount_
+	)
+	{
+        uint256 initialGas = gasleft();
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_unlockSecret != bytes32(0));
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+
+        UnStakes storage unStake = unStakes[_messageHash];
+        MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
+
+        unstakeRequestedAmount_ = unStake.amount;
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the reward amount
+		require(token.transfer(msg.sender, rewardAmount_));
+
+
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unstakeAmount_,
+			unStake.beneficiary,
+			rewardAmount_
+		);
+	}
+
+	function processUnstakeWithProof(
+		bytes32 _messageHash,
+		bytes _rlpEncodedParentNodes,
+		uint256 _blockHeight,
+		uint256 _messageStatus
+	)
+	public
+	returns (
+		uint256 unstakeRequestedAmount_,
+		uint256 unstakeAmount_,
+		uint256 rewardAmount_
+	)
+	{
+        uint256 initialGas = gasleft();
+		require(isActivated);
+		require(_messageHash != bytes32(0));
+		require(_rlpEncodedParentNodes.length > 0);
+
+		MessageBus.Message storage message = unStakes[_messageHash].message;
+
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		UnStakes storage unStake = unStakes[_messageHash];
+
+        MessageBus.progressInboxWithProof(
+            messageBox,
+            REDEEM_REQUEST_TYPEHASH,
+            unStake.message,
+            _rlpEncodedParentNodes,
+            outboxOffset,
+            storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
+        );
+
+        unstakeRequestedAmount_ = unStake.amount;
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
+
+		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
+		//reward beneficiary with the fee
+		require(token.transfer(msg.sender, rewardAmount_));
+
+		emit UnStakeProcessed(
+			_messageHash,
+			unstakeAmount_,
+			unStake.beneficiary,
+			rewardAmount_
+		);
+	}
+
+	function executeConfirmRedemptionIntent(
+		MessageBus.Message storage _message,
+		uint256 _blockHeight,
+		bytes _rlpParentNodes
+	)
+	private
+	{
+		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		require(storageRoot != bytes32(0));
+
+		MessageBus.confirmMessage(
+			messageBox,
+			REDEEM_REQUEST_TYPEHASH,
+			_message,
+			_rlpParentNodes,
+			outboxOffset,
+			core.getStorageRoot(_blockHeight));
+	}
+
+	function getUnStake(
+		uint256 _amount,
+		address _beneficiary,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock
+	)
+	private
+	pure
+	returns (UnStakes)
+	{
+		return UnStakes({
+			amount : _amount,
+			beneficiary : _beneficiary,
+			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock)
+			});
+	}
+
+
+	function getMessage(
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _gasPrice,
+		bytes32 _intentHash,
+		bytes32 _hashLock
+	)
+	private
+	pure
+	returns (MessageBus.Message)
+	{
+		return MessageBus.Message({
+			intentHash : _intentHash,
+			nonce : _redeemerNonce,
+			gasPrice : _gasPrice,
+			sender : _redeemer,
+			hashLock : _hashLock,
+            gasConsumed: 0
+			});
+
+	}
+
+	function cleanProcessedStakeRequest(address staker)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[staker];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete stakeRequests[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
+
+	function cleanProcessedRedeemRequest(address redeemer)
+	private
+	returns (bool /*success*/)
+	{
+		bytes32 previousRequest = activeRequests[redeemer];
+
+		if (previousRequest != bytes32(0)) {
+
+			require(
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+			);
+			delete unStakes[previousRequest];
+			delete messageBox.inbox[previousRequest];
+		}
+	}
 }
+
+
+
+
