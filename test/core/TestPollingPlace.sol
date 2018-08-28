@@ -17,10 +17,10 @@ pragma solidity ^0.4.23;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../lib/RevertProxy.sol";
-import "../../contracts/core/AuxiliaryStake.sol";
+import "../../contracts/core/PollingPlace.sol";
 
 /**
- * @title Wrapper to wrap auxiliary stake methods.
+ * @title Wrapper to wrap polling place methods.
  *
  * @notice The wrapper is required to drop the return value from the method
  *         under test. See also:
@@ -30,19 +30,19 @@ import "../../contracts/core/AuxiliaryStake.sol";
  *      required to drop it in order for the low-level call of the RevertProxy
  *      to work.
  */
-contract AuxiliaryStakeWrapper {
+contract PollingPlaceWrapper {
 
     /** The wrapped contract. */
-    AuxiliaryStake auxiliaryStake;
+    PollingPlace pollingPlace;
 
     /**
      * @notice Setting the wrapped contruct. It is not necessarily known at
      *         construction.
      *
-     * @param _auxiliaryStake The address of the wrapped contract.
+     * @param _pollingPlace The address of the wrapped contract.
      */
-    function setAuxiliaryStake(address _auxiliaryStake) public {
-        auxiliaryStake = AuxiliaryStake(_auxiliaryStake);
+    function setPollingPlace(address _pollingPlace) public {
+        pollingPlace = PollingPlace(_pollingPlace);
     }
 
     /**
@@ -57,7 +57,7 @@ contract AuxiliaryStakeWrapper {
     )
         public
     {
-        auxiliaryStake.updateOstBlockHeight(
+        pollingPlace.updateOstBlockHeight(
             _auxiliaryAddresses,
             _stakes
         );
@@ -65,14 +65,14 @@ contract AuxiliaryStakeWrapper {
 }
 
 /**
- * @title Test contract to test the external methods of AuxiliaryStake.
+ * @title Test contract to test the external methods of PollingPlace.
  */
-contract TestAuxiliaryStake {
+contract TestPollingPlace {
 
     /* Private Variables */
 
     /*
-     * Addresses and stakes are kept in storage as AuxiliaryStake expects
+     * Addresses and stakes are kept in storage as PollingPlace expects
      * dynamic arrays as arguments and arrays in memory are always fixed size
      * in solidity.
      */
@@ -86,8 +86,8 @@ contract TestAuxiliaryStake {
     uint256[] private updateStakes;
 
     RevertProxy private proxy;
-    AuxiliaryStake private stake;
-    AuxiliaryStakeWrapper private wrapper;
+    PollingPlace private stake;
+    PollingPlaceWrapper private wrapper;
 
     /* External Functions */
 
@@ -125,7 +125,7 @@ contract TestAuxiliaryStake {
          */
 
          /* Priming the proxy. */
-        AuxiliaryStakeWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateOstBlockHeight(
             updateAddresses,
             updateStakes
         );
@@ -175,17 +175,17 @@ contract TestAuxiliaryStake {
         initialAddresses.push(initialAddress);
         initialStakes.push(initialStake);
 
-        wrapper = new AuxiliaryStakeWrapper();
+        wrapper = new PollingPlaceWrapper();
         /*
          * Address 1 is not the wrapper, thus the wrapper is not allowed to
          * call the method and it should revert.
          */
-        stake = new AuxiliaryStake(
+        stake = new PollingPlace(
             address(1),
             initialAddresses,
             initialStakes
         );
-        wrapper.setAuxiliaryStake(address(stake));
+        wrapper.setPollingPlace(address(stake));
         proxy = new RevertProxy(address(wrapper));
 
         updateAddresses.push(address(999));
@@ -258,13 +258,13 @@ contract TestAuxiliaryStake {
         initialAddresses.push(initialAddress);
         initialStakes.push(initialStake);
 
-        wrapper = new AuxiliaryStakeWrapper();
-        stake = new AuxiliaryStake(
+        wrapper = new PollingPlaceWrapper();
+        stake = new PollingPlace(
             address(wrapper),
             initialAddresses,
             initialStakes
         );
-        wrapper.setAuxiliaryStake(address(stake));
+        wrapper.setPollingPlace(address(stake));
         proxy = new RevertProxy(address(wrapper));
     }
 
@@ -277,7 +277,7 @@ contract TestAuxiliaryStake {
      */
     function expectRevertOnUpdateOstBlockHeight(string _errorMessage) private {
         /* Priming the proxy. */
-        AuxiliaryStakeWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateOstBlockHeight(
             updateAddresses,
             updateStakes
         );
@@ -302,7 +302,7 @@ contract TestAuxiliaryStake {
     }
 
     /**
-     * @notice Gets a validator from the AuxiliaryStake address based on the
+     * @notice Gets a validator from the PollingPlace address based on the
      *         expected address and then compares all fields to their expected
      *         values. Fails the test if any field does not match.
      *

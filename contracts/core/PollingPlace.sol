@@ -14,13 +14,18 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./PollingPlaceInterface.sol";
+
 /**
- * @title AuxiliaryStake tracks the validator deposits of the Mosaic
- *        validators. The set of validators will change with new OSTblocks
- *        opening on auxiliary. This contract should always know the active
- *        validators and their respective stake.
+ * @title A polling place is where voters cast their votes.
+ *
+ * @notice PollingPlace accepts Casper FFG votes from validators.
+ *         PollingPlace also tracks the validator deposits of the Mosaic
+ *         validators. The set of validators will change with new OSTblocks
+ *         opening on auxiliary. This contract should always know the active
+ *         validators and their respective stake.
  */
-contract AuxiliaryStake {
+contract PollingPlace is PollingPlaceInterface {
 
     /* Structs */
 
@@ -172,6 +177,39 @@ contract AuxiliaryStake {
         addValidators(_auxiliaryAddresses, _stakes);
 
         success_ = true;
+    }
+
+    /**
+     * @notice Cast a vote from a source to a target.
+     *
+     * @param _blockStore Address of the block store that stores the blocks
+     *                    that are source and target of this vote.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target blokc.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     * @param _hash The hash of the vote object that is signed.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
+     *
+     * @return `true` if the vote was recorded successfully.
+     */
+    function vote(
+        address _blockStore,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight,
+        bytes32 _hash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        external
+        returns (bool success_)
+    {
+        revert("This method is not implemented.");
     }
 
     /* Private Functions */

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: AuxiliaryCore.js
+// Test: PollingPlace.js
 //
 // http://www.simpletoken.org/
 //
@@ -22,7 +22,7 @@
 const BigNumber = require('bignumber.js');
 const utils = require('../lib/utils.js');
 
-const AuxiliaryStake = artifacts.require('AuxiliaryStake');
+const PollingPlace = artifacts.require('PollingPlace');
 
 const ValidatorIndexAuxiliaryAddress = 0;
 const ValidatorIndexStake = 1;
@@ -30,8 +30,8 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
-contract('AuxiliaryStake', async (accounts) => {
-    describe('deploying an auxiliary stake contract', async () => {
+contract('PollingPlace', async (accounts) => {
+    describe('deploying a polling place contract', async () => {
         /*
          * Make the first address the default OSTblock gate to be able to
          * call methods that change the set of validators from the default
@@ -85,13 +85,13 @@ contract('AuxiliaryStake', async (accounts) => {
                 ]
             };
 
-            let auxiliaryStake = await AuxiliaryStake.new(
+            let pollingPlace = await PollingPlace.new(
                 defaultOstBlockGate,
                 expectedStakes.addresses,
                 expectedStakes.values
             );
 
-            let ostBlockGate = await auxiliaryStake.ostBlockGate.call();
+            let ostBlockGate = await pollingPlace.ostBlockGate.call();
             assert.strictEqual(
                 ostBlockGate,
                 defaultOstBlockGate,
@@ -100,7 +100,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
             // Check for all individual stakes to be recorded
             for (var i = 0; i < 19; i++) {
-                let validator = await auxiliaryStake.validators.call(expectedStakes.addresses[i]);
+                let validator = await pollingPlace.validators.call(expectedStakes.addresses[i]);
 
                 assert.strictEqual(
                     validator[ValidatorIndexAuxiliaryAddress],
@@ -126,7 +126,7 @@ contract('AuxiliaryStake', async (accounts) => {
                 );
             }
 
-            let totalStakeAtZero = await auxiliaryStake.totalStakes.call(0);
+            let totalStakeAtZero = await pollingPlace.totalStakes.call(0);
             assert(
                 totalStakeAtZero.equals(new BigNumber('190')),
                 'The contract must track the sum of all stakes as total stakes.'
@@ -135,7 +135,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero OSTblock gate', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     '0x0000000000000000000000000000000000000000',
                     [
                         '0x0000000000000000000000000000000000000001',
@@ -151,7 +151,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept an empty validator set', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     defaultOstBlockGate,
                     [],
                     []
@@ -161,7 +161,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept two arrays of different length', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
@@ -176,7 +176,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero stake', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
@@ -192,7 +192,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero address', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
@@ -208,7 +208,7 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept the same address more than once', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     defaultOstBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
