@@ -42,9 +42,8 @@ contract SimpleStake is ProtocolVersioned {
 
 	/** EIP20 token contract that can be staked. */
 	EIP20Interface public eip20Token;
-	/** UUID for the utility token */
-	bytes32 public uuid;
 
+	address public gateway;
 	/** Public functions */
 
 	/**
@@ -53,18 +52,16 @@ contract SimpleStake is ProtocolVersioned {
 	 *  @dev Sets the protocol and the EIP20 token to stake.
 	 *
 	 *  @param _eip20Token EIP20 token that will be staked.
-	 *  @param _openSTProtocol OpenSTProtocol contract that governs staking.
-	 *  @param _uuid Unique Universal Identifier of the registered utility token.
+	 *  @param _gateway Gateway contract that governs staking.
 	 */
 	constructor(
 		EIP20Interface _eip20Token,
-		address _openSTProtocol,
-		bytes32 _uuid)
-		ProtocolVersioned(_openSTProtocol)
+		address _gateway)
+		ProtocolVersioned(_gateway)
 		public
 	{
 		eip20Token = _eip20Token;
-		uuid = _uuid;
+		gateway = _gateway;
 	}
 
 	/**

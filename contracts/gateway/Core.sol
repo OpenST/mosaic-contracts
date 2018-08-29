@@ -140,6 +140,7 @@ contract Core is CoreInterface {
 
 	/** External functions */
 
+	//TODO: This is added for demo purpose.
 	/**
 	 *  @notice The Co-Core address is the address of the core that is
 	 *          deployed on the auxiliary chain. Should only be set if this
