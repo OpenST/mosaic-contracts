@@ -2,11 +2,9 @@ pragma solidity ^0.4.23;
 
 contract GatewayRedeemInterface {
 
-    function token() external returns (address);
-    function organisation() external returns (address);
     function isActivated() external returns (bool);
     function bounty() external returns (uint256);
-    function core() external returns (address);
+
 
     function redeem(
 		uint256 _amount,
