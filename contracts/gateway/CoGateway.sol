@@ -4,9 +4,8 @@ import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./UtilityTokenAbstract.sol";
-import "./HasherV1.sol";
 
-contract CoGatewayV1 {
+contract CoGateway {
 
 	using SafeMath for uint256;
 
@@ -442,12 +441,14 @@ contract CoGatewayV1 {
 		require(isActivated);
 		require(msg.value == bounty);
 		require(_amount > uint256(0));
-		require(_beneficiary != address(0));
+		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
 		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
 		require(cleanProcessedRedeemRequest(msg.sender));
 
-		bytes32 intentHash = HasherV1.intentHash(_amount, _beneficiary, msg.sender, _gasPrice);
+		//TODO: Move the hashing code in to hasher library
+		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, msg.sender, _gasPrice));
+
 
 		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
