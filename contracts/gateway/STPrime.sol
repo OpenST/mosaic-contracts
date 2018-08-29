@@ -49,6 +49,8 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
 
     /** Storage */
 
+    address public token;
+
     /** set when ST' has received TOKENS_MAX tokens; when uninitialised minting is not allowed */
     bool private initialized;
 
@@ -71,28 +73,24 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
      *
      *  @dev Sets the UtilityTokenAbstract contract. 
      *
-     *  @param _uuid UUID of the token.
-     *  @param _chainIdValue Chain id of the value chain.
-     *  @param _chainIdUtility Chain id of the utility chain.
+     *  @param _token ERC20 token address
      *  @param _conversionRate Conversion rate of the token.
      *  @param _conversionRateDecimals Decimal places of conversion rate of token.
      */    
     constructor(
-        bytes32 _uuid,
-        uint256 _chainIdValue,
-        uint256 _chainIdUtility,
+        address _token,
         uint256 _conversionRate,
         uint8 _conversionRateDecimals)
         public
         UtilityTokenAbstract(
-        _uuid,
-        STPRIME_SYMBOL,
-        STPRIME_NAME,
-        _chainIdValue,
-        _chainIdUtility,
         _conversionRate,
         _conversionRateDecimals)
-        { }
+        {
+            require(_token != address(0),
+            "ERC20 token address cannot be 0");
+
+            token = _token;
+        }
 
     /**
      *  @notice Public function initialize. 
@@ -109,37 +107,6 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
     {
         require(msg.value == TOKENS_MAX);
         initialized = true;
-    }
-
-
-    /**
-     *  @notice Public function claim.
-     *
-     *  @dev Only callable by initialized. Transfer full claim to beneficiary. 
-     *       Claim can be called publicly as the beneficiary and amount are set, 
-     *       and this allows for reduced steps on the user experience to 
-     *       complete the claim automatically. For first stake of ST' the gas price by one 
-     *       validator has to be zero to deploy the contracts and accept the very
-     *       first staking of ST for ST' and its protocol executions.
-     *
-     *  @param _beneficiary Address of beneficiary.
-     *
-     *  @return bool True if claim successfully transfers amount calculated with claimInternal 
-     *          to beneficiary, false otherwise.
-     */
-    function claim(
-        address _beneficiary)
-        public
-        onlyInitialized
-        returns (bool /** success */)
-    {
-        uint256 amount = claimInternal(_beneficiary);
-        assert(address(this).balance >= amount);
-
-        // transfer throws if insufficient funds
-        _beneficiary.transfer(amount);
-
-        return true;
     }
 
     /**
@@ -163,7 +130,14 @@ contract STPrime is UtilityTokenAbstract, STPrimeConfig {
         returns (bool /** success */)
     {
         // add the minted amount to the beneficiary's claim 
-        return mintInternal(_beneficiary, _amount);
+        require(mintInternal(_beneficiary, _amount));
+
+        assert(address(this).balance >= _amount);
+
+        // transfer throws if insufficient funds
+        _beneficiary.transfer(_amount);
+
+        return true;
     }
 
     /**
