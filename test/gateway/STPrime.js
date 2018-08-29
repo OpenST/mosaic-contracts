@@ -18,7 +18,7 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-
+/*
 const BigNumber = require('bignumber.js');
 const Utils = require('../lib/utils.js');
 const HashLock = require('../lib/hash_lock.js');
@@ -134,3 +134,5 @@ contract('STPrime', function(accounts) {
 		})
 	})
 })
+
+*/
