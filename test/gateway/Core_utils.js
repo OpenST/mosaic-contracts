@@ -49,9 +49,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     await workers.setAdminAddress(admin);
     await workers.setOpsAddress(ops);
     await workers.setWorker(worker1, deactivationHeight, {from: ops});
-    console.log("deploying core");
     const core = await Core.new(chainIdOrigin, chainIdRemote, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
-  console.log("Core deployed");
     return {
         core: core,
         workersContract: workers,
