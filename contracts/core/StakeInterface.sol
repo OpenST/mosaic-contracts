@@ -111,4 +111,41 @@ interface StakeInterface {
     )
         external
         returns (bytes _openedOstBlockHeaderRlp);
+
+    /**
+     * @notice Returns the total stake of all validators at a given height.
+     *
+     * @param _height The height for which to get the total deposit.
+     *
+     * @return The total stake at the given height.
+     */
+    function totalStakeAtHeight(
+        uint256 _height
+    )
+        external
+        view
+        returns (uint256 totalStake_);
+
+    /**
+     * @notice Returns the stake of a validator at a specific OSTblock height,
+     *         based on the auxiliary address of the validator.
+     *
+     * @dev The OriginCore can use this method to track the verified stake by
+     *      the verified votes and notice when a supermajority has been
+     *      reached, therefore committing the OSTblock.
+     *
+     * @param _height The OSTblock height for which to get the stake.
+     * @param _auxiliaryValidatorAddress The address of the validator on the
+     *                                   auxiliary chain.
+     *
+     * @return The stake of the validator at the given height. Can be 0, for
+     *         example when the address never deposited.
+     */
+    function getStakeAtHeightByAuxiliaryAddress(
+        uint256 _height,
+        address _auxiliaryValidatorAddress
+    )
+        external
+        view
+        returns (uint256 validatorStake_);
 }

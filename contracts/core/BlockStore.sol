@@ -34,12 +34,20 @@ contract BlockStore is BlockStoreInterface {
     }
 
     /**
-     * @notice Marks a block in the block store as justified.
+     * @notice Marks a block in the block store as justified. The source and
+     *         the target are required to know when a block is finalised.
      *         Only the polling place may call this method.
      *
+     * @param _sourceBlockHash The block hash of the source of the super-
+     *                         majority link.
      * @param _targetBlockHash The block hash of the block that is justified.
      */
-    function justify(bytes32 _targetBlockHash) external {
+    function justify(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        external
+    {
         revert("This method is not implemented.");
     }
 

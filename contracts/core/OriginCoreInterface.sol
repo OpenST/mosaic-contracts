@@ -22,15 +22,39 @@ interface OriginCoreInterface {
      *         succeeds, but its votes still need to be verified in order for
      *         it to be committed.
      *
-     * @param _ostBlockHeaderRlp The entire header of the proposed OSTblock,
-     *                           RLP encoded.
-     * @param _dynasty The dynasty number where the OSTblock closes on the
-     *                 auxiliary chain. It is not part of the OSTblock header
-     *                 and must therefore be presented separately.
+     * @param _height Height of the OSTblock in the chain of OSTblocks.
+     * @param _parent The hash of the parent OSTblock.
+     * @param _gas The total consumed gas on auxiliary within this OSTblock.
+     * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
+     *                            that is part of this OSTblock.
+     * @param _auxiliaryDynasty The dynasty number where the OSTblock closes on
+     *                          the auxiliary chain.
+     * @param _stateRoot The state root of the last finalised checkpoint that
+     *                   is part of this OSTblock.
+     * @param _transactionRoot The transaction root of the OSTblock. A trie
+     *                         created by the auxiliary block store from the
+     *                         transaction roots of all blocks.
+     * @param _signatureRoot The root of the trie of votes from the last
+     *                       finalised checkpoint to its direct child
+     *                       checkpoint.
+     * @param _depositedValidators Auxiliary addresses of the validators that
+     *                             deposited during the previous OSTblock.
+     * @param _loggedOutValidators  Auxiliary addresses of the validators that
+     *                              logged out during the previous OSTblock.
+     *
+     * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
-        bytes _ostBlockHeaderRlp,
-        uint256 _dynasty
+        uint256 _height,
+        bytes32 _parent,
+        uint256 _gas,
+        bytes32 _auxiliaryBlockHash,
+        uint256 _auxiliaryDynasty,
+        bytes32 _stateRoot,
+        bytes32 _transactionRoot,
+        bytes32 _signatureRoot,
+        address[] _depositedValidators,
+        address[] _loggedOutValidators
     )
         external
         returns (bool success_);
@@ -42,20 +66,16 @@ interface OriginCoreInterface {
      *
      * @param _ostBlockHash The block hash of the OSTblock for which a vote
      *                      shall be verified.
-     * @param _voteTrieBranchRlp The trie branch of the trie of votes on the
-     *                           auxiliary checkpoint that is the last
-     *                           finalised checkpoint in the OSTblock.
-     * @param _childVoteTrieBranchRlp The trie branch of the trie of votes from
-     *                                the last finalised checkpoint to its
-     *                                direct checkpoint. Thus finalising the
-     *                                source of the votes with a supermajority.
+     * @param _voteTrieBranchRlp The trie branch of the trie of votes from the
+     *                           last finalised checkpoint to its direct child
+     *                           checkpoint. Thus finalising the source of the
+     *                           votes with a supermajority.
      *
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
         bytes32 _ostBlockHash,
-        bytes _voteTrieBranchRlp,
-        bytes _childVoteTrieBranchRlp
+        bytes _voteTrieBranchRlp
     )
         external
         returns (bool success_);
