@@ -28,7 +28,7 @@ const Core = artifacts.require("./Core.sol")
 const BigNumber = require('bignumber.js')
 ;
 const rootPrefix = "../.."
-    , constants = require(rootPrefix + '/test/lib/constants')
+    , constants = require(rootPrefix + '/test/test_lib/constants')
 ;
 
 /// @dev Deploy 

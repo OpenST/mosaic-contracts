@@ -22,8 +22,8 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
-import "./Hasher.sol";
+import "../lib/SafeMath.sol";
+import "../lib/Hasher.sol";
 import "./OpsManaged.sol";
 
 // utility chain contracts
@@ -33,8 +33,8 @@ import "./BrandedToken.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 import "./CoreInterface.sol";
-import "./MerklePatriciaProof.sol";
-import "./ProofLib.sol";
+import "../lib//MerklePatriciaProof.sol";
+import "../lib/ProofLib.sol";
 
 /// @title OpenST Utility
 contract OpenSTUtility is Hasher, OpsManaged, STPrimeConfig {

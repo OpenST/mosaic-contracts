@@ -23,10 +23,10 @@ const BigNumber = require('bignumber.js');
 const Assert = require('assert');
 
 const rootPrefix = "../.."
-  , constants = require(rootPrefix + '/test/lib/constants')
+  , constants = require(rootPrefix + '/test/test_lib/constants')
 ;
 
-const utils = require(rootPrefix + "/test/lib/utils.js");
+const utils = require(rootPrefix + "/test/test_lib/utils.js");
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 
 var MockToken   = artifacts.require("./MockToken.sol");

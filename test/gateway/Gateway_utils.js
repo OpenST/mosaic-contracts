@@ -30,7 +30,7 @@ const OpenSTValue_utils = require('./OpenSTValue_utils.js')
 ;
 
 const rootPrefix = "../.."
-  , constants = require(rootPrefix + '/test/lib/constants')
+  , constants = require(rootPrefix + '/test/test_lib/constants')
 ;
 const Assert  = require('assert')
   , BigNumber = require('bignumber.js')

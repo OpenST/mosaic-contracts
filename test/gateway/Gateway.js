@@ -19,10 +19,10 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const BigNumber = require('bignumber.js');
 const Gateway_utils = require('./Gateway_utils.js');
-const HashLock = require('../lib/hash_lock.js');
+const HashLock = require('../test_lib/hash_lock.js');
 
 contract('Gateway', function(accounts) {
 

@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('../lib/utils.js')
+const Utils = require('../test_lib/utils.js')
 const OwnedUtils = require('./Owned_utils.js')
 
 const BigNumber = require('bignumber.js')

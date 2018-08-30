@@ -26,7 +26,7 @@
 
   const rootPrefix = "../.."
       , proofData = require( rootPrefix + "/test/data/proof.json" )
-      , Utils = require(rootPrefix + '/test/lib/utils')
+      , Utils = require(rootPrefix + '/test/test_lib/utils')
       , ProofLib = artifacts.require("./ProofLibTest.sol");
 
   contract('ProofLib', function (accounts) {

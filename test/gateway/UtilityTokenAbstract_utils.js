@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
-var Hasher = artifacts.require("./Hasher.sol");
+var Hasher = artifacts.require("../test_lib/Hasher.sol");
 var UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");
 
 /// @dev Deploy 

@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
-const utils = require('../lib/utils.js');
+const utils = require('../test_lib/utils.js');
 
 const AuxiliaryStake = artifacts.require('AuxiliaryStake');
 

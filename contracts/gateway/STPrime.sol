@@ -27,7 +27,7 @@ pragma solidity ^0.4.23;
 /// The gasprice on utility chains is set in [ST'-Wei/gas] (like Ether pays for gas
 /// on Ethereum mainnet) when sending a transaction on the open utility chain.
 
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 
 /** utility chain contracts */
 import "./UtilityTokenAbstract.sol";

@@ -22,7 +22,7 @@
 const Assert 	= require('assert');
 const BigNumber = require('bignumber.js');
 
-var Hasher 			= artifacts.require("./Hasher.sol");
+var Hasher 			= artifacts.require("../test_lib/Hasher.sol");
 var STPrimeConfig 	= artifacts.require("./STPrimeConfig.sol");
 var STPrime 		= artifacts.require("./STPrime.sol");
 

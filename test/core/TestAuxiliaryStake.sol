@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../lib/RevertProxy.sol";
+import "../test_lib/RevertProxy.sol";
 import "../../contracts/core/AuxiliaryStake.sol";
 
 /**
