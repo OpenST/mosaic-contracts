@@ -215,20 +215,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *
      * @param _ostBlockHash The block hash of the OSTblock for which a vote
      *                      shall be verified.
-     * @param _voteTrieBranchRlp The trie branch of the trie of votes on the
-     *                           auxiliary checkpoint that is the last
-     *                           finalised checkpoint in the OSTblock.
-     * @param _childVoteTrieBranchRlp The trie branch of the trie of votes from
-     *                                the last finalised checkpoint to its
-     *                                direct checkpoint. Thus finalising the
-     *                                source of the votes with a supermajority.
+     * @param _voteTrieBranchRlp The trie branch of the trie of votes from the
+     *                           last finalised checkpoint to its direct child
+     *                           checkpoint. Thus finalising the source of the
+     *                           votes with a supermajority.
      *
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
         bytes32 _ostBlockHash,
-        bytes _voteTrieBranchRlp,
-        bytes _childVoteTrieBranchRlp
+        bytes _voteTrieBranchRlp
     )
         external
         returns (bool success_)
