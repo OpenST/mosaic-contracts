@@ -5,8 +5,9 @@ import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
+import "./Hasher.sol";
 
-contract CoGateway {
+contract CoGateway is Hasher {
 
 	using SafeMath for uint256;
 
@@ -95,24 +96,6 @@ contract CoGateway {
 		MessageBus.Message message;
 	}
 
-
-	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-
-	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
-		abi.encode(
-			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-		)
-	);
-
 	address public gateway;
 	address public organisation;
 	bool public isActivated;
@@ -175,17 +158,15 @@ contract CoGateway {
 		require(gatewayLink.messageHash == bytes32(0));
 
 		// TODO: need to add check for MessageBus.
-		bytes32 intentHash = keccak256(
-			abi.encodePacked(_gateway,
+		bytes32 intentHash = hashLinkGateway(
+			_gateway,
 			address(this),
 			bounty,
 			EIP20Interface(utilityToken).name(),
 			EIP20Interface(utilityToken).symbol(),
 			EIP20Interface(utilityToken).decimals(),
 			_gasPrice,
-			_nonce
-			)
-		);
+			_nonce);
 
 		require(intentHash == _intentHash);
 
@@ -725,4 +706,19 @@ contract CoGateway {
 	{
 		return ProtocolVersioned(utilityToken).completeProtocolTransfer();
 	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		bytes32 messageHash = activeRequests[_account];
+		if (messageHash == bytes32(0)) {
+			return 0;
+		}
+
+		MessageBus.Message storage message = redeemRequests[messageHash].message;
+		return message.nonce;
+	}
+
 }
