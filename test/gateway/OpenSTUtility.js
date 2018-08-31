@@ -19,8 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('../lib/utils.js');
-const HashLock = require('../lib/hash_lock.js');
+const Utils = require('../test_lib/utils.js');
+const HashLock = require('../test_lib/hash_lock.js');
 const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');
 const BrandedToken = artifacts.require("./BrandedToken.sol");
 const BigNumber = require('bignumber.js');

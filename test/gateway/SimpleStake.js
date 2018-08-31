@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const SimpleStake_utils = require('./SimpleStake_utils.js');
 
 ///

@@ -22,8 +22,8 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
-import "./Hasher.sol";
+import "../lib/SafeMath.sol";
+import "../lib/Hasher.sol";
 import "./OpsManaged.sol";
 import "./EIP20Interface.sol";
 import "./CoreInterface.sol";
@@ -31,7 +31,7 @@ import "./ProtocolVersioned.sol";
 
 // value chain contracts
 import "./SimpleStake.sol";
-import "./ProofLib.sol";
+import "../lib/ProofLib.sol";
 
 /// @title OpenSTValue - value staking contract for OpenST
 contract OpenSTValue is OpsManaged, Hasher {

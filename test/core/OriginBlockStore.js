@@ -19,8 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const eventsDecoder = require('../lib/event_decoder.js');
-const utils = require('../lib/utils.js');
+const eventsDecoder = require('../test_lib/event_decoder.js');
+const utils = require('../test_lib/utils.js');
 
 const OriginBlockStore = artifacts.require('OriginBlockStore');
 

@@ -20,8 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const BigNumber = require('bignumber.js');
-const Utils = require('../lib/utils.js');
-const HashLock = require('../lib/hash_lock.js');
+const Utils = require('../test_lib/utils.js');
+const HashLock = require('../test_lib/hash_lock.js');
 const STPrime_utils = require('./STPrime_utils.js');
 
 ///

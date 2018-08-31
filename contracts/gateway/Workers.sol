@@ -21,7 +21,7 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 import "./EIP20Interface.sol";
 import "./OpsManaged.sol";
 import "./WorkersInterface.sol";

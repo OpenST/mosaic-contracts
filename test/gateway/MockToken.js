@@ -23,10 +23,10 @@ const Assert = require('assert');
 // const Web3 = require('web3');
 const BigNumber = require('bignumber.js');
 
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const MockTokenUtils = require('./MockToken_utils.js')
 const EIP20Token_utils = require('./EIP20Token_utils.js')
-const web3EventsDecoder = require('../lib/event_decoder.js');
+const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
 const MockToken = artifacts.require("./MockToken.sol")
 

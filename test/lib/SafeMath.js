@@ -23,7 +23,7 @@
 // The MIT License.
 // ----------------------------------------------------------------------------
 
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 
 var SafeMathMock = artifacts.require('./SafeMathMock.sol');
 

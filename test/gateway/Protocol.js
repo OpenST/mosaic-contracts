@@ -21,11 +21,11 @@
 
 const Assert = require('assert');
 const BigNumber = require('bignumber.js');
-const utils = require("../lib/utils.js");
-const HashLock = require('../lib/hash_lock.js');
+const utils = require("../test_lib/utils.js");
+const HashLock = require('../test_lib/hash_lock.js');
 const openSTValueUtils = require("./OpenSTValue_utils.js");
 const openSTUtilityUtils = require('./OpenSTUtility_utils.js');
-const web3EventsDecoder = require('../lib/event_decoder.js');
+const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
 const ProtocolUtils = require('./Protocol_utils.js');
 

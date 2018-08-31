@@ -22,7 +22,7 @@
 const Assert 	= require('assert');
 const BigNumber = require('bignumber.js');
 
-var Hasher 		 = artifacts.require("./Hasher.sol");
+var Hasher 		 = artifacts.require("../lib/Hasher.sol");
 var BrandedToken = artifacts.require("./BrandedToken.sol");
 
 /// @dev Deploy 

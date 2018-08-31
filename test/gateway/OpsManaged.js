@@ -21,7 +21,7 @@
 
 const BigNumber = require('bignumber.js')
 
-const Utils = require('../lib/utils.js')
+const Utils = require('../test_lib/utils.js')
 const OpsManagedUtils = require('./OpsManaged_utils.js');
 
 const OpsManaged = artifacts.require("./OpsManaged.sol")

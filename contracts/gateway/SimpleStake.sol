@@ -22,7 +22,7 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./EIP20Interface.sol";
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 import "./ProtocolVersioned.sol";
 
 /**

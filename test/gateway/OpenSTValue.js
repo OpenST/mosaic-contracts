@@ -19,8 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('../lib/utils.js');
-const HashLock = require('../lib/hash_lock.js');
+const Utils = require('../test_lib/utils.js');
+const HashLock = require('../test_lib/hash_lock.js');
 const OpenSTValue_utils = require('./OpenSTValue_utils.js');
 const Core = artifacts.require("./CoreMock.sol");
 const SimpleStake = artifacts.require("./SimpleStake.sol");
@@ -28,7 +28,7 @@ const BigNumber = require('bignumber.js');
 const proof = require('../data/proof');
 
 const rootPrefix = "../.."
-    , constant = require(rootPrefix + '/test/lib/constants')
+    , constant = require(rootPrefix + '/test/test_lib/constants')
 ;
 
 ///

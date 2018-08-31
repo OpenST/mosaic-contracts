@@ -1,6 +1,6 @@
 const RLPTest = artifacts.require("./RLPTest.sol"),
 	RLP = require("rlp"),
-	Utils = require('../lib/utils.js');
+	Utils = require('../test_lib/utils.js');
 
 contract('RLP', function (accounts) {
 	let rlpTest;
