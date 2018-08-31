@@ -3,9 +3,13 @@ pragma solidity ^0.4.23;
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
-import "./UtilityTokenAbstract.sol";
+import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
+import "./Hasher.sol";
+import "./ProofLib.sol";
+import "./RLP.sol";
 
-contract CoGateway {
+contract CoGateway is Hasher {
 
 	using SafeMath for uint256;
 
@@ -75,6 +79,13 @@ contract CoGateway {
 		address token
 	);
 
+	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
+	event GatewayProven(
+		uint256 blockHeight,
+		bytes32 storageRoot,
+		bool wasAlreadyProved
+	);
+
 	/* Struct */
 	/**
 	 *  It denotes the redeem request.
@@ -94,34 +105,20 @@ contract CoGateway {
 		MessageBus.Message message;
 	}
 
-
-	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-
-	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
-		abi.encode(
-			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-		)
-	);
-
-	EIP20Interface private token;
-	address private gateway;
-	address private organisation;
-	bool private isActivated;
+	address public gateway;
+	address public organisation;
+	bool public isActivated;
 	GatewayLink gatewayLink;
-	uint256 private bounty;
+	uint256 public bounty;
 	MessageBus.MessageBox messageBox;
 	uint8 outboxOffset = 4;
-	CoreInterface private core;
-	UtilityTokenInterface  private utilityToken;
+	CoreInterface public core;
+	address public utilityToken;
+
+	/*mapping to store storage root with block height*/
+	mapping(uint256 /* block height */ => bytes32) private storageRoots;
+	/* path to prove merkle account proof for gateway  */
+	bytes private encodedGatewayPath;
 
 	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
@@ -134,25 +131,26 @@ contract CoGateway {
 	}
 
 	constructor(
-		EIP20Interface _token,
+		address _utilityToken,
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation
 	)
 	public
 	{
-		require(_token != address(0));
+		require(_utilityToken != address(0));
 		//require(_gateway != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
-		token = _token;
+		utilityToken = _utilityToken;
 		//gateway = _gateway;
 		core = _core;
 		bounty = _bounty;
 		organisation = _organisation;
 
+		encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(this)));
 		// TODO: should we check the code hash with declared codeHash constants.
 	}
 
@@ -175,17 +173,15 @@ contract CoGateway {
 		require(gatewayLink.messageHash == bytes32(0));
 
 		// TODO: need to add check for MessageBus.
-		bytes32 intentHash = keccak256(
-			abi.encodePacked(_gateway,
+		bytes32 intentHash = hashLinkGateway(
+			_gateway,
 			address(this),
 			bounty,
-			token.name(),
-			token.symbol(),
-			token.decimals(),
+			EIP20Interface(utilityToken).name(),
+			EIP20Interface(utilityToken).symbol(),
+			EIP20Interface(utilityToken).decimals(),
 			_gasPrice,
-			_nonce
-			)
-		);
+			_nonce);
 
 		require(intentHash == _intentHash);
 
@@ -216,7 +212,7 @@ contract CoGateway {
 			messageHash_,
 			gateway,
 			address(this),
-			token
+			utilityToken
 		);
 		gatewayLink.message.gasConsumed = gasleft().sub(initialGas);
 	}
@@ -493,7 +489,7 @@ contract CoGateway {
 
 		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, message, _unlockSecret);
 
-		require(utilityToken.burn(this, redeemAmount));
+		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		msg.sender.transfer(bounty);
 
@@ -533,7 +529,7 @@ contract CoGateway {
 			MessageBus.MessageStatus(_messageStatus)
 		);
 
-		require(utilityToken.burn(this, redeemAmount));
+		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		//TODO: think around bounty
 		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
@@ -618,6 +614,61 @@ contract CoGateway {
 			message.gasPrice);
 	}
 
+	/**
+ *  @notice External function prove gateway.
+ *
+ *  @dev proveGateway can be called by anyone to verify merkle proof of gateway contract address.
+ *		   Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
+ *		   which is a trusted decentralized system running separately.
+ * 		   It's important to note that in replay calls of proveGateway bytes _rlpParentNodes variable is not validated. In this case
+ *		   input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
+ *		   GatewayProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
+ *
+ *  @param _blockHeight Block height at which Gateway is to be proven.
+ *  @param _rlpEncodedAccount RLP encoded account node object.
+ *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
+ *
+ *  @return bool Status.
+ */
+	function proveGateway(
+		uint256 _blockHeight,
+		bytes _rlpEncodedAccount,
+		bytes _rlpParentNodes)
+	external
+	returns (bool /* success */)
+	{
+		// _rlpEncodedAccount should be valid
+		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		// _rlpParentNodes should be valid
+		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
+
+		bytes32 stateRoot = core.getStateRoot(_blockHeight);
+		// State root should be present for the block height
+		require(stateRoot != bytes32(0), "State root is 0");
+
+		// If account already proven for block height
+		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+
+		if (provenStorageRoot != bytes32(0)) {
+			// Check extracted storage root is matching with existing stored storage root
+			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
+			// wasAlreadyProved is true here since proveOpenST is replay call for same block height
+			emit GatewayProven(_blockHeight, storageRoot, true);
+			// return true
+			return true;
+		}
+
+		bytes32 storageRoot = ProofLib.proveAccount(_rlpEncodedAccount, _rlpParentNodes, encodedGatewayPath, stateRoot);
+
+		storageRoots[_blockHeight] = storageRoot;
+		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
+		emit GatewayProven(_blockHeight, storageRoot, false);
+
+		return true;
+	}
+
+
+	/* private methods */
 	function executeConfirmStakingIntent(
 		MessageBus.Message storage _message,
 		uint256 _blockHeight,
@@ -712,4 +763,32 @@ contract CoGateway {
 		}
 		return true;
 	}
+
+	/**
+	 *  @notice Public function completeUtilityTokenProtocolTransfer.
+	 *
+	 *  @return bool True if protocol transfer is completed, false otherwise.
+	 */
+	function completeUtilityTokenProtocolTransfer()
+	public
+	onlyOrganisation
+	returns (bool)
+	{
+		return ProtocolVersioned(utilityToken).completeProtocolTransfer();
+	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		bytes32 messageHash = activeRequests[_account];
+		if (messageHash == bytes32(0)) {
+			return 0;
+		}
+
+		MessageBus.Message storage message = redeemRequests[messageHash].message;
+		return message.nonce;
+	}
+
 }
