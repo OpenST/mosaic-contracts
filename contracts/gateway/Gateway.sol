@@ -389,7 +389,7 @@ contract Gateway is Hasher {
 
 		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		//staker has started the revocation and facilitator has processed on utility chain
@@ -465,7 +465,7 @@ contract Gateway is Hasher {
 		MessageBus.Message storage message = stakeRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		require(
@@ -509,7 +509,7 @@ contract Gateway is Hasher {
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		require(MessageBus.confirmRevocation(
@@ -647,7 +647,7 @@ contract Gateway is Hasher {
 
 		MessageBus.Message storage message = unStakes[_messageHash].message;
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		UnStakes storage unStake = unStakes[_messageHash];
@@ -740,7 +740,7 @@ contract Gateway is Hasher {
 	)
 	private
 	{
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		MessageBus.confirmMessage(
@@ -749,7 +749,7 @@ contract Gateway is Hasher {
 			_message,
 			_rlpParentNodes,
 			outboxOffset,
-			core.getStorageRoot(_blockHeight));
+			storageRoot);
 	}
 
 	function getUnStake(
