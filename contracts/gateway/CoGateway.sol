@@ -224,7 +224,7 @@ contract CoGateway {
 			gatewayLink.message,
 			_rlpParentNodes,
 			outboxOffset,
-			core.getStorageRoot(_blockHeight));
+			storageRoots[_blockHeight]);
 
 		gateway = _gateway;
 
@@ -393,7 +393,7 @@ contract CoGateway {
 		//reward beneficiary with the reward amount
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		emit MintProcessed(
@@ -420,7 +420,7 @@ contract CoGateway {
 		MessageBus.Message storage message = mint.message;
 		require(message.intentHash !=  bytes32(0));
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		require(MessageBus.confirmRevocation(
@@ -536,7 +536,7 @@ contract CoGateway {
 
 		redeemAmount = redeemRequests[_messageHash].amount;
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		MessageBus.progressOutboxWithProof(
@@ -607,7 +607,7 @@ contract CoGateway {
 		MessageBus.Message storage message = redeemRequests[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		require(
@@ -696,7 +696,7 @@ contract CoGateway {
 	)
 	private
 	{
-		bytes32 storageRoot = core.getStorageRoot(_blockHeight);
+		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		MessageBus.confirmMessage(
@@ -705,7 +705,7 @@ contract CoGateway {
 			_message,
 			_rlpParentNodes,
 			outboxOffset,
-			core.getStorageRoot(_blockHeight));
+			storageRoots[_blockHeight]);
 	}
 
 	function getMessage(
