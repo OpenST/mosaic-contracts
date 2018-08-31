@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: AuxiliaryCore.js
+// Test: AuxiliaryBlockStore.js
 //
 // http://www.simpletoken.org/
 //
@@ -22,26 +22,26 @@
 const eventsDecoder = require('../lib/event_decoder.js');
 const utils = require('../lib/utils.js');
 
-const AuxiliaryObserver = artifacts.require('AuxiliaryObserver');
+const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 
-contract('AuxiliaryObserver', async (accounts) => {
+contract('AuxiliaryBlockStore', async (accounts) => {
     describe('reporting a checkpoint', async () => {
-        let auxiliaryObserver;
+        let auxiliaryBlockStore;
 
         beforeEach(async () => {
-            auxiliaryObserver = await AuxiliaryObserver.new(1);
+            auxiliaryBlockStore = await AuxiliaryBlockStore.new(1);
         });
 
         it('should accept a correct checkpoint report', async () => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 300;
 
-            await auxiliaryObserver.reportCheckpoint(
+            await auxiliaryBlockStore.reportCheckpoint(
                 blockHeight,
                 expectedBlockHash
             );
 
-            let reportedCheckpoint = await auxiliaryObserver.reportedCheckpoints.call(expectedBlockHash);
+            let reportedCheckpoint = await auxiliaryBlockStore.reportedCheckpoints.call(expectedBlockHash);
 
             // Access properties by index
             assert.strictEqual(
@@ -60,12 +60,12 @@ contract('AuxiliaryObserver', async (accounts) => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 1200;
 
-            let tx = await auxiliaryObserver.reportCheckpoint(
+            let tx = await auxiliaryBlockStore.reportCheckpoint(
                 blockHeight,
                 expectedBlockHash
             );
 
-            let events = eventsDecoder.perform(tx.receipt, auxiliaryObserver.address, auxiliaryObserver.abi);
+            let events = eventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
             assert.strictEqual(
                 Number(events.CheckpointReported.height),
                 blockHeight,
@@ -85,16 +85,16 @@ contract('AuxiliaryObserver', async (accounts) => {
             let blockHeight = 700;
 
             // Report two different block hashes
-            await auxiliaryObserver.reportCheckpoint(
+            await auxiliaryBlockStore.reportCheckpoint(
                 blockHeight,
                 expectedBlockHashOne
             );
-            await auxiliaryObserver.reportCheckpoint(
+            await auxiliaryBlockStore.reportCheckpoint(
                 blockHeight,
                 expectedBlockHashTwo
             );
 
-            let reportedCheckpoint = await auxiliaryObserver.reportedCheckpoints.call(expectedBlockHashOne);
+            let reportedCheckpoint = await auxiliaryBlockStore.reportedCheckpoints.call(expectedBlockHashOne);
             // Access properties by index
             assert.strictEqual(
                 reportedCheckpoint[0].toNumber(),
@@ -107,7 +107,7 @@ contract('AuxiliaryObserver', async (accounts) => {
                 'The contract did not store the block hash that was reported.'
             );
 
-            reportedCheckpoint = await auxiliaryObserver.reportedCheckpoints.call(expectedBlockHashTwo);
+            reportedCheckpoint = await auxiliaryBlockStore.reportedCheckpoints.call(expectedBlockHashTwo);
             // Access properties by index
             assert.strictEqual(
                 reportedCheckpoint[0].toNumber(),
@@ -126,7 +126,7 @@ contract('AuxiliaryObserver', async (accounts) => {
             let blockHeight = 700;
 
             await utils.expectRevert(
-                auxiliaryObserver.reportCheckpoint(
+                auxiliaryBlockStore.reportCheckpoint(
                     blockHeight,
                     invalidBlockHash
                 )
@@ -137,14 +137,14 @@ contract('AuxiliaryObserver', async (accounts) => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 700;
 
-            await auxiliaryObserver.reportCheckpoint(
+            await auxiliaryBlockStore.reportCheckpoint(
                 blockHeight,
                 expectedBlockHash
             );
 
             // Reporting the same block hash again should lead to an error.
             await utils.expectRevert(
-                auxiliaryObserver.reportCheckpoint(
+                auxiliaryBlockStore.reportCheckpoint(
                     blockHeight,
                     expectedBlockHash
                 )
@@ -156,7 +156,7 @@ contract('AuxiliaryObserver', async (accounts) => {
             let blockHeight = 750;
 
             await utils.expectRevert(
-                auxiliaryObserver.reportCheckpoint(
+                auxiliaryBlockStore.reportCheckpoint(
                     blockHeight,
                     blockHash
                 )

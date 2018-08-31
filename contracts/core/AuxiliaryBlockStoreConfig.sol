@@ -14,8 +14,8 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title Configuration constants for the AuxiliaryObserver contract. */
-contract AuxiliaryObserverConfig {
+/** @title Configuration constants for the AuxiliaryBlockStore contract. */
+contract AuxiliaryBlockStoreConfig {
 
     /** The length of a Casper FFG epoch on auxiliary (in blocks). */
     uint256 public constant EPOCH_LENGTH = 100;

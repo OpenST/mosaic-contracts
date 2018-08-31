@@ -14,23 +14,20 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title The interface for the auxiliary observer. */
-interface AuxiliaryObserverInterface {
+/** @title The interface for the origin block store on auxiliary. */
+interface OriginBlockStoreInterface {
 
     /**
-     * @notice Report a checkpoint of auxiliary to this core contract. A
-     *         checkpoint must be at a height that is a multiple of the epoch
-     *         length. You can report every checkpoint only once.
+     * @notice Get the state root of a block in this store.
      *
-     * @param _height The block height of the checkpoint.
-     * @param _blockHash The block hash of the block at the checkpoint.
+     * @param _blockHeight For which blockheight to get the state root.
      *
-     * @return `true` if the report succeeded. Reverts if it fails.
+     * @return The state root of the block.
      */
-    function reportCheckpoint(
-        uint256 _height,
-        bytes32 _blockHash
+    function getStateRoot(
+        uint256 _blockHeight
     )
         external
-        returns (bool success_);
+        view
+        returns (bytes32 stateRoot_);
 }
