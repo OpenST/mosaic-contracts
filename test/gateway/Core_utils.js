@@ -36,6 +36,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     const registrar = accounts[1]
         , admin = accounts[2]
         , ops = accounts[3]
+        , openSTRemote = proof.account.accountAddress
         , chainIdOrigin = 3
         , chainIdRemote = 1410
         , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
@@ -48,7 +49,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
     await workers.setAdminAddress(admin);
     await workers.setOpsAddress(ops);
     await workers.setWorker(worker1, deactivationHeight, {from: ops});
-    const core = await Core.new(chainIdOrigin, chainIdRemote, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
+    const core = await Core.new(registrar, chainIdOrigin, chainIdRemote, openSTRemote, constants.UTILITY_CHAIN_BLOCK_TIME, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
     return {
         core: core,
         workersContract: workers,
