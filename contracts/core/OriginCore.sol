@@ -209,16 +209,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice Verifies two of the votes that justified this block and two of
-     *         the votes that justified its child checkpoint, therefore
-     *         finalising the previous checkpoint.
+     * @notice Verifies two of the votes that justified the direct child
+     *         checkpoint of the last justified auxiliary checkpoint in the
+     *         OSTblock. A supermajority of such votes finalise the last
+     *         auxiliary checkpoint of this OSTblock.
      *
-     * @param _ostBlockHash The block hash of the OSTblock for which a vote
+     * @dev Verifies two votes, as the trie branch includes two leaf nodes in
+     *      order to verify all hashes.
+     *
+     * @param _ostBlockHash The block hash of the OSTblock for which the votes
      *                      shall be verified.
      * @param _voteTrieBranchRlp The trie branch of the trie of votes from the
      *                           last finalised checkpoint to its direct child
-     *                           checkpoint. Thus finalising the source of the
-     *                           votes with a supermajority.
+     *                           checkpoint.
      *
      * @return `true` if the verification succeeded.
      */

@@ -27,7 +27,8 @@ interface OstBlockGatewayInterface {
      *                            that proves that the opening took place on
      *                            origin.
      * @param _originBlockHeight The block height on origin where the opening
-     *                           took place.
+     *                           took place. Must be a height that is finalised
+     *                           in the OriginBlockStore.
      *
      * @return `true` if the proof succeeded.
      */

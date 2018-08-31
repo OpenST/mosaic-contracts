@@ -21,6 +21,8 @@ interface BlockStoreInterface {
      * @notice Report a block.
      *
      * @param _blockHeaderRlp The header of the reported block, RLP encoded.
+     *
+     * @return `true` if the report succeeded.
      */
     function reportBlock(
         bytes _blockHeaderRlp

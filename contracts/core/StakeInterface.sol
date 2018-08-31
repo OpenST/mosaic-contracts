@@ -19,27 +19,24 @@ interface StakeInterface {
 
     /**
      * @notice The message sender deposits the given amount of OST in the stake
-     *         contract to give the validator addresses voting power equal to
+     *         contract to give the validator addresses voting weight equal to
      *         the deposit. The validator will be able to cast votes starting
      *         at the current OSTblock height plus two.
      *         Prior to this call, the message sender must approve an OST
      *         transfer of the specified deposit ammount from her account to
      *         the stake contract.
+     *         The `msg.sender` will be the only address that is allowed to
+     *         log out or withdraw.
      *
      * @param _amount The amount of OST to deposit.
-     * @param _originValidatorAddress The address of the validator on origin.
-     * @param _auxiliaryValidatorAddress The address of the validator on
-     *                                   auxiliary.
-     * @param _withdrawalAddress The address where the OST should be
-     *                           transferred in case of a withdrawal.
+     * @param _validator The address of the validator on auxiliary, where the
+     *                   voting takes place.
      *
      * @return The unique index of the registered validator.
      */
     function deposit(
         uint256 _amount,
-        address _originValidatorAddress,
-        address _auxiliaryValidatorAddress,
-        address _withdrawalAddress
+        address _validator
     )
         external
         returns (uint256 validatorIndex_);
@@ -64,7 +61,7 @@ interface StakeInterface {
     /**
      * @notice Withdraw the deposit of a validator. A deposit can only be
      *         withdrawn after the holding period has passed after the
-     *         validator logged out.
+     *         validator was logged out.
      *
      * @param _validatorIndex The unique index of the validator that shall
      *                        approve the transfer of the deposit to its
@@ -99,53 +96,62 @@ interface StakeInterface {
      *         handle any changes in the set of validators.
      *         Can only be called from OriginCore.
      *
-     * @param _closedOstBlockHeaderRlp The full header of the closed OSTblock,
-     *                                 RLP encoded.
+     * @dev The height is given to `assert` that the call is in sync with the
+     *      contract.
      *
-     * @return The full header of the new, opened OSTblock as a result of the
-     *         closing, RLP encoded. The newly opened OSTblock header inculdes
-     *         all changes in the set of validators.
+     * @param _closingHeight The height of the OSTblock to close.
+     *
+     * @return The set of updated validators. Could be new validators or
+     *         existing validators with an updated weight. Weights can only
+     *         decrease.
      */
     function closeOstBlock(
-        bytes _closedOstBlockHeaderRlp
+        uint256 _closingHeight
     )
         external
-        returns (bytes _openedOstBlockHeaderRlp);
+        returns (
+            address[] updatedValidators_,
+            uint256[] updatedWeights_
+        );
 
     /**
-     * @notice Returns the total stake of all validators at a given height.
+     * @notice Returns the total weight of all validators at a given height.
+     *
+     * @dev The height is given to `assert` that the call is in sync with the
+     *      contract.
      *
      * @param _height The height for which to get the total deposit.
      *
-     * @return The total stake at the given height.
+     * @return The total weight at the given height.
      */
-    function totalStakeAtHeight(
+    function totalWeightAtHeight(
         uint256 _height
     )
         external
         view
-        returns (uint256 totalStake_);
+        returns (uint256 totalWeight_);
 
     /**
-     * @notice Returns the stake of a validator at a specific OSTblock height,
+     * @notice Returns the weight of a validator at a specific OSTblock height,
      *         based on the auxiliary address of the validator.
      *
-     * @dev The OriginCore can use this method to track the verified stake by
+     * @dev The OriginCore can use this method to track the verified weight by
      *      the verified votes and notice when a supermajority has been
      *      reached, therefore committing the OSTblock.
+     *      The height is given to `assert` that the call is in sync with the
+     *      contract.
      *
-     * @param _height The OSTblock height for which to get the stake.
-     * @param _auxiliaryValidatorAddress The address of the validator on the
-     *                                   auxiliary chain.
+     * @param _height The OSTblock height for which to get the weight.
+     * @param _validator The address of the validator on the auxiliary chain.
      *
-     * @return The stake of the validator at the given height. Can be 0, for
-     *         example when the address never deposited.
+     * @return The weight of the validator. Can be 0, for example when the
+     *         there was never a deposit for this address.
      */
-    function getStakeAtHeightByAuxiliaryAddress(
+    function weight(
         uint256 _height,
-        address _auxiliaryValidatorAddress
+        address _validator
     )
         external
         view
-        returns (uint256 validatorStake_);
+        returns (uint256 validatorWeight_);
 }

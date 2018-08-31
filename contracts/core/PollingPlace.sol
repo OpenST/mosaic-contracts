@@ -143,19 +143,19 @@ contract PollingPlace is PollingPlaceInterface {
      * @notice Updates the OSTblock height by one and adds the new validators
      *         that should join at this height.
      *         Provide two arrays with the validators' addresses on auxiliary
-     *         and their respective stakes at the same index. If an auxiliary
-     *         address and a stake have the same index in the provided arrays,
+     *         and their respective weights at the same index. If an auxiliary
+     *         address and a weight have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
-     * @param _auxiliaryAddresses The addresses of the new validators on the
-     *                            auxiliary chain.
-     * @param _stakes The stakes of the validators on origin.
+     * @param _validators The addresses of the new validators on the auxiliary
+     *                    chain.
+     * @param _weights The weights of the validators.
      *
-     * @return `true` if the update was successful. Reverts otherwise.
+     * @return `true` if the update was successful.
      */
     function updateOstBlockHeight(
-        address[] _auxiliaryAddresses,
-        uint256[] _stakes
+        address[] _validators,
+        uint256[] _weights
     )
         external
         returns (bool success_)
@@ -174,7 +174,7 @@ contract PollingPlace is PollingPlaceInterface {
          */
         totalStakes[currentOstBlockHeight] = totalStakes[currentOstBlockHeight - 1];
 
-        addValidators(_auxiliaryAddresses, _stakes);
+        addValidators(_validators, _weights);
 
         success_ = true;
     }
@@ -182,10 +182,8 @@ contract PollingPlace is PollingPlaceInterface {
     /**
      * @notice Cast a vote from a source to a target.
      *
-     * @param _blockStore Address of the block store that stores the blocks
-     *                    that are source and target of this vote.
-     * @param _coreId A unique identifier that identifies what chain this vote
-     *                is about. Must be maintained externally.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
      * @param _source The hash of the source block.
      * @param _target The hash of the target blokc.
      * @param _sourceHeight The height of the source block.
@@ -197,8 +195,7 @@ contract PollingPlace is PollingPlaceInterface {
      * @return `true` if the vote was recorded successfully.
      */
     function vote(
-        address _blockStore,
-        bytes20 _coreId,
+        bytes20 _coreIdentifier,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,
