@@ -38,14 +38,13 @@ module.exports.deployCore = async (artifacts, accounts) => {
         , ops = accounts[3]
         , chainIdOrigin = 3
         , chainIdRemote = 1410
-        , valueToken = await MockToken.new()
         , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
         , worker1 = accounts[7]
     ;
 
 
     // Deploy worker contract
-    const workers = await Workers.new(valueToken.address);
+    const workers = await Workers.new();
     await workers.setAdminAddress(admin);
     await workers.setOpsAddress(ops);
     await workers.setWorker(worker1, deactivationHeight, {from: ops});

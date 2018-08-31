@@ -30,19 +30,15 @@ pragma solidity ^0.4.23;
 contract UtilityTokenInterface {
 
     /** Public Functions */
-    
-    /** @dev transfer full claim to beneficiary */
-    function claim(address _beneficiary) public returns (bool success);
+
     /** @dev Mint new utility token into  claim for beneficiary */
     function mint(address _beneficiary, uint256 _amount) public returns (bool success);
-    /** @dev Burn utility tokens after having redeemed them 
-     *       through the protocol for the staked Simple Token 
+    /** @dev Burn utility tokens after having redeemed them
+     *       through the protocol for the staked Simple Token
      */
     function burn(address _burner, uint256 _amount) public payable returns (bool success);
     /** @dev Get totalTokenSupply as view so that child cannot edit */
     function totalSupply() public view returns (uint256 supply);
-    /** @dev Get unique universal identifier for utility token */
-    function uuid() public view returns (bytes32 getUuid);
     /** @dev Get conversion rate for utility token */
     function conversionRate() public view returns (uint256 rate);
     /** @dev Get conversion rate decimal factor for utility token */

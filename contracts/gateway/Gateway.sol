@@ -27,6 +27,7 @@ import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./SimpleStake.sol";
 import "./SafeMath.sol";
+import "./Hasher.sol";
 import "./ProofLib.sol";
 import "./RLP.sol";
 
@@ -38,7 +39,7 @@ import "./RLP.sol";
  *          The Gateway contract will serve the role of staking account rather than an external account.
  *
  */
-contract Gateway {
+contract Gateway is Hasher {
 
 	using SafeMath for uint256;
 
@@ -137,26 +138,6 @@ contract Gateway {
 
 	/* Storage */
 
-	// It is a hash used to represent operation type.
-	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message,address facilitator)"
-		)
-	);
-
-	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-
-	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
-		abi.encode(
-			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-		)
-	);
-
-
 	address public coGateway;
 	bool public isActivated;
 	address public organisation;
@@ -240,17 +221,16 @@ contract Gateway {
 		require(gatewayLink.messageHash == bytes32(0));
 
         // TODO: need to add check for MessageBus.
-		bytes32 intentHash = keccak256(
-			abi.encodePacked(address(this),
-				coGateway,
-				bounty,
-                token.name(),
-                token.symbol(),
-                token.decimals(),
-                _gasPrice,
-                _nonce
-			)
-		);
+		bytes32 intentHash = hashLinkGateway(
+			address(this),
+			coGateway,
+			bounty,
+			token.name(),
+			token.symbol(),
+			token.decimals(),
+			_gasPrice,
+			_nonce);
+
 		require(intentHash == _intentHash);
 
 		// check nonces
@@ -848,6 +828,21 @@ contract Gateway {
 			delete messageBox.inbox[previousRequest];
 		}
 	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		bytes32 messageHash = activeRequests[_account];
+		if (messageHash == bytes32(0)) {
+			return 0;
+		}
+
+		MessageBus.Message storage message = stakeRequests[messageHash].message;
+		return message.nonce;
+	}
+
 }
 
 
