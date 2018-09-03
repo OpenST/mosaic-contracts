@@ -3,9 +3,11 @@ pragma solidity ^0.4.23;
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
-import "./UtilityTokenAbstract.sol";
+import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
+import "./Hasher.sol";
 
-contract CoGateway {
+contract CoGateway is Hasher {
 
 	using SafeMath for uint256;
 
@@ -94,34 +96,15 @@ contract CoGateway {
 		MessageBus.Message message;
 	}
 
-
-	bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-
-	bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
-		abi.encode(
-			"RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
-		)
-	);
-	bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
-		abi.encode(
-			"GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-		)
-	);
-
-	EIP20Interface private token;
-	address private gateway;
-	address private organisation;
-	bool private isActivated;
+	address public gateway;
+	address public organisation;
+	bool public isActivated;
 	GatewayLink gatewayLink;
-	uint256 private bounty;
+	uint256 public bounty;
 	MessageBus.MessageBox messageBox;
 	uint8 outboxOffset = 4;
-	CoreInterface private core;
-	UtilityTokenInterface  private utilityToken;
+	CoreInterface public core;
+	address public utilityToken;
 
 	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 	mapping(bytes32 /*requestHash*/ => Mint) mints;
@@ -134,20 +117,20 @@ contract CoGateway {
 	}
 
 	constructor(
-		EIP20Interface _token,
+		address _utilityToken,
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation
 	)
 	public
 	{
-		require(_token != address(0));
+		require(_utilityToken != address(0));
 		//require(_gateway != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
-		token = _token;
+		utilityToken = _utilityToken;
 		//gateway = _gateway;
 		core = _core;
 		bounty = _bounty;
@@ -175,17 +158,15 @@ contract CoGateway {
 		require(gatewayLink.messageHash == bytes32(0));
 
 		// TODO: need to add check for MessageBus.
-		bytes32 intentHash = keccak256(
-			abi.encodePacked(_gateway,
+		bytes32 intentHash = hashLinkGateway(
+			_gateway,
 			address(this),
 			bounty,
-			token.name(),
-			token.symbol(),
-			token.decimals(),
+			EIP20Interface(utilityToken).name(),
+			EIP20Interface(utilityToken).symbol(),
+			EIP20Interface(utilityToken).decimals(),
 			_gasPrice,
-			_nonce
-			)
-		);
+			_nonce);
 
 		require(intentHash == _intentHash);
 
@@ -216,7 +197,7 @@ contract CoGateway {
 			messageHash_,
 			gateway,
 			address(this),
-			token
+			utilityToken
 		);
 		gatewayLink.message.gasConsumed = gasleft().sub(initialGas);
 	}
@@ -493,7 +474,7 @@ contract CoGateway {
 
 		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, message, _unlockSecret);
 
-		require(utilityToken.burn(this, redeemAmount));
+		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		msg.sender.transfer(bounty);
 
@@ -533,7 +514,7 @@ contract CoGateway {
 			MessageBus.MessageStatus(_messageStatus)
 		);
 
-		require(utilityToken.burn(this, redeemAmount));
+		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		//TODO: think around bounty
 		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
@@ -712,4 +693,32 @@ contract CoGateway {
 		}
 		return true;
 	}
+
+	/**
+	 *  @notice Public function completeUtilityTokenProtocolTransfer.
+	 *
+	 *  @return bool True if protocol transfer is completed, false otherwise.
+	 */
+	function completeUtilityTokenProtocolTransfer()
+	public
+	onlyOrganisation
+	returns (bool)
+	{
+		return ProtocolVersioned(utilityToken).completeProtocolTransfer();
+	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		bytes32 messageHash = activeRequests[_account];
+		if (messageHash == bytes32(0)) {
+			return 0;
+		}
+
+		MessageBus.Message storage message = redeemRequests[messageHash].message;
+		return message.nonce;
+	}
+
 }

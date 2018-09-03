@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Utility chain: OSTPrimeConfig
 //
 // http://www.simpletoken.org/
 //
@@ -24,11 +24,11 @@ pragma solidity ^0.4.23;
 
 /* solhint-disable-next-line two-lines-top-level-separator */
 /**
- *  @title STPrimeConfig contract.
+ *  @title OSTPrimeConfig contract.
  *
- *  @notice Contains configuration constants utilized by the STPrime contract.
+ *  @notice Contains configuration constants utilized by the OSTPrime contract.
  */
-contract STPrimeConfig {
+contract OSTPrimeConfig {
 
     /** Constants */
 
