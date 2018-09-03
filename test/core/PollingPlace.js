@@ -33,11 +33,11 @@ const ValidatorIndexEndHeight = 4;
 contract('PollingPlace', async (accounts) => {
     describe('deploying a polling place contract', async () => {
         /*
-         * Make the first address the default OSTblock gate to be able to
+         * Make the first address the default meta-block gate to be able to
          * call methods that change the set of validators from the default
          * message caller address.
          */
-        let defaultOstBlockGate = accounts[0];
+        let defaultMetaBlockGate = accounts[0];
 
         it('should store a correct list of initial validators', async () => {
             let expectedStakes = {
@@ -86,16 +86,16 @@ contract('PollingPlace', async (accounts) => {
             };
 
             let pollingPlace = await PollingPlace.new(
-                defaultOstBlockGate,
+                defaultMetaBlockGate,
                 expectedStakes.addresses,
                 expectedStakes.values
             );
 
-            let ostBlockGate = await pollingPlace.ostBlockGate.call();
+            let metaBlockGate = await pollingPlace.metaBlockGate.call();
             assert.strictEqual(
-                ostBlockGate,
-                defaultOstBlockGate,
-                'The contract must store the correct OSTblock gate.'
+                metaBlockGate,
+                defaultMetaBlockGate,
+                'The contract must store the correct meta-block gate.'
             );
 
             // Check for all individual stakes to be recorded
@@ -133,7 +133,7 @@ contract('PollingPlace', async (accounts) => {
             );
         });
 
-        it('should not accept a zero OSTblock gate', async () => {
+        it('should not accept a zero meta-block gate', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
                     '0x0000000000000000000000000000000000000000',
@@ -152,7 +152,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept an empty validator set', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
-                    defaultOstBlockGate,
+                    defaultMetaBlockGate,
                     [],
                     []
                 )
@@ -162,7 +162,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept two arrays of different length', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
-                    defaultOstBlockGate,
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -177,7 +177,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept a zero stake', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
-                    defaultOstBlockGate,
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -193,7 +193,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept a zero address', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
-                    defaultOstBlockGate,
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000000',
@@ -209,7 +209,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept the same address more than once', async () => {
             await utils.expectRevert(
                 PollingPlace.new(
-                    defaultOstBlockGate,
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
