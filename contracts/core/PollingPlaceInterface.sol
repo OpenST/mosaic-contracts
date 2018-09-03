@@ -46,7 +46,7 @@ interface PollingPlaceInterface {
         returns (bool success_);
 
     /**
-     * @notice Updates the OSTblock height by one and adds the new validators
+     * @notice Updates the meta-block height by one and adds the new validators
      *         that should join at this height.
      *         Provide two arrays with the validators' addresses on auxiliary
      *         and their respective weights at the same index. If an auxiliary
@@ -59,7 +59,7 @@ interface PollingPlaceInterface {
      *
      * @return `true` if the update was successful.
      */
-    function updateOstBlockHeight(
+    function updateMetaBlockHeight(
         address[] _validators,
         uint256[] _weights
     )

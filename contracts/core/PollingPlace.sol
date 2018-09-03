@@ -21,7 +21,7 @@ import "./PollingPlaceInterface.sol";
  *
  * @notice PollingPlace accepts Casper FFG votes from validators.
  *         PollingPlace also tracks the validator deposits of the Mosaic
- *         validators. The set of validators will change with new OSTblocks
+ *         validators. The set of validators will change with new meta-blocks
  *         opening on auxiliary. This contract should always know the active
  *         validators and their respective stake.
  */
@@ -40,25 +40,25 @@ contract PollingPlace is PollingPlaceInterface {
         /** The amount of OST that the validator deposited on origin. */
         uint256 stake;
 
-        /** When set to `true`, check `endHeight` to know the last OSTblock. */
+        /** When set to `true`, check `endHeight` to know the last meta-block. */
         bool ended;
 
         /**
-         * The OSTblock height where this validator will enter the set of
-         * validators. Usually, when a validator deposits at OSTblock height h,
-         * then OSTblock h+1 announces that the validator will join in OSTblock
-         * h+2.
-         * The validator will participate starting from the OSTblock with
+         * The meta-block height where this validator will enter the set of
+         * validators. Usually, when a validator deposits at meta-block height
+         * h, then meta-block h+1 announces that the validator will join in
+         * meta-block h+2.
+         * The validator will participate starting from the meta-block with
          * exactly this height.
          */
         uint256 startHeight;
 
         /**
-         * The OSTblock height where this validator will exit the set of
-         * validators. Usually, when a validator withdraws at OSTblock height
-         * h, then OSTblock h+1 announces that the validator will leave in
-         * OSTblock h+2.
-         * The OSTblock with this height will be the first block where the
+         * The meta-block height where this validator will exit the set of
+         * validators. Usually, when a validator withdraws at meta-block height
+         * h, then meta-block h+1 announces that the validator will leave in
+         * meta-block h+2.
+         * The meta-block with this height will be the first block where the
          * validator does not participate anymore.
          */
         uint256 endHeight;
@@ -67,24 +67,24 @@ contract PollingPlace is PollingPlaceInterface {
     /* Public Variables */
 
     /**
-     * The OSTblock gate is the only contract that is allowed to update the
-     * OSTblock height.
+     * The meta-block gate is the only contract that is allowed to update the
+     * meta-block height.
      */
-    address public ostBlockGate;
+    address public metaBlockGate;
 
     /**
-     * Tracks the current height of the OSTblock within this contract. We track
-     * this here to make certain assertions about newly reported OSTblocks and
-     * to know what current height we are voting on.
+     * Tracks the current height of the meta-block within this contract. We
+     * track this here to make certain assertions about newly reported
+     * meta-blocks and to know what current height we are voting on.
      */
-    uint256 public currentOstBlockHeight;
+    uint256 public currentMetaBlockHeight;
 
     /**
      * Maps auxiliary addresses of validators to their details.
      *
      * The initial set will be given at construction. Later, validators can
      * enter and leave the set of validators through the reporting of new
-     * OSTblocks to auxiliary. Validators that left the set of validators are
+     * meta-blocks to auxiliary. Validators that left the set of validators are
      * still kept in the mapping, with `ended` set to `true`.
      *
      * One address can never stake more than once.
@@ -92,9 +92,10 @@ contract PollingPlace is PollingPlaceInterface {
     mapping (address => Validator) public validators;
 
     /**
-     * Maps the OSTblock height to the total stake at that height. The total
-     * stake is the sum of all deposits that took place at least two OSTblocks
-     * before and that have not withdrawn at least two OSTblocks before.
+     * Maps the meta-block height to the total stake at that height. The total
+     * stake is the sum of all deposits that took place at least two
+     * meta-blocks before and that have not withdrawn at least two meta-blocks
+     * before.
      */
     mapping (uint256 => uint256) public totalStakes;
 
@@ -107,23 +108,23 @@ contract PollingPlace is PollingPlaceInterface {
      *         address and a stake have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
-     * @param _ostBlockGate The OSTblock gate is the only address that is
+     * @param _metaBlockGate The meta-block gate is the only address that is
      *                      allowed to call methods that update the current
-     *                      height of the OSTblock chain.
+     *                      height of the meta-block chain.
      * @param _auxiliaryAddresses An array of validators' addresses on
      *                            auxiliary.
      * @param _stakes The stakes of the validators on origin. Indexed the same
      *                way as the _auxiliaryAddresses.
      */
     constructor (
-        address _ostBlockGate,
+        address _metaBlockGate,
         address[] _auxiliaryAddresses,
         uint256[] _stakes
     )
         public
     {
         require(
-            _ostBlockGate != address(0),
+            _metaBlockGate != address(0),
             "The address of the validator manager must not be zero."
         );
 
@@ -132,7 +133,7 @@ contract PollingPlace is PollingPlaceInterface {
             "The count of initial validators must be at least one."
         );
 
-        ostBlockGate = _ostBlockGate;
+        metaBlockGate = _metaBlockGate;
 
         addValidators(_auxiliaryAddresses, _stakes);
     }
@@ -140,7 +141,7 @@ contract PollingPlace is PollingPlaceInterface {
     /* External Functions */
 
     /**
-     * @notice Updates the OSTblock height by one and adds the new validators
+     * @notice Updates the meta-block height by one and adds the new validators
      *         that should join at this height.
      *         Provide two arrays with the validators' addresses on auxiliary
      *         and their respective weights at the same index. If an auxiliary
@@ -153,7 +154,7 @@ contract PollingPlace is PollingPlaceInterface {
      *
      * @return `true` if the update was successful.
      */
-    function updateOstBlockHeight(
+    function updateMetaBlockHeight(
         address[] _validators,
         uint256[] _weights
     )
@@ -161,18 +162,18 @@ contract PollingPlace is PollingPlaceInterface {
         returns (bool success_)
     {
         require(
-            msg.sender == ostBlockGate,
-            "OSTblock updates must be done by the registered OSTblock gate."
+            msg.sender == metaBlockGate,
+            "meta-block updates must be done by the registered meta-block gate."
         );
 
-        currentOstBlockHeight++;
+        currentMetaBlockHeight++;
 
         /*
          * Before adding the new validators, copy the total stakes from the
          * previous height. The new validators' stakes for this height will be
          * added on top.
          */
-        totalStakes[currentOstBlockHeight] = totalStakes[currentOstBlockHeight - 1];
+        totalStakes[currentMetaBlockHeight] = totalStakes[currentMetaBlockHeight - 1];
 
         addValidators(_validators, _weights);
 
@@ -214,7 +215,7 @@ contract PollingPlace is PollingPlaceInterface {
 
     /**
      * @notice Add validators to the set of validators. Starting from the
-     *         current OSTblock height.
+     *         current meta-block height.
      *
      * @param _auxiliaryAddresses The addresses of the new validators on the
      *                            auxiliary chain.
@@ -254,11 +255,11 @@ contract PollingPlace is PollingPlaceInterface {
                 auxiliaryAddress,
                 stake,
                 false,
-                currentOstBlockHeight,
+                currentMetaBlockHeight,
                 0
             );
 
-            totalStakes[currentOstBlockHeight] += stake;
+            totalStakes[currentMetaBlockHeight] += stake;
         }
     }
 
