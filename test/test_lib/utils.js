@@ -130,6 +130,22 @@ module.exports.expectRevert = async (promise) => {
   assert(false, "Did not revert as expected.");
 };
 
+/// @dev Expect failure from assert, but returns error instead
+module.exports.expectFailedAssert = async (promise) => {
+  try {
+    await promise;
+  } catch (error) {
+    assert(
+      error.message.search('invalid opcode') > -1,
+      'The contract should fail an assert. Instead: ' + error.message
+    );
+
+    return;
+  }
+
+  assert(false, "Did not fail assert as expected.");
+};
+
 /// @dev Get account balance
 module.exports.getBalance = function (address) {
   return new Promise(function (resolve, reject) {

@@ -28,15 +28,15 @@ interface StakeInterface {
      *         The `msg.sender` will be the only address that is allowed to
      *         log out or withdraw.
      *
-     * @param _amount The amount of OST to deposit.
      * @param _validator The address of the validator on auxiliary, where the
      *                   voting takes place.
+     * @param _amount The amount of OST to deposit.
      *
      * @return The unique index of the registered validator.
      */
     function deposit(
-        uint256 _amount,
-        address _validator
+        address _validator,
+        uint256 _amount
     )
         external
         returns (uint256 validatorIndex_);
