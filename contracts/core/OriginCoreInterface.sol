@@ -60,25 +60,38 @@ interface OriginCoreInterface {
         returns (bool success_);
 
     /**
-     * @notice Verifies two of the votes that justified the direct child
-     *         checkpoint of the last justified auxiliary checkpoint in the
-     *         OSTblock. A supermajority of such votes finalise the last
-     *         auxiliary checkpoint of this OSTblock.
+     * @notice Verifies a vote that justified the direct child checkpoint of
+     *         the last justified auxiliary checkpoint in the meta-block. A
+     *         supermajority of such votes finalise the last auxiliary
+     *         checkpoint of this meta-block.
      *
-     * @dev Verifies two votes, as the trie branch includes two leaf nodes in
-     *      order to verify all hashes.
+     * @dev Must track which votes have already been verified so that the same
+     *      vote never gets verified more than once.
      *
-     * @param _ostBlockHash The block hash of the OSTblock for which the votes
-     *                      shall be verified.
-     * @param _voteTrieBranchRlp The trie branch of the trie of votes from the
-     *                           last finalised checkpoint to its direct child
-     *                           checkpoint.
+     * @param _metaBlockHash The block hash of the meta-block for which the
+     *                       votes shall be verified.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target blokc.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
      *
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
-        bytes32 _ostBlockHash,
-        bytes _voteTrieBranchRlp
+        bytes32 _metaBlockHash,
+        bytes20 _coreIdentifier,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     )
         external
         returns (bool success_);
