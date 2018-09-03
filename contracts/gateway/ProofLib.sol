@@ -90,4 +90,29 @@ library ProofLib {
       _storageRoot);
   }
 
+  function proveAccount(
+    bytes _rlpEncodedAccount,
+    bytes _rlpParentNodes,
+    bytes _encodedPath,
+    bytes32 _stateRoot
+  )
+  internal
+  pure
+  returns (bytes32 storageRoot_)
+  {
+    // Decode RLP encoded account value
+    RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
+    // Convert to list
+    RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
+    // Array 3rd position is storage root
+    storageRoot_ = RLP.toBytes32(accountArray[2]);
+    // Hash the rlpEncodedValue value
+    bytes32 hashedAccount = keccak256(abi.encodePacked(_rlpEncodedAccount));
+
+    // Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
+    require(MerklePatriciaProof.verify(hashedAccount, _encodedPath, _rlpParentNodes, _stateRoot), "Account proof is not verified.");
+
+    return storageRoot_;
+  }
+
 }
