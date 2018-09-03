@@ -184,6 +184,9 @@ contract PollingPlace is PollingPlaceInterface {
      *
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block. The meta-block is not yet
+     *                    closed when this vote is cast.
      * @param _source The hash of the source block.
      * @param _target The hash of the target blokc.
      * @param _sourceHeight The height of the source block.
@@ -196,6 +199,7 @@ contract PollingPlace is PollingPlaceInterface {
      */
     function vote(
         bytes20 _coreIdentifier,
+        bytes32 _transition,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,

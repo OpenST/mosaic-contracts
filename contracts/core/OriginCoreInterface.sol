@@ -24,37 +24,37 @@ interface OriginCoreInterface {
      *
      * @param _height Height of the OSTblock in the chain of OSTblocks.
      * @param _parent The hash of the parent OSTblock.
-     * @param _gas The total consumed gas on auxiliary within this OSTblock.
+     * @param _updatedValidators The array of addresses of the validators that
+     *                           are updated within this block. Updated weights
+     *                           at the same index relate to the address in
+     *                           this array.
+     * @param _updatedWeights The array of weights that corresponds to the
+     *                        updated validators. Updated validators at the
+     *                        same index relate to the weight in this array.
+     *                        Weights of existing validators can only decrease.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
      * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
      *                            that is part of this OSTblock.
-     * @param _auxiliaryDynasty The dynasty number where the OSTblock closes on
-     *                          the auxiliary chain.
-     * @param _stateRoot The state root of the last finalised checkpoint that
-     *                   is part of this OSTblock.
+     * @param _gas The total consumed gas on auxiliary within this meta-block.
      * @param _transactionRoot The transaction root of the OSTblock. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
-     * @param _signatureRoot The root of the trie of votes from the last
-     *                       finalised checkpoint to its direct child
-     *                       checkpoint.
-     * @param _depositedValidators Auxiliary addresses of the validators that
-     *                             deposited during the previous OSTblock.
-     * @param _loggedOutValidators  Auxiliary addresses of the validators that
-     *                              logged out during the previous OSTblock.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
      *
      * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
         uint256 _height,
         bytes32 _parent,
-        uint256 _gas,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes20 _coreIdentifier,
         bytes32 _auxiliaryBlockHash,
-        uint256 _auxiliaryDynasty,
-        bytes32 _stateRoot,
+        uint256 _gas,
         bytes32 _transactionRoot,
-        bytes32 _signatureRoot,
-        address[] _depositedValidators,
-        address[] _loggedOutValidators
+        uint256 _auxiliaryDynasty
     )
         external
         returns (bool success_);
@@ -72,6 +72,8 @@ interface OriginCoreInterface {
      *                       votes shall be verified.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block.
      * @param _source The hash of the source block.
      * @param _target The hash of the target blokc.
      * @param _sourceHeight The height of the source block.
@@ -85,6 +87,7 @@ interface OriginCoreInterface {
     function verifyVote(
         bytes32 _metaBlockHash,
         bytes20 _coreIdentifier,
+        bytes32 _transition,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,

@@ -102,8 +102,8 @@ interface StakeInterface {
      * @param _closingHeight The height of the OSTblock to close.
      *
      * @return The set of updated validators. Could be new validators or
-     *         existing validators with an updated weight. Weights can only
-     *         decrease.
+     *         existing validators with an updated weight. Weights of existing
+     *         validators can only decrease.
      */
     function closeOstBlock(
         uint256 _closingHeight
