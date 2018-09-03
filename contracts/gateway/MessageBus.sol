@@ -182,6 +182,9 @@ library MessageBus {
 	pure
 	returns (bool /*success*/)
 	{
+		bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+		_message = keccak256(abi.encodePacked(prefix, _message));
+
 		bytes32 r;
 		bytes32 s;
 		uint8 v;
