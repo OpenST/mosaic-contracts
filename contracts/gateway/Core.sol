@@ -40,10 +40,13 @@ contract Core is CoreInterface {
 	/** Events */
 
 	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
+	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
+	event OpenSTProven(uint256 blockHeight, bytes32 storageRoot, bool wasAlreadyProved);
 
 	/** Storage */
 
 	mapping (uint256 /* block height */ => bytes32) private stateRoots;
+	mapping (uint256 /* block height */ => bytes32) private storageRoots;
 
 	/** chainIdOrigin is the origin chain id where core contract is deployed.  */
 	uint256 public coreChainIdOrigin;
@@ -51,6 +54,7 @@ contract Core is CoreInterface {
 	uint256 private coreChainIdRemote;
 	/** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
 	address private coreOpenSTRemote;
+	address private coreRegistrar;
 	/** Latest block height of block for which state root was committed. */
 	uint256 private latestStateRootBlockHeight;
 
@@ -59,6 +63,12 @@ contract Core is CoreInterface {
 
 	/** Address of the core on the auxiliary chain. Can be zero. */
 	address public coCore;
+
+	/**
+	 *  OpenSTRemote encoded path. Constructed with below flow:
+	 *  coreOpenSTRemote => sha3 => bytes32 => bytes
+	 */
+	bytes private encodedOpenSTRemotePath;
 
 	/** Modifiers */
 
@@ -73,6 +83,15 @@ contract Core is CoreInterface {
 		_;
 	}
 
+	// time that is safe to execute confirmStakingIntent and confirmRedemptionIntent from the time the
+	// stake and redemption was initiated
+	// 5Days in seconds
+	uint256 private constant TIME_TO_WAIT = 432000;
+
+	uint256 public remoteChainBlockGenerationTime;
+
+	uint256 public remoteChainBlocksToWait;
+
 	/*  Public functions */
 
 	/**
@@ -80,28 +99,41 @@ contract Core is CoreInterface {
 	 *
 	 *  @dev bytes32ToBytes is ProofLib contract method.
 	 *
+	 *  @param _registrar Address of the registrar which registers for utility tokens.
 	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
 	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+	 *  @param _openSTRemote If current chain is value then _openSTRemote is address of openSTUtility contract address.
+	 *  @param _remoteChainBlockGenerationTime block generation time of remote chain.
 	 *  @param _blockHeight Block height at which _stateRoot needs to store.
 	 *  @param _stateRoot State root hash of given _blockHeight.
 	 *  @param _workers Workers contract address.
 	 */
 	constructor(
+		address _registrar,
 		uint256 _chainIdOrigin,
 		uint256 _chainIdRemote,
+		address _openSTRemote,
+		uint256 _remoteChainBlockGenerationTime,
 		uint256 _blockHeight,
 		bytes32 _stateRoot,
 		WorkersInterface _workers)
 		public
 	{
+		require(_registrar != address(0), "Registrar address is 0");
 		require(_chainIdOrigin != 0, "Origin chain Id is 0");
 		require(_chainIdRemote != 0, "Remote chain Id is 0");
+		require(_openSTRemote != address(0), "OpenSTRemote address is 0");
 		require(_workers != address(0), "Workers contract address is 0");
-
+		require(_remoteChainBlockGenerationTime != uint256(0), "Remote block time is 0");
+		coreRegistrar = _registrar;
 		coreChainIdOrigin = _chainIdOrigin;
 		coreChainIdRemote = _chainIdRemote;
+		coreOpenSTRemote = _openSTRemote;
 		workers = _workers;
-
+		remoteChainBlockGenerationTime = _remoteChainBlockGenerationTime;
+		remoteChainBlocksToWait = TIME_TO_WAIT.div(_remoteChainBlockGenerationTime);
+		// Encoded remote path.
+		encodedOpenSTRemotePath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coreOpenSTRemote)));
 		latestStateRootBlockHeight = _blockHeight;
 		stateRoots[latestStateRootBlockHeight] = _stateRoot;
 	}
@@ -116,14 +148,24 @@ contract Core is CoreInterface {
 	 *
 	 *  @param _coCore Address of the Co-Core on auxiliary.
 	 */
-	function setCoCoreAddress(address _coCore)
-	external
-	onlyWorker
-	returns (bool /*success*/)
-	{
+	function setCoCoreAddress(address _coCore) external {
 		require(_coCore != address(0), "Co-Core address is 0");
 		coCore = _coCore;
-		return true;
+	}
+
+	/** Public functions */
+
+	/**
+	 *  @notice Public view function registrar.
+	 *
+	 *  @return address coreRegistrar.
+	 */
+	function registrar()
+		public
+		view
+		returns (address /* registrar */)
+	{
+		return coreRegistrar;
 	}
 
 	/**
@@ -132,13 +174,42 @@ contract Core is CoreInterface {
 	 *  @return uint256 coreChainIdRemote.
 	 */
 	function chainIdRemote()
-	public
-	view
-	returns (uint256 /* chainIdRemote */)
+		public
+		view
+		returns (uint256 /* chainIdRemote */)
 	{
 		return coreChainIdRemote;
 	}
 
+	/**
+	 *  @notice Public view function openSTRemote.
+	 *
+	 *  @return address coreOpenSTRemote.
+	 */
+	function openSTRemote()
+		public
+		view
+		returns (address /* OpenSTRemote */)
+	{
+		return coreOpenSTRemote;
+	}
+
+	/**
+	 * @notice Get safe unlock height
+	 *
+	 * @dev block height that is safe to execute confirmStakingIntent and confirmRedemptionIntent,
+	 *      else there will be possibility that there is not much time left for executing processStaking
+	 *      and processRedeeming respectively
+	 *
+	 * @return uint256 safeUnlockHeight
+	 */
+	function safeUnlockHeight()
+		external
+		view
+		returns (uint256 /* safeUnlockHeight */)
+	{
+		return remoteChainBlocksToWait.add(latestStateRootBlockHeight);
+	}
 
 	/**
 	 *  @notice Public view function getStateRoot.
@@ -148,15 +219,29 @@ contract Core is CoreInterface {
 	 *  @return bytes32 State root.
 	 */
 	function getStateRoot(
-		uint256 _blockHeight
-	)
-	public
-	view
-	returns (bytes32 /* state root */)
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* state root */)
 	{
 		return stateRoots[_blockHeight];
 	}
 
+	/**
+	 *  @notice Public view function getStorageRoot.
+	 *
+	 *  @param _blockHeight Block height for which storage root is needed.
+	 *
+	 *  @return bytes32 Storage root.
+	 */
+	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return storageRoots[_blockHeight];
+	}
 
 	/**
 	 *  @notice Public function getLatestStateRootBlockHeight.
@@ -164,12 +249,13 @@ contract Core is CoreInterface {
 	 *  @return uint256 Latest state root block height.
 	 */
 	function getLatestStateRootBlockHeight()
-	public
-	view
-	returns (uint256 /* block height */)
+		public
+		view
+		returns (uint256 /* block height */)
 	{
 		return latestStateRootBlockHeight;
 	}
+
 
 	/** External functions */
 
@@ -187,9 +273,9 @@ contract Core is CoreInterface {
 	function commitStateRoot(
 		uint256 _blockHeight,
 		bytes32 _stateRoot)
-	external
-	onlyWorker
-	returns (bytes32 /* stateRoot */)
+		external
+		onlyWorker
+		returns(bytes32 /* stateRoot */)
 	{
 		// State root should be valid
 		require(_stateRoot != bytes32(0), "State root is 0");
@@ -202,5 +288,70 @@ contract Core is CoreInterface {
 		emit StateRootCommitted(_blockHeight, _stateRoot);
 
 		return _stateRoot;
+	}
+
+	/**
+	 *  @notice External function proveOpenST.
+	 *
+	 *  @dev proveOpenST can be called by anyone to verify merkle proof of OpenSTRemote contract address. OpenSTRemote is OpenSTUtility
+	 *		   contract address on utility chain and OpenSTValue contract address on value chain.
+	 *		   Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
+	 *		   which is a trusted decentralized system running separately.
+	 * 		   It's important to note that in replay calls of proveOpenST bytes _rlpParentNodes variable is not validated. In this case
+	 *		   input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
+	 *		   OpenSTProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
+	 *
+	 *  @param _blockHeight Block height at which OpenST is to be proven.
+	 *  @param _rlpEncodedAccount RLP encoded account node object.
+	 *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
+	 *
+	 *  @return bool Status.
+	 */
+	function proveOpenST(
+		uint256 _blockHeight,
+		bytes _rlpEncodedAccount,
+		bytes _rlpParentNodes)
+		external
+		returns(bool /* success */)
+	{
+		// _rlpEncodedAccount should be valid
+		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		// _rlpParentNodes should be valid
+		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
+
+		bytes32 stateRoot = stateRoots[_blockHeight];
+		// State root should be present for the block height
+		require(stateRoot != bytes32(0), "State root is 0");
+
+		// Decode RLP encoded account value
+		RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
+		// Convert to list
+		RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
+		// Array 3rd position is storage root
+		bytes32 storageRoot = RLP.toBytes32(accountArray[2]);
+		// Hash the rlpEncodedValue value
+		bytes32 hashedAccount = keccak256(abi.encodePacked(_rlpEncodedAccount));
+
+		// If account already proven for block height
+		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+
+		if (provenStorageRoot != bytes32(0)) {
+			// Check extracted storage root is matching with existing stored storage root
+			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
+			// wasAlreadyProved is true here since proveOpenST is replay call for same block height
+			emit OpenSTProven(_blockHeight, storageRoot, true);
+			// return true
+			return true;
+		}
+
+		// Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
+		require(MerklePatriciaProof.verify(hashedAccount, encodedOpenSTRemotePath, _rlpParentNodes, stateRoot), "Account proof is not verified.");
+
+		// After verification update storageRoots mapping
+		storageRoots[_blockHeight] = storageRoot;
+		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
+		emit OpenSTProven(_blockHeight, storageRoot, false);
+
+		return true;
 	}
 }
