@@ -169,7 +169,7 @@ contract CoGateway is Hasher {
 	returns(bytes32 messageHash_)
 	{
 		uint256 initialGas = gasleft();
-		require(_sender == organisation);
+		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
 
 		// TODO: need to add check for MessageBus.
