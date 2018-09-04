@@ -139,6 +139,7 @@ contract Gateway is Hasher {
 	/* Storage */
 
 	address public coGateway;
+	MessageBus.MessageBox messageBox;
 	bool public isActivated;
 	address public organisation;
 	GatewayLink gatewayLink;
@@ -154,7 +155,6 @@ contract Gateway is Hasher {
 	//address of core contract.
 	CoreInterface core;
 
-	MessageBus.MessageBox messageBox;
 	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
 	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeRequests;
 
@@ -167,7 +167,7 @@ contract Gateway is Hasher {
 
     uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 
-	uint8 outboxOffset = 4;
+	uint8 outboxOffset = 1;
 
 	/**
 	 *  @notice Contract constructor.

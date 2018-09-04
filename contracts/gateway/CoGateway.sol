@@ -106,12 +106,13 @@ contract CoGateway is Hasher {
 	}
 
 	address public gateway;
+	MessageBus.MessageBox messageBox;
 	address public organisation;
 	bool public isActivated;
 	GatewayLink gatewayLink;
 	uint256 public bounty;
-	MessageBus.MessageBox messageBox;
-	uint8 outboxOffset = 4;
+
+	uint8 outboxOffset = 1;
 	CoreInterface public core;
 	address public utilityToken;
 
