@@ -32,14 +32,14 @@ interface StakeInterface {
      *                   voting takes place.
      * @param _amount The amount of OST to deposit.
      *
-     * @return The unique index of the registered validator.
+     * @return `true` if the deposit succeeded.
      */
     function deposit(
         address _validator,
         uint256 _amount
     )
         external
-        returns (uint256 validatorIndex_);
+        returns (bool success_);
 
     /**
      * @notice A logout is a prerequisite to withdrawing the deposited OST

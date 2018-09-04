@@ -26,9 +26,8 @@ contract Stake is StakeInterface {
 
     /** Emitted whenever a new validator is successfully deposited. */
     event NewDeposit(
-        uint256 indexed validatorId,
         address indexed validatorAddress,
-        uint256 stake
+        uint256 indexed stake
     );
 
     /** Emitted whenever an OSTblock increase is successfully registered. */
@@ -63,7 +62,24 @@ contract Stake is StakeInterface {
          * may still have stake that the depositor can withdraw. However the
          * weight of an evicted validator is always zero.
          */
+        uint256 startingHeight;
+
+        /**
+         * Will be true if a validator has been slashed or logged out.
+         * An evicted validator may still have stake that the depositor can
+         * withdraw. For example in the case of a partial slashing. However,
+         * the weight of an evicted validator is always zero starting from the
+         * `evictionHeight`.
+         */
         bool evicted;
+
+        /**
+         * If the validator has been evicted, this states the height at which
+         * the eviction goes into effect. Starting from this height, a
+         * validator has a weight of zero. In case of a logout, the eviction
+         * height is the current height plus two.
+         */
+        uint256 evictionHeight;
     }
 
     /* Public Variables */
@@ -78,17 +94,19 @@ contract Stake is StakeInterface {
     uint256 public height;
 
     /**
-     * The next index in the validators mapping. Iterate over all validators by
-     * iterating over `[0..validatorIndex[`.
+     * All addresses of validators that were deposited. Includes logged out and
+     * evicted validators.
      */
-    uint256 public validatorIndex;
+    address[] public validatorAddresses;
 
     /**
-     * Maps from index to validator.
+     * Maps from the auxiliary address to the validator.
+     * The address is the address that the validator uses to sign votes on
+     * auxiliary.
      * All the validators that have ever been deposited. Includes logged out
      * and evicted validators.
      */
-    mapping (uint256 => Validator) public validators;
+    mapping (address => Validator) public validators;
 
     /**
      * Maps from height to validator auxiliary addresses.
@@ -133,14 +151,14 @@ contract Stake is StakeInterface {
      *                   voting takes place.
      * @param _amount The amount of ERC-20 to deposit.
      *
-     * @return The unique index of the registered validator.
+     * @return `true` if the deposit succeeded.
      */
     function deposit(
         address _validator,
         uint256 _amount
     )
         external
-        returns (uint256 validatorIndex_)
+        returns (bool success_)
     {
         require(
             _validator != address(0),
@@ -160,13 +178,14 @@ contract Stake is StakeInterface {
             "Could not transfer deposit to the stake contract."
         );
 
-        validatorIndex_ = registerNewValidator(_validator, _amount);
+        registerNewValidator(_validator, _amount);
 
         emit NewDeposit(
-            validatorIndex_,
             _validator,
             _amount
         );
+
+        success_ = true;
     }
 
     /**
@@ -271,7 +290,7 @@ contract Stake is StakeInterface {
      * @dev The height is given to `assert` that the call is in sync with the
      *      contract.
      *
-     * @param _height The height for which to get the total deposit.
+     * @param _height The height for which to get the total weight.
      *
      * @return The total weight at the given height.
      */
@@ -282,7 +301,10 @@ contract Stake is StakeInterface {
         view
         returns (uint256 totalWeight_)
     {
-        revert("This method is not implemented.");
+        for (uint256 i = 0; i < validatorAddresses.length; i++) {
+            address validator = validatorAddresses[i];
+            totalWeight_ += validatorWeightAtHeight(_height, validator);
+        }
     }
 
     /**
@@ -309,7 +331,7 @@ contract Stake is StakeInterface {
         view
         returns (uint256 validatorWeight_)
     {
-        revert("This method is not implemented.");
+        validatorWeight_ = validatorWeightAtHeight(_height, _validator);
     }
 
     /* Private Functions */
@@ -330,21 +352,23 @@ contract Stake is StakeInterface {
         uint256 _amount
     )
         private
-        returns (uint256 validatorIndex_)
     {
+        uint256 startingHeight = height + 2;
+
         Validator memory validator = Validator(
             msg.sender,
             _validator,
             _amount,
-            false
+            startingHeight,
+            false,
+            0
         );
-        validators[validatorIndex] = validator;
-        validatorIndex_ = validatorIndex;
-        validatorIndex++;
 
-        /* The new new validator will have its initial weight at height + 2. */
-        updateAddresses[height+2].push(_validator);
-        updateWeights[height+2].push(_amount);
+        validators[_validator] = validator;
+        validatorAddresses.push(_validator);
+
+        updateAddresses[startingHeight].push(_validator);
+        updateWeights[startingHeight].push(_amount);
     }
 
     /**
@@ -357,12 +381,37 @@ contract Stake is StakeInterface {
      *         `false` otherwise.
      */
     function validatorExists(address _validator) private view returns (bool) {
-        for (uint256 i = 0; i < validatorIndex; i++) {
-            if (validators[i].auxiliaryAddress == _validator) {
-                return true;
-            }
-        }
+        return validators[_validator].auxiliaryAddress == _validator;
+    }
 
-        return false;
+    /**
+     * @notice Returns the weight of a validator at a specific OSTblock height,
+     *         based on the auxiliary address of the validator.
+     *
+     * @param _height The OSTblock height for which to get the weight.
+     * @param _auxiliaryAddress The address of the validator on the auxiliary chain.
+     *
+     * @return The weight of the validator. Can be 0, for example when the
+     *         there was never a deposit for this address.
+     */
+    function validatorWeightAtHeight(
+        uint256 _height,
+        address _auxiliaryAddress
+    )
+        private
+        view
+        returns (uint256 validatorWeight_)
+    {
+        Validator storage validator = validators[_auxiliaryAddress];
+
+        if (validator.auxiliaryAddress != _auxiliaryAddress) {
+            validatorWeight_ = 0;
+        } else if (validator.startingHeight > _height) {
+            validatorWeight_ = 0;
+        } else if (validator.evicted && validator.evictionHeight <= _height) {
+            validatorWeight_ = 0;
+        } else {
+            validatorWeight_ = validator.stake;
+        }
     }
 }

@@ -28,15 +28,17 @@ const MockToken = artifacts.require('MockToken');
 const Stake = artifacts.require('Stake');
 
 contract('Stake', async (accounts) => {
-    describe('closing an OSTblock', async () => {
-        let originCoreAccount = accounts[4];
-        let ost;
-        let stake;
 
-        beforeEach(async () => {
-            ost = await MockToken.new();
-            stake = await Stake.new(ost.address, originCoreAccount);
-        });
+    let originCoreAccount = accounts[4];
+    let ost;
+    let stake;
+
+    beforeEach(async () => {
+        ost = await MockToken.new();
+        stake = await Stake.new(ost.address, originCoreAccount);
+    });
+
+    describe('closing an OSTblock', async () => {
 
         it('should increase the OSTblock height by 1', async () => {
             for (let expectedHeight = 1; expectedHeight < 5; expectedHeight++) {
@@ -89,28 +91,14 @@ contract('Stake', async (accounts) => {
     });
 
     describe('depositing new validators', async () => {
-        let originCoreAccount = accounts[4];
-        let ost;
-        let stake;
-
-        beforeEach(async () => {
-            ost = await MockToken.new();
-            stake = await Stake.new(ost.address, originCoreAccount);
-        });
 
         it('should emit an event when depositing', async () => {
             let depositAmount = new BigNumber('250000000000000000000');
             let validatorAccount = accounts[1];
 
-            await ost.approve(stake.address, depositAmount);
-            let tx = await stake.deposit(validatorAccount, depositAmount);
+            let tx = await deposit(validatorAccount, depositAmount);
 
             let events = Events.perform(tx.receipt, stake.address, stake.abi);
-            assert.strictEqual(
-                Number(events.NewDeposit.validatorId),
-                0,
-                'The contract did not emit an event with the given validator index.'
-            );
             assert.strictEqual(
                 events.NewDeposit.validatorAddress,
                 validatorAccount,
@@ -190,19 +178,56 @@ contract('Stake', async (accounts) => {
         });
 
         it('should store deposited validators', async () => {
-            await deposit(accounts[0], new BigNumber('1'));
-            await deposit(accounts[1], new BigNumber('2'));
-            await deposit(accounts[2], new BigNumber('3'));
-            
+            let expectedDeposits = [
+                {
+                    address: accounts[1],
+                    deposit: new BigNumber('1'),
+                    startingHeight: 2
+                }, {
+                    address: accounts[2],
+                    deposit: new BigNumber('20'),
+                    startingHeight: 2
+                }, {
+                    address: accounts[3],
+                    deposit: new BigNumber('300'),
+                    startingHeight: 2
+                }, {
+                    address: accounts[4],
+                    deposit: new BigNumber('4000'),
+                    startingHeight: 3
+                },
+            ];
+
+            await deposit(
+                expectedDeposits[0].address,
+                expectedDeposits[0].deposit
+            );
+            await deposit(
+                expectedDeposits[1].address,
+                expectedDeposits[1].deposit
+            );
+            await deposit(
+                expectedDeposits[2].address,
+                expectedDeposits[2].deposit
+            );
+
             await stake.closeOstBlock(
                 new BigNumber(0),
                 {from: originCoreAccount}
             );
 
-            await deposit(accounts[3], new BigNumber('4'));
+            await deposit(
+                expectedDeposits[3].address,
+                expectedDeposits[3].deposit
+            );
 
-            for (let i = 0; i < 4; i++) {
-                let validator = await stake.validators.call(i);
+            let expectationCount = expectedDeposits.length;
+            for (let i = 0; i < expectationCount; i++) {
+                let expectedDeposit = expectedDeposits[i];
+                let validator = await stake.validators.call(
+                    expectedDeposit.address
+                );
+
                 assert.strictEqual(
                     validator[0],
                     accounts[0],
@@ -210,28 +235,134 @@ contract('Stake', async (accounts) => {
                 );
                 assert.strictEqual(
                     validator[1],
-                    accounts[i],
+                    expectedDeposit.address,
                     "Contract must store the correct validator address."
                 );
 
-                let expectedStake = i+1;
                 assert.strictEqual(
                     Number(validator[2]),
-                    expectedStake,
+                    Number(expectedDeposit.deposit),
                     "Contract must store the correct stake."
                 );
 
                 assert.strictEqual(
-                    validator[3],
+                    Number(validator[3]),
+                    Number(expectedDeposit.startingHeight),
+                    "Contract must store the correct starting height."
+                );
+
+                assert.strictEqual(
+                    validator[4],
                     false,
                     "Contract must store a validator as non-evicted."
                 );
             }
         });
-
-        async function deposit(address, deposit) {
-            await ost.approve(stake.address, deposit);
-            await stake.deposit(address, deposit);
-        }
     });
+
+    describe('getting weight for validators', async () => {
+
+        it('returns the weight of registered validators', async () => {
+            await deposit(accounts[4], new BigNumber('12091985'));
+            await deposit(accounts[2], new BigNumber('1337'));
+            
+            let weight = await stake.weight(2, accounts[4]);
+            assert.strictEqual(
+                Number(weight),
+                12091985,
+                "The weight should equal the deposit."
+            );
+
+            weight = await stake.weight(5, accounts[2]);
+            assert.strictEqual(
+                Number(weight),
+                1337,
+                "The weight should equal the deposit."
+            );
+        });
+
+        it('returns a zero weight for unknown validators', async () => {
+            await deposit(accounts[4], new BigNumber('12091985'));
+            await deposit(accounts[2], new BigNumber('1337'));
+            
+            let weight = await stake.weight(2, accounts[0]);
+            assert.strictEqual(
+                Number(weight),
+                0,
+                "The weight should equal the deposit."
+            );
+
+            weight = await stake.weight(5, accounts[1]);
+            assert.strictEqual(
+                Number(weight),
+                0,
+                "The weight should equal the deposit."
+            );
+        });
+
+        it('returns a zero weight for future validators', async () => {
+            await deposit(accounts[4], new BigNumber('12091985'));
+            await deposit(accounts[2], new BigNumber('1337'));
+            
+            let weight = await stake.weight(1, accounts[4]);
+            assert.strictEqual(
+                Number(weight),
+                0,
+                "The weight should equal the deposit."
+            );
+
+            weight = await stake.weight(0, accounts[2]);
+            assert.strictEqual(
+                Number(weight),
+                0,
+                "The weight should equal the deposit."
+            );
+        });
+    });
+
+    describe('getting the total weight', async () => {
+        it('should store the correct accumulative weight', async () => {
+            await deposit(accounts[1], new BigNumber('1'));
+            await deposit(accounts[2], new BigNumber('2'));
+            stake.closeOstBlock(
+                new BigNumber(0),
+                {from: originCoreAccount}
+            )
+            await deposit(accounts[3], new BigNumber('4'));
+            stake.closeOstBlock(
+                new BigNumber(1),
+                {from: originCoreAccount}
+            )
+            await deposit(accounts[4], new BigNumber('8'));
+            await deposit(accounts[5], new BigNumber('16'));
+
+            let expecteds = [
+                {height: 0, totalWeight: 0},
+                {height: 1, totalWeight: 0},
+                {height: 2, totalWeight: 3},
+                {height: 3, totalWeight: 7},
+                {height: 4, totalWeight: 31},
+                {height: 10, totalWeight: 31},
+                {height: 1000, totalWeight: 31},
+            ];
+
+            for (let i = 0; i < expecteds.length; i++) {
+                let expected = expecteds[i];
+                let totalWeight = await stake.totalWeightAtHeight(expected.height);
+
+                assert.strictEqual(
+                    totalWeight.toNumber(),
+                    expected.totalWeight,
+                    "The total weight at this height should be different."
+                );
+            }
+        });
+    });
+
+    async function deposit(address, deposit) {
+        await ost.approve(stake.address, deposit);
+        let tx = await stake.deposit(address, deposit);
+
+        return tx;
+    }
 });
