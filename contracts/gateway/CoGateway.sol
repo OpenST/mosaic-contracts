@@ -106,12 +106,13 @@ contract CoGateway is Hasher {
 	}
 
 	address public gateway;
+	MessageBus.MessageBox messageBox;
 	address public organisation;
 	bool public isActivated;
 	GatewayLink gatewayLink;
 	uint256 public bounty;
-	MessageBus.MessageBox messageBox;
-	uint8 outboxOffset = 4;
+
+	uint8 outboxOffset = 1;
 	CoreInterface public core;
 	address public utilityToken;
 
@@ -134,28 +135,28 @@ contract CoGateway is Hasher {
 		address _utilityToken,
 		CoreInterface _core,
 		uint256 _bounty,
-		address _organisation
+		address _organisation,
+		address _gateway
 	)
 	public
 	{
 		require(_utilityToken != address(0));
-		//require(_gateway != address(0));
+		require(_gateway != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
 		utilityToken = _utilityToken;
-		//gateway = _gateway;
+		gateway = _gateway;
 		core = _core;
 		bounty = _bounty;
 		organisation = _organisation;
 
-		encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(this)));
+		encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(_gateway)));
 		// TODO: should we check the code hash with declared codeHash constants.
 	}
 
 	function confirmGatewayLinkIntent(
-		address _gateway,
 		bytes32 _intentHash,
 		uint256 _gasPrice,
 		uint256 _nonce,
@@ -169,12 +170,11 @@ contract CoGateway is Hasher {
 	{
 		uint256 initialGas = gasleft();
 		require(_sender == organisation);
-		require(_gateway != address(0));
 		require(gatewayLink.messageHash == bytes32(0));
 
 		// TODO: need to add check for MessageBus.
 		bytes32 intentHash = hashLinkGateway(
-			_gateway,
+			gateway,
 			address(this),
 			bounty,
 			EIP20Interface(utilityToken).name(),
@@ -205,8 +205,6 @@ contract CoGateway is Hasher {
 			_rlpParentNodes,
 			outboxOffset,
 			storageRoots[_blockHeight]);
-
-		gateway = _gateway;
 
 		emit GatewayLinkConfirmed(
 			messageHash_,
