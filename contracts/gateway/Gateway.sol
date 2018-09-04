@@ -163,7 +163,7 @@ contract Gateway is Hasher {
 	/*mapping to store storage root with block height*/
 	mapping(uint256 /* block height */ => bytes32) private storageRoots;
 	/* path to prove merkle account proof for gateway  */
-	bytes private encodedGatewayPath;
+	bytes private encodedCoGatewayPath;
 
     uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 
@@ -173,14 +173,12 @@ contract Gateway is Hasher {
 	 *  @notice Contract constructor.
 	 *
 	 *  @param _token Branded token contract address.
-	 *  @param _coGateway CoGateway contract address.
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
 	 *  @param _organisation organisation address.
 	 */
 	constructor(
 		EIP20Interface _token,
-		address _coGateway,
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation
@@ -188,24 +186,22 @@ contract Gateway is Hasher {
 	public
 	{
 		require(_token != address(0));
-		require(_coGateway != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
 
 		isActivated = false;
 		token = _token;
-		coGateway = _coGateway;
 		core = _core;
 		bounty = _bounty;
 		organisation = _organisation;
 
 		stakeVault = new SimpleStake(token, address(this));
-		encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(this)));
 	}
 
 	/* Public functions */
 
 	function initiateGatewayLink(
+		address _coGateway,
 		bytes32 _intentHash,
 		uint256 _gasPrice,
 		uint256 _nonce,
@@ -216,10 +212,13 @@ contract Gateway is Hasher {
 	payable
 	returns (bytes32 messageHash_)
 	{
+		require(_coGateway != address(0));
 		require(_sender == organisation);
 		require(msg.value == bounty);
 		require(gatewayLink.messageHash == bytes32(0));
 
+		coGateway = _coGateway;
+		encodedCoGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coGateway)));
         // TODO: need to add check for MessageBus.
 		bytes32 intentHash = hashLinkGateway(
 			address(this),
@@ -723,7 +722,7 @@ contract Gateway is Hasher {
 			return true;
 		}
 
-		bytes32 storageRoot = ProofLib.proveAccount(_rlpEncodedAccount, _rlpParentNodes, encodedGatewayPath, stateRoot);
+		bytes32 storageRoot = ProofLib.proveAccount(_rlpEncodedAccount, _rlpParentNodes, encodedCoGatewayPath, stateRoot);
 
 		storageRoots[_blockHeight] = storageRoot;
 		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
