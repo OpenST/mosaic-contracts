@@ -74,6 +74,27 @@ contract Hasher {
         );
     }
 
+    function hashStakingIntent(
+        uint256 _amount,
+        address _beneficiary,
+        address _staker,
+        uint256 _gasPrice)
+    public
+    pure
+    returns (bytes32)
+    {
+
+        return keccak256(
+            abi.encodePacked(
+                _amount,
+                _beneficiary,
+                _staker,
+                _gasPrice
+            )
+        );
+    }
+
+
     function stakeRequestTypeHash()
     external
     pure

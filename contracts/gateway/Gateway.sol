@@ -319,7 +319,7 @@ contract Gateway is Hasher {
 		require(cleanProcessedStakeRequest(_staker));
 
         //TODO: Move the hashing code in to hasher library
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 

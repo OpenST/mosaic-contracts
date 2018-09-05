@@ -263,7 +263,7 @@ contract CoGateway is Hasher {
 		require(cleanProcessedStakingRequest(_staker));
 
 		//todo change to library call, stake too deep error
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
