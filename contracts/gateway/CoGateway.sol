@@ -79,6 +79,13 @@ contract CoGateway is Hasher {
 		address token
 	);
 
+	event GatewayLinkProcessed(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
+
 	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
 	event GatewayProven(
 		uint256 blockHeight,
@@ -193,7 +200,8 @@ contract CoGateway is Hasher {
 				_sender,
 				_nonce,
 				_gasPrice,
-				_intentHash, _hashLock
+				_intentHash,
+				_hashLock
 				)
 			});
 
@@ -212,7 +220,7 @@ contract CoGateway is Hasher {
 			address(this),
 			utilityToken
 		);
-		gatewayLink.message.gasConsumed = gasleft().sub(initialGas);
+		gatewayLink.message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function processGatewayLink(
@@ -233,7 +241,12 @@ contract CoGateway is Hasher {
 		// TODO: think about fee transfer
 
 		isActivated = true;
-
+		emit  GatewayLinkProcessed(
+			_messageHash,
+			gateway,
+			address(this),
+			utilityToken
+		);
 		return true;
 	}
 
