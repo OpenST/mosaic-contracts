@@ -853,7 +853,7 @@ contract Gateway is Hasher {
 		}
 
 		MessageBus.Message storage message = stakeRequests[messageHash].message;
-		return message.nonce;
+		return message.nonce.add(1);
 	}
 
 }

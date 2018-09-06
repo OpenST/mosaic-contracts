@@ -799,7 +799,7 @@ contract CoGateway is Hasher {
 		}
 
 		MessageBus.Message storage message = redeemRequests[messageHash].message;
-		return message.nonce;
+		return message.nonce.add(1);
 	}
 
 }
