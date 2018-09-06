@@ -303,7 +303,7 @@ contract CoGateway is Hasher {
 			_hashLock
 		);
 
-		mints[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
+		mints[messageHash_].message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function processMinting(
@@ -429,7 +429,7 @@ contract CoGateway is Hasher {
 			message.nonce,
 			_blockHeight
 		);
-		message.gasConsumed = gasleft().sub(initialGas);
+		message.gasConsumed = initialGas.sub(gasleft());
 		return true;
 	}
 
