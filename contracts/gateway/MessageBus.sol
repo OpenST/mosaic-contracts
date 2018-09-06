@@ -338,7 +338,7 @@ library MessageBus {
 	external
 	returns (uint256 fee_)
 	{
-		_message.gasConsumed = gasleft().sub(_initalGas).add(_estimatedAdditionalGasUsage).add(_message.gasConsumed);
+		_message.gasConsumed = _initalGas.sub(gasleft()).add(_estimatedAdditionalGasUsage).add(_message.gasConsumed);
 		require(_message.gasConsumed < _gasLimit);
 		return _message.gasConsumed.mul(_message.gasPrice);
 

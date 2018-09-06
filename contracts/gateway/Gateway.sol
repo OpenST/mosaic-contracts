@@ -334,7 +334,7 @@ contract Gateway is Hasher {
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
-		require(token.transferFrom(_staker, this, _amount));
+		require(token.transferFrom(_staker, address(this), _amount));
 
 		emit StakeRequestedEvent(
 			messageHash_,
@@ -809,6 +809,7 @@ contract Gateway is Hasher {
 			delete stakeRequests[previousRequest];
 			delete messageBox.inbox[previousRequest];
 		}
+		return true;
 	}
 
 	function cleanProcessedRedeemRequest(address redeemer)
