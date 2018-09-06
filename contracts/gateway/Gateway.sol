@@ -111,6 +111,13 @@ contract Gateway is Hasher {
 		bool wasAlreadyProved
 	);
 
+	event GatewayLinkProcessed(
+		bytes32 messageHash,
+		address gateway,
+		address cogateway,
+		address token
+	);
+
 	/* Struct */
 	/**
 	 *  It denotes the stake request.
@@ -276,6 +283,12 @@ contract Gateway is Hasher {
 		//return bounty
 		msg.sender.transfer(bounty);
 
+		emit GatewayLinkProcessed(
+			_messageHash,
+			address(this),
+			coGateway,
+			token
+		);
 		return true;
 	}
 
