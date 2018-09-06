@@ -87,7 +87,7 @@ library MessageBus {
 	external
 	returns (bytes32 messageHash_)
 	{
-		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
+		require(_message.hashLock == keccak256(abi.encode(_unlockSecret)));
 
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
@@ -137,7 +137,7 @@ library MessageBus {
 	external
 	returns (bytes32 messageHash_)
 	{
-		require(_unlockSecret == keccak256(abi.encode(_message.hashLock)));
+		require(_message.hashLock == keccak256(abi.encode(_unlockSecret)));
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
 		require(_messageBox.inbox[messageHash_] == MessageStatus.Declared);
@@ -182,6 +182,9 @@ library MessageBus {
 	pure
 	returns (bool /*success*/)
 	{
+		bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+		_message = keccak256(abi.encodePacked(prefix, _message));
+
 		bytes32 r;
 		bytes32 s;
 		uint8 v;
