@@ -46,18 +46,18 @@ contract PollingPlaceWrapper {
     }
 
     /**
-     * @notice Wrapper function for the wrapped `updateOstBlockHeight`.
+     * @notice Wrapper function for the wrapped `updateMetaBlockHeight`.
      *
      * @param _auxiliaryAddresses The addresses of the validators.
      * @param _stakes The stakes of the validators.
      */
-    function updateOstBlockHeight(
+    function updateMetaBlockHeight(
         address[] _auxiliaryAddresses,
         uint256[] _stakes
     )
         public
     {
-        pollingPlace.updateOstBlockHeight(
+        pollingPlace.updateMetaBlockHeight(
             _auxiliaryAddresses,
             _stakes
         );
@@ -103,9 +103,9 @@ contract TestPollingPlace {
         constructContracts();
 
         Assert.equal(
-            stake.currentOstBlockHeight(),
+            stake.currentMetaBlockHeight(),
             uint256(0),
-            "OSTblock height after initialisation should be 0."
+            "meta-block height after initialisation should be 0."
         );
         Assert.equal(
             stake.totalStakes(uint256(0)),
@@ -125,7 +125,7 @@ contract TestPollingPlace {
          */
 
          /* Priming the proxy. */
-        PollingPlaceWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
             updateAddresses,
             updateStakes
         );
@@ -134,13 +134,13 @@ contract TestPollingPlace {
         bool result = proxy.execute.gas(200000)();
         Assert.isTrue(
             result,
-            "The stake contract must accept a valid new OSTblock."
+            "The stake contract must accept a valid new meta-block."
         );
 
         Assert.equal(
-            stake.currentOstBlockHeight(),
+            stake.currentMetaBlockHeight(),
             uint256(1),
-            "OSTblock height after update should be 1."
+            "meta-block height after update should be 1."
         );
         Assert.equal(
             stake.totalStakes(uint256(1)),
@@ -191,8 +191,8 @@ contract TestPollingPlace {
         updateAddresses.push(address(999));
         updateStakes.push(uint256(344));
         
-        expectRevertOnUpdateOstBlockHeight(
-            "The stake contract must revert if the caller is not the OSTblock gate."
+        expectRevertOnUpdateMetaBlockHeight(
+            "The stake contract must revert if the caller is not the meta-block gate."
         );
     }
 
@@ -203,7 +203,7 @@ contract TestPollingPlace {
         updateAddresses.push(address(86));
         updateStakes.push(uint256(344));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the addresses array is longer."
         );
 
@@ -211,7 +211,7 @@ contract TestPollingPlace {
         updateStakes.push(uint256(345));
         updateStakes.push(uint256(346));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the stakes array is longer."
         );
     }
@@ -222,7 +222,7 @@ contract TestPollingPlace {
         updateAddresses.push(address(85));
         updateStakes.push(uint256(0));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the stake is zero."
         );
     }
@@ -233,17 +233,17 @@ contract TestPollingPlace {
         updateAddresses.push(address(0));
         updateStakes.push(uint256(30000));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the address is zero."
         );
     }
 
-    function testUpdateBlockUpdateOstBlockWithRepeatedValidator() external {
+    function testUpdateBlockUpdateMetaBlockWithRepeatedValidator() external {
         constructContracts();
 
         updateStakes.push(uint256(344));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if a validator address already exists."
         );
     }
@@ -269,15 +269,15 @@ contract TestPollingPlace {
     }
 
     /**
-     * @notice Does a `updateOstBlockHeight()` call with the RevertProxy and
+     * @notice Does a `updateMetaBlockHeight()` call with the RevertProxy and
      *         expects the method under test to revert.
      *
      * @param _errorMessage The message to print if the contract does not
      *                      revert.
      */
-    function expectRevertOnUpdateOstBlockHeight(string _errorMessage) private {
+    function expectRevertOnUpdateMetaBlockHeight(string _errorMessage) private {
         /* Priming the proxy. */
-        PollingPlaceWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
             updateAddresses,
             updateStakes
         );
