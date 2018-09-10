@@ -809,6 +809,7 @@ contract Gateway is Hasher {
 
 	}
 
+	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
 	function cleanProcessedStake(address staker)
 	private
 	returns (bool /*success*/)
@@ -827,6 +828,7 @@ contract Gateway is Hasher {
 		return true;
 	}
 
+	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
 	function cleanProcessedRedeem(address redeemer)
 	private
 	returns (bool /*success*/)

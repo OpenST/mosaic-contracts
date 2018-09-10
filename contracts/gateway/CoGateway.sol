@@ -178,6 +178,7 @@ contract CoGateway is Hasher {
 		uint256 initialGas = gasleft();
 		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
+		// TODO: need to check the nonce is in sync with the params.
 
 		// TODO: need to add check for MessageBus.
 		bytes32 intentHash = hashLinkGateway(
@@ -274,6 +275,7 @@ contract CoGateway is Hasher {
 		require(_rlpParentNodes.length != 0);
 
 		require(cleanProcessedStake(_staker));
+		// TODO: check the nonce is consistent here.
 
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
@@ -740,7 +742,7 @@ contract CoGateway is Hasher {
 			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}
-
+	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
 	function cleanProcessedRedemption(address redeemer)
 	private
 	returns (bool /*success*/)
@@ -758,6 +760,7 @@ contract CoGateway is Hasher {
 		}
 	}
 
+	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
 	function cleanProcessedStake(address staker)
 	private
 	returns (bool /*success*/)
