@@ -18,12 +18,12 @@ pragma solidity ^0.4.23;
 interface OriginCoreInterface {
 
     /**
-     * @notice Proposes a new OSTblock. The block is stored if the proposal
+     * @notice Proposes a new meta-block. The block is stored if the proposal
      *         succeeds, but its votes still need to be verified in order for
      *         it to be committed.
      *
-     * @param _height Height of the OSTblock in the chain of OSTblocks.
-     * @param _parent The hash of the parent OSTblock.
+     * @param _height Height of the meta-block in the chain of meta-blocks.
+     * @param _parent The hash of the parent meta-block.
      * @param _updatedValidators The array of addresses of the validators that
      *                           are updated within this block. Updated weights
      *                           at the same index relate to the address in
@@ -35,9 +35,9 @@ interface OriginCoreInterface {
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
      * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
-     *                            that is part of this OSTblock.
+     *                            that is part of this meta-block.
      * @param _gas The total consumed gas on auxiliary within this meta-block.
-     * @param _transactionRoot The transaction root of the OSTblock. A trie
+     * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
      * @param _auxiliaryDynasty The dynasty number where the meta-block closes
@@ -111,13 +111,13 @@ interface OriginCoreInterface {
         returns (uint256);
 
     /**
-     * @notice Returns the block height of the latest OSTblock that has been
+     * @notice Returns the block height of the latest meta-block that has been
      *         committed.
      *
-     * @dev An OSTblock has been committed if it has been proposed and the
+     * @dev A meta-block has been committed if it has been proposed and the
      *      votes have been verified.
      *
-     * @return The height of the latest committed OSTblock.
+     * @return The height of the latest committed meta-block.
      */
     function latestBlockHeight()
         external
@@ -125,11 +125,11 @@ interface OriginCoreInterface {
         returns (uint256);
 
     /**
-     * @notice Get the state root of an OSTblock.
+     * @notice Get the state root of a meta-block.
      *
      * @param _blockHeight For which block height to get the state root.
      *
-     * @return The state root of the OSTblock.
+     * @return The state root of the meta-block.
      */
     function getStateRoot(
         uint256 _blockHeight

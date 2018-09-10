@@ -21,7 +21,7 @@ interface StakeInterface {
      * @notice The message sender deposits the given amount of OST in the stake
      *         contract to give the validator addresses voting weight equal to
      *         the deposit. The validator will be able to cast votes starting
-     *         at the current OSTblock height plus two.
+     *         at the current meta-block height plus two.
      *         Prior to this call, the message sender must approve an OST
      *         transfer of the specified deposit ammount from her account to
      *         the stake contract.
@@ -44,8 +44,8 @@ interface StakeInterface {
     /**
      * @notice A logout is a prerequisite to withdrawing the deposited OST
      *         after the holding period. A validator that is logged out has no
-     *         more voting power starting from the current OSTblock height plus
-     *         two.
+     *         more voting power starting from the current meta-block height
+     *         plus two.
      *
      * @param _validatorIndex The unique index of the validator that shall be
      *                        logged out.
@@ -92,20 +92,20 @@ interface StakeInterface {
         returns (bool slashed_);
 
     /**
-     * @notice Notifies the contract about a closing OSTblock in order to
+     * @notice Notifies the contract about a closing meta-block in order to
      *         handle any changes in the set of validators.
      *         Can only be called from OriginCore.
      *
      * @dev The height is given to `assert` that the call is in sync with the
      *      contract.
      *
-     * @param _closingHeight The height of the OSTblock to close.
+     * @param _closingHeight The height of the meta-block to close.
      *
      * @return The set of updated validators. Could be new validators or
      *         existing validators with an updated weight. Weights of existing
      *         validators can only decrease.
      */
-    function closeOstBlock(
+    function closeMetaBlock(
         uint256 _closingHeight
     )
         external
@@ -132,16 +132,16 @@ interface StakeInterface {
         returns (uint256 totalWeight_);
 
     /**
-     * @notice Returns the weight of a validator at a specific OSTblock height,
-     *         based on the auxiliary address of the validator.
+     * @notice Returns the weight of a validator at a specific meta-block
+     *         height, based on the auxiliary address of the validator.
      *
      * @dev The OriginCore can use this method to track the verified weight by
      *      the verified votes and notice when a supermajority has been
-     *      reached, therefore committing the OSTblock.
+     *      reached, therefore committing the meta-block.
      *      The height is given to `assert` that the call is in sync with the
      *      contract.
      *
-     * @param _height The OSTblock height for which to get the weight.
+     * @param _height The meta-block height for which to get the weight.
      * @param _validator The address of the validator on the auxiliary chain.
      *
      * @return The weight of the validator. Can be 0, for example when the

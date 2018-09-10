@@ -14,15 +14,15 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title The interface for the OSTblock Gateway on auxiliary. */
-interface OstBlockGatewayInterface {
+/** @title The interface for the meta-block Gateway on auxiliary. */
+interface MetaBlockGatewayInterface {
 
     /**
-     * @notice Prove the opening of a new OSTblock on origin. The method will
+     * @notice Prove the opening of a new meta-block on origin. The method will
      *         check the proof against the state root from the OriginBlockStore
      *         given the state trie branch.
      *
-     * @param _ostBlockHeaderRlp The entire new OSTblock header, RLP encoded.
+     * @param _metaBlockHeaderRlp The entire new meta-block header, RLP encoded.
      * @param _stateTrieBranchRlp The trie branch of the state truie of origin
      *                            that proves that the opening took place on
      *                            origin.
@@ -33,7 +33,7 @@ interface OstBlockGatewayInterface {
      * @return `true` if the proof succeeded.
      */
     function proveBlockOpening(
-        bytes _ostBlockHeaderRlp,
+        bytes _metaBlockHeaderRlp,
         bytes _stateTrieBranchRlp,
         uint256 _originBlockHeight
     )

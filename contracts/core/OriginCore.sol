@@ -79,7 +79,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         /**
          * The total gas that has been consumed on auxiliary for all blocks
-         * that are inside this OSTblock.
+         * that are inside this meta-block.
          */
         uint256 gas;
 
@@ -91,6 +91,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         /** The dynasty of the auxiliary block with the above block hash. */
         uint256 _auxiliaryDynasty;
+        /**
+         * The root hash of the state trie of the latest finalised checkpoint
+         * on auxiliary that is part of this meta-block.
+         */
+        bytes32 stateRoot;
     }
 
     /* Public Variables */
@@ -133,12 +138,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /* External Functions */
 
     /**
-     * @notice Proposes a new OSTblock. The block is stored if the proposal
+     * @notice Proposes a new meta-block. The block is stored if the proposal
      *         succeeds, but its votes still need to be verified in order for
      *         it to be committed.
      *
-     * @param _height Height of the OSTblock in the chain of OSTblocks.
-     * @param _parent The hash of the parent OSTblock.
+     * @param _height Height of the meta-block in the chain of meta-blocks.
+     * @param _parent The hash of the parent meta-block.
      * @param _updatedValidators The array of addresses of the validators that
      *                           are updated within this block. Updated weights
      *                           at the same index relate to the address in
@@ -150,9 +155,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
      * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
-     *                            that is part of this OSTblock.
+     *                            that is part of this meta-block.
      * @param _gas The total consumed gas on auxiliary within this meta-block.
-     * @param _transactionRoot The transaction root of the OSTblock. A trie
+     * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
      * @param _auxiliaryDynasty The dynasty number where the meta-block closes
@@ -234,13 +239,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice Returns the block height of the latest OSTblock that has been
+     * @notice Returns the block height of the latest meta-block that has been
      *         committed.
      *
-     * @dev An OSTblock has been committed if it has been proposed and the
+     * @dev A meta-block has been committed if it has been proposed and the
      *      votes have been verified.
      *
-     * @return The height of the latest committed OSTblock.
+     * @return The height of the latest committed meta-block.
      */
     function latestBlockHeight()
         external
@@ -248,18 +253,18 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (uint256)
     {
         /*
-         * `height` is the current open OSTblock. The latest committed block is
-         * therefore at `height - 1`.
+         * `height` is the current open meta-block. The latest committed block
+         * is therefore at `height - 1`.
          */
         return height - 1;
     }
 
     /**
-     * @notice Get the state root of an OSTblock.
+     * @notice Get the state root of a meta-block.
      *
      * @param _blockHeight For which blockheight to get the state root.
      *
-     * @return The state root of the OSTblock.
+     * @return The state root of the meta-block.
      */
     function getStateRoot(
         uint256 _blockHeight
