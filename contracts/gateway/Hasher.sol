@@ -29,15 +29,15 @@ pragma solidity ^0.4.23;
  */
 contract Hasher {
 
-    bytes32 constant STAKE_REQUEST_TYPEHASH = keccak256(
+    bytes32 constant STAKE_TYPEHASH = keccak256(
         abi.encode(
-            "StakeRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
+            "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
 
-    bytes32 constant REDEEM_REQUEST_TYPEHASH = keccak256(
+    bytes32 constant REDEEM_TYPEHASH = keccak256(
         abi.encode(
-            "RedeemRequest(uint256 amount,address beneficiary,MessageBus.Message message)"
+            "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
     bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
@@ -95,20 +95,20 @@ contract Hasher {
     }
 
 
-    function stakeRequestTypeHash()
+    function stakeTypeHash()
     external
     pure
     returns (bytes32 /* type hash */)
     {
-        return STAKE_REQUEST_TYPEHASH;
+        return STAKE_TYPEHASH;
     }
 
-    function redeemRequestTypeHash()
+    function redeemTypeHash()
     external
     pure
     returns (bytes32 /* type hash */)
     {
-        return REDEEM_REQUEST_TYPEHASH;
+        return REDEEM_TYPEHASH;
     }
 
     function gatewayLinkTypeHash()

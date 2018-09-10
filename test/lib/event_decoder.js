@@ -1,10 +1,10 @@
 "use strict";
 
-const web3EventsDecoder = function () {};
+const web3EventsDecoder = function () { };
 
 web3EventsDecoder.prototype = {
 
-  getFormattedEvents: function(eventsData) {
+  getFormattedEvents: function (eventsData) {
     var formattedEvents = {};
 
     var eventDataValues = {};
@@ -15,7 +15,7 @@ web3EventsDecoder.prototype = {
         , currEventAddr = currEvent.address
         , currEventParams = currEvent.events;
 
-      formattedEvents[currEventName] = {address: currEventAddr};
+      formattedEvents[currEventName] = { address: currEventAddr };
 
       for (var j = 0; j < currEventParams.length; j++) {
         var p = currEventParams[j];
@@ -28,7 +28,7 @@ web3EventsDecoder.prototype = {
   },
 
   // decode logs from a transaction receipt
-  perform: function(txReceipt, contractAddr, contractAbi) {
+  perform: function (txReceipt, contractAddr, contractAbi) {
     //console.log(txReceipt);
     //console.log(contractAddr);
     //console.log(contractAbi);
@@ -49,7 +49,7 @@ web3EventsDecoder.prototype = {
     const toAddr = txReceipt.to;
 
     // if the address is a known address
-    if ( txReceipt.logs.length > 0) {
+    if (txReceipt.logs.length > 0) {
 
       var abiDecoder = require('abi-decoder')
         , relevantLogs = [];
@@ -65,9 +65,14 @@ web3EventsDecoder.prototype = {
           continue;
         }
 
+        if (currContractAddrFromReciept != contractAddr) {
+          console.debug('**** Skipping event of contract that is not under inspection: ' + txReceipt.logs[i].address + ' at log index(' + i + ') in TxHash: ' + txReceipt.transactionHash + '');
+          continue;
+        }
+
         // ABI not found
         if (!contractAbi) {
-          console.error("ABI not found for contract: "+contractAddr);
+          console.error("ABI not found for contract: " + contractAddr);
           return;
         }
 
@@ -75,7 +80,7 @@ web3EventsDecoder.prototype = {
         abiDecoder.addABI(contractAbi);
       }
 
-      if(relevantLogs.length > 0) {
+      if (relevantLogs.length > 0) {
         decodedEvents = abiDecoder.decodeLogs(relevantLogs);
       }
 
@@ -83,7 +88,6 @@ web3EventsDecoder.prototype = {
 
     return this.getFormattedEvents(decodedEvents);
   }
-
 };
 
 module.exports = new web3EventsDecoder();

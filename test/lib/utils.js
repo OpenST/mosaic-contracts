@@ -31,17 +31,17 @@ const receipts = [];
 
 module.exports.logResponse = (response, description) => {
   receipts.push({
-    receipt     : response.receipt,
-    description : description,
-    response    : response
-  }); 
+    receipt: response.receipt,
+    description: description,
+    response: response
+  });
 }
 
 module.exports.logReceipt = (receipt, description) => {
   receipts.push({
-    receipt     : receipt,
-    description : description,
-    response    : null
+    receipt: receipt,
+    description: description,
+    response: null
   })
 }
 
@@ -69,7 +69,7 @@ module.exports.printGasStatistics = () => {
 }
 
 module.exports.clearReceipts = () => {
-  receipts.splice( 0, receipts.length );
+  receipts.splice(0, receipts.length);
 }
 
 
@@ -77,7 +77,7 @@ module.exports.clearReceipts = () => {
  *  General event checks
  */
 module.exports.expectNoEvents = (result) => {
-   Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
+  Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
 }
 
 /*
@@ -86,34 +86,53 @@ module.exports.expectNoEvents = (result) => {
 
 /// @dev Compare to null address
 module.exports.isNullAddress = function (address) {
-    Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
-    return (address == NullAddress);
+  Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
+  return (address == NullAddress);
 }
 
 /// @dev Expect failure from invalid opcode or out of gas,
 ///      but returns error instead
 module.exports.expectThrow = async (promise) => {
-    try {
-        await promise;
-    } catch (error) {
-        const invalidOpcode = error.message.search('invalid opcode') > -1;
+  try {
+    await promise;
+  } catch (error) {
+    const invalidOpcode = error.message.search('invalid opcode') > -1;
 
-        const outOfGas = error.message.search('out of gas') > -1;
+    const outOfGas = error.message.search('out of gas') > -1;
 
-        // Latest TestRPC has trouble with require
-        const revertInstead = error.message.search('revert') > -1;
+    // Latest TestRPC has trouble with require
+    const revertInstead = error.message.search('revert') > -1;
 
-        assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+    assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
 
-        return;
-    }
+    return;
+  }
 
-    assert(false, "Did not throw as expected");
+  assert(false, "Did not throw as expected");
+};
+
+/// @dev Expect failure from revert,
+///      but returns error instead
+module.exports.expectRevert = async (promise) => {
+  try {
+    await promise;
+  } catch (error) {
+    // TODO: Truffle v5 will support require messages with web3 1.0 and we can
+    //       check for a specific message.
+    assert(
+      error.message.search('revert') > -1,
+      'The contract should revert. Instead: ' + error.message
+    );
+
+    return;
+  }
+
+  assert(false, "Did not revert as expected.");
 };
 
 /// @dev Get account balance
 module.exports.getBalance = function (address) {
-  return new Promise (function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     web3.eth.getBalance(address, function (error, result) {
       if (error) {
         reject(error);
@@ -126,7 +145,7 @@ module.exports.getBalance = function (address) {
 
 /// @dev Get gas price
 module.exports.getGasPrice = function () {
-  return new Promise (function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     web3.eth.getGasPrice(function (error, result) {
       if (error) {
         reject(error);

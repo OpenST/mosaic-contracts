@@ -13,7 +13,7 @@ contract CoGateway is Hasher {
 
 	using SafeMath for uint256;
 
-	event  StakingIntentConfirmed(
+	event StakingIntentConfirmed(
 		bytes32 messageHash,
 		address staker,
 		uint256 stakerNonce,
@@ -23,7 +23,7 @@ contract CoGateway is Hasher {
 		bytes32 hashLock
 	);
 
-	event MintProcessed(
+	event ProcessedMint(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
@@ -37,7 +37,7 @@ contract CoGateway is Hasher {
 		uint256 blockHeight
 	);
 
-	event RedeemRequested(
+	event RedemptionIntentDeclared(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
@@ -45,13 +45,13 @@ contract CoGateway is Hasher {
 		bytes32 intentHash
 	);
 
-	event RedeemProcessed(
+	event ProcessedRedemption(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary
 	);
 
-	event RevertRedeemRequested(
+	event RevertRedemptionDeclared(
 		bytes32 messageHash,
 		address redeemer,
 		bytes32 intentHash,
@@ -59,18 +59,12 @@ contract CoGateway is Hasher {
 		uint256 gasPrice
 	);
 
-	event RedeemReverted(
+	event RevertedRedemption(
 		address redeemer,
 		uint256 amount,
 		address beneficiary,
 		uint256 gasPrice
 	);
-
-	struct Mint {
-		uint256 amount;
-		address beneficiary;
-		MessageBus.Message message;
-	}
 
 	event GatewayLinkConfirmed(
 		bytes32 messageHash,
@@ -95,16 +89,22 @@ contract CoGateway is Hasher {
 
 	/* Struct */
 	/**
-	 *  It denotes the redeem request.
+	 *  It denotes the redeem.
 	 *  Status values could be :-
 	 *  0 :- amount used for redemption
 	 *  1 :- beneficiary is the address in the target chain where token will be minted.
 	 */
-	struct RedeemRequest {
+	struct Redeem {
 		uint256 amount;
 		address beneficiary;
 		MessageBus.Message message;
 		address facilitator;
+	}
+
+	struct Mint {
+		uint256 amount;
+		address beneficiary;
+		MessageBus.Message message;
 	}
 
 	struct GatewayLink {
@@ -129,9 +129,9 @@ contract CoGateway is Hasher {
 	bytes private encodedGatewayPath;
 
 	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
-	mapping(bytes32 /*requestHash*/ => Mint) mints;
-	mapping(bytes32/*messageHash*/ => RedeemRequest) redeemRequests;
-	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeRequests;
+	mapping(bytes32 /*messageHash*/ => Mint) mints;
+	mapping(bytes32/*messageHash*/ => Redeem) redeems;
+	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeProcess;
 
 	modifier onlyOrganisation() {
 		require(msg.sender == organisation);
@@ -273,14 +273,14 @@ contract CoGateway is Hasher {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProcessedStakingRequest(_staker));
+		require(cleanProcessedStake(_staker));
 
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
-		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
-		activeRequests[_staker] = messageHash_;
+		activeProcess[_staker] = messageHash_;
 
 		mints[messageHash_] = getMint(_amount,
 			_beneficiary,
@@ -312,7 +312,7 @@ contract CoGateway is Hasher {
 	)
 	external
 	returns (
-		uint256 mintRequestedAmount_,
+		uint256 mintAmount_,
 		uint256 mintedAmount_,
 		uint256 rewardAmount_
 	)
@@ -325,9 +325,9 @@ contract CoGateway is Hasher {
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
 
-		MessageBus.progressInbox(messageBox, STAKE_REQUEST_TYPEHASH, mint.message, _unlockSecret);
+		MessageBus.progressInbox(messageBox, STAKE_TYPEHASH, mint.message, _unlockSecret);
 
-		mintRequestedAmount_ = mint.amount;
+		mintAmount_ = mint.amount;
 
 		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 
@@ -338,7 +338,7 @@ contract CoGateway is Hasher {
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
 
-		emit MintProcessed(
+		emit ProcessedMint(
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
@@ -354,7 +354,7 @@ contract CoGateway is Hasher {
 	)
 	public
 	returns (
-		uint256 mintRequestedAmount_,
+		uint256 mintAmount_,
 		uint256 mintedAmount_,
 		uint256 rewardAmount_
 	)
@@ -368,14 +368,15 @@ contract CoGateway is Hasher {
 		MessageBus.Message storage message = mint.message;
 
 		MessageBus.progressInboxWithProof(messageBox,
-			STAKE_REQUEST_TYPEHASH,
+			STAKE_TYPEHASH,
 			mint.message,
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus));
 
-		mintRequestedAmount_ = mint.amount;
+		mintAmount_ = mint.amount;
+		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 
 		mintedAmount_ = mint.amount.sub(rewardAmount_);
@@ -387,7 +388,7 @@ contract CoGateway is Hasher {
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
-		emit MintProcessed(
+		emit ProcessedMint(
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
@@ -416,7 +417,7 @@ contract CoGateway is Hasher {
 
 		require(MessageBus.confirmRevocation(
 				messageBox,
-				STAKE_REQUEST_TYPEHASH,
+				STAKE_TYPEHASH,
 				message,
 				_rlpEncodedParentNodes,
 				outboxOffset,
@@ -451,17 +452,17 @@ contract CoGateway is Hasher {
 		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
 		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
-		require(cleanProcessedRedeemRequest(msg.sender));
+		require(cleanProcessedRedemption(msg.sender));
 
 		//TODO: Move the hashing code in to hasher library
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, msg.sender, _gasPrice));
 
 
-		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		activeRequests[msg.sender] = messageHash_;
+		activeProcess[msg.sender] = messageHash_;
 
-		redeemRequests[messageHash_] = RedeemRequest({
+		redeems[messageHash_] = Redeem({
 			amount : _amount,
 			beneficiary : _beneficiary,
 			message : getMessage(msg.sender, _nonce, _gasPrice, intentHash, _hashLock),
@@ -475,7 +476,7 @@ contract CoGateway is Hasher {
 		//transfer redeem amount to Co-Gateway
 		require(EIP20Interface(utilityToken).transferFrom(msg.sender, this, _amount));
 
-		emit RedeemRequested(
+		emit RedemptionIntentDeclared(
 			messageHash_,
 			_amount,
 			_beneficiary,
@@ -494,20 +495,20 @@ contract CoGateway is Hasher {
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
-		MessageBus.Message storage message = redeemRequests[_messageHash].message;
+		MessageBus.Message storage message = redeems[_messageHash].message;
 
-		redeemAmount = redeemRequests[_messageHash].amount;
+		redeemAmount = redeems[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, REDEEM_REQUEST_TYPEHASH, message, _unlockSecret);
+		MessageBus.progressOutbox(messageBox, REDEEM_TYPEHASH, message, _unlockSecret);
 
 		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		msg.sender.transfer(bounty);
 
-		emit RedeemProcessed(
+		emit ProcessedRedemption(
 			_messageHash,
 			redeemAmount,
-			redeemRequests[_messageHash].beneficiary
+			redeems[_messageHash].beneficiary
 		);
 	}
 
@@ -525,15 +526,15 @@ contract CoGateway is Hasher {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		redeemAmount = redeemRequests[_messageHash].amount;
+		redeemAmount = redeems[_messageHash].amount;
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
 		MessageBus.progressOutboxWithProof(
 			messageBox,
-			REDEEM_REQUEST_TYPEHASH,
-			redeemRequests[_messageHash].message,
+			REDEEM_TYPEHASH,
+			redeems[_messageHash].message,
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
@@ -543,12 +544,12 @@ contract CoGateway is Hasher {
 		require(UtilityTokenInterface(utilityToken).burn(this, redeemAmount));
 
 		//TODO: think around bounty
-		require(EIP20Interface(utilityToken).transfer(redeemRequests[_messageHash].facilitator, bounty));
+		require(EIP20Interface(utilityToken).transfer(redeems[_messageHash].facilitator, bounty));
 
-		emit RedeemProcessed(
+		emit ProcessedRedemption(
 			_messageHash,
 			redeemAmount,
-			redeemRequests[_messageHash].beneficiary
+			redeems[_messageHash].beneficiary
 		);
 	}
 
@@ -565,7 +566,7 @@ contract CoGateway is Hasher {
 	{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
-		MessageBus.Message storage message = redeemRequests[_messageHash].message;
+		MessageBus.Message storage message = redeems[_messageHash].message;
 
 		require(message.intentHash != bytes32(0));
 
@@ -580,7 +581,7 @@ contract CoGateway is Hasher {
 		nonce_ = message.nonce;
 		gasPrice_ = message.gasPrice;
 
-		emit RevertRedeemRequested(_messageHash, redeemer_, intentHash_, message.nonce, gasPrice_);
+		emit RevertRedemptionDeclared(_messageHash, redeemer_, intentHash_, message.nonce, gasPrice_);
 	}
 
 	function processRevertRedemption(
@@ -595,7 +596,7 @@ contract CoGateway is Hasher {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = redeemRequests[_messageHash].message;
+		MessageBus.Message storage message = redeems[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
@@ -605,23 +606,23 @@ contract CoGateway is Hasher {
 			MessageBus.progressRevocationMessage(
 				messageBox,
 				message,
-				REDEEM_REQUEST_TYPEHASH,
+				REDEEM_TYPEHASH,
 				outboxOffset,
 				_rlpEncodedParentNodes,
 				storageRoot
 			)
 		);
 
-		RedeemRequest storage redeemRequest = redeemRequests[_messageHash];
+		Redeem storage redeemData = redeems[_messageHash];
 
-		require(EIP20Interface(utilityToken).transfer(message.sender, redeemRequest.amount));
+		require(EIP20Interface(utilityToken).transfer(message.sender, redeemData.amount));
 
 		msg.sender.transfer(bounty);
 
-		emit RedeemReverted(
+		emit RevertedRedemption(
 			message.sender,
-			redeemRequest.amount,
-			redeemRequest.beneficiary,
+			redeemData.amount,
+			redeemData.beneficiary,
 			message.gasPrice);
 	}
 
@@ -692,7 +693,7 @@ contract CoGateway is Hasher {
 
 		MessageBus.confirmMessage(
 			messageBox,
-			STAKE_REQUEST_TYPEHASH,
+			STAKE_TYPEHASH,
 			_message,
 			_rlpParentNodes,
 			outboxOffset,
@@ -740,41 +741,42 @@ contract CoGateway is Hasher {
 			});
 	}
 
-	function cleanProcessedRedeemRequest(address redeemer)
+	function cleanProcessedRedemption(address redeemer)
 	private
 	returns (bool /*success*/)
 	{
-		bytes32 previousRequest = activeRequests[redeemer];
+		bytes32 previousProcess = activeProcess[redeemer];
 
-		if (previousRequest != bytes32(0)) {
+		if (previousProcess != bytes32(0)) {
 
 			require(
-				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
-				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Revoked
 			);
-			delete redeemRequests[previousRequest];
-			delete messageBox.inbox[previousRequest];
+			delete redeems[previousProcess];
+			delete messageBox.inbox[previousProcess];
 		}
 	}
 
-	function cleanProcessedStakingRequest(address staker)
+	function cleanProcessedStake(address staker)
 	private
 	returns (bool /*success*/)
 	{
-		bytes32 previousRequest = activeRequests[staker];
+		bytes32 previousProcess = activeProcess[staker];
 
-		if (previousRequest != bytes32(0)) {
+		if (previousProcess != bytes32(0)) {
 
 			require(
-				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
-				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Revoked
 			);
-			delete mints[previousRequest];
-			delete messageBox.inbox[previousRequest];
+			delete mints[previousProcess];
+			delete messageBox.inbox[previousProcess];
 		}
 		return true;
 	}
 
+	//TODO: This needs discusion. This doesnt apprear correct way of implementation
 	/**
 	 *  @notice Public function completeUtilityTokenProtocolTransfer.
 	 *
@@ -793,12 +795,12 @@ contract CoGateway is Hasher {
 	view
 	returns (uint256 /* nonce */)
 	{
-		bytes32 messageHash = activeRequests[_account];
+		bytes32 messageHash = activeProcess[_account];
 		if (messageHash == bytes32(0)) {
 			return 0;
 		}
 
-		MessageBus.Message storage message = redeemRequests[messageHash].message;
+		MessageBus.Message storage message = redeems[messageHash].message;
 		return message.nonce.add(1);
 	}
 
