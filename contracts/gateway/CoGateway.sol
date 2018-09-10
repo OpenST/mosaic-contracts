@@ -276,7 +276,7 @@ contract CoGateway is Hasher {
 		require(cleanProcessedStakingRequest(_staker));
 
 		//todo change to library call, stake too deep error
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
@@ -303,7 +303,7 @@ contract CoGateway is Hasher {
 			_hashLock
 		);
 
-		mints[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
+		mints[messageHash_].message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function processMinting(
@@ -429,7 +429,7 @@ contract CoGateway is Hasher {
 			message.nonce,
 			_blockHeight
 		);
-		message.gasConsumed = gasleft().sub(initialGas);
+		message.gasConsumed = initialGas.sub(gasleft());
 		return true;
 	}
 
@@ -799,7 +799,7 @@ contract CoGateway is Hasher {
 		}
 
 		MessageBus.Message storage message = redeemRequests[messageHash].message;
-		return message.nonce;
+		return message.nonce.add(1);
 	}
 
 }

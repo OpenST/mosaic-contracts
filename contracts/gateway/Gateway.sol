@@ -332,7 +332,7 @@ contract Gateway is Hasher {
 		require(cleanProcessedStakeRequest(_staker));
 
         //TODO: Move the hashing code in to hasher library
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
 
@@ -347,7 +347,7 @@ contract Gateway is Hasher {
 
 		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
 		//transfer staker amount to gateway
-		require(token.transferFrom(_staker, this, _amount));
+		require(token.transferFrom(_staker, address(this), _amount));
 
 		emit StakeRequestedEvent(
 			messageHash_,
@@ -822,6 +822,7 @@ contract Gateway is Hasher {
 			delete stakeRequests[previousRequest];
 			delete messageBox.inbox[previousRequest];
 		}
+		return true;
 	}
 
 	function cleanProcessedRedeemRequest(address redeemer)
@@ -852,7 +853,7 @@ contract Gateway is Hasher {
 		}
 
 		MessageBus.Message storage message = stakeRequests[messageHash].message;
-		return message.nonce;
+		return message.nonce.add(1);
 	}
 
 }
