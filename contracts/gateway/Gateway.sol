@@ -147,7 +147,8 @@ contract Gateway is Hasher {
 
 	address public coGateway;
 	MessageBus.MessageBox messageBox;
-	bool public isActivated;
+	bool public linked;
+	bool public deactivated;
 	address public organisation;
 	GatewayLink gatewayLink;
 
@@ -177,6 +178,15 @@ contract Gateway is Hasher {
 
 	uint8 outboxOffset = 1;
 
+	modifier isLinked() {
+		require(linked);
+		_;
+	}
+	modifier isActive() {
+		require(deactivated == false);
+		_;
+	}
+
 	/**
 	 *  @notice Contract constructor.
 	 *
@@ -197,7 +207,8 @@ contract Gateway is Hasher {
 		require(_core != address(0));
 		require(_organisation != address(0));
 
-		isActivated = false;
+		linked = false;
+		deactivated = false;
 		token = _token;
 		core = _core;
 		bounty = _bounty;
@@ -217,8 +228,10 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes _signature)
 	external
+	isActive
 	returns (bytes32 messageHash_)
 	{
+		require(linked == false);
 		require(_coGateway != address(0));
 		require(_sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
@@ -271,6 +284,7 @@ contract Gateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
@@ -280,7 +294,7 @@ contract Gateway is Hasher {
 
 		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
 
-		isActivated = true;
+		linked = true;
 
 		emit GatewayLinkProgressed(
 			_messageHash,
@@ -318,9 +332,10 @@ contract Gateway is Hasher {
 	)
 	external
 	payable
+	isLinked
+	isActive
 	returns (bytes32 messageHash_)
 	{
-		require(isActivated);
 		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
@@ -368,9 +383,10 @@ contract Gateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
+	isActive
 	returns (uint256 stakeAmount_)
 	{
-		require(isActivated); //TODO: this is not required. put it only for stake, redeem (places we do declare)
+		//require(linked); //TODO: this is not required. put it only for stake, redeem (places we do declare)
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakes[_messageHash].message;
@@ -398,9 +414,10 @@ contract Gateway is Hasher {
 		uint256 _messageStatus
 	)
 	external
+	isActive
 	returns (uint256 stakeAmount_)
 	{
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -438,6 +455,8 @@ contract Gateway is Hasher {
 		bytes _signature
 	)
 	external
+	isActive
+	isLinked
 	returns (
 		address staker_,
 		bytes32 intentHash_,
@@ -445,7 +464,7 @@ contract Gateway is Hasher {
 		uint256 gasPrice_
 	)
 	{
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
@@ -473,9 +492,10 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -516,10 +536,11 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
         uint256 initialGas = gasleft();
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -560,10 +581,11 @@ contract Gateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public
+	isActive
 	returns (bytes32 messageHash_)
 	{
         uint256 initialGas = gasleft();
-		require(isActivated);
+		//require(linked);
 		require(_redeemer != address(0));
 		require(_beneficiary != address(0));
 		require(_amount != 0);
@@ -610,6 +632,7 @@ contract Gateway is Hasher {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
+	isActive
 	returns (
 		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
@@ -617,7 +640,7 @@ contract Gateway is Hasher {
 	)
 	{
         uint256 initialGas = gasleft();
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
@@ -652,6 +675,7 @@ contract Gateway is Hasher {
 		uint256 _messageStatus
 	)
 	public
+	isActive
 	returns (
 		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
@@ -659,7 +683,7 @@ contract Gateway is Hasher {
 	)
 	{
         uint256 initialGas = gasleft();
-		require(isActivated);
+		//require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -719,6 +743,7 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 	external
+	isActive
 	returns (bool /* success */)
 	{
 		// _rlpEncodedAccount should be valid

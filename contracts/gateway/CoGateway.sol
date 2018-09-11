@@ -115,7 +115,8 @@ contract CoGateway is Hasher {
 	address public gateway;
 	MessageBus.MessageBox messageBox;
 	address public organisation;
-	bool public isActivated;
+	bool public linked;
+	bool public deactivated;
 	GatewayLink gatewayLink;
 	uint256 public bounty;
 
@@ -138,6 +139,15 @@ contract CoGateway is Hasher {
 		_;
 	}
 
+	modifier isLinked() {
+		require(linked);
+		_;
+	}
+	modifier isActive() {
+		require(deactivated == false);
+		_;
+	}
+
 	//TODO: pass the ValueToken address
 	constructor(
 		address _utilityToken,
@@ -153,7 +163,9 @@ contract CoGateway is Hasher {
 		require(_core != address(0));
 		require(_organisation != address(0));
 
-		isActivated = false;
+		linked = false;
+		deactivated = false;
+
 		utilityToken = _utilityToken;
 		gateway = _gateway;
 		core = _core;
@@ -174,8 +186,10 @@ contract CoGateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public // TODO: check to change it to external.
+	isActive
 	returns(bytes32 messageHash_)
 	{
+		require(linked == false);
 		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
 		// TODO: need to check the nonce is in sync with the params.
@@ -230,6 +244,7 @@ contract CoGateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
@@ -239,7 +254,7 @@ contract CoGateway is Hasher {
 
 		MessageBus.progressInbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
 
-		isActivated = true;
+		linked = true;
 		emit GatewayLinkProgressed(
 			_messageHash,
 			gateway,
@@ -260,10 +275,10 @@ contract CoGateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public
+	isActive
 	returns (bytes32 messageHash_)
 	{
 		uint256 initialGas = gasleft();
-		require(isActivated);
 		require(_staker != address(0));
 		require(_beneficiary != address(0));
 		require(_amount != 0);
@@ -318,7 +333,7 @@ contract CoGateway is Hasher {
 	)
 	{
 		uint256 initialGas = gasleft();
-		require(isActivated);
+		require(linked);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
@@ -353,6 +368,7 @@ contract CoGateway is Hasher {
 		uint256 _messageStatus
 	)
 	public
+	isActive
 	returns (
 		uint256 mintAmount_,
 		uint256 mintedAmount_,
@@ -360,7 +376,6 @@ contract CoGateway is Hasher {
 	)
 	{
 		uint256 initialGas = gasleft();
-		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -402,10 +417,10 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
 		uint256 initialGas = gasleft();
-		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 		Mint storage mint = mints[_messageHash];
@@ -444,9 +459,10 @@ contract CoGateway is Hasher {
 	)
 	public
 	payable
+	isActive
+	isLinked
 	returns (bytes32 messageHash_)
 	{
-		require(isActivated);
 		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
@@ -490,9 +506,10 @@ contract CoGateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
+	isActive
 	returns (uint256 redeemAmount)
 	{
-		require(isActivated);
+		require(linked);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = redeems[_messageHash].message;
@@ -520,9 +537,10 @@ contract CoGateway is Hasher {
 		uint256 _messageStatus
 	)
 	external
+	isActive
 	returns (uint256 redeemAmount)
 	{
-		require(isActivated);
+		require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -557,6 +575,8 @@ contract CoGateway is Hasher {
 		bytes32 _messageHash
 	)
 	external
+	isActive
+	isLinked
 	returns (
 		address redeemer_,
 		bytes32 intentHash_,
@@ -564,7 +584,7 @@ contract CoGateway is Hasher {
 		uint256 gasPrice_
 	)
 	{
-		require(isActivated);
+		require(linked);
 		require(_messageHash != bytes32(0));
 		MessageBus.Message storage message = redeems[_messageHash].message;
 
@@ -590,9 +610,10 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
+	isActive
 	returns (bool /*TBD*/)
 	{
-		require(isActivated);
+		require(linked);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
@@ -647,6 +668,7 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 	external
+	isActive
 	returns (bool /* success */)
 	{
 		// _rlpEncodedAccount should be valid
@@ -786,6 +808,7 @@ contract CoGateway is Hasher {
 	function completeUtilityTokenProtocolTransfer()
 	public
 	onlyOrganisation
+	isActive
 	returns (bool)
 	{
 		return ProtocolVersioned(utilityToken).completeProtocolTransfer();
@@ -794,6 +817,7 @@ contract CoGateway is Hasher {
 	function getNonce(address _account)
 	external
 	view
+	isActive
 	returns (uint256 /* nonce */)
 	{
 		bytes32 messageHash = activeProcess[_account];
