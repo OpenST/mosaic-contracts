@@ -172,6 +172,7 @@ contract Gateway is Hasher {
 	/* path to prove merkle account proof for gateway  */
 	bytes private encodedCoGatewayPath;
 
+	//TODO: remove the GAS_LIMIT form constant. And get it along with gasPrice.
     uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 
 	uint8 outboxOffset = 1;
@@ -264,6 +265,9 @@ contract Gateway is Hasher {
 
 	}
 
+	// TODO: add isDeactivated
+
+	// TODO: change the process to Progress
 	function processGatewayLink(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
@@ -280,8 +284,9 @@ contract Gateway is Hasher {
 
 		isActivated = true;
 
+		//REmove the bounty logic
 		//return bounty
-		msg.sender.transfer(bounty);
+		//msg.sender.transfer(bounty);
 
 		emit GatewayLinkProcessed(
 			_messageHash,
@@ -327,15 +332,20 @@ contract Gateway is Hasher {
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
 		require(_hashLock != bytes32(0));
-		require(_signature.length != 0);
+		require(_signature.length != 0); //TODO: check for the correct length (65).
+
+		// TODO: change the bounty transfer in BountyToken (Think for a name)
+		// TODO: need to check the nonce.
 
 		require(cleanProcessedStake(_staker));
 
-        //TODO: Move the hashing code in to hasher library
+        //TODO: include valueToken,
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
+		//TODO:
 		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _nonce, _gasPrice);
 
+		// TODO: Check if we can merge  require(cleanProcessedStake(_staker)); , checking the nonce, and  activeProcess[_staker] = messageHash_;
 		activeProcess[_staker] = messageHash_;
 
 		stakes[messageHash_] = Stake({
@@ -348,6 +358,7 @@ contract Gateway is Hasher {
 		MessageBus.declareMessage(messageBox, STAKE_TYPEHASH, stakes[messageHash_].message, _signature);
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, address(this), _amount));
+
 
 		emit StakingIntentDeclared(
 			messageHash_,
@@ -365,7 +376,7 @@ contract Gateway is Hasher {
 	external
 	returns (uint256 stakeAmount_)
 	{
-		require(isActivated);
+		require(isActivated); //TODO: this is not required. put it only for stake, redeem (places we do declare)
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakes[_messageHash].message;

@@ -138,6 +138,7 @@ contract CoGateway is Hasher {
 		_;
 	}
 
+	//TODO: pass the ValueToken address
 	constructor(
 		address _utilityToken,
 		CoreInterface _core,
@@ -172,9 +173,11 @@ contract CoGateway is Hasher {
 		uint256 _blockHeight,
 		bytes memory _rlpParentNodes
 	)
-	public
+	public // TODO: check to change it to external.
 	returns(bytes32 messageHash_)
 	{
+		// TODO: Remove the reward related code.
+
 		uint256 initialGas = gasleft();
 		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
@@ -192,6 +195,8 @@ contract CoGateway is Hasher {
 			_nonce);
 
 		require(intentHash == _intentHash);
+
+		// TODO: add require for storageRoots[_blockHeight].
 
 		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
 
@@ -277,11 +282,11 @@ contract CoGateway is Hasher {
 		require(cleanProcessedStake(_staker));
 		// TODO: check the nonce is consistent here.
 
-		//todo change to library call, stake too deep error
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
 		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
 
+		// TODO: Check if we can merge  require(cleanProcessedStake(_staker)); , checking the nonce, and  activeProcess[_staker] = messageHash_;
 		activeProcess[_staker] = messageHash_;
 
 		mints[messageHash_] = getMint(_amount,

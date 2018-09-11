@@ -8,6 +8,7 @@ library MessageBus {
 
 	using SafeMath for uint256;
 
+	//TODO: Check if completed state is required.
 	enum MessageStatus {
 		Undeclared,
 		Declared,
@@ -201,6 +202,7 @@ library MessageBus {
 	}
 
 
+	//TODO: Check if we can move this to Hasher.sol
 	function messageDigest(
 		bytes32 _messageTypeHash,
 		bytes32 _intentHash,
@@ -338,6 +340,8 @@ library MessageBus {
 	external
 	returns (uint256 fee_)
 	{
+
+		//TODO: revisit, get the minimum(gasConsumed, _gasLimit)
 		_message.gasConsumed = _initalGas.sub(gasleft()).add(_estimatedAdditionalGasUsage).add(_message.gasConsumed);
 		require(_message.gasConsumed < _gasLimit);
 		return _message.gasConsumed.mul(_message.gasPrice);
