@@ -176,9 +176,6 @@ contract CoGateway is Hasher {
 	public // TODO: check to change it to external.
 	returns(bytes32 messageHash_)
 	{
-		// TODO: Remove the reward related code.
-
-		uint256 initialGas = gasleft();
 		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
 		// TODO: need to check the nonce is in sync with the params.
@@ -226,7 +223,6 @@ contract CoGateway is Hasher {
 			address(this),
 			utilityToken
 		);
-		gatewayLink.message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function progressGatewayLink(
@@ -236,15 +232,12 @@ contract CoGateway is Hasher {
 	external
 	returns (bool /*TBD*/)
 	{
-		// TODO: think about fee transfer
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
 		require(gatewayLink.messageHash == _messageHash);
 
 		MessageBus.progressInbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
-
-		// TODO: think about fee transfer
 
 		isActivated = true;
 		emit GatewayLinkProgressed(

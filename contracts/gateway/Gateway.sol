@@ -217,12 +217,10 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes _signature)
 	external
-	payable
 	returns (bytes32 messageHash_)
 	{
 		require(_coGateway != address(0));
 		require(_sender == organisation);
-		require(msg.value == bounty);
 		require(gatewayLink.messageHash == bytes32(0));
 
 		coGateway = _coGateway;
@@ -283,10 +281,6 @@ contract Gateway is Hasher {
 		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
 
 		isActivated = true;
-
-		//REmove the bounty logic
-		//return bounty
-		//msg.sender.transfer(bounty);
 
 		emit GatewayLinkProgressed(
 			_messageHash,
