@@ -23,7 +23,7 @@ contract CoGateway is Hasher {
 		bytes32 hashLock
 	);
 
-	event ProcessedMint(
+	event ProgressedMint(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
@@ -45,7 +45,7 @@ contract CoGateway is Hasher {
 		bytes32 intentHash
 	);
 
-	event ProcessedRedemption(
+	event ProgressedRedemption(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary
@@ -73,7 +73,7 @@ contract CoGateway is Hasher {
 		address token
 	);
 
-	event GatewayLinkProcessed(
+	event GatewayLinkProgressed(
 		bytes32 messageHash,
 		address gateway,
 		address cogateway,
@@ -229,7 +229,7 @@ contract CoGateway is Hasher {
 		gatewayLink.message.gasConsumed = initialGas.sub(gasleft());
 	}
 
-	function processGatewayLink(
+	function progressGatewayLink(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
@@ -247,7 +247,7 @@ contract CoGateway is Hasher {
 		// TODO: think about fee transfer
 
 		isActivated = true;
-		emit  GatewayLinkProcessed(
+		emit GatewayLinkProgressed(
 			_messageHash,
 			gateway,
 			address(this),
@@ -279,7 +279,7 @@ contract CoGateway is Hasher {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProcessedStake(_staker));
+		require(cleanProgressedStake(_staker));
 		// TODO: check the nonce is consistent here.
 
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
@@ -313,7 +313,7 @@ contract CoGateway is Hasher {
 		mints[messageHash_].message.gasConsumed = initialGas.sub(gasleft());
 	}
 
-	function processMinting(
+	function progressMinting(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
@@ -345,7 +345,7 @@ contract CoGateway is Hasher {
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
 
 
-		emit ProcessedMint(
+		emit ProgressedMint(
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
@@ -353,7 +353,7 @@ contract CoGateway is Hasher {
 		);
 	}
 
-	function processMintingWithProof(
+	function progressMintingWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
@@ -395,7 +395,7 @@ contract CoGateway is Hasher {
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
-		emit ProcessedMint(
+		emit ProgressedMint(
 			_messageHash,
 			mint.amount,
 			mint.beneficiary,
@@ -459,7 +459,7 @@ contract CoGateway is Hasher {
 		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
 		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
-		require(cleanProcessedRedemption(msg.sender));
+		require(cleanProgressedRedemption(msg.sender));
 
 		//TODO: Move the hashing code in to hasher library
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, msg.sender, _gasPrice));
@@ -492,7 +492,7 @@ contract CoGateway is Hasher {
 		);
 	}
 
-	function processRedemption(
+	function progressRedemption(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
@@ -512,7 +512,7 @@ contract CoGateway is Hasher {
 
 		msg.sender.transfer(bounty);
 
-		emit ProcessedRedemption(
+		emit ProgressedRedemption(
 			_messageHash,
 			redeemAmount,
 			redeems[_messageHash].beneficiary
@@ -520,7 +520,7 @@ contract CoGateway is Hasher {
 	}
 
 
-	function processRedemptionWithProof(
+	function progressRedemptionWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
@@ -553,7 +553,7 @@ contract CoGateway is Hasher {
 		//TODO: think around bounty
 		require(EIP20Interface(utilityToken).transfer(redeems[_messageHash].facilitator, bounty));
 
-		emit ProcessedRedemption(
+		emit ProgressedRedemption(
 			_messageHash,
 			redeemAmount,
 			redeems[_messageHash].beneficiary
@@ -591,7 +591,7 @@ contract CoGateway is Hasher {
 		emit RevertRedemptionDeclared(_messageHash, redeemer_, intentHash_, message.nonce, gasPrice_);
 	}
 
-	function processRevertRedemption(
+	function progressRevertRedemption(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
@@ -748,7 +748,7 @@ contract CoGateway is Hasher {
 			});
 	}
 	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
-	function cleanProcessedRedemption(address redeemer)
+	function cleanProgressedRedemption(address redeemer)
 	private
 	returns (bool /*success*/)
 	{
@@ -766,7 +766,7 @@ contract CoGateway is Hasher {
 	}
 
 	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
-	function cleanProcessedStake(address staker)
+	function cleanProgressedStake(address staker)
 	private
 	returns (bool /*success*/)
 	{

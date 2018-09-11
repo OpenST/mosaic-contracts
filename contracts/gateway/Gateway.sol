@@ -53,7 +53,7 @@ contract Gateway is Hasher {
 		bytes32 _intentHash
 	);
 
-	event ProcessedStake(
+	event ProgressedStake(
 		bytes32 _messageHash,
 		uint256 _amount,
 		address _beneficiary
@@ -84,7 +84,7 @@ contract Gateway is Hasher {
 		bytes32 hashLock
 	);
 
-	event ProcessedUnstake(
+	event ProgressedUnstake(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
@@ -111,7 +111,7 @@ contract Gateway is Hasher {
 		bool wasAlreadyProved
 	);
 
-	event GatewayLinkProcessed(
+	event GatewayLinkProgressed(
 		bytes32 messageHash,
 		address gateway,
 		address cogateway,
@@ -268,7 +268,7 @@ contract Gateway is Hasher {
 	// TODO: add isDeactivated
 
 	// TODO: change the process to Progress
-	function processGatewayLink(
+	function progressGatewayLink(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
@@ -288,7 +288,7 @@ contract Gateway is Hasher {
 		//return bounty
 		//msg.sender.transfer(bounty);
 
-		emit GatewayLinkProcessed(
+		emit GatewayLinkProgressed(
 			_messageHash,
 			address(this),
 			coGateway,
@@ -337,7 +337,7 @@ contract Gateway is Hasher {
 		// TODO: change the bounty transfer in BountyToken (Think for a name)
 		// TODO: need to check the nonce.
 
-		require(cleanProcessedStake(_staker));
+		require(cleanProgressedStake(_staker));
 
         //TODO: include valueToken,
 		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
@@ -369,7 +369,7 @@ contract Gateway is Hasher {
 		);
 	}
 
-	function processStaking(
+	function progressStaking(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
@@ -390,14 +390,14 @@ contract Gateway is Hasher {
 		//return bounty
 		msg.sender.transfer(bounty);
 
-		emit ProcessedStake(
+		emit ProgressedStake(
 			_messageHash,
 			stakes[_messageHash].amount,
 			stakes[_messageHash].beneficiary
 		);
 	}
 
-	function processStakingWithProof(
+	function progressStakingWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
@@ -432,7 +432,7 @@ contract Gateway is Hasher {
 		//todo discuss return bounty
 		require(token.transfer(stakes[_messageHash].facilitator, bounty));
 
-		emit ProcessedStake(
+		emit ProgressedStake(
 			_messageHash,
 			stakes[_messageHash].amount,
 			stakes[_messageHash].beneficiary
@@ -473,7 +473,7 @@ contract Gateway is Hasher {
 		emit RevertStakeDeclared(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
 	}
 
-	function processRevertStaking(
+	function progressRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
@@ -578,7 +578,7 @@ contract Gateway is Hasher {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProcessedRedeem(_redeemer));
+		require(cleanProgressedRedeem(_redeemer));
 
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
@@ -612,7 +612,7 @@ contract Gateway is Hasher {
         unstakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
 	}
 
-	function processUnstake(
+	function progressUnstake(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
@@ -643,7 +643,7 @@ contract Gateway is Hasher {
 
 
 
-		emit ProcessedUnstake(
+		emit ProgressedUnstake(
 			_messageHash,
 			unstakeAmount_,
 			unStake.beneficiary,
@@ -651,7 +651,7 @@ contract Gateway is Hasher {
 		);
 	}
 
-	function processUnstakeWithProof(
+	function progressUnstakeWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
@@ -695,7 +695,7 @@ contract Gateway is Hasher {
 		//reward beneficiary with the fee
 		require(token.transfer(msg.sender, rewardAmount_));
 
-		emit ProcessedUnstake(
+		emit ProgressedUnstake(
 			_messageHash,
 			unstakeAmount_,
 			unStake.beneficiary,
@@ -821,7 +821,7 @@ contract Gateway is Hasher {
 	}
 
 	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
-	function cleanProcessedStake(address staker)
+	function cleanProgressedStake(address staker)
 	private
 	returns (bool /*success*/)
 	{
@@ -840,7 +840,7 @@ contract Gateway is Hasher {
 	}
 
 	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
-	function cleanProcessedRedeem(address redeemer)
+	function cleanProgressedRedeem(address redeemer)
 	private
 	returns (bool /*success*/)
 	{
