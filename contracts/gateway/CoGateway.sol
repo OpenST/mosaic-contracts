@@ -115,8 +115,8 @@ contract CoGateway is Hasher {
 	address public gateway;
 	MessageBus.MessageBox messageBox;
 	address public organisation;
-	bool public linked;
-	bool public deactivated;
+	bool private linked;
+	bool private deactivated;
 	GatewayLink gatewayLink;
 	uint256 public bounty;
 
@@ -139,12 +139,8 @@ contract CoGateway is Hasher {
 		_;
 	}
 
-	modifier isLinked() {
-		require(linked);
-		_;
-	}
 	modifier isActive() {
-		require(deactivated == false);
+		require(deactivated == false && linked == true);
 		_;
 	}
 
@@ -186,7 +182,6 @@ contract CoGateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public // TODO: check to change it to external.
-	isActive
 	returns(bytes32 messageHash_)
 	{
 		require(linked == false);
@@ -244,7 +239,6 @@ contract CoGateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
@@ -275,7 +269,6 @@ contract CoGateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public
-	isActive
 	returns (bytes32 messageHash_)
 	{
 		uint256 initialGas = gasleft();
@@ -368,7 +361,6 @@ contract CoGateway is Hasher {
 		uint256 _messageStatus
 	)
 	public
-	isActive
 	returns (
 		uint256 mintAmount_,
 		uint256 mintedAmount_,
@@ -417,7 +409,6 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
 		uint256 initialGas = gasleft();
@@ -460,7 +451,6 @@ contract CoGateway is Hasher {
 	public
 	payable
 	isActive
-	isLinked
 	returns (bytes32 messageHash_)
 	{
 		require(msg.value == bounty);
@@ -506,7 +496,6 @@ contract CoGateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
-	isActive
 	returns (uint256 redeemAmount)
 	{
 		require(linked);
@@ -537,7 +526,6 @@ contract CoGateway is Hasher {
 		uint256 _messageStatus
 	)
 	external
-	isActive
 	returns (uint256 redeemAmount)
 	{
 		require(linked);
@@ -575,8 +563,6 @@ contract CoGateway is Hasher {
 		bytes32 _messageHash
 	)
 	external
-	isActive
-	isLinked
 	returns (
 		address redeemer_,
 		bytes32 intentHash_,
@@ -610,7 +596,6 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
 		require(linked);
@@ -668,7 +653,6 @@ contract CoGateway is Hasher {
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 	external
-	isActive
 	returns (bool /* success */)
 	{
 		// _rlpEncodedAccount should be valid
@@ -829,4 +813,27 @@ contract CoGateway is Hasher {
 		return message.nonce.add(1);
 	}
 
+	function isLinked()
+	external
+	view
+	returns (bool)
+	{
+		return linked;
+	}
+
+	function isDeactivated()
+	external
+	view
+	returns (bool)
+	{
+		return deactivated;
+	}
+
+	function setGatewayActive(bool _active)
+	external
+	onlyOrganisation
+	returns (bool)
+	{
+		deactivated = !_active;
+	}
 }

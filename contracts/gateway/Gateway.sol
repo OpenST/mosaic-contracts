@@ -147,8 +147,8 @@ contract Gateway is Hasher {
 
 	address public coGateway;
 	MessageBus.MessageBox messageBox;
-	bool public linked;
-	bool public deactivated;
+	bool private linked;
+	bool private deactivated;
 	address public organisation;
 	GatewayLink gatewayLink;
 
@@ -178,12 +178,13 @@ contract Gateway is Hasher {
 
 	uint8 outboxOffset = 1;
 
-	modifier isLinked() {
-		require(linked);
+	modifier onlyOrganisation() {
+		require(msg.sender == organisation);
 		_;
 	}
+
 	modifier isActive() {
-		require(deactivated == false);
+		require(deactivated == false && linked == true);
 		_;
 	}
 
@@ -228,7 +229,6 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes _signature)
 	external
-	isActive
 	returns (bytes32 messageHash_)
 	{
 		require(linked == false);
@@ -284,7 +284,6 @@ contract Gateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
@@ -332,7 +331,6 @@ contract Gateway is Hasher {
 	)
 	external
 	payable
-	isLinked
 	isActive
 	returns (bytes32 messageHash_)
 	{
@@ -383,7 +381,6 @@ contract Gateway is Hasher {
 		bytes32 _unlockSecret
 	)
 	external
-	isActive
 	returns (uint256 stakeAmount_)
 	{
 		//require(linked); //TODO: this is not required. put it only for stake, redeem (places we do declare)
@@ -414,7 +411,6 @@ contract Gateway is Hasher {
 		uint256 _messageStatus
 	)
 	external
-	isActive
 	returns (uint256 stakeAmount_)
 	{
 		//require(linked);
@@ -455,8 +451,6 @@ contract Gateway is Hasher {
 		bytes _signature
 	)
 	external
-	isActive
-	isLinked
 	returns (
 		address staker_,
 		bytes32 intentHash_,
@@ -492,7 +486,6 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
 		//require(linked);
@@ -536,7 +529,6 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedParentNodes
 	)
 	external
-	isActive
 	returns (bool /*TBD*/)
 	{
         uint256 initialGas = gasleft();
@@ -581,7 +573,6 @@ contract Gateway is Hasher {
 		bytes memory _rlpParentNodes
 	)
 	public
-	isActive
 	returns (bytes32 messageHash_)
 	{
         uint256 initialGas = gasleft();
@@ -632,7 +623,6 @@ contract Gateway is Hasher {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret)
 	external
-	isActive
 	returns (
 		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
@@ -675,7 +665,6 @@ contract Gateway is Hasher {
 		uint256 _messageStatus
 	)
 	public
-	isActive
 	returns (
 		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
@@ -743,7 +732,6 @@ contract Gateway is Hasher {
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes)
 	external
-	isActive
 	returns (bool /* success */)
 	{
 		// _rlpEncodedAccount should be valid
@@ -890,6 +878,29 @@ contract Gateway is Hasher {
 		return message.nonce.add(1);
 	}
 
+	function isLinked()
+	external
+	view
+	returns (bool)
+	{
+		return linked;
+	}
+
+	function isDeactivated()
+	external
+	view
+	returns (bool)
+	{
+		return deactivated;
+	}
+
+	function setGatewayActive(bool _active)
+	external
+	onlyOrganisation
+	returns (bool)
+	{
+		deactivated = !_active;
+	}
 }
 
 
