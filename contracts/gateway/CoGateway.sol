@@ -191,7 +191,8 @@ contract CoGateway is Hasher {
 		require(linked == false);
 		require(msg.sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
-		// TODO: need to check the nonce is in sync with the params.
+		require(storageRoots[_blockHeight] != bytes32(0));
+		require(_nonce == _getNonce(_sender));
 
 		// TODO: need to add check for MessageBus.
 		bytes32 intentHash = hashLinkGateway(
@@ -206,8 +207,6 @@ contract CoGateway is Hasher {
 			valueToken);
 
 		require(intentHash == _intentHash);
-
-		// TODO: add require for storageRoots[_blockHeight].
 
 		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
 
@@ -375,6 +374,9 @@ contract CoGateway is Hasher {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
+		bytes32 storageRoot = storageRoots[_blockHeight];
+		require(storageRoot != bytes32(0));
+
 		Mint storage mint = mints[_messageHash];
 		MessageBus.Message storage message = mint.message;
 
@@ -395,9 +397,6 @@ contract CoGateway is Hasher {
 		require(UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_));
 		//reward beneficiary with the reward amount
 		require(UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_));
-
-		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
 
 		emit ProgressedMint(
 			_messageHash,

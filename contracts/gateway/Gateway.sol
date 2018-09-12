@@ -262,7 +262,6 @@ contract Gateway is Hasher {
 
 		require(intentHash == _intentHash);
 
-		// check nonces
 		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
 
 		gatewayLink = GatewayLink ({
