@@ -160,6 +160,11 @@ contract Gateway is Hasher {
 
 	//address of branded token.
 	EIP20Interface public token;
+
+	//address of bounty token.
+	EIP20Interface public bountyToken;
+
+
 	//address of core contract.
 	CoreInterface core;
 
@@ -192,12 +197,14 @@ contract Gateway is Hasher {
 	 *  @notice Contract constructor.
 	 *
 	 *  @param _token Branded token contract address.
+	 *  @param _bountyToken Contract address of ERC20 token for which the bounty will be transferred.
 	 *  @param _core Core contract address.
 	 *  @param _bounty Bounty amount that worker address stakes while accepting stake.
 	 *  @param _organisation organisation address.
 	 */
 	constructor(
 		EIP20Interface _token,
+		EIP20Interface _bountyToken, //TODO: think of a better name
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation
@@ -207,10 +214,12 @@ contract Gateway is Hasher {
 		require(_token != address(0));
 		require(_core != address(0));
 		require(_organisation != address(0));
+		require(_bountyToken != address(0));
 
 		linked = false;
 		deactivated = false;
 		token = _token;
+		bountyToken = _bountyToken;
 		core = _core;
 		bounty = _bounty;
 		organisation = _organisation;
@@ -330,11 +339,9 @@ contract Gateway is Hasher {
 		bytes _signature
 	)
 	external
-	payable
 	isActive
 	returns (bytes32 messageHash_)
 	{
-		require(msg.value == bounty);
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
@@ -342,6 +349,7 @@ contract Gateway is Hasher {
 		require(_signature.length != 0); //TODO: check for the correct length (65).
 
 		// TODO: change the bounty transfer in BountyToken (Think for a name)
+
 		// TODO: need to check the nonce.
 
 		require(cleanProgressedStake(_staker));
@@ -366,6 +374,8 @@ contract Gateway is Hasher {
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, address(this), _amount));
 
+		// transfer the bounty amount
+		require(bountyToken.transferFrom(msg.sender, address(this), bounty));
 
 		emit StakingIntentDeclared(
 			messageHash_,
@@ -395,7 +405,7 @@ contract Gateway is Hasher {
 		require(token.transfer(stakeVault, stakeAmount_));
 
 		//return bounty
-		msg.sender.transfer(bounty);
+		require(bountyToken.transfer(msg.sender, bounty));
 
 		emit ProgressedStake(
 			_messageHash,
@@ -437,7 +447,7 @@ contract Gateway is Hasher {
 		require(token.transfer(stakeVault, stakeAmount_));
 
 		//todo discuss return bounty
-		require(token.transfer(stakes[_messageHash].facilitator, bounty));
+		require(bountyToken.transfer(stakes[_messageHash].facilitator, bounty));
 
 		emit ProgressedStake(
 			_messageHash,
@@ -513,7 +523,7 @@ contract Gateway is Hasher {
 
 		require(token.transfer(message.sender, stakeData.amount));
 
-		msg.sender.transfer(bounty);
+		require(bountyToken.transfer(msg.sender, bounty));
 
 		emit RevertedStake(
 			message.sender,
