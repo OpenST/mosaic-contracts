@@ -463,7 +463,7 @@ contract CoGateway is Hasher {
 		require(_hashLock != bytes32(0));
 
 		//TODO: Move the hashing code in to hasher library
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, msg.sender, _gasPrice));
+		bytes32 intentHash = hashRedemptionIntent(_amount, _beneficiary, msg.sender, _gasPrice, valueToken);
 		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _nonce, _gasPrice);
 
 		bytes32 previousMessageHash = initiateNewOutboxProcess(msg.sender, _nonce, messageHash_);

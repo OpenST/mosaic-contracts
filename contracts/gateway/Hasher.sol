@@ -86,7 +86,6 @@ contract Hasher {
     pure
     returns (bytes32)
     {
-
         return keccak256(
             abi.encodePacked(
                 _amount,
@@ -98,6 +97,26 @@ contract Hasher {
         );
     }
 
+    function hashRedemptionIntent(
+        uint256 _amount,
+        address _beneficiary,
+        address _redeemer,
+        uint256 _gasPrice,
+        address _token)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(
+            abi.encodePacked(
+                _amount,
+                _beneficiary,
+                _redeemer,
+                _gasPrice,
+                _token
+            )
+        );
+    }
 
     function stakeTypeHash()
     external

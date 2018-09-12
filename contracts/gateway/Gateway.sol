@@ -474,9 +474,9 @@ contract Gateway is Hasher {
 		require(
 			MessageBus.declareRevocationMessage(
 			messageBox,
-				STAKE_TYPEHASH,
+			STAKE_TYPEHASH,
 			message,
-				_signature
+			_signature
 			)
 		);
 
@@ -592,7 +592,7 @@ contract Gateway is Hasher {
 		require(_rlpParentNodes.length != 0);
 
 		//todo change to library call, stake too deep error
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
+		bytes32 intentHash = hashRedemptionIntent(_amount, _beneficiary, _redeemer, _gasPrice, token);
 		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
 
 		bytes32 previousMessageHash = initiateNewOutboxProcess(_redeemer, _redeemerNonce, messageHash_);
