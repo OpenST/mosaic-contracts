@@ -13,7 +13,6 @@ library MessageBus {
 		Undeclared,
 		Declared,
 		Progressed,
-		Completed,
 		DeclaredRevocation,
 		Revoked
 	}
@@ -28,6 +27,7 @@ library MessageBus {
 		bytes32 intentHash;
 		uint256 nonce;
 		uint256 gasPrice;
+		uint256 gasLimit;
 		address sender;
 		bytes32 hashLock;
 		uint256 gasConsumed;
@@ -306,14 +306,6 @@ library MessageBus {
 		return true;
 	}
 
-	function getCodeHash()
-	external
-	pure
-	returns (bytes32) {
-		//TODO: update code to return proper codeHash
-		return bytes32(0);
-	}
-
 	function revocationMessageDigest(
 		bytes32 _messageTypeHash,
 		bytes32 _intentHash,
@@ -335,17 +327,16 @@ library MessageBus {
 	function feeAmount(
 		Message storage _message,
 		uint256 _initalGas,
-		uint256 _estimatedAdditionalGasUsage,
-		uint256 _gasLimit)
+		uint256 _estimatedAdditionalGasUsage)
 	external
 	returns (uint256 fee_)
 	{
-
-		//TODO: revisit, get the minimum(gasConsumed, _gasLimit)
 		_message.gasConsumed = _initalGas.sub(gasleft()).add(_estimatedAdditionalGasUsage).add(_message.gasConsumed);
-		require(_message.gasConsumed < _gasLimit);
-		return _message.gasConsumed.mul(_message.gasPrice);
-
+		if (_message.gasConsumed < _message.gasLimit) {
+			fee_ = _message.gasConsumed.mul(_message.gasPrice);
+		} else {
+			fee_ = _message.gasLimit.mul(_message.gasPrice);
+		}
 	}
 
 }

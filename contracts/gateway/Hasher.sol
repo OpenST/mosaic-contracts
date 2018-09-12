@@ -54,7 +54,6 @@ contract Hasher {
         string _tokenName,
         string _tokenSymbol,
         uint8 _tokenDecimal,
-        uint256 _gasPrice,
         uint256 _nonce,
         address _token)
     public
@@ -69,7 +68,6 @@ contract Hasher {
                 _tokenName,
                 _tokenSymbol,
                 _tokenDecimal,
-                _gasPrice,
                 _nonce,
                 _token
             )

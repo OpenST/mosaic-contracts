@@ -130,7 +130,6 @@ contract CoGateway is Hasher {
 	/* path to prove merkle account proof for gateway  */
 	bytes private encodedGatewayPath;
 
-	uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 	mapping(bytes32 /*messageHash*/ => Mint) mints;
 	mapping(bytes32/*messageHash*/ => Redeem) redeems;
 	mapping(address /*redeemer*/ => bytes32 /*messageHash*/) activeProcess;
@@ -178,7 +177,6 @@ contract CoGateway is Hasher {
 
 	function confirmGatewayLinkIntent(
 		bytes32 _intentHash,
-		uint256 _gasPrice,
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
@@ -189,7 +187,7 @@ contract CoGateway is Hasher {
 	returns(bytes32 messageHash_)
 	{
 		require(linked == false);
-		require(msg.sender == organisation);
+		require(_sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
 		require(storageRoots[_blockHeight] != bytes32(0));
 		require(_nonce == _getNonce(_sender));
@@ -202,20 +200,20 @@ contract CoGateway is Hasher {
 			EIP20Interface(utilityToken).name(),
 			EIP20Interface(utilityToken).symbol(),
 			EIP20Interface(utilityToken).decimals(),
-			_gasPrice,
 			_nonce,
 			valueToken);
 
 		require(intentHash == _intentHash);
 
-		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, 0);
 
 		gatewayLink = GatewayLink ({
 			messageHash: messageHash_,
 			message: getMessage(
 				_sender,
 				_nonce,
-				_gasPrice,
+				0,
+				0,
 				_intentHash,
 				_hashLock
 				)
@@ -268,6 +266,7 @@ contract CoGateway is Hasher {
 		address _beneficiary,
 		uint256 _amount,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
 		bytes memory _rlpParentNodes
@@ -298,6 +297,7 @@ contract CoGateway is Hasher {
 			_staker,
 			_stakerNonce,
 			_gasPrice,
+			_gasLimit,
 			intentHash,
 			_hashLock
 		);
@@ -340,7 +340,7 @@ contract CoGateway is Hasher {
 
 		mintAmount_ = mint.amount;
 
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
 
 		mintedAmount_ = mint.amount.sub(rewardAmount_);
 		//Mint token after subtracting reward amount
@@ -390,7 +390,7 @@ contract CoGateway is Hasher {
 
 		mintAmount_ = mint.amount;
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
 
 		mintedAmount_ = mint.amount.sub(rewardAmount_);
 		//Mint token after subtracting reward amount
@@ -448,6 +448,7 @@ contract CoGateway is Hasher {
 		address _beneficiary,
 		address _facilitator,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		uint256 _nonce,
 		bytes32 _hashLock
 	)
@@ -472,7 +473,7 @@ contract CoGateway is Hasher {
 		redeems[messageHash_] = Redeem({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			message : getMessage(msg.sender, _nonce, _gasPrice, intentHash, _hashLock),
+			message : getMessage(msg.sender, _nonce, _gasPrice, _gasLimit, intentHash, _hashLock),
 			facilitator : _facilitator
 			});
 
@@ -711,6 +712,7 @@ contract CoGateway is Hasher {
 		address _staker,
 		uint256 _stakerNonce,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
@@ -722,6 +724,7 @@ contract CoGateway is Hasher {
 			intentHash : _intentHash,
 			nonce : _stakerNonce,
 			gasPrice : _gasPrice,
+			gasLimit: _gasLimit,
 			sender : _staker,
 			hashLock : _hashLock,
 			gasConsumed: 0
@@ -734,6 +737,7 @@ contract CoGateway is Hasher {
 		address _staker,
 		uint256 _stakerNonce,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
@@ -744,7 +748,7 @@ contract CoGateway is Hasher {
 		return Mint({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock)
+			message : getMessage(_staker, _stakerNonce, _gasPrice, _gasLimit, _intentHash, _hashLock)
 			});
 	}
 

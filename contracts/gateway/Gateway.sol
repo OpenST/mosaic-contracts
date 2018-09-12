@@ -178,9 +178,6 @@ contract Gateway is Hasher {
 	/* path to prove merkle account proof for gateway  */
 	bytes private encodedCoGatewayPath;
 
-	//TODO: remove the GAS_LIMIT form constant. And get it along with gasPrice.
-    uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
-
 	uint8 outboxOffset = 1;
 
 	modifier onlyOrganisation() {
@@ -232,7 +229,6 @@ contract Gateway is Hasher {
 	function initiateGatewayLink(
 		address _coGateway,
 		bytes32 _intentHash,
-		uint256 _gasPrice,
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
@@ -256,20 +252,20 @@ contract Gateway is Hasher {
 			token.name(),
 			token.symbol(),
 			token.decimals(),
-			_gasPrice,
 			_nonce,
 			token);
 
 		require(intentHash == _intentHash);
 
-		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, 0);
 
 		gatewayLink = GatewayLink ({
 		 	messageHash: messageHash_,
 			message:getMessage(
                 _sender,
                 _nonce,
-                _gasPrice,
+                0,
+				0,
                 _intentHash,
                 _hashLock
             )
@@ -324,6 +320,7 @@ contract Gateway is Hasher {
 	 * @param _beneficiary Beneficiary address.
 	 * @param _staker Staker address.
 	 * @param _gasPrice Gas price
+	 * @param _gasLimit Gas limit
 	 * @param _nonce Staker nonce.
 	 * @param _hashLock Hash Lock
 	 * @param _signature Signature signed by staker.
@@ -335,6 +332,7 @@ contract Gateway is Hasher {
 		address _beneficiary,
 		address _staker,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		uint256 _nonce,
 		bytes32 _hashLock,
 		bytes _signature
@@ -363,7 +361,7 @@ contract Gateway is Hasher {
 		stakes[messageHash_] = Stake({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
+			message : getMessage(_staker, _nonce, _gasPrice, _gasLimit, intentHash, _hashLock),
 			facilitator : msg.sender
 			});
 
@@ -575,6 +573,7 @@ contract Gateway is Hasher {
 		address _beneficiary,
 		uint256 _amount,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
 		bytes memory _rlpParentNodes
@@ -604,6 +603,7 @@ contract Gateway is Hasher {
 			_redeemer,
 			_redeemerNonce,
 			_gasPrice,
+			_gasLimit,
 			intentHash,
 			_hashLock
 		);
@@ -645,7 +645,7 @@ contract Gateway is Hasher {
 
 		unstakeTotalAmount_ = unStake.amount;
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
@@ -699,7 +699,7 @@ contract Gateway is Hasher {
 
 		unstakeTotalAmount_ = unStake.amount;
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
@@ -794,6 +794,7 @@ contract Gateway is Hasher {
 		address _redeemer,
 		uint256 _redeemerNonce,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
@@ -804,7 +805,7 @@ contract Gateway is Hasher {
 		return Unstake({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock)
+			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _gasLimit, _intentHash, _hashLock)
 			});
 	}
 
@@ -813,6 +814,7 @@ contract Gateway is Hasher {
 		address _redeemer,
 		uint256 _redeemerNonce,
 		uint256 _gasPrice,
+		uint256 _gasLimit,
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
@@ -824,6 +826,7 @@ contract Gateway is Hasher {
 			intentHash : _intentHash,
 			nonce : _redeemerNonce,
 			gasPrice : _gasPrice,
+			gasLimit: _gasLimit,
 			sender : _redeemer,
 			hashLock : _hashLock,
             gasConsumed: 0
