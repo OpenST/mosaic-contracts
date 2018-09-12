@@ -584,6 +584,7 @@ contract Gateway is Hasher {
 			_gasPrice,
 			intentHash,
 			_hashLock
+			_hashLock
 		);
 
 		executeConfirmRedemptionIntent(unstakes[messageHash_].message, _blockHeight, _rlpParentNodes);

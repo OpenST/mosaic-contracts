@@ -38,8 +38,8 @@ library MessageBus {
 		Message storage _message,
 		bytes _signature
 	)
-	external
-	returns (bytes32 messageHash_)
+		external
+		returns (bytes32 messageHash_)
 	{
 
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
@@ -58,8 +58,8 @@ library MessageBus {
 		uint8 _outboxOffset,
 		bytes32 _storageRoot
 	)
-	external
-	returns (bytes32 messageHash_)
+		external
+		returns (bytes32 messageHash_)
 	{
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
 
@@ -84,8 +84,8 @@ library MessageBus {
 		Message storage _message,
 		bytes32 _unlockSecret
 	)
-	external
-	returns (bytes32 messageHash_)
+		external
+		returns (bytes32 messageHash_)
 	{
 		require(_message.hashLock == keccak256(abi.encode(_unlockSecret)));
 
@@ -134,8 +134,8 @@ library MessageBus {
 		Message storage _message,
 		bytes32 _unlockSecret
 	)
-	external
-	returns (bytes32 messageHash_)
+		external
+		returns (bytes32 messageHash_)
 	{
 		require(_message.hashLock == keccak256(abi.encode(_unlockSecret)));
 		messageHash_ = messageDigest(_messageTypeHash, _message.intentHash, _message.nonce, _message.gasPrice);
