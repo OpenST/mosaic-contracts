@@ -123,6 +123,7 @@ contract CoGateway is Hasher {
 	uint8 outboxOffset = 1;
 	CoreInterface public core;
 	address public utilityToken;
+	address public valueToken;
 
 	/*mapping to store storage root with block height*/
 	mapping(uint256 /* block height */ => bytes32) private storageRoots;
@@ -146,6 +147,7 @@ contract CoGateway is Hasher {
 
 	//TODO: pass the ValueToken address
 	constructor(
+		address _valueToken,
 		address _utilityToken,
 		CoreInterface _core,
 		uint256 _bounty,
@@ -154,6 +156,7 @@ contract CoGateway is Hasher {
 	)
 	public
 	{
+		require(_valueToken != address(0));
 		require(_utilityToken != address(0));
 		require(_gateway != address(0));
 		require(_core != address(0));
@@ -162,6 +165,7 @@ contract CoGateway is Hasher {
 		linked = false;
 		deactivated = false;
 
+		valueToken = _valueToken;
 		utilityToken = _utilityToken;
 		gateway = _gateway;
 		core = _core;
@@ -198,7 +202,8 @@ contract CoGateway is Hasher {
 			EIP20Interface(utilityToken).symbol(),
 			EIP20Interface(utilityToken).decimals(),
 			_gasPrice,
-			_nonce);
+			_nonce,
+			valueToken);
 
 		require(intentHash == _intentHash);
 
@@ -280,12 +285,11 @@ contract CoGateway is Hasher {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProgressedStake(_staker));
-		// TODO: check the nonce is consistent here.
-
-		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
-
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice, valueToken);
 		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _stakerNonce, _gasPrice);
+
+		bytes32 previousMessageHash = initiateNewInboxProcess(_staker, _stakerNonce, messageHash_);
+		delete mints[previousMessageHash];
 
 		// TODO: Check if we can merge  require(cleanProcessedStake(_staker)); , checking the nonce, and  activeProcess[_staker] = messageHash_;
 		activeProcess[_staker] = messageHash_;
@@ -458,15 +462,13 @@ contract CoGateway is Hasher {
 		require(_beneficiary != address(0)); //TODO: this check will be removed so that tokens can be burnt
 		require(_facilitator != address(0));
 		require(_hashLock != bytes32(0));
-		require(cleanProgressedRedemption(msg.sender));
 
 		//TODO: Move the hashing code in to hasher library
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, msg.sender, _gasPrice));
-
-
 		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		activeProcess[msg.sender] = messageHash_;
+		bytes32 previousMessageHash = initiateNewOutboxProcess(msg.sender, _nonce, messageHash_);
+		delete redeems[previousMessageHash];
 
 		redeems[messageHash_] = Redeem({
 			amount : _amount,
@@ -746,41 +748,53 @@ contract CoGateway is Hasher {
 			message : getMessage(_staker, _stakerNonce, _gasPrice, _intentHash, _hashLock)
 			});
 	}
-	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
-	function cleanProgressedRedemption(address redeemer)
-	private
-	returns (bool /*success*/)
-	{
-		bytes32 previousProcess = activeProcess[redeemer];
 
-		if (previousProcess != bytes32(0)) {
+	function initiateNewOutboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash)
+	private
+	returns (bytes32 previousMessageHash_)
+	{
+		require(_nonce == _getNonce(_account));
+
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
 
 			require(
-				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
-				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Revoked
+				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
 			);
-			delete redeems[previousProcess];
-			delete messageBox.inbox[previousProcess];
+			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
+			//delete messageBox.outbox[previousMessageHash_];
 		}
+
+		activeProcess[_account] = _messageHash;
 	}
 
-	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
-	function cleanProgressedStake(address staker)
+	function initiateNewInboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash)
 	private
-	returns (bool /*success*/)
+	returns (bytes32 previousMessageHash_)
 	{
-		bytes32 previousProcess = activeProcess[staker];
+		require(_nonce == _getNonce(_account));
 
-		if (previousProcess != bytes32(0)) {
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
 
 			require(
-				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
-				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Revoked
+				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
 			);
-			delete mints[previousProcess];
-			delete messageBox.inbox[previousProcess];
+			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
+			//delete messageBox.inbox[previousMessageHash_];
 		}
-		return true;
+
+		activeProcess[_account] = _messageHash;
 	}
 
 	//TODO: This needs discusion. This doesnt apprear correct way of implementation
@@ -798,10 +812,9 @@ contract CoGateway is Hasher {
 		return ProtocolVersioned(utilityToken).completeProtocolTransfer();
 	}
 
-	function getNonce(address _account)
-	external
+	function _getNonce(address _account)
+	private
 	view
-	isActive
 	returns (uint256 /* nonce */)
 	{
 		bytes32 messageHash = activeProcess[_account];
@@ -811,6 +824,14 @@ contract CoGateway is Hasher {
 
 		MessageBus.Message storage message = redeems[messageHash].message;
 		return message.nonce.add(1);
+	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		return _getNonce(_account);
 	}
 
 	function isLinked()

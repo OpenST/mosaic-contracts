@@ -244,6 +244,7 @@ contract Gateway is Hasher {
 		require(_coGateway != address(0));
 		require(_sender == organisation);
 		require(gatewayLink.messageHash == bytes32(0));
+		require(_nonce == _getNonce(_sender));
 
 		coGateway = _coGateway;
 		encodedCoGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coGateway)));
@@ -256,7 +257,8 @@ contract Gateway is Hasher {
 			token.symbol(),
 			token.decimals(),
 			_gasPrice,
-			_nonce);
+			_nonce,
+			token);
 
 		require(intentHash == _intentHash);
 
@@ -346,19 +348,15 @@ contract Gateway is Hasher {
 		require(_beneficiary != address(0));
 		require(_staker != address(0));
 		require(_hashLock != bytes32(0));
-		require(_signature.length != 0); //TODO: check for the correct length (65).
+		require(_signature.length == 65); //TODO: check for the correct length (65).
 
-		// TODO: change the bounty transfer in BountyToken (Think for a name)
+		//TODO: include valueToken,
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice, token);
 
-		// TODO: need to check the nonce.
-
-		require(cleanProgressedStake(_staker));
-
-        //TODO: include valueToken,
-		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
-
-		//TODO:
 		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _nonce, _gasPrice);
+
+		bytes32 previousMessageHash = initiateNewInboxProcess(_staker, _nonce, messageHash_);
+		delete stakes[previousMessageHash];
 
 		// TODO: Check if we can merge  require(cleanProcessedStake(_staker)); , checking the nonce, and  activeProcess[_staker] = messageHash_;
 		activeProcess[_staker] = messageHash_;
@@ -374,7 +372,7 @@ contract Gateway is Hasher {
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, address(this), _amount));
 
-		// transfer the bounty amount
+		// transfer the bounty amount // TODO: change the bounty transfer in BountyToken (Think for a name)
 		require(bountyToken.transferFrom(msg.sender, address(this), bounty));
 
 		emit StakingIntentDeclared(
@@ -586,7 +584,6 @@ contract Gateway is Hasher {
 	returns (bytes32 messageHash_)
 	{
         uint256 initialGas = gasleft();
-		//require(linked);
 		require(_redeemer != address(0));
 		require(_beneficiary != address(0));
 		require(_amount != 0);
@@ -595,14 +592,12 @@ contract Gateway is Hasher {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProgressedRedeem(_redeemer));
-
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
-
 		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
 
-		activeProcess[_redeemer] = messageHash_;
+		bytes32 previousMessageHash = initiateNewOutboxProcess(_redeemer, _redeemerNonce, messageHash_);
+		delete unstakes[previousMessageHash];
 
 		unstakes[messageHash_] = getUnStake(
 			_amount,
@@ -837,45 +832,56 @@ contract Gateway is Hasher {
 
 	}
 
-	// TODO: merge the below and this function logic in single function. Probable move this to MessageBus
-	function cleanProgressedStake(address staker)
+	function initiateNewOutboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash)
 	private
-	returns (bool /*success*/)
+	returns (bytes32 previousMessageHash_)
 	{
-		bytes32 previousProcess = activeProcess[staker];
+		require(_nonce == _getNonce(_account));
 
-		if (previousProcess != bytes32(0)) {
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
 
 			require(
-				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
-				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Revoked
+				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
 			);
-			delete stakes[previousProcess];
-			delete messageBox.inbox[previousProcess];
+			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
+			//delete messageBox.outbox[previousMessageHash_];
 		}
-		return true;
+
+		activeProcess[_account] = _messageHash;
 	}
 
-	// TODO: merge the above and this function logic in single function. Probable move this to MessageBus
-	function cleanProgressedRedeem(address redeemer)
+	function initiateNewInboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash)
 	private
-	returns (bool /*success*/)
+	returns (bytes32 previousMessageHash_)
 	{
-		bytes32 previousProcess = activeProcess[redeemer];
+		require(_nonce == _getNonce(_account));
 
-		if (previousProcess != bytes32(0)) {
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
 
 			require(
-				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
-				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Revoked
+				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
 			);
-			delete unstakes[previousProcess];
-			delete messageBox.inbox[previousProcess];
+			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
+			//delete messageBox.inbox[previousMessageHash_];
 		}
+
+		activeProcess[_account] = _messageHash;
 	}
 
-	function getNonce(address _account)
-	external
+	function _getNonce(address _account)
+	private
 	view
 	returns (uint256 /* nonce */)
 	{
@@ -886,6 +892,14 @@ contract Gateway is Hasher {
 
 		MessageBus.Message storage message = stakes[messageHash].message;
 		return message.nonce.add(1);
+	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		return _getNonce(_account);
 	}
 
 	function isLinked()

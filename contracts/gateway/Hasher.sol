@@ -55,7 +55,8 @@ contract Hasher {
         string _tokenSymbol,
         uint8 _tokenDecimal,
         uint256 _gasPrice,
-        uint256 _nonce)
+        uint256 _nonce,
+        address _token)
     public
     pure
     returns (bytes32)
@@ -69,7 +70,8 @@ contract Hasher {
                 _tokenSymbol,
                 _tokenDecimal,
                 _gasPrice,
-                _nonce
+                _nonce,
+                _token
             )
         );
     }
@@ -78,7 +80,8 @@ contract Hasher {
         uint256 _amount,
         address _beneficiary,
         address _staker,
-        uint256 _gasPrice)
+        uint256 _gasPrice,
+        address _token)
     public
     pure
     returns (bytes32)
@@ -89,7 +92,8 @@ contract Hasher {
                 _amount,
                 _beneficiary,
                 _staker,
-                _gasPrice
+                _gasPrice,
+                _token
             )
         );
     }
