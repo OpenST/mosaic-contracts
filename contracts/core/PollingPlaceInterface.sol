@@ -18,10 +18,41 @@ pragma solidity ^0.4.23;
 interface PollingPlaceInterface {
 
     /**
+     * @notice Updates the meta-block height by one and adds the new validators
+     *         that should join at this height.
+     *         Provide two arrays with the validators' addresses on auxiliary
+     *         and their respective weights at the same index. If an auxiliary
+     *         address and a weight have the same index in the provided arrays,
+     *         they are regarded as belonging to the same validator.
+     *
+     * @param _validators The addresses of the new validators on the auxiliary
+     *                    chain.
+     * @param _weights The weights of the validators.
+     * @param _originHeight The height of the origin chain where the new
+     *                      meta-block opens.
+     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
+     *                         the last finalised checkpoint within the
+     *                         previous, closed meta-block.
+     *
+     * @return `true` if the update was successful.
+     */
+    function updateMetaBlockHeight(
+        address[] _validators,
+        uint256[] _weights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
+    )
+        external
+        returns (bool success_);
+
+    /**
      * @notice Cast a vote from a source to a target.
      *
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
+     * @param _transitionHash The hash of the transition object of the
+     *                        meta-block that would result from the source
+     *                        block being finalised and proposed to origin.
      * @param _source The hash of the source block.
      * @param _target The hash of the target blokc.
      * @param _sourceHeight The height of the source block.
@@ -34,6 +65,7 @@ interface PollingPlaceInterface {
      */
     function vote(
         bytes20 _coreIdentifier,
+        bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,
@@ -41,27 +73,6 @@ interface PollingPlaceInterface {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    )
-        external
-        returns (bool success_);
-
-    /**
-     * @notice Updates the meta-block height by one and adds the new validators
-     *         that should join at this height.
-     *         Provide two arrays with the validators' addresses on auxiliary
-     *         and their respective weights at the same index. If an auxiliary
-     *         address and a weight have the same index in the provided arrays,
-     *         they are regarded as belonging to the same validator.
-     *
-     * @param _validators The addresses of the new validators on the auxiliary
-     *                    chain.
-     * @param _weights The weights of the validators.
-     *
-     * @return `true` if the update was successful.
-     */
-    function updateMetaBlockHeight(
-        address[] _validators,
-        uint256[] _weights
     )
         external
         returns (bool success_);

@@ -46,20 +46,30 @@ contract PollingPlaceWrapper {
     }
 
     /**
-     * @notice Wrapper function for the wrapped `updateMetaBlockHeight`.
+     * @notice Wrapper function for the wrapped `updateMetaBlockHeight`,
+     *         without a return value.
      *
      * @param _auxiliaryAddresses The addresses of the validators.
-     * @param _stakes The stakes of the validators.
+     * @param _weights The weights of the validators.
+     * @param _originHeight The height of the origin chane where the new
+     *                      meta-block opens.
+     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
+     *                         the last finalised checkpoint within the
+     *                         previous, closed meta-block.
      */
     function updateMetaBlockHeight(
         address[] _auxiliaryAddresses,
-        uint256[] _stakes
+        uint256[] _weights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
     )
         public
     {
         pollingPlace.updateMetaBlockHeight(
             _auxiliaryAddresses,
-            _stakes
+            _weights,
+            _originHeight,
+            _auxiliaryHeight
         );
     }
 }
@@ -71,50 +81,35 @@ contract TestPollingPlace {
 
     /* Private Variables */
 
-    /*
-     * Addresses and stakes are kept in storage as PollingPlace expects
-     * dynamic arrays as arguments and arrays in memory are always fixed size
-     * in solidity.
-     */
-
     address private initialAddress = address(1337);
-    address[] private initialAddresses;
-    address[] private updateAddresses;
+    uint256 private initialWeight = uint256(1337);
 
-    uint256 private initialStake = uint256(1337);
-    uint256[] private initialStakes;
-    uint256[] private updateStakes;
+    uint private gasForProxy = 200000;
 
     RevertProxy private proxy;
-    PollingPlace private stake;
+    PollingPlace private pollingPlace;
     PollingPlaceWrapper private wrapper;
 
     /* External Functions */
-
-    /** @notice Resetting the arrays for every test to run independent. */
-    function beforeEach() external {
-        initialAddresses.length = 0;
-        updateAddresses.length = 0;
-        initialStakes.length = 0;
-        updateStakes.length = 0;
-    }
 
     function testUpdateBlock() external {
         constructContracts();
 
         Assert.equal(
-            stake.currentMetaBlockHeight(),
+            pollingPlace.currentMetaBlockHeight(),
             uint256(0),
             "meta-block height after initialisation should be 0."
         );
         Assert.equal(
-            stake.totalStakes(uint256(0)),
-            initialStake,
-            "Total stake after initialisation should be 1337."
+            pollingPlace.totalWeights(uint256(0)),
+            initialWeight,
+            "Total weight after initialisation should be 1337."
         );
 
-        updateAddresses.push(address(2));
-        updateStakes.push(uint256(19));
+        address[] memory updateAddresses = new address[](1);
+        updateAddresses[0] = address(2);
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(19);
 
         /*
          * Using the same proxy logic as in the test that is expected to fail
@@ -127,36 +122,38 @@ contract TestPollingPlace {
          /* Priming the proxy. */
         PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
             updateAddresses,
-            updateStakes
+            updateWeights,
+            uint256(1),
+            uint256(1)
         );
 
         /* Making the primed call from the proxy. */
-        bool result = proxy.execute.gas(200000)();
+        bool result = proxy.execute.gas(gasForProxy)();
         Assert.isTrue(
             result,
-            "The stake contract must accept a valid new meta-block."
+            "The polling place must accept a valid new meta-block."
         );
 
         Assert.equal(
-            stake.currentMetaBlockHeight(),
+            pollingPlace.currentMetaBlockHeight(),
             uint256(1),
             "meta-block height after update should be 1."
         );
         Assert.equal(
-            stake.totalStakes(uint256(1)),
+            pollingPlace.totalWeights(uint256(1)),
             uint256(1356),
-            "Total stake after update should be 1356."
+            "Total weight after update should be 1356."
         );
         Assert.equal(
-            stake.totalStakes(uint256(0)),
-            initialStake,
-            "Initial total stake after update should still be initial."
+            pollingPlace.totalWeights(uint256(0)),
+            initialWeight,
+            "Initial total weight after update should still be initial."
         );
 
         /* Validator from construction. */
         validateValidator(
             initialAddress,
-            initialStake,
+            initialWeight,
             false,
             uint256(0),
             uint256(0)
@@ -172,79 +169,195 @@ contract TestPollingPlace {
     }
 
     function testUpdateBlockInvalidMessageSender() external {
-        initialAddresses.push(initialAddress);
-        initialStakes.push(initialStake);
+        address[] memory initialAddresses = new address[](1);
+        initialAddresses[0] = initialAddress;
+        uint256[] memory initialWeights = new uint256[](1);
+        initialWeights[0] = initialWeight;
 
         wrapper = new PollingPlaceWrapper();
         /*
          * Address 1 is not the wrapper, thus the wrapper is not allowed to
          * call the method and it should revert.
          */
-        stake = new PollingPlace(
+        pollingPlace = new PollingPlace(
             address(1),
+            bytes20(1),
+            address(2),
+            bytes20(2),
+            address(3),
             initialAddresses,
-            initialStakes
+            initialWeights
         );
-        wrapper.setPollingPlace(address(stake));
+        wrapper.setPollingPlace(address(pollingPlace));
         proxy = new RevertProxy(address(wrapper));
 
-        updateAddresses.push(address(999));
-        updateStakes.push(uint256(344));
+        address[] memory updateAddresses = new address[](1);
+        updateAddresses[0] = address(999);
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(344);
         
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if the caller is not the meta-block gate."
+            updateAddresses,
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if the caller is not the meta-block gate."
         );
     }
 
     function testUpdateBlockInputArraysMustBeOfSameLength() external {
         constructContracts();
 
-        updateAddresses.push(address(85));
-        updateAddresses.push(address(86));
-        updateStakes.push(uint256(344));
+        address[] memory updateAddresses = new address[](2);
+        updateAddresses[0] = address(85);
+        updateAddresses[1] = address(86);
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(344);
 
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if the addresses array is longer."
+            updateAddresses,
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if the addresses array is longer."
         );
 
         /* The other array may also not be longer. */
-        updateStakes.push(uint256(345));
-        updateStakes.push(uint256(346));
+        updateWeights = new uint256[](3);
+        updateWeights[0] = uint256(344);
+        updateWeights[1] = uint256(345);
+        updateWeights[2] = uint256(346);
 
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if the stakes array is longer."
+            new address[](0),
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if the weights array is longer."
         );
     }
 
-    function testUpdateBlockStakeMustBeGreaterZero() external {
+    function testUpdateBlockWeightMustBeGreaterZero() external {
         constructContracts();
 
-        updateAddresses.push(address(85));
-        updateStakes.push(uint256(0));
+        address[] memory updateAddresses = new address[](1);
+        updateAddresses[0] = address(85);
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(0);
 
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if the stake is zero."
+            updateAddresses,
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if the weight is zero."
         );
     }
 
     function testUpdateBlockValidatorAddressMustNotBeZero() external {
         constructContracts();
 
-        updateAddresses.push(address(0));
-        updateStakes.push(uint256(30000));
+        address[] memory updateAddresses = new address[](1);
+        updateAddresses[0] = address(0);
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(30000);
 
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if the address is zero."
+            updateAddresses,
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if the address is zero."
         );
     }
 
     function testUpdateBlockUpdateMetaBlockWithRepeatedValidator() external {
         constructContracts();
 
-        updateStakes.push(uint256(344));
+        address[] memory updateAddresses = new address[](1);
+        updateAddresses[0] = initialAddress;
+        uint256[] memory updateWeights = new uint256[](1);
+        updateWeights[0] = uint256(344);
 
         expectRevertOnUpdateMetaBlockHeight(
-            "The stake contract must revert if a validator address already exists."
+            updateAddresses,
+            updateWeights,
+            uint256(1),
+            uint256(1),
+            "The polling place must revert if a validator address already exists."
+        );
+    }
+
+    function testUpdateBlockChainHeightsMustIncrease() external {
+        constructContracts();
+
+        /*
+         * Using the same proxy logic as in the test that is expected to fail
+         * below. The reason is to make sure that the provided gas to the
+         * proxy's execute method would be sufficient to not trigger an out-of-
+         * gas error and have a false-positive test below when expecting a
+         * revert.
+         */
+
+         /* Priming the proxy. */
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
+            new address[](0),
+            new uint256[](0),
+            uint256(1),
+            uint256(1)
+        );
+
+        /* Making the primed call from the proxy. */
+        bool result = proxy.execute.gas(gasForProxy)();
+        Assert.isTrue(
+            result,
+            "The polling place must accept a valid new meta-block."
+        );
+
+         /* Priming the proxy. */
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
+            new address[](0),
+            new uint256[](0),
+            uint256(4),
+            uint256(9)
+        );
+
+        /* Making the primed call from the proxy. */
+        result = proxy.execute.gas(gasForProxy)();
+        Assert.isTrue(
+            result,
+            "The polling place must accept a valid new meta-block."
+        );
+
+         /* Priming the proxy. */
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
+            new address[](0),
+            new uint256[](0),
+            uint256(5),
+            uint256(14)
+        );
+
+        /* Making the primed call from the proxy. */
+        result = proxy.execute.gas(gasForProxy)();
+        Assert.isTrue(
+            result,
+            "The polling place must accept a valid new meta-block."
+        );
+
+        expectRevertOnUpdateMetaBlockHeight(
+            new address[](0),
+            new uint256[](0),
+            uint256(3),
+            uint256(200),
+            "The polling place must revert if the origin height does not increase."
+        );
+
+        expectRevertOnUpdateMetaBlockHeight(
+            new address[](0),
+            new uint256[](0),
+            uint256(200),
+            uint256(7),
+            "The polling place must revert if the auxiliary height does not increase."
         );
     }
 
@@ -255,16 +368,22 @@ contract TestPollingPlace {
      *         dependencies.
      */
     function constructContracts() private {
-        initialAddresses.push(initialAddress);
-        initialStakes.push(initialStake);
+        address[] memory initialAddresses = new address[](1);
+        initialAddresses[0] = initialAddress;
+        uint256[] memory initialWeights = new uint256[](1);
+        initialWeights[0] = initialWeight;
 
         wrapper = new PollingPlaceWrapper();
-        stake = new PollingPlace(
+        pollingPlace = new PollingPlace(
             address(wrapper),
+            bytes20(1),
+            address(2),
+            bytes20(2),
+            address(3),
             initialAddresses,
-            initialStakes
+            initialWeights
         );
-        wrapper.setPollingPlace(address(stake));
+        wrapper.setPollingPlace(address(pollingPlace));
         proxy = new RevertProxy(address(wrapper));
     }
 
@@ -275,11 +394,21 @@ contract TestPollingPlace {
      * @param _errorMessage The message to print if the contract does not
      *                      revert.
      */
-    function expectRevertOnUpdateMetaBlockHeight(string _errorMessage) private {
+    function expectRevertOnUpdateMetaBlockHeight(
+        address[] _updateAddresses,
+        uint256[] _updateWeights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight,
+        string _errorMessage
+    )
+        private
+    {
         /* Priming the proxy. */
         PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
-            updateAddresses,
-            updateStakes
+            _updateAddresses,
+            _updateWeights,
+            _originHeight,
+            _auxiliaryHeight
         );
 
         expectRevert(_errorMessage);
@@ -294,7 +423,7 @@ contract TestPollingPlace {
      */
     function expectRevert(string _errorMessage) private {
         /* Making the primed call from the proxy. */
-        bool result = proxy.execute.gas(200000)();
+        bool result = proxy.execute.gas(gasForProxy)();
         Assert.isFalse(
             result,
             _errorMessage
@@ -307,14 +436,14 @@ contract TestPollingPlace {
      *         values. Fails the test if any field does not match.
      *
      * @param _expectedAddress The expected address of the validator.
-     * @param _expectedStake The expected stake of the validator.
+     * @param _expectedWeight The expected weight of the validator.
      * @param _expectedEnded The expected ended of the validator.
      * @param _expectedStartHeight The expected start height of the validator.
      * @param _expectedEndHeight The expected end height of the validator.
      */
     function validateValidator(
         address _expectedAddress,
-        uint256 _expectedStake,
+        uint256 _expectedWeight,
         bool _expectedEnded,
         uint256 _expectedStartHeight,
         uint256 _expectedEndHeight
@@ -322,17 +451,17 @@ contract TestPollingPlace {
         private
     {
         address vAuxAddress;
-        uint256 vStake;
+        uint256 vWeight;
         bool vEnded;
         uint256 vStartHeight;
         uint256 vEndHeight;
         (
             vAuxAddress,
-            vStake,
+            vWeight,
             vEnded,
             vStartHeight,
             vEndHeight
-        ) = stake.validators(_expectedAddress);
+        ) = pollingPlace.validators(_expectedAddress);
         
         Assert.equal(
             vAuxAddress,
@@ -340,9 +469,9 @@ contract TestPollingPlace {
             "Did not store the correct address of the validator."
         );
         Assert.equal(
-            vStake,
-            _expectedStake,
-            "Did not store the correct stake of the validator."
+            vWeight,
+            _expectedWeight,
+            "Did not store the correct weight of the validator."
         );
         Assert.equal(
             vEnded,

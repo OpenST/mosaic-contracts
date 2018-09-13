@@ -46,12 +46,51 @@ interface BlockStoreInterface {
         external;
 
     /**
+     * @notice Returns the state root of the block that is stored at the given
+     *         height. The height must be <= the height of the latest finalised
+     *         checkpoint.
+     *
+     * @param _height The blockheight.
+     *
+     * @return The state root of the block at the given height.
+     */
+    function stateRoot(
+        uint256 _height
+    )
+        external
+        view
+        returns (bytes32 stateRoot_);
+
+    /**
      * @notice Returns the height of the latest block that has been finalised.
      *
      * @return The height of the latest finalised block.
      */
-    function getLatestBlockHeight()
+    function latestBlockHeight()
         external
         view
         returns (uint256 height_);
+
+    /**
+     * @notice Validates a given vote. For a vote to be valid:
+     *         - The hashes must exist and
+     *         - The blocks of the hashes must be at checkpoint heights and
+     *         - The source checkpoint must be justified
+     *
+     * @param _transitionHash The hash of the transition object of the related
+     *                        meta-block. Depends on the source block.
+     * @param _sourceBlockHash The hash of the source checkpoint of the vote.
+     * @param _targetBlockHash The hash of teh target checkpoint of the vote.
+     *
+     * @return `true` if all of the above apply and therefore the vote is
+     *         considered valid by the block store. `false` otherwise.
+     */
+    function isVoteValid(
+        bytes32 _transitionHash,
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        external
+        view
+        returns (bool valid_);
 }

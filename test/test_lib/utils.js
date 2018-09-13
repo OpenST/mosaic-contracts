@@ -111,18 +111,30 @@ module.exports.expectThrow = async (promise) => {
   assert(false, "Did not throw as expected");
 };
 
-/// @dev Expect failure from revert,
-///      but returns error instead
-module.exports.expectRevert = async (promise) => {
+/**
+ * Asserts that a call or transaction reverts.
+ * 
+ * @param {promise} promise The call or transaction.
+ * @param {string} expectedMessage Optional. If given, the revert message will
+ *                                 be checked to contain this string. Works with
+ *                                 web3 >= 1.0.
+ * @throws Will fail an assertion if the call or transaction is not reverted.
+ */
+module.exports.expectRevert = async (promise, expectedMessage) => {
   try {
     await promise;
   } catch (error) {
-    // TODO: Truffle v5 will support require messages with web3 1.0 and we can
-    //       check for a specific message.
     assert(
       error.message.search('revert') > -1,
       'The contract should revert. Instead: ' + error.message
     );
+
+    if (expectedMessage !== undefined) {
+      assert(
+        error.message.search(expectedMessage) > -1,
+        'The contract should revert with "' + expectedMessage + '", instead: "' + error.message + '"'
+      );
+    }
 
     return;
   }

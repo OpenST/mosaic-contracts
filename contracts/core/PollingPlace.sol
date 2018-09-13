@@ -14,31 +14,35 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./BlockStoreInterface.sol";
 import "./PollingPlaceInterface.sol";
 
 /**
- * @title A polling place is where voters cast their votes.
+ * @title A polling place is where validators cast their votes.
  *
  * @notice PollingPlace accepts Casper FFG votes from validators.
  *         PollingPlace also tracks the validator deposits of the Mosaic
  *         validators. The set of validators will change with new meta-blocks
  *         opening on auxiliary. This contract should always know the active
- *         validators and their respective stake.
+ *         validators and their respective weight.
  */
 contract PollingPlace is PollingPlaceInterface {
 
     /* Structs */
 
     /**
-     * A validator deposited stake on origin to enter the set of validators.
+     * A validator deposited weight on origin to enter the set of validators.
      */
     struct Validator {
 
         /** The address of the validator on auxiliary. */
         address auxiliaryAddress;
 
-        /** The amount of OST that the validator deposited on origin. */
-        uint256 stake;
+        /**
+         * The weight that a validator's vote has. Depends on the stake on
+         * origin and whethere the validator has logged out or been slashed.
+         */
+        uint256 weight;
 
         /** When set to `true`, check `endHeight` to know the last meta-block. */
         bool ended;
@@ -72,6 +76,36 @@ contract PollingPlace is PollingPlaceInterface {
      */
     address public metaBlockGate;
 
+    /** The core identifier of the core that tracks origin. */
+    bytes20 public originCoreIdentifier;
+
+    /** The core identifier of the core that tracks this auxiliary chain. */
+    bytes20 public auxiliaryCoreIdentifier;
+
+    /** Maps core identifiers to their respective block stores. */
+    mapping (bytes20 => BlockStoreInterface) public blockStores;
+
+    /**
+     * Maps core identifires to their respective chain heights at the currently
+     * open meta-block. Targets of votes must have a height >= the core height.
+     * This way, we only allow votes that target the current "epoch" (open meta-
+     * block).
+     */
+    mapping (bytes20 => uint256) public coreHeights;
+
+    /**
+     * Maps a vote hash to the combined weight of all validators that voted
+     * this vote.
+     */
+    mapping (bytes32 => uint256) public votesWeights;
+
+    /**
+     * Maps validator addresses to the highest target vote they have voted. All
+     * future votes must target a hegiht greater than the last voted target
+     * height.
+     */
+    mapping (address => uint256) public validatorTargetHeights;
+
     /**
      * Tracks the current height of the meta-block within this contract. We
      * track this here to make certain assertions about newly reported
@@ -92,40 +126,67 @@ contract PollingPlace is PollingPlaceInterface {
     mapping (address => Validator) public validators;
 
     /**
-     * Maps the meta-block height to the total stake at that height. The total
-     * stake is the sum of all deposits that took place at least two
+     * Maps the meta-block height to the total weight at that height. The total
+     * weight is the sum of all deposits that took place at least two
      * meta-blocks before and that have not withdrawn at least two meta-blocks
      * before.
      */
-    mapping (uint256 => uint256) public totalStakes;
+    mapping (uint256 => uint256) public totalWeights;
 
     /* Constructor */
 
     /**
      * @notice Initialise the contract with an initial set of validators.
      *         Provide two arrays with the validators' addresses on auxiliary
-     *         and their respective stakes at the same index. If an auxiliary
-     *         address and a stake have the same index in the provided arrays,
+     *         and their respective weights at the same index. If an auxiliary
+     *         address and a weight have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
      * @param _metaBlockGate The meta-block gate is the only address that is
      *                       allowed to call methods that update the current
      *                       height of the meta-block chain.
+     * @param _originCoreIdentifier The identifier of the core that tracks the
+     *                              origin chain.
+     * @param _originBlockStore The block store that stores the origin chain.
+     * @param _auxiliaryCoreIdentifier The identifier of the core that tracks
+     *                                 the auxiliary chain.
+     * @param _auxiliaryBlockStore The block store that stores the auxiliary
+     *                             chain.
      * @param _auxiliaryAddresses An array of validators' addresses on
      *                            auxiliary.
-     * @param _stakes The stakes of the validators on origin. Indexed the same
-     *                way as the _auxiliaryAddresses.
+     * @param _weights The weights of the validators on origin. Indexed the same
+     *                 way as the _auxiliaryAddresses.
      */
     constructor (
         address _metaBlockGate,
+        bytes20 _originCoreIdentifier,
+        address _originBlockStore,
+        bytes20 _auxiliaryCoreIdentifier,
+        address _auxiliaryBlockStore,
         address[] _auxiliaryAddresses,
-        uint256[] _stakes
+        uint256[] _weights
     )
         public
     {
         require(
             _metaBlockGate != address(0),
             "The address of the validator manager must not be zero."
+        );
+        require(
+            _originCoreIdentifier != bytes20(0),
+            "The core id of origin must not be zero."
+        );
+        require(
+            _originBlockStore != address(0),
+            "The address of the origin block store must not be zero."
+        );
+        require(
+            _auxiliaryCoreIdentifier != bytes20(0),
+            "The core id of auxiliary must not be zero."
+        );
+        require(
+            _auxiliaryBlockStore != address(0),
+            "The address of the auxiliary block store must not be zero."
         );
 
         require(
@@ -135,7 +196,12 @@ contract PollingPlace is PollingPlaceInterface {
 
         metaBlockGate = _metaBlockGate;
 
-        addValidators(_auxiliaryAddresses, _stakes);
+        originCoreIdentifier = _originCoreIdentifier;
+        auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
+        blockStores[originCoreIdentifier] = BlockStoreInterface(_originBlockStore);
+        blockStores[auxiliaryCoreIdentifier] = BlockStoreInterface(_auxiliaryBlockStore);
+
+        addValidators(_auxiliaryAddresses, _weights);
     }
 
     /* External Functions */
@@ -151,12 +217,19 @@ contract PollingPlace is PollingPlaceInterface {
      * @param _validators The addresses of the new validators on the auxiliary
      *                    chain.
      * @param _weights The weights of the validators.
+     * @param _originHeight The height of the origin chain where the new
+     *                      meta-block opens.
+     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
+     *                         the last finalised checkpoint within the
+     *                         previous, closed meta-block.
      *
      * @return `true` if the update was successful.
      */
     function updateMetaBlockHeight(
         address[] _validators,
-        uint256[] _weights
+        uint256[] _weights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
     )
         external
         returns (bool success_)
@@ -169,13 +242,13 @@ contract PollingPlace is PollingPlaceInterface {
         currentMetaBlockHeight++;
 
         /*
-         * Before adding the new validators, copy the total stakes from the
-         * previous height. The new validators' stakes for this height will be
-         * added on top.
+         * Before adding the new validators, copy the total weights from the
+         * previous height. The new validators' weights for this height will be
+         * added on top in `addValidators()`.
          */
-        totalStakes[currentMetaBlockHeight] = totalStakes[currentMetaBlockHeight - 1];
-
+        totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight - 1];
         addValidators(_validators, _weights);
+        updateCoreHeights(_originHeight, _auxiliaryHeight);
 
         success_ = true;
     }
@@ -185,6 +258,9 @@ contract PollingPlace is PollingPlaceInterface {
      *
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
+     * @param _transitionHash The hash of the transition object of the
+     *                        meta-block that would result from the source
+     *                        block being finalised and proposed to origin.
      * @param _source The hash of the source block.
      * @param _target The hash of the target blokc.
      * @param _sourceHeight The height of the source block.
@@ -197,6 +273,7 @@ contract PollingPlace is PollingPlaceInterface {
      */
     function vote(
         bytes20 _coreIdentifier,
+        bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,
@@ -208,7 +285,58 @@ contract PollingPlace is PollingPlaceInterface {
         external
         returns (bool success_)
     {
-        revert("This method is not implemented.");
+        require(
+            _sourceHeight < _targetHeight,
+            "The source height must be less than the target height."
+        );
+
+        require(
+            _targetHeight > coreHeights[_coreIdentifier],
+            "The target height must be within the currently open meta-block."
+        );
+
+        BlockStoreInterface blockStore = blockStores[_coreIdentifier];
+        require(
+            address(blockStore) != address(0),
+            "The providede core identifier must be known to the PollingPlace."
+        );
+
+        require(
+            blockStore.isVoteValid(_transitionHash, _source, _target),
+            "The provided vote is not valid according to the block store."
+        );
+
+        bytes32 voteHash = hashVote(
+            _coreIdentifier,
+            _transitionHash,
+            _source,
+            _target,
+            _sourceHeight,
+            _targetHeight
+        );
+        Validator storage validator = getValidatorFromVote(
+            voteHash,
+            _v,
+            _r,
+            _s
+        );
+        require(validator.auxiliaryAddress != address(0), "Vote by unknown validator.");
+
+        require(
+            _targetHeight > validatorTargetHeights[validator.auxiliaryAddress],
+            "A validator must vote for increasing target heights."
+        );
+
+        storeVote(
+            voteHash,
+            _source,
+            _target,
+            _targetHeight,
+            validator,
+            blockStore
+        );
+
+        success_ = true;
     }
 
     /* Private Functions */
@@ -219,26 +347,26 @@ contract PollingPlace is PollingPlaceInterface {
      *
      * @param _auxiliaryAddresses The addresses of the new validators on the
      *                            auxiliary chain.
-     * @param _stakes The stakes of the validators on origin.
+     * @param _weights The weights of the validators on origin.
      */
     function addValidators(
         address[] _auxiliaryAddresses,
-        uint256[] _stakes
+        uint256[] _weights
     )
         private
     {
         require(
-            _auxiliaryAddresses.length == _stakes.length,
-            "The lengths of the addresses and stakes arrays must be identical."
+            _auxiliaryAddresses.length == _weights.length,
+            "The lengths of the addresses and weights arrays must be identical."
         );
 
         for (uint256 i; i < _auxiliaryAddresses.length; i++) {
             address auxiliaryAddress = _auxiliaryAddresses[i];
-            uint256 stake = _stakes[i];
+            uint256 weight = _weights[i];
 
             require(
-                stake > 0,
-                "The stake must be greater zero for all validators."
+                weight > 0,
+                "The weight must be greater zero for all validators."
             );
 
             require(
@@ -253,13 +381,75 @@ contract PollingPlace is PollingPlaceInterface {
 
             validators[auxiliaryAddress] = Validator(
                 auxiliaryAddress,
-                stake,
+                weight,
                 false,
                 currentMetaBlockHeight,
                 0
             );
 
-            totalStakes[currentMetaBlockHeight] += stake;
+            totalWeights[currentMetaBlockHeight] += weight;
+        }
+    }
+
+    /**
+     * @notice Verify that the new heights are legal and then store them.
+     *
+     * @param _originHeight The height of the origin chain where the new meta-
+     *                      block opens.
+     * @param _auxiliaryHeight The height of the auxiliary chain where the new
+     *                         meta-block opens.
+     */
+    function updateCoreHeights(
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
+    )
+        private
+    {
+        require(
+            _originHeight > coreHeights[originCoreIdentifier],
+            "The height of origin must increase with a meta-block opening."
+        );
+        require(
+            _auxiliaryHeight > coreHeights[auxiliaryCoreIdentifier],
+            "The height of auxiliary must increase with a meta-block opening."
+        );
+
+        coreHeights[originCoreIdentifier] = _originHeight;
+        coreHeights[auxiliaryCoreIdentifier] = _auxiliaryHeight;
+    }
+
+    /**
+     * @notice
+     *
+     * @param _voteHash The hash of the vote object. The hash is used to
+     *                  identify the vote.
+     * @param _source The hash of the source checkpoint of the vote.
+     * @param _target The hash of the target checkpoint of the vote.
+     * @param _targetHeight The height of the target block of the vote.
+     * @param _validator The validator that signed the vote.
+     * @param _blockStore The block store that this vote is about.
+     */
+    function storeVote(
+        bytes32 _voteHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _targetHeight,
+        Validator storage _validator,
+        BlockStoreInterface _blockStore
+    )
+        private
+    {
+        validatorTargetHeights[_validator.auxiliaryAddress] = _targetHeight;
+        votesWeights[_voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
+
+        /*
+         * Because the target must be within the currently open meta-block, the
+         * required weight must also be from the currently open meta-block.
+         */
+        uint256 required = requiredWeight(currentMetaBlockHeight);
+        
+        if (votesWeights[_voteHash] >= required) {
+            _blockStore.justify(_source, _target);
         }
     }
 
@@ -279,5 +469,132 @@ contract PollingPlace is PollingPlaceInterface {
         returns (bool)
     {
         return validators[_auxiliaryAddress].auxiliaryAddress != address(0);
+    }
+
+    /**
+     * @notice Usese the signature of a vote to recover the public address of
+     *         the signer.
+     *
+     * @param _voteHash The hashed vote. It is the message that was signed.
+     * @param _v V of the signature.
+     * @param _r R of teh signature.
+     * @param _s S of the signature.
+     *
+     * @return The `Validator` that signed the given message with the given
+     *         signature.
+     */
+    function getValidatorFromVote(
+        bytes32 _voteHash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        private
+        view
+        returns (Validator storage validator_)
+    {
+        address signer = ecrecover(_voteHash, _v, _r, _s);
+        validator_ = validators[signer];
+    }
+
+    /**
+     * @notice The weight that a validator has at a given height.
+     *
+     * @dev The weight can not change except to zero due to logging out or
+     *      slashing.
+     *
+     * @param _validator The validator that the weight is requested for.
+     * @param _height The height at which the validator weight is requested.
+     *
+     * @return The weight of the given validator at the given height.
+     */
+    function validatorWeight(
+        Validator storage _validator,
+        uint256 _height
+    )
+        private
+        view
+        returns (uint256 weight_)
+    {
+        if (_validator.startHeight > _height) {
+            weight_ = 0;
+        } else if (_validator.ended && _validator.endHeight <= _height) {
+            weight_ = 0;
+        } else {
+            weight_ = _validator.weight;
+        }
+    }
+
+    /**
+     * @notice The minimum weight that is required for a vote to achieve a
+     *         >=2/3 majority.
+     *
+     * @param _metaBlockHeight The height of the meta-block for which the
+     *                         required weight must be known.
+     *
+     * @return The minimum weight of votes that achieve a >=2/3 majority.
+     */
+    function requiredWeight(
+        uint256 _metaBlockHeight
+    )
+        private
+        view
+        returns (uint256 required_)
+    {
+        required_ = (totalWeights[_metaBlockHeight] * 2 / 3);
+
+        /**
+         * Solidity always rounds down, but we have to round up if there is a
+         * remainder.
+         */
+        if (((totalWeights[_metaBlockHeight] * 2) % 3) > 0) {
+            required_ += 1;
+        }
+    }
+
+    /**
+     * @notice Creates the hash of o vote object. This is the same hash that
+     *         the validator has signed.
+     *
+     * @param _coreIdentifier Core identifier of the vote object.
+     * @param _transitionHash Transition hash of the vote object.
+     * @param _source Source block hash of the vote object.
+     * @param _target Target block hash of the vote object.
+     * @param _sourceHeight Source height of the vote object.
+     * @param _targetHeight Target height of the vote object.
+     *
+     * @return The hash of the given vote.
+     */
+    function hashVote(
+        bytes20 _coreIdentifier,
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight
+    )
+        private
+        pure
+        returns (bytes32 hashed_)
+    {
+        hashed_ = keccak256(
+            abi.encodePacked(
+                _coreIdentifier,
+                _transitionHash,
+                _source,
+                _target,
+                _sourceHeight,
+                _targetHeight
+            )
+        );
+
+        // As per https://github.com/ethereum/go-ethereum/pull/2940
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        hashed_ = keccak256(
+            abi.encodePacked(
+                prefix,
+                hashed_
+            )
+        );
     }
 }
