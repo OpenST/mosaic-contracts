@@ -851,46 +851,81 @@ contract Gateway is Hasher {
 		);
 	}
 
+	/**
+	 * @notice Complete revert staking by providing the merkle proof
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _blockHeight Block number for which the proof is valid
+	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+	 *                               DeclaredRevocation in messageBox outbox
+	 *                               of CoGateway
+
+	 * @return staker_ Staker address
+	 * @return stakerNonce_ Staker nonce
+	 * @return amount_ Stake amount
+	 */
+
 	function progressRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
 		external
-		returns (bool /*TBD*/)
+		returns (
+			address staker_,
+			uint256 stakerNonce_,
+			uint256 amount_
+		)
 	{
-		//require(linked);
-		require(_messageHash != bytes32(0));
-		require(_rlpEncodedParentNodes.length > 0);
-
-		MessageBus.Message storage message = stakes[_messageHash].message;
-		require(message.intentHash != bytes32(0));
-
-		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
-
 		require(
-			MessageBus.progressRevocationMessage(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		require(
+			_rlpEncodedParentNodes.length > 0,
+			"RLP encoded parent nodes must not be zero"
+		);
+
+		// Get the message object
+		MessageBus.Message storage message = stakes[_messageHash].message;
+		require(
+			message.intentHash != bytes32(0),
+			"StakingIntentHash must not be zero"
+		);
+
+		// Get the storageRoot for the given block height
+		bytes32 storageRoot = storageRoots[_blockHeight];
+		require(
+			storageRoot != bytes32(0),
+			"Storage root must not be zero"
+		);
+
+		// Progress with revocation message
+		MessageBus.progressRevocationMessage(
 			messageBox,
 			message,
 			STAKE_TYPEHASH,
-				OUTBOX_OFFSET,
+			OUTBOX_OFFSET,
 			_rlpEncodedParentNodes,
-				storageRoot
-			)
+			storageRoot
 		);
 
-		Stake storage stakeData = stakes[_messageHash];
+		staker_ = message.sender;
+		stakerNonce_ = message.nonce;
+		amount_ = stakes[_messageHash].amount;
 
-		require(token.transfer(message.sender, stakeData.amount));
+		// transfer the staked amount to the staker
+		token.transfer(message.sender, amount_);
 
-		require(bountyToken.transfer(msg.sender, bounty));
+		// transfer the bounty to msg.sender
+		bountyToken.transfer(msg.sender, bounty);
 
+		// Emit RevertedStake event
 		emit RevertedStake(
 			_messageHash,
-			message.sender,
-			message.nonce,
-			stakeData.amount
+			staker_,
+			stakerNonce_,
+			amount_
 		);
 	}
 
