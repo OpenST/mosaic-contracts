@@ -94,10 +94,11 @@ contract Gateway is Hasher {
 	event ProgressedUnstake(
 		bytes32 indexed _messageHash,
 		address _redeemer,
-		uint256 _redeemerNonce,
-		uint256 _amount,
 		address _beneficiary,
-		uint256 _reward
+		uint256 _redeemAmount,
+		uint256 _unstakeAmount,
+		uint256 _rewardAmount,
+		bytes32 _unlockSecret
 	);
 
 	/** Emitted whenever a revert redemption intent is confirmed. */
@@ -403,7 +404,8 @@ contract Gateway is Hasher {
 			keccak256(abi.encodePacked(coGateway))
 		);
 
-		// TODO: need to add check for MessageBus. (This is already done in other branch)
+		// TODO: need to add check for MessageBus.
+		//       (This is already done in other branch)
 		bytes32 intentHash = hashLinkGateway(
 			address(this),
 			coGateway,
@@ -1160,7 +1162,6 @@ contract Gateway is Hasher {
 		external
 		returns (
 			address redeemer_,
-			uint256 redeemerNonce_,
 			address beneficiary_,
 			uint256 unstakeTotalAmount_,
 			uint256 unstakeAmount_,
@@ -1194,7 +1195,6 @@ contract Gateway is Hasher {
 		);
 
 		redeemer_ = message.sender;
-		redeemerNonce_ = message.nonce;
 		beneficiary_ = unStake.beneficiary;
 		unstakeTotalAmount_ = unStake.amount;
 
@@ -1203,24 +1203,49 @@ contract Gateway is Hasher {
 		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000);
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
-		// Release the amount to bendficiary
+		// Release the amount to beneficiary
 		stakeVault.releaseTo(beneficiary_, unstakeAmount_);
 
 		//TODO: Should the rewared here be in OST (bountyToken)?
 		//reward facilitator with the reward amount
-		stakeVault.releaseTo(msg.sender, unstakeAmount_);
+		stakeVault.releaseTo(msg.sender, rewardAmount_);
 
 		// Emit ProgressedUnstake event
 		emit ProgressedUnstake(
 			_messageHash,
 			redeemer_,
-			redeemerNonce_,
-			unstakeAmount_,
 			beneficiary_,
-			rewardAmount_
+			unstakeTotalAmount_,
+			unstakeAmount_,
+			rewardAmount_,
+			_unlockSecret
 		);
 	}
 
+	/**
+	 * @notice Completes the redemption process by providing the merkle proof
+	 *         instead of unlockSecret. In case the facilitator process is not
+	 *         able to complete the redeem and unstake process then this is an
+	 *         alternative approach to complete the process
+	 *
+	 * @dev This can be called to prove that the outbox status of messageBox on
+	 *      CoGateway is either declared or progressed.
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+	 *                               messageBox inbox of CoGateway
+	 * @param _blockHeight Block number for which the proof is valid
+	 * @param _messageStatus Message status i.e. Declared or Progressed that
+	 *                       will be proved.
+	 *
+	 * @return redeemAmount_ Total amount for which the redemption was
+ 	 *                       initiated. The reward amount is deducted from the
+ 	 *                       total redemption amount and is given to the
+ 	 *                       facilitator.
+ 	 * @return unstakeAmount_ Actual unstake amount, after deducting the reward
+ 	 *                        from the total redeem amount.
+ 	 * @return rewardAmount_ Reward amount that is transferred to facilitator
+	 */
 	function progressUnstakeWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
@@ -1229,52 +1254,67 @@ contract Gateway is Hasher {
 	)
 		public
 		returns (
-			uint256 unstakeTotalAmount_,
+			uint256 redeemAmount_,
 			uint256 unstakeAmount_,
 			uint256 rewardAmount_
 		)
 	{
+		// Get the inital gas
         uint256 initialGas = gasleft();
-		//require(linked);
-		require(_messageHash != bytes32(0));
-		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = unstakes[_messageHash].message;
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		require(
+			_rlpEncodedParentNodes.length > 0,
+			"RLP encoded parent nodes must not be zero"
+		);
 
+		// Get the storage root for the given block height
 		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
+		require(
+			storageRoot != bytes32(0),
+			"Storage root must not be zero"
+		);
 
 		Unstake storage unStake = unstakes[_messageHash];
 
         MessageBus.progressInboxWithProof(
             messageBox,
 			REDEEM_TYPEHASH,
-            unStake.message,
+			unStake.message,
             _rlpEncodedParentNodes,
 			OUTBOX_OFFSET,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
 
-		unstakeTotalAmount_ = unStake.amount;
+		redeemAmount_ = unStake.amount;
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
+		//21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(unStake.message, initialGas, 50000);
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
-		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
-		//reward beneficiary with the fee
-		require(token.transfer(msg.sender, rewardAmount_));
+		// Release the amount to beneficiary
+		stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
+		//TODO: Should the rewared here be in OST (bountyToken)?
+		//reward facilitator with the reward amount
+		stakeVault.releaseTo(msg.sender, rewardAmount_);
+
+		//TODO: we can have a seperate event for this.
+		// Emit ProgressedUnstake event
 		emit ProgressedUnstake(
 			_messageHash,
-			message.sender,
-			message.nonce,
-			unstakeAmount_,
+			unStake.message.sender,
 			unStake.beneficiary,
-			rewardAmount_
+			redeemAmount_,
+			unstakeAmount_,
+			redeemAmount_,
+			bytes32(0)
 		);
 	}
-
 
 	/**
 	 *  @notice External function prove gateway.
