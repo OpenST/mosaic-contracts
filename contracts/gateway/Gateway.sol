@@ -310,17 +310,14 @@ contract Gateway is Hasher {
 			_token != address(0),
 			"Token contract address must not be zero"
 		);
-
 		require(
 			_bountyToken != address(0),
 			"Token contract address for bounty must not be zero"
 		);
-
 		require(
 			_core != address(0),
 			"Core contract address must not be zero"
 		);
-
 		require(
 			_organisation != address(0),
 			"Organisation address must not be zero"
@@ -342,8 +339,25 @@ contract Gateway is Hasher {
 		stakeVault = new SimpleStake(token, address(this));
 	}
 
-	/* Public functions */
+	/* External functions */
 
+	/**
+ 	 * @notice Initiate the Gateway and CoGateway contracts linking.
+ 	 *
+ 	 * @param _coGateway CoGateway contract address.
+ 	 * @param _intentHash Gateway and CoGateway linking intent hash.
+ 	 *                    This is a sha3 of gateway address, cogateway address,
+	 *                    bounty, token name, token symbol, token decimals,
+	 *                    _nonce, token.
+ 	 * @param _nonce Nonce of the sender. Here in this case its organisation
+ 	 *               address
+ 	 * @param _sender The address that signs the message hash. In this case it
+ 	 *                has to be organisation address
+ 	 * @param _hashLock Hash lock, set by the facilitator.
+ 	 * @param _signature Signed data.
+ 	 *
+ 	 * @return messageHash_ Message hash
+ 	 */
 	function initiateGatewayLink(
 		address _coGateway,
 		bytes32 _intentHash,
@@ -355,15 +369,40 @@ contract Gateway is Hasher {
 		external
 		returns (bytes32 messageHash_)
 	{
-		require(linked == false);
-		require(_coGateway != address(0));
-		require(_sender == organisation);
-		require(gatewayLink.messageHash == bytes32(0));
-		require(_nonce == _getNonce(_sender));
+		require(
+			linked == false,
+			"Gateway contract must not be linked"
+		);
+		require(
+			deactivated == false,
+			"Gateway contract must not be deactivated"
+		);
+		require(
+			_coGateway != address(0),
+			"CoGateway address must not be zero"
+		);
+		require(
+			_sender == organisation,
+			"Sender must be organisation address"
+		);
+		require(
+			gatewayLink.messageHash == bytes32(0),
+			"Linking is already initiated"
+		);
+		require(
+			_nonce == _getNonce(_sender),
+			"Sender nonce must be in sync"
+		);
 
+		// update the coGateway address
 		coGateway = _coGateway;
-		encodedCoGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(coGateway)));
-        // TODO: need to add check for MessageBus.
+
+		// update the encodedCoGatewayPath
+		encodedCoGatewayPath = ProofLib.bytes32ToBytes(
+			keccak256(abi.encodePacked(coGateway))
+		);
+
+		// TODO: need to add check for MessageBus. (This is already done in other branch)
 		bytes32 intentHash = hashLinkGateway(
 			address(this),
 			coGateway,
@@ -374,10 +413,22 @@ contract Gateway is Hasher {
 			_nonce,
 			token);
 
-		require(intentHash == _intentHash);
+		// Ensure that the _intentHash matches the calculated intentHash
+		require(
+			intentHash == _intentHash,
+			"Incorrect intent hash"
+		);
 
-		messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, 0);
+		// Get the message hash
+		messageHash_ = MessageBus.messageDigest(
+			GATEWAY_LINK_TYPEHASH,
+			intentHash,
+			_nonce,
+			0
+		);
 
+		//TODO: Check when its deleted
+		// update the gatewayLink storage
 		gatewayLink = GatewayLink ({
 		 	messageHash: messageHash_,
 			message:getMessage(
@@ -390,15 +441,21 @@ contract Gateway is Hasher {
             )
 		});
 
-		MessageBus.declareMessage(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _signature);
+		// Declare message in outbox
+		MessageBus.declareMessage(
+			messageBox,
+			GATEWAY_LINK_TYPEHASH,
+			gatewayLink.message,
+			_signature
+		);
 
+		// emit GatewayLinkInitiated event
 		emit GatewayLinkInitiated(
 			messageHash_,
 			address(this),
 			coGateway,
 			token
 		);
-
 	}
 
 	// TODO: add isDeactivated
