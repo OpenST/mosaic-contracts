@@ -41,8 +41,9 @@ contract TestMessageBus {
     bytes32 storageRoot = 0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d;
     Hasher hasher = new Hasher();
 
-    address signer = 0xbc6D23FD444Aa9f40Fb22aDAd3aFe702716dc62A;
-    bytes signature = '0xc46cdc50a66f4d07c6e9a127a7277e882fb21bcfb5b068f2b58c7f7283993b790bdb5f0ac79d1a7efdc255f399a045038c1b433e9d06c1b1abd58a5fcaab33f11c';
+    bytes32 hashedMessage = 0x6c095eb94d4c2aae2f6b7edb82cdad4e0c836e48633d85fc426e8b48b264b8ac;
+    bytes signature = "0x8a48df8972c8498f547e7b9086dd67b99ec65eadbd55f8862a6b40e0eaad14264c0f6be93dde3737ee06cb0e84e96408bfa3dd68e767d71483f7f73ee971e12100";
+    address signer = 0x8014986b452DE9f00ff9B036dcBe522f918E2fE4;
 
     /* External Functions */
     // TODO revert cases
@@ -94,19 +95,18 @@ contract TestMessageBus {
     function testVerifySignature()
         external
     {
-        bytes32 message = keccak256(abi.encodePacked('test'));
         Assert.equal(
-            MessageBus.verifySignature(message, signature, address(0)),
+            MessageBus.verifySignature(hashedMessage, signature, address(0)),
             false,
             "Signer is not verified when signer address is empty."
         );
         Assert.equal(
-            MessageBus.verifySignature(message, '', signer),
+            MessageBus.verifySignature(hashedMessage, '', signer),
             false,
             "Signer is not verified when signature is empty."
         );
         Assert.equal(
-            MessageBus.verifySignature(message, signature, signer),
+            MessageBus.verifySignature(hashedMessage, signature, signer),
             true,
             "Signer not verified."
         );
