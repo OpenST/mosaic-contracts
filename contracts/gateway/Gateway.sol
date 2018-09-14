@@ -1317,59 +1317,89 @@ contract Gateway is Hasher {
 	}
 
 	/**
-	 *  @notice External function prove gateway.
+	 *  @notice External function to prove CoGateway.
 	 *
-	 *  @dev proveGateway can be called by anyone to verify merkle proof of gateway contract address.
-	 *		   Trust factor is brought by stateRoots mapping. stateRoot is committed in commitStateRoot function by mosaic process
-	 *		   which is a trusted decentralized system running separately.
-	 * 		   It's important to note that in replay calls of proveGateway bytes _rlpParentNodes variable is not validated. In this case
-	 *		   input storage root derived from merkle proof account nodes is verified with stored storage root of given blockHeight.
-	 *		   GatewayProven event has parameter wasAlreadyProved to differentiate between first call and replay calls.
+	 *  @dev proveCoGateway can be called by anyone to verify merkle proof of
+	 *       CoGateway contract address. Trust factor is brought by stateRoots
+	 *       mapping. stateRoot is committed in commitStateRoot function by
+	 *       mosaic process which is a trusted decentralized system running
+	 *       separately. It's important to note that in replay calls of
+	 *       proveCoGateway bytes _rlpParentNodes variable is not validated. In
+	 *       this case input storage root derived from merkle proof account
+	 *       nodes is verified with stored storage root of given blockHeight.
+	 *		 GatewayProven event has parameter wasAlreadyProved to
+	 *       differentiate between first call and replay calls.
 	 *
 	 *  @param _blockHeight Block height at which Gateway is to be proven.
 	 *  @param _rlpEncodedAccount RLP encoded account node object.
 	 *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
 	 *
-	 *  @return bool Status.
+	 * @return `true` if CoGateway account is proved
 	 */
-	function proveGateway(
+	function proveCoGateway(
 		uint256 _blockHeight,
 		bytes _rlpEncodedAccount,
 		bytes _rlpParentNodes
 	)
 		external
-		returns (bool /* success */)
+		returns (bool)
 	{
 		// _rlpEncodedAccount should be valid
-		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
+		require(
+			_rlpEncodedAccount.length != 0,
+			"Length of RLP encoded account is 0"
+		);
+
 		// _rlpParentNodes should be valid
-		require(_rlpParentNodes.length != 0, "Length of RLP parent nodes is 0");
+		require(
+			_rlpParentNodes.length != 0,
+			"Length of RLP parent nodes is 0"
+		);
 
 		bytes32 stateRoot = core.getStateRoot(_blockHeight);
+
 		// State root should be present for the block height
-		require(stateRoot != bytes32(0), "State root is 0");
+		require(
+			stateRoot != bytes32(0),
+			"State root is 0"
+		);
 
 		// If account already proven for block height
 		bytes32 provenStorageRoot = storageRoots[_blockHeight];
 
 		if (provenStorageRoot != bytes32(0)) {
-			// Check extracted storage root is matching with existing stored storage root
-			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
-			// wasAlreadyProved is true here since proveOpenST is replay call for same block height
+
+			// Check extracted storage root is matching with existing stored
+			// storage root
+			require(
+				provenStorageRoot == storageRoot,
+				"Storage root mismatch when account is already proven"
+			);
+
+			// wasAlreadyProved is true here since proveOpenST is replay call
+			// for same block height
 			emit CoGatewayProven(
 				coGateway,
 				_blockHeight,
 				storageRoot,
 				true
 			);
+
 			// return true
 			return true;
 		}
 
-		bytes32 storageRoot = ProofLib.proveAccount(_rlpEncodedAccount, _rlpParentNodes, encodedCoGatewayPath, stateRoot);
+		bytes32 storageRoot = ProofLib.proveAccount(
+			_rlpEncodedAccount,
+			_rlpParentNodes,
+			encodedCoGatewayPath,
+			stateRoot
+		);
 
 		storageRoots[_blockHeight] = storageRoot;
-		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
+
+		// wasAlreadyProved is false since proveOpenST is called for the first
+		// time for a block height
 		emit CoGatewayProven(
 			coGateway,
 			_blockHeight,
@@ -1381,6 +1411,7 @@ contract Gateway is Hasher {
 	}
 
 	/*private functions*/
+
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
 		uint256 _blockHeight,
