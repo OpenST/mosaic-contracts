@@ -795,6 +795,17 @@ contract Gateway is Hasher {
 		);
 	}
 
+	/**
+	 * @notice Revert staking to stop the staking process and get the stake
+	 *         amount back.
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _signature Signature signed by the staker.
+	 *
+	 * @return staker_ Staker address
+	 * @return stakerNonce_ Staker nonce
+	 * @return amount_ Stake amount
+	 */
 	function revertStaking(
 		bytes32 _messageHash,
 		bytes _signature
@@ -806,32 +817,38 @@ contract Gateway is Hasher {
 			uint256 amount_
 		)
 	{
-		require(_messageHash != bytes32(0));
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
 
+		// get the message object for the _messageHash
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
-		require(message.intentHash != bytes32(0));
-
 		require(
-			MessageBus.declareRevocationMessage(
-				messageBox,
-				STAKE_TYPEHASH,
-				message,
-				_signature
-			)
+			message.intentHash != bytes32(0),
+			"StakingIntentHash must not be zero"
+		);
+
+		// Declare staking revocation.
+		MessageBus.declareRevocationMessage(
+			messageBox,
+			STAKE_TYPEHASH,
+			message,
+			_signature
 		);
 
 		staker_ = message.sender;
 		stakerNonce_ = message.nonce;
 		amount_ = stakes[_messageHash].amount;
 
+		// Emit RevertStakeIntentDeclared event.
 		emit RevertStakeIntentDeclared(
 			_messageHash,
 			staker_,
 			stakerNonce_,
 			amount_
 		);
-
 	}
 
 	function progressRevertStaking(
