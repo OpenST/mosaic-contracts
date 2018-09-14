@@ -65,7 +65,7 @@ module.exports.perform = (accounts) => {
       null));
   });
 
-  it('Fails when unlockSecret is different ', async () => {
+  it('Fails when unlockSecret is different for hashLock', async () => {
     utils.expectThrow(await messageBusTest.progressInbox(intentHash,
       nonce,
       gasPrice,
