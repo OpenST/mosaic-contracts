@@ -663,7 +663,7 @@ contract Gateway is Hasher {
 		//TODO: unlock secret can be zero. Discuss if this check is needed.
 		require(
 			_unlockSecret != bytes32(0),
-			"Unlocl secret must not be zero"
+			"Unlock secret must not be zero"
 		);
 
 		// Get the message object
@@ -699,6 +699,25 @@ contract Gateway is Hasher {
 		);
 	}
 
+	/**
+	 * @notice Completes the stake process by providing the merkle proof
+	 *         instead of unlockSecret. In case the facilitator process is not
+	 *         able to complete the stake and mint process then this is an
+	 *         alternative approach to complete the process
+	 *
+	 * @dev This can be called to prove that the inbox status of messageBox on
+	 *      CoGateway is either declared or progressed.
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+	 *                               messageBox outbox of CoGateway
+	 * @param _blockHeight Block number for which the proof is valid
+	 * @param _messageStatus Message status i.e. Declared or Progressed that
+	 *                       will be proved.
+	 *
+	 * @return staker_ Staker address
+	 * @return stakeAmount_ Stake amount
+	 */
 	function progressStakingWithProof(
 		bytes32 _messageHash,
 		bytes _rlpEncodedParentNodes,
@@ -706,21 +725,34 @@ contract Gateway is Hasher {
 		uint256 _messageStatus
 	)
 		external
-		returns (uint256 stakeAmount_)
+		returns (
+			address staker_,
+			uint256 stakeAmount_
+		)
 	{
-		//require(linked);
-		require(_messageHash != bytes32(0));
-		require(_rlpEncodedParentNodes.length > 0);
-
-		stakeAmount_ = stakes[_messageHash].amount;
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		require(
+			_rlpEncodedParentNodes.length > 0,
+			"RLP encoded parent nodes must not be zero"
+		);
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
+
+		require(
+			storageRoot != bytes32(0),
+			"Storage root must not be zero"
+		);
 
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
-		//staker has started the revocation and facilitator has processed on utility chain
-		//staker has to process with proof
+		staker_ = message.sender;
+		stakeAmount_ = stakes[_messageHash].amount;
+
+		// staker has started the revocation and facilitator has processed on
+		// utility chain. staker has to process with proof
 		MessageBus.progressOutboxWithProof(
 			messageBox,
 			STAKE_TYPEHASH,
@@ -731,11 +763,29 @@ contract Gateway is Hasher {
 			MessageBus.MessageStatus(_messageStatus)
 		);
 
-		require(token.transfer(stakeVault, stakeAmount_));
+		// transfer the token to stakeVault
+		token.transfer(stakeVault, stakeAmount_);
 
-		//todo discuss return bounty
-		require(bountyToken.transfer(stakes[_messageHash].facilitator, bounty));
+		/*
+		 TODO: Points to be discussed for return bounty
+		 1. We do not know the reason why progressStakingWithProof was
+			initiated. Either the facilitator died or staker initiated the
+		    revert. So we dont know if the facilitator is genuine or not
+		 2. There can also be a scenario where a bad actor will keep observing
+		    the ConfirmStakingIntent declared on the CoGateway and can initiate
+		    the progressStakingWithProof to take away the bounty.
+		 3. proposal: We should provide a grace period before this function can
+		 	be called.
+		 4. proposal: The staker should call this function or provide a
+		 	signature
+		 5. If the point 3 and 4 is accepted then the bounty can always be
+		 	burnt or transferred to a special address
+		*/
+		// Currently we are transferring the bounty amount to the msg.sender
+		bountyToken.transfer(msg.sender, bounty);
 
+		//TODO: we can have a seperate event for this.
+		// Emit ProgressedStake event.
 		emit ProgressedStake(
 			_messageHash,
 			message.sender,
@@ -743,7 +793,6 @@ contract Gateway is Hasher {
 			stakes[_messageHash].amount,
 			bytes32(0)
 		);
-
 	}
 
 	function revertStaking(
