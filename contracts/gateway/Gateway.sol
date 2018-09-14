@@ -45,90 +45,116 @@ contract Gateway is Hasher {
 
 	/* Events */
 
-	event  StakingIntentDeclared(
-		bytes32 _messageHash,
+	/** Emitted whenever a staking process is initiated. */
+	event StakingIntentDeclared(
+		bytes32 indexed _messageHash,
+		address _staker,
+		uint256 _stakerNonce,
+		address _beneficiary,
+		uint256 _amount
+	);
+
+	/** Emitted whenever a staking is completed. */
+	event ProgressedStake(
+		bytes32 indexed _messageHash,
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _amount,
+		bytes32 _unlockSecret
+	);
+
+	/** Emitted whenever a process is initiated to revert staking. */
+	event RevertStakeIntentDeclared(
+		bytes32 indexed _messageHash,
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _amount
+	);
+
+	/** Emitted whenever a staking is reverted. */
+	event RevertedStake(
+		bytes32 indexed _messageHash,
+		address _staker,
+		uint256 _stakerNonce,
+		uint256 _amount
+	);
+
+	/** Emitted whenever a redemption intent is confirmed. */
+	event RedemptionIntentConfirmed(
+		bytes32 indexed _messageHash,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		address _beneficiary,
+		uint256 _amount,
+		uint256 _blockHeight,
+		bytes32 _hashLock
+	);
+
+	/** Emitted whenever a unstake process is complete. */
+	event ProgressedUnstake(
+		bytes32 indexed _messageHash,
+		address _redeemer,
+		uint256 _redeemerNonce,
 		uint256 _amount,
 		address _beneficiary,
-		address _staker,
-		bytes32 _intentHash
+		uint256 _reward
 	);
 
-	event ProgressedStake(
-		bytes32 _messageHash,
-		uint256 _amount,
-		address _beneficiary
-	);
-
-	event RevertStakeDeclared(
-		bytes32 messageHash,
-		address staker,
-		bytes32 intentHash,
-		uint256 nonce,
-		uint256 gasPrice
-	);
-
-	event RevertedStake(
-		address staker,
-		uint256 amount,
-		address beneficiary,
-		uint256 gasPrice
-	);
-
-	event RedemptionIntentConfirmed(
-		bytes32 messageHash,
-		address redeemer,
-		uint256 redeemerNonce,
-		address beneficiary,
-		uint256 amount,
-		uint256 blockHeight,
-		bytes32 hashLock
-	);
-
-	event ProgressedUnstake(
-		bytes32 messageHash,
-		uint256 amount,
-		address beneficiary,
-		uint256 reward
-	);
-
+	/** Emitted whenever a revert redemption intent is confirmed. */
 	event RevertRedemptionIntentConfirmed(
-		bytes32 messageHash,
-		address redeemer,
-		uint256 redeemerNonce,
-		uint256 blockHeight
+		bytes32 indexed _messageHash,
+		address _redeemer,
+		uint256 _redeemerNonce,
+		uint256 _amount
 	);
 
+	/** Emitted whenever a gateway and coGateway linking is initiated. */
 	event GatewayLinkInitiated(
-		bytes32 messageHash,
-		address gateway,
-		address cogateway,
-		address token
-	);
-	/** wasAlreadyProved parameter differentiates between first call and replay call of proveOpenST method for same block height */
-	event GatewayProven(
-		uint256 blockHeight,
-		bytes32 storageRoot,
-		bool wasAlreadyProved
+		bytes32 indexed _messageHash,
+		address _gateway,
+		address _cogateway,
+		address _token
 	);
 
+	/** Emitted whenever a CoGateway contract is proven.
+	 *	wasAlreadyProved parameter differentiates between first call and replay call of proveGateway method for same block height
+	 */
+	event CoGatewayProven(
+		address _coGateway,
+		uint256 _blockHeight,
+		bytes32 _storageRoot,
+		bool _wasAlreadyProved
+	);
+
+	/** Emitted whenever a gateway and coGateway linking is completed. */
 	event GatewayLinkProgressed(
-		bytes32 messageHash,
-		address gateway,
-		address cogateway,
-		address token
+		bytes32 indexed _messageHash,
+		address _gateway,
+		address _cogateway,
+		address _token
 	);
 
 	/* Struct */
+
 	/**
-	 *  It denotes the stake.
-	 *  Status values could be :-
-	 *  0 :- amount used for staking
-	 *  1 :- beneficiary is the address in the target chain where token will be minted.
+	 * Stake stores the staking information about the staking amount,
+	 * beneficiary addresss, message data and facilitator address.
 	 */
 	struct Stake {
+
+		/** Amount that will be staked. */
 		uint256 amount;
+
+		/**
+		 * Address where the utility tokens will be minted in the
+		 * auxiliary chain.
+		 */
 		address beneficiary;
+
+		/** Message data. */
 		MessageBus.Message message;
+
+		/** Address of the facilitator that initiates the staking process. */
 		address facilitator;
 	}
 
@@ -206,7 +232,7 @@ contract Gateway is Hasher {
 		uint256 _bounty,
 		address _organisation
 	)
-	public
+		public
 	{
 		require(_token != address(0));
 		require(_core != address(0));
@@ -232,9 +258,10 @@ contract Gateway is Hasher {
 		uint256 _nonce,
 		address _sender,
 		bytes32 _hashLock,
-		bytes _signature)
-	external
-	returns (bytes32 messageHash_)
+		bytes _signature
+	)
+		external
+		returns (bytes32 messageHash_)
 	{
 		require(linked == false);
 		require(_coGateway != address(0));
@@ -289,8 +316,8 @@ contract Gateway is Hasher {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
-	external
-	returns (bool /*TBD*/)
+		external
+		returns (bool /*TBD*/)
 	{
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
@@ -337,9 +364,9 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes _signature
 	)
-	external
-	isActive
-	returns (bytes32 messageHash_)
+		external
+		isActive
+		returns (bytes32 messageHash_)
 	{
 		require(_amount > uint256(0));
 		require(_beneficiary != address(0));
@@ -374,10 +401,10 @@ contract Gateway is Hasher {
 
 		emit StakingIntentDeclared(
 			messageHash_,
-			_amount,
-			_beneficiary,
 			_staker,
-			intentHash
+			_nonce,
+			_beneficiary,
+			_amount
 		);
 	}
 
@@ -385,14 +412,17 @@ contract Gateway is Hasher {
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
-	external
-	returns (uint256 stakeAmount_)
+		external
+		returns (
+			address staker_,
+			uint256 stakeAmount_
+		)
 	{
-		//require(linked); //TODO: this is not required. put it only for stake, redeem (places we do declare)
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
+		staker_ = stakes[_messageHash].sender;
 		stakeAmount_ = stakes[_messageHash].amount;
 
 		MessageBus.progressOutbox(messageBox, STAKE_TYPEHASH, message, _unlockSecret);
@@ -404,8 +434,10 @@ contract Gateway is Hasher {
 
 		emit ProgressedStake(
 			_messageHash,
-			stakes[_messageHash].amount,
-			stakes[_messageHash].beneficiary
+			staker_,
+			stakes[_messageHash].nonce,
+			stakeAmount_,
+			_unlockSecret
 		);
 	}
 
@@ -415,8 +447,8 @@ contract Gateway is Hasher {
 		uint256 _blockHeight,
 		uint256 _messageStatus
 	)
-	external
-	returns (uint256 stakeAmount_)
+		external
+		returns (uint256 stakeAmount_)
 	{
 		//require(linked);
 		require(_messageHash != bytes32(0));
@@ -455,34 +487,39 @@ contract Gateway is Hasher {
 		bytes32 _messageHash,
 		bytes _signature
 	)
-	external
-	returns (
-		address staker_,
-		bytes32 intentHash_,
-		uint256 nonce_,
-		uint256 gasPrice_
-	)
+		external
+		returns (
+			address staker_,
+			uint256 stakerNonce_,
+			uint256 amount_
+		)
 	{
-		//require(linked);
 		require(_messageHash != bytes32(0));
+
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
 		require(message.intentHash != bytes32(0));
 
 		require(
 			MessageBus.declareRevocationMessage(
-			messageBox,
-			STAKE_TYPEHASH,
-			message,
-			_signature
+				messageBox,
+				STAKE_TYPEHASH,
+				message,
+				_signature
 			)
 		);
 
 		staker_ = message.sender;
-		intentHash_ = message.intentHash;
-		gasPrice_ = message.gasPrice;
-		nonce_ = message.nonce;
-		emit RevertStakeDeclared(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
+		stakerNonce_ = message.nonce;
+		amount_ = message.amount;
+
+		emit RevertStakeIntentDeclared(
+			_messageHash,
+			staker_,
+			stakerNonce_,
+			amount_
+		);
+
 	}
 
 	function progressRevertStaking(
@@ -490,8 +527,8 @@ contract Gateway is Hasher {
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
-	external
-	returns (bool /*TBD*/)
+		external
+		returns (bool /*TBD*/)
 	{
 		//require(linked);
 		require(_messageHash != bytes32(0));
@@ -521,10 +558,10 @@ contract Gateway is Hasher {
 		require(bountyToken.transfer(msg.sender, bounty));
 
 		emit RevertedStake(
+			_messageHash,
 			message.sender,
-			stakeData.amount,
-			stakeData.beneficiary,
-			message.gasPrice
+			message.nonce,
+			stakeData.amount
 		);
 	}
 
@@ -533,8 +570,8 @@ contract Gateway is Hasher {
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
-	external
-	returns (bool /*TBD*/)
+		external
+		returns (bool /*TBD*/)
 	{
         uint256 initialGas = gasleft();
 		//require(linked);
@@ -560,7 +597,7 @@ contract Gateway is Hasher {
 			_messageHash,
 			message.sender,
 			message.nonce,
-			_blockHeight
+			unstakes[messageHash_]._amount
 		);
 
         message.gasConsumed = gasleft().sub(initialGas);
@@ -578,8 +615,8 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes memory _rlpParentNodes
 	)
-	public
-	returns (bytes32 messageHash_)
+		public
+		returns (bytes32 messageHash_)
 	{
         uint256 initialGas = gasleft();
 		require(_redeemer != address(0));
@@ -625,13 +662,14 @@ contract Gateway is Hasher {
 
 	function progressUnstake(
 		bytes32 _messageHash,
-		bytes32 _unlockSecret)
-	external
-	returns (
-		uint256 unstakeTotalAmount_,
-		uint256 unstakeAmount_,
-		uint256 rewardAmount_
+		bytes32 _unlockSecret
 	)
+		external
+		returns (
+			uint256 unstakeTotalAmount_,
+			uint256 unstakeAmount_,
+			uint256 rewardAmount_
+		)
 	{
         uint256 initialGas = gasleft();
 		//require(linked);
@@ -652,10 +690,10 @@ contract Gateway is Hasher {
 		//reward beneficiary with the reward amount
 		require(token.transfer(msg.sender, rewardAmount_));
 
-
-
 		emit ProgressedUnstake(
 			_messageHash,
+			message.sender,
+			message.nonce,
 			unstakeAmount_,
 			unStake.beneficiary,
 			rewardAmount_
@@ -668,12 +706,12 @@ contract Gateway is Hasher {
 		uint256 _blockHeight,
 		uint256 _messageStatus
 	)
-	public
-	returns (
-		uint256 unstakeTotalAmount_,
-		uint256 unstakeAmount_,
-		uint256 rewardAmount_
-	)
+		public
+		returns (
+			uint256 unstakeTotalAmount_,
+			uint256 unstakeAmount_,
+			uint256 rewardAmount_
+		)
 	{
         uint256 initialGas = gasleft();
 		//require(linked);
@@ -708,6 +746,8 @@ contract Gateway is Hasher {
 
 		emit ProgressedUnstake(
 			_messageHash,
+			message.sender,
+			message.nonce,
 			unstakeAmount_,
 			unStake.beneficiary,
 			rewardAmount_
@@ -734,9 +774,10 @@ contract Gateway is Hasher {
 	function proveGateway(
 		uint256 _blockHeight,
 		bytes _rlpEncodedAccount,
-		bytes _rlpParentNodes)
-	external
-	returns (bool /* success */)
+		bytes _rlpParentNodes
+	)
+		external
+		returns (bool /* success */)
 	{
 		// _rlpEncodedAccount should be valid
 		require(_rlpEncodedAccount.length != 0, "Length of RLP encoded account is 0");
@@ -754,7 +795,12 @@ contract Gateway is Hasher {
 			// Check extracted storage root is matching with existing stored storage root
 			require(provenStorageRoot == storageRoot, "Storage root mismatch when account is already proven");
 			// wasAlreadyProved is true here since proveOpenST is replay call for same block height
-			emit GatewayProven(_blockHeight, storageRoot, true);
+			emit CoGatewayProven(
+				coGateway,
+				_blockHeight,
+				storageRoot,
+				true
+			);
 			// return true
 			return true;
 		}
@@ -763,7 +809,12 @@ contract Gateway is Hasher {
 
 		storageRoots[_blockHeight] = storageRoot;
 		// wasAlreadyProved is false since proveOpenST is called for the first time for a block height
-		emit GatewayProven(_blockHeight, storageRoot, false);
+		emit CoGatewayProven(
+			coGateway,
+			_blockHeight,
+			storageRoot,
+			false
+		);
 
 		return true;
 	}
@@ -774,7 +825,7 @@ contract Gateway is Hasher {
 		uint256 _blockHeight,
 		bytes _rlpParentNodes
 	)
-	private
+		private
 	{
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
@@ -798,9 +849,9 @@ contract Gateway is Hasher {
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
-	private
-	pure
-	returns (Unstake)
+		private
+		pure
+		returns (Unstake)
 	{
 		return Unstake({
 			amount : _amount,
@@ -818,9 +869,9 @@ contract Gateway is Hasher {
 		bytes32 _intentHash,
 		bytes32 _hashLock
 	)
-	private
-	pure
-	returns (MessageBus.Message)
+		private
+		pure
+		returns (MessageBus.Message)
 	{
 		return MessageBus.Message({
 			intentHash : _intentHash,
@@ -837,9 +888,10 @@ contract Gateway is Hasher {
 	function initiateNewOutboxProcess(
 		address _account,
 		uint256 _nonce,
-		bytes32 _messageHash)
-	private
-	returns (bytes32 previousMessageHash_)
+		bytes32 _messageHash
+	)
+		private
+		returns (bytes32 previousMessageHash_)
 	{
 		require(_nonce == _getNonce(_account));
 
@@ -861,9 +913,10 @@ contract Gateway is Hasher {
 	function initiateNewInboxProcess(
 		address _account,
 		uint256 _nonce,
-		bytes32 _messageHash)
-	private
-	returns (bytes32 previousMessageHash_)
+		bytes32 _messageHash
+	)
+		private
+		returns (bytes32 previousMessageHash_)
 	{
 		require(_nonce == _getNonce(_account));
 
@@ -883,9 +936,9 @@ contract Gateway is Hasher {
 	}
 
 	function _getNonce(address _account)
-	private
-	view
-	returns (uint256 /* nonce */)
+		private
+		view
+		returns (uint256 /* nonce */)
 	{
 		bytes32 messageHash = activeProcess[_account];
 		if (messageHash == bytes32(0)) {
@@ -897,33 +950,33 @@ contract Gateway is Hasher {
 	}
 
 	function getNonce(address _account)
-	external
-	view
-	returns (uint256 /* nonce */)
+		external
+		view
+		returns (uint256 /* nonce */)
 	{
 		return _getNonce(_account);
 	}
 
 	function isLinked()
-	external
-	view
-	returns (bool)
+		external
+		view
+		returns (bool)
 	{
 		return linked;
 	}
 
 	function isDeactivated()
-	external
-	view
-	returns (bool)
+		external
+		view
+		returns (bool)
 	{
 		return deactivated;
 	}
 
 	function setGatewayActive(bool _active)
-	external
-	onlyOrganisation
-	returns (bool)
+		external
+		onlyOrganisation
+		returns (bool)
 	{
 		deactivated = !_active;
 	}
