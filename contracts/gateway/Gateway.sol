@@ -189,50 +189,94 @@ contract Gateway is Hasher {
 		MessageBus.Message message;
 	}
 
-	/* Storage */
+	/* constants */
 
-	address public coGateway;
+	uint8 constant OUTBOX_OFFSET = 1;
+
+	/**
+	 * Message box.
+	 * @dev keep this is at location 1, in case this is changed then update
+	 *      constant OUTBOX_OFFSET accordingly.
+	 */
 	MessageBus.MessageBox messageBox;
-	bool private linked;
-	bool private deactivated;
+
+	/* public variables */
+
+	/** CoGateway contract address. */
+	address public coGateway;
+
+	/** Specifies if the Gateway and CoGateway contracts are linked. */
+	bool public linked;
+
+	/** Specifies if the Gateway is deactivated for any new staking process. */
+	bool public deactivated;
+
+	/** Organisation address. */
 	address public organisation;
-	GatewayLink gatewayLink;
 
-	//Escrow address to lock staked fund
-	SimpleStake stakeVault;
+	/** Escrow address to lock staked fund. */
+	SimpleStake public stakeVault;
 
-	//amount in BT which is staked by facilitator
+	/** amount of ERC20 which is staked by facilitator. */
 	uint256 public bounty;
 
-	//address of branded token.
+	/** address of ERC20 token. */
 	EIP20Interface public token;
 
-	//address of bounty token.
+	/**
+	 * address of ERC20 token in which
+	 * the facilitator will stake for a process
+	 */
 	EIP20Interface public bountyToken;
 
+	/** address of core contract. */
+	CoreInterface public core;
 
-	//address of core contract.
-	CoreInterface core;
-
+	/** Maps messageHash to the Stake object. */
 	mapping(bytes32 /*messageHash*/ => Stake) stakes;
-	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeProcess;
 
+	/** Maps messageHash to the Unstake object. */
 	mapping(bytes32 /*messageHash*/ => Unstake) unstakes;
 
-	/*mapping to store storage root with block height*/
+	/**
+	 * Maps address to messageHash.
+	 *
+	 * Once the staking or unstaking process is started the corresponding
+	 * message hash is stored against the staker/redeemer address. This is used
+	 * to restrict simultaneous/multiple staking and unstaking for a particular
+	 * address. This is also used to determine the nonce of the particular
+	 * address. Refer getNonce for the details.
+	 */
+	mapping(address /*address*/ => bytes32 /*messageHash*/) activeProcess;
+
+	/** Maps  blockHeigth to storageRoot*/
 	mapping(uint256 /* block height */ => bytes32) private storageRoots;
-	/* path to prove merkle account proof for gateway  */
+
+	/* private variables */
+
+	/** Gateway link. */
+	GatewayLink gatewayLink;
+
+	/** path to prove merkle account proof for CoGateway contract. */
 	bytes private encodedCoGatewayPath;
 
-	uint8 outboxOffset = 1;
+	/* modifiers */
 
+	/** checks that only organisation can call a particular function. */
 	modifier onlyOrganisation() {
-		require(msg.sender == organisation);
+		require(
+			msg.sender == organisation,
+			"Only organisation can call the function"
+		);
 		_;
 	}
 
+	/** checks that contract is linked and is not deactivated */
 	modifier isActive() {
-		require(deactivated == false && linked == true);
+		require(
+			deactivated == false && linked == true,
+			"Contract is restricted to use"
+		);
 		_;
 	}
 
@@ -488,7 +532,7 @@ contract Gateway is Hasher {
 			STAKE_TYPEHASH,
 			message,
 			_rlpEncodedParentNodes,
-			outboxOffset,
+			OUTBOX_OFFSET,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus)
 		);
@@ -570,7 +614,7 @@ contract Gateway is Hasher {
 			messageBox,
 			message,
 			STAKE_TYPEHASH,
-			outboxOffset,
+				OUTBOX_OFFSET,
 			_rlpEncodedParentNodes,
 				storageRoot
 			)
@@ -614,7 +658,7 @@ contract Gateway is Hasher {
 				REDEEM_TYPEHASH,
 				message,
 				_rlpEncodedParentNodes,
-				outboxOffset,
+				OUTBOX_OFFSET,
 				storageRoot
 			));
 
@@ -755,7 +799,7 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
             unStake.message,
             _rlpEncodedParentNodes,
-            outboxOffset,
+			OUTBOX_OFFSET,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
@@ -860,7 +904,7 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
 			_message,
 			_rlpParentNodes,
-			outboxOffset,
+			OUTBOX_OFFSET,
 			storageRoot);
 	}
 
