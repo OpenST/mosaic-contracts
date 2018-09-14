@@ -108,22 +108,16 @@ contract CoGateway is CoGatewaySetup {
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation,
-		address _gateway
+		address _gateway,
+		address _messageBus
 	)
-	CoGatewaySetup(_utilityToken, _bounty, _organisation, _gateway)
+	CoGatewaySetup(_utilityToken, _bounty, _organisation, _gateway, _messageBus)
 	public
 	{
-		require(_utilityToken != address(0));
-		require(_gateway != address(0));
 		require(_core != address(0));
-		require(_organisation != address(0));
 
 		isActivated = false;
-		utilityToken = _utilityToken;
-		gateway = _gateway;
 		core = _core;
-		bounty = _bounty;
-		organisation = _organisation;
 
 		encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(_gateway)));
 		// TODO: should we check the code hash with declared codeHash constants.

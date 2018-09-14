@@ -50,6 +50,7 @@ contract Hasher {
     function hashLinkGateway(
         address _gateway,
         address _coGateway,
+        bytes32 _messageBusCodeHash,
         uint256 _bounty,
         string _tokenName,
         string _tokenSymbol,
@@ -64,6 +65,7 @@ contract Hasher {
             abi.encodePacked(
                 _gateway,
                 _coGateway,
+                _messageBusCodeHash,
                 _bounty,
                 _tokenName,
                 _tokenSymbol,

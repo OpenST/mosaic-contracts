@@ -150,9 +150,10 @@ contract Gateway is GatewaySetup {
 		EIP20Interface _token,
 		CoreInterface _core,
 		uint256 _bounty,
-		address _organisation
+		address _organisation,
+		address _messageBus
 	)
-	GatewaySetup(_bounty, _organisation, _token)
+	GatewaySetup(_bounty, _organisation, _token, _messageBus)
 	public
 	{
 		require(_core != address(0));

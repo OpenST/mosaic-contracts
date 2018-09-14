@@ -5,6 +5,7 @@ import "./ProofLib.sol";
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
+import "./Util.sol";
 
 contract CoGatewaySetup is Hasher {
     using SafeMath for uint256;
@@ -40,23 +41,30 @@ contract CoGatewaySetup is Hasher {
     mapping(uint256 /* block height */ => bytes32)  storageRoots;
     /* path to prove merkle account proof for gateway  */
     bytes  encodedGatewayPath;
+    //todo explore ways by which message bus address can be retrieved within contract as it's linked library
+    address  messageBus;
 
     constructor(
         address _utilityToken,
         uint256 _bounty,
         address _organisation,
-        address _gateway
-    ){
+        address _gateway,
+        address _messageBus
+    )
+    public
+    {
 
         require(_utilityToken != address(0));
         require(_gateway != address(0));
         require(_organisation != address(0));
+        require(_messageBus != address(0));
 
         isActivated = false;
         utilityToken = _utilityToken;
         gateway = _gateway;
         bounty = _bounty;
         organisation = _organisation;
+        messageBus = _messageBus;
 
         encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(_gateway)));
 
@@ -79,20 +87,17 @@ contract CoGatewaySetup is Hasher {
         require(msg.sender == organisation);
         require(gatewayLink.messageHash == bytes32(0));
 
-        // TODO: need to add check for MessageBus.
-        bytes32 intentHash = hashLinkGateway(
-            gateway,
-            address(this),
-            bounty,
-            EIP20Interface(utilityToken).name(),
-            EIP20Interface(utilityToken).symbol(),
-            EIP20Interface(utilityToken).decimals(),
-            _gasPrice,
-            _nonce);
 
-        require(intentHash == _intentHash);
+        require(confirmGatewayLinkIntentInternal(
+                _gasPrice,
+                _intentHash,
+                _nonce,
+                _blockHeight,
+                _rlpParentNodes
+            )
+        );
 
-        messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, intentHash, _nonce, _gasPrice);
+        messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, _intentHash, _nonce, _gasPrice);
 
         gatewayLink = GatewayLink({
             messageHash : messageHash_,
@@ -105,15 +110,6 @@ contract CoGatewaySetup is Hasher {
             )
             });
 
-
-        MessageBus.confirmMessage(
-            messageBox,
-            GATEWAY_LINK_TYPEHASH,
-            gatewayLink.message,
-            _rlpParentNodes,
-            outboxOffset,
-            storageRoots[_blockHeight]);
-
         emit GatewayLinkConfirmed(
             messageHash_,
             gateway,
@@ -121,6 +117,42 @@ contract CoGatewaySetup is Hasher {
             utilityToken
         );
         gatewayLink.message.gasConsumed = initialGas.sub(gasleft());
+    }
+
+    function confirmGatewayLinkIntentInternal(
+        uint256 _gasPrice,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _blockHeight,
+        bytes memory _rlpParentNodes
+    )
+    internal
+    returns (bool)
+    {
+        bytes32 intentHash = hashLinkGateway(
+            gateway,
+            address(this),
+            Util.getLibraryContractCodeHash(address(this)), //todo change to library address
+            bounty,
+            EIP20Interface(utilityToken).name(),
+            EIP20Interface(utilityToken).symbol(),
+            EIP20Interface(utilityToken).decimals(),
+            _gasPrice,
+            _nonce
+        );
+
+        require(intentHash == _intentHash);
+
+        MessageBus.confirmMessage(
+            messageBox,
+            GATEWAY_LINK_TYPEHASH,
+            gatewayLink.message,
+            _rlpParentNodes,
+            outboxOffset,
+            storageRoots[_blockHeight]
+        );
+
+        return true;
     }
 
     function processGatewayLink(

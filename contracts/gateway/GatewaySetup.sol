@@ -4,7 +4,7 @@ import './ProofLib.sol';
 import './MessageBus.sol';
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
-
+import "./Util.sol";
 
 contract GatewaySetup is Hasher {
 
@@ -41,21 +41,25 @@ contract GatewaySetup is Hasher {
     bytes  encodedCoGatewayPath;
     //address of branded token.
     EIP20Interface public token;
+    address  messageBus;
 
     constructor(
         uint256 _bounty,
         address _organisation,
-        EIP20Interface _token
+        EIP20Interface _token,
+        address _messageBus
     )
     public
     {
         require(_organisation != address(0));
         require(_token != address(0));
+        require(_messageBus != address(0));
 
         isActivated = false;
         token = _token;
         bounty = _bounty;
         organisation = _organisation;
+        messageBus = _messageBus;
     }
 
     function initiateGatewayLink(
@@ -81,6 +85,7 @@ contract GatewaySetup is Hasher {
         bytes32 intentHash = hashLinkGateway(
             address(this),
             coGateway,
+            Util.getLibraryContractCodeHash(address(messageBus)), //todo change to library address
             bounty,
             token.name(),
             token.symbol(),
