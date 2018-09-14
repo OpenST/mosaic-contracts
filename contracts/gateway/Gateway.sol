@@ -864,7 +864,6 @@ contract Gateway is Hasher {
 	 * @return stakerNonce_ Staker nonce
 	 * @return amount_ Stake amount
 	 */
-
 	function progressRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
@@ -929,43 +928,81 @@ contract Gateway is Hasher {
 		);
 	}
 
+	/**
+	 * @notice Declare redemption revert intent
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _blockHeight Block number for which the proof is valid
+	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+	 *                               DeclaredRevocation in messageBox outbox
+	 *                               of CoGateway
+
+	 * @return redeemer_ Redeemer address
+	 * @return redeemerNonce_ Redeemer nonce
+	 * @return amount_ Redeem amount
+	 */
 	function confirmRevertRedemptionIntent(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
 		bytes _rlpEncodedParentNodes
 	)
 		external
-		returns (bool /*TBD*/)
+		returns (
+			address redeemer_,
+			uint256 redeemerNonce_,
+			uint256 amount_
+		)
 	{
+		// Get the initial gas value
         uint256 initialGas = gasleft();
-		//require(linked);
-		require(_messageHash != bytes32(0));
-		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = unstakes[_messageHash].message;
-		require(message.intentHash != bytes32(0));
-
-		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
-
-		require(MessageBus.confirmRevocation(
-				messageBox,
-				REDEEM_TYPEHASH,
-				message,
-				_rlpEncodedParentNodes,
-				OUTBOX_OFFSET,
-				storageRoot
-			));
-
-		emit RevertRedemptionIntentConfirmed(
-			_messageHash,
-			message.sender,
-			message.nonce,
-			unstakes[_messageHash].amount
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		require(
+			_rlpEncodedParentNodes.length > 0,
+			"RLP encoded parent nodes must not be zero"
 		);
 
-        message.gasConsumed = gasleft().sub(initialGas);
-		return true;
+		// Get the message object.
+		MessageBus.Message storage message = unstakes[_messageHash].message;
+		require(
+			message.intentHash != bytes32(0),
+			"RevertRedemption intent hash must not be zero"
+		);
+
+		// Get the storage root
+		bytes32 storageRoot = storageRoots[_blockHeight];
+		require(
+			storageRoot != bytes32(0),
+			"Storage root must not be zero"
+		);
+
+		// Confirm revocation
+		MessageBus.confirmRevocation(
+			messageBox,
+			REDEEM_TYPEHASH,
+			message,
+			_rlpEncodedParentNodes,
+			OUTBOX_OFFSET,
+			storageRoot
+		);
+
+		redeemer_ = message.sender;
+		redeemerNonce_ = message.nonce;
+		amount_ = unstakes[_messageHash].amount;
+
+		// Emit RevertRedemptionIntentConfirmed event
+		emit RevertRedemptionIntentConfirmed(
+			_messageHash,
+			redeemer_,
+			redeemerNonce_,
+			amount_
+		);
+
+		// Update the gas consumed for this function.
+        message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function confirmRedemptionIntent(
