@@ -34,10 +34,9 @@ import "./RLP.sol";
 /**
  * @title Gateway Contract
  *
- *  @notice Gateway contract is staking Gateway that separates the concerns of staker and staking processor.
- *          Stake process is executed through Gateway contract rather than directly with the protocol contract.
- *          The Gateway contract will serve the role of staking account rather than an external account.
- *
+ *  @notice Gateway act as medium to send messages from source to target chain.
+ *          Currently gateway supports stake and mint , revert stake message &
+ *          linking of gateway and cogateway.
  */
 contract Gateway is Hasher {
 
@@ -118,7 +117,8 @@ contract Gateway is Hasher {
 	);
 
 	/** Emitted whenever a CoGateway contract is proven.
-	 *	wasAlreadyProved parameter differentiates between first call and replay call of proveGateway method for same block height
+	 *	wasAlreadyProved parameter differentiates between first call and replay
+	 *  call of proveGateway method for same block height
 	 */
 	event CoGatewayProven(
 		address _coGateway,
@@ -300,7 +300,8 @@ contract Gateway is Hasher {
 	 * @param _organisation Organisation address.
 	 */
 	constructor(
-		EIP20Interface _token, //TODO: think if this should this be ERC20TokenInterface
+		//TODO: think if this should this be ERC20TokenInterface
+		EIP20Interface _token,
 		EIP20Interface _bountyToken, //TODO: think of a better name
 		CoreInterface _core,
 		uint256 _bounty,
@@ -1200,7 +1201,12 @@ contract Gateway is Hasher {
 
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		//21000 * 2 for transactions + approx buffer
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000);
+		rewardAmount_ = MessageBus.feeAmount(
+			message,
+			initialGas,
+			50000
+		);
+
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		// Release the amount to beneficiary
@@ -1293,7 +1299,12 @@ contract Gateway is Hasher {
 		redeemAmount_ = unStake.amount;
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		//21000 * 2 for transactions + approx buffer
-		rewardAmount_ = MessageBus.feeAmount(unStake.message, initialGas, 50000);
+		rewardAmount_ = MessageBus.feeAmount(
+			unStake.message,
+			initialGas,
+			50000
+		);
+
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
 		// Release the amount to beneficiary
@@ -1410,18 +1421,73 @@ contract Gateway is Hasher {
 		return true;
 	}
 
-	/*private functions*/
+	/**
+	 * @notice Activate or Deactivate Gateway contract. Can be set only by the
+	 *         Organisation address
+	 *
+	 * @param _active Boolean specify to activate or deactivate
+	 *
+	 * @return `true` if value is set
+	 */
+	function setGatewayActive(bool _active)
+		external
+		onlyOrganisation
+		returns (bool)
+	{
+		require(
+			deactivated == _active,
+			"Value is already set"
+		);
+		deactivated = !_active;
+		return true;
+	}
 
+	/**
+	 * @notice Get the nonce for the given account address
+	 *
+	 * @param _account Account address for which the nonce is to fetched
+	 *
+	 * @return nonce
+	 */
+	function getNonce(address _account)
+		external
+		view
+		returns (uint256 /* nonce */)
+	{
+		// call the private method
+		return _getNonce(_account);
+	}
+
+	/* private functions */
+
+	/**
+	 * @notice private function to execute confirm redemption intent.
+	 *
+	 * @dev This function is to avoid stack too deep error in
+	 *      confirmRedemptionIntent function
+	 *
+	 * @param _message message object
+	 * @param _blockHeight Block number for which the proof is valid
+	 * @param _rlpParentNodes RLP encoded parent nodes.
+	 *
+	 * @return `true` if executed successfully
+	 */
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
 		uint256 _blockHeight,
 		bytes _rlpParentNodes
 	)
 		private
+		returns (bool)
 	{
+		// Get storage root
 		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(storageRoot != bytes32(0));
+		require(
+			storageRoot != bytes32(0),
+			"Storage root must not be zero"
+		);
 
+		// Confirm message
 		MessageBus.confirmMessage(
 			messageBox,
 			REDEEM_TYPEHASH,
@@ -1429,8 +1495,115 @@ contract Gateway is Hasher {
 			_rlpParentNodes,
 			OUTBOX_OFFSET,
 			storageRoot);
+
+		return true;
 	}
 
+	/**
+	 * @notice Clears the previous outbox process. Validates the
+	 *         nonce. Updates the process with current messageHash
+	 *
+	 * @param _account Account address
+	 * @param _nonce Nonce for the account address
+	 * @param _messageHash Message hash
+	 *
+	 * @return previousMessageHash_ previous messageHash
+	 */
+	function initiateNewOutboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash
+	)
+	private
+	returns (bytes32 previousMessageHash_)
+	{
+		require(
+			_nonce == _getNonce(_account),
+			"Invalid nonce"
+		);
+
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
+
+			require(
+				messageBox.outbox[previousMessageHash_] !=
+				MessageBus.MessageStatus.Progressed
+				||
+				messageBox.outbox[previousMessageHash_] !=
+				MessageBus.MessageStatus.Revoked,
+				"Prevous process is not completed"
+			);
+			//TODO: Commenting below line. Please check if deleting this will
+			//      effect any process related to merkle proof in other chain.
+			//delete messageBox.outbox[previousMessageHash_];
+		}
+
+		// Update the active proccess.
+		activeProcess[_account] = _messageHash;
+	}
+
+	/**
+	 * @notice Clears the previous inbox process. Validates the
+	 *         nonce. Updates the process with current messageHash
+	 *
+	 * @param _account Account address
+	 * @param _nonce Nonce for the account address
+	 * @param _messageHash Message hash
+	 *
+	 * @return previousMessageHash_ previous messageHash
+	 */
+
+	function initiateNewInboxProcess(
+		address _account,
+		uint256 _nonce,
+		bytes32 _messageHash
+	)
+	private
+	returns (bytes32 previousMessageHash_)
+	{
+		require(
+			_nonce == _getNonce(_account),
+			"Invalid nonce"
+		);
+
+		previousMessageHash_ = activeProcess[_account];
+
+		if (previousMessageHash_ != bytes32(0)) {
+
+			require(
+				messageBox.inbox[previousMessageHash_] !=
+				MessageBus.MessageStatus.Progressed
+				||
+				messageBox.inbox[previousMessageHash_] !=
+				MessageBus.MessageStatus.Revoked,
+				"Prevous process is not completed"
+			);
+			//TODO: Commenting below line. Please check if deleting this will
+			//      effect any process related to merkle proof in other chain.
+			//delete messageBox.inbox[previousMessageHash_];
+		}
+
+		// Update the active proccess.
+		activeProcess[_account] = _messageHash;
+	}
+
+	/**
+	 * @notice Create and return Unstake object.
+	 *
+	 * @dev This function is to avoid stack too deep error.
+	 *
+	 * @param _amount Amount
+	 * @param _beneficiary Beneficiary address
+	 * @param _redeemer Redeemer address
+	 * @param _redeemerNonce Nonce for redeemer address
+	 * @param _gasPrice Gas price
+	 * @param _gasLimit Gas limit
+	 * @param _intentHash Intent hash
+	 * @param _hashLock Hash lock
+	 *
+	 * @return Unstake object
+	 */
 	function getUnStake(
 		uint256 _amount,
 		address _beneficiary,
@@ -1446,16 +1619,35 @@ contract Gateway is Hasher {
 		returns (Unstake)
 	{
 		return Unstake({
-			amount : _amount,
-			beneficiary : _beneficiary,
-			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _gasLimit, _intentHash, _hashLock)
+			amount: _amount,
+			beneficiary: _beneficiary,
+			message: getMessage(
+				_redeemer,
+				_redeemerNonce,
+				_gasPrice,
+				_gasLimit,
+				_intentHash,
+				_hashLock)
 			});
 	}
 
-
+	/**
+	 * @notice Create and return Message object.
+	 *
+	 * @dev This function is to avoid stack too deep error.
+	 *
+	 * @param _account Account address
+	 * @param _accountNonce Nonce for the account address
+	 * @param _gasPrice Gas price
+	 * @param _gasLimit Gas limit
+	 * @param _intentHash Intent hash
+	 * @param _hashLock Hash lock
+	 *
+	 * @return Message object
+	 */
 	function getMessage(
-		address _redeemer,
-		uint256 _redeemerNonce,
+		address _account,
+		uint256 _accountNonce,
 		uint256 _gasPrice,
 		uint256 _gasLimit,
 		bytes32 _intentHash,
@@ -1465,68 +1657,26 @@ contract Gateway is Hasher {
 		pure
 		returns (MessageBus.Message)
 	{
-		return MessageBus.Message({
-			intentHash : _intentHash,
-			nonce : _redeemerNonce,
-			gasPrice : _gasPrice,
-			gasLimit: _gasLimit,
-			sender : _redeemer,
-			hashLock : _hashLock,
-            gasConsumed: 0
-			});
-
+		return MessageBus.Message(
+			{
+				intentHash : _intentHash,
+				nonce : _accountNonce,
+				gasPrice : _gasPrice,
+				gasLimit: _gasLimit,
+				sender : _account,
+				hashLock : _hashLock,
+            	gasConsumed: 0
+			}
+		);
 	}
 
-	function initiateNewOutboxProcess(
-		address _account,
-		uint256 _nonce,
-		bytes32 _messageHash
-	)
-		private
-		returns (bytes32 previousMessageHash_)
-	{
-		require(_nonce == _getNonce(_account));
-
-		previousMessageHash_ = activeProcess[_account];
-
-		if (previousMessageHash_ != bytes32(0)) {
-
-			require(
-				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
-				messageBox.outbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
-			);
-			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
-			//delete messageBox.outbox[previousMessageHash_];
-		}
-
-		activeProcess[_account] = _messageHash;
-	}
-
-	function initiateNewInboxProcess(
-		address _account,
-		uint256 _nonce,
-		bytes32 _messageHash
-	)
-		private
-		returns (bytes32 previousMessageHash_)
-	{
-		require(_nonce == _getNonce(_account));
-
-		previousMessageHash_ = activeProcess[_account];
-
-		if (previousMessageHash_ != bytes32(0)) {
-
-			require(
-				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Progressed ||
-				messageBox.inbox[previousMessageHash_] != MessageBus.MessageStatus.Revoked
-			);
-			//TODO: Commenting below line. Please check if deleting this will effect any process related to merkle proof in other chain.
-			//delete messageBox.inbox[previousMessageHash_];
-		}
-
-		activeProcess[_account] = _messageHash;
-	}
-
+	/**
+	 * @notice Private function to get the nonce for the given account address
+	 *
+	 * @param _account Account address for which the nonce is to fetched
+	 *
+	 * @return nonce
+	 */
 	function _getNonce(address _account)
 		private
 		view
@@ -1539,38 +1689,6 @@ contract Gateway is Hasher {
 
 		MessageBus.Message storage message = stakes[messageHash].message;
 		return message.nonce.add(1);
-	}
-
-	function getNonce(address _account)
-		external
-		view
-		returns (uint256 /* nonce */)
-	{
-		return _getNonce(_account);
-	}
-
-	function isLinked()
-		external
-		view
-		returns (bool)
-	{
-		return linked;
-	}
-
-	function isDeactivated()
-		external
-		view
-		returns (bool)
-	{
-		return deactivated;
-	}
-
-	function setGatewayActive(bool _active)
-		external
-		onlyOrganisation
-		returns (bool)
-	{
-		deactivated = !_active;
 	}
 }
 
