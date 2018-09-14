@@ -1058,8 +1058,7 @@ contract('PollingPlace', async (accounts) => {
                     signature.v,
                     signature.r,
                     signature.s,
-                ),
-                'The target height must be within the currently open meta-block.'
+                )
             );
         });
 
