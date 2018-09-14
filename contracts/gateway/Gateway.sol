@@ -623,7 +623,8 @@ contract Gateway is Hasher {
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, address(this), _amount));
 
-		// transfer the bounty amount // TODO: change the bounty transfer in BountyToken (Think for a name)
+		// TODO: change the bounty transfer in BountyToken (Think for a name)
+		// transfer the bounty amount
 		require(bountyToken.transferFrom(msg.sender, address(this), bounty));
 
 		// Emit StakingIntentDeclared event
@@ -1134,42 +1135,88 @@ contract Gateway is Hasher {
 		unstakes[messageHash_].message.gasConsumed = initialGas.sub(gasleft());
 	}
 
+	/**
+	 * @notice Complete unstake
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _unlockSecret Unlock secret for the hashLock provide by the
+ 	 *                      facilitator while initiating the redeem
+ 	 *
+ 	 * @return redeemer_ Redeemer address
+ 	 * @return redeemerNonce_ Redeemer nonce
+ 	 * @return beneficiary_ Address to which the tokens will be transferred.
+ 	 * @return redeemAmount_ Total amount for which the redemption was
+ 	 *                       initiated. The reward amount is deducted from the
+ 	 *                       total redemption amount and is given to the
+ 	 *                       facilitator.
+ 	 * @return unstakeAmount_ Actual unstake amount, after deducting the reward
+ 	 *                        from the total redeem amount.
+ 	 * @return rewardAmount_ Reward amount that is transferred to facilitator
+	 */
 	function progressUnstake(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
 		external
 		returns (
+			address redeemer_,
+			uint256 redeemerNonce_,
+			address beneficiary_,
 			uint256 unstakeTotalAmount_,
 			uint256 unstakeAmount_,
 			uint256 rewardAmount_
 		)
 	{
+		// Get the inital gas
         uint256 initialGas = gasleft();
-		//require(linked);
-		require(_messageHash != bytes32(0));
-		require(_unlockSecret != bytes32(0));
 
-		MessageBus.Message storage message = unstakes[_messageHash].message;
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		//TODO: discuss this, infact the _unlockSecret can be zero.
+		require(
+			_unlockSecret != bytes32(0),
+			"Unlock secret must not be zero"
+		);
 
-        Unstake storage unStake = unstakes[_messageHash];
-        MessageBus.progressInbox(messageBox, REDEEM_TYPEHASH, unStake.message, _unlockSecret);
+		Unstake storage unStake = unstakes[_messageHash];
 
+		// Get the message object.
+		MessageBus.Message storage message = unStake.message;
+
+		// Progress inbox
+        MessageBus.progressInbox(
+			messageBox,
+			REDEEM_TYPEHASH,
+			message,
+			_unlockSecret
+		);
+
+		redeemer_ = message.sender;
+		redeemerNonce_ = message.nonce;
+		beneficiary_ = unStake.beneficiary;
 		unstakeTotalAmount_ = unStake.amount;
+
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
-		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000); //21000 * 2 for transactions + approx buffer
+		//21000 * 2 for transactions + approx buffer
+		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000);
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
-		require(stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_));
-		//reward beneficiary with the reward amount
-		require(token.transfer(msg.sender, rewardAmount_));
+		// Release the amount to bendficiary
+		stakeVault.releaseTo(beneficiary_, unstakeAmount_);
 
+		//TODO: Should the rewared here be in OST (bountyToken)?
+		//reward facilitator with the reward amount
+		stakeVault.releaseTo(msg.sender, unstakeAmount_);
+
+		// Emit ProgressedUnstake event
 		emit ProgressedUnstake(
 			_messageHash,
-			message.sender,
-			message.nonce,
+			redeemer_,
+			redeemerNonce_,
 			unstakeAmount_,
-			unStake.beneficiary,
+			beneficiary_,
 			rewardAmount_
 		);
 	}
