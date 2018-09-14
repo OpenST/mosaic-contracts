@@ -59,13 +59,13 @@ contract EIP20TokenMock is EIP20Token {
 
     /**
      *  @notice Public function claimEIP20Public.
-     * 
+     *
      *  @dev Public wrapper for claimEIP20.
      *
      *  @param _beneficiary Address of tokens beneficiary.
      *  @param _amount Amount of tokens claimed for beneficiary.
      *
-     *  @return bool True if claim of tokens for beneficiary address is successful, 
+     *  @return bool True if claim of tokens for beneficiary address is successful,
      *          false otherwise.
      */
     function claimEIP20Public(

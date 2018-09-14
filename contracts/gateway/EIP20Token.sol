@@ -179,7 +179,7 @@ contract EIP20Token is EIP20Interface {
      *  @param _beneficiary Address of tokens beneificary.
      *  @param _amount Amount of tokens claimed for beneficiary.
      *
-     *  @return bool True if claim of tokens for beneficiary address is successful, 
+     *  @return bool True if claim of tokens for beneficiary address is successful,
      *          false otherwise.
      */
     function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {

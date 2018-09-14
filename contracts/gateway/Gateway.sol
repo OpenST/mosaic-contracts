@@ -40,7 +40,7 @@ contract Gateway is GatewaySetup {
 
 	/* Events */
 
-	event  StakeRequestedEvent(
+	event  StakingIntentDeclared(
 		bytes32 _messageHash,
 		uint256 _amount,
 		address _beneficiary,
@@ -48,13 +48,13 @@ contract Gateway is GatewaySetup {
 		bytes32 _intentHash
 	);
 
-	event StakeProcessed(
+	event ProcessedStake(
 		bytes32 _messageHash,
 		uint256 _amount,
 		address _beneficiary
 	);
 
-	event RevertStakeRequested(
+	event RevertStakeDeclared(
 		bytes32 messageHash,
 		address staker,
 		bytes32 intentHash,
@@ -62,7 +62,7 @@ contract Gateway is GatewaySetup {
 		uint256 gasPrice
 	);
 
-	event StakeReverted(
+	event RevertedStake(
 		address staker,
 		uint256 amount,
 		address beneficiary,
@@ -79,7 +79,7 @@ contract Gateway is GatewaySetup {
 		bytes32 hashLock
 	);
 
-	event UnStakeProcessed(
+	event ProcessedUnstake(
 		bytes32 messageHash,
 		uint256 amount,
 		address beneficiary,
@@ -103,19 +103,19 @@ contract Gateway is GatewaySetup {
 
 	/* Struct */
 	/**
-	 *  It denotes the stake request.
+	 *  It denotes the stake.
 	 *  Status values could be :-
 	 *  0 :- amount used for staking
 	 *  1 :- beneficiary is the address in the target chain where token will be minted.
 	 */
-	struct StakeRequest {
+	struct Stake {
 		uint256 amount;
 		address beneficiary;
 		MessageBus.Message message;
 		address facilitator;
 	}
 
-	struct UnStakes {
+	struct Unstake {
 		uint256 amount;
 		address beneficiary;
 		MessageBus.Message message;
@@ -129,10 +129,10 @@ contract Gateway is GatewaySetup {
 	//address of core contract.
 	CoreInterface core;
 
-	mapping(bytes32 /*messageHash*/ => StakeRequest) stakeRequests;
-	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeRequests;
+	mapping(bytes32 /*messageHash*/ => Stake) stakes;
+	mapping(address /*staker*/ => bytes32 /*messageHash*/) activeProcess;
 
-	mapping(bytes32 /*messageHash*/ => UnStakes) unStakes;
+	mapping(bytes32 /*messageHash*/ => Unstake) unstakes;
 
     uint256 constant GAS_LIMIT = 2000000; //TODO: Decide this later (May be we should have different gas limits. TO think)
 
@@ -143,7 +143,7 @@ contract Gateway is GatewaySetup {
 	 *
 	 *  @param _token Branded token contract address.
 	 *  @param _core Core contract address.
-	 *  @param _bounty Bounty amount that worker address stakes while accepting stake request.
+	 *  @param _bounty Bounty amount that worker address stakes while accepting stake.
 	 *  @param _organisation organisation address.
 	 */
 	constructor(
@@ -205,24 +205,24 @@ contract Gateway is GatewaySetup {
 		require(cleanProcessedStakeRequest(_staker));
 
         //TODO: Move the hashing code in to hasher library
-		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _staker, _gasPrice));
+		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice);
 
-		messageHash_ = MessageBus.messageDigest(STAKE_REQUEST_TYPEHASH, intentHash, _nonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _nonce, _gasPrice);
 
-		activeRequests[_staker] = messageHash_;
+		activeProcess[_staker] = messageHash_;
 
-		stakeRequests[messageHash_] = StakeRequest({
+		stakes[messageHash_] = Stake({
 			amount : _amount,
 			beneficiary : _beneficiary,
 			message : getMessage(_staker, _nonce, _gasPrice, intentHash, _hashLock),
 			facilitator : msg.sender
 			});
 
-		MessageBus.declareMessage(messageBox, STAKE_REQUEST_TYPEHASH, stakeRequests[messageHash_].message, _signature);
+		MessageBus.declareMessage(messageBox, STAKE_TYPEHASH, stakes[messageHash_].message, _signature);
 		//transfer staker amount to gateway
-		require(token.transferFrom(_staker, this, _amount));
+		require(token.transferFrom(_staker, address(this), _amount));
 
-		emit StakeRequestedEvent(
+		emit StakingIntentDeclared(
 			messageHash_,
 			_amount,
 			_beneficiary,
@@ -236,26 +236,26 @@ contract Gateway is GatewaySetup {
 		bytes32 _unlockSecret
 	)
 	external
-	returns (uint256 stakeRequestAmount_)
+	returns (uint256 stakeAmount_)
 	{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
-		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+		MessageBus.Message storage message = stakes[_messageHash].message;
 
-		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
+		stakeAmount_ = stakes[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, STAKE_REQUEST_TYPEHASH, message, _unlockSecret);
+		MessageBus.progressOutbox(messageBox, STAKE_TYPEHASH, message, _unlockSecret);
 
-		require(token.transfer(stakeVault, stakeRequestAmount_));
+		require(token.transfer(stakeVault, stakeAmount_));
 
 		//return bounty
 		msg.sender.transfer(bounty);
 
-		emit StakeProcessed(
+		emit ProcessedStake(
 			_messageHash,
-			stakeRequests[_messageHash].amount,
-			stakeRequests[_messageHash].beneficiary
+			stakes[_messageHash].amount,
+			stakes[_messageHash].beneficiary
 		);
 	}
 
@@ -266,13 +266,13 @@ contract Gateway is GatewaySetup {
 		uint256 _messageStatus
 	)
 	external
-	returns (uint256 stakeRequestAmount_)
+	returns (uint256 stakeAmount_)
 	{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		stakeRequestAmount_ = stakeRequests[_messageHash].amount;
+		stakeAmount_ = stakes[_messageHash].amount;
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
@@ -281,23 +281,23 @@ contract Gateway is GatewaySetup {
 		//staker has to process with proof
 		MessageBus.progressOutboxWithProof(
 			messageBox,
-			STAKE_REQUEST_TYPEHASH,
-			stakeRequests[_messageHash].message,
+			STAKE_TYPEHASH,
+			stakes[_messageHash].message,
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus)
 		);
 
-		require(token.transfer(stakeVault, stakeRequestAmount_));
+		require(token.transfer(stakeVault, stakeAmount_));
 
 		//todo discuss return bounty
-		require(token.transfer(stakeRequests[_messageHash].facilitator, bounty));
+		require(token.transfer(stakes[_messageHash].facilitator, bounty));
 
-		emit StakeProcessed(
+		emit ProcessedStake(
 			_messageHash,
-			stakeRequests[_messageHash].amount,
-			stakeRequests[_messageHash].beneficiary
+			stakes[_messageHash].amount,
+			stakes[_messageHash].beneficiary
 		);
 	}
 
@@ -315,14 +315,14 @@ contract Gateway is GatewaySetup {
 	{
 		require(isActivated);
 		require(_messageHash != bytes32(0));
-		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+		MessageBus.Message storage message = stakes[_messageHash].message;
 
 		require(message.intentHash != bytes32(0));
 
 		require(
 			MessageBus.declareRevocationMessage(
 			messageBox,
-			STAKE_REQUEST_TYPEHASH,
+				STAKE_TYPEHASH,
 			message,
 				_signature
 			)
@@ -332,7 +332,7 @@ contract Gateway is GatewaySetup {
 		intentHash_ = message.intentHash;
 		gasPrice_ = message.gasPrice;
 		nonce_ = message.nonce;
-		emit RevertStakeRequested(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
+		emit RevertStakeDeclared(_messageHash, staker_, intentHash_, nonce_, gasPrice_);
 	}
 
 	function processRevertStaking(
@@ -347,7 +347,7 @@ contract Gateway is GatewaySetup {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = stakeRequests[_messageHash].message;
+		MessageBus.Message storage message = stakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
@@ -357,23 +357,23 @@ contract Gateway is GatewaySetup {
 			MessageBus.progressRevocationMessage(
 			messageBox,
 			message,
-			STAKE_REQUEST_TYPEHASH,
+			STAKE_TYPEHASH,
 			outboxOffset,
 			_rlpEncodedParentNodes,
 				storageRoot
 			)
 		);
 
-		StakeRequest storage stakeRequest = stakeRequests[_messageHash];
+		Stake storage stakeData = stakes[_messageHash];
 
-		require(token.transfer(message.sender, stakeRequest.amount));
+		require(token.transfer(message.sender, stakeData.amount));
 
 		msg.sender.transfer(bounty);
 
-		emit StakeReverted(
+		emit RevertedStake(
 			message.sender,
-			stakeRequest.amount,
-			stakeRequest.beneficiary,
+			stakeData.amount,
+			stakeData.beneficiary,
 			message.gasPrice
 		);
 	}
@@ -391,7 +391,7 @@ contract Gateway is GatewaySetup {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = unStakes[_messageHash].message;
+		MessageBus.Message storage message = unstakes[_messageHash].message;
 		require(message.intentHash != bytes32(0));
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
@@ -399,7 +399,7 @@ contract Gateway is GatewaySetup {
 
 		require(MessageBus.confirmRevocation(
 				messageBox,
-				REDEEM_REQUEST_TYPEHASH,
+				REDEEM_TYPEHASH,
 				message,
 				_rlpEncodedParentNodes,
 				outboxOffset,
@@ -440,16 +440,16 @@ contract Gateway is GatewaySetup {
 		require(_hashLock != bytes32(0));
 		require(_rlpParentNodes.length != 0);
 
-		require(cleanProcessedRedeemRequest(_redeemer));
+		require(cleanProcessedRedeem(_redeemer));
 
 		//todo change to library call, stake too deep error
 		bytes32 intentHash = keccak256(abi.encodePacked(_amount, _beneficiary, _redeemer, _gasPrice));
 
-		messageHash_ = MessageBus.messageDigest(REDEEM_REQUEST_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
 
-		activeRequests[_redeemer] = messageHash_;
+		activeProcess[_redeemer] = messageHash_;
 
-		unStakes[messageHash_] = getUnStake(
+		unstakes[messageHash_] = getUnStake(
 			_amount,
 			_beneficiary,
 			_redeemer,
@@ -459,7 +459,7 @@ contract Gateway is GatewaySetup {
 			_hashLock
 		);
 
-		executeConfirmRedemptionIntent(unStakes[messageHash_].message, _blockHeight, _rlpParentNodes);
+		executeConfirmRedemptionIntent(unstakes[messageHash_].message, _blockHeight, _rlpParentNodes);
 
 		emit RedemptionIntentConfirmed(
 			messageHash_,
@@ -471,7 +471,7 @@ contract Gateway is GatewaySetup {
 			_hashLock
 		);
 
-        unStakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
+        unstakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
 	}
 
 	function processUnstake(
@@ -479,7 +479,7 @@ contract Gateway is GatewaySetup {
 		bytes32 _unlockSecret)
 	external
 	returns (
-		uint256 unstakeRequestedAmount_,
+		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
 		uint256 rewardAmount_
 	)
@@ -489,12 +489,13 @@ contract Gateway is GatewaySetup {
 		require(_messageHash != bytes32(0));
 		require(_unlockSecret != bytes32(0));
 
-		MessageBus.Message storage message = unStakes[_messageHash].message;
+		MessageBus.Message storage message = unstakes[_messageHash].message;
 
-        UnStakes storage unStake = unStakes[_messageHash];
-        MessageBus.progressInbox(messageBox, REDEEM_REQUEST_TYPEHASH, unStake.message, _unlockSecret);
+        Unstake storage unStake = unstakes[_messageHash];
+        MessageBus.progressInbox(messageBox, REDEEM_TYPEHASH, unStake.message, _unlockSecret);
 
-        unstakeRequestedAmount_ = unStake.amount;
+		unstakeTotalAmount_ = unStake.amount;
+		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
@@ -504,7 +505,7 @@ contract Gateway is GatewaySetup {
 
 
 
-		emit UnStakeProcessed(
+		emit ProcessedUnstake(
 			_messageHash,
 			unstakeAmount_,
 			unStake.beneficiary,
@@ -514,13 +515,13 @@ contract Gateway is GatewaySetup {
 
 	function processUnstakeWithProof(
 		bytes32 _messageHash,
-		bytes memory _rlpEncodedParentNodes,
+		bytes _rlpEncodedParentNodes,
 		uint256 _blockHeight,
 		uint256 _messageStatus
 	)
 	public
 	returns (
-		uint256 unstakeRequestedAmount_,
+		uint256 unstakeTotalAmount_,
 		uint256 unstakeAmount_,
 		uint256 rewardAmount_
 	)
@@ -530,16 +531,16 @@ contract Gateway is GatewaySetup {
 		require(_messageHash != bytes32(0));
 		require(_rlpEncodedParentNodes.length > 0);
 
-		MessageBus.Message storage message = unStakes[_messageHash].message;
+		MessageBus.Message storage message = unstakes[_messageHash].message;
 
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
-		UnStakes storage unStake = unStakes[_messageHash];
+		Unstake storage unStake = unstakes[_messageHash];
 
         MessageBus.progressInboxWithProof(
             messageBox,
-            REDEEM_REQUEST_TYPEHASH,
+			REDEEM_TYPEHASH,
             unStake.message,
             _rlpEncodedParentNodes,
             outboxOffset,
@@ -547,7 +548,8 @@ contract Gateway is GatewaySetup {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        unstakeRequestedAmount_ = unStake.amount;
+		unstakeTotalAmount_ = unStake.amount;
+		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		rewardAmount_ = MessageBus.feeAmount(message, initialGas, 50000, GAS_LIMIT); //21000 * 2 for transactions + approx buffer
 		unstakeAmount_ = unStake.amount.sub(rewardAmount_);
 
@@ -555,7 +557,7 @@ contract Gateway is GatewaySetup {
 		//reward beneficiary with the fee
 		require(token.transfer(msg.sender, rewardAmount_));
 
-		emit UnStakeProcessed(
+		emit ProcessedUnstake(
 			_messageHash,
 			unstakeAmount_,
 			unStake.beneficiary,
@@ -617,20 +619,6 @@ contract Gateway is GatewaySetup {
 		return true;
 	}
 
-	function getNonce(address _account)
-	external
-	view
-	returns (uint256 /* nonce */)
-	{
-		bytes32 messageHash = activeRequests[_account];
-		if (messageHash == bytes32(0)) {
-			return 0;
-		}
-
-		MessageBus.Message storage message = stakeRequests[messageHash].message;
-		return message.nonce;
-	}
-
 	/*private functions*/
 	function executeConfirmRedemptionIntent(
 		MessageBus.Message storage _message,
@@ -644,7 +632,7 @@ contract Gateway is GatewaySetup {
 
 		MessageBus.confirmMessage(
 			messageBox,
-			REDEEM_REQUEST_TYPEHASH,
+			REDEEM_TYPEHASH,
 			_message,
 			_rlpParentNodes,
 			outboxOffset,
@@ -662,9 +650,9 @@ contract Gateway is GatewaySetup {
 	)
 	private
 	pure
-	returns (UnStakes)
+	returns (Unstake)
 	{
-		return UnStakes({
+		return Unstake({
 			amount : _amount,
 			beneficiary : _beneficiary,
 			message : getMessage(_redeemer, _redeemerNonce, _gasPrice, _intentHash, _hashLock)
@@ -675,34 +663,49 @@ contract Gateway is GatewaySetup {
 	private
 	returns (bool /*success*/)
 	{
-		bytes32 previousRequest = activeRequests[staker];
+		bytes32 previousProcess = activeProcess[staker];
 
-		if (previousRequest != bytes32(0)) {
+		if (previousProcess != bytes32(0)) {
 
 			require(
-				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
-				messageBox.outbox[previousRequest] != MessageBus.MessageStatus.Revoked
+				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
+				messageBox.outbox[previousProcess] != MessageBus.MessageStatus.Revoked
 			);
-			delete stakeRequests[previousRequest];
-			delete messageBox.inbox[previousRequest];
+			delete stakes[previousProcess];
+			delete messageBox.inbox[previousProcess];
 		}
+		return true;
 	}
 
-	function cleanProcessedRedeemRequest(address redeemer)
+	function cleanProcessedRedeem(address redeemer)
 	private
 	returns (bool /*success*/)
 	{
-		bytes32 previousRequest = activeRequests[redeemer];
+		bytes32 previousProcess = activeProcess[redeemer];
 
-		if (previousRequest != bytes32(0)) {
+		if (previousProcess != bytes32(0)) {
 
 			require(
-				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Progressed ||
-				messageBox.inbox[previousRequest] != MessageBus.MessageStatus.Revoked
+				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Progressed ||
+				messageBox.inbox[previousProcess] != MessageBus.MessageStatus.Revoked
 			);
-			delete unStakes[previousRequest];
-			delete messageBox.inbox[previousRequest];
+			delete unstakes[previousProcess];
+			delete messageBox.inbox[previousProcess];
 		}
+	}
+
+	function getNonce(address _account)
+	external
+	view
+	returns (uint256 /* nonce */)
+	{
+		bytes32 messageHash = activeProcess[_account];
+		if (messageHash == bytes32(0)) {
+			return 0;
+		}
+
+		MessageBus.Message storage message = stakes[messageHash].message;
+		return message.nonce.add(1);
 	}
 
 }
