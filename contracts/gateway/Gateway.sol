@@ -515,18 +515,22 @@ contract Gateway is Hasher {
 	}
 
 	/**
-	 * @notice external function stake
+	 * @notice Initiates the stake process.
 	 *
-	 * @dev In order to stake the staker needs to approve Gateway contract for stake amount.
-     *   Staked amount is transferred from staker address to Gateway contract.
+	 * @dev In order to stake the staker needs to approve Gateway contract for
+	 *      stake amount. Staked amount is transferred from staker address to
+	 *      Gateway contract.
 	 *
-	 * @param _amount Staking amount.
-	 * @param _beneficiary Beneficiary address.
+	 * @param _amount Staking amount that will be transferred form staker
+	 *                account.
+	 * @param _beneficiary The address in the auxiliary chain where the utility
+	 *                     tokens will be minted.
 	 * @param _staker Staker address.
-	 * @param _gasPrice Gas price
-	 * @param _gasLimit Gas limit
-	 * @param _nonce Staker nonce.
-	 * @param _hashLock Hash Lock
+	 * @param _gasPrice Gas price that staker is ready to pay to get the stake
+	 *                  and mint process done
+	 * @param _gasLimit Gas limit that staker is ready to pay
+	 * @param _nonce Nonce of the staker address.
+	 * @param _hashLock Hash Lock provided by the facilitator.
 	 * @param _signature Signature signed by staker.
 	 *
 	 * @return messageHash_ which is unique for each request.
@@ -545,37 +549,84 @@ contract Gateway is Hasher {
 		isActive
 		returns (bytes32 messageHash_)
 	{
-		require(_amount > uint256(0));
-		require(_beneficiary != address(0));
-		require(_staker != address(0));
-		require(_hashLock != bytes32(0));
-		require(_signature.length == 65); //TODO: check for the correct length (65).
+		require(
+			_amount > uint256(0),
+			"Stake amount must not be zero"
+		);
+		require(
+			_beneficiary != address(0),
+			"Beneficiary address must not be zero"
+		);
+		require(
+			_staker != address(0),
+			"Staker address must not be zero"
+		);
+		//TODO: Do we need this check ?
+		require(
+			_hashLock != bytes32(0),
+			"HashLock must not be zero"
+		);
+		require(
+			_signature.length == 65,
+			"Signature must be of length 65"
+		);
 
-		//TODO: include valueToken,
-		bytes32 intentHash = hashStakingIntent(_amount, _beneficiary, _staker, _gasPrice, token);
+		//TODO: add _gasLimit in intent hash
+		// Get the staking intent hash
+		bytes32 intentHash = hashStakingIntent(
+			_amount,
+			_beneficiary,
+			_staker,
+			_gasPrice,
+			token
+		);
 
-		messageHash_ = MessageBus.messageDigest(STAKE_TYPEHASH, intentHash, _nonce, _gasPrice);
+		// Get the messageHash
+		messageHash_ = MessageBus.messageDigest(
+			STAKE_TYPEHASH,
+			intentHash,
+			_nonce,
+			_gasPrice
+		);
 
-		bytes32 previousMessageHash = initiateNewInboxProcess(_staker, _nonce, messageHash_);
+		// Get previousMessageHash
+		bytes32 previousMessageHash = initiateNewInboxProcess(
+			_staker,
+			_nonce,
+			messageHash_
+		);
+
+		// Delete the progressed/Revoked stake data
 		delete stakes[previousMessageHash];
-
-		// TODO: Check if we can merge  require(cleanProcessedStake(_staker)); , checking the nonce, and  activeProcess[_staker] = messageHash_;
-		activeProcess[_staker] = messageHash_;
 
 		stakes[messageHash_] = Stake({
 			amount : _amount,
 			beneficiary : _beneficiary,
-			message : getMessage(_staker, _nonce, _gasPrice, _gasLimit, intentHash, _hashLock),
-			facilitator : msg.sender
+			facilitator : msg.sender,
+			message : getMessage(
+				_staker,
+				_nonce,
+				_gasPrice,
+				_gasLimit,
+				intentHash,
+				_hashLock)
 			});
 
-		MessageBus.declareMessage(messageBox, STAKE_TYPEHASH, stakes[messageHash_].message, _signature);
+		// Declare message in outbox
+		MessageBus.declareMessage(
+			messageBox,
+			STAKE_TYPEHASH,
+			stakes[messageHash_].message,
+			_signature
+		);
+
 		//transfer staker amount to gateway
 		require(token.transferFrom(_staker, address(this), _amount));
 
 		// transfer the bounty amount // TODO: change the bounty transfer in BountyToken (Think for a name)
 		require(bountyToken.transferFrom(msg.sender, address(this), bounty));
 
+		// Emit StakingIntentDeclared event
 		emit StakingIntentDeclared(
 			messageHash_,
 			_staker,
