@@ -138,7 +138,7 @@ contract Gateway is Hasher {
 
 	/**
 	 * Stake stores the staking information about the staking amount,
-	 * beneficiary addresss, message data and facilitator address.
+	 * beneficiary address, message data and facilitator address.
 	 */
 	struct Stake {
 
@@ -158,14 +158,34 @@ contract Gateway is Hasher {
 		address facilitator;
 	}
 
+	/**
+	 * Unstake stores the unstaking / redeem information
+	 * like unstake/redeem amount, beneficiary address, message data.
+	 */
 	struct Unstake {
+
+		/** Amount that will be unstaked. */
 		uint256 amount;
+
+		/** Address that will receive the unstaked token */
 		address beneficiary;
+
+		/** Message data. */
 		MessageBus.Message message;
 	}
 
+	/**
+	 * GatewayLink stores data for linking of Gateway and CoGateway.
+	 */
 	struct GatewayLink {
+
+		/**
+		 * message hash is the sha3 of gateway address, cogateway address,
+		 * bounty, token name, token symbol, token decimals , _nonce, token
+		 */
 		bytes32 messageHash;
+
+		/** Message data. */
 		MessageBus.Message message;
 	}
 
@@ -364,7 +384,7 @@ contract Gateway is Hasher {
 		bytes32 _hashLock,
 		bytes _signature
 	)
-		external
+		public
 		isActive
 		returns (bytes32 messageHash_)
 	{
@@ -422,7 +442,7 @@ contract Gateway is Hasher {
 		require(_unlockSecret != bytes32(0));
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
-		staker_ = stakes[_messageHash].sender;
+		staker_ = message.sender;
 		stakeAmount_ = stakes[_messageHash].amount;
 
 		MessageBus.progressOutbox(messageBox, STAKE_TYPEHASH, message, _unlockSecret);
@@ -435,7 +455,7 @@ contract Gateway is Hasher {
 		emit ProgressedStake(
 			_messageHash,
 			staker_,
-			stakes[_messageHash].nonce,
+			message.nonce,
 			stakeAmount_,
 			_unlockSecret
 		);
@@ -459,12 +479,14 @@ contract Gateway is Hasher {
 		bytes32 storageRoot = storageRoots[_blockHeight];
 		require(storageRoot != bytes32(0));
 
+		MessageBus.Message storage message = stakes[_messageHash].message;
+
 		//staker has started the revocation and facilitator has processed on utility chain
 		//staker has to process with proof
 		MessageBus.progressOutboxWithProof(
 			messageBox,
 			STAKE_TYPEHASH,
-			stakes[_messageHash].message,
+			message,
 			_rlpEncodedParentNodes,
 			outboxOffset,
 			storageRoot,
@@ -478,9 +500,12 @@ contract Gateway is Hasher {
 
 		emit ProgressedStake(
 			_messageHash,
+			message.sender,
+			message.nonce,
 			stakes[_messageHash].amount,
-			stakes[_messageHash].beneficiary
+			bytes32(0)
 		);
+
 	}
 
 	function revertStaking(
@@ -511,7 +536,7 @@ contract Gateway is Hasher {
 
 		staker_ = message.sender;
 		stakerNonce_ = message.nonce;
-		amount_ = message.amount;
+		amount_ = stakes[_messageHash].amount;
 
 		emit RevertStakeIntentDeclared(
 			_messageHash,
@@ -597,7 +622,7 @@ contract Gateway is Hasher {
 			_messageHash,
 			message.sender,
 			message.nonce,
-			unstakes[messageHash_]._amount
+			unstakes[_messageHash].amount
 		);
 
         message.gasConsumed = gasleft().sub(initialGas);
