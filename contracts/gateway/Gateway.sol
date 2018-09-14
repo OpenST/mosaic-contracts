@@ -280,17 +280,25 @@ contract Gateway is Hasher {
 		_;
 	}
 
+	/* Constructor */
+
 	/**
-	 *  @notice Contract constructor.
+	 * @notice Initialise the contract by providing the ERC20 token address
+	 *         for which the gateway will enable facilitation of staking and
+	 *         minting.
 	 *
-	 *  @param _token Branded token contract address.
-	 *  @param _bountyToken Contract address of ERC20 token for which the bounty will be transferred.
-	 *  @param _core Core contract address.
-	 *  @param _bounty Bounty amount that worker address stakes while accepting stake.
-	 *  @param _organisation organisation address.
+	 * @param _token The ERC20 token contract address that will be
+	 *               staked and corresponding utility tokens will be minted
+	 *               in auxiliary chain.
+	 * @param _bountyToken The ERC20 token address that will be used for
+	 *                     staking bounty from the facilitators.
+	 * @param _core Core contract address.
+	 * @param _bounty The amount that facilitator will stakes to initiate the
+	 *                staking process.
+	 * @param _organisation Organisation address.
 	 */
 	constructor(
-		EIP20Interface _token,
+		EIP20Interface _token, //TODO: think if this should this be ERC20TokenInterface
 		EIP20Interface _bountyToken, //TODO: think of a better name
 		CoreInterface _core,
 		uint256 _bounty,
@@ -298,19 +306,39 @@ contract Gateway is Hasher {
 	)
 		public
 	{
-		require(_token != address(0));
-		require(_core != address(0));
-		require(_organisation != address(0));
-		require(_bountyToken != address(0));
+		require(
+			_token != address(0),
+			"Token contract address must not be zero"
+		);
 
+		require(
+			_bountyToken != address(0),
+			"Token contract address for bounty must not be zero"
+		);
+
+		require(
+			_core != address(0),
+			"Core contract address must not be zero"
+		);
+
+		require(
+			_organisation != address(0),
+			"Organisation address must not be zero"
+		);
+
+		// gateway and cogateway is not linked so it is initialized as false
 		linked = false;
+
+		// gateway is active
 		deactivated = false;
+
 		token = _token;
 		bountyToken = _bountyToken;
 		core = _core;
 		bounty = _bounty;
 		organisation = _organisation;
 
+		// deploy simpleStake contract that will keep the staked amounts.
 		stakeVault = new SimpleStake(token, address(this));
 	}
 
