@@ -178,7 +178,7 @@ library MessageBus {
 
 
 	function verifySignature(bytes32 _message, bytes _signature, address signer)
-	private
+	internal
 	pure
 	returns (bool /*success*/)
 	{
