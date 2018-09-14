@@ -131,7 +131,8 @@ contract Gateway is Hasher {
 		bytes32 indexed _messageHash,
 		address _gateway,
 		address _cogateway,
-		address _token
+		address _token,
+		bytes32 _unlockSecret
 	);
 
 	/* Struct */
@@ -458,31 +459,58 @@ contract Gateway is Hasher {
 		);
 	}
 
-	// TODO: add isDeactivated
-
-	// TODO: change the process to Progress
+	/**
+ 	 * @notice Complete the Gateway and CoGateway contracts linking. This will
+ 	 *         set the variable linked to true, and thus it will activate the
+ 	 *         Gateway contract for stake and mint.
+ 	 *
+ 	 * @param _messageHash Message hash
+ 	 * @param _unlockSecret Unlock secret for the hashLock provide by the
+ 	 *                      facilitator while initiating the Gateway/CoGateway
+ 	 *                      linking
+ 	 *
+ 	 * @return `true` if gateway linking was successfully progressed
+ 	 */
 	function progressGatewayLink(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
 	)
 		external
-		returns (bool /*TBD*/)
+		returns (bool)
 	{
-		require(_messageHash != bytes32(0));
-		require(_unlockSecret != bytes32(0));
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		require(
+			_unlockSecret != bytes32(0),
+			"Unlocl secret must not be zero"
+		);
+		require(
+			gatewayLink.messageHash == _messageHash,
+			"Unknown message type"
+		);
 
-		require(gatewayLink.messageHash == _messageHash);
+		// Progress the outbox.
+		MessageBus.progressOutbox(
+			messageBox,
+			GATEWAY_LINK_TYPEHASH,
+			gatewayLink.message,
+			_unlockSecret
+		);
 
-		MessageBus.progressOutbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
-
+		// Update to specify the Gateway/CoGateway is linked
 		linked = true;
 
+		// Emit GatewayLinkProgressed event
 		emit GatewayLinkProgressed(
 			_messageHash,
 			address(this),
 			coGateway,
-			token
+			token,
+			_unlockSecret
 		);
+
 		return true;
 	}
 
