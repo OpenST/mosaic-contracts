@@ -936,7 +936,7 @@ contract Gateway is Hasher {
 	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
 	 *                               DeclaredRevocation in messageBox outbox
 	 *                               of CoGateway
-
+	 *
 	 * @return redeemer_ Redeemer address
 	 * @return redeemerNonce_ Redeemer nonce
 	 * @return amount_ Redeem amount
@@ -1005,6 +1005,25 @@ contract Gateway is Hasher {
         message.gasConsumed = initialGas.sub(gasleft());
 	}
 
+	/**
+	 * @notice Declare redemption intent
+	 *
+	 * @param _redeemer Redeemer address.
+	 * @param _redeemerNonce Redeemer nonce.
+	 * @param _beneficiary Address where the redeemed tokens will be
+	 *                     transferred.
+	 * @param _amount Redeem amount.
+	 * @param _gasPrice Gas price that redeemer is ready to pay to get the
+	 *                  redeem and unstake process done
+	 * @param _gasLimit Gas limit that redeemer is ready to pay.
+	 * @param _blockHeight Block number for which the proof is valid.
+	 * @param _hashLock Hash lock
+	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+	 *                               Declared in messageBox outbox
+	 *                               of CoGateway
+	 *
+	 * @return messageHash_ Message hash
+	 */
 	function confirmRedemptionIntent(
 		address _redeemer,
 		uint256 _redeemerNonce,
@@ -1014,25 +1033,73 @@ contract Gateway is Hasher {
 		uint256 _gasLimit,
 		uint256 _blockHeight,
 		bytes32 _hashLock,
-		bytes memory _rlpParentNodes
+		bytes memory _rlpEncodedParentNodes
 	)
 		public
 		returns (bytes32 messageHash_)
 	{
+		// Get the initial gas
         uint256 initialGas = gasleft();
-		require(_redeemer != address(0));
-		require(_beneficiary != address(0));
-		require(_amount != 0);
-		require(_gasPrice != 0);
-		require(_blockHeight != 0);
-		require(_hashLock != bytes32(0));
-		require(_rlpParentNodes.length != 0);
 
-		//todo change to library call, stake too deep error
-		bytes32 intentHash = hashRedemptionIntent(_amount, _beneficiary, _redeemer, _gasPrice, token);
-		messageHash_ = MessageBus.messageDigest(REDEEM_TYPEHASH, intentHash, _redeemerNonce, _gasPrice);
+		require(
+			_redeemer != address(0),
+			"Redeemer address must not be zero"
+		);
+		require(
+			_beneficiary != address(0),
+			"Beneficiary address must not be zero"
+		);
+		require(
+			_amount != 0,
+			"Redeem amount must not be zero"
+		);
+		require(
+			_gasPrice != 0,
+			"Gas price must not be zero"
+		);
+		require(
+			_gasLimit != 0,
+			"Gas limit must not be zero"
+		);
+		// TODO: Discuss if we should have the _blockHeight zero check
+		require(
+			_blockHeight != 0,
+			"Block height must not be zero"
+		);
+		require(
+			_hashLock != bytes32(0),
+			"Hashlock must not be zero"
+		);
+		require(
+			_rlpEncodedParentNodes.length > 0,
+			"RLP encoded parent nodes must not be zero"
+		);
 
-		bytes32 previousMessageHash = initiateNewOutboxProcess(_redeemer, _redeemerNonce, messageHash_);
+		// Get the redemption intent hash
+		bytes32 intentHash = hashRedemptionIntent(
+			_amount,
+			_beneficiary,
+			_redeemer,
+			_gasPrice,
+			token
+		);
+
+		// Get the message hash
+		messageHash_ = MessageBus.messageDigest(
+			REDEEM_TYPEHASH,
+			intentHash,
+			_redeemerNonce,
+			_gasPrice
+		);
+
+		// Get previousMessageHash
+		bytes32 previousMessageHash = initiateNewOutboxProcess(
+			_redeemer,
+			_redeemerNonce,
+			messageHash_
+		);
+
+		// Delete the progressed/Revoked unstake data
 		delete unstakes[previousMessageHash];
 
 		unstakes[messageHash_] = getUnStake(
@@ -1046,8 +1113,13 @@ contract Gateway is Hasher {
 			_hashLock
 		);
 
-		executeConfirmRedemptionIntent(unstakes[messageHash_].message, _blockHeight, _rlpParentNodes);
+		executeConfirmRedemptionIntent(
+			unstakes[messageHash_].message,
+			_blockHeight,
+			_rlpEncodedParentNodes
+		);
 
+		// Emit RedemptionIntentConfirmed event.
 		emit RedemptionIntentConfirmed(
 			messageHash_,
 			_redeemer,
@@ -1058,7 +1130,8 @@ contract Gateway is Hasher {
 			_hashLock
 		);
 
-        unstakes[messageHash_].message.gasConsumed = gasleft().sub(initialGas);
+        // Update the gas consumed for this function.
+		unstakes[messageHash_].message.gasConsumed = initialGas.sub(gasleft());
 	}
 
 	function progressUnstake(
