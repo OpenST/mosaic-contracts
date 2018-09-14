@@ -636,6 +636,16 @@ contract Gateway is Hasher {
 		);
 	}
 
+	/**
+	 * @notice Completes the stake process.
+	 *
+	 * @param _messageHash Message hash.
+	 * @param _unlockSecret Unlock secret for the hashLock provide by the
+ 	 *                      facilitator while initiating the stake
+ 	 *
+ 	 * @return staker_ Staker address
+ 	 * @return stakeAmount_ Stake amount
+	 */
 	function progressStaking(
 		bytes32 _messageHash,
 		bytes32 _unlockSecret
@@ -646,20 +656,40 @@ contract Gateway is Hasher {
 			uint256 stakeAmount_
 		)
 	{
-		require(_messageHash != bytes32(0));
-		require(_unlockSecret != bytes32(0));
+		require(
+			_messageHash != bytes32(0),
+			"Message hash must not be zero"
+		);
+		//TODO: unlock secret can be zero. Discuss if this check is needed.
+		require(
+			_unlockSecret != bytes32(0),
+			"Unlocl secret must not be zero"
+		);
+
+		// Get the message object
 		MessageBus.Message storage message = stakes[_messageHash].message;
 
+		// Get the staker address
 		staker_ = message.sender;
+
+		//Get the stake amount
 		stakeAmount_ = stakes[_messageHash].amount;
 
-		MessageBus.progressOutbox(messageBox, STAKE_TYPEHASH, message, _unlockSecret);
+		// Progress outbox
+		MessageBus.progressOutbox(
+			messageBox,
+			STAKE_TYPEHASH,
+			message,
+			_unlockSecret
+		);
 
-		require(token.transfer(stakeVault, stakeAmount_));
+		// Transfer the staked amount to stakeVault.
+		token.transfer(stakeVault, stakeAmount_);
 
-		//return bounty
-		require(bountyToken.transfer(msg.sender, bounty));
+		//Transfer the bounty amount to the msg.sender
+		bountyToken.transfer(msg.sender, bounty);
 
+		// Emit ProgressedStake event.
 		emit ProgressedStake(
 			_messageHash,
 			staker_,
