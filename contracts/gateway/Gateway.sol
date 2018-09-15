@@ -15,7 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Value Chain: Gateway Contract
+// Origin Chain: Gateway Contract
 //
 // http://www.simpletoken.org/
 //
@@ -25,18 +25,18 @@ pragma solidity ^0.4.23;
 import "./EIP20Interface.sol";
 import "./MessageBus.sol";
 import "./CoreInterface.sol";
-import "./SimpleStake.sol";
 import "./SafeMath.sol";
 import "./Hasher.sol";
 import "./ProofLib.sol";
 import "./RLP.sol";
+import "./SimpleStake.sol";
 
 /**
  * @title Gateway Contract
  *
- *  @notice Gateway act as medium to send messages from source to target chain.
- *          Currently gateway supports stake and mint , revert stake message &
- *          linking of gateway and cogateway.
+ * @notice Gateway act as medium to send messages from origin chain to
+ *         auxiliary chain. Currently gateway supports stake and mint , revert
+ *         stake message & linking of gateway and cogateway.
  */
 contract Gateway is Hasher {
 
@@ -116,17 +116,6 @@ contract Gateway is Hasher {
 		address _token
 	);
 
-	/** Emitted whenever a CoGateway contract is proven.
-	 *	wasAlreadyProved parameter differentiates between first call and replay
-	 *  call of proveGateway method for same block height
-	 */
-	event CoGatewayProven(
-		address _coGateway,
-		uint256 _blockHeight,
-		bytes32 _storageRoot,
-		bool _wasAlreadyProved
-	);
-
 	/** Emitted whenever a gateway and coGateway linking is completed. */
 	event GatewayLinkProgressed(
 		bytes32 indexed _messageHash,
@@ -136,7 +125,18 @@ contract Gateway is Hasher {
 		bytes32 _unlockSecret
 	);
 
-	/* Struct */
+    /** Emitted whenever a CoGateway contract is proven.
+     *	wasAlreadyProved parameter differentiates between first call and replay
+     *  call of proveCoGateway method for same block height
+     */
+    event CoGatewayProven(
+        address _coGateway,
+        uint256 _blockHeight,
+        bytes32 _storageRoot,
+        bool _wasAlreadyProved
+    );
+
+    /* Struct */
 
 	/**
 	 * Stake stores the staking information about the staking amount,
@@ -195,19 +195,19 @@ contract Gateway is Hasher {
 
 	uint8 constant OUTBOX_OFFSET = 1;
 
-	/**
-	 * Message box.
-	 * @dev keep this is at location 1, in case this is changed then update
-	 *      constant OUTBOX_OFFSET accordingly.
-	 */
-	MessageBus.MessageBox messageBox;
-
 	/* public variables */
 
 	/** CoGateway contract address. */
 	address public coGateway;
 
-	/** Specifies if the Gateway and CoGateway contracts are linked. */
+    /**
+	 * Message box.
+	 * @dev keep this is at location 1, in case this is changed then update
+	 *      constant OUTBOX_OFFSET accordingly.
+	 */
+    MessageBus.MessageBox messageBox;
+
+    /** Specifies if the Gateway and CoGateway contracts are linked. */
 	bool public linked;
 
 	/** Specifies if the Gateway is deactivated for any new staking process. */
@@ -251,7 +251,7 @@ contract Gateway is Hasher {
 	 */
 	mapping(address /*address*/ => bytes32 /*messageHash*/) activeProcess;
 
-	/** Maps  blockHeigth to storageRoot*/
+	/** Maps blockHeight to storageRoot*/
 	mapping(uint256 /* block height */ => bytes32) private storageRoots;
 
 	/* private variables */
@@ -326,7 +326,7 @@ contract Gateway is Hasher {
 			"Organisation address must not be zero"
 		);
 
-		// gateway and cogateway is not linked so it is initialized as false
+		// gateway and cogateway is not linked yet so it is initialized as false
 		linked = false;
 
 		// gateway is active
@@ -374,7 +374,7 @@ contract Gateway is Hasher {
 	{
 		require(
 			linked == false,
-			"Gateway contract must not be linked"
+			"Gateway contract must not be already linked"
 		);
 		require(
 			deactivated == false,
@@ -487,11 +487,11 @@ contract Gateway is Hasher {
 		);
 		require(
 			_unlockSecret != bytes32(0),
-			"Unlocl secret must not be zero"
+			"Unlock secret must not be zero"
 		);
 		require(
 			gatewayLink.messageHash == _messageHash,
-			"Unknown message type"
+			"Invalid message hash"
 		);
 
 		// Progress the outbox.
@@ -564,6 +564,14 @@ contract Gateway is Hasher {
 			_staker != address(0),
 			"Staker address must not be zero"
 		);
+        require(
+            _gasPrice != 0,
+            "Gas price must not be zero"
+        );
+        require(
+            _gasLimit != 0,
+            "Gas limit must not be zero"
+        );
 		//TODO: Do we need this check ?
 		require(
 			_hashLock != bytes32(0),
@@ -574,7 +582,7 @@ contract Gateway is Hasher {
 			"Signature must be of length 65"
 		);
 
-		//TODO: add _gasLimit in intent hash
+		//TODO: include _gasLimit in intent hash
 		// Get the staking intent hash
 		bytes32 intentHash = hashStakingIntent(
 			_amount,
@@ -599,7 +607,7 @@ contract Gateway is Hasher {
 			messageHash_
 		);
 
-		// Delete the progressed/Revoked stake data
+		// Delete the previous progressed/Revoked stake data
 		delete stakes[previousMessageHash];
 
 		stakes[messageHash_] = Stake({
@@ -755,8 +763,6 @@ contract Gateway is Hasher {
 		staker_ = message.sender;
 		stakeAmount_ = stakes[_messageHash].amount;
 
-		// staker has started the revocation and facilitator has processed on
-		// utility chain. staker has to process with proof
 		MessageBus.progressOutboxWithProof(
 			messageBox,
 			STAKE_TYPEHASH,
@@ -1146,7 +1152,6 @@ contract Gateway is Hasher {
  	 *                      facilitator while initiating the redeem
  	 *
  	 * @return redeemer_ Redeemer address
- 	 * @return redeemerNonce_ Redeemer nonce
  	 * @return beneficiary_ Address to which the tokens will be transferred.
  	 * @return redeemAmount_ Total amount for which the redemption was
  	 *                       initiated. The reward amount is deducted from the
@@ -1164,7 +1169,7 @@ contract Gateway is Hasher {
 		returns (
 			address redeemer_,
 			address beneficiary_,
-			uint256 unstakeTotalAmount_,
+			uint256 redeemAmount_,
 			uint256 unstakeAmount_,
 			uint256 rewardAmount_
 		)
@@ -1197,7 +1202,7 @@ contract Gateway is Hasher {
 
 		redeemer_ = message.sender;
 		beneficiary_ = unStake.beneficiary;
-		unstakeTotalAmount_ = unStake.amount;
+        redeemAmount_ = unStake.amount;
 
 		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
 		//21000 * 2 for transactions + approx buffer
@@ -1221,7 +1226,7 @@ contract Gateway is Hasher {
 			_messageHash,
 			redeemer_,
 			beneficiary_,
-			unstakeTotalAmount_,
+            redeemAmount_,
 			unstakeAmount_,
 			rewardAmount_,
 			_unlockSecret
@@ -1372,7 +1377,7 @@ contract Gateway is Hasher {
 		// State root should be present for the block height
 		require(
 			stateRoot != bytes32(0),
-			"State root is 0"
+			"State root must not be zero"
 		);
 
 		// If account already proven for block height
@@ -1409,8 +1414,8 @@ contract Gateway is Hasher {
 
 		storageRoots[_blockHeight] = storageRoot;
 
-		// wasAlreadyProved is false since proveOpenST is called for the first
-		// time for a block height
+		// wasAlreadyProved is false since proveCoGateway is called for the
+        // first time for a block height
 		emit CoGatewayProven(
 			coGateway,
 			_blockHeight,
@@ -1494,11 +1499,13 @@ contract Gateway is Hasher {
 			_message,
 			_rlpParentNodes,
 			OUTBOX_OFFSET,
-			storageRoot);
+			storageRoot
+        );
 
 		return true;
 	}
 
+    //TODO: this will move to base class
 	/**
 	 * @notice Clears the previous outbox process. Validates the
 	 *         nonce. Updates the process with current messageHash
@@ -1543,6 +1550,7 @@ contract Gateway is Hasher {
 		activeProcess[_account] = _messageHash;
 	}
 
+    //TODO: this will move to base class
 	/**
 	 * @notice Clears the previous inbox process. Validates the
 	 *         nonce. Updates the process with current messageHash
@@ -1553,7 +1561,6 @@ contract Gateway is Hasher {
 	 *
 	 * @return previousMessageHash_ previous messageHash
 	 */
-
 	function initiateNewInboxProcess(
 		address _account,
 		uint256 _nonce,
