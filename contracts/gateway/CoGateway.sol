@@ -1250,7 +1250,8 @@ contract CoGateway is Hasher {
 	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
 	 *                               DeclaredRevocation in messageBox inbox
 	 *                               of Gateway
-
+	 * @param _messageStatus Message status in CoGateway for given messageHash.
+	 *
 	 * @return redeemer_ Redeemer address
 	 * @return redeemerNonce_ Redeemer nonce
 	 * @return amount_ Redeem amount
@@ -1258,7 +1259,8 @@ contract CoGateway is Hasher {
 	function progressRevertRedemption(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes
+		bytes _rlpEncodedParentNodes,
+        uint256 _messageStatus
 	)
 	    external
 	    returns (
@@ -1291,13 +1293,14 @@ contract CoGateway is Hasher {
         );
 
         // Progress with revocation message
-        MessageBus.progressRevocationMessage(
+        MessageBus.progressOutboxRevocation(
             messageBox,
             message,
             REDEEM_TYPEHASH,
             OUTBOX_OFFSET,
             _rlpEncodedParentNodes,
-            storageRoot
+            storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
         );
 
 		Redeem storage redeemData = redeems[_messageHash];

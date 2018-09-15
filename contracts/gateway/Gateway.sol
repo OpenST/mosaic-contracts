@@ -869,7 +869,8 @@ contract Gateway is Hasher {
 	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
 	 *                               DeclaredRevocation in messageBox outbox
 	 *                               of CoGateway
-
+	 * @param _messageStatus Message status in CoGateway for given messageHash.
+	 *
 	 * @return staker_ Staker address
 	 * @return stakerNonce_ Staker nonce
 	 * @return amount_ Stake amount
@@ -877,7 +878,8 @@ contract Gateway is Hasher {
 	function progressRevertStaking(
 		bytes32 _messageHash,
 		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes
+		bytes _rlpEncodedParentNodes,
+        uint256 _messageStatus
 	)
 		external
 		returns (
@@ -895,7 +897,7 @@ contract Gateway is Hasher {
 			"RLP encoded parent nodes must not be zero"
 		);
 
-		// Get the message object
+        // Get the message object
 		MessageBus.Message storage message = stakes[_messageHash].message;
 		require(
 			message.intentHash != bytes32(0),
@@ -910,13 +912,14 @@ contract Gateway is Hasher {
 		);
 
 		// Progress with revocation message
-		MessageBus.progressRevocationMessage(
+		MessageBus.progressOutboxRevocation(
 			messageBox,
 			message,
 			STAKE_TYPEHASH,
 			OUTBOX_OFFSET,
 			_rlpEncodedParentNodes,
-			storageRoot
+			storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
 		);
 
 		staker_ = message.sender;
