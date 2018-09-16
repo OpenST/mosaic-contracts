@@ -28,18 +28,18 @@ import "./SafeMath.sol";
 
 library MessageBus {
 
-	using SafeMath for uint256;
+    using SafeMath for uint256;
 
     /* Enum */
 
-	/** Status of the message state machine*/
+    /** Status of the message state machine*/
     enum MessageStatus {
-		Undeclared,
-		Declared,
-		Progressed,
-		DeclaredRevocation,
-		Revoked
-	}
+        Undeclared,
+        Declared,
+        Progressed,
+        DeclaredRevocation,
+        Revoked
+    }
 
     /** Status of the message state machine*/
     enum MessageBoxType {
@@ -50,45 +50,45 @@ library MessageBus {
     /* Struct */
 
     /** MessageBox stores the inbox and outbox mapping */
-	struct MessageBox {
+    struct MessageBox {
 
         /** Maps messageHash to the MessageStatus. */
-		mapping(bytes32 /* messageHash */ => MessageStatus) outbox;
+        mapping(bytes32 /* messageHash */ => MessageStatus) outbox;
 
         /** Maps messageHash to the MessageStatus. */
-		mapping(bytes32 /* messageHash */ => MessageStatus) inbox;
-	}
+        mapping(bytes32 /* messageHash */ => MessageStatus) inbox;
+    }
 
     /** Message */
-	struct Message {
+    struct Message {
 
         /**
          * intent hash, this can be staking intent hash, redemption intent
          * hash, gateway linking hash
          */
-		bytes32 intentHash;
+        bytes32 intentHash;
 
         /** nonce of the sender */
-		uint256 nonce;
+        uint256 nonce;
 
         /** gas price that sender will pay for reward*/
-		uint256 gasPrice;
+        uint256 gasPrice;
 
         /** gas limit that sender will pay */
-		uint256 gasLimit;
+        uint256 gasLimit;
 
         /** sender address */
-		address sender;
+        address sender;
 
         /** hash lock provided by the facilitator */
-		bytes32 hashLock;
+        bytes32 hashLock;
 
         /**
          *the amount of the gas consumed, this is used for reward
          * calculation
          */
-		uint256 gasConsumed;
-	}
+        uint256 gasConsumed;
+    }
 
     /* constants */
 
@@ -110,16 +110,16 @@ library MessageBus {
      * @return messageHash_ Message hash
      */
     function declareMessage(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _signature
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _signature
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // Get the message hash
-		messageHash_ = messageDigest(
+        messageHash_ = messageDigest(
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
@@ -135,15 +135,15 @@ library MessageBus {
         );
 
         // Verify the signature
-		require(
+        require(
             verifySignature(messageHash_, _signature, _message.sender),
             "Invalid signature"
         );
 
         // Update the message status to `Declared` in outbox for the given
         // message hash
-		_messageBox.outbox[messageHash_] = MessageStatus.Declared;
-	}
+        _messageBox.outbox[messageHash_] = MessageStatus.Declared;
+    }
 
     /**
      * @notice Confirm a new message that is declared in outbox on the source
@@ -161,19 +161,19 @@ library MessageBus {
      *
      * @return messageHash_ Message hash
      */
-	function confirmMessage(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _rlpEncodedParentNodes,
-		uint8 _messageBoxOffset,
-		bytes32 _storageRoot
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function confirmMessage(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _rlpEncodedParentNodes,
+        uint8 _messageBoxOffset,
+        bytes32 _storageRoot
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // Get the message hash
-		messageHash_ = messageDigest(
+        messageHash_ = messageDigest(
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
@@ -189,26 +189,26 @@ library MessageBus {
         );
 
         // get the storage path for proof
-		bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(
+        bytes memory path = ProofLib.bytes32ToBytes(
+            ProofLib.storageVariablePath(
                 _messageBoxOffset + OUTBOX_OFFSET,
                 messageHash_
             )
         );
 
         // Perform the merkle proof
-		require(
+        require(
             MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(MessageStatus.Declared)),
-				path,
-				_rlpEncodedParentNodes,
-				_storageRoot),
+                keccak256(abi.encodePacked(MessageStatus.Declared)),
+                path,
+                _rlpEncodedParentNodes,
+                _storageRoot),
             "Merkle proof verification failed"
-		);
+        );
 
         // Update the message box inbox status to `Declared`.
-		_messageBox.inbox[messageHash_] = MessageStatus.Declared;
-	}
+        _messageBox.inbox[messageHash_] = MessageStatus.Declared;
+    }
 
     /**
      * @notice Update the status for the outbox for a given message hash to
@@ -222,23 +222,23 @@ library MessageBus {
 	 *
      * @return messageHash_ Message hash
      */
-	function progressOutbox(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes32 _unlockSecret
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function progressOutbox(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes32 _unlockSecret
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // verify the unlock secret
-		require(
+        require(
             _message.hashLock == keccak256(abi.encode(_unlockSecret)),
             "Invalid unlock secret"
         );
 
         // Get the message hash
-		messageHash_ = messageDigest(
+        messageHash_ = messageDigest(
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
@@ -247,14 +247,14 @@ library MessageBus {
         );
 
         // Verify the current message status is `Declared`
-		require(
+        require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared,
             "Message status must be Declared"
         );
 
         // Update the message status of outbox to `Progressed`
-		_messageBox.outbox[messageHash_] = MessageStatus.Progressed;
-	}
+        _messageBox.outbox[messageHash_] = MessageStatus.Progressed;
+    }
 
     /**
      * @notice Update the status for the outbox for a given message hash to
@@ -277,21 +277,21 @@ library MessageBus {
 	 *
      * @return messageHash_ Message hash
      */
-	function progressOutboxWithProof(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _rlpEncodedParentNodes,
-		uint8 _messageBoxOffset,
-		bytes32 _storageRoot,
-		MessageStatus _messageStatus
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function progressOutboxWithProof(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _rlpEncodedParentNodes,
+        uint8 _messageBoxOffset,
+        bytes32 _storageRoot,
+        MessageStatus _messageStatus
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // the message status for the message hash in the inbox must be either
         // `Declared` or `Progressed`
-		require(
+        require(
             _messageStatus == MessageStatus.Declared ||
             _messageStatus == MessageStatus.Progressed,
             "Message status must be Declared or Progressed"
@@ -311,31 +311,31 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
             _messageBox.outbox[messageHash_] ==
-                MessageStatus.DeclaredRevocation ,
+            MessageStatus.DeclaredRevocation ,
             "Message status must be Declared"
         );
 
         // Get the path
         bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(
+            ProofLib.storageVariablePath(
                 _messageBoxOffset + INBOX_OFFSET,
                 messageHash_
             )
         );
 
         // Perform the merkle proof
-		require(
+        require(
             MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(_messageStatus)),
-				path,
-				_rlpEncodedParentNodes,
-				_storageRoot),
+                keccak256(abi.encodePacked(_messageStatus)),
+                path,
+                _rlpEncodedParentNodes,
+                _storageRoot),
             "Merkle proof verification failed"
-		);
+        );
 
         // Update the status to `Progressed`
-		_messageBox.outbox[messageHash_] = MessageStatus.Progressed;
-	}
+        _messageBox.outbox[messageHash_] = MessageStatus.Progressed;
+    }
 
     /**
      * @notice Update the status for the inbox for a given message hash to
@@ -349,23 +349,23 @@ library MessageBus {
      *
      * @return messageHash_ Message hash
      */
-	function progressInbox(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes32 _unlockSecret
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function progressInbox(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes32 _unlockSecret
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // verify the unlock secret
-		require(
+        require(
             _message.hashLock == keccak256(abi.encode(_unlockSecret)),
             "Invalid unlock secret"
         );
 
         // Get the message hash
-		messageHash_ = messageDigest(
+        messageHash_ = messageDigest(
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
@@ -374,14 +374,14 @@ library MessageBus {
         );
 
         // Verify the current message status is `Declared`
-		require(
+        require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
             "Message status must be Declared"
         );
 
         // Update the message status of outbox to `Progressed`
-		_messageBox.inbox[messageHash_] = MessageStatus.Progressed;
-	}
+        _messageBox.inbox[messageHash_] = MessageStatus.Progressed;
+    }
 
     /**
      * @notice Update the status for the inbox for a given message hash to
@@ -405,21 +405,21 @@ library MessageBus {
      * @return messageHash_ Message hash
      */
 
-	function progressInboxWithProof(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _rlpEncodedParentNodes,
-		uint8 _messageBoxOffset,
-		bytes32 _storageRoot,
-		MessageStatus _messageStatus
-	)
-	external
-	returns (bytes32 messageHash_)
-	{
+    function progressInboxWithProof(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _rlpEncodedParentNodes,
+        uint8 _messageBoxOffset,
+        bytes32 _storageRoot,
+        MessageStatus _messageStatus
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // the message status for the message hash in the outbox must be either
         // `Declared` or `Progressed`
-		require(
+        require(
             _messageStatus == MessageStatus.Declared ||
             _messageStatus == MessageStatus.Progressed,
             "Message status must be Declared or Progressed"
@@ -442,26 +442,26 @@ library MessageBus {
 
         // @dev the out box is at location 0 of the MessageBox struct, so it
         // is same as _messageBoxOffset
-		bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(
+        bytes memory path = ProofLib.bytes32ToBytes(
+            ProofLib.storageVariablePath(
                 _messageBoxOffset + OUTBOX_OFFSET,
                 messageHash_
             )
         );
 
         // Perform the merkle proof
-		require(
+        require(
             MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(_messageStatus)),
-				path,
-				_rlpEncodedParentNodes,
-				_storageRoot),
+                keccak256(abi.encodePacked(_messageStatus)),
+                path,
+                _rlpEncodedParentNodes,
+                _storageRoot),
             "Merkle proof verification failed"
-		);
+        );
 
         // Update the status to `Progressed`
-		_messageBox.inbox[messageHash_] = MessageStatus.Progressed;
-	}
+        _messageBox.inbox[messageHash_] = MessageStatus.Progressed;
+    }
 
     /**
      * @notice Verify the signature is signed by the signer address.
@@ -472,34 +472,34 @@ library MessageBus {
      *
      * @return `true` if the signature is signed by the signer
      */
-	function verifySignature(
+    function verifySignature(
         bytes32 _message,
         bytes _signature,
         address _signer
     )
-	    private
-	    pure
-	    returns (bool /*success*/)
-	{
-		bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        private
+        pure
+        returns (bool /*success*/)
+    {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
 
         _message = keccak256(abi.encodePacked(prefix, _message));
 
-		bytes32 r;
-		bytes32 s;
-		uint8 v;
-		assembly {
-			r := mload(add(_signature, 32))
-			s := mload(add(_signature, 64))
-			v := byte(0, mload(add(_signature, 96)))
-		}
-		// Version of signature should be 27 or 28, but 0 and 1 are also
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 32))
+            s := mload(add(_signature, 64))
+            v := byte(0, mload(add(_signature, 96)))
+        }
+        // Version of signature should be 27 or 28, but 0 and 1 are also
         // possible versions
-		if (v < 27) {
-			v += 27;
-		}
-		return (ecrecover(_message, v, r, s) == _signer);
-	}
+        if (v < 27) {
+            v += 27;
+        }
+        return (ecrecover(_message, v, r, s) == _signer);
+    }
 
     /**
      * @notice Generate message hash from the input params
@@ -511,27 +511,27 @@ library MessageBus {
      *
      * @return Message hash
      */
-	function messageDigest(
-		bytes32 _messageTypeHash,
-		bytes32 _intentHash,
-		uint256 _nonce,
-		uint256 _gasPrice,
+    function messageDigest(
+        bytes32 _messageTypeHash,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
         uint256 _gasLimit
-	)
-	    internal
-	    pure
-	    returns (bytes32 /* messageHash */)
-	{
-		return keccak256(
-			abi.encode(
-				_messageTypeHash,
-				_intentHash,
-				_nonce,
-				_gasPrice,
+    )
+        internal
+        pure
+        returns (bytes32 /* messageHash */)
+    {
+        return keccak256(
+            abi.encode(
+                _messageTypeHash,
+                _intentHash,
+                _nonce,
+                _gasPrice,
                 _gasLimit
-			)
-		);
-	}
+            )
+        );
+    }
 
     /**
      * @notice Declare a new revocation message. This will update the outbox
@@ -547,15 +547,15 @@ library MessageBus {
      *
      * @return messageHash_ Message hash
      */
-	function declareRevocationMessage (
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _signature
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function declareRevocationMessage (
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _signature
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
 
         // Get the message hash
         messageHash_ = messageDigest(
@@ -578,9 +578,9 @@ library MessageBus {
             _message.nonce+1
         );
 
-		// verify if revocation is signed by the same address that declared
+        // verify if revocation is signed by the same address that declared
         // the message
-		require(
+        require(
             verifySignature(
                 revocationMessageHash,
                 _signature,
@@ -589,8 +589,8 @@ library MessageBus {
         );
 
         // change the status of outbox
-		_messageBox.outbox[messageHash_] = MessageStatus.DeclaredRevocation;
-	}
+        _messageBox.outbox[messageHash_] = MessageStatus.DeclaredRevocation;
+    }
 
     /**
      * @notice Confirm a revocation message that is declared in the outbox of
@@ -610,17 +610,17 @@ library MessageBus {
      *
      * @return messageHash_ Message hash
      */
-	function confirmRevocation(
-		MessageBox storage _messageBox,
-		bytes32 _messageTypeHash,
-		Message storage _message,
-		bytes _rlpEncodedParentNodes,
-		uint8 _messageBoxOffset,
-		bytes32 _storageRoot
-	)
-	    external
-	    returns (bytes32 messageHash_)
-	{
+    function confirmRevocation(
+        MessageBox storage _messageBox,
+        bytes32 _messageTypeHash,
+        Message storage _message,
+        bytes _rlpEncodedParentNodes,
+        uint8 _messageBoxOffset,
+        bytes32 _storageRoot
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
         // Get the message hash
         messageHash_ = messageDigest(
             _messageTypeHash,
@@ -632,14 +632,14 @@ library MessageBus {
 
         // Check the existing message status for the message hash in message
         // inbox is `Declared`
-		require(
+        require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
             "Message status must be Declared"
         );
 
         // Get the path
         bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(
+            ProofLib.storageVariablePath(
                 _messageBoxOffset + OUTBOX_OFFSET,
                 messageHash_
             )
@@ -647,16 +647,16 @@ library MessageBus {
 
         // Perform the merkle proof
         require(MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
-				path,
-				_rlpEncodedParentNodes,
-				_storageRoot),
+                keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
+                path,
+                _rlpEncodedParentNodes,
+                _storageRoot),
             "Merkle proof verification failed"
-		);
+        );
 
         // Update the message box inbox status to `DeclaredRevocation`.
-		_messageBox.inbox[messageHash_] = MessageStatus.DeclaredRevocation;
-	}
+        _messageBox.inbox[messageHash_] = MessageStatus.DeclaredRevocation;
+    }
 
     /**
      * @notice Update the status for the outbox for a given message hash to
@@ -679,18 +679,18 @@ library MessageBus {
 	 *
      * @return messageHash_ Message hash
      */
-	function progressOutboxRevocation(
-		MessageBox storage _messageBox,
-		Message storage _message,
-		bytes32 _messageTypeHash,
-		uint8 _messageBoxOffset,
-		bytes _rlpEncodedParentNodes,
-		bytes32 _storageRoot,
+    function progressOutboxRevocation(
+        MessageBox storage _messageBox,
+        Message storage _message,
+        bytes32 _messageTypeHash,
+        uint8 _messageBoxOffset,
+        bytes _rlpEncodedParentNodes,
+        bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-	    external
-	    returns (bytes32 messageHash_)
-	{
+        external
+        returns (bytes32 messageHash_)
+    {
 
         // the message status for the message hash in the inbox must be either
         // `DeclaredRevocation` or `Revoked`
@@ -710,7 +710,7 @@ library MessageBus {
         );
 
         // The existing message status must be `DeclaredRevocation`
-		require(
+        require(
             _messageBox.outbox[messageHash_] ==
             MessageStatus.DeclaredRevocation,
             "Message status must be DeclaredRevocation"
@@ -719,25 +719,25 @@ library MessageBus {
         // @dev the out box is at location 1 of the MessageBox struct, so we
         // add one to get the path
         bytes memory path = ProofLib.bytes32ToBytes(
-			ProofLib.storageVariablePath(
+            ProofLib.storageVariablePath(
                 _messageBoxOffset + INBOX_OFFSET,
                 messageHash_
             )
         );
 
         // Perform the merkle proof
-		require(
+        require(
             MerklePatriciaProof.verify(
-				keccak256(abi.encodePacked(_messageStatus)),
-				path,
-				_rlpEncodedParentNodes,
-				_storageRoot),
+                keccak256(abi.encodePacked(_messageStatus)),
+                path,
+                _rlpEncodedParentNodes,
+                _storageRoot),
             "Merkle proof verification failed"
-		);
+        );
 
         // Update the status to `Revoked`
-		_messageBox.outbox[messageHash_] = MessageStatus.Revoked;
-	}
+        _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
+    }
 
     /**
      * @notice Update the status for the inbox for a given message hash to
@@ -769,8 +769,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
 
         // the message status for the message hash in the outbox must be either
@@ -912,21 +912,21 @@ library MessageBus {
      *
      * @return Revocation message hash
      */
-	function revocationMessageDigest(
-		bytes32 _messageHash,
-		uint256 _nonce
-	)
-	    internal
-	    pure
-	    returns (bytes32 /* revocationMessageHash */)
-	{
-		return keccak256(
-			abi.encode(
+    function revocationMessageDigest(
+        bytes32 _messageHash,
+        uint256 _nonce
+    )
+        internal
+        pure
+        returns (bytes32 /* revocationMessageHash */)
+    {
+        return keccak256(
+            abi.encode(
                 _messageHash,
-				_nonce
-			)
-		);
-	}
+                _nonce
+            )
+        );
+    }
 
     /**
      * @notice Calculate the fee amount
@@ -937,15 +937,15 @@ library MessageBus {
      *
      * @return fee amount
      */
-	function feeAmount(
-		Message storage _message,
-		uint256 _gasUsed,
-		uint256 _estimatedAdditionalGasUsage
+    function feeAmount(
+        Message storage _message,
+        uint256 _gasUsed,
+        uint256 _estimatedAdditionalGasUsage
     )
-	    external
-	    returns (uint256 fee_)
-	{
-		_message.gasConsumed = _gasUsed.sub(
+        external
+        returns (uint256 fee_)
+    {
+        _message.gasConsumed = _gasUsed.sub(
             gasleft()
         ).add(
             _estimatedAdditionalGasUsage
@@ -953,12 +953,12 @@ library MessageBus {
             _message.gasConsumed
         );
 
-		if (_message.gasConsumed < _message.gasLimit) {
-			fee_ = _message.gasConsumed.mul(_message.gasPrice);
-		} else {
-			fee_ = _message.gasLimit.mul(_message.gasPrice);
-		}
-	}
+        if (_message.gasConsumed < _message.gasLimit) {
+            fee_ = _message.gasConsumed.mul(_message.gasPrice);
+        } else {
+            fee_ = _message.gasLimit.mul(_message.gasPrice);
+        }
+    }
 
 }
 

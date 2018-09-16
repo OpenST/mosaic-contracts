@@ -77,39 +77,39 @@ import "./ProtocolVersioned.sol";
  */
 contract CoGateway is Hasher {
 
-	using SafeMath for uint256;
+    using SafeMath for uint256;
 
-	/* Events */
+    /* Events */
 
     /** Emitted whenever a staking intent is confirmed. */
-	event StakingIntentConfirmed(
-		bytes32 indexed _messageHash,
-		address _staker,
-		uint256 _stakerNonce,
-		address _beneficiary,
-		uint256 _amount,
-		uint256 _blockHeight,
-		bytes32 _hashLock
-	);
+    event StakingIntentConfirmed(
+        bytes32 indexed _messageHash,
+        address _staker,
+        uint256 _stakerNonce,
+        address _beneficiary,
+        uint256 _amount,
+        uint256 _blockHeight,
+        bytes32 _hashLock
+    );
 
     /** Emitted whenever a utility tokens are minted. */
-	event ProgressedMint(
-		bytes32 indexed _messageHash,
+    event ProgressedMint(
+        bytes32 indexed _messageHash,
         address _staker,
-		address _beneficiary,
+        address _beneficiary,
         uint256 _stakeAmount,
         uint256 _mintedAmount,
-		uint256 _rewardAmount,
+        uint256 _rewardAmount,
         bytes32 _unlockSecret
-	);
+    );
 
     /** Emitted whenever revert staking intent is confirmed. */
-	event RevertStakingIntentConfirmed(
-		bytes32 indexed _messageHash,
-		address _staker,
-		uint256 _stakerNonce,
-		uint256 _amount
-	);
+    event RevertStakingIntentConfirmed(
+        bytes32 indexed _messageHash,
+        address _staker,
+        uint256 _stakerNonce,
+        uint256 _amount
+    );
 
     /** Emitted whenever a staking intent is reverted. */
     event RevertStakeProgressed(
@@ -120,102 +120,102 @@ contract CoGateway is Hasher {
     );
 
     /** Emitted whenever redemption is initiated. */
-	event RedemptionIntentDeclared(
-		bytes32 indexed _messageHash,
+    event RedemptionIntentDeclared(
+        bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
         address _beneficiary,
         uint256 _amount
-	);
+    );
 
     /** Emitted whenever redemption is completed. */
-	event ProgressedRedemption(
-		bytes32 indexed _messageHash,
+    event ProgressedRedemption(
+        bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
-		uint256 _amount,
+        uint256 _amount,
         bytes32 _unlockSecret
-	);
+    );
 
     /** Emitted whenever revert redemption is initiated. */
-	event RevertRedemptionDeclared(
-		bytes32 indexed _messageHash,
-		address _redeemer,
-		uint256 _redeemerNonce,
-		uint256 _amount
-	);
+    event RevertRedemptionDeclared(
+        bytes32 indexed _messageHash,
+        address _redeemer,
+        uint256 _redeemerNonce,
+        uint256 _amount
+    );
 
     /** Emitted whenever revert redemption is complete. */
-	event RevertedRedemption(
+    event RevertedRedemption(
         bytes32 indexed _messageHash,
-		address _redeemer,
+        address _redeemer,
         uint256 _redeemerNonce,
-		uint256 _amount
-	);
+        uint256 _amount
+    );
 
     /** Emitted whenever a gateway and coGateway linking is confirmed. */
-	event GatewayLinkConfirmed(
-		bytes32 indexed _messageHash,
-		address _gateway,
-		address _cogateway,
-		address _valueToken,
+    event GatewayLinkConfirmed(
+        bytes32 indexed _messageHash,
+        address _gateway,
+        address _cogateway,
+        address _valueToken,
         address _utilityToken
-	);
+    );
 
     /** Emitted whenever a gateway and coGateway linking is complete. */
-	event GatewayLinkProgressed(
-		bytes32 indexed _messageHash,
-		address _gateway,
-		address _cogateway,
+    event GatewayLinkProgressed(
+        bytes32 indexed _messageHash,
+        address _gateway,
+        address _cogateway,
         address _valueToken,
         address _utilityToken,
         bytes32 _unlockSecret
-	);
+    );
 
     /** Emitted whenever a Gateway contract is proven.
      *	wasAlreadyProved parameter differentiates between first call and replay
      *  call of proveGateway method for same block height
      */
-	event GatewayProven(
+    event GatewayProven(
         address _gateway,
-		uint256 _blockHeight,
-		bytes32 _storageRoot,
-		bool _wasAlreadyProved
-	);
+        uint256 _blockHeight,
+        bytes32 _storageRoot,
+        bool _wasAlreadyProved
+    );
 
-	/* Struct */
+    /* Struct */
 
     /**
 	 * Redeem stores the redemption information about the redeem amount,
 	 * beneficiary address, message data and facilitator address.
 	 */
-	struct Redeem {
+    struct Redeem {
 
         /** Amount that will be redeemed. */
-		uint256 amount;
+        uint256 amount;
 
         /**
 		 * Address where the value tokens will be unstaked in the
 		 * origin chain.
 		 */
-		address beneficiary;
+        address beneficiary;
 
         /** Address of the facilitator that initiates the staking process. */
-		address facilitator;
-	}
+        address facilitator;
+    }
 
     /**
 	 * Mint stores the minting information
 	 * like mint amount, beneficiary address, message data.
 	 */
-	struct Mint {
+    struct Mint {
 
         /** Amount that will be minted. */
-		uint256 amount;
+        uint256 amount;
 
         /** Address for which the utility tokens will be minted */
-		address beneficiary;
-	}
+        address beneficiary;
+    }
 
     /**
 	 * ActiveProcess stores the information related to in progress process
@@ -291,12 +291,12 @@ contract CoGateway is Hasher {
     mapping(address /*address*/ => ActiveProcess) activeProcess;
 
     /** Maps blockHeight to storageRoot*/
-	mapping(uint256 /* block height */ => bytes32) private storageRoots;
+    mapping(uint256 /* block height */ => bytes32) private storageRoots;
 
     /* private variables */
 
     /* path to prove merkle account proof for Gateway contract */
-	bytes private encodedGatewayPath;
+    bytes private encodedGatewayPath;
 
     /* modifiers */
 
@@ -334,21 +334,21 @@ contract CoGateway is Hasher {
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
      */
-	constructor(
-		address _valueToken,
-		address _utilityToken,
-		CoreInterface _core,
-		uint256 _bounty,
-		address _organisation,
-		address _gateway
-	)
-	public
-	{
-		require(
+    constructor(
+        address _valueToken,
+        address _utilityToken,
+        CoreInterface _core,
+        uint256 _bounty,
+        address _organisation,
+        address _gateway
+    )
+        public
+    {
+        require(
             _valueToken != address(0),
             "Value token address must not be zero"
         );
-		require(
+        require(
             _utilityToken != address(0),
             "Utility token address must not be zero"
         );
@@ -360,29 +360,29 @@ contract CoGateway is Hasher {
             _organisation != address(0),
             "Organisation address must not be zero"
         );
-		require(
+        require(
             _gateway != address(0),
             "Gateway address must not be zero"
         );
 
         //gateway and cogateway is not linked yet so it is initialized as false
-		linked = false;
+        linked = false;
 
         // gateway is active
-		deactivated = false;
+        deactivated = false;
 
-		valueToken = _valueToken;
-		utilityToken = _utilityToken;
-		gateway = _gateway;
-		core = _core;
-		bounty = _bounty;
-		organisation = _organisation;
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        gateway = _gateway;
+        core = _core;
+        bounty = _bounty;
+        organisation = _organisation;
 
         // update the encodedGatewayPath
-		encodedGatewayPath = ProofLib.bytes32ToBytes(
+        encodedGatewayPath = ProofLib.bytes32ToBytes(
             keccak256(abi.encodePacked(_gateway))
         );
-	}
+    }
 
     /* External functions */
 
@@ -405,17 +405,17 @@ contract CoGateway is Hasher {
      * @return messageHash_ Message hash
      */
     function confirmGatewayLinkIntent(
-		bytes32 _intentHash,
-		uint256 _nonce,
-		address _sender,
-		bytes32 _hashLock,
-		uint256 _blockHeight,
-		bytes memory _rlpParentNodes
-	)
-	    public // TODO: check to change it to external, getting stack to deep.
+        bytes32 _intentHash,
+        uint256 _nonce,
+        address _sender,
+        bytes32 _hashLock,
+        uint256 _blockHeight,
+        bytes memory _rlpParentNodes
+    )
+        public // TODO: check to change it to external, getting stack to deep.
         returns(bytes32 messageHash_)
-	{
-		require(
+    {
+        require(
             linked == false,
             "CoGateway contract must not be already linked"
         );
@@ -423,7 +423,7 @@ contract CoGateway is Hasher {
             deactivated == false,
             "Gateway contract must not be deactivated"
         );
-		require(
+        require(
             gatewayLinkHash == bytes32(0),
             "Linking is already initiated"
         );
@@ -431,7 +431,7 @@ contract CoGateway is Hasher {
             _sender != address(0),
             "Sender must be not be zero"
         );
-		require(
+        require(
             _nonce == _getNonce(_sender),
             "Sender nonce must be in sync"
         );
@@ -452,24 +452,24 @@ contract CoGateway is Hasher {
 
         // TODO: need to add check for MessageBus.
         //       (This is already done in other branch)
-		bytes32 intentHash = hashLinkGateway(
-			gateway,
-			address(this),
-			bounty,
-			EIP20Interface(utilityToken).name(),
-			EIP20Interface(utilityToken).symbol(),
-			EIP20Interface(utilityToken).decimals(),
-			_nonce,
-			valueToken);
+        bytes32 intentHash = hashLinkGateway(
+            gateway,
+            address(this),
+            bounty,
+            EIP20Interface(utilityToken).name(),
+            EIP20Interface(utilityToken).symbol(),
+            EIP20Interface(utilityToken).decimals(),
+            _nonce,
+            valueToken);
 
         // Ensure that the _intentHash matches the calculated intentHash
-		require(
+        require(
             intentHash == _intentHash,
             "Incorrect intent hash"
         );
 
         // Get the message hash
-		messageHash_ = MessageBus.messageDigest(
+        messageHash_ = MessageBus.messageDigest(
             GATEWAY_LINK_TYPEHASH,
             intentHash,
             _nonce,
@@ -495,11 +495,11 @@ contract CoGateway is Hasher {
         );
 
         // Declare message in inbox
-		MessageBus.confirmMessage(
-			messageBox,
-			GATEWAY_LINK_TYPEHASH,
+        MessageBus.confirmMessage(
+            messageBox,
+            GATEWAY_LINK_TYPEHASH,
             messages[messageHash_],
-			_rlpParentNodes,
+            _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot
         );
@@ -507,14 +507,14 @@ contract CoGateway is Hasher {
         gatewayLinkHash = messageHash_;
 
         // Emit GatewayLinkConfirmed event
-		emit GatewayLinkConfirmed(
-			messageHash_,
-			gateway,
-			address(this),
-			valueToken,
+        emit GatewayLinkConfirmed(
+            messageHash_,
+            gateway,
+            address(this),
+            valueToken,
             utilityToken
-		);
-	}
+        );
+    }
 
     /**
      * @notice Complete the Gateway and CoGateway contracts linking. This will
@@ -529,27 +529,27 @@ contract CoGateway is Hasher {
      * @return `true` if gateway linking was successfully progressed
      */
     function progressGatewayLink(
-		bytes32 _messageHash,
-		bytes32 _unlockSecret
-	)
-	    external
-	    returns (bool)
-	{
-		require(
+        bytes32 _messageHash,
+        bytes32 _unlockSecret
+    )
+        external
+        returns (bool)
+    {
+        require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-		require(
+        require(
             _unlockSecret != bytes32(0),
             "Unlock secret must not be zero"
         );
-		require(
+        require(
             gatewayLinkHash == _messageHash,
             "Invalid message hash"
         );
 
         // Progress inbox
-		MessageBus.progressInbox(
+        MessageBus.progressInbox(
             messageBox,
             GATEWAY_LINK_TYPEHASH,
             messages[_messageHash],
@@ -557,20 +557,20 @@ contract CoGateway is Hasher {
         );
 
         // Update to specify the Gateway/CoGateway is linked
-		linked = true;
+        linked = true;
 
         // Emit GatewayLinkProgressed event
-		emit GatewayLinkProgressed(
-			_messageHash,
-			gateway,
-			address(this),
+        emit GatewayLinkProgressed(
+            _messageHash,
+            gateway,
+            address(this),
             valueToken,
-			utilityToken,
+            utilityToken,
             _unlockSecret
-		);
+        );
 
-		return true;
-	}
+        return true;
+    }
 
     /**
 	 * @notice Confirms the initiation of the stake process.
@@ -590,36 +590,36 @@ contract CoGateway is Hasher {
 	 *
 	 * @return messageHash_ which is unique for each request.
 	 */
-	function confirmStakingIntent(
-		address _staker,
-		uint256 _stakerNonce,
-		address _beneficiary,
-		uint256 _amount,
-		uint256 _gasPrice,
-		uint256 _gasLimit,
-		bytes32 _hashLock,
+    function confirmStakingIntent(
+        address _staker,
+        uint256 _stakerNonce,
+        address _beneficiary,
+        uint256 _amount,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _hashLock,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
-	)
-	    public
-	    returns (bytes32 messageHash_)
-	{
+    )
+        public
+        returns (bytes32 messageHash_)
+    {
         // Get the initial gas amount
-		uint256 initialGas = gasleft();
+        uint256 initialGas = gasleft();
 
-		require(
+        require(
             _staker != address(0),
             "Staker address must not be zero"
         );
-		require(
+        require(
             _beneficiary != address(0),
             "Beneficiary address must not be zero"
         );
-		require(
+        require(
             _amount != 0,
             "Mint amount must not be zero"
         );
-		require(
+        require(
             _gasPrice != 0,
             "Gas price must not be zero"
         );
@@ -627,17 +627,17 @@ contract CoGateway is Hasher {
             _gasLimit != 0,
             "Gas limit must not be zero"
         );
-		require(
+        require(
             _hashLock != bytes32(0),
             "Hash lock must not be zero"
         );
-		require(
+        require(
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero"
         );
 
         // Get the staking intent hash
-		bytes32 intentHash = hashStakingIntent(
+        bytes32 intentHash = hashStakingIntent(
             _amount,
             _beneficiary,
             _staker,
@@ -648,7 +648,7 @@ contract CoGateway is Hasher {
         );
 
         // Get the messageHash
-		messageHash_ = MessageBus.messageDigest(
+        messageHash_ = MessageBus.messageDigest(
             STAKE_TYPEHASH,
             intentHash,
             _stakerNonce,
@@ -657,7 +657,7 @@ contract CoGateway is Hasher {
         );
 
         // Get previousMessageHash
-		bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = initiateNewProcess(
             _staker,
             _stakerNonce,
             messageHash_,
@@ -665,10 +665,10 @@ contract CoGateway is Hasher {
         );
 
         // Delete the previous progressed / revoked mint data
-		delete mints[previousMessageHash];
+        delete mints[previousMessageHash];
 
         // Create new mint object
-		mints[messageHash_] = Mint({
+        mints[messageHash_] = Mint({
             amount : _amount,
             beneficiary : _beneficiary
             });
@@ -685,26 +685,26 @@ contract CoGateway is Hasher {
 
         // execute the confirm staking intent. This is done in separate
         // function to avoid stack too deep error
-		executeConfirmStakingIntent(
+        executeConfirmStakingIntent(
             messages[messageHash_],
             _blockHeight,
             _rlpParentNodes
         );
 
         // Emit StakingIntentConfirmed event
-		emit StakingIntentConfirmed(
-			messageHash_,
-			_staker,
-			_stakerNonce,
-			_beneficiary,
-			_amount,
-			_blockHeight,
-			_hashLock
-		);
+        emit StakingIntentConfirmed(
+            messageHash_,
+            _staker,
+            _stakerNonce,
+            _beneficiary,
+            _amount,
+            _blockHeight,
+            _hashLock
+        );
 
         // Update the gas consumed for this function.
         messages[messageHash_].gasConsumed = initialGas.sub(gasleft());
-	}
+    }
 
     /**
 	 * @notice Complete minting process by minting the utility tokens
@@ -723,36 +723,36 @@ contract CoGateway is Hasher {
  	 *                       from the total (stake) amount.
  	 * @return rewardAmount_ Reward amount that is transferred to facilitator
 	 */
-	function progressMinting(
-		bytes32 _messageHash,
-		bytes32 _unlockSecret
-	)
-	    external
-	    returns (
+    function progressMinting(
+        bytes32 _messageHash,
+        bytes32 _unlockSecret
+    )
+        external
+        returns (
             address staker_,
             address beneficiary_,
-		    uint256 stakeAmount_,
-		    uint256 mintedAmount_,
-		    uint256 rewardAmount_
-	    )
-	{
+            uint256 stakeAmount_,
+            uint256 mintedAmount_,
+            uint256 rewardAmount_
+        )
+    {
         // Get the initial gas amount
-		uint256 initialGas = gasleft();
+        uint256 initialGas = gasleft();
 
-		require(
+        require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-		require(
+        require(
             _unlockSecret != bytes32(0),
             "Unlock secret must not be zero"
         );
 
-		Mint storage mint = mints[_messageHash];
-		MessageBus.Message storage message = messages[_messageHash];
+        Mint storage mint = mints[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
 
         // Progress inbox
-		MessageBus.progressInbox(
+        MessageBus.progressInbox(
             messageBox,
             STAKE_TYPEHASH,
             message,
@@ -763,31 +763,31 @@ contract CoGateway is Hasher {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-		rewardAmount_ = MessageBus.feeAmount(
+        rewardAmount_ = MessageBus.feeAmount(
             message,
             initialGas,
             50000  //21000 * 2 for transactions + approx buffer
         );
 
-		mintedAmount_ = stakeAmount_.sub(rewardAmount_);
+        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
-		//Mint token after subtracting reward amount
+        //Mint token after subtracting reward amount
         UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
 
-		//reward beneficiary with the reward amount
+        //reward beneficiary with the reward amount
         UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
 
         // Emit ProgressedMint event
-		emit ProgressedMint(
-			_messageHash,
+        emit ProgressedMint(
+            _messageHash,
             message.sender,
             mint.beneficiary,
             stakeAmount_,
             mintedAmount_,
-			rewardAmount_,
+            rewardAmount_,
             _unlockSecret
-		);
-	}
+        );
+    }
 
     /**
 	 * @notice Completes the minting process by providing the merkle proof
@@ -812,72 +812,72 @@ contract CoGateway is Hasher {
  	 *                        from the total amount.
  	 * @return rewardAmount_ Reward amount that is transferred to facilitator
 	 */
-	function progressMintingWithProof(
-		bytes32 _messageHash,
-		bytes _rlpEncodedParentNodes,
-		uint256 _blockHeight,
-		uint256 _messageStatus
-	)
-	    public
-	    returns (
-		    uint256 stakeAmount_,
-		    uint256 mintedAmount_,
-		    uint256 rewardAmount_
-	    )
-	{
+    function progressMintingWithProof(
+        bytes32 _messageHash,
+        bytes _rlpEncodedParentNodes,
+        uint256 _blockHeight,
+        uint256 _messageStatus
+    )
+        public
+        returns (
+            uint256 stakeAmount_,
+            uint256 mintedAmount_,
+            uint256 rewardAmount_
+        )
+    {
         // Get the inital gas
-		uint256 initialGas = gasleft();
+        uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-		require(
+        require(
             _rlpEncodedParentNodes.length > 0,
             "RLP encoded parent nodes must not be zero"
         );
 
         // Get the storage root for the given block height
-		bytes32 storageRoot = storageRoots[_blockHeight];
-		require(
+        bytes32 storageRoot = storageRoots[_blockHeight];
+        require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-		Mint storage mint = mints[_messageHash];
-		MessageBus.Message storage message = messages[_messageHash];
+        Mint storage mint = mints[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
 
-		MessageBus.progressInboxWithProof(
+        MessageBus.progressInboxWithProof(
             messageBox,
-			STAKE_TYPEHASH,
+            STAKE_TYPEHASH,
             message,
-			_rlpEncodedParentNodes,
+            _rlpEncodedParentNodes,
             MESSAGE_BOX_OFFSET,
-			storageRoot,
-			MessageBus.MessageStatus(_messageStatus)
+            storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
         );
 
         stakeAmount_ = mint.amount;
 
-		//TODO: Remove the hardcoded 50000. Discuss and implement it properly
+        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
         //21000 * 2 for transactions + approx buffer
-		rewardAmount_ = MessageBus.feeAmount(
+        rewardAmount_ = MessageBus.feeAmount(
             message,
             initialGas,
             50000
         );
 
-		mintedAmount_ = stakeAmount_.sub(rewardAmount_);
+        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
-		//Mint token after subtracting reward amount
+        //Mint token after subtracting reward amount
         UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_);
 
-		//reward beneficiary with the reward amount
+        //reward beneficiary with the reward amount
         UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedMint event
-		emit ProgressedMint(
+        emit ProgressedMint(
             _messageHash,
             message.sender,
             mint.beneficiary,
@@ -886,7 +886,7 @@ contract CoGateway is Hasher {
             rewardAmount_,
             bytes32(0)
         );
-	}
+    }
 
     /**
 	 * @notice Declare staking revert intent
@@ -901,20 +901,20 @@ contract CoGateway is Hasher {
 	 * @return stakerNonce_ Staker nonce
 	 * @return amount_ Redeem amount
 	 */
-	function confirmRevertStakingIntent(
-		bytes32 _messageHash,
-		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes
-	)
-	    external
-	    returns (
+    function confirmRevertStakingIntent(
+        bytes32 _messageHash,
+        uint256 _blockHeight,
+        bytes _rlpEncodedParentNodes
+    )
+        external
+        returns (
             address staker_,
             uint256 stakerNonce_,
             uint256 amount_
         )
-	{
+    {
         // Get the initial gas value
-		uint256 initialGas = gasleft();
+        uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
@@ -932,7 +932,7 @@ contract CoGateway is Hasher {
         );
 
         // Get the storage root
-		bytes32 storageRoot = storageRoots[_blockHeight];
+        bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
@@ -955,16 +955,16 @@ contract CoGateway is Hasher {
         amount_ = mint.amount;
 
         // Emit RevertStakingIntentConfirmed event
-		emit RevertStakingIntentConfirmed(
-			_messageHash,
-			message.sender,
-			message.nonce,
+        emit RevertStakingIntentConfirmed(
+            _messageHash,
+            message.sender,
+            message.nonce,
             mint.amount
-		);
+        );
 
         // Update the gas consumed for this function.
-		message.gasConsumed = initialGas.sub(gasleft());
-	}
+        message.gasConsumed = initialGas.sub(gasleft());
+    }
 
     //TODO: Discuss this with team. We may not need this at all.
     /**
@@ -979,12 +979,12 @@ contract CoGateway is Hasher {
     function progressRevertStaking(
         bytes32 _messageHash
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakerNonce_,
+            uint256 amount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -1035,36 +1035,36 @@ contract CoGateway is Hasher {
 	 *
 	 * @return messageHash_ which is unique for each request.
 	 */
-	function redeem(
-		uint256 _amount,
-		address _beneficiary,
-		address _facilitator,
-		uint256 _gasPrice,
-		uint256 _gasLimit,
-		uint256 _nonce,
-		bytes32 _hashLock
-	)
-	    public
-	    payable
-	    isActive
-	    returns (bytes32 messageHash_)
-	{
-		require(
+    function redeem(
+        uint256 _amount,
+        address _beneficiary,
+        address _facilitator,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        uint256 _nonce,
+        bytes32 _hashLock
+    )
+        public
+        payable
+        isActive
+        returns (bytes32 messageHash_)
+    {
+        require(
             msg.value == bounty,
             "msg.value must match the bounty amount"
         );
-		require(
+        require(
             _amount > uint256(0),
             "Redeem amount must not be zero"
         );
 
         //TODO: This check will be removed so that tokens can be burnt.
         //      Discuss and verify all the cases
-		require(
+        require(
             _beneficiary != address(0),
             "Beneficiary address must not be zero"
         );
-		require(
+        require(
             _facilitator != address(0),
             "Facilitator address must not be zero"
         );
@@ -1078,14 +1078,14 @@ contract CoGateway is Hasher {
         );
 
         //TODO: Do we need this check ?
-		require(
+        require(
             _hashLock != bytes32(0),
             "HashLock must not be zero"
         );
 
         //TODO: include _gasLimit in redemption hash
         // Get the redemption intent hash
-		bytes32 intentHash = hashRedemptionIntent(
+        bytes32 intentHash = hashRedemptionIntent(
             _amount,
             _beneficiary,
             msg.sender,
@@ -1096,7 +1096,7 @@ contract CoGateway is Hasher {
         );
 
         // Get the messageHash
-		messageHash_ = MessageBus.messageDigest(
+        messageHash_ = MessageBus.messageDigest(
             REDEEM_TYPEHASH,
             intentHash,
             _nonce,
@@ -1105,7 +1105,7 @@ contract CoGateway is Hasher {
         );
 
         // Get previousMessageHash
-		bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = initiateNewProcess(
             msg.sender,
             _nonce,
             messageHash_,
@@ -1113,13 +1113,13 @@ contract CoGateway is Hasher {
         );
 
         // Delete the previous progressed/revoked redeem data
-		delete redeems[previousMessageHash];
+        delete redeems[previousMessageHash];
 
-		redeems[messageHash_] = Redeem({
-			amount : _amount,
-			beneficiary : _beneficiary,
+        redeems[messageHash_] = Redeem({
+            amount : _amount,
+            beneficiary : _beneficiary,
             facilitator : _facilitator
-			});
+            });
 
         // create message object
         messages[messageHash_] = getMessage(
@@ -1131,16 +1131,16 @@ contract CoGateway is Hasher {
             _hashLock
         );
 
-		//TODO: Move this code in MessageBus.
-		require(
+        //TODO: Move this code in MessageBus.
+        require(
             messageBox.outbox[messageHash_] ==
             MessageBus.MessageStatus.Undeclared,
             "Message status must be Undeclared"
         );
         // Update the message outbox status to declared.
-		messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
+        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
 
-		//transfer redeem amount to Co-Gateway
+        //transfer redeem amount to Co-Gateway
         EIP20Interface(utilityToken).transferFrom(
             msg.sender,
             address(this),
@@ -1148,14 +1148,14 @@ contract CoGateway is Hasher {
         );
 
         // Emit RedemptionIntentDeclared event
-		emit RedemptionIntentDeclared(
-			messageHash_,
+        emit RedemptionIntentDeclared(
+            messageHash_,
             msg.sender,
             _nonce,
-			_beneficiary,
+            _beneficiary,
             _amount
-		);
-	}
+        );
+    }
 
     /**
 	 * @notice Completes the redemption process.
@@ -1167,16 +1167,16 @@ contract CoGateway is Hasher {
  	 * @return redeemer_ Redeemer address
  	 * @return redeemAmount_ Redeem amount
 	 */
-	function progressRedemption(
-		bytes32 _messageHash,
-		bytes32 _unlockSecret
-	)
-	    external
-	    returns (
+    function progressRedemption(
+        bytes32 _messageHash,
+        bytes32 _unlockSecret
+    )
+        external
+        returns (
             address redeemer_,
             uint256 redeemAmount_
         )
-	{
+    {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
@@ -1188,7 +1188,7 @@ contract CoGateway is Hasher {
         );
 
         // Get the message object
-		MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
 
         // Get the redeemer address
         redeemer_ = message.sender;
@@ -1197,7 +1197,7 @@ contract CoGateway is Hasher {
         redeemAmount_ = redeems[_messageHash].amount;
 
         // Progress outbox
-		MessageBus.progressOutbox(
+        MessageBus.progressOutbox(
             messageBox,
             REDEEM_TYPEHASH,
             message,
@@ -1208,17 +1208,17 @@ contract CoGateway is Hasher {
         UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
-		msg.sender.transfer(bounty);
+        msg.sender.transfer(bounty);
 
         // Emit ProgressedRedemption event.
-		emit ProgressedRedemption(
-			_messageHash,
+        emit ProgressedRedemption(
+            _messageHash,
             message.sender,
             message.nonce,
             redeemAmount_,
             _unlockSecret
-		);
-	}
+        );
+    }
 
     /**
      * @notice Completes the redemption process by providing the merkle proof
@@ -1239,18 +1239,18 @@ contract CoGateway is Hasher {
      * @return redeemer_ Redeemer address
      * @return redeemAmount_ Redeem amount
      */
-	function progressRedemptionWithProof(
-		bytes32 _messageHash,
-		bytes _rlpEncodedParentNodes,
-		uint256 _blockHeight,
-		uint256 _messageStatus
-	)
-	    external
-	    returns (
+    function progressRedemptionWithProof(
+        bytes32 _messageHash,
+        bytes _rlpEncodedParentNodes,
+        uint256 _blockHeight,
+        uint256 _messageStatus
+    )
+        external
+        returns (
             address redeemer_,
             uint256 redeemAmount_
         )
-	{
+    {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
@@ -1260,7 +1260,7 @@ contract CoGateway is Hasher {
             "RLP encoded parent nodes must not be zero"
         );
 
-		bytes32 storageRoot = storageRoots[_blockHeight];
+        bytes32 storageRoot = storageRoots[_blockHeight];
 
         require(
             storageRoot != bytes32(0),
@@ -1272,15 +1272,15 @@ contract CoGateway is Hasher {
         redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
 
-		MessageBus.progressOutboxWithProof(
-			messageBox,
-			REDEEM_TYPEHASH,
+        MessageBus.progressOutboxWithProof(
+            messageBox,
+            REDEEM_TYPEHASH,
             message,
-			_rlpEncodedParentNodes,
+            _rlpEncodedParentNodes,
             MESSAGE_BOX_OFFSET,
-			storageRoot,
-			MessageBus.MessageStatus(_messageStatus)
-		);
+            storageRoot,
+            MessageBus.MessageStatus(_messageStatus)
+        );
 
         // Burn the redeem amount.
         UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
@@ -1290,14 +1290,14 @@ contract CoGateway is Hasher {
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedRedemption event.
-		emit ProgressedRedemption(
+        emit ProgressedRedemption(
             _messageHash,
             redeemer_,
             message.nonce,
             redeemAmount_,
             bytes32(0)
         );
-	}
+    }
 
     /**
 	 * @notice Revert redemption to stop the redeem process
@@ -1308,25 +1308,25 @@ contract CoGateway is Hasher {
 	 * @return redeemerNonce_ Redeemer nonce
 	 * @return amount_ Redeem amount
 	 */
-	function revertRedemption(
-		bytes32 _messageHash
-	)
-	    external
-	    returns (
-		    address redeemer_,
-		    uint256 redeemerNonce_,
-		    uint256 amount_
-	    )
-	{
+    function revertRedemption(
+        bytes32 _messageHash
+    )
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemerNonce_,
+            uint256 amount_
+        )
+    {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
 
         // get the message object for the _messageHash
-		MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
 
-		require(message.intentHash != bytes32(0));
+        require(message.intentHash != bytes32(0));
 
         require(
             message.intentHash != bytes32(0),
@@ -1347,18 +1347,18 @@ contract CoGateway is Hasher {
         // Update the message outbox status to declared.
         messageBox.outbox[_messageHash] = MessageBus.MessageStatus.Declared;
 
-		redeemer_ = message.sender;
+        redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
         // Emit RevertRedemptionDeclared event.
-		emit RevertRedemptionDeclared(
+        emit RevertRedemptionDeclared(
             _messageHash,
             redeemer_,
             redeemerNonce_,
             amount_
         );
-	}
+    }
 
     /**
 	 * @notice Complete revert redemption by providing the merkle proof
@@ -1373,18 +1373,18 @@ contract CoGateway is Hasher {
 	 * @return redeemerNonce_ Redeemer nonce
 	 * @return amount_ Redeem amount
 	 */
-	function progressRevertRedemption(
-		bytes32 _messageHash,
-		uint256 _blockHeight,
-		bytes _rlpEncodedParentNodes
-	)
-	    external
-	    returns (
+    function progressRevertRedemption(
+        bytes32 _messageHash,
+        uint256 _blockHeight,
+        bytes _rlpEncodedParentNodes
+    )
+        external
+        returns (
             address redeemer_,
             uint256 redeemerNonce_,
             uint256 amount_
         )
-	{
+    {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
@@ -1395,14 +1395,14 @@ contract CoGateway is Hasher {
         );
 
         // Get the message object
-		MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
             "StakingIntentHash must not be zero"
         );
 
         // Get the storageRoot for the given block height
-		bytes32 storageRoot = storageRoots[_blockHeight];
+        bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
@@ -1419,7 +1419,7 @@ contract CoGateway is Hasher {
             MessageBus.MessageStatus.Revoked
         );
 
-		Redeem storage redeemData = redeems[_messageHash];
+        Redeem storage redeemData = redeems[_messageHash];
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
@@ -1429,18 +1429,18 @@ contract CoGateway is Hasher {
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // transfer the bounty to msg.sender
-		msg.sender.transfer(bounty);
+        msg.sender.transfer(bounty);
 
         // Emit RevertedRedemption event
-		emit RevertedRedemption(
+        emit RevertedRedemption(
             _messageHash,
-			message.sender,
+            message.sender,
             message.nonce,
-			redeemData.amount
+            redeemData.amount
         );
-	}
+    }
 
-	/**
+    /**
      *  @notice External function prove gateway.
      *
      *  @dev proveGateway can be called by anyone to verify merkle proof of
@@ -1460,79 +1460,79 @@ contract CoGateway is Hasher {
      *
      *  @return `true` if Gateway account is proved
      */
-	function proveGateway(
-		uint256 _blockHeight,
-		bytes _rlpEncodedAccount,
-		bytes _rlpParentNodes
+    function proveGateway(
+        uint256 _blockHeight,
+        bytes _rlpEncodedAccount,
+        bytes _rlpParentNodes
     )
-	    external
-	    returns (bool /* success */)
-	{
-		// _rlpEncodedAccount should be valid
-		require(
+        external
+        returns (bool /* success */)
+    {
+        // _rlpEncodedAccount should be valid
+        require(
             _rlpEncodedAccount.length != 0,
             "Length of RLP encoded account is 0"
         );
 
-		// _rlpParentNodes should be valid
-		require(
+        // _rlpParentNodes should be valid
+        require(
             _rlpParentNodes.length != 0,
             "Length of RLP parent nodes is 0"
         );
 
-		bytes32 stateRoot = core.getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
-		require(
+        require(
             stateRoot != bytes32(0),
             "State root must not be zero"
         );
 
-		// If account already proven for block height
-		bytes32 provenStorageRoot = storageRoots[_blockHeight];
+        // If account already proven for block height
+        bytes32 provenStorageRoot = storageRoots[_blockHeight];
 
-		if (provenStorageRoot != bytes32(0)) {
+        if (provenStorageRoot != bytes32(0)) {
 
-			// Check extracted storage root is matching with existing stored
+            // Check extracted storage root is matching with existing stored
             // storage root
-			require(
+            require(
                 provenStorageRoot == storageRoot,
                 "Storage root mismatch when account is already proven"
             );
 
-			// wasAlreadyProved is true here since proveOpenST is replay call
+            // wasAlreadyProved is true here since proveOpenST is replay call
             // for same block height
-			emit GatewayProven(
+            emit GatewayProven(
                 gateway,
                 _blockHeight,
                 storageRoot,
                 true
             );
 
-			// return true
-			return true;
-		}
+            // return true
+            return true;
+        }
 
-		bytes32 storageRoot = ProofLib.proveAccount(
+        bytes32 storageRoot = ProofLib.proveAccount(
             _rlpEncodedAccount,
             _rlpParentNodes,
             encodedGatewayPath,
             stateRoot
         );
 
-		storageRoots[_blockHeight] = storageRoot;
+        storageRoots[_blockHeight] = storageRoot;
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
-		emit GatewayProven(
+        emit GatewayProven(
             gateway,
             _blockHeight,
             storageRoot,
             false
         );
 
-		return true;
-	}
+        return true;
+    }
 
     /**
      * @notice Activate or Deactivate CoGateway contract. Can be set only by the
@@ -1586,33 +1586,33 @@ contract CoGateway is Hasher {
 	 *
 	 * @return `true` if executed successfully
 	 */
-	function executeConfirmStakingIntent(
-		MessageBus.Message storage _message,
-		uint256 _blockHeight,
-		bytes _rlpParentNodes
-	)
-	    private
+    function executeConfirmStakingIntent(
+        MessageBus.Message storage _message,
+        uint256 _blockHeight,
+        bytes _rlpParentNodes
+    )
+        private
         returns (bool)
-	{
+    {
         // Get storage root
-		bytes32 storageRoot = storageRoots[_blockHeight];
+        bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
         // Confirm message
-		MessageBus.confirmMessage(
-			messageBox,
-			STAKE_TYPEHASH,
-			_message,
-			_rlpParentNodes,
+        MessageBus.confirmMessage(
+            messageBox,
+            STAKE_TYPEHASH,
+            _message,
+            _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot
         );
 
         return true;
-	}
+    }
 
     /**
      * @notice Clears the previous process. Validates the
@@ -1685,30 +1685,30 @@ contract CoGateway is Hasher {
 	 *
 	 * @return Message object
 	 */
-	function getMessage(
-		address _account,
-		uint256 _accountNonce,
-		uint256 _gasPrice,
-		uint256 _gasLimit,
-		bytes32 _intentHash,
-		bytes32 _hashLock
-	)
-	    private
-	    pure
-	    returns (MessageBus.Message)
-	{
-		return MessageBus.Message(
+    function getMessage(
+        address _account,
+        uint256 _accountNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _intentHash,
+        bytes32 _hashLock
+    )
+        private
+        pure
+        returns (MessageBus.Message)
+    {
+        return MessageBus.Message(
             {
-			    intentHash : _intentHash,
-			    nonce : _accountNonce,
-			    gasPrice : _gasPrice,
-			    gasLimit: _gasLimit,
-			    sender : _account,
-			    hashLock : _hashLock,
-			    gasConsumed: 0
-			}
+            intentHash : _intentHash,
+            nonce : _accountNonce,
+            gasPrice : _gasPrice,
+            gasLimit: _gasLimit,
+            sender : _account,
+            hashLock : _hashLock,
+            gasConsumed: 0
+            }
         );
-	}
+    }
 
     /**
 	 * @notice Private function to get the nonce for the given account address
@@ -1717,22 +1717,22 @@ contract CoGateway is Hasher {
 	 *
 	 * @return nonce
 	 */
-	function _getNonce(address _account)
-	    private
-	    view
-	    returns (uint256 /* nonce */)
-	{
+    function _getNonce(address _account)
+        private
+        view
+        returns (uint256 /* nonce */)
+    {
         ActiveProcess storage prevousProcess  = activeProcess[_account];
 
-		if (prevousProcess.messageHash == bytes32(0)) {
-			return 1;
-		}
+        if (prevousProcess.messageHash == bytes32(0)) {
+            return 1;
+        }
 
-		MessageBus.Message storage message =
-            messages[prevousProcess.messageHash];
+        MessageBus.Message storage message =
+        messages[prevousProcess.messageHash];
 
-		return message.nonce.add(1);
-	}
+        return message.nonce.add(1);
+    }
 
     //TODO: This needs discusion. This doesnt apprear correct way of implementation
     /**
