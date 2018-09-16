@@ -428,7 +428,8 @@ contract Gateway is Hasher {
 			GATEWAY_LINK_TYPEHASH,
 			intentHash,
 			_nonce,
-			0
+			0,
+            0
 		);
 
 		//TODO: Check when its deleted
@@ -588,7 +589,9 @@ contract Gateway is Hasher {
 			_amount,
 			_beneficiary,
 			_staker,
+            _nonce,
 			_gasPrice,
+            _gasLimit,
 			token
 		);
 
@@ -597,7 +600,8 @@ contract Gateway is Hasher {
 			STAKE_TYPEHASH,
 			intentHash,
 			_nonce,
-			_gasPrice
+			_gasPrice,
+            _gasLimit
 		);
 
 		// Get previousMessageHash
@@ -1093,7 +1097,9 @@ contract Gateway is Hasher {
 			_amount,
 			_beneficiary,
 			_redeemer,
+            _redeemerNonce,
 			_gasPrice,
+            _gasLimit,
 			token
 		);
 
@@ -1102,7 +1108,8 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
 			intentHash,
 			_redeemerNonce,
-			_gasPrice
+			_gasPrice,
+            _gasLimit
 		);
 
 		// Get previousMessageHash

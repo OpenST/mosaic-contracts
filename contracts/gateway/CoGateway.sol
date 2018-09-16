@@ -421,6 +421,7 @@ contract CoGateway is Hasher {
             GATEWAY_LINK_TYPEHASH,
             intentHash,
             _nonce,
+            0,
             0
         );
 
@@ -588,7 +589,9 @@ contract CoGateway is Hasher {
             _amount,
             _beneficiary,
             _staker,
+            _stakerNonce,
             _gasPrice,
+            _gasLimit,
             valueToken
         );
 
@@ -597,7 +600,8 @@ contract CoGateway is Hasher {
             STAKE_TYPEHASH,
             intentHash,
             _stakerNonce,
-            _gasPrice
+            _gasPrice,
+            _gasLimit
         );
 
         // Get previousMessageHash
@@ -978,7 +982,9 @@ contract CoGateway is Hasher {
             _amount,
             _beneficiary,
             msg.sender,
+            _nonce,
             _gasPrice,
+            _gasLimit,
             valueToken
         );
 
@@ -987,7 +993,8 @@ contract CoGateway is Hasher {
             REDEEM_TYPEHASH,
             intentHash,
             _nonce,
-            _gasPrice
+            _gasPrice,
+            _gasLimit
         );
 
         // Get previousMessageHash

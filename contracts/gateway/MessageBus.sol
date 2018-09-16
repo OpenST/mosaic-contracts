@@ -117,7 +117,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // Check the existing message status for the message hash in message
@@ -170,7 +171,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // Check the existing message status for the message hash in message
@@ -234,7 +236,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // Verify the current message status is `Declared`
@@ -293,7 +296,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // The existing message status must be `Declared`
@@ -356,7 +360,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // Verify the current message status is `Declared`
@@ -416,7 +421,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // The existing message status must be `Declared`
@@ -500,7 +506,8 @@ library MessageBus {
 		bytes32 _messageTypeHash,
 		bytes32 _intentHash,
 		uint256 _nonce,
-		uint256 _gasPrice
+		uint256 _gasPrice,
+        uint256 _gasLimit
 	)
 	    internal
 	    pure
@@ -511,7 +518,8 @@ library MessageBus {
 				_messageTypeHash,
 				_intentHash,
 				_nonce,
-				_gasPrice
+				_gasPrice,
+                _gasLimit
 			)
 		);
 	}
@@ -545,7 +553,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // outbox should be declared
@@ -608,7 +617,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // Check the existing message status for the message hash in message
@@ -686,7 +696,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // The existing message status must be `DeclaredRevocation`
@@ -766,7 +777,8 @@ library MessageBus {
             _messageTypeHash,
             _message.intentHash,
             _message.nonce,
-            _message.gasPrice
+            _message.gasPrice,
+            _message.gasLimit
         );
 
         // The existing message status must be `DeclaredRevocation`
