@@ -215,9 +215,9 @@ contract Gateway is Hasher {
     }
 
     /**
-	 * ActiveProcess stores the information related to in progress process
-	 * like stake/mint unstake/redeem.
-	 */
+     * ActiveProcess stores the information related to in progress process
+     * like stake/mint unstake/redeem.
+     */
     struct ActiveProcess {
 
         /** latest message hash. */
@@ -236,10 +236,10 @@ contract Gateway is Hasher {
     address public coGateway;
 
     /**
-	 * Message box.
-	 * @dev keep this is at location 1, in case this is changed then update
-	 *      constant OUTBOX_OFFSET accordingly.
-	 */
+     * Message box.
+     * @dev keep this is at location 1, in case this is changed then update
+     *      constant OUTBOX_OFFSET accordingly.
+     */
     MessageBus.MessageBox messageBox;
 
     /** Specifies if the Gateway and CoGateway contracts are linked. */
@@ -383,22 +383,22 @@ contract Gateway is Hasher {
     /* External functions */
 
     /**
-      * @notice Initiate the Gateway and CoGateway contracts linking.
-      *
-      * @param _coGateway CoGateway contract address.
-      * @param _intentHash Gateway and CoGateway linking intent hash.
-      *                    This is a sha3 of gateway address, cogateway address,
-      *                    bounty, token name, token symbol, token decimals,
-      *                    _nonce, token.
-      * @param _nonce Nonce of the sender. Here in this case its organisation
-      *               address
-      * @param _sender The address that signs the message hash. In this case it
-      *                has to be organisation address
-      * @param _hashLock Hash lock, set by the facilitator.
-      * @param _signature Signed data.
-      *
-      * @return messageHash_ Message hash
-      */
+     * @notice Initiate the Gateway and CoGateway contracts linking.
+     *
+     * @param _coGateway CoGateway contract address.
+     * @param _intentHash Gateway and CoGateway linking intent hash.
+     *                    This is a sha3 of gateway address, cogateway address,
+     *                    bounty, token name, token symbol, token decimals,
+     *                    _nonce, token.
+     * @param _nonce Nonce of the sender. Here in this case its organisation
+     *               address
+     * @param _sender The address that signs the message hash. In this case it
+     *                has to be organisation address
+     * @param _hashLock Hash lock, set by the facilitator.
+     * @param _signature Signed data.
+     *
+     * @return messageHash_ Message hash
+     */
     function initiateGatewayLink(
         address _coGateway,
         bytes32 _intentHash,
@@ -513,17 +513,17 @@ contract Gateway is Hasher {
     }
 
     /**
-      * @notice Complete the Gateway and CoGateway contracts linking. This will
-      *         set the variable linked to true, and thus it will activate the
-      *         Gateway contract for stake and mint.
-      *
-      * @param _messageHash Message hash
-      * @param _unlockSecret Unlock secret for the hashLock provide by the
-      *                      facilitator while initiating the Gateway/CoGateway
-      *                      linking
-      *
-      * @return `true` if gateway linking was successfully progressed
-      */
+     * @notice Complete the Gateway and CoGateway contracts linking. This will
+     *         set the variable linked to true, and thus it will activate the
+     *         Gateway contract for stake and mint.
+     *
+     * @param _messageHash Message hash
+     * @param _unlockSecret Unlock secret for the hashLock provide by the
+     *                      facilitator while initiating the Gateway/CoGateway
+     *                      linking
+     *
+     * @return `true` if gateway linking was successfully progressed
+     */
     function progressGatewayLink(
         bytes32 _messageHash,
         bytes32 _unlockSecret
@@ -1002,24 +1002,24 @@ contract Gateway is Hasher {
     }
 
     /**
-	 * @notice Declare redemption intent
-	 *
-	 * @param _redeemer Redeemer address.
-	 * @param _redeemerNonce Redeemer nonce.
-	 * @param _beneficiary Address where the redeemed tokens will be
-	 *                     transferred.
-	 * @param _amount Redeem amount.
-	 * @param _gasPrice Gas price that redeemer is ready to pay to get the
-	 *                  redeem and unstake process done
-	 * @param _gasLimit Gas limit that redeemer is ready to pay.
-	 * @param _blockHeight Block number for which the proof is valid.
-	 * @param _hashLock Hash lock
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-	 *                               Declared in messageBox outbox
-	 *                               of CoGateway
-	 *
-	 * @return messageHash_ Message hash
-	 */
+     * @notice Declare redemption intent
+     *
+     * @param _redeemer Redeemer address.
+     * @param _redeemerNonce Redeemer nonce.
+     * @param _beneficiary Address where the redeemed tokens will be
+     *                     transferred.
+     * @param _amount Redeem amount.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the
+     *                  redeem and unstake process done
+     * @param _gasLimit Gas limit that redeemer is ready to pay.
+     * @param _blockHeight Block number for which the proof is valid.
+     * @param _hashLock Hash lock
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+     *                               Declared in messageBox outbox
+     *                               of CoGateway
+     *
+     * @return messageHash_ Message hash
+     */
     function confirmRedemptionIntent(
         address _redeemer,
         uint256 _redeemerNonce,
@@ -1401,16 +1401,16 @@ contract Gateway is Hasher {
     }
 
     /**
-    * @notice Complete revert redemption
-    *
-    * @dev Any once can call this.
-    *
-    * @param _messageHash Message hash.
-    *
-    * @return redeemer_ Redeemer address
-    * @return redeemerNonce_ Redeemer nonce
-    * @return amount_ Redeem amount
-    */
+     * @notice Complete revert redemption
+     *
+     * @dev Any once can call this.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return redeemer_ Redeemer address
+     * @return redeemerNonce_ Redeemer nonce
+     * @return amount_ Redeem amount
+     */
     function progressRevertRedemption(
         bytes32 _messageHash
     )

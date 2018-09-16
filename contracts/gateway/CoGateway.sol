@@ -186,18 +186,18 @@ contract CoGateway is Hasher {
     /* Struct */
 
     /**
-	 * Redeem stores the redemption information about the redeem amount,
-	 * beneficiary address, message data and facilitator address.
-	 */
+     * Redeem stores the redemption information about the redeem amount,
+     * beneficiary address, message data and facilitator address.
+     */
     struct Redeem {
 
         /** Amount that will be redeemed. */
         uint256 amount;
 
         /**
-		 * Address where the value tokens will be unstaked in the
-		 * origin chain.
-		 */
+         * Address where the value tokens will be unstaked in the
+         * origin chain.
+         */
         address beneficiary;
 
         /** Address of the facilitator that initiates the staking process. */
@@ -205,9 +205,9 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * Mint stores the minting information
-	 * like mint amount, beneficiary address, message data.
-	 */
+     * Mint stores the minting information
+     * like mint amount, beneficiary address, message data.
+     */
     struct Mint {
 
         /** Amount that will be minted. */
@@ -218,9 +218,9 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * ActiveProcess stores the information related to in progress process
-	 * like stake/mint unstake/redeem.
-	 */
+     * ActiveProcess stores the information related to in progress process
+     * like stake/mint unstake/redeem.
+     */
     struct ActiveProcess {
 
         /** latest message hash. */
@@ -400,8 +400,8 @@ contract CoGateway is Hasher {
      * @param _hashLock Hash lock, set by the facilitator.
      * @param _blockHeight Block number for which the proof is valid
      * @param _rlpParentNodes RLP encoded parent node data to prove in
-	 *                        messageBox outbox of Gateway
-	 *
+     *                        messageBox outbox of Gateway
+     *
      * @return messageHash_ Message hash
      */
     function confirmGatewayLinkIntent(
@@ -585,7 +585,7 @@ contract CoGateway is Hasher {
 	 * @param _gasLimit Gas limit that staker is ready to pay
 	 * @param _hashLock Hash Lock provided by the facilitator.
 	 * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpParentNodes RLP encoded parent node data to prove in
+	 * @param _rlpParentNodes RLP encoded parent node data to prove in
 	 *                        messageBox outbox of Gateway
 	 *
 	 * @return messageHash_ which is unique for each request.
@@ -707,22 +707,22 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Complete minting process by minting the utility tokens
-	 *
-	 * @param _messageHash Message hash.
-	 * @param _unlockSecret Unlock secret for the hashLock provide by the
- 	 *                      facilitator while initiating the stake
- 	 *
- 	 * @return staker_ Staker address
- 	 * @return beneficiary_ Address to which the utility tokens will be
- 	 *                      transferred after minting
- 	 * @return stakeAmount_ Total amount for which the staking was
- 	 *                      initiated. The reward amount is deducted from the
- 	 *                      this amount and is given to the facilitator.
- 	 * @return mintedAmount_ Actual minted amount, after deducting the reward
- 	 *                       from the total (stake) amount.
- 	 * @return rewardAmount_ Reward amount that is transferred to facilitator
-	 */
+     * @notice Complete minting process by minting the utility tokens
+     *
+     * @param _messageHash Message hash.
+     * @param _unlockSecret Unlock secret for the hashLock provide by the
+     *                      facilitator while initiating the stake
+     *
+     * @return staker_ Staker address
+     * @return beneficiary_ Address to which the utility tokens will be
+     *                      transferred after minting
+     * @return stakeAmount_ Total amount for which the staking was
+     *                      initiated. The reward amount is deducted from the
+     *                      this amount and is given to the facilitator.
+     * @return mintedAmount_ Actual minted amount, after deducting the reward
+     *                       from the total (stake) amount.
+     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     */
     function progressMinting(
         bytes32 _messageHash,
         bytes32 _unlockSecret
@@ -790,28 +790,28 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Completes the minting process by providing the merkle proof
-	 *         instead of unlockSecret. In case the facilitator process is not
-	 *         able to complete the stake and minting process then this is an
-	 *         alternative approach to complete the process
-	 *
-	 * @dev This can be called to prove that the outbox status of messageBox on
-	 *      Gateway is either declared or progressed.
-	 *
-	 * @param _messageHash Message hash.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox of Gateway
-	 * @param _blockHeight Block number for which the proof is valid
-	 * @param _messageStatus Message status i.e. Declared or Progressed that
-	 *                       will be proved.
-	 *
-	 * @return stakeAmount_ Total amount for which the stake was initiated. The
-	 *                      reward amount is deducted from the total amount and
-	 *                      is given to the facilitator.
- 	 * @return mintedAmount_ Actual minted amount, after deducting the reward
- 	 *                        from the total amount.
- 	 * @return rewardAmount_ Reward amount that is transferred to facilitator
-	 */
+     * @notice Completes the minting process by providing the merkle proof
+     *         instead of unlockSecret. In case the facilitator process is not
+     *         able to complete the stake and minting process then this is an
+     *         alternative approach to complete the process
+     *
+     * @dev This can be called to prove that the outbox status of messageBox on
+     *      Gateway is either declared or progressed.
+     *
+     * @param _messageHash Message hash.
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+     *                               messageBox inbox of Gateway
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _messageStatus Message status i.e. Declared or Progressed that
+     *                       will be proved.
+     *
+     * @return stakeAmount_ Total amount for which the stake was initiated. The
+     *                      reward amount is deducted from the total amount and
+     *                      is given to the facilitator.
+     * @return mintedAmount_ Actual minted amount, after deducting the reward
+     *                        from the total amount.
+     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     */
     function progressMintingWithProof(
         bytes32 _messageHash,
         bytes _rlpEncodedParentNodes,
@@ -889,18 +889,18 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Declare staking revert intent
-	 *
-	 * @param _messageHash Message hash.
-	 * @param _blockHeight Block number for which the proof is valid
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-	 *                               DeclaredRevocation in messageBox outbox
-	 *                               of Gateway
-	 *
-	 * @return staker_ Staker address
-	 * @return stakerNonce_ Staker nonce
-	 * @return amount_ Redeem amount
-	 */
+     * @notice Declare staking revert intent
+     *
+     * @param _messageHash Message hash.
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+     *                               DeclaredRevocation in messageBox outbox
+     *                               of Gateway
+     *
+     * @return staker_ Staker address
+     * @return stakerNonce_ Staker nonce
+     * @return amount_ Redeem amount
+     */
     function confirmRevertStakingIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
@@ -968,14 +968,14 @@ contract CoGateway is Hasher {
 
     //TODO: Discuss this with team. We may not need this at all.
     /**
-	 * @notice Complete revert staking by providing the merkle proof
-	 *
-	 * @param _messageHash Message hash.
-	 *
-	 * @return staker_ Staker address
-	 * @return stakerNonce_ Staker nonce
-	 * @return amount_ Stake amount
-	 */
+     * @notice Complete revert staking by providing the merkle proof
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return staker_ Staker address
+     * @return stakerNonce_ Staker nonce
+     * @return amount_ Stake amount
+     */
     function progressRevertStaking(
         bytes32 _messageHash
     )
@@ -1014,27 +1014,27 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Initiates the redemption process.
-	 *
-	 * @dev In order to redeem the redeemer needs to approve CoGateway contract
-	 *      for redeem amount. Redeem amount is transferred from redeemer
-	 *      address to CoGateway contract.
-	 *      This is a payable function. The bounty is transferred in base token
-	 *      Redeemer is always msg.sender
-	 *
-	 * @param _amount Redeem amount that will be transferred form redeemer
-	 *                account.
-	 * @param _beneficiary The address in the origin chain where the value
-	 *                     tok ens will be released.
-	 * @param _facilitator Facilitator address.
-	 * @param _gasPrice Gas price that redeemer is ready to pay to get the
-	 *                  redemption process done.
-	 * @param _gasLimit Gas limit that redeemer is ready to pay
-	 * @param _nonce Nonce of the redeemer address.
-	 * @param _hashLock Hash Lock provided by the facilitator.
-	 *
-	 * @return messageHash_ which is unique for each request.
-	 */
+     * @notice Initiates the redemption process.
+     *
+     * @dev In order to redeem the redeemer needs to approve CoGateway contract
+     *      for redeem amount. Redeem amount is transferred from redeemer
+     *      address to CoGateway contract.
+     *      This is a payable function. The bounty is transferred in base token
+     *      Redeemer is always msg.sender
+     *
+     * @param _amount Redeem amount that will be transferred form redeemer
+     *                account.
+     * @param _beneficiary The address in the origin chain where the value
+     *                     tok ens will be released.
+     * @param _facilitator Facilitator address.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the
+     *                  redemption process done.
+     * @param _gasLimit Gas limit that redeemer is ready to pay
+     * @param _nonce Nonce of the redeemer address.
+     * @param _hashLock Hash Lock provided by the facilitator.
+     *
+     * @return messageHash_ which is unique for each request.
+     */
     function redeem(
         uint256 _amount,
         address _beneficiary,
@@ -1158,15 +1158,15 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Completes the redemption process.
-	 *
-	 * @param _messageHash Message hash.
-	 * @param _unlockSecret Unlock secret for the hashLock provide by the
- 	 *                      facilitator while initiating the redeem
- 	 *
- 	 * @return redeemer_ Redeemer address
- 	 * @return redeemAmount_ Redeem amount
-	 */
+     * @notice Completes the redemption process.
+     *
+     * @param _messageHash Message hash.
+     * @param _unlockSecret Unlock secret for the hashLock provide by the
+     *                      facilitator while initiating the redeem
+     *
+     * @return redeemer_ Redeemer address
+     * @return redeemAmount_ Redeem amount
+     */
     function progressRedemption(
         bytes32 _messageHash,
         bytes32 _unlockSecret
@@ -1300,14 +1300,14 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Revert redemption to stop the redeem process
-	 *
-	 * @param _messageHash Message hash.
-	 *
-	 * @return redeemer_ Redeemer address
-	 * @return redeemerNonce_ Redeemer nonce
-	 * @return amount_ Redeem amount
-	 */
+     * @notice Revert redemption to stop the redeem process
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return redeemer_ Redeemer address
+     * @return redeemerNonce_ Redeemer nonce
+     * @return amount_ Redeem amount
+     */
     function revertRedemption(
         bytes32 _messageHash
     )
@@ -1361,18 +1361,18 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Complete revert redemption by providing the merkle proof
-	 *
-	 * @param _messageHash Message hash.
-	 * @param _blockHeight Block number for which the proof is valid
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-	 *                               DeclaredRevocation in messageBox inbox
-	 *                               of Gateway
-	 *
-	 * @return redeemer_ Redeemer address
-	 * @return redeemerNonce_ Redeemer nonce
-	 * @return amount_ Redeem amount
-	 */
+     * @notice Complete revert redemption by providing the merkle proof
+     *
+     * @param _messageHash Message hash.
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
+     *                               DeclaredRevocation in messageBox inbox
+     *                               of Gateway
+     *
+     * @return redeemer_ Redeemer address
+     * @return redeemerNonce_ Redeemer nonce
+     * @return amount_ Redeem amount
+     */
     function progressRevertRedemption(
         bytes32 _messageHash,
         uint256 _blockHeight,
@@ -1556,12 +1556,12 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Get the nonce for the given account address
-	 *
-	 * @param _account Account address for which the nonce is to fetched
-	 *
-	 * @return nonce
-	 */
+     * @notice Get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
     function getNonce(address _account)
         external
         view
@@ -1575,17 +1575,17 @@ contract CoGateway is Hasher {
     /* private methods */
 
     /**
-	 * @notice private function to execute confirm staking intent.
-	 *
-	 * @dev This function is to avoid stack too deep error in
-	 *      confirmStakingIntent function
-	 *
-	 * @param _message message object
-	 * @param _blockHeight Block number for which the proof is valid
-	 * @param _rlpParentNodes RLP encoded parent nodes.
-	 *
-	 * @return `true` if executed successfully
-	 */
+     * @notice private function to execute confirm staking intent.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmStakingIntent function
+     *
+     * @param _message message object
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent nodes.
+     *
+     * @return `true` if executed successfully
+     */
     function executeConfirmStakingIntent(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
@@ -1642,7 +1642,6 @@ contract CoGateway is Hasher {
         ActiveProcess storage prevousProcess  = activeProcess[_account];
         previousMessageHash_ = prevousProcess.messageHash;
 
-
         if (previousMessageHash_ != bytes32(0)) {
 
             MessageBus.MessageStatus status;
@@ -1672,19 +1671,19 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Create and return Message object.
-	 *
-	 * @dev This function is to avoid stack too deep error.
-	 *
-	 * @param _account Account address
-	 * @param _accountNonce Nonce for the account address
-	 * @param _gasPrice Gas price
-	 * @param _gasLimit Gas limit
-	 * @param _intentHash Intent hash
-	 * @param _hashLock Hash lock
-	 *
-	 * @return Message object
-	 */
+     * @notice Create and return Message object.
+     *
+     * @dev This function is to avoid stack too deep error.
+     *
+     * @param _account Account address
+     * @param _accountNonce Nonce for the account address
+     * @param _gasPrice Gas price
+     * @param _gasLimit Gas limit
+     * @param _intentHash Intent hash
+     * @param _hashLock Hash lock
+     *
+     * @return Message object
+     */
     function getMessage(
         address _account,
         uint256 _accountNonce,
@@ -1711,12 +1710,12 @@ contract CoGateway is Hasher {
     }
 
     /**
-	 * @notice Private function to get the nonce for the given account address
-	 *
-	 * @param _account Account address for which the nonce is to fetched
-	 *
-	 * @return nonce
-	 */
+     * @notice Private function to get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
     function _getNonce(address _account)
         private
         view
