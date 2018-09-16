@@ -41,6 +41,12 @@ library MessageBus {
 		Revoked
 	}
 
+    /** Status of the message state machine*/
+    enum MessageBoxType {
+        Outbox,
+        Inbox
+    }
+
     /* Struct */
 
     /** MessageBox stores the inbox and outbox mapping */
@@ -90,7 +96,7 @@ library MessageBus {
     uint8 constant OUTBOX_OFFSET = 0;
 
     /** Position of inbox in struct MessageBox */
-    uint8 constant INBOX_OFFSET = 0;
+    uint8 constant INBOX_OFFSET = 1;
 
     /**
      * @notice Declare a new message. This will update the outbox status to
@@ -300,9 +306,12 @@ library MessageBus {
             _message.gasLimit
         );
 
-        // The existing message status must be `Declared`
+        // The existing message status must be `Declared` or
+        // `DeclaredRevocation`.
         require(
-            _messageBox.outbox[messageHash_] == MessageStatus.Declared,
+            _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
+            _messageBox.outbox[messageHash_] ==
+                MessageStatus.DeclaredRevocation ,
             "Message status must be Declared"
         );
 
@@ -809,6 +818,90 @@ library MessageBus {
 
         // Update the status to `Revoked`
         _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
+    }
+
+    /**
+	 * @notice Change inbox state to the next possible state
+	 *
+	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+	 *      Undeclared -> Declared, Declared -> Progressed,
+	 *      DeclaredRevocation -> Revoked
+	 *
+	 * @param _messageBox Message box.
+	 * @param _messageHash Message hash
+	 *
+	 * @return isChanged_ `true` if the state is changed
+	 * @return nextState_ Next state to which its changed
+	 */
+    function changeInboxState(
+        MessageBox storage _messageBox,
+        bytes32 _messageHash
+    )
+        external
+        returns (
+            bool isChanged_,
+            MessageBus.MessageStatus nextState_
+        )
+    {
+        MessageStatus status = _messageBox.inbox[_messageHash];
+
+        if(status == MessageStatus.Undeclared) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Declared;
+        } else if(status == MessageStatus.Declared) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Progressed;
+        } else if(status == MessageStatus.DeclaredRevocation) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Revoked;
+        }
+
+        if(isChanged_){
+            // Update the message inbox status.
+            _messageBox.inbox[_messageHash] = nextState_;
+        }
+    }
+
+    /**
+	 * @notice Change outbox state to the next possible state
+	 *
+	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+	 *      Undeclared -> Declared, Declared -> Progressed,
+	 *      DeclaredRevocation -> Revoked
+	 *
+	 * @param _messageBox Message box.
+	 * @param _messageHash Message hash
+	 *
+	 * @return isChanged_ `true` if the state is changed
+	 * @return nextState_ Next state to which its changed
+	 */
+    function changeOutboxState(
+        MessageBox storage _messageBox,
+        bytes32 _messageHash
+    )
+        external
+        returns (
+            bool isChanged_,
+            MessageBus.MessageStatus nextState_
+        )
+    {
+        MessageStatus status = _messageBox.outbox[_messageHash];
+
+        if(status == MessageStatus.Undeclared) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Declared;
+        } else if(status == MessageStatus.Declared) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Progressed;
+        } else if(status == MessageStatus.DeclaredRevocation) {
+            isChanged_ = true;
+            nextState_ = MessageStatus.Revoked;
+        }
+
+        if(isChanged_){
+            // Update the message outbox status.
+            _messageBox.outbox[_messageHash] = nextState_;
+        }
     }
 
     /**
