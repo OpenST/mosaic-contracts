@@ -193,7 +193,7 @@ contract Gateway is Hasher {
 
 	/* constants */
 
-	uint8 constant OUTBOX_OFFSET = 1;
+	uint8 constant MESSAGE_BOX_OFFSET = 1;
 
 	/* public variables */
 
@@ -768,7 +768,7 @@ contract Gateway is Hasher {
 			STAKE_TYPEHASH,
 			message,
 			_rlpEncodedParentNodes,
-			OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus)
 		);
@@ -916,7 +916,7 @@ contract Gateway is Hasher {
 			messageBox,
 			message,
 			STAKE_TYPEHASH,
-			OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			_rlpEncodedParentNodes,
 			storageRoot,
             MessageBus.MessageStatus(_messageStatus)
@@ -998,7 +998,7 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
 			message,
 			_rlpEncodedParentNodes,
-			OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			storageRoot
 		);
 
@@ -1299,7 +1299,7 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
 			unStake.message,
             _rlpEncodedParentNodes,
-			OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
@@ -1501,7 +1501,7 @@ contract Gateway is Hasher {
 			REDEEM_TYPEHASH,
 			_message,
 			_rlpParentNodes,
-			OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			storageRoot
         );
 

@@ -195,7 +195,7 @@ contract CoGateway is Hasher {
 
     /* constants */
 
-    uint8 OUTBOX_OFFSET = 1;
+    uint8 MESSAGE_BOX_OFFSET = 1;
 
     /* public variables */
 
@@ -444,7 +444,7 @@ contract CoGateway is Hasher {
 			GATEWAY_LINK_TYPEHASH,
 			gatewayLink.message,
 			_rlpParentNodes,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
             storageRoot
         );
 
@@ -789,7 +789,7 @@ contract CoGateway is Hasher {
 			STAKE_TYPEHASH,
 			mint.message,
 			_rlpEncodedParentNodes,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus));
 
@@ -882,7 +882,7 @@ contract CoGateway is Hasher {
             STAKE_TYPEHASH,
             message,
             _rlpEncodedParentNodes,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
             storageRoot
         );
 
@@ -1159,7 +1159,7 @@ contract CoGateway is Hasher {
 			REDEEM_TYPEHASH,
             message,
 			_rlpEncodedParentNodes,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
 			storageRoot,
 			MessageBus.MessageStatus(_messageStatus)
 		);
@@ -1297,7 +1297,7 @@ contract CoGateway is Hasher {
             messageBox,
             message,
             REDEEM_TYPEHASH,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
             _rlpEncodedParentNodes,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
@@ -1491,7 +1491,7 @@ contract CoGateway is Hasher {
 			STAKE_TYPEHASH,
 			_message,
 			_rlpParentNodes,
-            OUTBOX_OFFSET,
+            MESSAGE_BOX_OFFSET,
             storageRoot
         );
 
