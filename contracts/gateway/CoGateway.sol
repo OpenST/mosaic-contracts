@@ -24,21 +24,21 @@ pragma solidity ^0.4.23;
 /*
 
                 Origin chain      |       Auxiliary chain
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
                 Gateway - - - - - - - - - - - CoGateway
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 1. GatewayLinking:
 
             initiateGatewayLink  --->   confirmGatewayLinkIntent
                  |
             progressGatewayLink  --->   progressGatewayLink
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 2. Redeem and Unstake: Normal flow
 
         confirmRedemptionIntent  <---   redeem
                                            |
         progressUnstake (HL)     --->   progressRedemption (HL)
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 3. Redeem and Unstake (Revert): Normal flow
 
         confirmRedemptionIntent   <---   redeem
@@ -46,7 +46,7 @@ pragma solidity ^0.4.23;
 RevertRedemptionIntentConfirmed   --->   revertRedemption
             |
     progressRevertRedemption      --->   progressRevertRedemption
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 4.  Redeem and Unstake: Incase the facilitator is not able to progress
 
         confirmRedemptionIntent   <---   redeem
@@ -55,7 +55,7 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
                             facilitator (offline)
                                             |
         progressUnstakeWithProof  <---   progressRedemptionWithProof
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 */
 
 import "./EIP20Interface.sol";
@@ -1567,23 +1567,40 @@ contract CoGateway is Hasher {
     }
 
     /**
-     * @notice Activate or Deactivate CoGateway contract. Can be set only by the
+     * @notice Activate CoGateway contract. Can be set only by the
      *         Organisation address
-     *
-     * @param _active Boolean specify to activate or deactivate
      *
      * @return `true` if value is set
      */
-    function setCoGatewayActive(bool _active)
+    function activateCoGateway()
         external
         onlyOrganisation
         returns (bool)
     {
         require(
-            deactivated == _active,
-            "Value is already set"
+            deactivated == true,
+            "Gateway is already active"
         );
-        deactivated = !_active;
+        deactivated = false;
+        return true;
+    }
+
+    /**
+     * @notice Deactivate CoGateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function deactivateCoGateway()
+        external
+        onlyOrganisation
+        returns (bool)
+    {
+        require(
+            deactivated == false,
+            "Gateway is already deactive"
+        );
+        deactivated = true;
         return true;
     }
 

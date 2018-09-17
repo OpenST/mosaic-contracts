@@ -25,21 +25,21 @@ pragma solidity ^0.4.23;
 /*
 
            Origin chain      |       Auxiliary chain
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
            Gateway - - - - - - - - - - - CoGateway
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 1. GatewayLinking:
 
         initiateGatewayLink  --->   confirmGatewayLinkIntent
              |
         progressGatewayLink  --->   progressGatewayLink
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 2. Staking and Minting: Normal flow
 
            stake             --->   confirmStakingIntent
              |
     progressStaking (HL)     --->   progressMinting (HL)
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 3. Staking and Minting (Revert): Normal flow
 
            stake             --->   confirmStakingIntent
@@ -47,7 +47,7 @@ pragma solidity ^0.4.23;
         revertStake          --->   confirmRevertStakingIntent
                                             |
     progressRevertStaking    <---   progressRevertStaking
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 4. Staking and Minting: Incase the facilitator is not able to progress
 
     stake (by facilitator)    --->   confirmStakingIntent (by facilitator)
@@ -55,7 +55,7 @@ pragma solidity ^0.4.23;
                         facilitator (offline)
              |
    progressStakingWithProof   --->   progressMintingWithProof
----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 */
 
 import "./EIP20Interface.sol";
@@ -1578,23 +1578,40 @@ contract Gateway is Hasher {
     }
 
     /**
-     * @notice Activate or Deactivate Gateway contract. Can be set only by the
+     * @notice Activate Gateway contract. Can be set only by the
      *         Organisation address
-     *
-     * @param _active Boolean specify to activate or deactivate
      *
      * @return `true` if value is set
      */
-    function setGatewayActive(bool _active)
+    function activateGateway()
         external
         onlyOrganisation
         returns (bool)
     {
         require(
-            deactivated == _active,
-            "Value is already set"
+            deactivated == true,
+            "Gateway is already active"
         );
-        deactivated = !_active;
+        deactivated = false;
+        return true;
+    }
+
+    /**
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function deactivateGateway()
+        external
+        onlyOrganisation
+        returns (bool)
+    {
+        require(
+            deactivated == false,
+            "Gateway is already deactive"
+        );
+        deactivated = true;
         return true;
     }
 
