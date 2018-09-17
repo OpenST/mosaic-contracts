@@ -59,6 +59,38 @@ library ProofLib {
   }
 
   /**
+    *	@notice Get the storage path of the variable inside the struct
+    *
+    *	@param _structPosition Position of struct variable
+    *   @param _offset Offset of variable inside the struct
+    *	@param _key Key of variable incase of mapping
+    *
+    *	@return bytes32 Storage path of the variable
+    */
+  function storageVariablePathForStruct(
+    uint8 _structPosition,
+    uint8 _offset,
+    bytes32 _key)
+  internal
+  pure
+  returns(bytes32 /* storage path */)
+  {
+    bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_structPosition)));
+    bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+    bytes memory path = BytesLib.concat(keyBytes, indexBytes);
+    bytes32 structPath = keccak256(abi.encodePacked(keccak256(abi.encodePacked(path))));
+    if (_offset == 0) {
+      return structPath;
+    }
+    bytes32 storagePath;
+    uint8 offset = _offset;
+    assembly {
+      storagePath := add(structPath, offset)
+    }
+    return keccak256(abi.encodePacked(storagePath));
+  }
+
+  /**
     *	@notice Verify storage of stakingIntents in OpenSTValue and redemptionIntents in OpenSTUtility
     *
     *	@param _intentionStorageIndex index position of storage variables stakingIntents/redemptionIntents

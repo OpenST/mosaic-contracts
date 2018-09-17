@@ -1004,7 +1004,21 @@ contract CoGateway is Hasher {
             "StakingIntentHash must not be zero"
         );
 
-        MessageBus.changeInboxState(messageBox, _messageHash);
+        // TODO: @dev should we directly change the status ?
+        bool isChanged = false;
+        MessageBus.MessageStatus nextStatus;
+        (isChanged, nextStatus) = MessageBus.changeInboxState(
+            messageBox,
+            _messageHash
+        );
+
+        require(isChanged == true,
+            "MessageBox state must change"
+        );
+
+        require(nextStatus == MessageBus.MessageStatus.Revoked,
+            "Next status must be Revoked"
+        );
 
         staker_ = message.sender;
         stakerNonce_ = message.nonce;
@@ -1352,14 +1366,15 @@ contract CoGateway is Hasher {
             "msg.sender must match"
         );
 
-        //TODO: Move this code in MessageBus.
+        //TODO: Move this code in MessageBus. Should we use changeOutboxState?
         require(
             messageBox.outbox[_messageHash] ==
             MessageBus.MessageStatus.Undeclared,
             "Message status must be Undeclared"
         );
         // Update the message outbox status to declared.
-        messageBox.outbox[_messageHash] = MessageBus.MessageStatus.Declared;
+        messageBox.outbox[_messageHash] =
+            MessageBus.MessageStatus.DeclaredRevocation;
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
@@ -1656,13 +1671,13 @@ contract CoGateway is Hasher {
             "Invalid nonce"
         );
 
-        ActiveProcess storage prevousProcess  = activeProcess[_account];
-        previousMessageHash_ = prevousProcess.messageHash;
+        ActiveProcess storage previousProcess = activeProcess[_account];
+        previousMessageHash_ = previousProcess.messageHash;
 
         if (previousMessageHash_ != bytes32(0)) {
 
             MessageBus.MessageStatus status;
-            if (prevousProcess.messageBoxType ==
+            if (previousProcess.messageBoxType ==
                 MessageBus.MessageBoxType.Inbox) {
                 status = messageBox.inbox[previousMessageHash_];
             } else{

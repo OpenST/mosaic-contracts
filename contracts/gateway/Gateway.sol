@@ -1447,7 +1447,21 @@ contract Gateway is Hasher {
             "StakingIntentHash must not be zero"
         );
 
-        MessageBus.changeInboxState(messageBox, _messageHash);
+        // TODO: @dev should we directly change the status ?
+        bool isChanged = false;
+        MessageBus.MessageStatus nextStatus;
+        (isChanged, nextStatus) = MessageBus.changeInboxState(
+            messageBox,
+            _messageHash
+        );
+
+        require(isChanged == true,
+            "MessageBox state must change"
+        );
+
+        require(nextStatus == MessageBus.MessageStatus.Revoked,
+            "Next status must be Revoked"
+        );
 
         Unstake storage unstakeData = unstakes[_messageHash];
 
@@ -1668,13 +1682,13 @@ contract Gateway is Hasher {
             "Invalid nonce"
         );
 
-        ActiveProcess storage prevousProcess  = activeProcess[_account];
-        previousMessageHash_ = prevousProcess.messageHash;
+        ActiveProcess storage previousProcess = activeProcess[_account];
+        previousMessageHash_ = previousProcess.messageHash;
 
-        if (prevousProcess.messageHash != bytes32(0)) {
+        if (previousProcess.messageHash != bytes32(0)) {
 
             MessageBus.MessageStatus status;
-            if (prevousProcess.messageBoxType ==
+            if (previousProcess.messageBoxType ==
                 MessageBus.MessageBoxType.Inbox) {
                 status = messageBox.inbox[previousMessageHash_];
             } else{
