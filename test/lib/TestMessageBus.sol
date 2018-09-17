@@ -41,7 +41,7 @@ contract TestMessageBus {
     Hasher hasher = new Hasher();
 
     /* Signature Verification Parameters */
-    address sender = address(0x8014986b452de9f00ff9b036dcbe522f918e2fe4);
+    address sender = address(0x8014986b452DE9f00ff9B036dcBe522f918E2fE4);
     bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
     bytes32 messageHash = MessageBus.messageDigest(
         hasher.stakeTypeHash(),
@@ -176,6 +176,122 @@ contract TestMessageBus {
 //            "Status not changed to DeclaredRevocation."
 //        );
 //    }
+
+    function testChangeInboxState()
+        external
+    {
+        bool isChanged;
+        MessageBus.MessageStatus nextState;
+
+        // Test Undeclared => Declared
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState not changed to Declared."
+        );
+
+        // Test Declared => Progressed
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState not changed to Progressed."
+        );
+
+        // Test DeclaredRevocation => Revoked
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState not changed to Revoked."
+        );
+    }
+
+    function testchangeOutboxState()
+        external
+    {
+        bool isChanged;
+        MessageBus.MessageStatus nextState;
+
+        // Test Undeclared => Declared
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState not changed to Declared."
+        );
+
+        // Test Declared => Progressed
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState not changed to Progressed."
+        );
+
+        // Test DeclaredRevocation => Revoked
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState not changed to Revoked."
+        );
+    }
 
 
 }
