@@ -55,11 +55,12 @@ contract Hasher {
         string _tokenName,
         string _tokenSymbol,
         uint8 _tokenDecimal,
-        uint256 _gasPrice,
-        uint256 _nonce)
-    public
-    pure
-    returns (bytes32)
+        uint256 _nonce,
+        address _token
+    )
+        public
+        pure
+        returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
@@ -70,8 +71,8 @@ contract Hasher {
                 _tokenName,
                 _tokenSymbol,
                 _tokenDecimal,
-                _gasPrice,
-                _nonce
+                _nonce,
+                _token
             )
         );
     }
@@ -80,43 +81,74 @@ contract Hasher {
         uint256 _amount,
         address _beneficiary,
         address _staker,
-        uint256 _gasPrice)
-    public
-    pure
-    returns (bytes32)
+        uint256 _stakerNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _token
+    )
+        public
+        pure
+        returns (bytes32)
     {
-
         return keccak256(
             abi.encodePacked(
                 _amount,
                 _beneficiary,
                 _staker,
-                _gasPrice
+                _stakerNonce,
+                _gasPrice,
+                _gasLimit,
+                _token
             )
         );
     }
 
+    function hashRedemptionIntent(
+        uint256 _amount,
+        address _beneficiary,
+        address _redeemer,
+        uint256 _redeemerNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _token
+    )
+        public
+        pure
+        returns (bytes32)
+    {
+        return keccak256(
+            abi.encodePacked(
+                _amount,
+                _beneficiary,
+                _redeemer,
+                _redeemerNonce,
+                _gasPrice,
+                _gasLimit,
+                _token
+            )
+        );
+    }
 
     function stakeTypeHash()
-    external
-    pure
-    returns (bytes32 /* type hash */)
+        external
+        pure
+        returns (bytes32 /* type hash */)
     {
         return STAKE_TYPEHASH;
     }
 
     function redeemTypeHash()
-    external
-    pure
-    returns (bytes32 /* type hash */)
+        external
+        pure
+        returns (bytes32 /* type hash */)
     {
         return REDEEM_TYPEHASH;
     }
 
     function gatewayLinkTypeHash()
-    external
-    pure
-    returns (bytes32 /* type hash */)
+        external
+        pure
+        returns (bytes32 /* type hash */)
     {
         return GATEWAY_LINK_TYPEHASH;
     }
