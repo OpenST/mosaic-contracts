@@ -59,11 +59,6 @@ pragma solidity ^0.4.23;
 */
 
 import "./EIP20Interface.sol";
-import "./MessageBus.sol";
-import "./CoreInterface.sol";
-import "./SafeMath.sol";
-import "./Hasher.sol";
-import "./ProofLib.sol";
 import "./RLP.sol";
 import "./SimpleStake.sol";
 import "./GatewaySetup.sol";
@@ -76,8 +71,6 @@ import "./GatewaySetup.sol";
  *         stake message & linking of gateway and cogateway.
  */
 contract Gateway is GatewaySetup {
-
-	using SafeMath for uint256;
 
 	/* Events */
 
@@ -1251,44 +1244,6 @@ contract Gateway is GatewaySetup {
 			false
 		);
 
-		return true;
-	}
-
-	/**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-	function activateGateway()
-	external
-	onlyOrganisation
-	returns (bool)
-	{
-		require(
-			deactivated == true,
-			"Gateway is already active"
-		);
-		deactivated = false;
-		return true;
-	}
-
-	/**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-	function deactivateGateway()
-	external
-	onlyOrganisation
-	returns (bool)
-	{
-		require(
-			deactivated == false,
-			"Gateway is already deactive"
-		);
-		deactivated = true;
 		return true;
 	}
 

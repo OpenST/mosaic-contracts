@@ -391,6 +391,43 @@ contract GatewaySetup is Hasher {
         return _getNonce(_account);
     }
 
+    /**
+     * @notice Activate Gateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function activateGateway()
+    external
+    onlyOrganisation
+    returns (bool)
+    {
+        require(
+            deactivated == true,
+            "Gateway is already active"
+        );
+        deactivated = false;
+        return true;
+    }
+
+    /**
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function deactivateGateway()
+    external
+    onlyOrganisation
+    returns (bool)
+    {
+        require(
+            deactivated == false,
+            "Gateway is already deactive"
+        );
+        deactivated = true;
+        return true;
+    }
 
     /**
      * @notice Create and return Message object.
@@ -432,16 +469,16 @@ contract GatewaySetup is Hasher {
     }
 
     /**
- * @notice Clears the previous process. Validates the
- *         nonce. Updates the process with new process
- *
- * @param _account Account address
- * @param _nonce Nonce for the account address
- * @param _messageHash Message hash
- * @param _messageBoxType message box type i.e Inbox or Outbox
- *
- * @return previousMessageHash_ previous messageHash
- */
+     * @notice Clears the previous process. Validates the
+     *         nonce. Updates the process with new process
+     *
+     * @param _account Account address
+     * @param _nonce Nonce for the account address
+     * @param _messageHash Message hash
+     * @param _messageBoxType message box type i.e Inbox or Outbox
+     *
+     * @return previousMessageHash_ previous messageHash
+     */
     function initiateNewProcess(
         address _account,
         uint256 _nonce,
