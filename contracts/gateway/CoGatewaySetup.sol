@@ -31,6 +31,11 @@ import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 
+/**
+ *  @title CoGatewaySetup contract.
+ *
+ *  @notice CoGatewaySetup contains functions for initial setup of co-gateway.
+ */
 contract CoGatewaySetup is Hasher, GatewayUtil {
 
     using SafeMath for uint256;

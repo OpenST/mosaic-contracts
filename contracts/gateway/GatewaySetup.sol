@@ -29,6 +29,11 @@ import "./GatewayUtil.sol";
 import "./CoreInterface.sol";
 import "./SafeMath.sol";
 
+/**
+ *  @title GatewaySetup contract.
+ *
+ *  @notice GatewaySetup contains functions for initial setup of gateway.
+ */
 contract GatewaySetup is Hasher, GatewayUtil {
 
     using SafeMath for uint256;

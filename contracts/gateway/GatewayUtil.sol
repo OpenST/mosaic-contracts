@@ -2,12 +2,30 @@ pragma solidity ^0.4.23;
 
 import './BytesLib.sol';
 
+/**
+ *  @title GatewayUtil contract.
+ *
+ *  @notice GatewayUtil contains general purpose functions shared between
+ *  gateway and co-gateway.
+ */
 contract GatewayUtil {
 
+
+    /* Internal functions */
+
+    /**
+     * @notice Returns the codehash of external library by trimming first
+     *         21 bytes. From 21 bytes first bytes is jump opcode and rest
+     *         20 bytes is address of library.
+     *
+     * @param _libraryAddress Address of library contract.
+     *
+     * @return codeHash_ return code hash of library
+     */
     function libraryCodeHash(address _libraryAddress)
-    view
-    internal
-    returns (bytes32)
+        view
+        internal
+        returns (bytes32)
     {
         bytes memory code = getCode(_libraryAddress);
         //trim the first 21 bytes in library code.
@@ -17,23 +35,30 @@ contract GatewayUtil {
 
     }
 
-    function getCode(address _address)
-    view
-    internal
-    returns (bytes o_code)
+    /**
+     * @notice Returns the codehash of the contract
+     *
+     * @param _contractAddress Address of  contract.
+     *
+     * @return codehash_ return code hash of contract
+     */
+    function getCode(address _contractAddress)
+        view
+        internal
+        returns (bytes codeHash_)
     {
         assembly {
         // retrieve the size of the code, this needs assembly
-            let size := extcodesize(_address)
+            let size := extcodesize(_contractAddress)
         // allocate output byte array - this could also be done without assembly
         // by using o_code = new bytes(size)
-            o_code := mload(0x40)
+            codeHash_ := mload(0x40)
         // new "memory end" including padding
-            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            mstore(0x40, add(codeHash_, and(add(add(size, 0x20), 0x1f), not(0x1f))))
         // store length in memory
-            mstore(o_code, size)
+            mstore(codeHash_, size)
         // actually retrieve the code, this needs assembly
-            extcodecopy(_address, add(o_code, 0x20), 0, size)
+            extcodecopy(_contractAddress, add(codeHash_, 0x20), 0, size)
         }
     }
 
