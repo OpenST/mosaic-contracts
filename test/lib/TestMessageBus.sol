@@ -163,7 +163,13 @@ contract TestMessageBus {
         view
         returns(bytes32 /* Message hash */)
     {
-        return MessageBus.messageDigest(hasher.stakeTypeHash(), intentHash, nonce, gasPrice, gasLimit);
+        return MessageBus.messageDigest(
+                hasher.stakeTypeHash(),
+                intentHash,
+                nonce,
+                gasPrice,
+                gasLimit
+        );
     }
 
     function setMessage()
