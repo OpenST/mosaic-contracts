@@ -224,9 +224,10 @@ contract Gateway is GatewaySetup {
 		EIP20Interface _bountyToken, //TODO: think of a better name
 		CoreInterface _core,
 		uint256 _bounty,
-		address _organisation
+		address _organisation,
+		address _messageBus
 	)
-	GatewaySetup(_token, _bountyToken, _core, _bounty, _organisation)
+	GatewaySetup(_token, _bountyToken, _core, _bounty, _organisation, _messageBus)
 	public
 	{
 		// deploy simpleStake contract that will keep the staked amounts.

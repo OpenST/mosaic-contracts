@@ -25,11 +25,11 @@ import './ProofLib.sol';
 import './MessageBus.sol';
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
-import "./Util.sol";
+import "./GatewayUtil.sol";
 import "./CoreInterface.sol";
 import "./SafeMath.sol";
 
-contract GatewaySetup is Hasher {
+contract GatewaySetup is Hasher, GatewayUtil {
 
     using SafeMath for uint256;
 
@@ -128,6 +128,9 @@ contract GatewaySetup is Hasher {
     /** path to prove merkle account proof for CoGateway contract. */
     bytes internal encodedCoGatewayPath;
 
+    /** address of message bus used to fetch codehash during gateway linking */
+    address internal messageBus;
+
     /* modifiers */
 
     /** checks that only organisation can call a particular function. */
@@ -168,7 +171,8 @@ contract GatewaySetup is Hasher {
         EIP20Interface _bountyToken, //TODO: think of a better name
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation
+        address _organisation,
+        address _messageBus
     )
     public
     {
@@ -189,6 +193,11 @@ contract GatewaySetup is Hasher {
             _organisation != address(0),
             "Organisation address must not be zero"
         );
+        require(
+            _messageBus != address(0),
+            "MessageBus address must not be zero"
+        );
+
 
         // gateway and cogateway is not linked yet so it is initialized as false
         linked = false;
@@ -201,6 +210,7 @@ contract GatewaySetup is Hasher {
         core = _core;
         bounty = _bounty;
         organisation = _organisation;
+        messageBus = _messageBus;
 
     }
 
@@ -263,11 +273,11 @@ contract GatewaySetup is Hasher {
             "Signature must be of length 65"
         );
 
-        // TODO: need to add check for MessageBus.
         //       (This is already done in other branch)
         bytes32 intentHash = hashLinkGateway(
             address(this),
             coGateway,
+            libraryCodeHash(address(messageBus)), //todo change to library address
             bounty,
             token.name(),
             token.symbol(),

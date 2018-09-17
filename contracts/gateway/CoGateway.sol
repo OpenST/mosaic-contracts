@@ -252,9 +252,10 @@ contract CoGateway is CoGatewaySetup {
 		CoreInterface _core,
 		uint256 _bounty,
 		address _organisation,
-		address _gateway
+		address _gateway,
+		address _messageBus
 	)
-	CoGatewaySetup(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway)
+	CoGatewaySetup(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway, _messageBus)
 	public
 	{
 

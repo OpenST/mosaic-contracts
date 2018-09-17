@@ -2,10 +2,9 @@ pragma solidity ^0.4.23;
 
 import './BytesLib.sol';
 
-library Util {
+contract GatewayUtil {
 
-
-    function getLibraryContractCodeHash(address _libraryAddress)
+    function libraryCodeHash(address _libraryAddress)
     view
     internal
     returns (bytes32)

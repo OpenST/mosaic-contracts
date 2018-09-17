@@ -26,12 +26,12 @@ import "./ProofLib.sol";
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
-import "./Util.sol";
+import "./GatewayUtil.sol";
 import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
 
-contract CoGatewaySetup is Hasher {
+contract CoGatewaySetup is Hasher, GatewayUtil {
 
     using SafeMath for uint256;
 
@@ -129,6 +129,10 @@ contract CoGatewaySetup is Hasher {
     /* path to prove merkle account proof for Gateway contract */
     bytes internal encodedGatewayPath;
 
+    /** address of message bus used to fetch codehash during gateway linking */
+    address internal messageBus;
+
+
     /* modifiers */
 
     /** checks that only organisation can call a particular function. */
@@ -171,7 +175,8 @@ contract CoGatewaySetup is Hasher {
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _gateway
+        address _gateway,
+        address _messageBus
     )
     public
     {
@@ -195,6 +200,10 @@ contract CoGatewaySetup is Hasher {
             _gateway != address(0),
             "Gateway address must not be zero"
         );
+        require(
+            _messageBus != address(0),
+            "MessageBus address must not be zero"
+        );
 
         //gateway and cogateway is not linked yet so it is initialized as false
         linked = false;
@@ -208,6 +217,7 @@ contract CoGatewaySetup is Hasher {
         core = _core;
         bounty = _bounty;
         organisation = _organisation;
+        messageBus = _messageBus;
 
         // update the encodedGatewayPath
         encodedGatewayPath = ProofLib.bytes32ToBytes(
@@ -281,11 +291,11 @@ contract CoGatewaySetup is Hasher {
             "Storage root for given block height must not be zero"
         );
 
-        // TODO: need to add check for MessageBus.
         //       (This is already done in other branch)
         bytes32 intentHash = hashLinkGateway(
             gateway,
             address(this),
+            libraryCodeHash(address(messageBus)), //todo change to library address
             bounty,
             EIP20Interface(utilityToken).name(),
             EIP20Interface(utilityToken).symbol(),
