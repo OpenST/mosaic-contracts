@@ -480,10 +480,13 @@ library MessageBus {
         bytes _signature,
         address _signer
     )
-        private
+        internal
         pure
         returns (bool /*success*/)
     {
+        if (_signature.length != 65) {
+            return false;
+        }
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
 
         _message = keccak256(abi.encodePacked(prefix, _message));
@@ -500,6 +503,9 @@ library MessageBus {
         // possible versions
         if (v < 27) {
             v += 27;
+        }
+        if (v != 27 && v != 28) {
+            return false;
         }
         return (ecrecover(_message, v, r, s) == _signer);
     }
