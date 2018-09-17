@@ -757,6 +757,9 @@ contract Gateway is Hasher {
         //Transfer the bounty amount to the msg.sender
         bountyToken.transfer(msg.sender, bounty);
 
+        // delete the stake data
+        delete stakes[_messageHash];
+
         // Emit ProgressedStake event.
         emit ProgressedStake(
             _messageHash,
@@ -849,6 +852,9 @@ contract Gateway is Hasher {
         */
         // Currently we are transferring the bounty amount to the msg.sender
         bountyToken.transfer(msg.sender, bounty);
+
+        // delete the stake data
+        delete stakes[_messageHash];
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedStake event.
@@ -991,6 +997,9 @@ contract Gateway is Hasher {
 
         // transfer the bounty to msg.sender
         bountyToken.transfer(msg.sender, bounty);
+
+        // delete the stake data
+        delete stakes[_messageHash];
 
         // Emit RevertedStake event
         emit RevertedStake(
@@ -1209,6 +1218,9 @@ contract Gateway is Hasher {
         //reward facilitator with the reward amount
         stakeVault.releaseTo(msg.sender, rewardAmount_);
 
+        // delete the unstake data
+        delete unstakes[_messageHash];
+
         // Emit ProgressedUnstake event
         emit ProgressedUnstake(
             _messageHash,
@@ -1309,6 +1321,9 @@ contract Gateway is Hasher {
         //TODO: Should the rewared here be in OST (bountyToken)?
         //reward facilitator with the reward amount
         stakeVault.releaseTo(msg.sender, rewardAmount_);
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedUnstake event
@@ -1440,6 +1455,9 @@ contract Gateway is Hasher {
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = unstakeData.amount;
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
 
         // Emit RevertedRedemption event
         emit RevertRedemptionComplete(
@@ -1733,14 +1751,14 @@ contract Gateway is Hasher {
         view
         returns (uint256 /* nonce */)
     {
-        ActiveProcess storage prevousProcess  = activeProcess[_account];
+        ActiveProcess storage previousProcess = activeProcess[_account];
 
-        if (prevousProcess.messageHash == bytes32(0)) {
+        if (previousProcess.messageHash == bytes32(0)) {
             return 1;
         }
 
         MessageBus.Message storage message =
-        messages[prevousProcess.messageHash];
+        messages[previousProcess.messageHash];
 
         return message.nonce.add(1);
     }

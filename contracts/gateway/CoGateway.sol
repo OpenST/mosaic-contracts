@@ -777,6 +777,9 @@ contract CoGateway is Hasher {
         //reward beneficiary with the reward amount
         UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
 
+        // delete the mint data
+        delete mints[_messageHash];
+
         // Emit ProgressedMint event
         emit ProgressedMint(
             _messageHash,
@@ -874,6 +877,9 @@ contract CoGateway is Hasher {
 
         //reward beneficiary with the reward amount
         UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
+
+        // delete the mint data
+        delete mints[_messageHash];
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedMint event
@@ -1003,6 +1009,9 @@ contract CoGateway is Hasher {
         staker_ = message.sender;
         stakerNonce_ = message.nonce;
         amount_ = mints[_messageHash].amount;
+
+        // delete the mint data
+        delete mints[_messageHash];
 
         // Emit RevertStakeProgressed event
         emit RevertStakeProgressed(
@@ -1210,6 +1219,9 @@ contract CoGateway is Hasher {
         // Transfer the bounty amount to the facilitator
         msg.sender.transfer(bounty);
 
+        // delete the redeem data
+        delete redeems[_messageHash];
+
         // Emit ProgressedRedemption event.
         emit ProgressedRedemption(
             _messageHash,
@@ -1287,6 +1299,9 @@ contract CoGateway is Hasher {
 
         // Transfer the bounty amount to the facilitator
         msg.sender.transfer(bounty);
+
+        // delete the redeem data
+        delete redeems[_messageHash];
 
         //TODO: we can have a seperate event for this.
         // Emit ProgressedRedemption event.
@@ -1430,6 +1445,9 @@ contract CoGateway is Hasher {
 
         // transfer the bounty to msg.sender
         msg.sender.transfer(bounty);
+
+        // delete the redeem data
+        delete redeems[_messageHash];
 
         // Emit RevertedRedemption event
         emit RevertedRedemption(
@@ -1721,14 +1739,14 @@ contract CoGateway is Hasher {
         view
         returns (uint256 /* nonce */)
     {
-        ActiveProcess storage prevousProcess  = activeProcess[_account];
+        ActiveProcess storage previousProcess = activeProcess[_account];
 
-        if (prevousProcess.messageHash == bytes32(0)) {
+        if (previousProcess.messageHash == bytes32(0)) {
             return 1;
         }
 
         MessageBus.Message storage message =
-        messages[prevousProcess.messageHash];
+        messages[previousProcess.messageHash];
 
         return message.nonce.add(1);
     }
