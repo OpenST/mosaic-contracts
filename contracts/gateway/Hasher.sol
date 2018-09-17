@@ -29,18 +29,18 @@ pragma solidity ^0.4.23;
  */
 contract Hasher {
 
-    bytes32 public constant STAKE_TYPEHASH = keccak256(
+    bytes32 constant STAKE_TYPEHASH = keccak256(
         abi.encode(
             "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
 
-    bytes32 public constant REDEEM_TYPEHASH = keccak256(
+    bytes32 constant REDEEM_TYPEHASH = keccak256(
         abi.encode(
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 public constant GATEWAY_LINK_TYPEHASH =  keccak256(
+    bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
         abi.encode(
             "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
         )
