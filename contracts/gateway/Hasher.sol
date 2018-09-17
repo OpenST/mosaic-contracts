@@ -50,7 +50,6 @@ contract Hasher {
     function hashLinkGateway(
         address _gateway,
         address _coGateway,
-        bytes32 _messageBusCodeHash,
         uint256 _bounty,
         string _tokenName,
         string _tokenSymbol,
@@ -58,15 +57,14 @@ contract Hasher {
         uint256 _nonce,
         address _token
     )
-        public
-        pure
-        returns (bytes32)
+    public
+    pure
+    returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
                 _gateway,
                 _coGateway,
-                _messageBusCodeHash,
                 _bounty,
                 _tokenName,
                 _tokenSymbol,
@@ -86,9 +84,9 @@ contract Hasher {
         uint256 _gasLimit,
         address _token
     )
-        public
-        pure
-        returns (bytes32)
+    public
+    pure
+    returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
@@ -112,9 +110,9 @@ contract Hasher {
         uint256 _gasLimit,
         address _token
     )
-        public
-        pure
-        returns (bytes32)
+    public
+    pure
+    returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
@@ -130,25 +128,25 @@ contract Hasher {
     }
 
     function stakeTypeHash()
-        external
-        pure
-        returns (bytes32 /* type hash */)
+    external
+    pure
+    returns (bytes32 /* type hash */)
     {
         return STAKE_TYPEHASH;
     }
 
     function redeemTypeHash()
-        external
-        pure
-        returns (bytes32 /* type hash */)
+    external
+    pure
+    returns (bytes32 /* type hash */)
     {
         return REDEEM_TYPEHASH;
     }
 
     function gatewayLinkTypeHash()
-        external
-        pure
-        returns (bytes32 /* type hash */)
+    external
+    pure
+    returns (bytes32 /* type hash */)
     {
         return GATEWAY_LINK_TYPEHASH;
     }
