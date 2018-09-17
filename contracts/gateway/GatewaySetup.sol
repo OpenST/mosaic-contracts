@@ -203,7 +203,6 @@ contract GatewaySetup is Hasher, GatewayUtil {
             "MessageBus address must not be zero"
         );
 
-
         // gateway and cogateway is not linked yet so it is initialized as false
         linked = false;
 
@@ -460,6 +459,8 @@ contract GatewaySetup is Hasher, GatewayUtil {
         return true;
     }
 
+    /** internal methods*/
+
     /**
      * @notice Create and return Message object.
      *
@@ -555,6 +556,8 @@ contract GatewaySetup is Hasher, GatewayUtil {
             messageBoxType: _messageBoxType
             });
     }
+
+    /** private methods */
 
     /**
      * @notice Private function to get the nonce for the given account address
