@@ -33,6 +33,7 @@ contract TestMessageBus {
     bytes32 intentHash = keccak256(abi.encodePacked('intent'));
     uint256 nonce = 1;
     uint256 gasPrice = 0x12A05F200;
+    uint256 gasLimit = 0x12A05F200;
     uint256 gasConsumed = 0;
 
     bytes rlpEncodedParentNodes = '0xf8f8f8b18080a011eb05caf5fa62e9b0fffc9118cf6c7a6f10870db11d837223bf585fc7283b2c80a0be65b7596c589a734b53d15e0cc9f13eae2083bf0173b1c2baf1534d9273882d8080808080a0997f2ab256882c505e8887d9f7622a18a17dc5727a0e9d04d314e59d482a508780a088976b814f3477b2d25aa3992c31abc4a4299557a6e94ca7786a440b15a07f1e80a04b140101c7c54b2c4d69e4cf35a353d7d969e439c48fe7388eaec325f1bfe6578080f843a0390decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563a1a03132333400000000000000000000000000000000000000000000000000000008' ;
@@ -41,7 +42,7 @@ contract TestMessageBus {
     Hasher hasher = new Hasher();
 
     /* Signature Verification Parameters */
-    address sender = 0x8014986b452de9f00ff9b036dcbe522f918e2fe4;
+    address sender = address(0x8014986b452de9f00ff9b036dcbe522f918e2fe4);
     bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
 
 
@@ -162,7 +163,7 @@ contract TestMessageBus {
         view
         returns(bytes32 /* Message hash */)
     {
-        return MessageBus.messageDigest(hasher.stakeTypeHash(), intentHash, nonce, gasPrice);
+        return MessageBus.messageDigest(hasher.stakeTypeHash(), intentHash, nonce, gasPrice, gasLimit);
     }
 
     function setMessage()
@@ -172,6 +173,7 @@ contract TestMessageBus {
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : gasPrice,
+            gasLimit : gasLimit,
             sender : sender,
             hashLock : hashLock,
             gasConsumed: gasConsumed
