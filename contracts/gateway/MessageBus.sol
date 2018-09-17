@@ -177,17 +177,22 @@ library MessageBus {
 	}
 
 
-	function verifySignature(bytes32 _message, bytes _signature, address signer)
+	function verifySignature(bytes32 _message, bytes _signature, address _signer)
 	internal
 	pure
 	returns (bool /*success*/)
 	{
+		if (_signature.length != 65) {
+			return false;
+		}
+
 		bytes memory prefix = "\x19Ethereum Signed Message:\n32";
 		_message = keccak256(abi.encodePacked(prefix, _message));
 
 		bytes32 r;
 		bytes32 s;
 		uint8 v;
+
 		assembly {
 			r := mload(add(_signature, 32))
 			s := mload(add(_signature, 64))
@@ -197,7 +202,10 @@ library MessageBus {
 		if (v < 27) {
 			v += 27;
 		}
-		return (ecrecover(_message, v, r, s) == signer);
+		if (v != 27 && v != 28) {
+			return false;
+		}
+		return (ecrecover(_message, v, r, s) == _signer);
 	}
 
 
