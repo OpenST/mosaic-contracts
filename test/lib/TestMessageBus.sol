@@ -46,7 +46,7 @@ contract TestMessageBus {
     address signer = 0x8014986b452DE9f00ff9B036dcBe522f918E2fE4;
 
     /* External Functions */
-    // TODO revert cases
+    // TODO test fail cases
     // TODO refactor repeat code. in before callback
     function testProgressInbox(
     )
