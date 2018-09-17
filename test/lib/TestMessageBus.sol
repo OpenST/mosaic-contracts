@@ -25,7 +25,6 @@ import "../../contracts/gateway/Hasher.sol";
 contract TestMessageBus {
 
     MessageBus.MessageBox messageBox;
-    MessageBus.Message message;
 
     bytes32 unlockSecret = keccak256(abi.encodePacked('secret'));
     bytes32 unlockSecret1 = keccak256(abi.encodePacked('secret1'));
@@ -44,24 +43,42 @@ contract TestMessageBus {
     /* Signature Verification Parameters */
     address sender = address(0x8014986b452de9f00ff9b036dcbe522f918e2fe4);
     bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
-
+    bytes32 messageHash = MessageBus.messageDigest(
+        hasher.stakeTypeHash(),
+        intentHash,
+        nonce,
+        gasPrice,
+        gasLimit
+    );
+    MessageBus.Message message = MessageBus.Message({
+        intentHash : intentHash,
+        nonce : nonce,
+        gasPrice : gasPrice,
+        gasLimit : gasLimit,
+        sender : sender,
+        hashLock : hashLock,
+        gasConsumed: gasConsumed
+    });
 
     /* External Functions */
     // TODO test fail cases
     // TODO refactor repeat code. in before callback
-    function testProgressInbox(
-    )
+    // TODO move hardcoded values to data contract
+    function testProgressInbox()
         external
     {
-        bytes32 messageHash = getMessageDigest();
-        setMessage();
         messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
 
-        MessageBus.progressInbox(
+        bytes32 returnedMessageHash = MessageBus.progressInbox(
             messageBox,
             hasher.stakeTypeHash(),
             message,
             unlockSecret
+        );
+        Assert.equal(
+            bytes32(returnedMessageHash),
+            bytes32(messageHash),
+            "Returned message hash not equal to passed messageHash."
         );
         Assert.equal(
             uint256(messageBox.inbox[messageHash]),
@@ -96,8 +113,7 @@ contract TestMessageBus {
     function testVerifySignature()
         external
     {
-        bytes memory signature = new bytes(65);
-        signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
+        bytes memory signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
         Assert.equal(
             MessageBus.verifySignature(hashedMessage, signature, address(0)),
             false,
@@ -115,26 +131,30 @@ contract TestMessageBus {
         );
     }
 
-//    function testDeclareRevocationMessage()
-//        external
-//    {
-//        bytes32 messageHash = getMessageDigest();
-//        setMessage();
-//        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
-//        MessageBus.declareRevocationMessage(
-//            messageBox,
-//            hasher.stakeTypeHash(),
-//            message,
-//            signature
-//        );
-//
-//        Assert.equal(
-//            uint256(messageBox.inbox[messageHash]),
-//            uint256(MessageBus.MessageStatus.DeclaredRevocation),
-//            "Status not changed to DeclaredRevocation."
-//        );
-//    }
-//
+    function testDeclareRevocationMessage()
+        external
+    {
+        // Calculated by hashing revocationMessage
+        bytes memory revocationSignature = hex"bda7f05d7bcbac276482ff0809c532edd57b10cce5638d3dede72bfd73a3ef3140e200b0a0e313beacdb79491d387000949751f2e6fe7eec4c03044ecc14fc2d00";
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 returnedMessageHash = MessageBus.declareRevocationMessage(
+            messageBox,
+            hasher.stakeTypeHash(),
+            message,
+            revocationSignature
+        );
+        Assert.equal(
+            bytes32(returnedMessageHash),
+            bytes32(messageHash),
+            "Returned message hash not equal to passed messageHash."
+        );
+        Assert.equal(
+            uint256(messageBox.outbox[messageHash]),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "Status not changed to DeclaredRevocation."
+        );
+    }
+
 //    function testConfirmRevocation()
 //        external
 //    {
@@ -156,35 +176,6 @@ contract TestMessageBus {
 //            "Status not changed to DeclaredRevocation."
 //        );
 //    }
-
-    /* Private Functions */
-    function getMessageDigest()
-        private
-        view
-        returns(bytes32 /* Message hash */)
-    {
-        return MessageBus.messageDigest(
-                hasher.stakeTypeHash(),
-                intentHash,
-                nonce,
-                gasPrice,
-                gasLimit
-        );
-    }
-
-    function setMessage()
-        private
-    {
-        message = MessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
-            gasPrice : gasPrice,
-            gasLimit : gasLimit,
-            sender : sender,
-            hashLock : hashLock,
-            gasConsumed: gasConsumed
-        });
-    }
 
 
 }
