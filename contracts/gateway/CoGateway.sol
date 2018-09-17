@@ -881,7 +881,7 @@ contract CoGateway is Hasher {
         // delete the mint data
         delete mints[_messageHash];
 
-        //TODO: we can have a seperate event for this.
+        //TODO: we can have a separate event for this.
         // Emit ProgressedMint event
         emit ProgressedMint(
             _messageHash,
@@ -1092,7 +1092,6 @@ contract CoGateway is Hasher {
             "HashLock must not be zero"
         );
 
-        //TODO: include _gasLimit in redemption hash
         // Get the redemption intent hash
         bytes32 intentHash = hashRedemptionIntent(
             _amount,

@@ -690,7 +690,6 @@ contract Gateway is Hasher {
         //transfer staker amount to gateway
         require(token.transferFrom(_staker, address(this), _amount));
 
-        // TODO: change the bounty transfer in BountyToken (Think for a name)
         // transfer the bounty amount
         require(bountyToken.transferFrom(msg.sender, address(this), bounty));
 
@@ -856,7 +855,7 @@ contract Gateway is Hasher {
         // delete the stake data
         delete stakes[_messageHash];
 
-        //TODO: we can have a seperate event for this.
+        //TODO: we can have a separate event for this.
         // Emit ProgressedStake event.
         emit ProgressedStake(
             _messageHash,
@@ -1178,7 +1177,7 @@ contract Gateway is Hasher {
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-        //TODO: discuss this, infact the _unlockSecret can be zero.
+        //TODO: discuss this, in fact the _unlockSecret can be zero.
         require(
             _unlockSecret != bytes32(0),
             "Unlock secret must not be zero"
@@ -1318,14 +1317,14 @@ contract Gateway is Hasher {
         // Release the amount to beneficiary
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
-        //TODO: Should the rewared here be in OST (bountyToken)?
+        //TODO: Should the reward here be in OST (bountyToken)?
         //reward facilitator with the reward amount
         stakeVault.releaseTo(msg.sender, rewardAmount_);
 
         // delete the unstake data
         delete unstakes[_messageHash];
 
-        //TODO: we can have a seperate event for this.
+        //TODO: we can have a separate event for this.
         // Emit ProgressedUnstake event
         emit ProgressedUnstake(
             _messageHash,
