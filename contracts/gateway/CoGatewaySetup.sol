@@ -1,191 +1,501 @@
 pragma solidity ^0.4.23;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Auxiliary Chain: CoGateway Contract
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 import "./MessageBus.sol";
 import "./ProofLib.sol";
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
 import "./Util.sol";
+import "./CoreInterface.sol";
+import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
 
 contract CoGatewaySetup is Hasher {
+
     using SafeMath for uint256;
 
+    /** Emitted whenever a gateway and coGateway linking is confirmed. */
     event GatewayLinkConfirmed(
-        bytes32 messageHash,
-        address gateway,
-        address cogateway,
-        address token
+        bytes32 indexed _messageHash,
+        address _gateway,
+        address _cogateway,
+        address _valueToken,
+        address _utilityToken
     );
 
-    event GatewayLinkProcessed(
-        bytes32 messageHash,
-        address gateway,
-        address cogateway,
-        address token
+    /** Emitted whenever a gateway and coGateway linking is complete. */
+    event GatewayLinkProgressed(
+        bytes32 indexed _messageHash,
+        address _gateway,
+        address _cogateway,
+        address _valueToken,
+        address _utilityToken,
+        bytes32 _unlockSecret
     );
 
-    struct GatewayLink {
+    /**
+     * ActiveProcess stores the information related to in progress process
+     * like stake/mint unstake/redeem.
+     */
+    struct ActiveProcess {
+
+        /** latest message hash. */
         bytes32 messageHash;
-        MessageBus.Message message;
+
+        /** Outbox or Inbox process. */
+        MessageBus.MessageBoxType messageBoxType;
     }
 
-    address public gateway;
-    MessageBus.MessageBox messageBox;
-    address public organisation;
-    bool public isActivated;
-    GatewayLink gatewayLink;
-    uint256 public bounty;
-    address public utilityToken;
-    uint8 outboxOffset = 1;
-    /*mapping to store storage root with block height*/
-    mapping(uint256 /* block height */ => bytes32)  storageRoots;
-    /* path to prove merkle account proof for gateway  */
-    bytes  encodedGatewayPath;
-    //todo explore ways by which message bus address can be retrieved within contract as it's linked library
-    address  messageBus;
+    /* constants */
 
+    uint8 MESSAGE_BOX_OFFSET = 1;
+
+    /* public variables */
+
+    /** Gateway contract address. */
+    address public gateway;
+
+    /**
+     * Message box.
+     * @dev keep this is at location 1, in case this is changed then update
+     *      constant OUTBOX_OFFSET accordingly.
+     */
+    MessageBus.MessageBox messageBox;
+
+    /** Specifies if the Gateway and CoGateway contracts are linked. */
+    bool public linked;
+
+    /** Specifies if the CoGateway is deactivated for any new redeem process.*/
+    bool public deactivated;
+
+    /** Organisation address. */
+    address public organisation;
+
+    /** amount of base token which is staked by facilitator. */
+    uint256 public bounty;
+
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
+    /** address of core contract. */
+    CoreInterface public core;
+
+    /** Gateway link message hash. */
+    bytes32 public gatewayLinkHash;
+
+    /** Maps messageHash to the Message object. */
+    mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
+
+    /**
+     * Maps address to ActiveProcess object.
+     *
+     * Once the minting or redeem process is started the corresponding
+     * message hash is stored in ActiveProcess against the staker/redeemer
+     * address. This is used to restrict simultaneous/multiple minting and
+     * redeem for a particular address. This is also used to determine the
+     * nonce of the particular address. Refer getNonce for the details.
+     */
+    mapping(address /*address*/ => ActiveProcess) activeProcess;
+
+    /** Maps blockHeight to storageRoot*/
+    mapping(uint256 /* block height */ => bytes32) internal storageRoots;
+
+    /* internal variables */
+
+    /* path to prove merkle account proof for Gateway contract */
+    bytes internal encodedGatewayPath;
+
+    /* modifiers */
+
+    /** checks that only organisation can call a particular function. */
+    modifier onlyOrganisation() {
+        require(
+            msg.sender == organisation,
+            "Only organisation can call the function"
+        );
+        _;
+    }
+
+    /** checks that contract is linked and is not deactivated */
+    modifier isActive() {
+        require(
+            deactivated == false && linked == true,
+            "Contract is restricted to use"
+        );
+        _;
+    }
+
+    /* Constructor */
+
+    /**
+     * @notice Initialise the contract by providing the Gateway contract
+     *         address for which the CoGateway will enable facilitation of
+     *         minting and redeeming.
+     *
+     * @param _valueToken The value token contract address.
+     * @param _utilityToken The utility token address that will be used for
+     *                      minting the utility token.
+     * @param _core Core contract address.
+     * @param _bounty The amount that facilitator will stakes to initiate the
+     *                staking process.
+     * @param _organisation Organisation address.
+     * @param _gateway Gateway contract address.
+     */
     constructor(
+        address _valueToken,
         address _utilityToken,
+        CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _gateway,
-        address _messageBus
+        address _gateway
     )
     public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero"
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero"
+        );
+        require(
+            _core != address(0),
+            "Core contract address must not be zero"
+        );
+        require(
+            _organisation != address(0),
+            "Organisation address must not be zero"
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero"
+        );
 
-        require(_utilityToken != address(0));
-        require(_gateway != address(0));
-        require(_organisation != address(0));
-        require(_messageBus != address(0));
+        //gateway and cogateway is not linked yet so it is initialized as false
+        linked = false;
 
-        isActivated = false;
+        // gateway is active
+        deactivated = false;
+
+        valueToken = _valueToken;
         utilityToken = _utilityToken;
         gateway = _gateway;
+        core = _core;
         bounty = _bounty;
         organisation = _organisation;
-        messageBus = _messageBus;
 
-        encodedGatewayPath = ProofLib.bytes32ToBytes(keccak256(abi.encodePacked(_gateway)));
-
+        // update the encodedGatewayPath
+        encodedGatewayPath = ProofLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(_gateway))
+        );
     }
 
+    /* External functions */
 
+    /**
+     * @notice Confirm the Gateway and CoGateway contracts initiation.
+     *
+     * @param _intentHash Gateway and CoGateway linking intent hash.
+     *                    This is a sha3 of gateway address, cogateway address,
+     *                    bounty, token name, token symbol, token decimals,
+     *                    _nonce, token.
+     * @param _nonce Nonce of the sender. Here in this case its organisation
+     *               address of Gateway
+     * @param _sender The address that signs the message hash. In this case it
+     *                has to be organisation address of Gateway
+     * @param _hashLock Hash lock, set by the facilitator.
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox of Gateway
+     *
+     * @return messageHash_ Message hash
+     */
     function confirmGatewayLinkIntent(
         bytes32 _intentHash,
-        uint256 _gasPrice,
         uint256 _nonce,
         address _sender,
         bytes32 _hashLock,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
     )
-    public
+    public // TODO: check to change it to external, getting stack to deep.
     returns (bytes32 messageHash_)
     {
-        uint256 initialGas = gasleft();
-        require(msg.sender == organisation);
-        require(gatewayLink.messageHash == bytes32(0));
-
-
-        require(confirmGatewayLinkIntentInternal(
-                _gasPrice,
-                _intentHash,
-                _nonce,
-                _blockHeight,
-                _rlpParentNodes
-            )
+        require(
+            linked == false,
+            "CoGateway contract must not be already linked"
+        );
+        require(
+            deactivated == false,
+            "Gateway contract must not be deactivated"
+        );
+        require(
+            gatewayLinkHash == bytes32(0),
+            "Linking is already initiated"
+        );
+        require(
+            _sender != address(0),
+            "Sender must be not be zero"
+        );
+        require(
+            _nonce == _getNonce(_sender),
+            "Sender nonce must be in sync"
+        );
+        require(
+            _hashLock != bytes32(0),
+            "Hash lock must not be zero"
+        );
+        require(
+            _rlpParentNodes.length > 0,
+            "RLP parent nodes must not be zero"
         );
 
-        messageHash_ = MessageBus.messageDigest(GATEWAY_LINK_TYPEHASH, _intentHash, _nonce, _gasPrice);
-
-        gatewayLink = GatewayLink({
-            messageHash : messageHash_,
-            message : getMessage(
-                _sender,
-                _nonce,
-                _gasPrice,
-                _intentHash,
-                _hashLock
-            )
-            });
-
-        emit GatewayLinkConfirmed(
-            messageHash_,
-            gateway,
-            address(this),
-            utilityToken
+        bytes32 storageRoot = storageRoots[_blockHeight];
+        require(
+            storageRoot != bytes32(0),
+            "Storage root for given block height must not be zero"
         );
-        gatewayLink.message.gasConsumed = initialGas.sub(gasleft());
-    }
 
-    function confirmGatewayLinkIntentInternal(
-        uint256 _gasPrice,
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _blockHeight,
-        bytes memory _rlpParentNodes
-    )
-    internal
-    returns (bool)
-    {
+        // TODO: need to add check for MessageBus.
+        //       (This is already done in other branch)
         bytes32 intentHash = hashLinkGateway(
             gateway,
             address(this),
-            Util.getLibraryContractCodeHash(address(this)), //todo change to library address
             bounty,
             EIP20Interface(utilityToken).name(),
             EIP20Interface(utilityToken).symbol(),
             EIP20Interface(utilityToken).decimals(),
-            _gasPrice,
-            _nonce
+            _nonce,
+            valueToken);
+
+        // Ensure that the _intentHash matches the calculated intentHash
+        require(
+            intentHash == _intentHash,
+            "Incorrect intent hash"
         );
 
-        require(intentHash == _intentHash);
+        // Get the message hash
+        messageHash_ = MessageBus.messageDigest(
+            GATEWAY_LINK_TYPEHASH,
+            intentHash,
+            _nonce,
+            0,
+            0
+        );
+        // create Message object
+        messages[messageHash_] = getMessage(
+            _sender,
+            _nonce,
+            0,
+            0,
+            _intentHash,
+            _hashLock
+        );
 
+        // initiate new inbox process
+        initiateNewProcess(
+            _sender,
+            _nonce,
+            messageHash_,
+            MessageBus.MessageBoxType.Inbox
+        );
+
+        // Declare message in inbox
         MessageBus.confirmMessage(
             messageBox,
             GATEWAY_LINK_TYPEHASH,
-            gatewayLink.message,
+            messages[messageHash_],
             _rlpParentNodes,
-            outboxOffset,
-            storageRoots[_blockHeight]
+            MESSAGE_BOX_OFFSET,
+            storageRoot
         );
 
-        return true;
+        gatewayLinkHash = messageHash_;
+
+        // Emit GatewayLinkConfirmed event
+        emit GatewayLinkConfirmed(
+            messageHash_,
+            gateway,
+            address(this),
+            valueToken,
+            utilityToken
+        );
     }
 
-    function processGatewayLink(
+    /**
+     * @notice Complete the Gateway and CoGateway contracts linking. This will
+     *         set the variable linked to true, and thus it will activate the
+     *         CoGateway contract for mint and redeem.
+     *
+     * @param _messageHash Message hash
+     * @param _unlockSecret Unlock secret for the hashLock provide by the
+     *                      facilitator while initiating the Gateway/CoGateway
+     *                      linking
+     *
+     * @return `true` if gateway linking was successfully progressed
+     */
+    function progressGatewayLink(
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
     external
-    returns (bool /*TBD*/)
+    returns (bool)
     {
-        // TODO: think about fee transfer
-        require(_messageHash != bytes32(0));
-        require(_unlockSecret != bytes32(0));
+        require(
+            _messageHash != bytes32(0),
+            "Message hash must not be zero"
+        );
+        require(
+            _unlockSecret != bytes32(0),
+            "Unlock secret must not be zero"
+        );
+        require(
+            gatewayLinkHash == _messageHash,
+            "Invalid message hash"
+        );
 
-        require(gatewayLink.messageHash == _messageHash);
+        // Progress inbox
+        MessageBus.progressInbox(
+            messageBox,
+            GATEWAY_LINK_TYPEHASH,
+            messages[_messageHash],
+            _unlockSecret
+        );
 
-        MessageBus.progressInbox(messageBox, GATEWAY_LINK_TYPEHASH, gatewayLink.message, _unlockSecret);
+        // Update to specify the Gateway/CoGateway is linked
+        linked = true;
 
-        // TODO: think about fee transfer
-
-        isActivated = true;
-        emit  GatewayLinkProcessed(
+        // Emit GatewayLinkProgressed event
+        emit GatewayLinkProgressed(
             _messageHash,
             gateway,
             address(this),
-            utilityToken
+            valueToken,
+            utilityToken,
+            _unlockSecret
         );
+
         return true;
     }
 
-    function getMessage(
-        address _sender,
+
+    /**
+     * @notice Get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function getNonce(address _account)
+    external
+    view
+    returns (uint256 /* nonce */)
+    {
+        // call the private method
+        return _getNonce(_account);
+    }
+    /* internal methods */
+
+    /**
+     * @notice Clears the previous process. Validates the
+     *         nonce. Updates the process with new process
+     *
+     * @param _account Account address
+     * @param _nonce Nonce for the account address
+     * @param _messageHash Message hash
+     * @param _messageBoxType message box type i.e Inbox or Outbox
+     *
+     * @return previousMessageHash_ previous messageHash
+     */
+    function initiateNewProcess(
+        address _account,
         uint256 _nonce,
+        bytes32 _messageHash,
+        MessageBus.MessageBoxType _messageBoxType
+    )
+    internal
+    returns (bytes32 previousMessageHash_)
+    {
+        require(
+            _nonce == _getNonce(_account),
+            "Invalid nonce"
+        );
+
+        ActiveProcess storage previousProcess = activeProcess[_account];
+        previousMessageHash_ = previousProcess.messageHash;
+
+        if (previousMessageHash_ != bytes32(0)) {
+
+            MessageBus.MessageStatus status;
+            if (previousProcess.messageBoxType ==
+                MessageBus.MessageBoxType.Inbox) {
+                status = messageBox.inbox[previousMessageHash_];
+            } else {
+                status = messageBox.outbox[previousMessageHash_];
+            }
+            require(
+                status != MessageBus.MessageStatus.Progressed ||
+                status != MessageBus.MessageStatus.Revoked,
+                "Previous process is not completed"
+            );
+            //TODO: Commenting below line. Please check if deleting this will
+            //      effect any process related to merkle proof in other chain.
+            //delete messageBox.outbox[previousMessageHash_];
+
+            delete messages[previousMessageHash_];
+        }
+
+        // Update the active proccess.
+        activeProcess[_account] = ActiveProcess({
+            messageHash : _messageHash,
+            messageBoxType : _messageBoxType
+            });
+    }
+
+    /**
+     * @notice Create and return Message object.
+     *
+     * @dev This function is to avoid stack too deep error.
+     *
+     * @param _account Account address
+     * @param _accountNonce Nonce for the account address
+     * @param _gasPrice Gas price
+     * @param _gasLimit Gas limit
+     * @param _intentHash Intent hash
+     * @param _hashLock Hash lock
+     *
+     * @return Message object
+     */
+    function getMessage(
+        address _account,
+        uint256 _accountNonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,
         bytes32 _intentHash,
         bytes32 _hashLock
     )
@@ -193,14 +503,56 @@ contract CoGatewaySetup is Hasher {
     pure
     returns (MessageBus.Message)
     {
-        return MessageBus.Message({
+        return MessageBus.Message(
+            {
             intentHash : _intentHash,
-            nonce : _nonce,
+            nonce : _accountNonce,
             gasPrice : _gasPrice,
-            sender : _sender,
+            gasLimit : _gasLimit,
+            sender : _account,
             hashLock : _hashLock,
             gasConsumed : 0
-            });
+            }
+        );
     }
 
+
+    /**
+     * @notice Private function to get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function _getNonce(address _account)
+    private
+    view
+    returns (uint256 /* nonce */)
+    {
+        ActiveProcess storage previousProcess = activeProcess[_account];
+
+        if (previousProcess.messageHash == bytes32(0)) {
+            return 1;
+        }
+
+        MessageBus.Message storage message =
+        messages[previousProcess.messageHash];
+
+        return message.nonce.add(1);
+    }
+
+    //TODO: This needs discusion. This doesnt apprear correct way of implementation
+    /**
+     *  @notice Public function completeUtilityTokenProtocolTransfer.
+     *
+     *  @return bool True if protocol transfer is completed, false otherwise.
+     */
+    function completeUtilityTokenProtocolTransfer()
+    public
+    onlyOrganisation
+    isActive
+    returns (bool)
+    {
+        return ProtocolVersioned(utilityToken).completeProtocolTransfer();
+    }
 }

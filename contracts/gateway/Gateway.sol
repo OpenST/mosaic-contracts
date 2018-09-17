@@ -58,8 +58,6 @@ pragma solidity ^0.4.23;
 -------------------------------------------------------------------------------
 */
 
-import "./EIP20Interface.sol";
-import "./RLP.sol";
 import "./SimpleStake.sol";
 import "./GatewaySetup.sol";
 
