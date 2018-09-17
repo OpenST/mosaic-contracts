@@ -115,8 +115,8 @@ library MessageBus {
         Message storage _message,
         bytes _signature
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -169,8 +169,8 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -229,8 +229,8 @@ library MessageBus {
         Message storage _message,
         bytes32 _unlockSecret
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // verify the unlock secret
         require(
@@ -287,8 +287,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // the message status for the message hash in the inbox must be either
         // `Declared` or `Progressed`
@@ -312,7 +312,7 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
             _messageBox.outbox[messageHash_] ==
-            MessageStatus.DeclaredRevocation ,
+            MessageStatus.DeclaredRevocation,
             "Message status must be Declared"
         );
 
@@ -357,8 +357,8 @@ library MessageBus {
         Message storage _message,
         bytes32 _unlockSecret
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // verify the unlock secret
         require(
@@ -416,8 +416,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // the message status for the message hash in the outbox must be either
         // `Declared` or `Progressed`
@@ -480,9 +480,9 @@ library MessageBus {
         bytes _signature,
         address _signer
     )
-        private
-        pure
-        returns (bool /*success*/)
+    private
+    pure
+    returns (bool /*success*/)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
 
@@ -521,9 +521,9 @@ library MessageBus {
         uint256 _gasPrice,
         uint256 _gasLimit
     )
-        internal
-        pure
-        returns (bytes32 /* messageHash */)
+    internal
+    pure
+    returns (bytes32 /* messageHash */)
     {
         return keccak256(
             abi.encode(
@@ -550,14 +550,14 @@ library MessageBus {
      *
      * @return messageHash_ Message hash
      */
-    function declareRevocationMessage (
+    function declareRevocationMessage(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
         bytes _signature
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
 
         // Get the message hash
@@ -582,7 +582,7 @@ library MessageBus {
         // This approach can be discussed and changed accordingly.
         bytes32 revocationMessageHash = revocationMessageDigest(
             messageHash_,
-            _message.nonce+1
+            _message.nonce + 1
         );
 
         // verify if revocation is signed by the same address that declared
@@ -625,8 +625,8 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -696,8 +696,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
 
         // the message status for the message hash in the inbox must be either
@@ -778,8 +778,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-        external
-        returns (bytes32 messageHash_)
+    external
+    returns (bytes32 messageHash_)
     {
 
         // the message status for the message hash in the outbox must be either
@@ -847,26 +847,26 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageHash
     )
-        external
-        returns (
-            bool isChanged_,
-            MessageBus.MessageStatus nextState_
-        )
+    external
+    returns (
+        bool isChanged_,
+        MessageBus.MessageStatus nextState_
+    )
     {
         MessageStatus status = _messageBox.inbox[_messageHash];
 
-        if(status == MessageStatus.Undeclared) {
+        if (status == MessageStatus.Undeclared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Declared;
-        } else if(status == MessageStatus.Declared) {
+        } else if (status == MessageStatus.Declared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Progressed;
-        } else if(status == MessageStatus.DeclaredRevocation) {
+        } else if (status == MessageStatus.DeclaredRevocation) {
             isChanged_ = true;
             nextState_ = MessageStatus.Revoked;
         }
 
-        if(isChanged_){
+        if (isChanged_) {
             // Update the message inbox status.
             _messageBox.inbox[_messageHash] = nextState_;
         }
@@ -889,26 +889,26 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageHash
     )
-        external
-        returns (
-            bool isChanged_,
-            MessageBus.MessageStatus nextState_
-        )
+    external
+    returns (
+        bool isChanged_,
+        MessageBus.MessageStatus nextState_
+    )
     {
         MessageStatus status = _messageBox.outbox[_messageHash];
 
-        if(status == MessageStatus.Undeclared) {
+        if (status == MessageStatus.Undeclared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Declared;
-        } else if(status == MessageStatus.Declared) {
+        } else if (status == MessageStatus.Declared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Progressed;
-        } else if(status == MessageStatus.DeclaredRevocation) {
+        } else if (status == MessageStatus.DeclaredRevocation) {
             isChanged_ = true;
             nextState_ = MessageStatus.Revoked;
         }
 
-        if(isChanged_){
+        if (isChanged_) {
             // Update the message outbox status.
             _messageBox.outbox[_messageHash] = nextState_;
         }
@@ -926,9 +926,9 @@ library MessageBus {
         bytes32 _messageHash,
         uint256 _nonce
     )
-        internal
-        pure
-        returns (bytes32 /* revocationMessageHash */)
+    internal
+    pure
+    returns (bytes32 /* revocationMessageHash */)
     {
         return keccak256(
             abi.encode(
@@ -952,8 +952,8 @@ library MessageBus {
         uint256 _initialGas,
         uint256 _estimatedAdditionalGasUsage
     )
-        external
-        returns (uint256 fee_)
+    external
+    returns (uint256 fee_)
     {
         _message.gasConsumed = _initialGas.sub(
             gasleft()

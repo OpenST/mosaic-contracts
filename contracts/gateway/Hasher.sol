@@ -40,7 +40,7 @@ contract Hasher {
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 constant GATEWAY_LINK_TYPEHASH =  keccak256(
+    bytes32 constant GATEWAY_LINK_TYPEHASH = keccak256(
         abi.encode(
             "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
         )

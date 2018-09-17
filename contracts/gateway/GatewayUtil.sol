@@ -23,9 +23,9 @@ contract GatewayUtil {
      * @return codeHash_ return code hash of library
      */
     function libraryCodeHash(address _libraryAddress)
-        view
-        internal
-        returns (bytes32)
+    view
+    internal
+    returns (bytes32)
     {
         bytes memory code = getCode(_libraryAddress);
         //trim the first 21 bytes in library code.
@@ -43,9 +43,9 @@ contract GatewayUtil {
      * @return codehash_ return code hash of contract
      */
     function getCode(address _contractAddress)
-        view
-        internal
-        returns (bytes codeHash_)
+    view
+    internal
+    returns (bytes codeHash_)
     {
         assembly {
         // retrieve the size of the code, this needs assembly

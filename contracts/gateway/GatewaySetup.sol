@@ -492,10 +492,10 @@ contract GatewaySetup is Hasher, GatewayUtil {
             intentHash : _intentHash,
             nonce : _accountNonce,
             gasPrice : _gasPrice,
-            gasLimit: _gasLimit,
+            gasLimit : _gasLimit,
             sender : _account,
             hashLock : _hashLock,
-            gasConsumed: 0
+            gasConsumed : 0
             }
         );
     }
@@ -535,7 +535,7 @@ contract GatewaySetup is Hasher, GatewayUtil {
             if (previousProcess.messageBoxType ==
                 MessageBus.MessageBoxType.Inbox) {
                 status = messageBox.inbox[previousMessageHash_];
-            } else{
+            } else {
                 status = messageBox.outbox[previousMessageHash_];
             }
             require(
@@ -552,8 +552,8 @@ contract GatewaySetup is Hasher, GatewayUtil {
 
         // Update the active proccess.
         activeProcess[_account] = ActiveProcess({
-            messageHash: _messageHash,
-            messageBoxType: _messageBoxType
+            messageHash : _messageHash,
+            messageBoxType : _messageBoxType
             });
     }
 
