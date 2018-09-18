@@ -398,37 +398,16 @@ contract Gateway is GatewaySetup {
         );
 
         // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.Message storage message;
 
-        // Get the staker address
-        staker_ = message.sender;
-
-        //Get the stake amount
-        stakeAmount_ = stakes[_messageHash].amount;
-
+        (staker_, stakerAmount_, message) = ProgressStakingInternal(
+            _messageHash
+        );
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
             STAKE_TYPEHASH,
             message,
-            _unlockSecret
-        );
-
-        // Transfer the staked amount to stakeVault.
-        token.transfer(stakeVault, stakeAmount_);
-
-        //Transfer the bounty amount to the msg.sender
-        bountyToken.transfer(msg.sender, bounty);
-
-        // delete the stake data
-        delete stakes[_messageHash];
-
-        // Emit ProgressedStake event.
-        emit ProgressedStake(
-            _messageHash,
-            staker_,
-            message.nonce,
-            stakeAmount_,
             _unlockSecret
         );
     }
@@ -479,11 +458,11 @@ contract Gateway is GatewaySetup {
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
+        MessageBus.Message storage message;
 
-        MessageBus.Message storage message = messages[_messageHash];
-
-        staker_ = message.sender;
-        stakeAmount_ = stakes[_messageHash].amount;
+        (staker_, stakerAmount_, message) = ProgressStakingInternal(
+            _messageHash
+        );
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -494,9 +473,6 @@ contract Gateway is GatewaySetup {
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
-
-        // transfer the token to stakeVault
-        token.transfer(stakeVault, stakeAmount_);
 
         /*
          TODO: Points to be discussed for return bounty
@@ -514,19 +490,38 @@ contract Gateway is GatewaySetup {
              burnt or transferred to a special address
         */
         // Currently we are transferring the bounty amount to the msg.sender
+    }
+
+    function ProgressStakingInternal(bytes32 _messageHash)
+    private
+    returns (
+        address staker_,
+        uint256 stakeAmount_,
+        MessageBus.Message message_
+    )
+    {
+
+        message_ = messages[_messageHash];
+        // Get the staker address
+        staker_ = message.sender;
+
+        //Get the stake amount
+        stakeAmount_ = stakes[_messageHash].amount;
+
+        // Transfer the staked amount to stakeVault.
+        token.transfer(stakeVault, stakeAmount_);
+
         bountyToken.transfer(msg.sender, bounty);
 
         // delete the stake data
         delete stakes[_messageHash];
 
-        //TODO: we can have a separate event for this.
-        // Emit ProgressedStake event.
         emit ProgressedStake(
             _messageHash,
-            message.sender,
+            staker_,
             message.nonce,
-            stakes[_messageHash].amount,
-            bytes32(0)
+            stakeAmount_,
+            _unlockSecret
         );
     }
 

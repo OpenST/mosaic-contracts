@@ -5,14 +5,14 @@ import './ProofLib.sol';
 import "./CoreInterface.sol";
 
 /**
- *  @title GatewayUtil contract.
+ *  @title GatewayBase contract.
  *
- *  @notice GatewayUtil contains general purpose functions shared between
- *  gateway and co-gateway.
+ *  @notice GatewayBase contains general purpose functions shared between
+ *  gateway and co-gateway contract.
  */
 contract GatewayBase {
 
-    /** Emitted whenever a Gateway contract is proven.
+    /** Emitted whenever a Gateway/CoGateway contract is proven.
      *	wasAlreadyProved parameter differentiates between first call and replay
      *  call of proveGateway method for same block height
      */
@@ -48,10 +48,10 @@ contract GatewayBase {
     /* external functions */
 
     /**
- *  @notice External function prove gateway.
+ *  @notice External function prove gateway/co-gateway.
  *
  *  @dev proveGateway can be called by anyone to verify merkle proof of
- *       gateway contract address. Trust factor is brought by stateRoots
+ *       gateway/co-gateway contract address. Trust factor is brought by stateRoots
  *       mapping. stateRoot is committed in commitStateRoot function by
  *       mosaic process which is a trusted decentralized system running
  *       separately. It's important to note that in replay calls of
@@ -61,7 +61,7 @@ contract GatewayBase {
  *		 GatewayProven event has parameter wasAlreadyProved to
  *       differentiate between first call and replay calls.
  *
- *  @param _blockHeight Block height at which Gateway is to be proven.
+ *  @param _blockHeight Block height at which Gateway/CoGateway is to be proven.
  *  @param _rlpEncodedAccount RLP encoded account node object.
  *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
  *
