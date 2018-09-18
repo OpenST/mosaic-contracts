@@ -400,8 +400,9 @@ contract Gateway is GatewaySetup {
         // Get the message object
         MessageBus.Message storage message;
 
-        (staker_, stakerAmount_, message) = ProgressStakingInternal(
-            _messageHash
+        (staker_, stakeAmount_, message) = ProgressStakingInternal(
+            _messageHash,
+            _unlockSecret
         );
         // Progress outbox
         MessageBus.progressOutbox(
@@ -460,8 +461,9 @@ contract Gateway is GatewaySetup {
         );
         MessageBus.Message storage message;
 
-        (staker_, stakerAmount_, message) = ProgressStakingInternal(
-            _messageHash
+        (staker_, stakeAmount_, message) = ProgressStakingInternal(
+            _messageHash,
+            bytes32(0)
         );
 
         MessageBus.progressOutboxWithProof(
@@ -490,39 +492,6 @@ contract Gateway is GatewaySetup {
              burnt or transferred to a special address
         */
         // Currently we are transferring the bounty amount to the msg.sender
-    }
-
-    function ProgressStakingInternal(bytes32 _messageHash)
-    private
-    returns (
-        address staker_,
-        uint256 stakeAmount_,
-        MessageBus.Message message_
-    )
-    {
-
-        message_ = messages[_messageHash];
-        // Get the staker address
-        staker_ = message.sender;
-
-        //Get the stake amount
-        stakeAmount_ = stakes[_messageHash].amount;
-
-        // Transfer the staked amount to stakeVault.
-        token.transfer(stakeVault, stakeAmount_);
-
-        bountyToken.transfer(msg.sender, bounty);
-
-        // delete the stake data
-        delete stakes[_messageHash];
-
-        emit ProgressedStake(
-            _messageHash,
-            staker_,
-            message.nonce,
-            stakeAmount_,
-            _unlockSecret
-        );
     }
 
     /**
@@ -1181,6 +1150,55 @@ contract Gateway is GatewaySetup {
 
         return true;
     }
+
+    /**
+ * @notice Internal function contains logic for process staking.
+ *
+ * @param _messageHash Message hash.
+ * @param _unlockSecret For process with hash lock, unlock secret is secret
+ *                      for the hashLock provide by the facilitator
+ *                      and zero for process with proof.
+ *
+ * @return staker_ Staker address
+ * @return stakeAmount_ Stake amount
+ * @return message_ Message Bus message
+ */
+    function ProgressStakingInternal(
+        bytes32 _messageHash,
+        bytes32 _unlockSecret
+    )
+    private
+    returns (
+        address staker_,
+        uint256 stakeAmount_,
+        MessageBus.Message storage message_
+    )
+    {
+
+        message_ = messages[_messageHash];
+        // Get the staker address
+        staker_ = message_.sender;
+
+        //Get the stake amount
+        stakeAmount_ = stakes[_messageHash].amount;
+
+        // Transfer the staked amount to stakeVault.
+        token.transfer(stakeVault, stakeAmount_);
+
+        bountyToken.transfer(msg.sender, bounty);
+
+        // delete the stake data
+        delete stakes[_messageHash];
+
+        emit ProgressedStake(
+            _messageHash,
+            staker_,
+            message_.nonce,
+            stakeAmount_,
+            _unlockSecret
+        );
+    }
+
 }
 
 
