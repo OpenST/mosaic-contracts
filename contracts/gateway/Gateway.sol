@@ -144,17 +144,6 @@ contract Gateway is GatewaySetup {
         uint256 _amount
     );
 
-    /** Emitted whenever a CoGateway contract is proven.
-     *	wasAlreadyProved parameter differentiates between first call and replay
-     *  call of proveCoGateway method for same block height
-     */
-    event CoGatewayProven(
-        address _coGateway,
-        uint256 _blockHeight,
-        bytes32 _storageRoot,
-        bool _wasAlreadyProved
-    );
-
     /* Struct */
 
     /**
@@ -227,8 +216,14 @@ contract Gateway is GatewaySetup {
         address _organisation,
         address _messageBus
     )
-    GatewaySetup(_token, _bountyToken, _core, _bounty, _organisation, _messageBus)
-    public
+        GatewaySetup(
+            _token,
+            _bountyToken,
+            _core, _bounty,
+            _organisation,
+            _messageBus
+        )
+        public
     {
         // deploy simpleStake contract that will keep the staked amounts.
         stakeVault = new SimpleStake(token, address(this));
@@ -267,9 +262,9 @@ contract Gateway is GatewaySetup {
         bytes32 _hashLock,
         bytes _signature
     )
-    public
-    isActive
-    returns (bytes32 messageHash_)
+        public
+        isActive
+        returns (bytes32 messageHash_)
     {
         require(
             _amount > uint256(0),
@@ -386,11 +381,11 @@ contract Gateway is GatewaySetup {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakeAmount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakeAmount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -463,11 +458,11 @@ contract Gateway is GatewaySetup {
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakeAmount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakeAmount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -552,12 +547,12 @@ contract Gateway is GatewaySetup {
         bytes32 _messageHash,
         bytes _signature
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakerNonce_,
+            uint256 amount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -615,11 +610,11 @@ contract Gateway is GatewaySetup {
         uint256 _blockHeight,
         bytes _rlpEncodedParentNodes
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
+        external
+        returns (
+            address staker_,
+            uint256 stakerNonce_,
+            uint256 amount_
     )
     {
         require(
@@ -1148,102 +1143,6 @@ contract Gateway is GatewaySetup {
             message.nonce,
             unstakeData.amount
         );
-    }
-
-
-
-    /**
-     *  @notice External function to prove CoGateway.
-     *
-     *  @dev proveCoGateway can be called by anyone to verify merkle proof of
-     *       CoGateway contract address. Trust factor is brought by stateRoots
-     *       mapping. stateRoot is committed in commitStateRoot function by
-     *       mosaic process which is a trusted decentralized system running
-     *       separately. It's important to note that in replay calls of
-     *       proveCoGateway bytes _rlpParentNodes variable is not validated. In
-     *       this case input storage root derived from merkle proof account
-     *       nodes is verified with stored storage root of given blockHeight.
-     *		 GatewayProven event has parameter wasAlreadyProved to
-     *       differentiate between first call and replay calls.
-     *
-     *  @param _blockHeight Block height at which Gateway is to be proven.
-     *  @param _rlpEncodedAccount RLP encoded account node object.
-     *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
-     *
-     * @return `true` if CoGateway account is proved
-     */
-    function proveCoGateway(
-        uint256 _blockHeight,
-        bytes _rlpEncodedAccount,
-        bytes _rlpParentNodes
-    )
-    external
-    returns (bool)
-    {
-        // _rlpEncodedAccount should be valid
-        require(
-            _rlpEncodedAccount.length != 0,
-            "Length of RLP encoded account is 0"
-        );
-
-        // _rlpParentNodes should be valid
-        require(
-            _rlpParentNodes.length != 0,
-            "Length of RLP parent nodes is 0"
-        );
-
-        bytes32 stateRoot = core.getStateRoot(_blockHeight);
-
-        // State root should be present for the block height
-        require(
-            stateRoot != bytes32(0),
-            "State root must not be zero"
-        );
-
-        // If account already proven for block height
-        bytes32 provenStorageRoot = storageRoots[_blockHeight];
-
-        if (provenStorageRoot != bytes32(0)) {
-
-            // Check extracted storage root is matching with existing stored
-            // storage root
-            require(
-                provenStorageRoot == storageRoot,
-                "Storage root mismatch when account is already proven"
-            );
-
-            // wasAlreadyProved is true here since proveOpenST is replay call
-            // for same block height
-            emit CoGatewayProven(
-                coGateway,
-                _blockHeight,
-                storageRoot,
-                true
-            );
-
-            // return true
-            return true;
-        }
-
-        bytes32 storageRoot = ProofLib.proveAccount(
-            _rlpEncodedAccount,
-            _rlpParentNodes,
-            encodedCoGatewayPath,
-            stateRoot
-        );
-
-        storageRoots[_blockHeight] = storageRoot;
-
-        // wasAlreadyProved is false since proveCoGateway is called for the
-        // first time for a block height
-        emit CoGatewayProven(
-            coGateway,
-            _blockHeight,
-            storageRoot,
-            false
-        );
-
-        return true;
     }
 
     /* private functions */

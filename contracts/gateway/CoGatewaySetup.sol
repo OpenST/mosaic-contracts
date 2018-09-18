@@ -26,7 +26,7 @@ import "./ProofLib.sol";
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
-import "./GatewayUtil.sol";
+import "./GatewayBase.sol";
 import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
@@ -36,7 +36,7 @@ import "./ProtocolVersioned.sol";
  *
  *  @notice CoGatewaySetup contains functions for initial setup of co-gateway.
  */
-contract CoGatewaySetup is Hasher, GatewayUtil {
+contract CoGatewaySetup is Hasher, GatewayBase {
 
     using SafeMath for uint256;
 
@@ -78,9 +78,6 @@ contract CoGatewaySetup is Hasher, GatewayUtil {
 
     /* public variables */
 
-    /** Gateway contract address. */
-    address public gateway;
-
     /**
      * Message box.
      * @dev keep this is at location 1, in case this is changed then update
@@ -106,9 +103,6 @@ contract CoGatewaySetup is Hasher, GatewayUtil {
     /** address of value token. */
     address public valueToken;
 
-    /** address of core contract. */
-    CoreInterface public core;
-
     /** Gateway link message hash. */
     bytes32 public gatewayLinkHash;
 
@@ -126,13 +120,7 @@ contract CoGatewaySetup is Hasher, GatewayUtil {
      */
     mapping(address /*address*/ => ActiveProcess) activeProcess;
 
-    /** Maps blockHeight to storageRoot*/
-    mapping(uint256 /* block height */ => bytes32) internal storageRoots;
-
     /* internal variables */
-
-    /* path to prove merkle account proof for Gateway contract */
-    bytes internal encodedGatewayPath;
 
     /** address of message bus used to fetch codehash during gateway linking */
     address internal messageBus;
@@ -183,6 +171,7 @@ contract CoGatewaySetup is Hasher, GatewayUtil {
         address _gateway,
         address _messageBus
     )
+    GatewayBase(_core)
     public
     {
         require(
@@ -218,11 +207,11 @@ contract CoGatewaySetup is Hasher, GatewayUtil {
 
         valueToken = _valueToken;
         utilityToken = _utilityToken;
-        gateway = _gateway;
         core = _core;
         bounty = _bounty;
         organisation = _organisation;
         messageBus = _messageBus;
+        gateway = _gateway;
 
         // update the encodedGatewayPath
         encodedGatewayPath = ProofLib.bytes32ToBytes(

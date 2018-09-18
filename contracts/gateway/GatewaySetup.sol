@@ -21,11 +21,10 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import './ProofLib.sol';
 import './MessageBus.sol';
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
-import "./GatewayUtil.sol";
+import "./GatewayBase.sol";
 import "./CoreInterface.sol";
 import "./SafeMath.sol";
 
@@ -34,7 +33,7 @@ import "./SafeMath.sol";
  *
  *  @notice GatewaySetup contains functions for initial setup of gateway.
  */
-contract GatewaySetup is Hasher, GatewayUtil {
+contract GatewaySetup is Hasher, GatewayBase {
 
     using SafeMath for uint256;
 
@@ -74,9 +73,6 @@ contract GatewaySetup is Hasher, GatewayUtil {
 
     uint8 constant MESSAGE_BOX_OFFSET = 1;
 
-    /** CoGateway contract address. */
-    address public coGateway;
-
     /**
      * Message box.
      * @dev keep this is at location 1, in case this is changed then update
@@ -105,17 +101,11 @@ contract GatewaySetup is Hasher, GatewayUtil {
      */
     EIP20Interface public bountyToken;
 
-    /** address of core contract. */
-    CoreInterface public core;
-
     /** Gateway link message hash. */
     bytes32 public gatewayLinkHash;
 
     /** Maps messageHash to the Message object. */
     mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
-
-    /** Maps blockHeight to storageRoot*/
-    mapping(uint256 /* block height */ => bytes32) internal storageRoots;
 
     /**
      * Maps address to ActiveProcess object.
@@ -129,9 +119,6 @@ contract GatewaySetup is Hasher, GatewayUtil {
     mapping(address /*address*/ => ActiveProcess) activeProcess;
 
     /* internal variables */
-
-    /** path to prove merkle account proof for CoGateway contract. */
-    bytes internal encodedCoGatewayPath;
 
     /** address of message bus used to fetch codehash during gateway linking */
     address internal messageBus;
@@ -179,6 +166,7 @@ contract GatewaySetup is Hasher, GatewayUtil {
         address _organisation,
         address _messageBus
     )
+    GatewayBase(_core)
     public
     {
 
@@ -211,7 +199,6 @@ contract GatewaySetup is Hasher, GatewayUtil {
 
         token = _token;
         bountyToken = _bountyToken;
-        core = _core;
         bounty = _bounty;
         organisation = _organisation;
         messageBus = _messageBus;
@@ -280,7 +267,7 @@ contract GatewaySetup is Hasher, GatewayUtil {
         //       (This is already done in other branch)
         bytes32 intentHash = hashLinkGateway(
             address(this),
-            coGateway,
+            _coGateway,
             libraryCodeHash(address(messageBus)), //todo change to library address
             bounty,
             token.name(),
@@ -331,21 +318,21 @@ contract GatewaySetup is Hasher, GatewayUtil {
         );
 
         // update the coGateway address
-        coGateway = _coGateway;
+        gateway = _coGateway;
 
         // update gateway link hash
         gatewayLinkHash = messageHash_;
 
-        // update the encodedCoGatewayPath
-        encodedCoGatewayPath = ProofLib.bytes32ToBytes(
-            keccak256(abi.encodePacked(coGateway))
+        // update the encodedGatewayPath
+        encodedGatewayPath = ProofLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(_coGateway))
         );
 
         // emit GatewayLinkInitiated event
         emit GatewayLinkInitiated(
             messageHash_,
             address(this),
-            coGateway,
+            _coGateway,
             token
         );
     }
@@ -397,7 +384,7 @@ contract GatewaySetup is Hasher, GatewayUtil {
         emit GatewayLinkProgressed(
             _messageHash,
             address(this),
-            coGateway,
+            gateway,
             token,
             _unlockSecret
         );
