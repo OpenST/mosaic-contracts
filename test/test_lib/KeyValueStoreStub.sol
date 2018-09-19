@@ -40,7 +40,7 @@ contract KeyValueStoreStub {
      *      mapping
      */
     function KeyValueStoreStub()
-        public
+        internal
     {
         // Stores uint256
         setUint("NONCE", 1);
