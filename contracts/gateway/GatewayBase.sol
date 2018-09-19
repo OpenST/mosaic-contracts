@@ -205,6 +205,7 @@ contract GatewayBase {
      * @param _estimatedAdditionalGasUsage Estimated gas that will be used
      *
      * @return fee amount
+     * @return totalGasConsumed_ total gas consumed during message transfer
      */
     function feeAmount(
         uint256 _gasConsumed,

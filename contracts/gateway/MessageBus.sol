@@ -467,76 +467,6 @@ library MessageBus {
     }
 
     /**
-     * @notice Verify the signature is signed by the signer address.
-     *
-     * @param _message Message hash
-     * @param _signature Signature
-     * @param _signer Signer address
-     *
-     * @return `true` if the signature is signed by the signer
-     */
-    function verifySignature(
-        bytes32 _message,
-        bytes _signature,
-        address _signer
-    )
-    private
-    pure
-    returns (bool /*success*/)
-    {
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-
-        _message = keccak256(abi.encodePacked(prefix, _message));
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := mload(add(_signature, 32))
-            s := mload(add(_signature, 64))
-            v := byte(0, mload(add(_signature, 96)))
-        }
-        // Version of signature should be 27 or 28, but 0 and 1 are also
-        // possible versions
-        if (v < 27) {
-            v += 27;
-        }
-        return (ecrecover(_message, v, r, s) == _signer);
-    }
-
-    /**
-     * @notice Generate message hash from the input params
-     *
-     * @param _messageTypeHash Message type hash
-     * @param _intentHash Intent hash
-     * @param _nonce Nonce
-     * @param _gasPrice Gas price
-     *
-     * @return Message hash
-     */
-    function messageDigest(
-        bytes32 _messageTypeHash,
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
-    )
-    internal
-    pure
-    returns (bytes32 /* messageHash */)
-    {
-        return keccak256(
-            abi.encode(
-                _messageTypeHash,
-                _intentHash,
-                _nonce,
-                _gasPrice,
-                _gasLimit
-            )
-        );
-    }
-
-    /**
      * @notice Declare a new revocation message. This will update the outbox
      *         status to `DeclaredRevocation` for the given message hash
      *
@@ -915,30 +845,6 @@ library MessageBus {
     }
 
     /**
-     * @notice Generate revocation message hash from the input params
-     *
-     * @param _messageHash Message hash
-     * @param _nonce Nonce
-     *
-     * @return Revocation message hash
-     */
-    function revocationMessageDigest(
-        bytes32 _messageHash,
-        uint256 _nonce
-    )
-    internal
-    pure
-    returns (bytes32 /* revocationMessageHash */)
-    {
-        return keccak256(
-            abi.encode(
-                _messageHash,
-                _nonce
-            )
-        );
-    }
-
-    /**
      * @notice Calculate the fee amount
      *
      * @param _message Message object
@@ -968,6 +874,104 @@ library MessageBus {
         } else {
             fee_ = _message.gasLimit.mul(_message.gasPrice);
         }
+    }
+
+    /* public functions */
+    
+    /**
+     * @notice Generate revocation message hash from the input params
+     *
+     * @param _messageHash Message hash
+     * @param _nonce Nonce
+     *
+     * @return Revocation message hash
+     */
+    function revocationMessageDigest(
+        bytes32 _messageHash,
+        uint256 _nonce
+    )
+    public
+    pure
+    returns (bytes32 /* revocationMessageHash */)
+    {
+        return keccak256(
+            abi.encode(
+                _messageHash,
+                _nonce
+            )
+        );
+    }
+
+    /**
+     * @notice Generate message hash from the input params
+     *
+     * @param _messageTypeHash Message type hash
+     * @param _intentHash Intent hash
+     * @param _nonce Nonce
+     * @param _gasPrice Gas price
+     *
+     * @return Message hash
+     */
+    function messageDigest(
+        bytes32 _messageTypeHash,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit
+    )
+    public
+    pure
+    returns (bytes32 /* messageHash */)
+    {
+        return keccak256(
+            abi.encode(
+                _messageTypeHash,
+                _intentHash,
+                _nonce,
+                _gasPrice,
+                _gasLimit
+            )
+        );
+    }
+
+    /* private functions */
+
+    /**
+     * @notice Verify the signature is signed by the signer address.
+     *
+     * @param _message Message hash
+     * @param _signature Signature
+     * @param _signer Signer address
+     *
+     * @return `true` if the signature is signed by the signer
+     */
+    function verifySignature(
+        bytes32 _message,
+        bytes _signature,
+        address _signer
+    )
+    private
+    pure
+    returns (bool /*success*/)
+    {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+
+        _message = keccak256(abi.encodePacked(prefix, _message));
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 32))
+            s := mload(add(_signature, 64))
+            v := byte(0, mload(add(_signature, 96)))
+        }
+        // Version of signature should be 27 or 28, but 0 and 1 are also
+        // possible versions
+        if (v < 27) {
+            v += 27;
+        }
+        return (ecrecover(_message, v, r, s) == _signer);
     }
 
 }
