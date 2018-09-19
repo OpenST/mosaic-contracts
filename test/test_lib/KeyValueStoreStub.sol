@@ -31,6 +31,14 @@ contract KeyValueStoreStub {
     MessageBus.MessageBox messageBox;
     MessageBus.Message message;
 
+    /* Special Functions */
+
+    /**
+     * @notice contract constructor.
+     *
+     * @dev It sets the stub data based on their data type in respective
+     *      mapping
+     */
     function KeyValueStoreStub()
         public
     {
@@ -88,6 +96,13 @@ contract KeyValueStoreStub {
 
     /* Getter Public Functions */
 
+    /**
+     * @notice it returns uint256 data from uintStorage mapping.
+     *
+     * @param key mapping key for which uintStorage to look up.
+     *
+     * @return Stored uint for the key.
+     */
     function getUint(string key)
         internal
         returns (uint256)
@@ -95,6 +110,13 @@ contract KeyValueStoreStub {
         return uintStorage[hashed(key)];
     }
 
+    /**
+     * @notice it returns address from addressStorage mapping.
+     *
+     * @param key mapping key for which addressStorage to look up.
+     *
+     * @return Stored address for the key.
+     */
     function getAddress(string key)
         internal
         returns (address)
@@ -102,6 +124,13 @@ contract KeyValueStoreStub {
         return addressStorage[hashed(key)];
     }
 
+    /**
+     * @notice it returns bytes32 from bytes32Storage mapping.
+     *
+     * @param key mapping key for which bytes32Storage to look up.
+     *
+     * @return Stored bytes32 for the key.
+     */
     function getBytes32(string key)
         internal
         returns (bytes32)
@@ -109,6 +138,13 @@ contract KeyValueStoreStub {
         return bytes32Storage[hashed(key)];
     }
 
+    /**
+     * @notice it returns bytes from bytesStorage mapping.
+     *
+     * @param key mapping key for which bytesStorage to look up.
+     *
+     * @return Stored bytes for the key.
+     */
     function getBytes(string key)
         internal
         returns (bytes)
@@ -118,24 +154,52 @@ contract KeyValueStoreStub {
 
     /* Setter Public Functions */
 
+    /**
+     * @notice it sets address in uintStorage mapping.
+     *
+     * @param key value is set for this key.
+     * @param value to be set in uintStorage mapping.
+     *
+     */
     function setUint(string key, uint256 value)
         internal
     {
         uintStorage[hashed(key)] = value;
     }
 
+    /**
+     * @notice it sets address in addressStorage mapping.
+     *
+     * @param key value is set for this key.
+     * @param value to be set in addressStorage mapping.
+     *
+     */
     function setAddress(string key, address value)
         internal
     {
         addressStorage[hashed(key)] = value;
     }
 
+    /**
+     * @notice it sets bytes32 data in bytes32Storage mapping.
+     *
+     * @param key value is set for this key.
+     * @param value to be set in bytes32Storage mapping.
+     *
+     */
     function setBytes32(string key, bytes32 value)
         internal
     {
         bytes32Storage[hashed(key)] = value;
     }
 
+    /**
+     * @notice it sets bytes data in bytesStorage mapping.
+     *
+     * @param key value is set for this key.
+     * @param value to be set in bytesStorage mapping.
+     *
+     */
     function setBytes(string key, bytes value)
         internal
     {
@@ -144,11 +208,18 @@ contract KeyValueStoreStub {
 
     /* Private Functions */
 
-    function hashed(string key)
+    /**
+     * @notice it hashes the input after doing abi encodePacked.
+     *
+     * @param data to hash.
+     *
+     * @return hashed data.
+     */
+    function hashed(string data)
         internal
         returns (bytes32)
     {
-        return keccak256(abi.encodePacked(key));
+        return keccak256(abi.encodePacked(data));
     }
 
 }

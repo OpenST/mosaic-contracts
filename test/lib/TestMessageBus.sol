@@ -31,8 +31,10 @@ contract TestMessageBus is KeyValueStoreStub {
     }
 
     /* External Functions */
-    // TODO -ve test cases
-    // TODO move hardcoded values to data contract
+
+    /**
+     * @notice it tests progress inbox method of messageBus.
+     */
     function testProgressInbox()
         external
     {
@@ -59,6 +61,9 @@ contract TestMessageBus is KeyValueStoreStub {
         );
     }
 
+    /**
+     * @notice it tests verify signature method of messageBus.
+     */
     function testVerifySignature()
         external
     {
@@ -92,6 +97,9 @@ contract TestMessageBus is KeyValueStoreStub {
         );
     }
 
+    /**
+     * @notice it tests declare revocation method of messageBus.
+     */
     function testDeclareRevocationMessage()
         external
     {
@@ -119,6 +127,9 @@ contract TestMessageBus is KeyValueStoreStub {
         );
     }
 
+    /**
+     * @notice it tests change inbox state method of messageBus.
+     */
     function testChangeInboxState()
         external
     {
@@ -132,6 +143,26 @@ contract TestMessageBus is KeyValueStoreStub {
         (isChanged, nextState) = MessageBus.changeInboxState(
             messageBox,
             messageHash
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState should not be equal to Progressed."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState should not be equal to Revoked."
         );
         Assert.equal(
             bool(isChanged),
@@ -150,6 +181,26 @@ contract TestMessageBus is KeyValueStoreStub {
             messageBox,
             messageHash
         );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState should not be equal to Declared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState should not be equal to Revoked."
+        );
         Assert.equal(
             bool(isChanged),
             true,
@@ -167,6 +218,26 @@ contract TestMessageBus is KeyValueStoreStub {
             messageBox,
             messageHash
         );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState should not be equal to Declared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState should not be equal to Progressed."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
         Assert.equal(
             bool(isChanged),
             true,
@@ -179,6 +250,9 @@ contract TestMessageBus is KeyValueStoreStub {
         );
     }
 
+    /**
+     * @notice it tests change outbox state method of messageBus.
+     */
     function testChangeOutboxState()
         external
     {
@@ -194,15 +268,35 @@ contract TestMessageBus is KeyValueStoreStub {
             messageBox,
             messageHash
         );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState should not be equal to Progressed."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState should not be equal to Revoked."
+        );
         Assert.equal(
             bool(isChanged),
             true,
-            "isChanged not equal to true."
+            "isChanged is not equal to true."
         );
         Assert.equal(
             uint256(nextState),
             uint256(MessageBus.MessageStatus.Declared),
-            "nextState not changed to Declared."
+            "nextState is not changed to Declared."
         );
 
         // Test Declared => Progressed
@@ -211,15 +305,35 @@ contract TestMessageBus is KeyValueStoreStub {
             messageBox,
             messageHash
         );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState should not be equal to Declared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState should not be equal to Revoked."
+        );
         Assert.equal(
             bool(isChanged),
             true,
-            "isChanged not equal to true."
+            "isChanged is not equal to true."
         );
         Assert.equal(
             uint256(nextState),
             uint256(MessageBus.MessageStatus.Progressed),
-            "nextState not changed to Progressed."
+            "nextState is not changed to Progressed."
         );
 
         // Test DeclaredRevocation => Revoked
@@ -228,15 +342,35 @@ contract TestMessageBus is KeyValueStoreStub {
             messageBox,
             messageHash
         );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Undeclared),
+            "nextState should not be equal to Undeclared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState should not be equal to Declared."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState should not be equal to Progressed."
+        );
+        Assert.notEqual(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "nextState should not be equal to DeclaredRevocation."
+        );
         Assert.equal(
             bool(isChanged),
             true,
-            "isChanged not equal to true."
+            "isChanged is not equal to true."
         );
         Assert.equal(
             uint256(nextState),
             uint256(MessageBus.MessageStatus.Revoked),
-            "nextState not changed to Revoked."
+            "nextState is not changed to Revoked."
         );
     }
 
