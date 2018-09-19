@@ -400,7 +400,7 @@ contract Gateway is GatewaySetup {
         // Get the message object
         MessageBus.Message storage message;
 
-        (staker_, stakeAmount_, message) = ProgressStakingInternal(
+        (staker_, stakeAmount_, message) = progressStakingInternal(
             _messageHash,
             _unlockSecret
         );
@@ -461,7 +461,7 @@ contract Gateway is GatewaySetup {
         );
         MessageBus.Message storage message;
 
-        (staker_, stakeAmount_, message) = ProgressStakingInternal(
+        (staker_, stakeAmount_, message) = progressStakingInternal(
             _messageHash,
             bytes32(0)
         );
@@ -791,8 +791,6 @@ contract Gateway is GatewaySetup {
     )
     external
     returns (
-        address redeemer_,
-        address beneficiary_,
         uint256 redeemAmount_,
         uint256 unstakeAmount_,
         uint256 rewardAmount_
@@ -810,9 +808,6 @@ contract Gateway is GatewaySetup {
             _unlockSecret != bytes32(0),
             "Unlock secret must not be zero"
         );
-
-        Unstake storage unStake = unstakes[_messageHash];
-
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
 
@@ -823,41 +818,9 @@ contract Gateway is GatewaySetup {
             message,
             _unlockSecret
         );
+        (redeemAmount_, unstakeAmount_, rewardAmount_) =
+        progressUnstakeInternal(_messageHash, initialGas, _unlockSecret);
 
-        redeemer_ = message.sender;
-        beneficiary_ = unStake.beneficiary;
-        redeemAmount_ = unStake.amount;
-
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
-            initialGas,
-            50000
-        );
-
-        unstakeAmount_ = unStake.amount.sub(rewardAmount_);
-
-        // Release the amount to beneficiary
-        stakeVault.releaseTo(beneficiary_, unstakeAmount_);
-
-        //TODO: Should the rewared here be in OST (bountyToken)?
-        //reward facilitator with the reward amount
-        stakeVault.releaseTo(msg.sender, rewardAmount_);
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
-        // Emit ProgressedUnstake event
-        emit ProgressedUnstake(
-            _messageHash,
-            redeemer_,
-            beneficiary_,
-            redeemAmount_,
-            unstakeAmount_,
-            rewardAmount_,
-            _unlockSecret
-        );
     }
 
     /**
@@ -916,8 +879,6 @@ contract Gateway is GatewaySetup {
             "Storage root must not be zero"
         );
 
-        Unstake storage unStake = unstakes[_messageHash];
-
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
 
@@ -931,38 +892,8 @@ contract Gateway is GatewaySetup {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        redeemAmount_ = unStake.amount;
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
-            initialGas,
-            50000
-        );
-
-        unstakeAmount_ = unStake.amount.sub(rewardAmount_);
-
-        // Release the amount to beneficiary
-        stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
-
-        //TODO: Should the reward here be in OST (bountyToken)?
-        //reward facilitator with the reward amount
-        stakeVault.releaseTo(msg.sender, rewardAmount_);
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
-        //TODO: we can have a separate event for this.
-        // Emit ProgressedUnstake event
-        emit ProgressedUnstake(
-            _messageHash,
-            message.sender,
-            unStake.beneficiary,
-            redeemAmount_,
-            unstakeAmount_,
-            redeemAmount_,
-            bytes32(0)
-        );
+        (redeemAmount_, unstakeAmount_, rewardAmount_) =
+        progressUnstakeInternal(_messageHash, initialGas, bytes32(0));
     }
 
     /**
@@ -1163,7 +1094,7 @@ contract Gateway is GatewaySetup {
  * @return stakeAmount_ Stake amount
  * @return message_ Message Bus message
  */
-    function ProgressStakingInternal(
+    function progressStakingInternal(
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
@@ -1195,6 +1126,75 @@ contract Gateway is GatewaySetup {
             staker_,
             message_.nonce,
             stakeAmount_,
+            _unlockSecret
+        );
+    }
+    /**
+     * @notice This is internal method for process unstake called from external
+     *         methods which processUnstake(with hashlock) and
+     *         processUnstakeWithProof
+     *
+     * @param _messageHash hash to identify message 
+     * @param _initialGas initial available gas during process unstake call.
+     * @param _unlockSecret Block number for which the proof is valid
+     *
+     * @return redeemAmount_ Total amount for which the redemption was
+     *                       initiated. The reward amount is deducted from the
+     *                       total redemption amount and is given to the
+     *                       facilitator.
+     * @return unstakeAmount_ Actual unstake amount, after deducting the reward
+     *                        from the total redeem amount.
+     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     */
+    function progressUnstakeInternal(
+        bytes32 _messageHash,
+        uint256 _initialGas,
+        bytes32 _unlockSecret
+    )
+    private
+    returns (
+        uint256 redeemAmount_,
+        uint256 unstakeAmount_,
+        uint256 rewardAmount_
+    )
+    {
+
+        Unstake storage unStake = unstakes[_messageHash];
+        // Get the message object.
+        MessageBus.Message storage message = messages[_messageHash];
+
+        redeemAmount_ = unStake.amount;
+        uint256 gasConsumed;
+        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
+        //21000 * 2 for transactions + approx buffer
+
+        (rewardAmount_, gasConsumed) = feeAmount(
+            message.gasConsumed,
+            message.gasLimit,
+            message.gasPrice,
+            _initialGas,
+            50000
+        );
+        message.gasConsumed = gasConsumed;
+
+        unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
+        // Release the amount to beneficiary
+        stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
+
+        //TODO: Should the rewared here be in OST (bountyToken)?
+        //reward facilitator with the reward amount
+        stakeVault.releaseTo(msg.sender, rewardAmount_);
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
+
+        emit ProgressedUnstake(
+            _messageHash,
+            message.sender,
+            unStake.beneficiary,
+            redeemAmount_,
+            unstakeAmount_,
+            redeemAmount_,
             _unlockSecret
         );
     }

@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 import './BytesLib.sol';
 import './ProofLib.sol';
 import "./CoreInterface.sol";
+import "./SafeMath.sol";
 
 /**
  *  @title GatewayBase contract.
@@ -12,6 +13,7 @@ import "./CoreInterface.sol";
  */
 contract GatewayBase {
 
+    using SafeMath for uint256;
     /** Emitted whenever a Gateway/CoGateway contract is proven.
      *	wasAlreadyProved parameter differentiates between first call and replay
      *  call of proveGateway method for same block height
@@ -189,6 +191,32 @@ contract GatewayBase {
             mstore(codeHash_, size)
         // actually retrieve the code, this needs assembly
             extcodecopy(_contractAddress, add(codeHash_, 0x20), 0, size)
+        }
+    }
+
+    function feeAmount(
+        uint256 _gasConsumed,
+        uint256 _gasLimit,
+        uint256 _gasPrice,
+        uint256 _initialGas,
+        uint256 _estimatedAdditionalGasUsage
+    )
+    view
+    internal
+    returns (uint256 fee_, uint256 gasConsumed_)
+    {
+        gasConsumed_ = _initialGas.sub(
+            gasleft()
+        ).add(
+            _estimatedAdditionalGasUsage
+        ).add(
+            _gasConsumed
+        );
+
+        if (gasConsumed_ < _gasLimit) {
+            fee_ = gasConsumed_.mul(_gasPrice);
+        } else {
+            fee_ = _gasLimit.mul(_gasPrice);
         }
     }
 

@@ -26,7 +26,6 @@ import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
 import "./CoreInterface.sol";
-import "./SafeMath.sol";
 
 /**
  *  @title GatewaySetup contract.
@@ -34,8 +33,6 @@ import "./SafeMath.sol";
  *  @notice GatewaySetup contains functions for initial setup of gateway.
  */
 contract GatewaySetup is Hasher, GatewayBase {
-
-    using SafeMath for uint256;
 
     /** Emitted whenever a gateway and coGateway linking is initiated. */
     event GatewayLinkInitiated(
