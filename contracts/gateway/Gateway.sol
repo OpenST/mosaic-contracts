@@ -1134,7 +1134,7 @@ contract Gateway is GatewaySetup {
      *         methods which processUnstake(with hashlock) and
      *         processUnstakeWithProof
      *
-     * @param _messageHash hash to identify message 
+     * @param _messageHash hash to identify message
      * @param _initialGas initial available gas during process unstake call.
      * @param _unlockSecret Block number for which the proof is valid
      *

@@ -194,6 +194,18 @@ contract GatewayBase {
         }
     }
 
+    /**
+     * @notice Calculate the fee amount which is rewarded to facilitator for
+     *         performing message transfers.
+     *
+     * @param _gasConsumed gas consumption during message confirmation.
+     * @param _gasLimit maximum amount of gas can be used for reward.
+     * @param _gasPrice price at which reward is calculated
+     * @param _initialGas initial gas at the start of the process
+     * @param _estimatedAdditionalGasUsage Estimated gas that will be used
+     *
+     * @return fee amount
+     */
     function feeAmount(
         uint256 _gasConsumed,
         uint256 _gasLimit,
@@ -201,11 +213,14 @@ contract GatewayBase {
         uint256 _initialGas,
         uint256 _estimatedAdditionalGasUsage
     )
-    view
-    internal
-    returns (uint256 fee_, uint256 gasConsumed_)
+        view
+        internal
+        returns (
+        uint256 fee_,
+        uint256 totalGasConsumed_
+        )
     {
-        gasConsumed_ = _initialGas.sub(
+        totalGasConsumed_ = _initialGas.sub(
             gasleft()
         ).add(
             _estimatedAdditionalGasUsage
@@ -213,8 +228,8 @@ contract GatewayBase {
             _gasConsumed
         );
 
-        if (gasConsumed_ < _gasLimit) {
-            fee_ = gasConsumed_.mul(_gasPrice);
+        if (totalGasConsumed_ < _gasLimit) {
+            fee_ = totalGasConsumed_.mul(_gasPrice);
         } else {
             fee_ = _gasLimit.mul(_gasPrice);
         }
