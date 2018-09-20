@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const BN = require('bn.js');
 const Assert = require('assert');
 
@@ -27,7 +29,6 @@ const rootPrefix = "../.."
 ;
 
 const utils = require(rootPrefix + "/test/lib/utils.js");
-const openSTValueUtils = require("./OpenSTValue_utils.js");
 
 var MockToken   = artifacts.require("./MockToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");

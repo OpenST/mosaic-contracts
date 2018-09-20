@@ -23,6 +23,8 @@
 // The MIT License.
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const BN = require('bn.js');
 const Utils = require('../lib/utils.js');
 

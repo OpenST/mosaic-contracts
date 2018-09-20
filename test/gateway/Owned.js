@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Utils = require('../lib/utils.js')
 const OwnedUtils = require('./Owned_utils.js')
 

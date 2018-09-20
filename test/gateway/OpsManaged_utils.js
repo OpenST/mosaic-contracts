@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 module.exports.checkAdminAddressChangedEventGroup = (result, _newAddress) => {
    assert.equal(result.logs.length, 1)
 

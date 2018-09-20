@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Assert 	= require('assert');
 const BN = require('bn.js');
 

@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Core = artifacts.require("./Core.sol")
     , MockToken = artifacts.require("./MockToken.sol")
     , Workers = artifacts.require("./Workers.sol")

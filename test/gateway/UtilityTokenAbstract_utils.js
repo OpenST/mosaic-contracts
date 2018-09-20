@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const BN = require('bn.js');
 var Hasher = artifacts.require("./Hasher.sol");
 var UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");

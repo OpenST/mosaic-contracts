@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Utils = require('../lib/utils.js');
 const BN = require('bn.js');
 const Gateway_utils = require('./Gateway_utils.js');

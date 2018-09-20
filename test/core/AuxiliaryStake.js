@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const BN = require('bn.js');
 const utils = require('../lib/utils.js');
 

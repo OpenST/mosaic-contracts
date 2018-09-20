@@ -19,8 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const BN = require('bn.js');
-const Utils = require('../lib/utils.js');
 const EIP20Token_utils = require('./EIP20Token_utils.js');
 
 ///

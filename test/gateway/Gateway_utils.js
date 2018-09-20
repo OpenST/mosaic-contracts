@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const OpenSTValue_utils = require('./OpenSTValue_utils.js')
   , OpenSTValue = artifacts.require("./OpenSTValueMock.sol")
   , MockToken = artifacts.require("./MockToken.sol")

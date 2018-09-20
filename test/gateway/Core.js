@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const coreUtils = require('./Core_utils.js')
     , utils = require('../lib/utils.js')
     , proof = require('../data/proof')

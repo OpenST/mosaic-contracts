@@ -1,3 +1,5 @@
+const web3 = require('../lib/web3.js');
+
 const RLPTest = artifacts.require("./RLPTest.sol"),
 	RLP = require("rlp"),
 	Utils = require('../lib/utils.js');

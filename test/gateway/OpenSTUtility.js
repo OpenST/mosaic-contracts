@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Utils = require('../lib/utils.js');
 const HashLock = require('../lib/hash_lock.js');
 const OpenSTUtility_utils = require('./OpenSTUtility_utils.js');

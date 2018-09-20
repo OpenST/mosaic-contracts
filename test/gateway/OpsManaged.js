@@ -19,13 +19,12 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require('bn.js')
+const web3 = require('../lib/web3.js');
 
 const Utils = require('../lib/utils.js')
 const OpsManagedUtils = require('./OpsManaged_utils.js');
 
 const OpsManaged = artifacts.require("./OpsManaged.sol")
-
 
 //
 // Basic properties

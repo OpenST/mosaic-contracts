@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 var ProtocolVersioned = artifacts.require("./ProtocolVersionedMock.sol");
 
 /// @dev Deploy 
