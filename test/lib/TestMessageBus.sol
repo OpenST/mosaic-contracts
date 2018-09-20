@@ -25,7 +25,6 @@ import "../../contracts/gateway/Hasher.sol";
 contract TestMessageBus {
 
     MessageBus.MessageBox messageBox;
-    MessageBus.Message message;
 
     bytes32 unlockSecret = keccak256(abi.encodePacked('secret'));
     bytes32 unlockSecret1 = keccak256(abi.encodePacked('secret1'));
@@ -41,29 +40,47 @@ contract TestMessageBus {
     bytes32 storageRoot = 0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d;
     Hasher hasher = new Hasher();
 
-    /* Signature Verification Parameters */
-    address sender = address(0x8014986b452de9f00ff9b036dcbe522f918e2fe4);
-    bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
-
     bytes32 messageTypeHash = keccak256(abi.encodePacked("gatewayLink"));
 
 
+    /* Signature Verification Parameters */
+    address sender = address(0x8014986b452DE9f00ff9B036dcBe522f918E2fE4);
+    bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
+    bytes32 messageHash = MessageBus.messageDigest(
+        hasher.stakeTypeHash(),
+        intentHash,
+        nonce,
+        gasPrice,
+        gasLimit
+    );
+    MessageBus.Message message = MessageBus.Message({
+        intentHash : intentHash,
+        nonce : nonce,
+        gasPrice : gasPrice,
+        gasLimit : gasLimit,
+        sender : sender,
+        hashLock : hashLock,
+        gasConsumed: gasConsumed
+        });
+
     /* External Functions */
-    // TODO test fail cases
-    // TODO refactor repeat code. in before callback
-    function testProgressInbox(
-    )
+    // TODO -ve test cases
+    // TODO move hardcoded values to data contract
+    function testProgressInbox()
         external
     {
-        bytes32 messageHash = getMessageDigest();
-        setMessage();
         messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
 
-        MessageBus.progressInbox(
+        bytes32 returnedMessageHash = MessageBus.progressInbox(
             messageBox,
             hasher.stakeTypeHash(),
             message,
             unlockSecret
+        );
+        Assert.equal(
+            bytes32(returnedMessageHash),
+            bytes32(messageHash),
+            "Returned message hash not equal to passed messageHash."
         );
         Assert.equal(
             uint256(messageBox.inbox[messageHash]),
@@ -72,34 +89,10 @@ contract TestMessageBus {
         );
     }
 
-//    function testProgressInboxWithProof()
-//        external
-//    {
-//        bytes32 messageHash = getMessageDigest();
-//        setMessage();
-//        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
-//        MessageBus.progressInboxWithProof(
-//            messageBox,
-//            hasher.stakeTypeHash(),
-//            message,
-//            rlpEncodedParentNodes,
-//            outboxOffset,
-//            storageRoot,
-//            MessageBus.MessageStatus.Declared
-//        );
-//
-//        Assert.equal(
-//            uint256(messageBox.inbox[messageHash]),
-//            uint256(MessageBus.MessageStatus.Progressed),
-//            "Status not changed to progressed."
-//        );
-//    }
-
     function testVerifySignature()
         external
     {
-        bytes memory signature = new bytes(65);
-        signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
+        bytes memory signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
         Assert.equal(
             MessageBus.verifySignature(hashedMessage, signature, address(0)),
             false,
@@ -117,86 +110,168 @@ contract TestMessageBus {
         );
     }
 
-//    function testDeclareRevocationMessage()
-//        external
-//    {
-//        bytes32 messageHash = getMessageDigest();
-//        setMessage();
-//        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
-//        MessageBus.declareRevocationMessage(
-//            messageBox,
-//            hasher.stakeTypeHash(),
-//            message,
-//            signature
-//        );
-//
-//        Assert.equal(
-//            uint256(messageBox.inbox[messageHash]),
-//            uint256(MessageBus.MessageStatus.DeclaredRevocation),
-//            "Status not changed to DeclaredRevocation."
-//        );
-//    }
-//
-//    function testConfirmRevocation()
-//        external
-//    {
-//        bytes32 messageHash = getMessageDigest();
-//        setMessage();
-//        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
-//        MessageBus.confirmRevocation(
-//            messageBox,
-//            hasher.stakeTypeHash(),
-//            message,
-//            rlpEncodedParentNodes,
-//            outboxOffset,
-//            storageRoot
-//        );
-//
-//        Assert.equal(
-//            uint256(messageBox.inbox[messageHash]),
-//            uint256(MessageBus.MessageStatus.DeclaredRevocation),
-//            "Status not changed to DeclaredRevocation."
-//        );
-//    }
-
-    /* Private Functions */
-    function getMessageDigest()
-        private
-        view
-        returns(bytes32 /* Message hash */)
+    function testDeclareRevocationMessage()
+        external
     {
-        return MessageBus.messageDigest(
-                hasher.stakeTypeHash(),
-                intentHash,
-                nonce,
-                gasPrice,
-                gasLimit
+        // Calculated by hashing revocationMessage
+        bytes memory revocationSignature = hex"bda7f05d7bcbac276482ff0809c532edd57b10cce5638d3dede72bfd73a3ef3140e200b0a0e313beacdb79491d387000949751f2e6fe7eec4c03044ecc14fc2d00";
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 returnedMessageHash = MessageBus.declareRevocationMessage(
+            messageBox,
+            hasher.stakeTypeHash(),
+            message,
+            revocationSignature
+        );
+        Assert.equal(
+            bytes32(returnedMessageHash),
+            bytes32(messageHash),
+            "Returned message hash not equal to passed messageHash."
+        );
+        Assert.equal(
+            uint256(messageBox.outbox[messageHash]),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "Status not changed to DeclaredRevocation."
         );
     }
 
-    function setMessage()
-        private
-    {
-        message = MessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
-            gasPrice : gasPrice,
-            gasLimit : gasLimit,
-            sender : sender,
-            hashLock : hashLock,
-            gasConsumed: gasConsumed
-        });
-    }
+    //    function testConfirmRevocation()
+    //        external
+    //    {
+    //        bytes32 messageHash = getMessageDigest();
+    //        setMessage();
+    //        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+    //        MessageBus.confirmRevocation(
+    //            messageBox,
+    //            hasher.stakeTypeHash(),
+    //            message,
+    //            rlpEncodedParentNodes,
+    //            outboxOffset,
+    //            storageRoot
+    //        );
+    //
+    //        Assert.equal(
+    //            uint256(messageBox.inbox[messageHash]),
+    //            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+    //            "Status not changed to DeclaredRevocation."
+    //        );
+    //    }
 
-    /**
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     */
+    function testChangeInboxState()
+        external
+    {
+        bool isChanged;
+        MessageBus.MessageStatus nextState;
+
+        // Test Undeclared => Declared
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Declared),
+            "nextState not changed to Declared."
+        );
+
+        // Test Declared => Progressed
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "nextState not changed to Progressed."
+        );
+
+        // Test DeclaredRevocation => Revoked
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MessageBus.changeInboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "nextState not changed to Revoked."
+        );
+    }
+//
+//    function testChangeOutboxState()
+//        external
+//    {
+//        bool isChanged;
+//        MessageBus.MessageStatus nextState;
+//
+//        // Test Undeclared => Declared
+//        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Undeclared;
+//        (isChanged, nextState) = MessageBus.changeOutboxState(
+//            messageBox,
+//            messageHash
+//        );
+//        Assert.equal(
+//            bool(isChanged),
+//            true,
+//            "isChanged not equal to true."
+//        );
+//        Assert.equal(
+//            uint256(nextState),
+//            uint256(MessageBus.MessageStatus.Declared),
+//            "nextState not changed to Declared."
+//        );
+//
+//        // Test Declared => Progressed
+//        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+//        (isChanged, nextState) = MessageBus.changeOutboxState(
+//            messageBox,
+//            messageHash
+//        );
+//        Assert.equal(
+//            bool(isChanged),
+//            true,
+//            "1345 isChanged not equal to true."
+//        );
+//        Assert.equal(
+//            uint256(nextState),
+//            uint256(MessageBus.MessageStatus.Progressed),
+//            "nextState not changed to Progressed."
+//        );
+//
+//        // Test DeclaredRevocation => Revoked
+//        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+//        (isChanged, nextState) = MessageBus.changeOutboxState(
+//            messageBox,
+//            messageHash
+//        );
+//        Assert.equal(
+//            bool(isChanged),
+//            true,
+//            "123 isChanged not equal to true."
+//        );
+//        Assert.equal(
+//            uint256(nextState),
+//            uint256(MessageBus.MessageStatus.Revoked),
+//            "nextState not changed to Revoked."
+//        );
+//    }
+
     function testDeclareMessage()
         public
     {
@@ -211,35 +286,389 @@ contract TestMessageBus {
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
-            });
-
-        bytes32 messageHash = MessageBus.declareMessage(
+        });
+        bytes32 messageHash = hex"165d879c2a71691e1114a325127f071aba8c7978c3e02455d8c542b05c34c17b";
+        bytes32 messageHashFromDeclare = MessageBus.declareMessage(
             messageBox,
             messageTypeHash,
-            message, signature
+            message,
+            signature
         );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromDeclare]),
+            uint256(MessageBus.MessageStatus.Declared),
+            "Status not changed to Declared."
+        );
+
+        Assert.equal(
+            messageHash,
+            messageHashFromDeclare,
+            "Message hash not equal"
+        );
+    }
+
+    function testProgressOutbox()
+        public
+    {
+        bytes memory signature = new bytes(65);
+        signature = hex"5dff9e41fdbc3b145894b7ddcee057473fabc4df153c04c10a81871591891176659af33bcc924b0dcdc2b3a41de7df690dbdb68db34a45fefde97b74bde0625100";
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 messageHashFromOutbox = MessageBus.progressOutbox(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            unlockSecret
+        );
+
         Assert.equal(
             uint256(messageBox.outbox[messageHash]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+        Assert.equal(
+            messageHash,
+            messageHashFromOutbox,
+            "Message hash not equal."
+        );
+    }
+
+    function testConfirmMessage()
+    {
+        bytes memory signature = new bytes(65);
+        signature = hex"5dff9e41fdbc3b145894b7ddcee057473fabc4df153c04c10a81871591891176659af33bcc924b0dcdc2b3a41de7df690dbdb68db34a45fefde97b74bde0625100";
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 messageHashFromConfirm = MessageBus.confirmMessage(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromConfirm]),
             uint256(MessageBus.MessageStatus.Declared),
             "Status not changed to Declared."
         );
     }
 
-    function testMessageDigest()
-        public
-        returns (bytes32 )
+    function testProgressInboxWithProof()
     {
 
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
 
-        return (MessageBus.messageDigest(
-            messageTypeHash,
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit
-        ));
+        // When the state for messageHash in inbox is Declared
+        // with outbox state for messageHash is Declared
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 messageHashFromProgressOutbox = MessageBus.progressInboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Declared
+        );
+
+        Assert.equal(
+            uint256(messageBox.inbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+
+        // When the state for messageHash in inbox is Progressed
+        // with outbox state for messageHash is Declared
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        messageHashFromProgressOutbox = MessageBus.progressInboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Progressed
+        );
+
+        Assert.equal(
+            uint256(messageBox.inbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
 
     }
 
 
+    function testProgressOutboxWithProof()
+    {
+
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+
+        // When the state for messageHash in inbox is Declared
+        // with outbox state for messageHash is Declared
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 messageHashFromProgressOutbox = MessageBus.progressOutboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Declared
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+
+        // When the state for messageHash in inbox is Declared
+        // with outbox state for messageHash is DeclaredRevocation
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        messageHashFromProgressOutbox = MessageBus.progressOutboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Declared
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+
+        // When the state for messageHash in inbox is Progressed
+        // with outbox state for messageHash is Declared
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
+        messageHashFromProgressOutbox = MessageBus.progressOutboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Progressed
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+
+//         When the state for messageHash in inbox is Progressed
+//         with outbox state for messageHash is Declared
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        messageHashFromProgressOutbox = MessageBus.progressOutboxWithProof(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot,
+            MessageBus.MessageStatus.Progressed
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromProgressOutbox]),
+            uint256(MessageBus.MessageStatus.Progressed),
+            "Status not changed to Progressed."
+        );
+
+    }
+
+    function testConfirmRevocation()
+    {
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        bytes32 messageHashFromConfirmRevocation = MessageBus.confirmRevocation(
+            messageBox,
+            hasher.gatewayLinkTypeHash(),
+            message,
+            rlpEncodedParentNodes,
+            1,
+            storageRoot
+        );
+
+        Assert.equal(
+            uint256(messageBox.inbox[messageHashFromConfirmRevocation]),
+            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            "Status not changed to Declared."
+        );
+
+    }
+
+    function testProgressInboxRevocation()
+    {
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+        });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+
+        // When the state for messageHash in inbox is DeclaredRevocation
+        // with outbox state for messageHash is DeclaredRevocation
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        bytes32 messageHashFromConfirmRevocation = MessageBus.progressInboxRevocation(
+            messageBox,
+            message,
+            hasher.gatewayLinkTypeHash(),
+            1,
+            rlpEncodedParentNodes,
+            storageRoot,
+            MessageBus.MessageStatus.DeclaredRevocation
+        );
+
+        Assert.equal(
+            uint256(messageBox.inbox[messageHashFromConfirmRevocation]),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "Status not changed to Revoked."
+        );
+
+        // When the state for messageHash in inbox is Revoked
+        // with outbox state for messageHash is Revoked
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        messageHashFromConfirmRevocation = MessageBus.progressInboxRevocation(
+            messageBox,
+            message,
+            hasher.gatewayLinkTypeHash(),
+            1,
+            rlpEncodedParentNodes,
+            storageRoot,
+            MessageBus.MessageStatus.Revoked
+        );
+
+        Assert.equal(
+            uint256(messageBox.inbox[messageHashFromConfirmRevocation]),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "Status not changed to Revoked."
+        );
+    }
+
+
+    function testProgressOutboxRevocation()
+    {
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : gasPrice,
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+            });
+        bytes memory rlpEncodedParentNodes = hex'f9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
+        bytes32 storageRoot = hex"9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771";
+        bytes32 messageHash = hex"51805747c1e5ae6170f64e0b7f815b2c97a643855933f57a7bf15f8aba6d6412";
+
+        // When the state for messageHash in outbox is DeclaredRevocation
+        // with inbox state for messageHash is DeclaredRevocation
+        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        bytes32 messageHashFromConfirmRevocation = MessageBus.progressOutboxRevocation(
+            messageBox,
+            message,
+            hasher.gatewayLinkTypeHash(),
+            1,
+            rlpEncodedParentNodes,
+            storageRoot,
+            MessageBus.MessageStatus.DeclaredRevocation
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromConfirmRevocation]),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "Status not changed to Declared."
+        );
+
+        // When the state for messageHash in inbox is Revoked
+        // with outbox state for messageHash is Revoked
+        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
+        messageHashFromConfirmRevocation = MessageBus.progressInboxRevocation(
+            messageBox,
+            message,
+            hasher.gatewayLinkTypeHash(),
+            1,
+            rlpEncodedParentNodes,
+            storageRoot,
+            MessageBus.MessageStatus.Revoked
+        );
+
+        Assert.equal(
+            uint256(messageBox.outbox[messageHashFromConfirmRevocation]),
+            uint256(MessageBus.MessageStatus.Revoked),
+            "Status not changed to Declared."
+        );
+    }
+
+
 }
+

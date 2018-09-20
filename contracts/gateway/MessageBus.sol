@@ -97,6 +97,7 @@ library MessageBus {
 
     /** Position of inbox in struct MessageBox */
     uint8 constant INBOX_OFFSET = 1;
+	event emitFromMessageBus(bytes32 messageHash_,uint status);
 
     /**
      * @notice Declare a new message. This will update the outbox status to
@@ -901,23 +902,23 @@ library MessageBus {
             MessageBus.MessageStatus nextState_
         )
     {
-        MessageStatus status = _messageBox.outbox[_messageHash];
-
-        if(status == MessageStatus.Undeclared) {
-            isChanged_ = true;
-            nextState_ = MessageStatus.Declared;
-        } else if(status == MessageStatus.Declared) {
-            isChanged_ = true;
-            nextState_ = MessageStatus.Progressed;
-        } else if(status == MessageStatus.DeclaredRevocation) {
-            isChanged_ = true;
-            nextState_ = MessageStatus.Revoked;
-        }
-
-        if(isChanged_){
-            // Update the message outbox status.
-            _messageBox.outbox[_messageHash] = nextState_;
-        }
+//        MessageStatus status = _messageBox.outbox[_messageHash];
+//
+//        if(status == MessageStatus.Undeclared) {
+//            isChanged_ = true;
+//            nextState_ = MessageStatus.Declared;
+//        } else if(status == MessageStatus.Declared) {
+//            isChanged_ = true;
+//            nextState_ = MessageStatus.Progressed;
+//        } else if(status == MessageStatus.DeclaredRevocation) {
+//            isChanged_ = true;
+//            nextState_ = MessageStatus.Revoked;
+//        }
+//
+//        if(isChanged_){
+//            // Update the message outbox status.
+//            _messageBox.outbox[_messageHash] = nextState_;
+//        }
     }
 
     /**
