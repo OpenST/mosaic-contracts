@@ -22,7 +22,7 @@
 const Utils = require('../lib/utils.js')
 const OwnedUtils = require('./Owned_utils.js')
 
-const BigNumber = require('bignumber.js')
+const BN = require('bn.js')
 
 const Owned = artifacts.require("./Owned.sol")
 

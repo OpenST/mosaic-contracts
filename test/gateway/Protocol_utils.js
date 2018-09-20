@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 const Assert = require('assert');
 
 const rootPrefix = "../.."
@@ -49,7 +49,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const ops           = accounts[3];
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
-	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const workerDeactivationHeight = web3.utils.toWei(new BN('100000000'), "ether");
 
 	var res = null;
 
@@ -119,7 +119,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
 	Assert.notEqual(stpContractAddress, utils.NullAddress);
-	const stPrime = STPrime.at(stpContractAddress);
+	const stPrime = await STPrime.at(stpContractAddress);
 
 	// console.log("Simple Token:", simpleToken.address);
 	// console.log("Registrar VC:", registrarVC.address);

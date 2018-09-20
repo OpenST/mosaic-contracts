@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber       = require('bignumber.js');
+const BN       = require('bn.js');
 const Utils           = require('../lib/utils.js');
 const HashLock        = require('../lib/hash_lock.js');
 const Registrar_utils = require('./Registrar_utils.js');
@@ -58,8 +58,8 @@ contract('Registrar', function(accounts) {
 	const symbol 			= "MCC";
 	const name 				= "Member Company Coin";
 	const conversionRateDecimals = 5;
-	const conversionRate	= new BigNumber(10 * (10**conversionRateDecimals)); // Conversion rate => 10
-	const amountST 			= new BigNumber(web3.toWei(2, "ether"));;
+	const conversionRate	= new BN(10 * (10**conversionRateDecimals)); // Conversion rate => 10
+	const amountST 			= web3.utils.toWei(new BN('2'), "ether");;
 
 	describe('RegisterBrandedToken for utility chain', async() => {
 		var contracts 		= null;
@@ -222,7 +222,7 @@ contract('Registrar', function(accounts) {
 	        var stakingIntentHash = result.logs[0].args._stakingIntentHash;
 			await openSTValue.processStaking(stakingIntentHash, lock.s, { from: staker });
 			nonce = await openSTValue.getNextNonce.call(staker);
-            unlockHeight = new BigNumber(BLOCKS_TO_WAIT_LONG).plus(web3.eth.blockNumber);
+            unlockHeight = BLOCKS_TO_WAIT_LONG + (await web3.eth.getBlockNumber());
 			redemptionIntentHash = await openSTValue.hashRedemptionIntent.call(uuid, staker, nonce, redeemBeneficiary, amountUTRedeemed, unlockHeight, lockR.l);
 		})
 

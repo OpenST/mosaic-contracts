@@ -92,18 +92,20 @@ module.exports.isNullAddress = function (address) {
 
 /// @dev Expect failure from invalid opcode or out of gas,
 ///      but returns error instead
-module.exports.expectThrow = async (promise) => {
+module.exports.expectThrow = async (promise, expectedMessage) => {
   try {
     await promise;
   } catch (error) {
-    const invalidOpcode = error.message.search('invalid opcode') > -1;
+    if (expectedMessage !== undefined) {
+      assertExpectedMessage(expectedMessage, error);
+    } else {
+      const invalidOpcode = error.message.search('invalid opcode') > -1;
+      const outOfGas = error.message.search('out of gas') > -1;
+      // Latest TestRPC has trouble with require
+      const revertInstead = error.message.search('revert') > -1;
 
-    const outOfGas = error.message.search('out of gas') > -1;
-
-    // Latest TestRPC has trouble with require
-    const revertInstead = error.message.search('revert') > -1;
-
-    assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+      assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+    }
 
     return;
   }
@@ -111,18 +113,24 @@ module.exports.expectThrow = async (promise) => {
   assert(false, "Did not throw as expected");
 };
 
-/// @dev Expect failure from revert,
-///      but returns error instead
-module.exports.expectRevert = async (promise) => {
+/**
+ * Asserts that a given ethereum call/transaction leads to a revert. The
+ * call/transaction is given as a promise.
+ *
+ * @param {promise} promise Awaiting this promise must lead to a revert.
+ * @param {string} expectedMessage If given, the returned error message must
+ *                                 include this string (optional).
+ */
+module.exports.expectRevert = async (promise, expectedMessage) => {
   try {
     await promise;
   } catch (error) {
-    // TODO: Truffle v5 will support require messages with web3 1.0 and we can
-    //       check for a specific message.
     assert(
       error.message.search('revert') > -1,
       'The contract should revert. Instead: ' + error.message
     );
+
+    assertExpectedMessage(expectedMessage, error);
 
     return;
   }
@@ -154,5 +162,21 @@ module.exports.getGasPrice = function () {
       }
     })
   })
+}
+
+/**
+ * Asserts that an error message contains a string given as message. Always
+ * passes if the message is `undefined`.
+ * 
+ * @param {string} message The message that the error should contain.
+ * @param {object} error The error.
+ */
+function assertExpectedMessage(message, error) {
+  if (message !== undefined) {
+    assert(
+      error.message.search(message) > -1,
+      'The contract was expected to error including "' + message + '", but instead: "' + error.message + '"'
+    );
+  }
 }
 

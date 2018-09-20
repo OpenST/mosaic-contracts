@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 
 const Assert = require('assert');
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 
 var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
 
@@ -45,7 +45,7 @@ module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
 
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
   let eventBody = event.args;
-  assertTransferEvent(event.event, eventBody._from, eventBody._to, eventBody._value.toNumber(), _from, _to, _value)
+  assertTransferEvent(event.event, eventBody._from, eventBody._to, eventBody._value, _from, _to, _value)
 }
 
 module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
@@ -55,13 +55,16 @@ module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
 }
 
 assertTransferEvent = (eventType, actualFrom, actualTo, actualValue, expectedFrom, expectedTo, expectedValue) => {
-  if (Number.isInteger(expectedValue)) {
-    expectedValue = new BigNumber(expectedValue);
-  }
+  actualValue = new BN(actualValue);
+  expectedValue = new BN(expectedValue);
+
   Assert.equal(eventType, "Transfer");
   Assert.equal(actualFrom, expectedFrom);
-  Assert.equal(actualTo, expectedTo);
-  Assert.equal(actualValue, expectedValue.toNumber());
+  Assert.equal(
+    web3.utils.toChecksumAddress(actualTo),
+    web3.utils.toChecksumAddress(expectedTo)
+  );
+  Assert(expectedValue.eq(actualValue));
 }
 
 module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
@@ -70,11 +73,11 @@ module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
   const event = result.logs[0]
 
   if (Number.isInteger(_value)) {
-    _value = new BigNumber(_value)
+    _value = new BN(_value)
   }
 
   assert.equal(event.event, "Approval")
   assert.equal(event.args._owner, _owner)
   assert.equal(event.args._spender, _spender)
-  assert.equal(event.args._value.toNumber(), _value.toNumber())
+  assert(event.args._value.eq(_value))
 }

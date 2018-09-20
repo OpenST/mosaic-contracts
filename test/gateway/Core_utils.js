@@ -25,7 +25,7 @@ const Core = artifacts.require("./Core.sol")
     , proof = require('../data/proof');
 ;
 
-const BigNumber = require('bignumber.js')
+const BN = require('bn.js')
 ;
 const rootPrefix = "../.."
     , constants = require(rootPrefix + '/test/lib/constants')
@@ -40,7 +40,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
         , chainIdOrigin = 3
         , chainIdRemote = 1410
         , valueToken = await MockToken.new()
-        , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+        , deactivationHeight = web3.utils.toWei(new BN('100000000'), "ether")
         , worker1 = accounts[7]
     ;
 
