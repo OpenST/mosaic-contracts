@@ -21,166 +21,62 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-/*
-
-                Origin chain      |       Auxiliary chain
--------------------------------------------------------------------------------
-                Gateway - - - - - - - - - - - CoGateway
--------------------------------------------------------------------------------
-1. GatewayLinking:
-
-            initiateGatewayLink  --->   confirmGatewayLinkIntent
-                 |
-            progressGatewayLink  --->   progressGatewayLink
--------------------------------------------------------------------------------
-2. Redeem and Unstake: Normal flow
-
-        confirmRedemptionIntent  <---   redeem
-                                           |
-        progressUnstake (HL)     --->   progressRedemption (HL)
--------------------------------------------------------------------------------
-3. Redeem and Unstake (Revert): Normal flow
-
-        confirmRedemptionIntent   <---   redeem
-                                            |
-RevertRedemptionIntentConfirmed   --->   revertRedemption
-            |
-    progressRevertRedemption      --->   progressRevertRedemption
--------------------------------------------------------------------------------
-4.  Redeem and Unstake: Incase the facilitator is not able to progress
-
-        confirmRedemptionIntent   <---   redeem
-        (by facilitator)                 (by facilitator)
-                                    |
-                            facilitator (offline)
-                                            |
-        progressUnstakeWithProof  <---   progressRedemptionWithProof
--------------------------------------------------------------------------------
-*/
-
-import "./CoGatewaySetup.sol";
+import "./MessageBus.sol";
+import "./Hasher.sol";
+import "./EIP20Interface.sol";
+import "./SafeMath.sol";
+import "./GatewayBase.sol";
+import "./CoreInterface.sol";
+import "./UtilityTokenInterface.sol";
+import "./ProtocolVersioned.sol";
+import "./GatewayLib.sol";
 
 /**
- * @title CoGateway Contract
+ *  @title CoGatewaySetup contract.
  *
- * @notice CoGateway act as medium to send messages from auxiliary chain to
- *         origin chain. Currently CoGateway supports redeem and unstake,
- *         revert redeem message & linking of gateway and cogateway.
+ *  @notice CoGatewaySetup contains functions for initial setup of co-gateway.
  */
-contract CoGateway is CoGatewaySetup {
+contract CoGateway is Hasher, GatewayBase {
 
-    /* Events */
+    using SafeMath for uint256;
 
-    /** Emitted whenever a staking intent is confirmed. */
-    event StakingIntentConfirmed(
+    /** Emitted whenever a gateway and coGateway linking is confirmed. */
+    event GatewayLinkConfirmed(
         bytes32 indexed _messageHash,
-        address _staker,
-        uint256 _stakerNonce,
-        address _beneficiary,
-        uint256 _amount,
-        uint256 _blockHeight,
-        bytes32 _hashLock
+        address _gateway,
+        address _cogateway,
+        address _valueToken,
+        address _utilityToken
     );
 
-    /** Emitted whenever a utility tokens are minted. */
-    event ProgressedMint(
+    /** Emitted whenever a gateway and coGateway linking is complete. */
+    event GatewayLinkProgressed(
         bytes32 indexed _messageHash,
-        address _staker,
-        address _beneficiary,
-        uint256 _stakeAmount,
-        uint256 _mintedAmount,
-        uint256 _rewardAmount,
+        address _gateway,
+        address _cogateway,
+        address _valueToken,
+        address _utilityToken,
         bytes32 _unlockSecret
     );
 
-    /** Emitted whenever revert staking intent is confirmed. */
-    event RevertStakingIntentConfirmed(
-        bytes32 indexed _messageHash,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _amount
-    );
-
-    /** Emitted whenever a staking intent is reverted. */
-    event RevertStakeProgressed(
-        bytes32 indexed _messageHash,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _amount
-    );
-
-    /** Emitted whenever redemption is initiated. */
-    event RedemptionIntentDeclared(
-        bytes32 indexed _messageHash,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        address _beneficiary,
-        uint256 _amount
-    );
-
-    /** Emitted whenever redemption is completed. */
-    event ProgressedRedemption(
-        bytes32 indexed _messageHash,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        uint256 _amount,
-        bytes32 _unlockSecret
-    );
-
-    /** Emitted whenever revert redemption is initiated. */
-    event RevertRedemptionDeclared(
-        bytes32 indexed _messageHash,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        uint256 _amount
-    );
-
-    /** Emitted whenever revert redemption is complete. */
-    event RevertedRedemption(
-        bytes32 indexed _messageHash,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        uint256 _amount
-    );
-
-    /* Struct */
-
     /**
-     * Redeem stores the redemption information about the redeem amount,
-     * beneficiary address, message data and facilitator address.
+     * ActiveProcess stores the information related to in progress process
+     * like stake/mint unstake/redeem.
      */
-    struct Redeem {
+    struct ActiveProcess {
 
-        /** Amount that will be redeemed. */
-        uint256 amount;
+        /** latest message hash. */
+        bytes32 messageHash;
 
-        /**
-         * Address where the value tokens will be unstaked in the
-         * origin chain.
-         */
-        address beneficiary;
-
-        /** Address of the facilitator that initiates the staking process. */
-        address facilitator;
+        /** Outbox or Inbox process. */
+        MessageBus.MessageBoxType messageBoxType;
     }
 
-    /**
-     * Mint stores the minting information
-     * like mint amount, beneficiary address, message data.
-     */
-    struct Mint {
+    /* constants */
 
-        /** Amount that will be minted. */
-        uint256 amount;
-
-        /** Address for which the utility tokens will be minted */
-        address beneficiary;
-    }
+    uint8 MESSAGE_BOX_OFFSET = 1;
 
     /* public variables */
-
-    /** Gateway contract address. */
-    address public gateway;
 
     /**
      * Message box.
@@ -207,17 +103,48 @@ contract CoGateway is CoGatewaySetup {
     /** address of value token. */
     address public valueToken;
 
-    /** address of core contract. */
-    CoreInterface public core;
-
     /** Gateway link message hash. */
     bytes32 public gatewayLinkHash;
 
-    /** Maps messageHash to the Mint object. */
-    mapping(bytes32 /*messageHash*/ => Mint) mints;
+    /** Maps messageHash to the Message object. */
+    mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 
-    /** Maps messageHash to the Redeem object. */
-    mapping(bytes32/*messageHash*/ => Redeem) redeems;
+    /**
+     * Maps address to ActiveProcess object.
+     *
+     * Once the minting or redeem process is started the corresponding
+     * message hash is stored in ActiveProcess against the staker/redeemer
+     * address. This is used to restrict simultaneous/multiple minting and
+     * redeem for a particular address. This is also used to determine the
+     * nonce of the particular address. Refer getNonce for the details.
+     */
+    mapping(address /*address*/ => ActiveProcess) activeProcess;
+
+    /* internal variables */
+
+    /** address of message bus used to fetch codehash during gateway linking */
+    address internal messageBus;
+
+
+    /* modifiers */
+
+    /** checks that only organisation can call a particular function. */
+    modifier onlyOrganisation() {
+        require(
+            msg.sender == organisation,
+            "Only organisation can call the function"
+        );
+        _;
+    }
+
+    /** checks that contract is linked and is not deactivated */
+    modifier isActive() {
+        require(
+            deactivated == false && linked == true,
+            "Contract is restricted to use"
+        );
+        _;
+    }
 
     /* Constructor */
 
@@ -244,1030 +171,414 @@ contract CoGateway is CoGatewaySetup {
         address _gateway,
         address _messageBus
     )
-    CoGatewaySetup(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway, _messageBus)
+    GatewayBase(_core)
     public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero"
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero"
+        );
+        require(
+            _core != address(0),
+            "Core contract address must not be zero"
+        );
+        require(
+            _organisation != address(0),
+            "Organisation address must not be zero"
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero"
+        );
+        require(
+            _messageBus != address(0),
+            "MessageBus address must not be zero"
+        );
 
+        //gateway and cogateway is not linked yet so it is initialized as false
+        linked = false;
+
+        // gateway is active
+        deactivated = false;
+
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        core = _core;
+        bounty = _bounty;
+        organisation = _organisation;
+        messageBus = _messageBus;
+        gateway = _gateway;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(_gateway))
+        );
     }
 
     /* External functions */
 
     /**
-     * @notice Confirms the initiation of the stake process.
+     * @notice Confirm the Gateway and CoGateway contracts initiation.
      *
-     * @param _staker Staker address.
-     * @param _stakerNonce Nonce of the staker address.
-     * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
-     * @param _amount Amount of utility token will be minted.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done
-     * @param _gasLimit Gas limit that staker is ready to pay
-     * @param _hashLock Hash Lock provided by the facilitator.
+     * @param _intentHash Gateway and CoGateway linking intent hash.
+     *                    This is a sha3 of gateway address, cogateway address,
+     *                    bounty, token name, token symbol, token decimals,
+     *                    _nonce, token.
+     * @param _nonce Nonce of the sender. Here in this case its organisation
+     *               address of Gateway
+     * @param _sender The address that signs the message hash. In this case it
+     *                has to be organisation address of Gateway
+     * @param _hashLock Hash lock, set by the facilitator.
      * @param _blockHeight Block number for which the proof is valid
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox of Gateway
      *
-     * @return messageHash_ which is unique for each request.
+     * @return messageHash_ Message hash
      */
-    function confirmStakingIntent(
-        address _staker,
-        uint256 _stakerNonce,
-        address _beneficiary,
-        uint256 _amount,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+    function confirmGatewayLinkIntent(
+        bytes32 _intentHash,
+        uint256 _nonce,
+        address _sender,
         bytes32 _hashLock,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
     )
-    public
+    public // TODO: check to change it to external, getting stack to deep.
     returns (bytes32 messageHash_)
     {
-        // Get the initial gas amount
-        uint256 initialGas = gasleft();
-
         require(
-            _staker != address(0),
-            "Staker address must not be zero"
+            linked == false,
+            "CoGateway contract must not be already linked"
         );
         require(
-            _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            deactivated == false,
+            "Gateway contract must not be deactivated"
         );
         require(
-            _amount != 0,
-            "Mint amount must not be zero"
+            gatewayLinkHash == bytes32(0),
+            "Linking is already initiated"
         );
         require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
+            _sender != address(0),
+            "Sender must be not be zero"
         );
         require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
+            _nonce == _getNonce(_sender),
+            "Sender nonce must be in sync"
         );
         require(
             _hashLock != bytes32(0),
             "Hash lock must not be zero"
         );
         require(
-            _rlpParentNodes.length != 0,
+            _rlpParentNodes.length > 0,
             "RLP parent nodes must not be zero"
         );
 
-        // Get the staking intent hash
-        bytes32 intentHash = hashStakingIntent(
-            _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
+        bytes32 storageRoot = storageRoots[_blockHeight];
+        require(
+            storageRoot != bytes32(0),
+            "Storage root for given block height must not be zero"
         );
 
-        // Get the messageHash
+        bytes32 intentHash = hashLinkGateway(_nonce);
+
+        // Ensure that the _intentHash matches the calculated intentHash
+        require(
+            intentHash == _intentHash,
+            "Incorrect intent hash"
+        );
+
+        // Get the message hash
         messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+            GATEWAY_LINK_TYPEHASH,
             intentHash,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
+            _nonce,
+            0,
+            0
+        );
+        // create Message object
+        messages[messageHash_] = getMessage(
+            _sender,
+            _nonce,
+            0,
+            0,
+            _intentHash,
+            _hashLock
         );
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
-            _staker,
-            _stakerNonce,
+        // initiate new inbox process
+        initiateNewProcess(
+            _sender,
+            _nonce,
             messageHash_,
             MessageBus.MessageBoxType.Inbox
         );
 
-        // Delete the previous progressed / revoked mint data
-        delete mints[previousMessageHash];
-
-        // Create new mint object
-        mints[messageHash_] = Mint({
-            amount : _amount,
-            beneficiary : _beneficiary
-            });
-
-        // create new message object
-        messages[messageHash_] = getMessage(
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock);
-
-
-        // execute the confirm staking intent. This is done in separate
-        // function to avoid stack too deep error
-        executeConfirmStakingIntent(
-            messages[messageHash_],
-            _blockHeight,
-            _rlpParentNodes
-        );
-
-        // Emit StakingIntentConfirmed event
-        emit StakingIntentConfirmed(
-            messageHash_,
-            _staker,
-            _stakerNonce,
-            _beneficiary,
-            _amount,
-            _blockHeight,
-            _hashLock
-        );
-
-        // Update the gas consumed for this function.
-        messages[messageHash_].gasConsumed = initialGas.sub(gasleft());
-    }
-
-    /**
-     * @notice Complete minting process by minting the utility tokens
-     *
-     * @param _messageHash Message hash.
-     * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the stake
-     *
-     * @return staker_ Staker address
-     * @return beneficiary_ Address to which the utility tokens will be
-     *                      transferred after minting
-     * @return stakeAmount_ Total amount for which the staking was
-     *                      initiated. The reward amount is deducted from the
-     *                      this amount and is given to the facilitator.
-     * @return mintedAmount_ Actual minted amount, after deducting the reward
-     *                       from the total (stake) amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
-     */
-    function progressMinting(
-        bytes32 _messageHash,
-        bytes32 _unlockSecret
-    )
-    external
-    returns (
-        address staker_,
-        address beneficiary_,
-        uint256 stakeAmount_,
-        uint256 mintedAmount_,
-        uint256 rewardAmount_
-    )
-    {
-        // Get the initial gas amount
-        uint256 initialGas = gasleft();
-
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
-        );
-
-        Mint storage mint = mints[_messageHash];
-        MessageBus.Message storage message = messages[_messageHash];
-
-        // Progress inbox
-        MessageBus.progressInbox(
-            messageBox,
-            STAKE_TYPEHASH,
-            message,
-            _unlockSecret
-        );
-
-        staker_ = message.sender;
-        beneficiary_ = mint.beneficiary;
-        stakeAmount_ = mint.amount;
-
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
-            initialGas,
-            50000  //21000 * 2 for transactions + approx buffer
-        );
-
-        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
-
-        //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
-
-        //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        // Emit ProgressedMint event
-        emit ProgressedMint(
-            _messageHash,
-            message.sender,
-            mint.beneficiary,
-            stakeAmount_,
-            mintedAmount_,
-            rewardAmount_,
-            _unlockSecret
-        );
-    }
-
-    /**
-     * @notice Completes the minting process by providing the merkle proof
-     *         instead of unlockSecret. In case the facilitator process is not
-     *         able to complete the stake and minting process then this is an
-     *         alternative approach to complete the process
-     *
-     * @dev This can be called to prove that the outbox status of messageBox on
-     *      Gateway is either declared or progressed.
-     *
-     * @param _messageHash Message hash.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox of Gateway
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _messageStatus Message status i.e. Declared or Progressed that
-     *                       will be proved.
-     *
-     * @return stakeAmount_ Total amount for which the stake was initiated. The
-     *                      reward amount is deducted from the total amount and
-     *                      is given to the facilitator.
-     * @return mintedAmount_ Actual minted amount, after deducting the reward
-     *                        from the total amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
-     */
-    function progressMintingWithProof(
-        bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
-        uint256 _blockHeight,
-        uint256 _messageStatus
-    )
-    public
-    returns (
-        uint256 stakeAmount_,
-        uint256 mintedAmount_,
-        uint256 rewardAmount_
-    )
-    {
-        // Get the inital gas
-        uint256 initialGas = gasleft();
-
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
-        );
-
-        // Get the storage root for the given block height
-        bytes32 storageRoot = storageRoots[_blockHeight];
-        require(
-            storageRoot != bytes32(0),
-            "Storage root must not be zero"
-        );
-
-        Mint storage mint = mints[_messageHash];
-        MessageBus.Message storage message = messages[_messageHash];
-
-        MessageBus.progressInboxWithProof(
-            messageBox,
-            STAKE_TYPEHASH,
-            message,
-            _rlpEncodedParentNodes,
-            MESSAGE_BOX_OFFSET,
-            storageRoot,
-            MessageBus.MessageStatus(_messageStatus)
-        );
-
-        stakeAmount_ = mint.amount;
-
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
-            initialGas,
-            50000
-        );
-
-        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
-
-        //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_);
-
-        //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        //TODO: we can have a separate event for this.
-        // Emit ProgressedMint event
-        emit ProgressedMint(
-            _messageHash,
-            message.sender,
-            mint.beneficiary,
-            stakeAmount_,
-            mintedAmount_,
-            rewardAmount_,
-            bytes32(0)
-        );
-    }
-
-    /**
-     * @notice Declare staking revert intent
-     *
-     * @param _messageHash Message hash.
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-     *                               DeclaredRevocation in messageBox outbox
-     *                               of Gateway
-     *
-     * @return staker_ Staker address
-     * @return stakerNonce_ Staker nonce
-     * @return amount_ Redeem amount
-     */
-    function confirmRevertStakingIntent(
-        bytes32 _messageHash,
-        uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
-    )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
-    {
-        // Get the initial gas value
-        uint256 initialGas = gasleft();
-
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
-        );
-
-        MessageBus.Message storage message = messages[_messageHash];
-        require(
-            message.intentHash != bytes32(0),
-            "RevertRedemption intent hash must not be zero"
-        );
-
-        // Get the storage root
-        bytes32 storageRoot = storageRoots[_blockHeight];
-        require(
-            storageRoot != bytes32(0),
-            "Storage root must not be zero"
-        );
-
-        // Confirm revocation
-        MessageBus.confirmRevocation(
-            messageBox,
-            STAKE_TYPEHASH,
-            message,
-            _rlpEncodedParentNodes,
-            MESSAGE_BOX_OFFSET,
-            storageRoot
-        );
-
-        Mint storage mint = mints[_messageHash];
-
-        staker_ = message.sender;
-        stakerNonce_ = message.nonce;
-        amount_ = mint.amount;
-
-        // Emit RevertStakingIntentConfirmed event
-        emit RevertStakingIntentConfirmed(
-            _messageHash,
-            message.sender,
-            message.nonce,
-            mint.amount
-        );
-
-        // Update the gas consumed for this function.
-        message.gasConsumed = initialGas.sub(gasleft());
-    }
-
-    //TODO: Discuss this with team. We may not need this at all.
-    /**
-     * @notice Complete revert staking by providing the merkle proof
-     *
-     * @param _messageHash Message hash.
-     *
-     * @return staker_ Staker address
-     * @return stakerNonce_ Staker nonce
-     * @return amount_ Stake amount
-     */
-    function progressRevertStaking(
-        bytes32 _messageHash
-    )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
-        require(
-            message.intentHash != bytes32(0),
-            "StakingIntentHash must not be zero"
-        );
-
-        // TODO: @dev should we directly change the status ?
-        bool isChanged = false;
-        MessageBus.MessageStatus nextStatus;
-        (isChanged, nextStatus) = MessageBus.changeInboxState(
-            messageBox,
-            _messageHash
-        );
-
-        require(isChanged == true,
-            "MessageBox state must change"
-        );
-
-        require(nextStatus == MessageBus.MessageStatus.Revoked,
-            "Next status must be Revoked"
-        );
-
-        staker_ = message.sender;
-        stakerNonce_ = message.nonce;
-        amount_ = mints[_messageHash].amount;
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        // Emit RevertStakeProgressed event
-        emit RevertStakeProgressed(
-            _messageHash,
-            staker_,
-            stakerNonce_,
-            amount_
-        );
-    }
-
-    /**
-     * @notice Initiates the redemption process.
-     *
-     * @dev In order to redeem the redeemer needs to approve CoGateway contract
-     *      for redeem amount. Redeem amount is transferred from redeemer
-     *      address to CoGateway contract.
-     *      This is a payable function. The bounty is transferred in base token
-     *      Redeemer is always msg.sender
-     *
-     * @param _amount Redeem amount that will be transferred form redeemer
-     *                account.
-     * @param _beneficiary The address in the origin chain where the value
-     *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
-     * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redemption process done.
-     * @param _gasLimit Gas limit that redeemer is ready to pay
-     * @param _nonce Nonce of the redeemer address.
-     * @param _hashLock Hash Lock provided by the facilitator.
-     *
-     * @return messageHash_ which is unique for each request.
-     */
-    function redeem(
-        uint256 _amount,
-        address _beneficiary,
-        address _facilitator,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        uint256 _nonce,
-        bytes32 _hashLock
-    )
-    public
-    payable
-    isActive
-    returns (bytes32 messageHash_)
-    {
-        require(
-            msg.value == bounty,
-            "msg.value must match the bounty amount"
-        );
-        require(
-            _amount > uint256(0),
-            "Redeem amount must not be zero"
-        );
-
-        //TODO: This check will be removed so that tokens can be burnt.
-        //      Discuss and verify all the cases
-        require(
-            _beneficiary != address(0),
-            "Beneficiary address must not be zero"
-        );
-        require(
-            _facilitator != address(0),
-            "Facilitator address must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-
-        //TODO: Do we need this check ?
-        require(
-            _hashLock != bytes32(0),
-            "HashLock must not be zero"
-        );
-
-        // Get the redemption intent hash
-        bytes32 intentHash = GatewayLib.hashRedemptionIntent(
-            _amount,
-            _beneficiary,
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
-        );
-
-        // Get the messageHash
-        messageHash_ = MessageBus.messageDigest(
-            REDEEM_TYPEHASH,
-            intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
-            msg.sender,
-            _nonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Outbox
-        );
-
-        // Delete the previous progressed/revoked redeem data
-        delete redeems[previousMessageHash];
-
-        redeems[messageHash_] = Redeem({
-            amount : _amount,
-            beneficiary : _beneficiary,
-            facilitator : _facilitator
-            });
-
-        // create message object
-        messages[messageHash_] = getMessage(
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock
-        );
-
-        //TODO: Move this code in MessageBus.
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
-        );
-        // Update the message outbox status to declared.
-        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
-
-        //transfer redeem amount to Co-Gateway
-        EIP20Interface(utilityToken).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
-
-        // Emit RedemptionIntentDeclared event
-        emit RedemptionIntentDeclared(
-            messageHash_,
-            msg.sender,
-            _nonce,
-            _beneficiary,
-            _amount
-        );
-    }
-
-    /**
-     * @notice Completes the redemption process.
-     *
-     * @param _messageHash Message hash.
-     * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the redeem
-     *
-     * @return redeemer_ Redeemer address
-     * @return redeemAmount_ Redeem amount
-     */
-    function progressRedemption(
-        bytes32 _messageHash,
-        bytes32 _unlockSecret
-    )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        //TODO: unlock secret can be zero. Discuss if this check is needed.
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
-        );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
-
-        // Get the redeemer address
-        redeemer_ = message.sender;
-
-        // Get the redeem amount
-        redeemAmount_ = redeems[_messageHash].amount;
-
-        // Progress outbox
-        MessageBus.progressOutbox(
-            messageBox,
-            REDEEM_TYPEHASH,
-            message,
-            _unlockSecret
-        );
-
-        // burn the redeem amount
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
-
-        // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(bounty);
-
-        // delete the redeem data
-        delete redeems[_messageHash];
-
-        // Emit ProgressedRedemption event.
-        emit ProgressedRedemption(
-            _messageHash,
-            message.sender,
-            message.nonce,
-            redeemAmount_,
-            _unlockSecret
-        );
-    }
-
-    /**
-     * @notice Completes the redemption process by providing the merkle proof
-     *         instead of unlockSecret. In case the facilitator process is not
-     *         able to complete the redeem and unstake process then this is an
-     *         alternative approach to complete the process
-     *
-     * @dev This can be called to prove that the inbox status of messageBox on
-     *      Gateway is either declared or progressed.
-     *
-     * @param _messageHash Message hash.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox of Gateway
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _messageStatus Message status i.e. Declared or Progressed that
-     *                       will be proved.
-     *
-     * @return redeemer_ Redeemer address
-     * @return redeemAmount_ Redeem amount
-     */
-    function progressRedemptionWithProof(
-        bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
-        uint256 _blockHeight,
-        uint256 _messageStatus
-    )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
-        );
-
-        bytes32 storageRoot = storageRoots[_blockHeight];
-
-        require(
-            storageRoot != bytes32(0),
-            "Storage root must not be zero"
-        );
-
-        MessageBus.Message storage message = messages[_messageHash];
-
-        redeemer_ = message.sender;
-        redeemAmount_ = redeems[_messageHash].amount;
-
-        MessageBus.progressOutboxWithProof(
-            messageBox,
-            REDEEM_TYPEHASH,
-            message,
-            _rlpEncodedParentNodes,
-            MESSAGE_BOX_OFFSET,
-            storageRoot,
-            MessageBus.MessageStatus(_messageStatus)
-        );
-
-        // Burn the redeem amount.
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
-
-        // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(bounty);
-
-        // delete the redeem data
-        delete redeems[_messageHash];
-
-        //TODO: we can have a seperate event for this.
-        // Emit ProgressedRedemption event.
-        emit ProgressedRedemption(
-            _messageHash,
-            redeemer_,
-            message.nonce,
-            redeemAmount_,
-            bytes32(0)
-        );
-    }
-
-    /**
-     * @notice Revert redemption to stop the redeem process
-     *
-     * @param _messageHash Message hash.
-     *
-     * @return redeemer_ Redeemer address
-     * @return redeemerNonce_ Redeemer nonce
-     * @return amount_ Redeem amount
-     */
-    function revertRedemption(
-        bytes32 _messageHash
-    )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-
-        // get the message object for the _messageHash
-        MessageBus.Message storage message = messages[_messageHash];
-
-        require(message.intentHash != bytes32(0));
-
-        require(
-            message.intentHash != bytes32(0),
-            "RedemptionIntentHash must not be zero"
-        );
-
-        require(
-            message.sender == msg.sender,
-            "msg.sender must match"
-        );
-
-        //TODO: Move this code in MessageBus. Should we use changeOutboxState?
-        require(
-            messageBox.outbox[_messageHash] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
-        );
-        // Update the message outbox status to declared.
-        messageBox.outbox[_messageHash] =
-        MessageBus.MessageStatus.DeclaredRevocation;
-
-        redeemer_ = message.sender;
-        redeemerNonce_ = message.nonce;
-        amount_ = redeems[_messageHash].amount;
-
-        // Emit RevertRedemptionDeclared event.
-        emit RevertRedemptionDeclared(
-            _messageHash,
-            redeemer_,
-            redeemerNonce_,
-            amount_
-        );
-    }
-
-    /**
-     * @notice Complete revert redemption by providing the merkle proof
-     *
-     * @param _messageHash Message hash.
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-     *                               DeclaredRevocation in messageBox inbox
-     *                               of Gateway
-     *
-     * @return redeemer_ Redeemer address
-     * @return redeemerNonce_ Redeemer nonce
-     * @return amount_ Redeem amount
-     */
-    function progressRevertRedemption(
-        bytes32 _messageHash,
-        uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
-    )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
-        );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
-        require(
-            message.intentHash != bytes32(0),
-            "StakingIntentHash must not be zero"
-        );
-
-        // Get the storageRoot for the given block height
-        bytes32 storageRoot = storageRoots[_blockHeight];
-        require(
-            storageRoot != bytes32(0),
-            "Storage root must not be zero"
-        );
-
-        // Progress with revocation message
-        MessageBus.progressOutboxRevocation(
-            messageBox,
-            message,
-            REDEEM_TYPEHASH,
-            MESSAGE_BOX_OFFSET,
-            _rlpEncodedParentNodes,
-            storageRoot,
-            MessageBus.MessageStatus.Revoked
-        );
-
-        Redeem storage redeemData = redeems[_messageHash];
-
-        redeemer_ = message.sender;
-        redeemerNonce_ = message.nonce;
-        amount_ = redeemData.amount;
-
-        // return the redeem amount back
-        EIP20Interface(utilityToken).transfer(message.sender, amount_);
-
-        // transfer the bounty to msg.sender
-        msg.sender.transfer(bounty);
-
-        // delete the redeem data
-        delete redeems[_messageHash];
-
-        // Emit RevertedRedemption event
-        emit RevertedRedemption(
-            _messageHash,
-            message.sender,
-            message.nonce,
-            redeemData.amount
-        );
-    }
-
-    /**
-     * @notice Activate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateCoGateway()
-    external
-    onlyOrganisation
-    returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateCoGateway()
-    external
-    onlyOrganisation
-    returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
-    }
-
-    /* private methods */
-
-    /**
-     * @notice private function to execute confirm staking intent.
-     *
-     * @dev This function is to avoid stack too deep error in
-     *      confirmStakingIntent function
-     *
-     * @param _message message object
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpParentNodes RLP encoded parent nodes.
-     *
-     * @return `true` if executed successfully
-     */
-    function executeConfirmStakingIntent(
-        MessageBus.Message storage _message,
-        uint256 _blockHeight,
-        bytes _rlpParentNodes
-    )
-    private
-    returns (bool)
-    {
-        // Get storage root
-        bytes32 storageRoot = storageRoots[_blockHeight];
-        require(
-            storageRoot != bytes32(0),
-            "Storage root must not be zero"
-        );
-
-        // Confirm message
+        // Declare message in inbox
         MessageBus.confirmMessage(
             messageBox,
-            STAKE_TYPEHASH,
-            _message,
+            GATEWAY_LINK_TYPEHASH,
+            messages[messageHash_],
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot
         );
 
-        return true;
-    }
+        gatewayLinkHash = messageHash_;
 
-    /**
-     * @notice private function to calculate staking intent hash.
-     *
-     * @dev This function is to avoid stack too deep error in
-     *      confirmStakingIntent function
-     *
-     * @param _amount staking amount
-     * @param _beneficiary minting account
-     * @param _staker staking account
-     * @param _stakerNonce nounce of staker
-     * @param _gasPrice price used for reward calculation
-     * @param _gasLimit max limit for reward calculation
-     *
-     * @return bytes32 staking intent hash
-     */
-    function hashStakingIntent(
-        uint256 _amount,
-        address _beneficiary,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
-    )
-    private
-    view
-    returns(bytes32)
-    {
-        return GatewayLib.hashStakingIntent(
-            _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
+        // Emit GatewayLinkConfirmed event
+        emit GatewayLinkConfirmed(
+            messageHash_,
+            gateway,
+            address(this),
+            valueToken,
+            utilityToken
         );
     }
 
+    /**
+     * @notice Complete the Gateway and CoGateway contracts linking. This will
+     *         set the variable linked to true, and thus it will activate the
+     *         CoGateway contract for mint and redeem.
+     *
+     * @param _messageHash Message hash
+     * @param _unlockSecret Unlock secret for the hashLock provide by the
+     *                      facilitator while initiating the Gateway/CoGateway
+     *                      linking
+     *
+     * @return `true` if gateway linking was successfully progressed
+     */
+    function progressGatewayLink(
+        bytes32 _messageHash,
+        bytes32 _unlockSecret
+    )
+    external
+    returns (bool)
+    {
+        require(
+            _messageHash != bytes32(0),
+            "Message hash must not be zero"
+        );
+        require(
+            _unlockSecret != bytes32(0),
+            "Unlock secret must not be zero"
+        );
+        require(
+            gatewayLinkHash == _messageHash,
+            "Invalid message hash"
+        );
+
+        // Progress inbox
+        MessageBus.progressInbox(
+            messageBox,
+            GATEWAY_LINK_TYPEHASH,
+            messages[_messageHash],
+            _unlockSecret
+        );
+
+        // Update to specify the Gateway/CoGateway is linked
+        linked = true;
+
+        // Emit GatewayLinkProgressed event
+        emit GatewayLinkProgressed(
+            _messageHash,
+            gateway,
+            address(this),
+            valueToken,
+            utilityToken,
+            _unlockSecret
+        );
+
+        return true;
+    }
+
+
+    /**
+     * @notice Get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function getNonce(address _account)
+    external
+    view
+    returns (uint256 /* nonce */)
+    {
+        // call the private method
+        return _getNonce(_account);
+    }
+    /* internal methods */
+
+    /**
+     * @notice Clears the previous process. Validates the
+     *         nonce. Updates the process with new process
+     *
+     * @param _account Account address
+     * @param _nonce Nonce for the account address
+     * @param _messageHash Message hash
+     * @param _messageBoxType message box type i.e Inbox or Outbox
+     *
+     * @return previousMessageHash_ previous messageHash
+     */
+    function initiateNewProcess(
+        address _account,
+        uint256 _nonce,
+        bytes32 _messageHash,
+        MessageBus.MessageBoxType _messageBoxType
+    )
+    internal
+    returns (bytes32 previousMessageHash_)
+    {
+        require(
+            _nonce == _getNonce(_account),
+            "Invalid nonce"
+        );
+
+        ActiveProcess storage previousProcess = activeProcess[_account];
+        previousMessageHash_ = previousProcess.messageHash;
+
+        if (previousMessageHash_ != bytes32(0)) {
+
+            MessageBus.MessageStatus status;
+            if (previousProcess.messageBoxType ==
+                MessageBus.MessageBoxType.Inbox) {
+                status = messageBox.inbox[previousMessageHash_];
+            } else {
+                status = messageBox.outbox[previousMessageHash_];
+            }
+            require(
+                status != MessageBus.MessageStatus.Progressed ||
+                status != MessageBus.MessageStatus.Revoked,
+                "Previous process is not completed"
+            );
+            //TODO: Commenting below line. Please check if deleting this will
+            //      effect any process related to merkle proof in other chain.
+            //delete messageBox.outbox[previousMessageHash_];
+
+            delete messages[previousMessageHash_];
+        }
+
+        // Update the active proccess.
+        activeProcess[_account] = ActiveProcess({
+            messageHash : _messageHash,
+            messageBoxType : _messageBoxType
+            });
+    }
+
+    /**
+     * @notice Create and return Message object.
+     *
+     * @dev This function is to avoid stack too deep error.
+     *
+     * @param _account Account address
+     * @param _accountNonce Nonce for the account address
+     * @param _gasPrice Gas price
+     * @param _gasLimit Gas limit
+     * @param _intentHash Intent hash
+     * @param _hashLock Hash lock
+     *
+     * @return Message object
+     */
+    function getMessage(
+        address _account,
+        uint256 _accountNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _intentHash,
+        bytes32 _hashLock
+    )
+    internal
+    pure
+    returns (MessageBus.Message)
+    {
+        return MessageBus.Message(
+            {
+            intentHash : _intentHash,
+            nonce : _accountNonce,
+            gasPrice : _gasPrice,
+            gasLimit : _gasLimit,
+            sender : _account,
+            hashLock : _hashLock,
+            gasConsumed : 0
+            }
+        );
+    }
+
+
+    /**
+     * @notice Private function to get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function _getNonce(address _account)
+    private
+    view
+    returns (uint256 /* nonce */)
+    {
+        ActiveProcess storage previousProcess = activeProcess[_account];
+
+        if (previousProcess.messageHash == bytes32(0)) {
+            return 1;
+        }
+
+        MessageBus.Message storage message =
+        messages[previousProcess.messageHash];
+
+        return message.nonce.add(1);
+    }
+
+    //TODO: This needs discusion. This doesnt apprear correct way of implementation
+    /**
+     *  @notice Public function completeUtilityTokenProtocolTransfer.
+     *
+     *  @return bool True if protocol transfer is completed, false otherwise.
+     */
+    function completeUtilityTokenProtocolTransfer()
+    public
+    onlyOrganisation
+    isActive
+    returns (bool)
+    {
+        return ProtocolVersioned(utilityToken).completeProtocolTransfer();
+    }
+
+    /**
+     * @notice private function to calculate gateway link intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmGatewayLinkIntent function
+     *
+     * @param _nonce nonce of message
+     *
+     * @return bytes32 link intent hash
+     */
+    function hashLinkGateway(
+        uint256 _nonce
+    )
+    private
+    view
+    returns (bytes32)
+    {
+        return GatewayLib.hashLinkGateway(
+            gateway,
+            address(this),
+            messageBus,
+            bounty,
+            EIP20Interface(utilityToken).name(),
+            EIP20Interface(utilityToken).symbol(),
+            EIP20Interface(utilityToken).decimals(),
+            _nonce,
+            valueToken);
+
+
+    }
 
 }
