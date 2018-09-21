@@ -38,9 +38,7 @@ contract TestMessageBus is KeyValueStoreStub {
     function testProgressInbox()
         external
     {
-        bytes32 messageHash = getBytes32(
-            "MESSAGE_BUS_DIGEST"
-        );
+        bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
 
         bytes32 returnedMessageHash = MessageBus.progressInbox(

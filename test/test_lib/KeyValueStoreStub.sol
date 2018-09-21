@@ -39,14 +39,14 @@ contract KeyValueStoreStub {
      * @dev It sets the stub data based on their data type in respective
      *      mapping
      */
-    function KeyValueStoreStub()
+    constructor()
         internal
     {
         // Stores uint256
-        setUint("NONCE", 1);
-        setUint("GAS_PRICE", 0x12A05F200);
-        setUint("GAS_LIMIT", 0x12A05F200);
-        setUint("GAS_CONSUMED", 0);
+        setUint256("NONCE", 1);
+        setUint256("GAS_PRICE", 0x12A05F200);
+        setUint256("GAS_LIMIT", 0x12A05F200);
+        setUint256("GAS_CONSUMED", 0);
 
         // Store Address
         setAddress(
@@ -77,20 +77,21 @@ contract KeyValueStoreStub {
             MessageBus.messageDigest(
                 hasher.stakeTypeHash(),
                 getBytes32("INTENT_HASH"),
-                getUint("NONCE"),
-                getUint("GAS_PRICE"),
-                getUint("GAS_LIMIT")
-        ));
+                getUint256("NONCE"),
+                getUint256("GAS_PRICE"),
+                getUint256("GAS_LIMIT")
+            )
+        );
 
         // Set Message
         message = MessageBus.Message({
             intentHash : getBytes32("INTENT_HASH"),
-            nonce : getUint("NONCE"),
-            gasPrice : getUint("GAS_PRICE"),
-            gasLimit : getUint("GAS_LIMIT"),
+            nonce : getUint256("NONCE"),
+            gasPrice : getUint256("GAS_PRICE"),
+            gasLimit : getUint256("GAS_LIMIT"),
             sender : getAddress("SENDER"),
             hashLock : getBytes32("HASH_LOCK"),
-            gasConsumed: getUint("GAS_CONSUMED")
+            gasConsumed: getUint256("GAS_CONSUMED")
         });
     }
 
@@ -103,7 +104,7 @@ contract KeyValueStoreStub {
      *
      * @return Stored uint for the key.
      */
-    function getUint(string key)
+    function getUint256(string key)
         internal
         returns (uint256)
     {
@@ -161,7 +162,7 @@ contract KeyValueStoreStub {
      * @param value to be set in uintStorage mapping.
      *
      */
-    function setUint(string key, uint256 value)
+    function setUint256(string key, uint256 value)
         internal
     {
         uintStorage[hashed(key)] = value;
