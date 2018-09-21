@@ -151,9 +151,11 @@ GatewayUtils.prototype = {
             );
             let eventData = response.logs;
 
-            oThis.validateEvents(eventData, expectedResults.events);
+            utils.validateEvents(eventData, expectedResults.events);
+            //oThis.validateEvents(eventData, expectedResults.events);
         }
-    },
+    }
+    /*,
     
     validateEvents: function (events, expectedData) {
         assert.equal(
@@ -178,5 +180,6 @@ GatewayUtils.prototype = {
         });
 
     }
+    */
 };
 module.exports = GatewayUtils;
