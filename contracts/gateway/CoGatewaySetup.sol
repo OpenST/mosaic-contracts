@@ -22,7 +22,6 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./MessageBus.sol";
-import "./ProofLib.sol";
 import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
@@ -30,6 +29,7 @@ import "./GatewayBase.sol";
 import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
 import "./ProtocolVersioned.sol";
+import "./GatewayLib.sol";
 
 /**
  *  @title CoGatewaySetup contract.
@@ -214,7 +214,7 @@ contract CoGatewaySetup is Hasher, GatewayBase {
         gateway = _gateway;
 
         // update the encodedGatewayPath
-        encodedGatewayPath = ProofLib.bytes32ToBytes(
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
             keccak256(abi.encodePacked(_gateway))
         );
     }
@@ -285,17 +285,7 @@ contract CoGatewaySetup is Hasher, GatewayBase {
             "Storage root for given block height must not be zero"
         );
 
-        //       (This is already done in other branch)
-        bytes32 intentHash = hashLinkGateway(
-            gateway,
-            address(this),
-            libraryCodeHash(address(messageBus)), //todo change to library address
-            bounty,
-            EIP20Interface(utilityToken).name(),
-            EIP20Interface(utilityToken).symbol(),
-            EIP20Interface(utilityToken).decimals(),
-            _nonce,
-            valueToken);
+        bytes32 intentHash = hashLinkGateway(_nonce);
 
         // Ensure that the _intentHash matches the calculated intentHash
         require(
@@ -559,4 +549,37 @@ contract CoGatewaySetup is Hasher, GatewayBase {
     {
         return ProtocolVersioned(utilityToken).completeProtocolTransfer();
     }
+
+
+    /**
+     * @notice private function to calculate gateway link intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmGatewayLinkIntent function
+     *
+     * @param _nonce nonce of message
+     *
+     * @return bytes32 link intent hash
+     */
+    function hashLinkGateway(
+        uint256 _nonce
+    )
+    private
+    view
+    returns (bytes32)
+    {
+        return GatewayLib.hashLinkGateway(
+            gateway,
+            address(this),
+            messageBus,
+            bounty,
+            EIP20Interface(utilityToken).name(),
+            EIP20Interface(utilityToken).symbol(),
+            EIP20Interface(utilityToken).decimals(),
+            _nonce,
+            valueToken);
+
+
+    }
+
 }

@@ -297,7 +297,7 @@ contract Gateway is GatewaySetup {
         );
 
         // Get the staking intent hash
-        bytes32 intentHash = hashStakingIntent(
+        bytes32 intentHash = GatewayLib.hashStakingIntent(
             _amount,
             _beneficiary,
             _staker,
@@ -391,12 +391,6 @@ contract Gateway is GatewaySetup {
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-        //TODO: unlock secret can be zero. Discuss if this check is needed.
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
-        );
-
         // Get the message object
         MessageBus.Message storage message;
 
@@ -709,8 +703,7 @@ contract Gateway is GatewaySetup {
             _redeemer,
             _redeemerNonce,
             _gasPrice,
-            _gasLimit,
-            token
+            _gasLimit
         );
 
         // Get the message hash
@@ -802,11 +795,6 @@ contract Gateway is GatewaySetup {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
-        );
-        //TODO: discuss this, in fact the _unlockSecret can be zero.
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
         );
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
@@ -1083,17 +1071,17 @@ contract Gateway is GatewaySetup {
     }
 
     /**
- * @notice Internal function contains logic for process staking.
- *
- * @param _messageHash Message hash.
- * @param _unlockSecret For process with hash lock, unlock secret is secret
- *                      for the hashLock provide by the facilitator
- *                      and zero for process with proof.
- *
- * @return staker_ Staker address
- * @return stakeAmount_ Stake amount
- * @return message_ Message Bus message
- */
+     * @notice Internal function contains logic for process staking.
+     *
+     * @param _messageHash Message hash.
+     * @param _unlockSecret For process with hash lock, unlock secret is secret
+     *                      for the hashLock provide by the facilitator
+     *                      and zero for process with proof.
+     *
+     * @return staker_ Staker address
+     * @return stakeAmount_ Stake amount
+     * @return message_ Message Bus message
+     */
     function progressStakingInternal(
         bytes32 _messageHash,
         bytes32 _unlockSecret
@@ -1168,7 +1156,7 @@ contract Gateway is GatewaySetup {
         //TODO: Remove the hardcoded 50000. Discuss and implement it properly
         //21000 * 2 for transactions + approx buffer
 
-        (rewardAmount_, gasConsumed) = feeAmount(
+        (rewardAmount_, gasConsumed) = GatewayLib.feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
@@ -1196,6 +1184,44 @@ contract Gateway is GatewaySetup {
             unstakeAmount_,
             redeemAmount_,
             _unlockSecret
+        );
+    }
+
+    /**
+     * @notice private function to calculate redemption intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmRedemptionIntent function
+     *
+     * @param _amount redemption amount
+     * @param _beneficiary unstake account
+     * @param _redeemer redeemer account
+     * @param _redeemer nonce of staker
+     * @param _gasPrice price used for reward calculation
+     * @param _gasLimit max limit for reward calculation
+     *
+     * @return bytes32 redemption intent hash
+     */
+    function hashRedemptionIntent(
+        uint256 _amount,
+        address _beneficiary,
+        address _redeemer,
+        uint256 _redeemerNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit
+    )
+    private
+    view
+    returns(bytes32)
+    {
+        return GatewayLib.hashRedemptionIntent(
+            _amount,
+            _beneficiary,
+            _redeemer,
+            _redeemerNonce,
+            _gasPrice,
+            _gasLimit,
+            token
         );
     }
 

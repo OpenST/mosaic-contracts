@@ -22,17 +22,15 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import './MessageBus.sol';
-import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
-import "./CoreInterface.sol";
 
 /**
  *  @title GatewaySetup contract.
  *
  *  @notice GatewaySetup contains functions for initial setup of gateway.
  */
-contract GatewaySetup is Hasher, GatewayBase {
+contract GatewaySetup is  GatewayBase {
 
     /** Emitted whenever a gateway and coGateway linking is initiated. */
     event GatewayLinkInitiated(
@@ -262,10 +260,10 @@ contract GatewaySetup is Hasher, GatewayBase {
         );
 
         //       (This is already done in other branch)
-        bytes32 intentHash = hashLinkGateway(
+        bytes32 intentHash = GatewayLib.hashLinkGateway(
             address(this),
             _coGateway,
-            libraryCodeHash(address(messageBus)), //todo change to library address
+            messageBus,
             bounty,
             token.name(),
             token.symbol(),
@@ -321,7 +319,7 @@ contract GatewaySetup is Hasher, GatewayBase {
         gatewayLinkHash = messageHash_;
 
         // update the encodedGatewayPath
-        encodedGatewayPath = ProofLib.bytes32ToBytes(
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
             keccak256(abi.encodePacked(_coGateway))
         );
 

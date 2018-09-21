@@ -323,8 +323,7 @@ contract CoGateway is CoGatewaySetup {
             _staker,
             _stakerNonce,
             _gasPrice,
-            _gasLimit,
-            valueToken
+            _gasLimit
         );
 
         // Get the messageHash
@@ -787,7 +786,7 @@ contract CoGateway is CoGatewaySetup {
         );
 
         // Get the redemption intent hash
-        bytes32 intentHash = hashRedemptionIntent(
+        bytes32 intentHash = GatewayLib.hashRedemptionIntent(
             _amount,
             _beneficiary,
             msg.sender,
@@ -1231,5 +1230,44 @@ contract CoGateway is CoGatewaySetup {
 
         return true;
     }
+
+    /**
+     * @notice private function to calculate staking intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmStakingIntent function
+     *
+     * @param _amount staking amount
+     * @param _beneficiary minting account
+     * @param _staker staking account
+     * @param _stakerNonce nounce of staker
+     * @param _gasPrice price used for reward calculation
+     * @param _gasLimit max limit for reward calculation
+     *
+     * @return bytes32 staking intent hash
+     */
+    function hashStakingIntent(
+        uint256 _amount,
+        address _beneficiary,
+        address _staker,
+        uint256 _stakerNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit
+    )
+    private
+    view
+    returns(bytes32)
+    {
+        return GatewayLib.hashStakingIntent(
+            _amount,
+            _beneficiary,
+            _staker,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit,
+            valueToken
+        );
+    }
+
 
 }
