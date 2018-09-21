@@ -19,13 +19,34 @@ import "truffle/DeployedAddresses.sol";
 import "../../contracts/lib/Block.sol";
 
 /**
+ * @notice BlockProxy helpere contract to enable a low-level call in order to
+ *         check for a revert.
+ */
+contract BlockProxy {
+
+    /**
+     * @notice Proxy method that does a library call.
+     *
+     * @param _rlpData The data that will be passed to the library method.
+     */
+    function decodeHeader(
+        bytes _rlpData
+    )
+        external
+        pure
+    {
+        Block.decodeHeader(_rlpData);
+    }
+}
+
+/**
  * @title Tests the Block library.
  */
 contract TestBlock {
 
     /* External Functions */
 
-    function testDecode() external {
+    function testDecodeSuccessful() external {
         bytes memory rlpEncodedHeader = hex"f901f9a083cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a0ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017a05fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67a0bc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000001832fefd8825208845506eb0780a0bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff49888a13a5a8c8f2bb1c4";
         Block.Header memory header = Block.decodeHeader(rlpEncodedHeader);
 
@@ -99,5 +120,48 @@ contract TestBlock {
             0xa13a5a8c8f2bb1c4,
             "Wrong nonce."
         );
+    }
+
+    function testDecodeWithInvalidRlpData() external {
+        // Removed the first two hex characters of the original data.
+        bool result = callDecodeHeader(
+            hex"f9a083cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a0ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017a05fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67a0bc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000001832fefd8825208845506eb0780a0bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff49888a13a5a8c8f2bb1c4"
+        );
+
+        Assert.equal(
+            result,
+            false,
+            "Invalid RLP data should lead to a revert."
+        );
+    }
+
+    function testDecodeWithInvalidHeaderData() external {
+        // RLP encoded transaction data from https://web3js.readthedocs.io/en/1.0/web3-eth.html#id72
+        bytes memory rlpEncodedData = hex"f86c808504a817c800825208943535353535353535353535353535353535353535880de0b6b3a76400008025a04f4c17305743700648bc4f6cd3038ec6f6af0df73e31757007b7f59df7bee88da07e1941b264348e80c78c4027afc65a87b0a5e43e86742b8ca0823584c6788fd0";
+
+        bool result = callDecodeHeader(rlpEncodedData);
+
+        Assert.equal(
+            result,
+            false,
+            "Invalid header data should lead to a revert."
+        );
+    }
+
+    /**
+     * @notice Makes a low-level call to the proxy.
+     *
+     * @param _rlpData The data that the library will try to decode.
+     *
+     * @return success_ `false` if the library call reverted. `true` otherwise.
+     */
+    function callDecodeHeader(
+        bytes memory _rlpData
+    )
+        private
+        returns (bool success_)
+    {
+        BlockProxy blockProxy = new BlockProxy();
+        success_ = address(blockProxy).call(bytes4(keccak256("decodeHeader(bytes)")), _rlpData);
     }
 }
