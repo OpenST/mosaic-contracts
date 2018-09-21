@@ -19,8 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
-
 module.exports.checkOwnershipTransferInitiatedEventGroup = (result, _proposedOwner) => {
    assert.equal(result.logs.length, 1)
 

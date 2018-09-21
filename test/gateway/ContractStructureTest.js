@@ -1,5 +1,3 @@
-const web3 = require('../lib/web3.js');
-
 const SolidityParser = require("solparse");
 
 

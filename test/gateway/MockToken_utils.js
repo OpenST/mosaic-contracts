@@ -19,8 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
-
 var MockToken = artifacts.require("./MockToken.sol");
 
 /// @dev Deploy 

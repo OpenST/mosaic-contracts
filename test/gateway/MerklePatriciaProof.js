@@ -1,6 +1,4 @@
 
-const web3 = require('../lib/web3.js');
-
 const MerklePatriciaProofTest = artifacts.require("./MerklePatriciaProofTest.sol");
 const proofJson =  require("../data/proof.json");
 const Utils = require("../lib/utils.js");

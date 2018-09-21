@@ -19,8 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
-
 const Utils = require('../lib/utils.js');
 const ProtocolVersioned_utils = require('./ProtocolVersioned_utils.js');
 
