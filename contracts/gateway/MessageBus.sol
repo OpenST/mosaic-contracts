@@ -114,8 +114,8 @@ library MessageBus {
         Message storage _message,
         bytes _signature
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -168,8 +168,8 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -228,8 +228,8 @@ library MessageBus {
         Message storage _message,
         bytes32 _unlockSecret
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // verify the unlock secret
         require(
@@ -286,8 +286,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // the message status for the message hash in the inbox must be either
         // `Declared` or `Progressed`
@@ -356,8 +356,8 @@ library MessageBus {
         Message storage _message,
         bytes32 _unlockSecret
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // verify the unlock secret
         require(
@@ -415,8 +415,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // the message status for the message hash in the outbox must be either
         // `Declared` or `Progressed`
@@ -485,8 +485,8 @@ library MessageBus {
         Message storage _message,
         bytes _signature
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
 
         // Get the message hash
@@ -554,8 +554,8 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         // Get the message hash
         messageHash_ = messageDigest(
@@ -625,8 +625,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
 
         // the message status for the message hash in the inbox must be either
@@ -707,8 +707,8 @@ library MessageBus {
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
 
         // the message status for the message hash in the outbox must be either
@@ -776,26 +776,26 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageHash
     )
-    external
-    returns (
-        bool isChanged_,
-        MessageBus.MessageStatus nextState_
-    )
+        external
+        returns (
+            bool isChanged_,
+            MessageBus.MessageStatus nextState_
+        )
     {
         MessageStatus status = _messageBox.inbox[_messageHash];
 
-        if (status == MessageStatus.Undeclared) {
+        if(status == MessageStatus.Undeclared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Declared;
-        } else if (status == MessageStatus.Declared) {
+        } else if(status == MessageStatus.Declared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Progressed;
-        } else if (status == MessageStatus.DeclaredRevocation) {
+        } else if(status == MessageStatus.DeclaredRevocation) {
             isChanged_ = true;
             nextState_ = MessageStatus.Revoked;
         }
 
-        if (isChanged_) {
+        if(isChanged_){
             // Update the message inbox status.
             _messageBox.inbox[_messageHash] = nextState_;
         }
@@ -818,33 +818,33 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageHash
     )
-    external
-    returns (
-        bool isChanged_,
-        MessageBus.MessageStatus nextState_
-    )
+        external
+        returns (
+            bool isChanged_,
+            MessageBus.MessageStatus nextState_
+        )
     {
         MessageStatus status = _messageBox.outbox[_messageHash];
 
-        if (status == MessageStatus.Undeclared) {
+        if(status == MessageStatus.Undeclared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Declared;
-        } else if (status == MessageStatus.Declared) {
+        } else if(status == MessageStatus.Declared) {
             isChanged_ = true;
             nextState_ = MessageStatus.Progressed;
-        } else if (status == MessageStatus.DeclaredRevocation) {
+        } else if(status == MessageStatus.DeclaredRevocation) {
             isChanged_ = true;
             nextState_ = MessageStatus.Revoked;
         }
 
-        if (isChanged_) {
+        if(isChanged_){
             // Update the message outbox status.
             _messageBox.outbox[_messageHash] = nextState_;
         }
     }
 
     /* public functions */
-    
+
     /**
      * @notice Generate revocation message hash from the input params
      *
@@ -921,6 +921,9 @@ library MessageBus {
     pure
     returns (bool /*success*/)
     {
+        if (_signature.length != 65) {
+            return false;
+        }
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
 
         _message = keccak256(abi.encodePacked(prefix, _message));
@@ -937,6 +940,10 @@ library MessageBus {
         // possible versions
         if (v < 27) {
             v += 27;
+        }
+
+        if (v != 27 && v != 28) {
+            return false;
         }
         return (ecrecover(_message, v, r, s) == _signer);
     }
@@ -991,9 +998,6 @@ library MessageBus {
         }
         return res;
     }
-
-
-
 }
 
 
