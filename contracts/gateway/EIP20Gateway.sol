@@ -216,7 +216,7 @@ contract EIP20Gateway is Gateway {
         address _organisation,
         address _messageBus
     )
-        GatewaySetup(
+        Gateway(
             _token,
             _bountyToken,
             _core, _bounty,
@@ -1152,18 +1152,17 @@ contract EIP20Gateway is Gateway {
         MessageBus.Message storage message = messages[_messageHash];
 
         redeemAmount_ = unStake.amount;
-        uint256 gasConsumed;
+
         //TODO: Remove the hardcoded 50000. Discuss and implement it properly
         //21000 * 2 for transactions + approx buffer
 
-        (rewardAmount_, gasConsumed) = GatewayLib.feeAmount(
+        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
             _initialGas,
             50000
         );
-        message.gasConsumed = gasConsumed;
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
         // Release the amount to beneficiary

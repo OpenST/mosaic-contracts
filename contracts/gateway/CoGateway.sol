@@ -22,13 +22,11 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./MessageBus.sol";
-import "./Hasher.sol";
 import "./EIP20Interface.sol";
 import "./SafeMath.sol";
 import "./GatewayBase.sol";
 import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
-import "./ProtocolVersioned.sol";
 import "./GatewayLib.sol";
 
 /**
@@ -36,7 +34,7 @@ import "./GatewayLib.sol";
  *
  *  @notice CoGatewaySetup contains functions for initial setup of co-gateway.
  */
-contract CoGateway is Hasher, GatewayBase {
+contract CoGateway is  GatewayBase {
 
     using SafeMath for uint256;
 
@@ -533,21 +531,6 @@ contract CoGateway is Hasher, GatewayBase {
         messages[previousProcess.messageHash];
 
         return message.nonce.add(1);
-    }
-
-    //TODO: This needs discusion. This doesnt apprear correct way of implementation
-    /**
-     *  @notice Public function completeUtilityTokenProtocolTransfer.
-     *
-     *  @return bool True if protocol transfer is completed, false otherwise.
-     */
-    function completeUtilityTokenProtocolTransfer()
-    public
-    onlyOrganisation
-    isActive
-    returns (bool)
-    {
-        return ProtocolVersioned(utilityToken).completeProtocolTransfer();
     }
 
     /**

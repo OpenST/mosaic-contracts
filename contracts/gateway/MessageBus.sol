@@ -843,38 +843,6 @@ library MessageBus {
         }
     }
 
-    /**
-     * @notice Calculate the fee amount
-     *
-     * @param _message Message object
-     * @param _initialGas  initial gas at the start of the process
-     * @param _estimatedAdditionalGasUsage Estimated gas that will be used
-     *
-     * @return fee amount
-     */
-    function feeAmount(
-        Message storage _message,
-        uint256 _initialGas,
-        uint256 _estimatedAdditionalGasUsage
-    )
-    external
-    returns (uint256 fee_)
-    {
-        _message.gasConsumed = _initialGas.sub(
-            gasleft()
-        ).add(
-            _estimatedAdditionalGasUsage
-        ).add(
-            _message.gasConsumed
-        );
-
-        if (_message.gasConsumed < _message.gasLimit) {
-            fee_ = _message.gasConsumed.mul(_message.gasPrice);
-        } else {
-            fee_ = _message.gasLimit.mul(_message.gasPrice);
-        }
-    }
-
     /* public functions */
     
     /**

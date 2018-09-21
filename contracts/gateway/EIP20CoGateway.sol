@@ -244,7 +244,7 @@ contract EIP20CoGateway is CoGateway {
         address _gateway,
         address _messageBus
     )
-    CoGatewaySetup(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway, _messageBus)
+    CoGateway(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway, _messageBus)
     public
     {
 
@@ -442,8 +442,10 @@ contract EIP20CoGateway is CoGateway {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
+        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+            message.gasConsumed,
+            message.gasLimit,
+            message.gasPrice,
             initialGas,
             50000  //21000 * 2 for transactions + approx buffer
         );
@@ -543,8 +545,10 @@ contract EIP20CoGateway is CoGateway {
 
         //TODO: Remove the hardcoded 50000. Discuss and implement it properly
         //21000 * 2 for transactions + approx buffer
-        rewardAmount_ = MessageBus.feeAmount(
-            message,
+        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+            message.gasConsumed,
+            message.gasLimit,
+            message.gasPrice,
             initialGas,
             50000
         );
