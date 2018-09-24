@@ -17,10 +17,10 @@ pragma solidity ^0.4.23;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../test_lib/RevertProxy.sol";
-import "../../contracts/core/AuxiliaryStake.sol";
+import "../../contracts/core/PollingPlace.sol";
 
 /**
- * @title Wrapper to wrap auxiliary stake methods.
+ * @title Wrapper to wrap polling place methods.
  *
  * @notice The wrapper is required to drop the return value from the method
  *         under test. See also:
@@ -30,34 +30,34 @@ import "../../contracts/core/AuxiliaryStake.sol";
  *      required to drop it in order for the low-level call of the RevertProxy
  *      to work.
  */
-contract AuxiliaryStakeWrapper {
+contract PollingPlaceWrapper {
 
     /** The wrapped contract. */
-    AuxiliaryStake auxiliaryStake;
+    PollingPlace pollingPlace;
 
     /**
      * @notice Setting the wrapped contruct. It is not necessarily known at
      *         construction.
      *
-     * @param _auxiliaryStake The address of the wrapped contract.
+     * @param _pollingPlace The address of the wrapped contract.
      */
-    function setAuxiliaryStake(address _auxiliaryStake) public {
-        auxiliaryStake = AuxiliaryStake(_auxiliaryStake);
+    function setPollingPlace(address _pollingPlace) public {
+        pollingPlace = PollingPlace(_pollingPlace);
     }
 
     /**
-     * @notice Wrapper function for the wrapped `updateOstBlockHeight`.
+     * @notice Wrapper function for the wrapped `updateMetaBlockHeight`.
      *
      * @param _auxiliaryAddresses The addresses of the validators.
      * @param _stakes The stakes of the validators.
      */
-    function updateOstBlockHeight(
+    function updateMetaBlockHeight(
         address[] _auxiliaryAddresses,
         uint256[] _stakes
     )
         public
     {
-        auxiliaryStake.updateOstBlockHeight(
+        pollingPlace.updateMetaBlockHeight(
             _auxiliaryAddresses,
             _stakes
         );
@@ -65,14 +65,14 @@ contract AuxiliaryStakeWrapper {
 }
 
 /**
- * @title Test contract to test the external methods of AuxiliaryStake.
+ * @title Test contract to test the external methods of PollingPlace.
  */
-contract TestAuxiliaryStake {
+contract TestPollingPlace {
 
     /* Private Variables */
 
     /*
-     * Addresses and stakes are kept in storage as AuxiliaryStake expects
+     * Addresses and stakes are kept in storage as PollingPlace expects
      * dynamic arrays as arguments and arrays in memory are always fixed size
      * in solidity.
      */
@@ -86,8 +86,8 @@ contract TestAuxiliaryStake {
     uint256[] private updateStakes;
 
     RevertProxy private proxy;
-    AuxiliaryStake private stake;
-    AuxiliaryStakeWrapper private wrapper;
+    PollingPlace private stake;
+    PollingPlaceWrapper private wrapper;
 
     /* External Functions */
 
@@ -103,9 +103,9 @@ contract TestAuxiliaryStake {
         constructContracts();
 
         Assert.equal(
-            stake.currentOstBlockHeight(),
+            stake.currentMetaBlockHeight(),
             uint256(0),
-            "OSTblock height after initialisation should be 0."
+            "meta-block height after initialisation should be 0."
         );
         Assert.equal(
             stake.totalStakes(uint256(0)),
@@ -125,7 +125,7 @@ contract TestAuxiliaryStake {
          */
 
          /* Priming the proxy. */
-        AuxiliaryStakeWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
             updateAddresses,
             updateStakes
         );
@@ -134,13 +134,13 @@ contract TestAuxiliaryStake {
         bool result = proxy.execute.gas(200000)();
         Assert.isTrue(
             result,
-            "The stake contract must accept a valid new OSTblock."
+            "The stake contract must accept a valid new meta-block."
         );
 
         Assert.equal(
-            stake.currentOstBlockHeight(),
+            stake.currentMetaBlockHeight(),
             uint256(1),
-            "OSTblock height after update should be 1."
+            "meta-block height after update should be 1."
         );
         Assert.equal(
             stake.totalStakes(uint256(1)),
@@ -175,24 +175,24 @@ contract TestAuxiliaryStake {
         initialAddresses.push(initialAddress);
         initialStakes.push(initialStake);
 
-        wrapper = new AuxiliaryStakeWrapper();
+        wrapper = new PollingPlaceWrapper();
         /*
          * Address 1 is not the wrapper, thus the wrapper is not allowed to
          * call the method and it should revert.
          */
-        stake = new AuxiliaryStake(
+        stake = new PollingPlace(
             address(1),
             initialAddresses,
             initialStakes
         );
-        wrapper.setAuxiliaryStake(address(stake));
+        wrapper.setPollingPlace(address(stake));
         proxy = new RevertProxy(address(wrapper));
 
         updateAddresses.push(address(999));
         updateStakes.push(uint256(344));
         
-        expectRevertOnUpdateOstBlockHeight(
-            "The stake contract must revert if the caller is not the OSTblock gate."
+        expectRevertOnUpdateMetaBlockHeight(
+            "The stake contract must revert if the caller is not the meta-block gate."
         );
     }
 
@@ -203,7 +203,7 @@ contract TestAuxiliaryStake {
         updateAddresses.push(address(86));
         updateStakes.push(uint256(344));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the addresses array is longer."
         );
 
@@ -211,7 +211,7 @@ contract TestAuxiliaryStake {
         updateStakes.push(uint256(345));
         updateStakes.push(uint256(346));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the stakes array is longer."
         );
     }
@@ -222,7 +222,7 @@ contract TestAuxiliaryStake {
         updateAddresses.push(address(85));
         updateStakes.push(uint256(0));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the stake is zero."
         );
     }
@@ -233,17 +233,17 @@ contract TestAuxiliaryStake {
         updateAddresses.push(address(0));
         updateStakes.push(uint256(30000));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if the address is zero."
         );
     }
 
-    function testUpdateBlockUpdateOstBlockWithRepeatedValidator() external {
+    function testUpdateBlockUpdateMetaBlockWithRepeatedValidator() external {
         constructContracts();
 
         updateStakes.push(uint256(344));
 
-        expectRevertOnUpdateOstBlockHeight(
+        expectRevertOnUpdateMetaBlockHeight(
             "The stake contract must revert if a validator address already exists."
         );
     }
@@ -258,26 +258,26 @@ contract TestAuxiliaryStake {
         initialAddresses.push(initialAddress);
         initialStakes.push(initialStake);
 
-        wrapper = new AuxiliaryStakeWrapper();
-        stake = new AuxiliaryStake(
+        wrapper = new PollingPlaceWrapper();
+        stake = new PollingPlace(
             address(wrapper),
             initialAddresses,
             initialStakes
         );
-        wrapper.setAuxiliaryStake(address(stake));
+        wrapper.setPollingPlace(address(stake));
         proxy = new RevertProxy(address(wrapper));
     }
 
     /**
-     * @notice Does a `updateOstBlockHeight()` call with the RevertProxy and
+     * @notice Does a `updateMetaBlockHeight()` call with the RevertProxy and
      *         expects the method under test to revert.
      *
      * @param _errorMessage The message to print if the contract does not
      *                      revert.
      */
-    function expectRevertOnUpdateOstBlockHeight(string _errorMessage) private {
+    function expectRevertOnUpdateMetaBlockHeight(string _errorMessage) private {
         /* Priming the proxy. */
-        AuxiliaryStakeWrapper(address(proxy)).updateOstBlockHeight(
+        PollingPlaceWrapper(address(proxy)).updateMetaBlockHeight(
             updateAddresses,
             updateStakes
         );
@@ -302,7 +302,7 @@ contract TestAuxiliaryStake {
     }
 
     /**
-     * @notice Gets a validator from the AuxiliaryStake address based on the
+     * @notice Gets a validator from the PollingPlace address based on the
      *         expected address and then compares all fields to their expected
      *         values. Fails the test if any field does not match.
      *

@@ -13,16 +13,18 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: AuxiliaryCore.js
+// Test: PollingPlace.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 const utils = require('../test_lib/utils.js');
 
-const AuxiliaryStake = artifacts.require('AuxiliaryStake');
+const PollingPlace = artifacts.require('PollingPlace');
 
 const ValidatorIndexAuxiliaryAddress = 0;
 const ValidatorIndexStake = 1;
@@ -30,14 +32,14 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
-contract('AuxiliaryStake', async (accounts) => {
-    describe('deploying an auxiliary stake contract', async () => {
+contract('PollingPlace', async (accounts) => {
+    describe('deploying a polling place contract', async () => {
         /*
-         * Make the first address the default OSTblock gate to be able to
+         * Make the first address the default meta-block gate to be able to
          * call methods that change the set of validators from the default
          * message caller address.
          */
-        let defaultOstBlockGate = accounts[0];
+        let defaultMetaBlockGate = accounts[0];
 
         it('should store a correct list of initial validators', async () => {
             let expectedStakes = {
@@ -51,56 +53,56 @@ contract('AuxiliaryStake', async (accounts) => {
                     '0x0000000000000000000000000000000000000007',
                     '0x0000000000000000000000000000000000000008',
                     '0x0000000000000000000000000000000000000009',
-                    '0x000000000000000000000000000000000000000a',
-                    '0x000000000000000000000000000000000000000b',
-                    '0x000000000000000000000000000000000000000c',
-                    '0x000000000000000000000000000000000000000d',
-                    '0x000000000000000000000000000000000000000e',
-                    '0x000000000000000000000000000000000000000f',
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000a'),
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000b'),
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000c'),
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000d'),
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000e'),
+                    web3.utils.toChecksumAddress('0x000000000000000000000000000000000000000f'),
                     '0x0000000000000000000000000000000000000010',
                     '0x0000000000000000000000000000000000000011',
                     '0x0000000000000000000000000000000000000012',
                     '0x0000000000000000000000000000000000000013',
                 ],
                 values: [
-                    new BigNumber('1'),
-                    new BigNumber('2'),
-                    new BigNumber('3'),
-                    new BigNumber('4'),
-                    new BigNumber('5'),
-                    new BigNumber('6'),
-                    new BigNumber('7'),
-                    new BigNumber('8'),
-                    new BigNumber('9'),
-                    new BigNumber('10'),
-                    new BigNumber('11'),
-                    new BigNumber('12'),
-                    new BigNumber('13'),
-                    new BigNumber('14'),
-                    new BigNumber('15'),
-                    new BigNumber('16'),
-                    new BigNumber('17'),
-                    new BigNumber('18'),
-                    new BigNumber('19'),
+                    new BN('1'),
+                    new BN('2'),
+                    new BN('3'),
+                    new BN('4'),
+                    new BN('5'),
+                    new BN('6'),
+                    new BN('7'),
+                    new BN('8'),
+                    new BN('9'),
+                    new BN('10'),
+                    new BN('11'),
+                    new BN('12'),
+                    new BN('13'),
+                    new BN('14'),
+                    new BN('15'),
+                    new BN('16'),
+                    new BN('17'),
+                    new BN('18'),
+                    new BN('19'),
                 ]
             };
 
-            let auxiliaryStake = await AuxiliaryStake.new(
-                defaultOstBlockGate,
+            let pollingPlace = await PollingPlace.new(
+                defaultMetaBlockGate,
                 expectedStakes.addresses,
                 expectedStakes.values
             );
 
-            let ostBlockGate = await auxiliaryStake.ostBlockGate.call();
+            let metaBlockGate = await pollingPlace.metaBlockGate.call();
             assert.strictEqual(
-                ostBlockGate,
-                defaultOstBlockGate,
-                'The contract must store the correct OSTblock gate.'
+                metaBlockGate,
+                defaultMetaBlockGate,
+                'The contract must store the correct meta-block gate.'
             );
 
             // Check for all individual stakes to be recorded
             for (var i = 0; i < 19; i++) {
-                let validator = await auxiliaryStake.validators.call(expectedStakes.addresses[i]);
+                let validator = await pollingPlace.validators.call(expectedStakes.addresses[i]);
 
                 assert.strictEqual(
                     validator[ValidatorIndexAuxiliaryAddress],
@@ -108,7 +110,7 @@ contract('AuxiliaryStake', async (accounts) => {
                     'The contract must record the correct auxilary address of a validator.'
                 );
                 assert(
-                    validator[ValidatorIndexStake].equals(expectedStakes.values[i]),
+                    validator[ValidatorIndexStake].eq(expectedStakes.values[i]),
                     'The contract must record the correct staking value address of a validator.'
                 );
                 assert.strictEqual(
@@ -117,33 +119,33 @@ contract('AuxiliaryStake', async (accounts) => {
                     'The contract must record that a validator hasn\'t ended on construction.'
                 );
                 assert(
-                    validator[ValidatorIndexStartHeight].equals(new BigNumber('0')),
+                    validator[ValidatorIndexStartHeight].eq(new BN('0')),
                     'The contract must record a zero starting height at construction.'
                 );
                 assert(
-                    validator[ValidatorIndexEndHeight].equals(new BigNumber('0')),
+                    validator[ValidatorIndexEndHeight].eq(new BN('0')),
                     'The contract must record a zero ending height at construction.'
                 );
             }
 
-            let totalStakeAtZero = await auxiliaryStake.totalStakes.call(0);
+            let totalStakeAtZero = await pollingPlace.totalStakes.call(0);
             assert(
-                totalStakeAtZero.equals(new BigNumber('190')),
+                totalStakeAtZero.eq(new BN('190')),
                 'The contract must track the sum of all stakes as total stakes.'
             );
         });
 
-        it('should not accept a zero OSTblock gate', async () => {
+        it('should not accept a zero meta-block gate', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     '0x0000000000000000000000000000000000000000',
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -151,8 +153,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept an empty validator set', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [],
                     []
                 )
@@ -161,14 +163,14 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept two arrays of different length', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
+                        new BN('1'),
                     ]
                 )
             );
@@ -176,15 +178,15 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero stake', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('0'),
+                        new BN('1'),
+                        new BN('0'),
                     ]
                 )
             );
@@ -192,15 +194,15 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero address', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000000',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -208,17 +210,17 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept the same address more than once', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
                         '0x0000000000000000000000000000000000000001',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
-                        new BigNumber('3'),
+                        new BN('1'),
+                        new BN('2'),
+                        new BN('3'),
                     ]
                 )
             );

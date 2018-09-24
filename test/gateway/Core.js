@@ -19,11 +19,13 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../test_lib/web3.js');
+
 const coreUtils = require('./Core_utils.js')
     , utils = require('../test_lib/utils.js')
     , proof = require('../data/proof')
     , RLP = require('rlp')
-    , BigNumber = require('bignumber.js')
+    , BN = require('bn.js')
     , web3EventsDecoder = require('../test_lib/event_decoder.js')
 ;
 
@@ -32,7 +34,7 @@ contract('Core', function (accounts) {
     describe('Properties', async () => {
         before(async () => {
             openSTRemote = proof.account.accountAddress;
-            blockHeight = new BigNumber(5);
+            blockHeight = new BN(5);
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;
             workersContract = contractsData.workersContract;
@@ -55,7 +57,7 @@ contract('Core', function (accounts) {
         });
 
         it('has coreOpenSTRemote', async () => {
-            assert.equal(await core.openSTRemote.call(), openSTRemote);
+            assert.equal(await core.openSTRemote.call(), web3.utils.toChecksumAddress(openSTRemote));
         });
 
         it('has workers', async () => {
@@ -126,11 +128,11 @@ contract('Core', function (accounts) {
             await core.commitStateRoot(blockHeight, proof.account.stateRoot, {from: worker});
         });
         it('should not be able to verify proof for account if rlpEncodedAccount value is blank', async () => {
-            await utils.expectThrow(core.proveOpenST(blockHeight, '', proof.account.rlpParentNodes, {from: worker}));
+            await utils.expectThrow(core.proveOpenST(blockHeight, '0x', proof.account.rlpParentNodes, {from: worker}));
         });
 
         it('should not be able to verify proof for account if rlpParentNodes value is blank', async () => {
-            await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '', {from: worker}));
+            await utils.expectThrow(core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, '0x', {from: worker}));
         });
 
         it('should be able to verify proof for account even if block height is 0', async () => {
@@ -171,11 +173,11 @@ contract('Core', function (accounts) {
         });
 
         it('should not be able to verify proof for account if wrong rlp encoded account value is passed', async () => {
-            await utils.expectThrow(core.proveOpenST(blockHeight, '0x346abcdef45363678578322467885654422353665', proof.account.rlpParentNodes, {from: worker}));
+            await utils.expectThrow(core.proveOpenST(blockHeight, '0x46abcdef45363678578322467885654422353665', proof.account.rlpParentNodes, {from: worker}));
         });
 
         it('should be able to verify proof for account when already proven for given blockHeight even if merkle proof parent nodes are wrong ', async () => {
-            let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcde';
+            let wrongRLPNodes = '0x456785315786abcde456785315786abcde456785315786abcd';
             let response = await core.proveOpenST(blockHeight, proof.account.rlpEncodedAccount, wrongRLPNodes, {from: worker});
             let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
             let event = formattedDecodedEvents['OpenSTProven'];
