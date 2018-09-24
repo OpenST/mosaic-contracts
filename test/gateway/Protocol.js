@@ -19,8 +19,10 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../test_lib/web3.js');
+
 const Assert = require('assert');
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 const utils = require("../test_lib/utils.js");
 const HashLock = require('../test_lib/hash_lock.js');
 const openSTValueUtils = require("./OpenSTValue_utils.js");
@@ -34,8 +36,8 @@ const openSTValueArtifacts = artifacts.require("./OpenSTValueMock.sol");
 const BrandedToken = artifacts.require("./BrandedToken.sol");
 const SimpleStake = artifacts.require("./SimpleStake.sol");
 
-const CHAINID_VALUE   = new BigNumber(2001);
-const CHAINID_UTILITY = new BigNumber(2002);
+const CHAINID_VALUE   = new BN(2001);
+const CHAINID_UTILITY = new BN(2002);
 
 contract('OpenST', function(accounts) {
 
@@ -44,7 +46,7 @@ contract('OpenST', function(accounts) {
 	const TOKEN_SYMBOL   = "ST";
 	const TOKEN_NAME     = "Simple Token";
 	const TOKEN_DECIMALS = 18;
-	const TOKENS_MAX     = new BigNumber(web3.toWei(800000000, "ether"));
+	const TOKENS_MAX     = web3.utils.toWei(new BN('800000000'), "ether");
 
 	const STPRIME_SYMBOL          = "STP";
 	const STPRIME_NAME            = "SimpleTokenPrime";
@@ -54,7 +56,7 @@ contract('OpenST', function(accounts) {
 	// Member Details
 	const symbol = "BT";
 	const name = "Branded Token";
-	const conversionRate = new BigNumber(10 * (10**conversionRateDecimals));	// conversion rate => 10
+	const conversionRate = new BN(10 * (10**conversionRateDecimals));	// conversion rate => 10
 
 	const deployMachine     = accounts[0];
 	const owner             = accounts[1];
@@ -70,11 +72,11 @@ contract('OpenST', function(accounts) {
 	const redeemer          = accounts[9];
   const redeemBeneficiary = accounts[19];
 
-	const AMOUNT_ST = new BigNumber(web3.toWei(1000, "ether"));
-	const AMOUNT_BT = (AMOUNT_ST.mul(conversionRate)).div(new BigNumber(10**conversionRateDecimals));
-	const REDEEM_AMOUNT_BT = new BigNumber(web3.toWei(5, "ether"));
-	const FUND_AMOUNT_STPRIME = new BigNumber(web3.toWei(15, "ether"));
-	const REDEEM_AMOUNT_STPRIME = new BigNumber(web3.toWei(10, "ether"));
+	const AMOUNT_ST = web3.utils.toWei(new BN('1000'), "ether");
+	const AMOUNT_BT = (AMOUNT_ST.mul(conversionRate)).div(new BN(10**conversionRateDecimals));
+	const REDEEM_AMOUNT_BT = web3.utils.toWei(new BN('5'), "ether");
+	const FUND_AMOUNT_STPRIME = web3.utils.toWei(new BN('15'), "ether");
+	const REDEEM_AMOUNT_STPRIME = web3.utils.toWei(new BN('10'), "ether");
 
 	describe('Setup Utility chain with Simple Token Prime', function () {
 
@@ -133,7 +135,7 @@ contract('OpenST', function(accounts) {
 				var formattedDecodedEvents = web3EventsDecoder.perform(o.receipt, openSTValue.address, openSTValueArtifacts.abi);
 
 				openSTValueUtils.checkUtilityTokenRegisteredEventOnProtocol(formattedDecodedEvents, uuidSTP,
-          			STPRIME_SYMBOL, STPRIME_NAME, TOKEN_DECIMALS, STPRIME_CONVERSION_RATE, CHAINID_UTILITY, 0);
+          			STPRIME_SYMBOL, STPRIME_NAME, TOKEN_DECIMALS, STPRIME_CONVERSION_RATE, CHAINID_UTILITY, '0x0000000000000000000000000000000000000000');
 
 				var event = formattedDecodedEvents['UtilityTokenRegistered'];
 
@@ -144,12 +146,12 @@ contract('OpenST', function(accounts) {
 
 			// Initialize Transfer to ST' Contract Address
 			it("initialize transfer to Simple Token Prime contract address", async () => {
-				Assert.equal(await web3.eth.getBalance(stPrime.address),  0);
+				Assert.equal(new BN(await web3.eth.getBalance(stPrime.address)),  0);
 
 			 	const o = await stPrime.initialize({ from: deployMachine, value: TOKENS_MAX});
 				utils.logResponse(o, "STPrime.initialize");
-				var stPrimeContractBalanceAfterTransfer = await web3.eth.getBalance(stPrime.address).toNumber();
-				Assert.equal(stPrimeContractBalanceAfterTransfer, TOKENS_MAX);
+				var stPrimeContractBalanceAfterTransfer = new BN(await web3.eth.getBalance(stPrime.address));
+				Assert(stPrimeContractBalanceAfterTransfer.eq(TOKENS_MAX));
 		    });
 
 		    it("report gas usage: deployment and setup", async () => {
@@ -204,13 +206,13 @@ contract('OpenST', function(accounts) {
 			});
 
 			it("claim Simple Token Prime", async () => {
-				var balanceBefore = await web3.eth.getBalance(beneficiary);
+				var balanceBefore = new BN(await web3.eth.getBalance(beneficiary));
 				const o = await stPrime.claim(beneficiary, { from: intercommUC });
 				utils.logResponse(o, "STPrime.claim");
-				var balanceAfter = await web3.eth.getBalance(beneficiary);
+				var balanceAfter = new BN(await web3.eth.getBalance(beneficiary));
 				var totalSupply = await stPrime.totalSupply.call();
-				Assert.equal(totalSupply.toNumber(), AMOUNT_ST.toNumber());
-				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_ST.toNumber());
+				assert(totalSupply.eq(AMOUNT_ST));
+				assert(balanceAfter.sub(balanceBefore).eq(AMOUNT_ST));
 			});
 
 			it("report gas usage: staking Simple Token Prime", async () => {
@@ -229,8 +231,8 @@ contract('OpenST', function(accounts) {
 		      openSTUtilityUtils.validateProposedBrandedTokenEvent(eventLog, requester, symbol, name, conversionRate);
 
 		      registeredBrandedTokenUuid = eventLog.args._uuid;
-		      registeredBrandedToken = eventLog.args._token;
-	          brandedToken = BrandedToken.at(registeredBrandedToken);
+			  registeredBrandedToken = eventLog.args._token;
+	          brandedToken = await BrandedToken.at(registeredBrandedToken);
 
     	      utils.logResponse(result, "OpenSTUtility.proposeBrandedToken");
 		    });
@@ -266,7 +268,7 @@ contract('OpenST', function(accounts) {
 
 				btSimpleStakeContractAddress = event.stake;
 
-				btSimpleStake = SimpleStake.at(btSimpleStakeContractAddress);
+				btSimpleStake = await SimpleStake.at(btSimpleStakeContractAddress);
 
 				utils.logResponse(result, "OpenSTValue.registerUtilityToken");
 
@@ -288,7 +290,7 @@ contract('OpenST', function(accounts) {
 				Assert.ok(await simpleToken.transfer(stakerVC, AMOUNT_ST, { from: deployMachine }));
 				// Check for stakerVC simpleToken Balance
 				var balanceOfStaker = await simpleToken.balanceOf(stakerVC);
-				Assert.equal(balanceOfStaker, AMOUNT_ST.toNumber());
+				Assert(AMOUNT_ST.eq(new BN(balanceOfStaker)));
 				// stakerVC sets allowance for OpenSTValue
 				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: stakerVC }));
 
@@ -351,8 +353,8 @@ contract('OpenST', function(accounts) {
 				const o = await brandedToken.claim(beneficiary, { from: stakerUC });
 				var balanceAfter = await brandedToken.balanceOf(beneficiary);
 				var totalSupply = await brandedToken.totalSupply.call();
-				Assert.equal(totalSupply.toNumber(), AMOUNT_BT.toNumber());
-				Assert.equal(balanceAfter.sub(balanceBefore).toNumber(), AMOUNT_BT.toNumber());
+				assert(totalSupply.eq(AMOUNT_BT));
+				assert(balanceAfter.sub(balanceBefore).eq(AMOUNT_BT));
 			});
 
 			it("report gas usage: stake Simple Token for Branded Token", async () => {
@@ -369,7 +371,7 @@ contract('OpenST', function(accounts) {
 				var result = await brandedToken.transfer(redeemer, REDEEM_AMOUNT_BT, { from: beneficiary });
 				Assert.ok(result);
 				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
-				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+				Assert(REDEEM_AMOUNT_BT.eq(new BN(balanceOfRedeemer)));
 
 				utils.logResponse(result, "brandedToken.transfer");
 
@@ -377,10 +379,10 @@ contract('OpenST', function(accounts) {
 
 			it("transfer STPrime to Redeemer", async() => {
 
-				var redeemerBalanceBeforeTransfer = await web3.eth.getBalance(redeemer).toNumber();
+				var redeemerBalanceBeforeTransfer = new BN(await web3.eth.getBalance(redeemer));
 				result = await web3.eth.sendTransaction({ from: stakerVC, to: redeemer, value: FUND_AMOUNT_STPRIME ,gasPrice: '0x12A05F200' });
-				var redeemerBalanceAfterTransfer = await web3.eth.getBalance(redeemer).toNumber();
-				Assert.equal((redeemerBalanceBeforeTransfer+(FUND_AMOUNT_STPRIME.toNumber())), redeemerBalanceAfterTransfer);
+				var redeemerBalanceAfterTransfer = new BN(await web3.eth.getBalance(redeemer));
+				Assert(redeemerBalanceBeforeTransfer.add(FUND_AMOUNT_STPRIME).eq(redeemerBalanceAfterTransfer));
 
 			});
 
@@ -423,7 +425,7 @@ contract('OpenST', function(accounts) {
 				  redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BN(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 
@@ -532,7 +534,7 @@ contract('OpenST', function(accounts) {
 				Assert.ok(await simpleToken.transfer(stakerVC, AMOUNT_ST, { from: deployMachine }));
 				// Check for stakerVC simpleToken Balance
 				var balanceOfRequester = await simpleToken.balanceOf(stakerVC);
-				Assert.equal(balanceOfRequester, AMOUNT_ST.toNumber());
+				Assert(AMOUNT_ST.eq(new BN(balanceOfRequester)));
 				// stakerVC sets allowance for OpenSTValue
 				Assert.ok(await simpleToken.approve(openSTValue.address, AMOUNT_ST, { from: stakerVC }));
 
@@ -553,7 +555,7 @@ contract('OpenST', function(accounts) {
 			it('fails to revertStaking before waiting period ends', async () => {
 				var waitTime = await openSTValue.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
-				const amount = new BigNumber(1);
+				const amount = new BN(1);
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
 				for (var i = 0; i < waitTime/2 ; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
@@ -615,7 +617,7 @@ contract('OpenST', function(accounts) {
 				var waitTime = await openSTValue.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
-				const amount = new BigNumber(1);
+				const amount = new BN(1);
 				for (var i = 0; i < waitTime/2; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
 					await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
@@ -635,7 +637,7 @@ contract('OpenST', function(accounts) {
 				var waitTime = await openSTUtility.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
-				const amount = new BigNumber(1);
+				const amount = new BN(1);
 				for (var i = 0; i < waitTime/2; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
 					await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
@@ -712,7 +714,7 @@ contract('OpenST', function(accounts) {
 					waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
 
-				const amount = new BigNumber(1);
+				const amount = new BN(1);
 				for (var i = 0; i < waitTime/2; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
 					await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
@@ -725,7 +727,7 @@ contract('OpenST', function(accounts) {
 				var waitTime = await openSTValue.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
 				// Wait time less 1 block for preceding test case and 1 block because condition is <=
-				const amount = new BigNumber(1);
+				const amount = new BN(1);
 				for (var i = 0; i < waitTime/2; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amount });
 					await web3.eth.sendTransaction({ from: admin, to: owner, value: amount });
@@ -746,8 +748,8 @@ contract('OpenST', function(accounts) {
 
 			it ("validate if the ST is stuck in Simple Stake", async() => {
 				var currentStBalance = await btSimpleStake.getTotalStake.call()
-				var tobeBalance = previousSTBalance.toNumber() + AMOUNT_ST.toNumber();
-				Assert.equal(currentStBalance.toNumber(), tobeBalance)
+				var tobeBalance = previousSTBalance.add(AMOUNT_ST);
+				Assert(currentStBalance.eq(tobeBalance))
 			});
 
 	    });
@@ -764,7 +766,7 @@ contract('OpenST', function(accounts) {
 				var result = await brandedToken.transfer(redeemer, REDEEM_AMOUNT_BT, { from: beneficiary });
 				Assert.ok(result);
 				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
-				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+				Assert(REDEEM_AMOUNT_BT.eq(new BN(balanceOfRedeemer)));
 
 				utils.logResponse(result, "OpenSTUtility.revertRedemption.transfer");
 
@@ -791,7 +793,7 @@ contract('OpenST', function(accounts) {
 			it('waits till redeem is expired', async () => {
 				 var waitTime = await openSTUtility.blocksToWaitLong.call();
 				 waitTime = waitTime.toNumber();
-				 var amountToTransfer = new BigNumber(web3.toWei(0.000001, "ether"));
+				 var amountToTransfer = web3.utils.toWei(new BN('0.000001'), "ether");
 					// Mock transactions so that block number increases
 				 for (var i = 0; i < waitTime; i++) {
 					 await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -829,7 +831,7 @@ contract('OpenST', function(accounts) {
 			it("check branded token balance of redeemer", async() => {
 
 				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
-				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+				Assert(REDEEM_AMOUNT_BT.eq(new BN(balanceOfRedeemer)));
 
 			});
 
@@ -856,7 +858,7 @@ contract('OpenST', function(accounts) {
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 					redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BN(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
@@ -867,7 +869,7 @@ contract('OpenST', function(accounts) {
 			it('waits till redeem is expired', async () => {
 				var waitTime = await openSTUtility.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));
+				var amountToTransfer =  web3.utils.toWei(new BN('0.000001'), "ether");
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -889,7 +891,7 @@ contract('OpenST', function(accounts) {
 			it('waits till unstake is expired', async () => {
 				var waitTime = await openSTValue.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));
+				var amountToTransfer =  web3.utils.toWei(new BN('0.000001'), "ether");
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
 					await web3.eth.sendTransaction({ from: owner, to: admin, value: amountToTransfer, gasPrice: '0x12A05F200' });
@@ -933,7 +935,7 @@ contract('OpenST', function(accounts) {
 			it("check branded token balance of redeemer", async() => {
 
 				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
-				Assert.equal(balanceOfRedeemer, REDEEM_AMOUNT_BT.toNumber());
+				Assert(REDEEM_AMOUNT_BT.eq(new BN(balanceOfRedeemer)));
 
 			});
 
@@ -960,7 +962,7 @@ contract('OpenST', function(accounts) {
 				var confirmRedemptionResult = await registrarVC.confirmRedemptionIntent( openSTValue.address, registeredBrandedTokenUuid,
 				redeemer, nonce, redeemBeneficiary, REDEEM_AMOUNT_BT, unlockHeight, lockRedeem.l, 0, validRLPParentNodes, { from: intercommVC });
 				var formattedDecodedEvents = web3EventsDecoder.perform(confirmRedemptionResult.receipt, openSTValue.address, openSTValueArtifacts.abi);
-				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BigNumber(10**conversionRateDecimals))).div(conversionRate);
+				redeemedAmountST = (REDEEM_AMOUNT_BT.mul(new BN(10**conversionRateDecimals))).div(conversionRate);
 				openSTValueUtils.checkRedemptionIntentConfirmedEventOnProtocol(formattedDecodedEvents, registeredBrandedTokenUuid,
 					redemptionIntentHash, redeemer, redeemBeneficiary, redeemedAmountST, REDEEM_AMOUNT_BT);
 				utils.logResponse(confirmRedemptionResult, "OpenSTUtility.revertUnstake.confirmRedemptionIntent");
@@ -983,7 +985,7 @@ contract('OpenST', function(accounts) {
 
 				var waitTime = await openSTUtility.blocksToWaitLong.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));
+				var amountToTransfer =  web3.utils.toWei(new BN('0.000001'), "ether");
 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
@@ -1004,7 +1006,7 @@ contract('OpenST', function(accounts) {
 
 				var waitTime = await openSTValue.blocksToWaitShort.call();
 				waitTime = waitTime.toNumber();
-				var amountToTransfer =  new BigNumber(web3.toWei(0.000001, "ether"));
+				var amountToTransfer =  web3.utils.toWei(new BN('0.000001'), "ether");
 
 				// Mock transactions so that block number increases
 				for (var i = 0; i < waitTime; i++) {
@@ -1028,11 +1030,11 @@ contract('OpenST', function(accounts) {
 
 				// Branded token has burned so balance will be 0
 				var balanceOfRedeemer = await brandedToken.balanceOf(redeemer);
-				Assert.equal(balanceOfRedeemer, 0);
+				Assert(balanceOfRedeemer.eqn(0));
 
 			  // Simple Token has not been released so previous and current balance is same
 				var currentStBalance = await btSimpleStake.getTotalStake.call();
-				Assert.equal(previousSTBalance.toNumber(), currentStBalance.toNumber());
+				assert(previousSTBalance.eq(currentStBalance));
 
 			});
 
