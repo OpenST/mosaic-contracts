@@ -18,7 +18,8 @@ pragma solidity ^0.4.23;
 interface BlockStoreInterface {
 
     /**
-     * @notice Report a block.
+     * @notice Report a block. A reported block header is stored and can then
+     *         be part of subsequent votes.
      *
      * @param _blockHeaderRlp The header of the reported block, RLP encoded.
      *
@@ -50,8 +51,48 @@ interface BlockStoreInterface {
      *
      * @return The height of the latest finalised block.
      */
-    function getLatestBlockHeight()
+    function latestBlockHeight()
         external
         view
         returns (uint256 height_);
+
+    /**
+     * @notice Validates a given vote. For a vote to be valid:
+     *         - The transition object must be correct and
+     *         - The hashes must exist and
+     *         - The blocks of the hashes must be at checkpoint heights and
+     *         - The source checkpoint must be justified and
+     *         - The target must be higher than the current head.
+     *
+     * @param _transitionHash The hash of the transition object of the related
+     *                        meta-block. Depends on the source block.
+     * @param _sourceBlockHash The hash of the source checkpoint of the vote.
+     * @param _targetBlockHash The hash of teh target checkpoint of the vote.
+     *
+     * @return `true` if all of the above apply and therefore the vote is
+     *         considered valid by the block store. `false` otherwise.
+     */
+    function isVoteValid(
+        bytes32 _transitionHash,
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        external
+        view
+        returns (bool valid_);
+
+    /**
+     * @notice Check, whether a block with a given block hash has been reported
+     *         before.
+     *
+     * @param _blockHash The hash of the block that should be checked.
+     *
+     * @return `true` if the block has been reported before.
+     */
+    function isBlockReported(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bool reported_);
 }
