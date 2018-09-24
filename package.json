@@ -3,17 +3,16 @@
   "version": "0.9.1",
   "description": "",
   "devDependencies": {
-    "abi-decoder": "1.0.9",
+    "abi-decoder": "1.2.0",
     "assert": "1.4.1",
-    "bignumber.js": "4.1.0",
-    "ethereumjs-abi": "^0.6.5",
-    "ganache-cli": "6.1.0",
+    "bn.js": "4.11.8",
+    "ganache-cli": "6.1.8",
     "keccak": "1.4.0",
     "rlp": "2.1.0",
-    "solidity-coverage": "^0.5.5",
+    "solidity-coverage": "0.5.11",
     "solparse": "2.2.5",
-    "truffle": "4.1.8",
-    "web3": "1.0.0-beta.33"
+    "truffle": "beta",
+    "web3": "1.0.0-beta.36"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"

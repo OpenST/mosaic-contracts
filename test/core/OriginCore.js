@@ -19,11 +19,14 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const eventsDecoder = require('../test_lib/event_decoder.js');
 const utils = require('../test_lib/utils.js');
 
 const OriginCore = artifacts.require('OriginCore');
 const MockToken = artifacts.require('MockToken');
+
+const approvalAmount = (new BN(10)).pow(new BN(18));
 
 contract('OriginCore', async (accounts) => {
     describe('reporting a block', async () => {
@@ -40,7 +43,7 @@ contract('OriginCore', async (accounts) => {
             let expectedStateRoot = '0x82ba3527d2433d8a6c50502f341f165955585b1337512e5cd9550eef623c8fd0';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             await originCore.reportBlock(
                 expectedBlockHash,
@@ -64,7 +67,7 @@ contract('OriginCore', async (accounts) => {
             let expectedStateRoot = '0x82ba3527d2433d8a6c50502f341f165955585b1337512e5cd9550eef623c8fd0';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             await originCore.reportBlock(
                 expectedBlockHash,
@@ -75,9 +78,8 @@ contract('OriginCore', async (accounts) => {
             );
 
             let coreBalance = await ost.balanceOf.call(originCore.address);
-            assert.strictEqual(
-                coreBalance.toNumber(),
-                10 ** 18,
+            assert(
+                coreBalance.eq(approvalAmount),
                 'The core contract\'s OST balance should be equal to the cost of reporting.'
             );
         });
@@ -86,7 +88,7 @@ contract('OriginCore', async (accounts) => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             let tx = await originCore.reportBlock(
                 expectedBlockHash,
@@ -117,7 +119,7 @@ contract('OriginCore', async (accounts) => {
             let expectedStateRootTwo = '0x12345627d2433d8a6c50502f341f165955585b1337512e5cd9550eef62312345';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 20 ** 18);
+            await ost.approve(originCore.address, approvalAmount.muln(2));
 
             // Report two blocks with different hashes
             await originCore.reportBlock(
@@ -157,7 +159,7 @@ contract('OriginCore', async (accounts) => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 17;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             await utils.expectRevert(
                 originCore.reportBlock(
@@ -174,7 +176,7 @@ contract('OriginCore', async (accounts) => {
             let invalidBlockHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             await utils.expectRevert(
                 originCore.reportBlock(
@@ -191,7 +193,7 @@ contract('OriginCore', async (accounts) => {
             let expectedBlockHash = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let blockHeight = 0;
 
-            await ost.approve(originCore.address, 10 ** 18);
+            await ost.approve(originCore.address, approvalAmount);
 
             await originCore.reportBlock(
                 expectedBlockHash,

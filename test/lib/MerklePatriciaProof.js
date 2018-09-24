@@ -1,5 +1,8 @@
+
 const MerklePatriciaProofTest = artifacts.require("./MerklePatriciaProofTest.sol");
 const proofJson =  require("../data/proof.json");
+const Utils = require("../test_lib/utils.js");
+
 contract('MerklePatriciaProof', function(accounts) {
 
     let merkleMock= null;
@@ -53,8 +56,9 @@ contract('MerklePatriciaProof', function(accounts) {
         })
 
         it('Should fail for variable storage when rlp parent nodes is incorrect',async () =>{
-            let proofStatus = await merkleMock.verifyStorage.call(proofJson.storage.variable.sha3ValueAtStorage, proofJson.storage.variable.path, "0xf908cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", proofJson.storage.variable.storageRoot);
-            assert.equal(proofStatus,false);
+            await Utils.expectRevert(
+                merkleMock.verifyStorage.call(proofJson.storage.variable.sha3ValueAtStorage, proofJson.storage.variable.path, "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e524", proofJson.storage.variable.storageRoot)
+            );
         })
 
         it('Should fail for variable storage when storage root is incorrect',async () =>{
@@ -78,8 +82,9 @@ contract('MerklePatriciaProof', function(accounts) {
         })
 
         it('Should fail for mapping storage value when rlp parent nodes is incorrect',async () =>{
-            let proofStatus = await merkleMock.verifyStorage.call(proofJson.storage.mapping.sha3ValueAtStorage, proofJson.storage.mapping.path, "0xf9e08cef90211a0f113fc83479a9dcb7a7b5c98cdb42f2426", proofJson.storage.mapping.storageRoot);
-            assert.equal(proofStatus,false);
+            await Utils.expectRevert(
+                merkleMock.verifyStorage.call(proofJson.storage.mapping.sha3ValueAtStorage, proofJson.storage.mapping.path, "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e522", proofJson.storage.mapping.storageRoot)
+            );
         })
 
         it('Should fail for mapping storage value when storage root is incorrect',async () =>{

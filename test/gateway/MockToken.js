@@ -19,12 +19,11 @@
 //
 // ----------------------------------------------------------------------------
 
-const Assert = require('assert');
-// const Web3 = require('web3');
-const BigNumber = require('bignumber.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 
 const Utils = require('../test_lib/utils.js');
-const MockTokenUtils = require('./MockToken_utils.js')
 const EIP20Token_utils = require('./EIP20Token_utils.js')
 const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
@@ -72,13 +71,13 @@ contract('MockToken', (accounts) => {
   const SYMBOL = "MOCK"
   const NAME = "Mock Token"
   const DECIMALS = 18
-  const TOTAL_SUPPLY = new BigNumber(web3.toWei(800000000, "ether"));
+  const TOTAL_SUPPLY = web3.utils.toWei(new BN('800000000'), "ether");
 
-  const ST10000 = new BigNumber(web3.toWei(10000, "ether"));
-  const ST9000 = new BigNumber(web3.toWei(9000, "ether"));
-  const ST1000 = new BigNumber(web3.toWei(1000, "ether"));
-  const ST10 = new BigNumber(web3.toWei(10, "ether"));
-  const ST1 = new BigNumber(web3.toWei(1, "ether"));
+  const ST10000 = web3.utils.toWei(new BN('10000'), "ether");
+  const ST9000 = web3.utils.toWei(new BN('9000'), "ether");
+  const ST1000 = web3.utils.toWei(new BN('1000'), "ether");
+  const ST10 = web3.utils.toWei(new BN('10'), "ether");
+  const ST1 = web3.utils.toWei(new BN('1'), "ether");
 
   const owner = accounts[0]
   const admin = accounts[1]
@@ -111,7 +110,7 @@ contract('MockToken', (accounts) => {
     })
 
     it("totalSupply", async () => {
-      assert.equal((await token.totalSupply.call()).toNumber(), TOTAL_SUPPLY.toNumber())
+      assert((await token.totalSupply.call()).eq(TOTAL_SUPPLY))
     })
 
     it("balances is private", async () => {
@@ -180,8 +179,8 @@ contract('MockToken', (accounts) => {
       const balance1After = await token.balanceOf.call(accounts[1])
       const balance2After = await token.balanceOf.call(accounts[2])
 
-      assert.equal(balance1After.toNumber(), 0)
-      assert.equal(balance2After.sub(balance2Before).toNumber(), balance1Before.sub(balance1After).toNumber(), balance1Before.toNumber())
+      assert(balance1After.eqn(0))
+      assert(balance2After.sub(balance2Before).eq(balance1Before.sub(balance1After)))
     })
 
     it("transfer 1 token", async () => {
@@ -194,8 +193,8 @@ contract('MockToken', (accounts) => {
       const balance1After = await token.balanceOf.call(accounts[1])
       const balance2After = await token.balanceOf.call(accounts[2])
 
-      assert.equal(balance1After.toNumber(), ST1.toNumber())
-      assert.equal(balance2After.toNumber(), balance2Before.sub(ST1).toNumber())
+      assert(balance1After.eq(ST1))
+      assert(balance2After.eq(balance2Before.sub(ST1)))
     })
   })
 
@@ -225,7 +224,7 @@ contract('MockToken', (accounts) => {
     it("transfer 1000 from account 1 -> 2 with 10 allowance", async () => {
       assert.equal(await token.approve.call(accounts[2], ST10, {from: accounts[1]}), true)
       await token.approve(accounts[2], ST10, {from: accounts[1]})
-      assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST10.toNumber())
+      assert(ST10.eq(new BN(await token.allowance.call(accounts[1], accounts[2]))))
       await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[1]}))
       await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[2]}))
     })
@@ -238,14 +237,14 @@ contract('MockToken', (accounts) => {
 
       assert.equal(await token.approve.call(accounts[2], ST1000, {from: accounts[1]}), true)
       await token.approve(accounts[2], ST1000, {from: accounts[1]})
-      assert.equal(await token.allowance.call(accounts[1], accounts[2]), ST1000.toNumber())
+      assert(ST1000.eq(new BN(await token.allowance.call(accounts[1], accounts[2]))))
 
       await Utils.expectThrow(token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[1]}))
       assert.equal(await token.transferFrom.call(accounts[1], accounts[2], ST1000, {from: accounts[2]}), true)
       await token.transferFrom(accounts[1], accounts[2], ST1000, {from: accounts[2]})
 
-      assert.equal((await token.balanceOf.call(accounts[1])).toNumber(), ST9000.toNumber())
-      assert.equal((await token.balanceOf.call(accounts[2])).toNumber(), ST1000.toNumber())
+      assert((await token.balanceOf.call(accounts[1])).eq(ST9000))
+      assert((await token.balanceOf.call(accounts[2])).eq(ST1000))
     })
   })
 

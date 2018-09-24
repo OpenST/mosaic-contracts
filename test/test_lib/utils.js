@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('./web3.js');
+
 const Assert = require('assert');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
@@ -92,18 +94,20 @@ module.exports.isNullAddress = function (address) {
 
 /// @dev Expect failure from invalid opcode or out of gas,
 ///      but returns error instead
-module.exports.expectThrow = async (promise) => {
+module.exports.expectThrow = async (promise, expectedMessage) => {
   try {
     await promise;
   } catch (error) {
-    const invalidOpcode = error.message.search('invalid opcode') > -1;
+    if (expectedMessage !== undefined) {
+      assertExpectedMessage(expectedMessage, error);
+    } else {
+      const invalidOpcode = error.message.search('invalid opcode') > -1;
+      const outOfGas = error.message.search('out of gas') > -1;
+      // Latest TestRPC has trouble with require
+      const revertInstead = error.message.search('revert') > -1;
 
-    const outOfGas = error.message.search('out of gas') > -1;
-
-    // Latest TestRPC has trouble with require
-    const revertInstead = error.message.search('revert') > -1;
-
-    assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+      assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+    }
 
     return;
   }
@@ -129,12 +133,7 @@ module.exports.expectRevert = async (promise, expectedMessage) => {
       'The contract should revert. Instead: ' + error.message
     );
 
-    if (expectedMessage !== undefined) {
-      assert(
-        error.message.search(expectedMessage) > -1,
-        'The contract should revert with "' + expectedMessage + '", instead: "' + error.message + '"'
-      );
-    }
+    assertExpectedMessage(expectedMessage, error);
 
     return;
   }
@@ -166,5 +165,21 @@ module.exports.getGasPrice = function () {
       }
     })
   })
+}
+
+/**
+ * Asserts that an error message contains a string given as message. Always
+ * passes if the message is `undefined`.
+ * 
+ * @param {string} message The message that the error should contain.
+ * @param {object} error The error.
+ */
+function assertExpectedMessage(message, error) {
+  if (message !== undefined) {
+    assert(
+      error.message.search(message) > -1,
+      'The contract was expected to error including "' + message + '", but instead: "' + error.message + '"'
+    );
+  }
 }
 
