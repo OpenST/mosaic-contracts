@@ -97,7 +97,6 @@ library MessageBus {
 
     /** Position of inbox in struct MessageBox */
     uint8 constant INBOX_OFFSET = 1;
-	event emitFromMessageBus(bytes32 messageHash_,uint status);
 
     /**
      * @notice Declare a new message. This will update the outbox status to
