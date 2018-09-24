@@ -38,11 +38,11 @@ contract('Stake', async (accounts) => {
         stake = await Stake.new(ost.address, originCoreAccount);
     });
 
-    describe('closing an OSTblock', async () => {
+    describe('closing an meta-block', async () => {
 
-        it('should increase the OSTblock height by 1', async () => {
+        it('should increase the meta-block height by 1', async () => {
             for (let expectedHeight = 1; expectedHeight < 5; expectedHeight++) {
-                await stake.closeOstBlock(
+                await stake.closeMetaBlock(
                     new BigNumber(expectedHeight - 1),
                     {from: originCoreAccount}
                 );
@@ -51,13 +51,13 @@ contract('Stake', async (accounts) => {
                 assert.strictEqual(
                     expectedHeight,
                     height.toNumber(),
-                    "The height should increase by one when an OSTblock is closed."
+                    "The height should increase by one when an meta-block is closed."
                 );
             }
         });
 
-        it('should emit an event when an OSTblock is closed', async () => {
-            let tx = await stake.closeOstBlock(
+        it('should emit an event when an meta-block is closed', async () => {
+            let tx = await stake.closeMetaBlock(
                 new BigNumber(0),
                 {from: originCoreAccount}
             );
@@ -68,7 +68,7 @@ contract('Stake', async (accounts) => {
                 'The contract did not emit an event with the new height.'
             );
 
-            tx = await stake.closeOstBlock(
+            tx = await stake.closeMetaBlock(
                 new BigNumber(1),
                 {from: originCoreAccount}
             );
@@ -82,7 +82,7 @@ contract('Stake', async (accounts) => {
 
         it('should fail when a wrong height is given', async () => {
             await Utils.expectFailedAssert(
-                stake.closeOstBlock(
+                stake.closeMetaBlock(
                     new BigNumber(3),
                     {from: originCoreAccount}
                 )
@@ -100,8 +100,8 @@ contract('Stake', async (accounts) => {
 
             let events = Events.perform(tx.receipt, stake.address, stake.abi);
             assert.strictEqual(
-                events.NewDeposit.validatorAddress,
-                validatorAccount,
+                web3.utils.toChecksumAddress(events.NewDeposit.validatorAddress),
+                web3.utils.toChecksumAddress(validatorAccount),
                 'The contract did not emit an event with the given validator address.'
             );
             assert.strictEqual(
@@ -211,7 +211,7 @@ contract('Stake', async (accounts) => {
                 expectedDeposits[2].deposit
             );
 
-            await stake.closeOstBlock(
+            await stake.closeMetaBlock(
                 new BigNumber(0),
                 {from: originCoreAccount}
             );
@@ -324,12 +324,12 @@ contract('Stake', async (accounts) => {
         it('should store the correct accumulative weight', async () => {
             await deposit(accounts[1], new BigNumber('1'));
             await deposit(accounts[2], new BigNumber('2'));
-            stake.closeOstBlock(
+            stake.closeMetaBlock(
                 new BigNumber(0),
                 {from: originCoreAccount}
             )
             await deposit(accounts[3], new BigNumber('4'));
-            stake.closeOstBlock(
+            stake.closeMetaBlock(
                 new BigNumber(1),
                 {from: originCoreAccount}
             )

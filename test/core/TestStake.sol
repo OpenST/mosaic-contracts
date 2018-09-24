@@ -47,7 +47,7 @@ contract TestStake {
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -69,7 +69,7 @@ contract TestStake {
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -82,7 +82,7 @@ contract TestStake {
             "The correct weight should be returned for the validator at the new height."
         );
 
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(2);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -105,7 +105,7 @@ contract TestStake {
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -118,7 +118,7 @@ contract TestStake {
             "The correct weight should be returned for the validator at the new height."
         );
 
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(2);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
         assertValidatorUpdatesLength(2, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -157,13 +157,13 @@ contract TestStake {
     }
 
     /**
-     * @notice Closes an OSTblock and asserts that it does non return any 
+     * @notice Closes an meta-block and asserts that it does non return any 
      *         updates.
      */
     function assertNoValidatorUpdates(uint256 _closingHeight) private {
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeOstBlock(
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(
             _closingHeight
         );
         
