@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const BrandedToken_utils = require('./BrandedToken_utils.js');
 
@@ -39,8 +41,8 @@ contract('BrandedToken', function(accounts) {
 	const openSTProtocol = accounts[4];
 
 	const beneficiary = accounts[0];
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
+	const ST1 = web3.utils.toWei(new BN('1'), "ether");
+	const ST2 = web3.utils.toWei(new BN('2'), "ether");
 
 	var result 				= null;
 	var totalSupply 		= null;
@@ -71,10 +73,10 @@ contract('BrandedToken', function(accounts) {
 			beneficiaryBalance 	= await token.balanceOf.call(beneficiary);
 			unclaimed 			= await token.unclaimed.call(beneficiary);
 
-			assert.equal(totalSupply.toNumber(), ST2);
-			assert.equal(tokenBalance.toNumber(), ST2);
-			assert.equal(beneficiaryBalance.toNumber(), 0);
-			assert.equal(unclaimed.toNumber(), ST2);
+			assert(totalSupply.eq(ST2));
+			assert(tokenBalance.eq(ST2));
+			assert(beneficiaryBalance.eqn(0));
+			assert(unclaimed.eq(ST2));
 		})
 
 		it('successfully claims', async () => {
@@ -86,10 +88,10 @@ contract('BrandedToken', function(accounts) {
 			beneficiaryBalance 	= await token.balanceOf.call(beneficiary);
 			unclaimed 			= await token.unclaimed.call(beneficiary);
 
-			assert.equal(totalSupply.toNumber(), ST2);
-			assert.equal(tokenBalance.toNumber(), 0);
-			assert.equal(beneficiaryBalance.toNumber(), ST2);
-			assert.equal(unclaimed.toNumber(), 0);
+			assert(totalSupply.eq(ST2));
+			assert(tokenBalance.eqn(0));
+			assert(beneficiaryBalance.eq(ST2));
+			assert(unclaimed.eqn(0));
 		})
 
 		it('fails to burn by non-openSTProtocol', async () => {
@@ -97,7 +99,7 @@ contract('BrandedToken', function(accounts) {
 		})
 
 		it('fails to burn by openSTProtocol if msg.value != 0', async () => {
-			const amountBT = new BigNumber(web3.toWei(1, "ether"));
+			const amountBT = web3.utils.toWei(new BN('1'), "ether");
       			await Utils.expectThrow(token.burn(beneficiary, ST1, { from: openSTProtocol, value: amountBT }));
 		})
 
@@ -105,15 +107,15 @@ contract('BrandedToken', function(accounts) {
 			// Protocol must hold tokens in order to burn tokens
 			await token.transfer(openSTProtocol, ST1, { from: beneficiary });
 			var protocolBalance = await token.balanceOf.call(openSTProtocol);
-			assert.equal(protocolBalance.toNumber(), ST1);
+			assert(protocolBalance.eq(ST1));
 			assert.equal(await token.burn.call(beneficiary, ST1, { from: openSTProtocol }), true);
 			result = await token.burn(beneficiary, ST1, { from: openSTProtocol });
 
 			totalSupply 	= await token.totalSupply.call();
 			protocolBalance = await token.balanceOf.call(openSTProtocol);
 
-			assert.equal(totalSupply.toNumber(), ST1);
-			assert.equal(protocolBalance.toNumber(), 0);
+			assert(totalSupply.eq(ST1));
+			assert(protocolBalance.eqn(0));
 		})
 	})
 })

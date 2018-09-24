@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 
 const rootPrefix = "../.."
   , constants = require(rootPrefix + '/test/test_lib/constants')
@@ -40,8 +42,8 @@ module.exports.deployRegistrar = async (artifacts, accounts) => {
 	const valueToken   	 = await MockToken.new();
 	const registrar    	 = await Registrar.new();
 	const staker	  	 = accounts[2];
-	const amountST		 = new BigNumber(web3.toWei(2, "ether"));
-	const deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const amountST		 = web3.utils.toWei(new BN('2'), "ether");
+	const deactivationHeight = web3.utils.toWei(new BN('100000000'), "ether");
 	const admin = accounts[3];
 	const ops = accounts[2];
 

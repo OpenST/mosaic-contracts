@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 const Assert = require('assert');
 
 const rootPrefix = "../.."
@@ -27,7 +29,6 @@ const rootPrefix = "../.."
 ;
 
 const utils = require(rootPrefix + "/test/test_lib/utils.js");
-const openSTValueUtils = require("./OpenSTValue_utils.js");
 
 var MockToken   = artifacts.require("./MockToken.sol");
 var Registrar     = artifacts.require("./Registrar.sol");
@@ -49,7 +50,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 	const ops           = accounts[3];
 	const intercommVC   = accounts[4];
 	const intercommUC   = accounts[5];
-	const workerDeactivationHeight = new BigNumber(web3.toWei(100000000, "ether"));
+	const workerDeactivationHeight = web3.utils.toWei(new BN('100000000'), "ether");
 
 	var res = null;
 
@@ -119,7 +120,7 @@ module.exports.deployOpenSTProtocol = async (artifacts, accounts) => {
 
 	const stpContractAddress = await openSTUtility.simpleTokenPrime.call();
 	Assert.notEqual(stpContractAddress, utils.NullAddress);
-	const stPrime = STPrime.at(stpContractAddress);
+	const stPrime = await STPrime.at(stpContractAddress);
 
 	// console.log("Simple Token:", simpleToken.address);
 	// console.log("Registrar VC:", registrarVC.address);
