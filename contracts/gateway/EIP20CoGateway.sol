@@ -179,40 +179,6 @@ contract EIP20CoGateway is CoGateway {
 
     /* public variables */
 
-    /** Gateway contract address. */
-    address public gateway;
-
-    /**
-     * Message box.
-     * @dev keep this is at location 1, in case this is changed then update
-     *      constant OUTBOX_OFFSET accordingly.
-     */
-    MessageBus.MessageBox messageBox;
-
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
-
-    /** Specifies if the CoGateway is deactivated for any new redeem process.*/
-    bool public deactivated;
-
-    /** Organisation address. */
-    address public organisation;
-
-    /** amount of base token which is staked by facilitator. */
-    uint256 public bounty;
-
-    /** address of utility token. */
-    address public utilityToken;
-
-    /** address of value token. */
-    address public valueToken;
-
-    /** address of core contract. */
-    CoreInterface public core;
-
-    /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -234,6 +200,7 @@ contract EIP20CoGateway is CoGateway {
      *                staking process.
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
+     * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,

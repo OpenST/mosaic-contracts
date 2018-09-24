@@ -49,44 +49,6 @@ contract Gateway is  GatewayBase {
         bytes32 _unlockSecret
     );
 
-    /* Struct */
-
-    /**
-     * ActiveProcess stores the information related to in progress process
-     * like stake/mint unstake/redeem.
-     */
-    struct ActiveProcess {
-
-        /** latest message hash. */
-        bytes32 messageHash;
-
-        /** Outbox or Inbox process. */
-        MessageBus.MessageBoxType messageBoxType;
-    }
-
-    /* constants */
-
-    uint8 constant MESSAGE_BOX_OFFSET = 1;
-
-    /**
-     * Message box.
-     * @dev keep this is at location 1, in case this is changed then update
-     *      constant OUTBOX_OFFSET accordingly.
-     */
-    MessageBus.MessageBox messageBox;
-
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
-
-    /** Specifies if the Gateway is deactivated for any new staking process. */
-    bool public deactivated;
-
-    /** Organisation address. */
-    address public organisation;
-
-    /** amount of ERC20 which is staked by facilitator. */
-    uint256 public bounty;
-
     /** address of ERC20 token. */
     EIP20Interface public token;
 
@@ -97,46 +59,6 @@ contract Gateway is  GatewayBase {
     EIP20Interface public bountyToken;
 
     /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-
-    /** Maps messageHash to the Message object. */
-    mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
-
-    /**
-     * Maps address to ActiveProcess object.
-     *
-     * Once the staking or unstaking process is started the corresponding
-     * message hash is stored in ActiveProcess against the staker/redeemer
-     * address. This is used to restrict simultaneous/multiple staking and
-     * unstaking for a particular address. This is also used to determine the
-     * nonce of the particular address. Refer getNonce for the details.
-     */
-    mapping(address /*address*/ => ActiveProcess) activeProcess;
-
-    /* internal variables */
-
-    /** address of message bus used to fetch codehash during gateway linking */
-    address internal messageBus;
-
-    /* modifiers */
-
-    /** checks that only organisation can call a particular function. */
-    modifier onlyOrganisation() {
-        require(
-            msg.sender == organisation,
-            "Only organisation can call the function"
-        );
-        _;
-    }
-
-    /** checks that contract is linked and is not deactivated */
-    modifier isActive() {
-        require(
-            deactivated == false && linked == true,
-            "Contract is restricted to use"
-        );
-        _;
-    }
 
     /**
      * @notice Initialise the contract by providing the ERC20 token address
@@ -161,7 +83,7 @@ contract Gateway is  GatewayBase {
         address _organisation,
         address _messageBus
     )
-    GatewayBase(_core)
+    GatewayBase(_core, _messageBus, _bounty, _organisation)
     public
     {
 
@@ -173,30 +95,9 @@ contract Gateway is  GatewayBase {
             _bountyToken != address(0),
             "Token contract address for bounty must not be zero"
         );
-        require(
-            _core != address(0),
-            "Core contract address must not be zero"
-        );
-        require(
-            _organisation != address(0),
-            "Organisation address must not be zero"
-        );
-        require(
-            _messageBus != address(0),
-            "MessageBus address must not be zero"
-        );
-
-        // gateway and cogateway is not linked yet so it is initialized as false
-        linked = false;
-
-        // gateway is active
-        deactivated = false;
-
         token = _token;
         bountyToken = _bountyToken;
-        bounty = _bounty;
-        organisation = _organisation;
-        messageBus = _messageBus;
+
 
     }
 
@@ -313,7 +214,7 @@ contract Gateway is  GatewayBase {
         );
 
         // update the coGateway address
-        gateway = _coGateway;
+        remoteGateway = _coGateway;
 
         // update gateway link hash
         gatewayLinkHash = messageHash_;
@@ -379,7 +280,7 @@ contract Gateway is  GatewayBase {
         emit GatewayLinkProgressed(
             _messageHash,
             address(this),
-            gateway,
+            remoteGateway,
             token,
             _unlockSecret
         );
@@ -387,100 +288,7 @@ contract Gateway is  GatewayBase {
         return true;
     }
 
-    /**
-     * @notice Get the nonce for the given account address
-     *
-     * @param _account Account address for which the nonce is to fetched
-     *
-     * @return nonce
-     */
-    function getNonce(address _account)
-    external
-    view
-    returns (uint256 /* nonce */)
-    {
-        // call the private method
-        return _getNonce(_account);
-    }
-
-    /**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateGateway()
-    external
-    onlyOrganisation
-    returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateGateway()
-    external
-    onlyOrganisation
-    returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
-    }
-
     /** internal methods*/
-
-    /**
-     * @notice Create and return Message object.
-     *
-     * @dev This function is to avoid stack too deep error.
-     *
-     * @param _account Account address
-     * @param _accountNonce Nonce for the account address
-     * @param _gasPrice Gas price
-     * @param _gasLimit Gas limit
-     * @param _intentHash Intent hash
-     * @param _hashLock Hash lock
-     *
-     * @return Message object
-     */
-    function getMessage(
-        address _account,
-        uint256 _accountNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        bytes32 _intentHash,
-        bytes32 _hashLock
-    )
-    internal
-    pure
-    returns (MessageBus.Message)
-    {
-        return MessageBus.Message(
-            {
-            intentHash : _intentHash,
-            nonce : _accountNonce,
-            gasPrice : _gasPrice,
-            gasLimit : _gasLimit,
-            sender : _account,
-            hashLock : _hashLock,
-            gasConsumed : 0
-            }
-        );
-    }
 
     /**
      * @notice Clears the previous process. Validates the
@@ -539,29 +347,4 @@ contract Gateway is  GatewayBase {
             });
     }
 
-    /** private methods */
-
-    /**
-     * @notice Private function to get the nonce for the given account address
-     *
-     * @param _account Account address for which the nonce is to fetched
-     *
-     * @return nonce
-     */
-    function _getNonce(address _account)
-    private
-    view
-    returns (uint256 /* nonce */)
-    {
-        ActiveProcess storage previousProcess = activeProcess[_account];
-
-        if (previousProcess.messageHash == bytes32(0)) {
-            return 1;
-        }
-
-        MessageBus.Message storage message =
-        messages[previousProcess.messageHash];
-
-        return message.nonce.add(1);
-    }
 }

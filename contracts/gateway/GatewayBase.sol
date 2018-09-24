@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 import './GatewayLib.sol';
 import "./CoreInterface.sol";
 import "./SafeMath.sol";
+import "./MessageBus.sol";
 
 /**
  *  @title GatewayBase contract.
@@ -24,6 +25,23 @@ contract GatewayBase {
         bool _wasAlreadyProved
     );
 
+
+    /* Struct */
+
+    /**
+     * ActiveProcess stores the information related to in progress process
+     * like stake/mint unstake/redeem.
+     */
+    struct ActiveProcess {
+
+        /** latest message hash. */
+        bytes32 messageHash;
+
+        /** Outbox or Inbox process. */
+        MessageBus.MessageBoxType messageBoxType;
+    }
+
+
     bytes32 constant STAKE_TYPEHASH = keccak256(
         abi.encode(
             "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
@@ -41,24 +59,117 @@ contract GatewayBase {
         )
     );
 
+    /* constants */
+
+    uint8 MESSAGE_BOX_OFFSET = 1;
+
+    /** Specifies if the Gateway and CoGateway contracts are linked. */
+    bool public linked;
+
+    /**
+     * Message box.
+     * @dev keep this is at location 1, in case this is changed then update
+     *      constant OUTBOX_OFFSET accordingly.
+     */
+    MessageBus.MessageBox messageBox;
+
+
+    /** Specifies if the Gateway is deactivated for any new staking process. */
+    bool public deactivated;
+
+    /** Organisation address. */
+    address public organisation;
+
+    /** amount of ERC20 which is staked by facilitator. */
+    uint256 public bounty;
+
+
     /** address of core contract. */
     CoreInterface public core;
 
     /** path to prove merkle account proof for CoGateway contract. */
     bytes internal encodedGatewayPath;
 
-    /** Gateway contract address. */
-    address public gateway;
+    /** Remote gateway contract address. */
+    address public remoteGateway;
+
+    /** Gateway link message hash. */
+    bytes32 public gatewayLinkHash;
+
+    /** Maps messageHash to the Message object. */
+    mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 
     /** Maps blockHeight to storageRoot*/
     mapping(uint256 /* block height */ => bytes32) internal storageRoots;
 
+    /**
+     * Maps address to ActiveProcess object.
+     *
+     * Once the minting or redeem process is started the corresponding
+     * message hash is stored in ActiveProcess against the staker/redeemer
+     * address. This is used to restrict simultaneous/multiple minting and
+     * redeem for a particular address. This is also used to determine the
+     * nonce of the particular address. Refer getNonce for the details.
+     */
+    mapping(address /*address*/ => ActiveProcess) activeProcess;
+
+    /* internal variables */
+
+    /** address of message bus used to fetch codehash during gateway linking */
+    address internal messageBus;
+
+
+    /* modifiers */
+
+    /** checks that only organisation can call a particular function. */
+    modifier onlyOrganisation() {
+        require(
+            msg.sender == organisation,
+            "Only organisation can call the function"
+        );
+        _;
+    }
+
+    /** checks that contract is linked and is not deactivated */
+    modifier isActive() {
+        require(
+            deactivated == false && linked == true,
+            "Contract is restricted to use"
+        );
+        _;
+    }
+
     constructor(
-        CoreInterface _core
+        CoreInterface _core,
+        address _messageBus,
+        uint256 _bounty,
+        address _organisation
     )
     public
     {
+        require(
+            _core != address(0),
+            "Core contract address must not be zero"
+        );
+        require(
+            _organisation != address(0),
+            "Organisation address must not be zero"
+        );
+        require(
+            _messageBus != address(0),
+            "MessageBus address must not be zero"
+        );
+
         core = _core;
+        messageBus = _messageBus;
+
+        //gateway and cogateway is not linked yet so it is initialized as false
+        linked = false;
+
+        // gateway is active
+        deactivated = false;
+        bounty = _bounty;
+        organisation = _organisation;
 
     }
 
@@ -127,7 +238,7 @@ contract GatewayBase {
             // wasAlreadyProved is true here since proveOpenST is replay call
             // for same block height
             emit GatewayProven(
-                gateway,
+                remoteGateway,
                 _blockHeight,
                 storageRoot,
                 true
@@ -149,7 +260,7 @@ contract GatewayBase {
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
         emit GatewayProven(
-            gateway,
+            remoteGateway,
             _blockHeight,
             storageRoot,
             false
@@ -157,5 +268,125 @@ contract GatewayBase {
 
         return true;
     }
+
+
+    /**
+     * @notice Activate Gateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function activateGateway()
+    external
+    onlyOrganisation
+    returns (bool)
+    {
+        require(
+            deactivated == true,
+            "Gateway is already active"
+        );
+        deactivated = false;
+        return true;
+    }
+
+    /**
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         Organisation address
+     *
+     * @return `true` if value is set
+     */
+    function deactivateGateway()
+    external
+    onlyOrganisation
+    returns (bool)
+    {
+        require(
+            deactivated == false,
+            "Gateway is already deactivated"
+        );
+        deactivated = true;
+        return true;
+    }
+
+    /**
+     * @notice Get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function getNonce(address _account)
+    external
+    view
+    returns (uint256 /* nonce */)
+    {
+        // call the private method
+        return _getNonce(_account);
+    }
+
+    /**
+     * @notice Create and return Message object.
+     *
+     * @dev This function is to avoid stack too deep error.
+     *
+     * @param _account Account address
+     * @param _accountNonce Nonce for the account address
+     * @param _gasPrice Gas price
+     * @param _gasLimit Gas limit
+     * @param _intentHash Intent hash
+     * @param _hashLock Hash lock
+     *
+     * @return Message object
+     */
+    function getMessage(
+        address _account,
+        uint256 _accountNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _intentHash,
+        bytes32 _hashLock
+    )
+    internal
+    pure
+    returns (MessageBus.Message)
+    {
+        return MessageBus.Message(
+            {
+            intentHash : _intentHash,
+            nonce : _accountNonce,
+            gasPrice : _gasPrice,
+            gasLimit : _gasLimit,
+            sender : _account,
+            hashLock : _hashLock,
+            gasConsumed : 0
+            }
+        );
+    }
+
+    /**
+     * @notice Private function to get the nonce for the given account address
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function _getNonce(address _account)
+    internal
+    view
+    returns (uint256 /* nonce */)
+    {
+        ActiveProcess storage previousProcess = activeProcess[_account];
+
+        if (previousProcess.messageHash == bytes32(0)) {
+            return 1;
+        }
+
+        MessageBus.Message storage message =
+        messages[previousProcess.messageHash];
+
+        return message.nonce.add(1);
+    }
+
+
 
 }
