@@ -19,8 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const Assert 	= require('assert');
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 
 var Hasher 			= artifacts.require("../test_lib/Hasher.sol");
 var STPrimeConfig 	= artifacts.require("./STPrimeConfig.sol");
@@ -33,7 +32,7 @@ module.exports.deploySTPrime = async (artifacts, accounts) => {
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol 		= accounts[4];
 	const conversionRateDecimals	= 5;
-	const conversionRate 		= new BigNumber(10 * (10**conversionRateDecimals));	
+	const conversionRate 		= new BN(10 * (10**conversionRateDecimals));	
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
 	const stPrimeSymbol			= await stPrimeConfig.STPRIME_SYMBOL.call();

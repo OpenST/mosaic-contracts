@@ -19,8 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
-const Utils = require('../test_lib/utils.js');
+const web3 = require('../test_lib/web3.js');
+
+const BN = require('bn.js');
 const EIP20Token_utils = require('./EIP20Token_utils.js');
 
 ///
@@ -35,9 +36,9 @@ const EIP20Token_utils = require('./EIP20Token_utils.js');
 contract('EIP20Token', function(accounts) {
 	const beneficiary1 = accounts[0];
 	const beneficiary2 = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
-	const ST3 = new BigNumber(web3.toWei(3, "ether"));
+	const ST1 = web3.utils.toWei(new BN('1'), "ether");
+	const ST2 = web3.utils.toWei(new BN('2'), "ether");
+	const ST3 = web3.utils.toWei(new BN('3'), "ether");
 
 	var result = null;
 	var tokenBalance = null;
@@ -55,12 +56,12 @@ contract('EIP20Token', function(accounts) {
 			result = await token.mintEIP20Public(ST1);
 
 			tokenBalance = await token.balanceOf.call(token.address);
-			assert.equal(tokenBalance.toNumber(), ST1);
+			assert(tokenBalance.eq(ST1));
 			assert.equal(await token.mintEIP20Public.call(ST2), true);
 			result = await token.mintEIP20Public(ST2);
 
 			tokenBalance = await token.balanceOf.call(token.address);
-			assert.equal(tokenBalance.toNumber(), ST3);
+			assert(tokenBalance.eq(ST3));
 		})
 
 		it('successfully claims', async () => {
@@ -71,18 +72,18 @@ contract('EIP20Token', function(accounts) {
 			result = await token.claimEIP20Public(beneficiary1, ST1);
 
 			tokenBalance = await token.balanceOf.call(token.address);
-			assert.equal(tokenBalance.toNumber(), ST2);
+			assert(tokenBalance.eq(ST2));
 			beneficiaryBalance = await token.balanceOf.call(beneficiary1);
-			assert.equal(beneficiaryBalance.toNumber(), ST1);
+			assert(beneficiaryBalance.eq(ST1));
 			EIP20Token_utils.checkTransferEvent(result.logs[0], token.address, beneficiary1, ST1);
 
 			// Claim again for beneficiary1
 			result = await token.claimEIP20Public(beneficiary1, ST1);
 
 			tokenBalance = await token.balanceOf.call(token.address);
-			assert.equal(tokenBalance.toNumber(), ST1);
+			assert(tokenBalance.eq(ST1));
 			beneficiaryBalance = await token.balanceOf.call(beneficiary1);
-			assert.equal(beneficiaryBalance.toNumber(), ST2);
+			assert(beneficiaryBalance.eq(ST2));
 			EIP20Token_utils.checkTransferEvent(result.logs[0], token.address, beneficiary1, ST1);
 
 			// Claim for beneficiary2
@@ -91,18 +92,18 @@ contract('EIP20Token', function(accounts) {
 			tokenBalance = await token.balanceOf.call(token.address);
 			assert.equal(tokenBalance.toNumber(), 0);
 			beneficiaryBalance = await token.balanceOf.call(beneficiary2);
-			assert.equal(beneficiaryBalance.toNumber(), ST1);
+			assert(beneficiaryBalance.eq(ST1));
 			EIP20Token_utils.checkTransferEvent(result.logs[0], token.address, beneficiary2, ST1);
 		})
 
 		it('successfully burns', async () => {
 			beneficiaryBalance = await token.balanceOf.call(beneficiary1);
-			assert.equal(beneficiaryBalance.toNumber(), ST2);
+			assert(beneficiaryBalance.eq(ST2));
 			assert.equal(await token.burnEIP20Public.call(ST1, { from: beneficiary1 }), true);
 			result = await token.burnEIP20Public(ST1, { from: beneficiary1 });
 
 			beneficiaryBalance = await token.balanceOf.call(beneficiary1);
-			assert.equal(beneficiaryBalance.toNumber(), ST1);
+			assert(beneficiaryBalance.eq(ST1));
 			assert.equal(await token.burnEIP20Public.call(ST1, { from: beneficiary1 }), true);
 			result = await token.burnEIP20Public(ST1, { from: beneficiary1 });
 

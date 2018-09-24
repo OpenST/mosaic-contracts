@@ -35,7 +35,7 @@ contract('RLP', function (accounts) {
 		});
 		
 		it('should pass when input is blank or 0x (NOT RLP encoded)', async () => {
-			let result = await rlpTest.toRLPItem.call("");
+			let result = await rlpTest.toRLPItem.call("0x");
 			//result[0] is memory pointer and result[1] is length
 			// memory pointer should be 0
 			assert.equal(result[0].toString(10), 0);
@@ -87,7 +87,7 @@ contract('RLP', function (accounts) {
 		});
 		
 		it('should fail when input is empty ', async () => {
-			let data;
+			let data = '';
 			await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
 		});
 		
@@ -117,7 +117,7 @@ contract('RLP', function (accounts) {
 		it('should pass when input is empty', async () => {
 			let data = ""
 				, result = await rlpTest.toBytes.call('0x' + data);
-			assert.equal("0x", result);
+			assert.isNull(result);
 		})
 	})
 	
@@ -138,7 +138,10 @@ contract('RLP', function (accounts) {
 		
 		it('should fail when input is in list form', async () => {
 			let dataArray = ['2', '5', '6'];
-			await Utils.expectThrow(rlpTest.toData.call('0x' + dataArray));
+			await Utils.expectThrow(
+				rlpTest.toData.call('0x' + dataArray),
+				"Given parameter is not bytes"
+			);
 		})
 	})
 })
