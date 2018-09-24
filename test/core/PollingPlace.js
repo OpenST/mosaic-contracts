@@ -129,7 +129,7 @@ contract('PollingPlace', async (accounts) => {
                     'The contract must record the correct auxilary address of a validator.'
                 );
                 assert(
-                    validator[ValidatorIndexStake].eq(expectedWeights.values[i]),
+                    validator[ValidatorIndexWeight].eq(expectedWeights.values[i]),
                     'The contract must record the correct staking value address of a validator.'
                 );
                 assert.strictEqual(
@@ -167,8 +167,8 @@ contract('PollingPlace', async (accounts) => {
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -187,8 +187,8 @@ contract('PollingPlace', async (accounts) => {
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -207,8 +207,8 @@ contract('PollingPlace', async (accounts) => {
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -227,8 +227,8 @@ contract('PollingPlace', async (accounts) => {
                         '0x0000000000000000000000000000000000000002',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('2'),
+                        new BN('1'),
+                        new BN('2'),
                     ]
                 )
             );
@@ -297,8 +297,8 @@ contract('PollingPlace', async (accounts) => {
                         '0x0000000000000000000000000000000000000001',
                     ],
                     [
-                        new BigNumber('1'),
-                        new BigNumber('1'),
+                        new BN('1'),
+                        new BN('1'),
                     ]
                 )
             );
@@ -382,11 +382,11 @@ contract('PollingPlace', async (accounts) => {
              */
             vote = {
                 coreIdentifier: originCoreIdentifier,
-                transitionHash: web3.sha3('transition'),
+                transitionHash: web3.utils.sha3('transition'),
                 source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
                 target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
-                sourceHeight: new BigNumber('1'),
-                targetHeight: new BigNumber('2'),
+                sourceHeight: new BN('1'),
+                targetHeight: new BN('2'),
             };
         });
 
@@ -401,7 +401,7 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await pollingPlace.vote(
@@ -429,7 +429,7 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await Utils.expectRevert(
@@ -460,7 +460,7 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await Utils.expectRevert(
@@ -480,7 +480,7 @@ contract('PollingPlace', async (accounts) => {
 
         it('should not accept a vote with invalid heights', async () => {
             // Target height is less than source height.
-            vote.targetHeight = new BigNumber('0');
+            vote.targetHeight = new BN('0');
 
             let signature = await signVote(accounts[0], vote);
 
@@ -491,7 +491,7 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await Utils.expectRevert(
@@ -520,7 +520,7 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             // Origin block store should pass.
@@ -575,16 +575,16 @@ contract('PollingPlace', async (accounts) => {
                     accounts[9],
                 ],
                 values: [
-                    new BigNumber('2'),
-                    new BigNumber('3'),
-                    new BigNumber('4'),
-                    new BigNumber('5'),
-                    new BigNumber('6'),
-                    new BigNumber('6'),
-                    new BigNumber('7'),
-                    new BigNumber('8'),
-                    new BigNumber('9'),
-                    new BigNumber('10'),
+                    new BN('2'),
+                    new BN('3'),
+                    new BN('4'),
+                    new BN('5'),
+                    new BN('6'),
+                    new BN('6'),
+                    new BN('7'),
+                    new BN('8'),
+                    new BN('9'),
+                    new BN('10'),
                 ]
             };
 
@@ -686,16 +686,16 @@ contract('PollingPlace', async (accounts) => {
                     accounts[9],
                 ],
                 values: [
-                    new BigNumber('2'),
-                    new BigNumber('3'),
-                    new BigNumber('4'),
-                    new BigNumber('5'),
-                    new BigNumber('6'),
-                    new BigNumber('6'),
-                    new BigNumber('7'),
-                    new BigNumber('8'),
-                    new BigNumber('9'),
-                    new BigNumber('10'),
+                    new BN('2'),
+                    new BN('3'),
+                    new BN('4'),
+                    new BN('5'),
+                    new BN('6'),
+                    new BN('6'),
+                    new BN('7'),
+                    new BN('8'),
+                    new BN('9'),
+                    new BN('10'),
                 ]
             };
 
@@ -769,16 +769,16 @@ contract('PollingPlace', async (accounts) => {
                     accounts[9],
                 ],
                 values: [
-                    new BigNumber('2'),
-                    new BigNumber('3'),
-                    new BigNumber('4'),
-                    new BigNumber('5'),
-                    new BigNumber('6'),
-                    new BigNumber('6'),
-                    new BigNumber('7'),
-                    new BigNumber('8'),
-                    new BigNumber('9'),
-                    new BigNumber('10'),
+                    new BN('2'),
+                    new BN('3'),
+                    new BN('4'),
+                    new BN('5'),
+                    new BN('6'),
+                    new BN('6'),
+                    new BN('7'),
+                    new BN('8'),
+                    new BN('9'),
+                    new BN('10'),
                 ]
             };
 
@@ -827,7 +827,7 @@ contract('PollingPlace', async (accounts) => {
                  * New target height as validators are not allowed to vote on
                  * the same height from the previous loop again.
                  */
-                vote.targetHeight = new BigNumber('999');
+                vote.targetHeight = new BN('999');
                 // Incrementing target hashes to split the votes
                 vote.target = '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9c' + i.toString(16);
 
@@ -880,16 +880,16 @@ contract('PollingPlace', async (accounts) => {
                     accounts[9],
                 ],
                 values: [
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('5'),
-                    new BigNumber('10'),
-                    new BigNumber('11'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('5'),
+                    new BN('10'),
+                    new BN('11'),
                 ]
             };
 
@@ -941,8 +941,8 @@ contract('PollingPlace', async (accounts) => {
                     accounts[1],
                 ],
                 values: [
-                    new BigNumber('1'),
-                    new BigNumber('9'),
+                    new BN('1'),
+                    new BN('9'),
                 ]
             };
 
@@ -960,8 +960,8 @@ contract('PollingPlace', async (accounts) => {
              * Letting the first validator vote multiple times on the same
              * target should lead to a revert.
              */
-            vote.sourceHeight = new BigNumber('5');
-            vote.targetHeight = new BigNumber('15');
+            vote.sourceHeight = new BN('5');
+            vote.targetHeight = new BN('15');
             let signature = await signVote(accounts[0], vote);
             await pollingPlace.vote(
                 vote.coreIdentifier,
@@ -976,7 +976,7 @@ contract('PollingPlace', async (accounts) => {
             );
 
             // Even with a different source.
-            vote.sourceHeight = new BigNumber('8');
+            vote.sourceHeight = new BN('8');
             signature = await signVote(accounts[0], vote);
             await Utils.expectRevert(
                 pollingPlace.vote(
@@ -1001,17 +1001,17 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await pollingPlace.updateMetaBlockHeight(
                 [],
                 [],
-                new BigNumber('19850912'),
-                new BigNumber('19850912')
+                new BN('19850912'),
+                new BN('19850912')
             );
 
-            vote.targetHeight = new BigNumber('19891109');
+            vote.targetHeight = new BN('19891109');
             let signature = await signVote(accounts[0], vote);
 
             await pollingPlace.vote(
@@ -1035,17 +1035,17 @@ contract('PollingPlace', async (accounts) => {
                 auxiliaryCoreIdentifier,
                 auxiliaryBlockStore.address,
                 [accounts[0]],
-                [new BigNumber('12')],
+                [new BN('12')],
             );
 
             await pollingPlace.updateMetaBlockHeight(
                 [],
                 [],
-                new BigNumber('19891109'),
-                new BigNumber('19891109')
+                new BN('19891109'),
+                new BN('19891109')
             );
 
-            vote.targetHeight = new BigNumber('19851209');
+            vote.targetHeight = new BN('19851209');
             let signature = await signVote(accounts[0], vote);
 
             await Utils.expectRevert(
@@ -1071,32 +1071,22 @@ contract('PollingPlace', async (accounts) => {
      * @returns {object} The signature of the vote (r, s, and v).
      */
     async function signVote(address, vote) {
-        let voteDigest = Abi.soliditySHA3(
-            [
-                'bytes20',
-                'bytes32',
-                'bytes32',
-                'bytes32',
-                'uint256',
-                'uint256',
-            ],
-            [
-                vote.coreIdentifier,
-                vote.transitionHash,
-                vote.source,
-                vote.target,
-                vote.sourceHeight.toNumber(),
-                vote.targetHeight.toNumber(),
-            ],
-        ).toString('hex');
+        let voteDigest = web3.utils.soliditySha3(
+            {type: 'bytes20', value: web3.utils.toChecksumAddress(vote.coreIdentifier)},
+            {type: 'bytes32', value: vote.transitionHash},
+            {type: 'bytes32', value: vote.source},
+            {type: 'bytes32', value: vote.target},
+            {type: 'uint256', value: vote.sourceHeight},
+            {type: 'uint256', value: vote.targetHeight},
+        );
 
         /*
          * Signature adds the prefix `\x19Ethereum Signed Message:\n32` to the
          * voteDigest.
          */
         let signature = await web3.eth.sign(
-            address,
-            voteDigest
+            voteDigest,
+            address
         );
 
         // Removing the `0x` prefix.
