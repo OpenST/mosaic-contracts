@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../lib/web3.js');
+
+const BN = require('bn.js');
 var Hasher = artifacts.require("./Hasher.sol");
 var UtilityTokenAbstract = artifacts.require("./UtilityTokenAbstractMock.sol");
 
@@ -29,7 +31,7 @@ module.exports.deployUtilityTokenAbstract = async (artifacts, accounts) => {
 	/// mock OpenST protocol contract address with an external account
 	const openSTProtocol 		= accounts[4];
 	const conversionRateDecimals = 5;
-	const conversionRate 		= new BigNumber(10*(10**conversionRateDecimals)); // conversaion rate => 10
+	const conversionRate 		= new BN(10*(10**conversionRateDecimals)); // conversaion rate => 10
 	const genesisChainIdValue 	= 3;
 	const genesisChainIdUtility = 1410;
 	const UUID 					= await hasher.hashUuid.call("symbol", "name", genesisChainIdValue, genesisChainIdUtility, openSTProtocol, conversionRate, conversionRateDecimals);
@@ -48,38 +50,38 @@ module.exports.deployUtilityTokenAbstract = async (artifacts, accounts) => {
 /// @dev Check Minted event
 module.exports.checkMintedEvent = (event, _uuid, _beneficiary, _amount, _unclaimed, _totalSupply) => {
 	if (Number.isInteger(_amount)) {
-	   _amount = new BigNumber(_amount);
+	   _amount = new BN(_amount);
 	};
 
 	if (Number.isInteger(_unclaimed)) {
-	   _unclaimed = new BigNumber(_unclaimed);
+	   _unclaimed = new BN(_unclaimed);
 	};
 
 	if (Number.isInteger(_totalSupply)) {
-	   _totalSupply = new BigNumber(_totalSupply);
+	   _totalSupply = new BN(_totalSupply);
 	};
 
 	assert.equal(event.event, "Minted");
 	assert.equal(event.args._uuid, _uuid);
-	assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
-	assert.equal(event.args._unclaimed.toNumber(), _unclaimed.toNumber());
-	assert.equal(event.args._totalSupply.toNumber(), _totalSupply.toNumber());	
+	assert.equal(event.args._beneficiary, web3.utils.toChecksumAddress(_beneficiary));
+	assert(event.args._amount.eq(_amount));
+	assert(event.args._unclaimed.eq(_unclaimed));
+	assert(event.args._totalSupply.eq(_totalSupply));	
 };
 
 /// @dev Check Burnt event
 module.exports.checkBurntEvent = (event, _uuid, _account, _amount, _totalSupply) => {
 	if (Number.isInteger(_amount)) {
-	   _amount = new BigNumber(_amount);
+	   _amount = new BN(_amount);
 	};
 
 	if (Number.isInteger(_totalSupply)) {
-	   _totalSupply = new BigNumber(_totalSupply);
+	   _totalSupply = new BN(_totalSupply);
 	};
 
 	assert.equal(event.event, "Burnt");
 	assert.equal(event.args._uuid, _uuid);
-	assert.equal(event.args._account, _account);
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
-	assert.equal(event.args._totalSupply.toNumber(), _totalSupply.toNumber());	
+	assert.equal(event.args._account, web3.utils.toChecksumAddress(_account));
+	assert(event.args._amount.eq(_amount));
+	assert(event.args._totalSupply.eq(_totalSupply));	
 };

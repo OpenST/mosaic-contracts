@@ -19,15 +19,17 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Utils = require('../lib/utils.js');
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 const Gateway_utils = require('./Gateway_utils.js');
 const HashLock = require('../lib/hash_lock.js');
 
 contract('Gateway', function(accounts) {
 
   var stakerAccount = accounts[0]
-    , stakeAmount = new BigNumber(web3.toWei(1000, "ether"))
+    , stakeAmount = web3.utils.toWei(new BN('1000'), "ether")
     , beneficiaryAccount = accounts[6]
   ;
 
@@ -72,18 +74,18 @@ contract('Gateway', function(accounts) {
     }
 
     // account balances after execution
-    let finalStakerAccountBalance = await valueToken.balanceOf.call(staker)
-      , finalGatewayBalance = await valueToken.balanceOf.call(gateway.address)
+    let finalStakerAccountBalance = new BN(await valueToken.balanceOf.call(staker))
+      , finalGatewayBalance = new BN(await valueToken.balanceOf.call(gateway.address))
     ;
 
     if (isSuccessCase) {
       // check balances for success case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.sub(amount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(amount)), true);
+      assert(finalStakerAccountBalance.eq(initialStakerAccountBalance.sub(amount)));
+      assert(finalGatewayBalance.eq(initialGatewayBalance.add(amount)));
     } else {
       // check balances for failed case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert(finalStakerAccountBalance.eq(initialStakerAccountBalance));
+      assert(finalGatewayBalance.eq(initialGatewayBalance));
     }
 
     // request again should fail
@@ -113,12 +115,12 @@ contract('Gateway', function(accounts) {
     ;
     if (isSuccessCase) {
       // check balances for success case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(amount)), true);
+      assert.equal(finalStakerAccountBalance.eq(initialStakerAccountBalance.add(amount)), true);
+      assert.equal(finalGatewayBalance.eq(initialGatewayBalance.sub(amount)), true);
     } else {
       // check balances for failed case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert.equal(finalStakerAccountBalance.eq(initialStakerAccountBalance), true);
+      assert.equal(finalGatewayBalance.eq(initialGatewayBalance), true);
     }
 
     // request again should fail
@@ -151,12 +153,12 @@ contract('Gateway', function(accounts) {
 
     if (isSuccessCase) {
       // check balances for success case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance.plus(amount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(amount)), true);
+      assert(finalStakerAccountBalance.eq(initialStakerAccountBalance.add(amount)));
+      assert(finalGatewayBalance.eq(initialGatewayBalance.sub(amount)));
     } else {
       // check balances for failed case
-      assert.equal(finalStakerAccountBalance.equals(initialStakerAccountBalance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert(finalStakerAccountBalance.eq(initialStakerAccountBalance));
+      assert(finalGatewayBalance.eq(initialGatewayBalance));
     }
 
     // request again should fail
@@ -192,13 +194,13 @@ contract('Gateway', function(accounts) {
 
     if (isSuccessCase) {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.sub(bountyAmount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.plus(bountyAmount).sub(amount)), true);
+      assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance.sub(bountyAmount)));
+      assert(finalGatewayBalance.eq(initialGatewayBalance.add(bountyAmount).sub(amount)));
 
     } else {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance));
+      assert(finalGatewayBalance.eq(initialGatewayBalance));
     }
 
     // request again should fail
@@ -234,18 +236,18 @@ contract('Gateway', function(accounts) {
     if (isSuccessCase) {
       // check balances
       if(isWhitelistedWorker){
-          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-          assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
+          assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance));
+          assert(finalWorkerBalance.eq(initialWorkerBalance.add(bountyAmount)));
       } else {
-          assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance.plus(bountyAmount)), true);
-          assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
+          assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance.add(bountyAmount)));
+          assert(finalWorkerBalance.eq(initialWorkerBalance));
       }
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(bountyAmount)), true);
+      assert(finalGatewayBalance.eq(initialGatewayBalance.sub(bountyAmount)));
     } else {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance));
+      assert(finalWorkerBalance.eq(initialWorkerBalance));
+      assert(finalGatewayBalance.eq(initialGatewayBalance));
     }
 
     // request again should fail
@@ -282,15 +284,15 @@ contract('Gateway', function(accounts) {
 
     if (isSuccessCase) {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalWorkerBalance.equals(initialWorkerBalance.plus(bountyAmount)), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance.sub(bountyAmount)), true);
+      assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance));
+      assert(finalWorkerBalance.eq(initialWorkerBalance.add(bountyAmount)));
+      assert(finalGatewayBalance.eq(initialGatewayBalance.sub(bountyAmount)));
 
     } else {
       // check balances
-      assert.equal(finalworkerAddress1Balance.equals(initialworkerAddress1Balance), true);
-      assert.equal(finalWorkerBalance.equals(initialWorkerBalance), true);
-      assert.equal(finalGatewayBalance.equals(initialGatewayBalance), true);
+      assert(finalworkerAddress1Balance.eq(initialworkerAddress1Balance));
+      assert(finalWorkerBalance.eq(initialWorkerBalance));
+      assert(finalGatewayBalance.eq(initialGatewayBalance));
     }
 
     // request again should fail
@@ -372,7 +374,7 @@ contract('Gateway', function(accounts) {
     });
 
     it('fails to processes request stake when stake amount is 0', async () => {
-      await approveGatewayAndRequestStake(new BigNumber(0), beneficiaryAccount, stakerAccount, false);
+      await approveGatewayAndRequestStake(new BN(0), beneficiaryAccount, stakerAccount, false);
     });
 
     it('fails to processes request stake when beneficiary account is 0', async () => {
@@ -408,7 +410,7 @@ contract('Gateway', function(accounts) {
     it('fails to processes revert stake request after stake request was accepted', async () => {
       await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-      await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+      await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
       await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
 
@@ -441,7 +443,7 @@ contract('Gateway', function(accounts) {
     it('fails to processes reject stake request after stake request was accepted', async () => {
       await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-      await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+      await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
       await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
       await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
@@ -475,7 +477,7 @@ contract('Gateway', function(accounts) {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
@@ -487,7 +489,7 @@ contract('Gateway', function(accounts) {
         let workerAddress = accounts[10];
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-        await valueToken.transfer(workerAddress, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress });
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress, false);
@@ -498,7 +500,7 @@ contract('Gateway', function(accounts) {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
@@ -509,11 +511,11 @@ contract('Gateway', function(accounts) {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
 
-        lock.l = 0;
-        lock.s = 0;
+        lock.l = '0x';
+        lock.s = '0x';
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
 
       });
@@ -529,7 +531,7 @@ contract('Gateway', function(accounts) {
       it('fails to processes accept stake request when worker address has not approved Gateway contract', async () => {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await acceptStakeRequest(0, stakeAmount, lock, workerAddress1, false);
 
       });
@@ -549,7 +551,7 @@ contract('Gateway', function(accounts) {
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
 
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       });
 
@@ -575,7 +577,7 @@ contract('Gateway', function(accounts) {
       it('fails to processes when stakingIntentHash is 0', async () => {
 
         await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
-        await processStaking(0, lock.s, workerAddress1, false, true);
+        await processStaking('0x00', lock.s, workerAddress1, false, true);
 
       });
 
@@ -591,7 +593,7 @@ contract('Gateway', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await processStaking(stakingIntentHash, 0, workerAddress1, false, true);
+        await processStaking(stakingIntentHash, '0x00', workerAddress1, false, true);
 
       });
 
@@ -642,7 +644,7 @@ contract('Gateway', function(accounts) {
         lock = HashLock.getHashLock();
 
         await approveGatewayAndRequestStake(stakeAmount, beneficiaryAccount, stakerAccount, true);
-        await valueToken.transfer(workerAddress1, new BigNumber(web3.toWei(10000, "ether")),{from: accounts[0]});
+        await valueToken.transfer(workerAddress1, web3.utils.toWei(new BN('10000'), "ether"),{from: accounts[0]});
         await valueToken.approve(gateway.address, bountyAmount, { from: workerAddress1 });
       });
 
@@ -680,7 +682,7 @@ contract('Gateway', function(accounts) {
         let stakeResult = await acceptStakeRequest(stakerAccount, stakeAmount, lock, workerAddress1, true);
         let stakingIntentHash = stakeResult['stakingIntentHash'];
 
-        await revertStaking(0, workerAddress1, false);
+        await revertStaking('0x', workerAddress1, false);
 
       });
 

@@ -22,7 +22,7 @@
   // The MIT License.
   // ----------------------------------------------------------------------------
 
-  const BigNumber = require('bignumber.js');
+  const BN = require('bn.js');
 
   const rootPrefix = "../.."
       , proofData = require( rootPrefix + "/test/data/proof.json" )
@@ -41,7 +41,7 @@
               , dataSet2 = proofData.storagePath.dataSet2;
 
           it('Should generate correct storage path [DataSet1]', async function () {
-              let storageIndex = new BigNumber(dataSet1.storageIndex);
+              let storageIndex = new BN(dataSet1.storageIndex);
               let mappingKey = dataSet1.mappingKey;
               let expectedPath = dataSet1.expectedPath;
 
@@ -51,7 +51,7 @@
           });
 
           it('Should generate correct storage path [DataSet2]', async function () {
-              let storageIndex = new BigNumber(dataSet2.storageIndex);
+              let storageIndex = new BN(dataSet2.storageIndex);
               let mappingKey = dataSet2.mappingKey;
               let expectedPath = dataSet2.expectedPath;
 
@@ -90,7 +90,7 @@
 
           it('Should fail to verify intent storage when storageIndex is incorrect', async function () {
               await Utils.expectThrow(ProofLibContract.verifyIntentStorage.call(
-                  new BigNumber(3),
+                  new BN(3),
                   dataSet2.redeemer,
                   dataSet2.redeemerNonce,
                   dataSet2.redemptionIntentHash,

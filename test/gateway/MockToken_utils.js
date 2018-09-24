@@ -19,9 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const Assert = require('assert');
-const BigNumber = require('bignumber.js');
-
 var MockToken = artifacts.require("./MockToken.sol");
 
 /// @dev Deploy 

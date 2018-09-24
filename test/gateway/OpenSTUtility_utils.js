@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../lib/web3.js');
+
+const BN = require('bn.js');
 const rootPrefix = "../.."
   , constants = require(rootPrefix + '/test/lib/constants')
 ;
@@ -39,7 +41,7 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
     const openSTUtility = await OpenSTUtility.new(chainIdValue, chainIdUtility, registrar, coreForOpenSTUtility.address, constants.UTILITY_CHAIN_BLOCK_TIME);
     const stPrimeAddress = await openSTUtility.simpleTokenPrime.call();
     const stPrime = new STPrime(stPrimeAddress);
-    await stPrime.initialize({ from: accounts[11], value: new BigNumber(web3.toWei(800000000, "ether")) });
+    await stPrime.initialize({ from: accounts[11], value: web3.utils.toWei(new BN('800000000'), "ether") });
 
     return {
         stPrime       : stPrime,
@@ -50,7 +52,7 @@ module.exports.deployOpenSTUtility = async (artifacts, accounts) => {
 // Token address is returned by ProposedBrandedToken but verified elsewhere
 module.exports.checkProposedBrandedTokenEvent = (event, _requester, _uuid, _symbol, _name, _conversionRate) => {
 	if (Number.isInteger(_conversionRate)) {
-		_conversionRate = new BigNumber(_conversionRate);
+		_conversionRate = new BN(_conversionRate);
 	}
 
 	assert.equal(event.event, "ProposedBrandedToken");
@@ -58,26 +60,26 @@ module.exports.checkProposedBrandedTokenEvent = (event, _requester, _uuid, _symb
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._symbol, _symbol);
 	assert.equal(event.args._name, _name);
-	assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
+	assert(event.args._conversionRate.eq(_conversionRate));
 }
 
 module.exports.validateProposedBrandedTokenEvent = (event, _requester, _symbol, _name, _conversionRate) => {
   if (Number.isInteger(_conversionRate)) {
-    _conversionRate = new BigNumber(_conversionRate);
+    _conversionRate = new BN(_conversionRate);
   }
 
   assert.equal(event.event, "ProposedBrandedToken");
   assert.equal(event.args._requester, _requester);
   assert.equal(event.args._symbol, _symbol);
   assert.equal(event.args._name, _name);
-  assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
+  assert(event.args._conversionRate.eq(_conversionRate));
 }
 
 
 module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _uuid, _symbol, _name, _conversionRate, _requester) => {
 	assert.equal(event.event, "RegisteredBrandedToken");
 	if (Number.isInteger(_conversionRate)) {
-		_conversionRate = new BigNumber(_conversionRate);
+		_conversionRate = new BN(_conversionRate);
 	}
 
 	assert.equal(event.args._registrar, _registrar);
@@ -85,7 +87,7 @@ module.exports.checkRegisteredBrandedTokenEvent = (event, _registrar, _token, _u
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._symbol, _symbol);
 	assert.equal(event.args._name, _name);
-	assert.equal(event.args._conversionRate.toNumber(), _conversionRate.toNumber());
+	assert(event.args._conversionRate.eq(_conversionRate));
 	assert.equal(event.args._requester, _requester);
 }
 
@@ -96,29 +98,37 @@ module.exports.checkRegisteredBrandedTokenEventOnProtocol = (formattedDecodedEve
   assert.notEqual(event, null);
 
   if (Number.isInteger(_conversionRate)) {
-    _conversionRate = new BigNumber(_conversionRate);
+    _conversionRate = new BN(_conversionRate);
   }
 
-  assert.equal(event._registrar, _registrar);
-  assert.equal(event._token, _token);
+  assert.equal(
+    web3.utils.toChecksumAddress(_registrar),
+    web3.utils.toChecksumAddress(_registrar));
+  assert.equal(
+    web3.utils.toChecksumAddress(event._token),
+    web3.utils.toChecksumAddress(_token)
+  );
   assert.equal(event._uuid, _uuid);
   assert.equal(event._symbol, _symbol);
   assert.equal(event._name, _name);
   assert.equal(event._conversionRate, _conversionRate.toNumber());
-  assert.equal(event._requester, _requester);
+  assert.equal(
+    web3.utils.toChecksumAddress(event._requester),
+    web3.utils.toChecksumAddress(_requester)
+  );
 }
 
 module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amountST, _amountUT, _expirationHeight) => {
 	if (Number.isInteger(_amountST)) {
-		_amountST = new BigNumber(_amountST);
+		_amountST = new BN(_amountST);
 	}
 
 	if (Number.isInteger(_amountUT)) {
-		_amountUT = new BigNumber(_amountUT);
+		_amountUT = new BN(_amountUT);
 	}
 
 	if (Number.isInteger(_expirationHeight)) {
-		_expirationHeight = new BigNumber(_expirationHeight);
+		_expirationHeight = new BN(_expirationHeight);
 	}
 
 	assert.equal(event.event, "StakingIntentConfirmed");
@@ -126,9 +136,9 @@ module.exports.checkStakingIntentConfirmedEvent = (event, _uuid, _stakingIntentH
 	assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._amountST.toNumber(), _amountST.toNumber());
-	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
-	assert.equal(event.args._expirationHeight.toNumber(), _expirationHeight.toNumber());
+	assert(event.args._amountST.eq(_amountST));
+	assert(event.args._amountUT.eq(_amountUT));
+	assert(event.args._expirationHeight.eq(_expirationHeight));
 }
 
 module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEvents, _uuid, _stakingIntentHash,
@@ -139,24 +149,30 @@ module.exports.checkStakingIntentConfirmedEventOnProtocol = (formattedDecodedEve
   assert.notEqual(event, null);
 
 	if (Number.isInteger(_amountST)) {
-    _amountST = new BigNumber(_amountST);
+    _amountST = new BN(_amountST);
   }
 
   if (Number.isInteger(_amountUT)) {
-    _amountUT = new BigNumber(_amountUT);
+    _amountUT = new BN(_amountUT);
   }
 
   assert.equal(event._uuid, _uuid);
   assert.equal(event._stakingIntentHash, _stakingIntentHash);
-  assert.equal(event._staker, _staker);
-  assert.equal(event._beneficiary, _beneficiary);
-  assert.equal(event._amountST, _amountST.toNumber());
-  assert.equal(event._amountUT, _amountUT.toNumber());
+  assert.equal(
+    web3.utils.toChecksumAddress(event._staker),
+    web3.utils.toChecksumAddress(_staker)
+  );
+  assert.equal(
+    web3.utils.toChecksumAddress(event._beneficiary), 
+    web3.utils.toChecksumAddress(_beneficiary)
+  );
+  assert(_amountST.eq(new BN(event._amountST)));
+  assert(_amountUT.eq(new BN(event._amountUT)));
 }
 
 module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _token, _staker, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
-		_amount = new BigNumber(_amount);
+		_amount = new BN(_amount);
 	}
 
 	assert.equal(event.event, "ProcessedMint");
@@ -165,25 +181,25 @@ module.exports.checkProcessedMintEvent = (event, _uuid, _stakingIntentHash, _tok
 	assert.equal(event.args._token, _token);
 	assert.equal(event.args._staker, _staker);
 	assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert(event.args._amount.eq(_amount));
 	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _nonce, _beneficiary, _amount, _unlockHeight, _chainIdValue) => {
 	if (Number.isInteger(_amount)) {
-		_amount = new BigNumber(_amount);
+		_amount = new BN(_amount);
 	}
 
 	if (Number.isInteger(_nonce)) {
-		_nonce = new BigNumber(_nonce);
+		_nonce = new BN(_nonce);
 	}
 
 	if (Number.isInteger(_unlockHeight)) {
-		_unlockHeight = new BigNumber(_unlockHeight);
+		_unlockHeight = new BN(_unlockHeight);
 	}
 
 	if (Number.isInteger(_chainIdValue)) {
-		_chainIdValue = new BigNumber(_chainIdValue);
+		_chainIdValue = new BN(_chainIdValue);
 	}
 
 	assert.equal(event.event, "RedemptionIntentDeclared");
@@ -192,15 +208,15 @@ module.exports.checkRedemptionIntentDeclaredEvent = (event, _uuid, _redemptionIn
 	assert.equal(event.args._token, _token);
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._nonce.toNumber(), _nonce.toNumber());
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
-	assert.equal(event.args._unlockHeight.toNumber(), _unlockHeight.toNumber());
-	assert.equal(event.args._chainIdValue.toNumber(), _chainIdValue.toNumber());
+	assert(event.args._nonce.eq(_nonce));
+	assert(event.args._amount.eq(_amount));
+	assert(event.args._unlockHeight.eq(_unlockHeight));
+	assert(event.args._chainIdValue.eq(_chainIdValue));
 }
 
 module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentHash, _token, _redeemer, _beneficiary, _amount, _unlockSecret) => {
 	if (Number.isInteger(_amount)) {
-		_amount = new BigNumber(_amount);
+		_amount = new BN(_amount);
 	}
 
 	assert.equal(event.event, "ProcessedRedemption");
@@ -209,12 +225,12 @@ module.exports.checkProcessedRedemptionEvent = (event, _uuid, _redemptionIntentH
 	assert.equal(event.args._token, _token);
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._amount.toNumber(), _amount.toNumber());
+	assert(event.args._amount.eq(_amount));
 	assert.equal(event.args._unlockSecret, _unlockSecret);
 }
 
 module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _staker, _beneficiary, _amount) => {
-	_amount = new BigNumber(_amount);
+	_amount = new BN(_amount);
 
 
   assert.equal(event.event, "RevertedMint");
@@ -222,17 +238,17 @@ module.exports.checkRevertedMintEvent = (event, _uuid, _stakingIntentHash, _stak
   assert.equal(event.args._stakingIntentHash, _stakingIntentHash);
   assert.equal(event.args._staker, _staker);
   assert.equal(event.args._beneficiary, _beneficiary);
-  assert.equal(event.args._amountUT.toNumber(), _amount.toNumber());
+  assert(event.args._amountUT.eq(_amount));
 }
 
 module.exports.checkRevertedRedemption = (event, _uuid, _redemptionIntentHash, _redeemer, _beneficiary, _amountUT) => {
-  _amountUT = new BigNumber(_amountUT);
+  _amountUT = new BN(_amountUT);
 
 	assert.equal(event.event, "RevertedRedemption");
 	assert.equal(event.args._uuid, _uuid);
 	assert.equal(event.args._redemptionIntentHash, _redemptionIntentHash);
 	assert.equal(event.args._redeemer, _redeemer);
   assert.equal(event.args._beneficiary, _beneficiary);
-	assert.equal(event.args._amountUT.toNumber(), _amountUT.toNumber());
+	assert(event.args._amountUT.eq(_amountUT));
 
 }
