@@ -165,7 +165,6 @@ contract Gateway is  GatewayBase {
             address(this),
             _coGateway,
             messageBus,
-            bounty,
             token.name(),
             token.symbol(),
             token.decimals(),

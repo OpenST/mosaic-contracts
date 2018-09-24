@@ -162,6 +162,8 @@ contract EIP20CoGateway is CoGateway {
 
         /** Address of the facilitator that initiates the staking process. */
         address facilitator;
+        /** bounty amount kept by facilitator for transferring redeem messages*/
+        uint256 bounty;
     }
 
     /**
@@ -790,7 +792,8 @@ contract EIP20CoGateway is CoGateway {
         redeems[messageHash_] = Redeem({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : _facilitator
+            facilitator : _facilitator,
+            bounty : bounty
             });
 
         // create message object
@@ -880,7 +883,7 @@ contract EIP20CoGateway is CoGateway {
         UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(bounty);
+        msg.sender.transfer(redeems[_messageHash].bounty);
 
         // delete the redeem data
         delete redeems[_messageHash];
@@ -961,7 +964,7 @@ contract EIP20CoGateway is CoGateway {
         UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(bounty);
+        msg.sender.transfer(redeems[_messageHash].bounty);
 
         // delete the redeem data
         delete redeems[_messageHash];

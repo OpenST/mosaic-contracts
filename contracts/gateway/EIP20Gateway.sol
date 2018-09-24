@@ -163,6 +163,9 @@ contract EIP20Gateway is Gateway {
 
         /** Address of the facilitator that initiates the staking process. */
         address facilitator;
+
+        /** Bounty kept by facilitator for stake message transfer*/
+        uint256 bounty;
     }
 
     /**
@@ -331,7 +334,8 @@ contract EIP20Gateway is Gateway {
         stakes[messageHash_] = Stake({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : msg.sender
+            facilitator : msg.sender,
+            bounty : bounty
             });
 
         // New message object
@@ -1104,7 +1108,7 @@ contract EIP20Gateway is Gateway {
         // Transfer the staked amount to stakeVault.
         token.transfer(stakeVault, stakeAmount_);
 
-        bountyToken.transfer(msg.sender, bounty);
+        bountyToken.transfer(msg.sender, stakes[_messageHash].bounty);
 
         // delete the stake data
         delete stakes[_messageHash];

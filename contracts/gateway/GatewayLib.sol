@@ -201,7 +201,6 @@ library GatewayLib {
      * @param _gateway address of gateway.
      * @param _coGateway address of co-gateway.
      * @param _messageBus address of message bus.
-     * @param _bounty amount of bounty used for linking.
      * @param _tokenName  name of branded token.
      * @param _tokenSymbol symbol of branded token.
      * @param _tokenDecimal token decimal of branded token.
@@ -214,7 +213,6 @@ library GatewayLib {
         address _gateway,
         address _coGateway,
         address _messageBus,
-        uint256 _bounty,
         string _tokenName,
         string _tokenSymbol,
         uint8 _tokenDecimal,
@@ -230,7 +228,6 @@ library GatewayLib {
                 _gateway,
                 _coGateway,
                 libraryCodeHash(_messageBus),
-                _bounty,
                 _tokenName,
                 _tokenSymbol,
                 _tokenDecimal,

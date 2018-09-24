@@ -375,7 +375,6 @@ contract CoGateway is  GatewayBase {
             remoteGateway,
             address(this),
             messageBus,
-            bounty,
             EIP20Interface(utilityToken).name(),
             EIP20Interface(utilityToken).symbol(),
             EIP20Interface(utilityToken).decimals(),
