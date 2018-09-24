@@ -60,8 +60,11 @@ contract GatewayBase {
     );
 
     /* constants */
-
-    uint8 MESSAGE_BOX_OFFSET = 1;
+    /** Position of message bus in the storage */
+    uint8 constant MESSAGE_BOX_OFFSET = 1;
+    /** Penalty in bounty amount percentage charged to staker on revert staking
+     */
+    uint8 constant REVOCATION_PENALTY = 150;
 
     /** Specifies if the Gateway and CoGateway contracts are linked. */
     bool public linked;

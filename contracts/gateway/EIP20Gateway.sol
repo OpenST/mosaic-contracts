@@ -494,7 +494,9 @@ contract EIP20Gateway is Gateway {
 
     /**
      * @notice Revert staking to stop the staking process and get the stake
-     *         amount back.
+     *         amount back. Only staker can revert staking and need to provide
+     *         1.5 times of bounty. On revert process staker bounty and
+     *         facilitator bounty will be burned.
      *
      * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
      *
@@ -545,6 +547,15 @@ contract EIP20Gateway is Gateway {
         stakerNonce_ = message.nonce;
         amount_ = stakes[_messageHash].amount;
 
+        //penalty charged to staker for revert staking
+        uint256 penalty = stakes[_messageHash].bounty
+        .mul(REVOCATION_PENALTY)
+        .div(100);
+
+        // transfer the penalty amount
+        require(bountyToken.transferFrom(msg.sender, address(this), penalty));
+
+
         // Emit RevertStakeIntentDeclared event.
         emit RevertStakeIntentDeclared(
             _messageHash,
@@ -555,7 +566,9 @@ contract EIP20Gateway is Gateway {
     }
 
     /**
-     * @notice Complete revert staking by providing the merkle proof
+     * @notice Complete revert staking by providing the merkle proof.
+     *         This method will return stake amount to staker and burn
+     *         facilitator bounty and staker penalty.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -620,8 +633,15 @@ contract EIP20Gateway is Gateway {
         // transfer the staked amount to the staker
         token.transfer(message.sender, amount_);
 
-        // transfer the bounty to msg.sender
-        bountyToken.transfer(msg.sender, bounty);
+        // burn facilitator bounty
+        bountyToken.transfer(address(0), bounty);
+        //penalty charged to staker
+        uint256 penalty = stakes[_messageHash].bounty
+        .mul(REVOCATION_PENALTY)
+        .div(100);
+
+        // burn staker penalty
+        bountyToken.transfer(address(0), penalty);
 
         // delete the stake data
         delete stakes[_messageHash];
