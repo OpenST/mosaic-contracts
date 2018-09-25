@@ -494,9 +494,9 @@ contract EIP20Gateway is Gateway {
 
     /**
      * @notice Revert staking to stop the staking process and get the stake
-     *         amount back. Only staker can revert staking and need to provide
-     *         1.5 times of bounty. On revert process staker bounty and
-     *         facilitator bounty will be burned.
+     *         amount back. Only staker can revert staking by providing
+     *         penalty i.e. 1.5 times of bounty. On revert process
+     *         penalty and facilitator bounty will be burned.
      *
      * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
      *

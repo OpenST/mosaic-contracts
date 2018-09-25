@@ -981,7 +981,10 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Revert redemption to stop the redeem process
+     * @notice Revert redemption to stop the redeem process. Only redeemer can
+     *         revert redemption by providing penalty i.e. 1.5 times of
+     *         bounty amount. On revert process, penalty and facilitator
+     *         bounty will be burned.
      *
      * @param _messageHash Message hash.
      *
@@ -992,6 +995,7 @@ contract EIP20CoGateway is CoGateway {
     function revertRedemption(
         bytes32 _messageHash
     )
+    payable
     external
     returns (
         address redeemer_,
@@ -999,6 +1003,7 @@ contract EIP20CoGateway is CoGateway {
         uint256 amount_
     )
     {
+
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
@@ -1017,6 +1022,16 @@ contract EIP20CoGateway is CoGateway {
         require(
             message.sender == msg.sender,
             "msg.sender must match"
+        );
+
+        //penalty charged to redeemer
+        uint256 penalty = redeems[_messageHash].bounty
+        .mul(REVOCATION_PENALTY)
+        .div(100);
+
+        require(
+            msg.value == penalty,
+            "msg.value must match the penalty amount"
         );
 
         //TODO: Move this code in MessageBus. Should we use changeOutboxState?
@@ -1043,7 +1058,8 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Complete revert redemption by providing the merkle proof
+     * @notice Complete revert redemption by providing the merkle proof.
+     *         It will burn facilitator bounty and redeemer penalty.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -1110,8 +1126,16 @@ contract EIP20CoGateway is CoGateway {
         // return the redeem amount back
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
-        // transfer the bounty to msg.sender
-        msg.sender.transfer(bounty);
+        // burn bounty
+        address(0).transfer(redeems[_messageHash].bounty);
+
+        //penalty charged to redeemer
+        uint256 penalty = redeems[_messageHash].bounty
+        .mul(REVOCATION_PENALTY)
+        .div(100);
+
+        //burn penalty
+        address(0).transfer(penalty);
 
         // delete the redeem data
         delete redeems[_messageHash];
