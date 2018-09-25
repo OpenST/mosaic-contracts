@@ -482,8 +482,7 @@ library MessageBus {
     function declareRevocationMessage(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
-        Message storage _message,
-        bytes _signature
+        Message storage _message
     )
         external
         returns (bytes32 messageHash_)
@@ -512,16 +511,6 @@ library MessageBus {
         bytes32 revocationMessageHash = revocationMessageDigest(
             messageHash_,
             _message.nonce + 1
-        );
-
-        // verify if revocation is signed by the same address that declared
-        // the message
-        require(
-            verifySignature(
-                revocationMessageHash,
-                _signature,
-                _message.sender),
-            "Invalid signature"
         );
 
         // change the status of outbox

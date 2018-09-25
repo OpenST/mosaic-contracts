@@ -1021,7 +1021,7 @@ contract EIP20CoGateway is CoGateway {
 
         require(
             message.sender == msg.sender,
-            "msg.sender must match"
+            "Only redeemer can revert redemption."
         );
 
         //penalty charged to redeemer

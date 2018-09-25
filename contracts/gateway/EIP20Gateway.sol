@@ -508,8 +508,7 @@ contract EIP20Gateway is Gateway {
      * @return amount_ Stake amount
      */
     function revertStaking(
-        bytes32 _messageHash,
-        bytes _signature
+        bytes32 _messageHash
     )
         external
         returns (
@@ -522,13 +521,11 @@ contract EIP20Gateway is Gateway {
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-        require(
-            _signature.length == 65,
-            "Signature must be of length 65"
-        );
 
         // get the message object for the _messageHash
         MessageBus.Message storage message = messages[_messageHash];
+
+        require(message.sender == msg.sender, "Only staker can revert staking.");
 
         require(
             message.intentHash != bytes32(0),
@@ -539,8 +536,7 @@ contract EIP20Gateway is Gateway {
         MessageBus.declareRevocationMessage(
             messageBox,
             STAKE_TYPEHASH,
-            message,
-            _signature
+            message
         );
 
         staker_ = message.sender;
