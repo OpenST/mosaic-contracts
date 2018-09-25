@@ -22,7 +22,6 @@
 const messageBusUtilsKlass = require('./messagebus_utils'),
 	web3 = require('web3');
 const messageBusUtils = new messageBusUtilsKlass();
-// const hasher = artifacts.require('./Hasher');
 const ProgressInboxRevocation = function(){};
 
 var intentHash,

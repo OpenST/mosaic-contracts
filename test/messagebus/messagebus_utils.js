@@ -45,8 +45,7 @@ MessageBusUtils.prototype = {
 			gasConsumed,
 			signature,
 			messageStatus,
-			messageHash,
-			inboxStatus
+			messageHash
 		));
 	},
 	
@@ -264,6 +263,68 @@ MessageBusUtils.prototype = {
 			messageStatus,
 			messageHash
 		);
+	},
+	
+	progressOutboxWithProof: async function(params){
+		
+		let messageTypeHash = params.messageTypeHash,
+			intentHash = params.intentHash,
+			nonce = params.nonce,
+			gasPrice = params.gasPrice,
+			gasLimit = params.gasLimit,
+			sender = params.sender,
+			gasConsumed = params.gasConsumed,
+			messageStatus = params.messageStatus,
+			messageHash = params.messageHash,
+			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+			storageRoot = params.storageRoot,
+			outboxStatus = params.outboxStatus;
+		
+		await utils.expectThrow(messageBus.progressOutboxWithProof.call(
+			messageTypeHash,
+			intentHash,
+			nonce,
+			// gasPrice,
+			// gasLimit,
+			sender,
+			rlpEncodedParentNodes,
+			storageRoot,
+			messageStatus,
+			// gasConsumed,
+			messageHash,
+			outboxStatus
+		));
+	},
+	
+	progressInboxWithProof: async function(params){
+		
+		let messageTypeHash = params.messageTypeHash,
+			intentHash = params.intentHash,
+			nonce = params.nonce,
+			gasPrice = params.gasPrice,
+			gasLimit = params.gasLimit,
+			sender = params.sender,
+			gasConsumed = params.gasConsumed,
+			messageStatus = params.messageStatus,
+			messageHash = params.messageHash,
+			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+			storageRoot = params.storageRoot,
+			inboxStatus = params.inboxStatus;
+		
+		await utils.expectThrow(messageBus.progressInboxWithProof.call(
+			messageTypeHash,
+			intentHash,
+			nonce,
+			// gasPrice,
+			// gasLimit,
+			sender,
+			rlpEncodedParentNodes,
+			storageRoot,
+			messageStatus,
+			// gasConsumed,
+			messageHash,
+			inboxStatus
+		));
 	}
 };
 

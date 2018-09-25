@@ -26,48 +26,58 @@ const ProgressInboxRevocationMessageBusKlass = require('./progressInboxRevocatio
 const ConfirmRevocationMessageBusKlass = require('./confirmRevocation');
 const ConfirmMessageMessageBusKlass = require('./confirmMessage');
 const ProgressOutboxRevocationMessageBusKlass = require('./progressOutboxRevocation');
-const DeclareRevocationMessageBusKlass = require('./declareRevocationMessage');
-//const declareMessage = new DeclareMessageBusKlass();
-// const progressOutbox = new ProgressOutboxMessageBusKlass();
-// const progressInbox = new ProgressInboxMessageBusKlass();
+// const DeclareRevocationMessageBusKlass = require('./declareRevocationMessage');
+const ProgressOutboxWithProofMessageBusKlass = require('./progressOutboxWithProof');
+const ProgressInboxWithProofMessageBusKlass = require('./progressInboxWithProof');
+const declareMessage = new DeclareMessageBusKlass();
+const progressOutbox = new ProgressOutboxMessageBusKlass();
+const progressInbox = new ProgressInboxMessageBusKlass();
  const progressInboxRevocation = new ProgressInboxRevocationMessageBusKlass();
  const confirmRevocation = new ConfirmRevocationMessageBusKlass();
  const progressOutboxRevocation = new ProgressOutboxRevocationMessageBusKlass();
  const confirmMessage = new ConfirmMessageMessageBusKlass();
- const declareRevocation = new DeclareRevocationMessageBusKlass();
+ // const declareRevocation = new DeclareRevocationMessageBusKlass();
+ const progressOutboxWithProof = new ProgressOutboxWithProofMessageBusKlass();
+ const progressInboxWithProof = new ProgressInboxWithProofMessageBusKlass();
 
 contract('MessageBus',  function(accounts) {
-	// describe('declareMessage', async function () {
-	// 	await declareMessage.perform(accounts)
-	// });
-
-	// describe('ProgressOutbox', async function () {
-	// 	await progressOutbox.perform(accounts)
-	// });
-	//
-	// describe('ProgressInbox', async function () {
-	// 	await progressInbox.perform(accounts)
-	// });
-	//
-	// describe('ProgressInboxRevocation', async function () {
-	// 	await progressInboxRevocation.perform(accounts)
-	// });
-	
-	// describe('ProgressOutboxRevocation', async function () {
-	// 	await progressOutboxRevocation.perform(accounts)
-	// });
-	
-	// describe('ConfirmRevocation', async function () {
-	// 	await confirmRevocation.perform(accounts)
-	// });
-	
-	// describe('ConfirmMessage', async function () {
-	// 	await confirmMessage.perform(accounts)
-	// });
-	
-	describe('DeclareRevocationMessage', async function () {
-		await declareRevocation.perform(accounts)
+	describe('declareMessage', async function () {
+		await declareMessage.perform(accounts)
 	});
+
+	describe('ProgressOutbox', async function () {
+		await progressOutbox.perform(accounts)
+	});
+
+	describe('ProgressInbox', async function () {
+		await progressInbox.perform(accounts)
+	});
+
+	describe('ProgressInboxRevocation', async function () {
+		await progressInboxRevocation.perform(accounts)
+	});
+	
+	describe('ProgressOutboxRevocation', async function () {
+		await progressOutboxRevocation.perform(accounts)
+	});
+	
+	describe('ConfirmRevocation', async function () {
+		await confirmRevocation.perform(accounts)
+	});
+	
+	describe('ConfirmMessage', async function () {
+		await confirmMessage.perform(accounts)
+	});
+	
+	describe('ProgressOutboxWithProof', async function () {
+		await progressOutboxWithProof.perform(accounts)
+	});
+	
+	describe('ProgressInboxWithProof', async function () {
+		await progressInboxWithProof.perform(accounts)
+	});
+	
+	
 	
 	
 	/*

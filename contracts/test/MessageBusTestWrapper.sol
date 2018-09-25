@@ -74,7 +74,6 @@ contract MessageBusTestWrapper {
         bytes _signature,
         MessageBus.MessageStatus  _status,
         bytes32 _messageHash
-
     )
         public
         returns(bytes32)
@@ -306,8 +305,8 @@ contract MessageBusTestWrapper {
         MessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash
     )
-    public
-    returns(bytes32)
+        public
+        returns(bytes32 messageHash_)
     {
         message = MessageBus.Message({
             intentHash : intentHash,
@@ -322,7 +321,7 @@ contract MessageBusTestWrapper {
         // When the state for messageHash in inbox is DeclaredRevocation
         // with outbox state for messageHash is DeclaredRevocation
         messageBox.inbox[_messageHash] = _messageStatus;
-        bytes32 messageHashFromConfirmRevocation = MessageBus.confirmMessage(
+        messageHash_ = MessageBus.confirmMessage(
             messageBox,
             _messageTypeHash,
             message,
@@ -330,46 +329,127 @@ contract MessageBusTestWrapper {
             1,
             _storageRoot
         );
-        return messageHashFromConfirmRevocation;
+        return messageHash_;
     }
 
-    function declareRevocationMessage
+//    function declareRevocationMessage
+//    (
+//        bytes32 _messageTypeHash,
+//        bytes32 _intentHash,
+//        uint256 _nonce,
+//        uint256 _gasPrice,
+//        uint256 _gasLimit,
+//        address _sender,
+//        bytes32 _hashLock,
+//        uint256 _gasConsumed,
+//        bytes _signature,
+//        MessageBus.MessageStatus  _status,
+//        bytes32 _messageHash
+//    )
+//    public
+//    returns(bytes32)
+//    {
+//
+//        message = MessageBus.Message({
+//            intentHash : _intentHash,
+//            nonce : _nonce,
+//            gasPrice : _gasPrice,
+//            sender : _sender,
+//            gasLimit : _gasLimit,
+//            hashLock : _hashLock,
+//            gasConsumed: 0
+//            });
+//        messageBox.outbox[_messageHash] = _status;
+//
+//        bytes32 messageHashFromDeclare= MessageBus.declareRevocationMessage(
+//            messageBox,
+//            _messageTypeHash,
+//            message,
+//            _signature
+//        );
+//
+//        return(messageHashFromDeclare);
+//
+//    }
+
+
+
+    function progressOutboxWithProof
     (
         bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
         address _sender,
-        bytes32 _hashLock,
-        uint256 _gasConsumed,
-        bytes _signature,
-        MessageBus.MessageStatus  _status,
-        bytes32 _messageHash
+        bytes _rlpEncodedParentNodes,
+        bytes32 _storageRoot,
+        MessageBus.MessageStatus _messageStatus,
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _outboxStatus
     )
-    public
-    returns(bytes32)
+        public
+        returns(bytes32 messageHash_)
     {
-
         message = MessageBus.Message({
-            intentHash : _intentHash,
-            nonce : _nonce,
-            gasPrice : _gasPrice,
-            sender : _sender,
-            gasLimit : _gasLimit,
-            hashLock : _hashLock,
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : uint256(0x12A05F200),
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
             gasConsumed: 0
-            });
-        messageBox.outbox[_messageHash] = _status;
+        });
 
-        bytes32 messageHashFromDeclare= MessageBus.declareRevocationMessage(
+        // When the state for messageHash in inbox is DeclaredRevocation
+        // with outbox state for messageHash is DeclaredRevocation
+        messageBox.outbox[_messageHash] = _outboxStatus;
+        messageHash_ = MessageBus.progressOutboxWithProof(
             messageBox,
             _messageTypeHash,
             message,
-            _signature
+            _rlpEncodedParentNodes,
+            1,
+            _storageRoot,
+            _messageStatus
         );
 
-        return(messageHashFromDeclare);
+    }
+
+    function progressInboxWithProof
+    (
+        bytes32 _messageTypeHash,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        address _sender,
+        bytes _rlpEncodedParentNodes,
+        bytes32 _storageRoot,
+        MessageBus.MessageStatus _messageStatus,
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _inboxStatus
+    )
+        public
+        returns(bytes32 messageHash_)
+    {
+        message = MessageBus.Message({
+            intentHash : intentHash,
+            nonce : nonce,
+            gasPrice : uint256(0x12A05F200),
+            sender : sender,
+            gasLimit : 0,
+            hashLock : hashLock,
+            gasConsumed: 0
+            });
+
+        messageBox.inbox[_messageHash] = _inboxStatus;
+        messageHash_ = MessageBus.progressInboxWithProof(
+            messageBox,
+            _messageTypeHash,
+            message,
+            _rlpEncodedParentNodes,
+            1,
+            _storageRoot,
+            _messageStatus
+        );
+
 
     }
 

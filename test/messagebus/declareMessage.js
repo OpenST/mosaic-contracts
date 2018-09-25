@@ -40,9 +40,9 @@ var intentHash,
 		hashLock;
 
 DeclareMessage.prototype = {
-	
+
 	declareMessage: async function () {
-		
+
 		let params = {
 			messageTypeHash: messageTypeHash,
 			intentHash: intentHash,
@@ -55,18 +55,18 @@ DeclareMessage.prototype = {
 			messageStatus: messageStatus,
 			gasPrice: gasPrice,
 			messageHash: messageHash
-			
+
 		};
-		
+
 		await messageBusUtils.declareMessage(params);
-	
+
 	},
-	
+
 	perform: function (accounts) {
 		const oThis = this;
-		
+
 		beforeEach(async function() {
-			
+
 			intentHash = web3.utils.soliditySha3({type: 'bytes32', value:'intent'})
 				,	nonce = 1
 				, gasPrice = 0x12A05F200
@@ -85,10 +85,10 @@ DeclareMessage.prototype = {
 			// uint256 gasPrice = 0x12A05F200;
 			// uint256 gasLimit = 0x12A05F200;
 			// uint256 gasConsumed = 0;
-			
-			
+
+
 		});
-		
+
 		it('should fail when message status is Declared in outbox', async () => {
 			messageStatus = 1;
 			// signature = "0xd0448f820b67d07ee7c7d1a4141177401933d97f744e785c435458032b7c8ae46a482c3c058fc94c3110df3488e1e537bcd8b13468f16aaea5d203e17301d47300";
@@ -96,7 +96,7 @@ DeclareMessage.prototype = {
 			await oThis.declareMessage();
 			// console.log(messageBusUtils);
 		});
-		
+
 		it('should fail when message status is Progressed in outbox', async () => {
 			messageStatus = 2;
 			// signature = "0xd0448f820b67d07ee7c7d1a4141177401933d97f744e785c435458032b7c8ae46a482c3c058fc94c3110df3488e1e537bcd8b13468f16aaea5d203e17301d47300";
@@ -104,33 +104,33 @@ DeclareMessage.prototype = {
 			await oThis.declareMessage();
 			// console.log(messageBusUtils);
 		});
-		
+
 		it('should fail when message status is Progressed in outbox', async () => {
-			
+
 			messageStatus = 3;
 			await oThis.declareMessage();
 
 		});
-		
+
 		it('should fail when message status is DeclaredRevocation in outbox', async () => {
-			
+
 			messageStatus = 4;
 			await oThis.declareMessage();
-			
+
 		});
-		
+
 		it('should fail when message status is Revoked in outbox', async () => {
-			
+
 			messageStatus = 3;
 			await oThis.declareMessage();
-			
+
 		});
-		
+
 		it('should fail when signature incorrect', async () => {
-			
+
 			signature = "0xa0448f820b67d07ee7c7d1a4141177401933d97f744e785c435458032b7c8ae46a482c3c058fc94c3110df3488e1e537bcd8b13468f16aaea5d203e17301d47301";
 			await oThis.declareMessage();
-			
+
 		});
 	}
 }
