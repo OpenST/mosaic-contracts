@@ -87,6 +87,7 @@ contract EIP20Gateway is Gateway {
         address _staker,
         uint256 _stakerNonce,
         uint256 _amount,
+        bool _proofProgress,
         bytes32 _unlockSecret
     );
 
@@ -125,6 +126,7 @@ contract EIP20Gateway is Gateway {
         uint256 _redeemAmount,
         uint256 _unstakeAmount,
         uint256 _rewardAmount,
+        bool _proofProgress,
         bytes32 _unlockSecret
     );
 
@@ -400,7 +402,8 @@ contract EIP20Gateway is Gateway {
 
         (staker_, stakeAmount_, message) = progressStakingInternal(
             _messageHash,
-            _unlockSecret
+            _unlockSecret,
+            false
         );
         // Progress outbox
         MessageBus.progressOutbox(
@@ -461,7 +464,8 @@ contract EIP20Gateway is Gateway {
 
         (staker_, stakeAmount_, message) = progressStakingInternal(
             _messageHash,
-            bytes32(0)
+            bytes32(0),
+            true
         );
 
         MessageBus.progressOutboxWithProof(
@@ -826,7 +830,7 @@ contract EIP20Gateway is Gateway {
             _unlockSecret
         );
         (redeemAmount_, unstakeAmount_, rewardAmount_) =
-        progressUnstakeInternal(_messageHash, initialGas, _unlockSecret);
+        progressUnstakeInternal(_messageHash, initialGas, _unlockSecret, false);
 
     }
 
@@ -900,7 +904,7 @@ contract EIP20Gateway is Gateway {
         );
 
         (redeemAmount_, unstakeAmount_, rewardAmount_) =
-        progressUnstakeInternal(_messageHash, initialGas, bytes32(0));
+        progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
 
     /**
@@ -1093,9 +1097,8 @@ contract EIP20Gateway is Gateway {
      * @notice Internal function contains logic for process staking.
      *
      * @param _messageHash Message hash.
-     * @param _unlockSecret For process with hash lock, unlock secret is secret
-     *                      for the hashLock provide by the facilitator
-     *                      and zero for process with proof.
+     * @param _unlockSecret For process with hash lock, proofProgress event
+     *                      param is set to false otherwise set to true.
      *
      * @return staker_ Staker address
      * @return stakeAmount_ Stake amount
@@ -1103,7 +1106,8 @@ contract EIP20Gateway is Gateway {
      */
     function progressStakingInternal(
         bytes32 _messageHash,
-        bytes32 _unlockSecret
+        bytes32 _unlockSecret,
+        bool _proofProgress
     )
     private
     returns (
@@ -1133,6 +1137,7 @@ contract EIP20Gateway is Gateway {
             staker_,
             message_.nonce,
             stakeAmount_,
+            _proofProgress,
             _unlockSecret
         );
     }
@@ -1144,6 +1149,8 @@ contract EIP20Gateway is Gateway {
      * @param _messageHash hash to identify message
      * @param _initialGas initial available gas during process unstake call.
      * @param _unlockSecret Block number for which the proof is valid
+     * @param _proofProgress true if progress with proof and false if
+     *                       progress with unlock secret.
      *
      * @return redeemAmount_ Total amount for which the redemption was
      *                       initiated. The reward amount is deducted from the
@@ -1156,7 +1163,8 @@ contract EIP20Gateway is Gateway {
     function progressUnstakeInternal(
         bytes32 _messageHash,
         uint256 _initialGas,
-        bytes32 _unlockSecret
+        bytes32 _unlockSecret,
+        bool _proofProgress
     )
     private
     returns (
@@ -1201,6 +1209,7 @@ contract EIP20Gateway is Gateway {
             redeemAmount_,
             unstakeAmount_,
             redeemAmount_,
+            _proofProgress,
             _unlockSecret
         );
     }

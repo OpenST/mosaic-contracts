@@ -90,6 +90,7 @@ contract EIP20CoGateway is CoGateway {
         uint256 _stakeAmount,
         uint256 _mintedAmount,
         uint256 _rewardAmount,
+        bool _proofProgress,
         bytes32 _unlockSecret
     );
 
@@ -124,6 +125,7 @@ contract EIP20CoGateway is CoGateway {
         address _redeemer,
         uint256 _redeemerNonce,
         uint256 _amount,
+        bool _proofProgress,
         bytes32 _unlockSecret
     );
 
@@ -361,7 +363,6 @@ contract EIP20CoGateway is CoGateway {
      * @param _unlockSecret Unlock secret for the hashLock provide by the
      *                      facilitator while initiating the stake
      *
-     * @return staker_ Staker address
      * @return beneficiary_ Address to which the utility tokens will be
      *                      transferred after minting
      * @return stakeAmount_ Total amount for which the staking was
@@ -377,7 +378,6 @@ contract EIP20CoGateway is CoGateway {
     )
     external
     returns (
-        address staker_,
         address beneficiary_,
         uint256 stakeAmount_,
         uint256 mintedAmount_,
@@ -396,7 +396,6 @@ contract EIP20CoGateway is CoGateway {
             "Unlock secret must not be zero"
         );
 
-        Mint storage mint = mints[_messageHash];
         MessageBus.Message storage message = messages[_messageHash];
 
         // Progress inbox
@@ -407,39 +406,11 @@ contract EIP20CoGateway is CoGateway {
             _unlockSecret
         );
 
-        staker_ = message.sender;
-        beneficiary_ = mint.beneficiary;
-        stakeAmount_ = mint.amount;
-
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
-            message.gasConsumed,
-            message.gasLimit,
-            message.gasPrice,
-            initialGas,
-            50000  //21000 * 2 for transactions + approx buffer
-        );
-
-        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
-
-        //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
-
-        //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        // Emit ProgressedMint event
-        emit ProgressedMint(
-            _messageHash,
-            message.sender,
-            mint.beneficiary,
-            stakeAmount_,
-            mintedAmount_,
-            rewardAmount_,
-            _unlockSecret
-        );
+        (beneficiary_,
+        stakeAmount_,
+        mintedAmount_,
+        rewardAmount_) =
+        progressMintingInternal(_messageHash, initialGas, true, bytes32(0));
     }
 
     /**
@@ -458,6 +429,8 @@ contract EIP20CoGateway is CoGateway {
      * @param _messageStatus Message status i.e. Declared or Progressed that
      *                       will be proved.
      *
+     * @return  beneficiary_ Address to which the utility tokens will be
+     *                      transferred after minting
      * @return stakeAmount_ Total amount for which the stake was initiated. The
      *                      reward amount is deducted from the total amount and
      *                      is given to the facilitator.
@@ -473,6 +446,7 @@ contract EIP20CoGateway is CoGateway {
     )
     public
     returns (
+        address beneficiary_,
         uint256 stakeAmount_,
         uint256 mintedAmount_,
         uint256 rewardAmount_
@@ -497,7 +471,6 @@ contract EIP20CoGateway is CoGateway {
             "Storage root must not be zero"
         );
 
-        Mint storage mint = mints[_messageHash];
         MessageBus.Message storage message = messages[_messageHash];
 
         MessageBus.progressInboxWithProof(
@@ -510,40 +483,11 @@ contract EIP20CoGateway is CoGateway {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        stakeAmount_ = mint.amount;
-
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
-            message.gasConsumed,
-            message.gasLimit,
-            message.gasPrice,
-            initialGas,
-            50000
-        );
-
-        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
-
-        //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).mint(mint.beneficiary, mintedAmount_);
-
-        //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        //TODO: we can have a separate event for this.
-        // Emit ProgressedMint event
-        emit ProgressedMint(
-            _messageHash,
-            message.sender,
-            mint.beneficiary,
-            stakeAmount_,
-            mintedAmount_,
-            rewardAmount_,
-            bytes32(0)
-        );
+        (beneficiary_,
+        stakeAmount_,
+        mintedAmount_,
+        rewardAmount_) =
+        progressMintingInternal(_messageHash, initialGas, true, bytes32(0));
     }
 
     /**
@@ -879,23 +823,10 @@ contract EIP20CoGateway is CoGateway {
             _unlockSecret
         );
 
-        // burn the redeem amount
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+        (redeemer_,
+        redeemAmount_)
+        = progressRedemptionInternal(_messageHash, false, _unlockSecret);
 
-        // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(redeems[_messageHash].bounty);
-
-        // delete the redeem data
-        delete redeems[_messageHash];
-
-        // Emit ProgressedRedemption event.
-        emit ProgressedRedemption(
-            _messageHash,
-            message.sender,
-            message.nonce,
-            redeemAmount_,
-            _unlockSecret
-        );
     }
 
     /**
@@ -960,24 +891,10 @@ contract EIP20CoGateway is CoGateway {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        // Burn the redeem amount.
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+        (redeemer_,
+        redeemAmount_)
+        = progressRedemptionInternal(_messageHash, true, bytes32(0));
 
-        // Transfer the bounty amount to the facilitator
-        msg.sender.transfer(redeems[_messageHash].bounty);
-
-        // delete the redeem data
-        delete redeems[_messageHash];
-
-        //TODO: we can have a seperate event for this.
-        // Emit ProgressedRedemption event.
-        emit ProgressedRedemption(
-            _messageHash,
-            redeemer_,
-            message.nonce,
-            redeemAmount_,
-            bytes32(0)
-        );
     }
 
     /**
@@ -1267,5 +1184,127 @@ contract EIP20CoGateway is CoGateway {
         );
     }
 
+    /**
+     * @notice This is internal method for process meeting contains common logic.
+     *
+     * @param _messageHash Message hash.
+     * @param _initialGas initial gas during progress process.
+     *
+     * @param _proofProgress true if progress with proof, false if progress
+     *                       with hashlock.
+     * @param _unlockSecret unlock secret to progress, zero in case of progress
+     *                      with proof
+     *
+     * @return  beneficiary_ Address to which the utility tokens will be
+     *                      transferred after minting.
+     * @return stakeAmount_ Total amount for which the stake was initiated. The
+     *                      reward amount is deducted from the total amount and
+     *                      is given to the facilitator.
+     * @return mintedAmount_ Actual minted amount, after deducting the reward
+     *                        from the total amount.
+     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     */
+
+    function progressMintingInternal(
+        bytes32 _messageHash,
+        uint256 _initialGas,
+        bool _proofProgress,
+        bytes32 _unlockSecret
+    )
+    private
+    returns (
+        address beneficiary_,
+        uint256 stakeAmount_,
+        uint256 mintedAmount_,
+        uint256 rewardAmount_
+    )
+    {
+        Mint storage mint = mints[_messageHash];
+        MessageBus.Message storage message = messages[_messageHash];
+
+        beneficiary_ = mint.beneficiary;
+        stakeAmount_ = mint.amount;
+
+        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
+        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+            message.gasConsumed,
+            message.gasLimit,
+            message.gasPrice,
+            _initialGas,
+            50000  //21000 * 2 for transactions + approx buffer
+        );
+
+        mintedAmount_ = stakeAmount_.sub(rewardAmount_);
+
+        //Mint token after subtracting reward amount
+        UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
+
+        //reward beneficiary with the reward amount
+        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
+
+        // delete the mint data
+        delete mints[_messageHash];
+
+        // Emit ProgressedMint event
+        emit ProgressedMint(
+            _messageHash,
+            message.sender,
+            mint.beneficiary,
+            stakeAmount_,
+            mintedAmount_,
+            rewardAmount_,
+            _proofProgress,
+            _unlockSecret
+        );
+
+    }
+
+    /**
+     * @notice Internal method to progressRedemptionInternal.
+     *
+     * @param _messageHash Message hash.
+     * @param _proofProgress true if progress with proof, false if progress
+     *                       with hashlock.
+     * @param _unlockSecret unlock secret to progress, zero in case of progress
+     *                      with proof
+     *
+     * @return redeemer_ Redeemer address
+     * @return redeemAmount_ Redeem amount
+     */
+    function progressRedemptionInternal(
+        bytes32 _messageHash,
+        bool _proofProgress,
+        bytes32 _unlockSecret
+    )
+    private
+    returns (
+        address redeemer_,
+        uint256 redeemAmount_
+    )
+    {
+        MessageBus.Message storage message = messages[_messageHash];
+
+        redeemer_ = message.sender;
+        redeemAmount_ = redeems[_messageHash].amount;
+        // Burn the redeem amount.
+        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+
+        // Transfer the bounty amount to the facilitator
+        msg.sender.transfer(redeems[_messageHash].bounty);
+
+        // delete the redeem data
+        delete redeems[_messageHash];
+
+        // Emit ProgressedRedemption event.
+        emit ProgressedRedemption(
+            _messageHash,
+            redeemer_,
+            message.nonce,
+            redeemAmount_,
+            _proofProgress,
+            _unlockSecret
+        );
+
+    }
 
 }
