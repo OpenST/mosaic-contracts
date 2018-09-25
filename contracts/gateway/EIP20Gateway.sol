@@ -501,7 +501,6 @@ contract EIP20Gateway is Gateway {
      * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
      *
      * @param _messageHash Message hash.
-     * @param _signature Signature signed by the staker.
      *
      * @return staker_ Staker address
      * @return stakerNonce_ Staker nonce

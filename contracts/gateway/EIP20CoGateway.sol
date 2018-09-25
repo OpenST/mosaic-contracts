@@ -1117,20 +1117,20 @@ contract EIP20CoGateway is CoGateway {
             MessageBus.MessageStatus.Revoked
         );
 
-        Redeem storage redeemData = redeems[_messageHash];
+        Redeem storage redeemProcess = redeems[_messageHash];
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
-        amount_ = redeemData.amount;
+        amount_ = redeemProcess.amount;
 
         // return the redeem amount back
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // burn bounty
-        address(0).transfer(redeems[_messageHash].bounty);
+        address(0).transfer(redeemProcess.bounty);
 
         //penalty charged to redeemer
-        uint256 penalty = redeems[_messageHash].bounty
+        uint256 penalty = redeemProcess.bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
 
@@ -1145,7 +1145,7 @@ contract EIP20CoGateway is CoGateway {
             _messageHash,
             message.sender,
             message.nonce,
-            redeemData.amount
+            redeemProcess.amount
         );
     }
 
