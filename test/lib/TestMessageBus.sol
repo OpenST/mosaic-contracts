@@ -29,7 +29,6 @@ contract TestMessageBus { //is KeyValueStoreStub{
     MockMessageBus.MessageBox messageBox;
 
     bytes32 unlockSecret = keccak256(abi.encodePacked('secret'));
-    bytes32 unlockSecret1 = keccak256(abi.encodePacked('secret1'));
     bytes32 hashLock = keccak256(abi.encodePacked(unlockSecret));
     bytes32 intentHash = keccak256(abi.encodePacked('intent'));
     uint256 nonce = 1;
@@ -215,64 +214,64 @@ contract TestMessageBus { //is KeyValueStoreStub{
             "nextState not changed to Revoked."
         );
     }
-//
-//    function testChangeOutboxState()
-//        external
-//    {
-//        bool isChanged;
-//        MockMessageBus.MessageStatus nextState;
-//
-//        // Test Undeclared => Declared
-//        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
-//        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-//            messageBox,
-//            messageHash
-//        );
-//        Assert.equal(
-//            bool(isChanged),
-//            true,
-//            "isChanged not equal to true."
-//        );
-//        Assert.equal(
-//            uint256(nextState),
-//            uint256(MockMessageBus.MessageStatus.Declared),
-//            "nextState not changed to Declared."
-//        );
-//
-//        // Test Declared => Progressed
-//        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
-//        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-//            messageBox,
-//            messageHash
-//        );
-//        Assert.equal(
-//            bool(isChanged),
-//            true,
-//            "1345 isChanged not equal to true."
-//        );
-//        Assert.equal(
-//            uint256(nextState),
-//            uint256(MockMessageBus.MessageStatus.Progressed),
-//            "nextState not changed to Progressed."
-//        );
-//
-//        // Test DeclaredRevocation => Revoked
-//        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-//        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-//            messageBox,
-//            messageHash
-//        );
-//        Assert.equal(
-//            bool(isChanged),
-//            true,
-//            "123 isChanged not equal to true."
-//        );
-//        Assert.equal(
-//            uint256(nextState),
-//            uint256(MockMessageBus.MessageStatus.Revoked),
-//            "nextState not changed to Revoked."
-//        );
-//    }
+
+    function testChangeOutboxState()
+        external
+    {
+        bool isChanged;
+        MockMessageBus.MessageStatus nextState;
+
+        // Test Undeclared => Declared
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MockMessageBus.MessageStatus.Declared),
+            "nextState not changed to Declared."
+        );
+
+        // Test Declared => Progressed
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            " isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MockMessageBus.MessageStatus.Progressed),
+            "nextState not changed to Progressed."
+        );
+
+        // Test DeclaredRevocation => Revoked
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
+            messageBox,
+            messageHash
+        );
+        Assert.equal(
+            bool(isChanged),
+            true,
+            "isChanged not equal to true."
+        );
+        Assert.equal(
+            uint256(nextState),
+            uint256(MockMessageBus.MessageStatus.Revoked),
+            "nextState not changed to Revoked."
+        );
+    }
 
     function testDeclareMessage()
         public

@@ -13,26 +13,21 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Core.js
+// Test: ProgressOutboxWithProof.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 const messageBusUtilsKlass = require('./messagebus_utils'),
-	web3 = require('web3');
-const messageBusUtils = new messageBusUtilsKlass();
-// const hasher = artifacts.require('./Hasher');
-const ProgressOutboxWithProof = function(){};
+	web3 = require('web3'),
+	messageBusUtils = new messageBusUtilsKlass(),
+	ProgressOutboxWithProof = function(){};
 
-var intentHash,
+let intentHash,
 	nonce,
-	gasPrice,
 	sender,
 	messageTypeHash,
-	gasLimit,
-	gasPrice,
-	gasConsumed,
 	messageHash,
 	messageStatus,
 	unlockSecret,
@@ -41,41 +36,34 @@ var intentHash,
 	storageRoot,
 	outboxStatus;
 
-ProgressOutboxWithProof.prototype = {
-	
-	progressOutboxWithProof: async function () {
+	progressOutboxWithProof = async function () {
 		
 		let params = {
 			messageTypeHash: messageTypeHash,
 			intentHash: intentHash,
 			nonce: nonce,
-			gasPrice: gasPrice,
-			gasLimit: gasLimit,
 			sender: sender,
 			rlpEncodedParentNodes: rlpEncodedParentNodes,
 			storageRoot: storageRoot,
 			messageStatus: messageStatus,
-			gasConsumed: gasConsumed,
 			messageHash: messageHash,
 			outboxStatus: outboxStatus
 		};
 		
 		await messageBusUtils.progressOutboxWithProof(params);
 		
-	},
-	
-	perform: function (accounts) {
-		const oThis = this;
+	}
+
+	contract('MessageBus',  async (accounts) => {
 		
-		beforeEach(async function() {
+		describe('progressOutboxWithProof', async () => {
+	
+			beforeEach(async function() {
 			
 			intentHash = web3.utils.soliditySha3({type: 'bytes32', value:'intent'})
 				,	nonce = 1
-				, gasPrice = 0x12A05F200
 				, sender = accounts[7]
 				, messageTypeHash = web3.utils.soliditySha3({type: 'bytes32', value: 'gatewaylink'})
-				, gasLimit = 0
-				, gasConsumed = 0
 				, messageHash = '0x9e2107e7dc8d11459a8ded4b6e0b63a8d2dd37ac8cb4b50984ea2e683bcd1640'
 				, messageStatus = 1
 				,	outboxStatus = 1
@@ -84,187 +72,184 @@ ProgressOutboxWithProof.prototype = {
 				,	rlpEncodedParentNodes = '0xf9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7'
 				, storageRoot = '0x9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771';
 				
-			await messageBusUtils.deployedMessageBus();
+				await messageBusUtils.deployedMessageBus();
 			
-		});
+			});
 		
-		it('should fail when message status is undeclared and messagehash status in outbox is undeclared', async () => {
+			it('should fail when message status is undeclared and messagehash status in outbox is undeclared', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = 0;
+				await progressOutboxWithProof();
+				
+			});
 			
-			messageStatus = 0;
-			outboxStatus = 0;
-			await oThis.progressOutboxWithProof();
+			it('should fail when message status is undeclared and messagehash status in outbox is declared', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = 1;
+				await progressOutboxWithProof();
+				
+			});
 			
+			it('should fail when message status is undeclared and messagehash status in outbox is progressed', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = 2;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is undeclared and messagehash status in outbox is declared revocation', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = 3;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is undeclared and messagehash status in outbox is revoked', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = 4;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is undeclared and messagehash status in outbox is empty', async () => {
+				
+				messageStatus = 0;
+				outboxStatus = '';
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is undeclared', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = 0;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is declared', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = 1;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is progressed', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = 2;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is declared revocation', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = 3;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is revoked', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = 4;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is declared revocation and messagehash status in outbox is empty', async () => {
+				
+				messageStatus = 3;
+				outboxStatus = '';
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is undeclared', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = 0;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is declared', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = 1;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is progressed', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = 2;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is declared revocation', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = 3;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is revoked', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = 4;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is revoked and messagehash status in outbox is empty', async () => {
+				
+				messageStatus = 4;
+				outboxStatus = '';
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status and messagehash status in outbox is empty', async () => {
+				
+				messageStatus = '';
+				outboxStatus = '';
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is empty and messagehash status in outbox is undeclared', async () => {
+				
+				messageStatus = '';
+				outboxStatus = 0;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is empty and messagehash status in outbox is progressed', async () => {
+				
+				messageStatus = '';
+				outboxStatus = 2;
+				await progressOutboxWithProof();
+				
+			});
+			
+			it('should fail when message status is empty and messagehash status in outbox is revoked', async () => {
+				
+				messageStatus = '';
+				outboxStatus = 4;
+				await progressOutboxWithProof();
+				
+			});
 		});
-		
-		it('should fail when message status is undeclared and messagehash status in outbox is declared', async () => {
-			
-			messageStatus = 0;
-			outboxStatus = 1;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is undeclared and messagehash status in outbox is progressed', async () => {
-			
-			messageStatus = 0;
-			outboxStatus = 2;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is undeclared and messagehash status in outbox is declared revocation', async () => {
-			
-			messageStatus = 0;
-			outboxStatus = 3;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is undeclared and messagehash status in outbox is revoked', async () => {
-			
-			messageStatus = 0;
-			outboxStatus = 4;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is undeclared and messagehash status in outbox is empty', async () => {
-			
-			messageStatus = 0;
-			outboxStatus = '';
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is undeclared', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = 0;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is declared', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = 1;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is progressed', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = 2;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is declared revocation', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = 3;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is revoked', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = 4;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is declared revocation and messagehash status in outbox is empty', async () => {
-			
-			messageStatus = 3;
-			outboxStatus = '';
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is undeclared', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = 0;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is declared', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = 1;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is progressed', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = 2;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is declared revocation', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = 3;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is revoked', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = 4;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is revoked and messagehash status in outbox is empty', async () => {
-			
-			messageStatus = 4;
-			outboxStatus = '';
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status and messagehash status in outbox is empty', async () => {
-			
-			messageStatus = '';
-			outboxStatus = '';
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is empty and messagehash status in outbox is undeclared', async () => {
-			
-			messageStatus = '';
-			outboxStatus = 0;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is empty and messagehash status in outbox is progressed', async () => {
-			
-			messageStatus = '';
-			outboxStatus = 2;
-			await oThis.progressOutboxWithProof();
-			
-		});
-		
-		it('should fail when message status is empty and messagehash status in outbox is revoked', async () => {
-			
-			messageStatus = '';
-			outboxStatus = 4;
-			await oThis.progressOutboxWithProof();
-			
-		});
-	
-	 }
-}
-
-module.exports = ProgressOutboxWithProof;
+	});

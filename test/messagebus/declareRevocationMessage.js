@@ -1,4 +1,4 @@
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Core.js
+// Test: DeclareRevocationMessage.js
 //
 // http://www.simpletoken.org/
 //
@@ -71,7 +71,7 @@ DeclareRevocationMessage .prototype = {
 				, gasPrice = 0x12A05F200
 				, sender = accounts[7]
 				, messageTypeHash = web3.utils.soliditySha3({type: 'bytes32', value: 'gatewaylink'})
-				, gasLimit = 0//0x12A05F200
+				, gasLimit = 0
 				, gasConsumed = 0
 				, messageHash = '0x9bdab5cbc3ebd8d50e3831bc73da35c1170e21bfb7145e41ce4a952b977a8f84'
 				, messageStatus = 1
@@ -128,4 +128,4 @@ DeclareRevocationMessage .prototype = {
 	}
 }
 
-module.exports = DeclareRevocationMessage ;
+module.exports = DeclareRevocationMessage;

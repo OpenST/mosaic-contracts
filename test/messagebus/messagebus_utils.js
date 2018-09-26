@@ -1,13 +1,10 @@
 'use strict'
 
 const MessageBus = artifacts.require('MessageBusTestWrapper');
-const hasher = artifacts.require('Hasher');
 const web3 = require("web3");
 const utils =  require("../lib/utils");
-const solc =  require('solc');
 
-let messageBus,
-	messageInstance;
+let messageBus;
 
 const MessageBusUtils = function() {};
 MessageBusUtils.prototype = {
@@ -18,7 +15,6 @@ MessageBusUtils.prototype = {
 		return messageBus;
 		
 	},
-	
 	
 	declareMessage: async function(params){
 		
@@ -117,10 +113,7 @@ MessageBusUtils.prototype = {
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
 			sender = params.sender,
-			gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
@@ -132,14 +125,11 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			sender,
 			messageBoxOffset,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash,
 			inboxStatus
 		));
@@ -150,10 +140,7 @@ MessageBusUtils.prototype = {
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
 			sender = params.sender,
-			gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
@@ -165,14 +152,11 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			sender,
 			messageBoxOffset,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash,
 			inboxStatus
 		));
@@ -183,9 +167,6 @@ MessageBusUtils.prototype = {
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			// gasPrice = params.gasPrice,
-			// gasLimit = params.gasLimit,
-			// gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
@@ -196,13 +177,10 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			messageBoxOffset,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash
 		));
 	},
@@ -212,10 +190,7 @@ MessageBusUtils.prototype = {
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
 			sender = params.sender,
-			gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
@@ -225,13 +200,10 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			sender,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash
 		));
 	},
@@ -270,10 +242,7 @@ MessageBusUtils.prototype = {
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
 			sender = params.sender,
-			gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
@@ -284,13 +253,10 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			sender,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash,
 			outboxStatus
 		));
@@ -315,13 +281,10 @@ MessageBusUtils.prototype = {
 			messageTypeHash,
 			intentHash,
 			nonce,
-			// gasPrice,
-			// gasLimit,
 			sender,
 			rlpEncodedParentNodes,
 			storageRoot,
 			messageStatus,
-			// gasConsumed,
 			messageHash,
 			inboxStatus
 		));
