@@ -197,11 +197,10 @@ contract Gateway is  GatewayBase {
         );
 
         // initiate new new outbox process
-        initiateNewProcess(
+        registerOutboxProcess(
             _sender,
             _nonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Outbox
+            messageHash_
         );
 
         // Declare message in outbox
@@ -288,62 +287,5 @@ contract Gateway is  GatewayBase {
     }
 
     /** internal methods*/
-
-    /**
-     * @notice Clears the previous process. Validates the
-     *         nonce. Updates the process with new process
-     *
-     * @param _account Account address
-     * @param _nonce Nonce for the account address
-     * @param _messageHash Message hash
-     * @param _messageBoxType message box type i.e Inbox or Outbox
-     *
-     * @return previousMessageHash_ previous messageHash
-     */
-    function initiateNewProcess(
-        address _account,
-        uint256 _nonce,
-        bytes32 _messageHash,
-        MessageBus.MessageBoxType _messageBoxType
-
-    )
-    internal
-    returns (bytes32 previousMessageHash_)
-    {
-        require(
-            _nonce == _getNonce(_account),
-            "Invalid nonce"
-        );
-
-        ActiveProcess storage previousProcess = activeProcess[_account];
-        previousMessageHash_ = previousProcess.messageHash;
-
-        if (previousProcess.messageHash != bytes32(0)) {
-
-            MessageBus.MessageStatus status;
-            if (previousProcess.messageBoxType ==
-                MessageBus.MessageBoxType.Inbox) {
-                status = messageBox.inbox[previousMessageHash_];
-            } else {
-                status = messageBox.outbox[previousMessageHash_];
-            }
-            require(
-                status != MessageBus.MessageStatus.Progressed ||
-                status != MessageBus.MessageStatus.Revoked,
-                "Previous process is not completed"
-            );
-            //TODO: Commenting below line. Please check if deleting this will
-            //      effect any process related to merkle proof in other chain.
-            //delete messageBox.outbox[previousMessageHash_];
-
-            delete messages[previousMessageHash_];
-        }
-
-        // Update the active proccess.
-        activeProcess[_account] = ActiveProcess({
-            messageHash : _messageHash,
-            messageBoxType : _messageBoxType
-            });
-    }
 
 }

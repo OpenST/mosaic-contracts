@@ -322,11 +322,10 @@ contract EIP20Gateway is Gateway {
         );
 
         // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = registerOutboxProcess(
             _staker,
             _nonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Outbox
+            messageHash_
         );
 
         // Delete the previous progressed/Revoked stake data
@@ -739,11 +738,10 @@ contract EIP20Gateway is Gateway {
         );
 
         // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = registerInboxProcess(
             _redeemer,
             _redeemerNonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Inbox
+            messageHash_
         );
 
         // Delete the progressed/Revoked unstake data

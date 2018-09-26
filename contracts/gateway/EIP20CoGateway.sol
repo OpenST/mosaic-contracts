@@ -307,11 +307,10 @@ contract EIP20CoGateway is CoGateway {
         );
 
         // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = registerInboxProcess(
             _staker,
             _stakerNonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Inbox
+            messageHash_
         );
 
         // Delete the previous progressed / revoked mint data
@@ -723,11 +722,10 @@ contract EIP20CoGateway is CoGateway {
         );
 
         // Get previousMessageHash
-        bytes32 previousMessageHash = initiateNewProcess(
+        bytes32 previousMessageHash = registerOutboxProcess(
             msg.sender,
             _nonce,
-            messageHash_,
-            MessageBus.MessageBoxType.Outbox
+            messageHash_
         );
 
         // Delete the previous progressed/revoked redeem data

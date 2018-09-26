@@ -25,23 +25,6 @@ contract GatewayBase {
         bool _wasAlreadyProved
     );
 
-
-    /* Struct */
-
-    /**
-     * ActiveProcess stores the information related to in progress process
-     * like stake/mint unstake/redeem.
-     */
-    struct ActiveProcess {
-
-        /** latest message hash. */
-        bytes32 messageHash;
-
-        /** Outbox or Inbox process. */
-        MessageBus.MessageBoxType messageBoxType;
-    }
-
-
     bytes32 constant STAKE_TYPEHASH = keccak256(
         abi.encode(
             "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
@@ -106,15 +89,16 @@ contract GatewayBase {
     mapping(uint256 /* block height */ => bytes32) internal storageRoots;
 
     /**
-     * Maps address to ActiveProcess object.
+     * Maps address to message hash.
      *
      * Once the minting or redeem process is started the corresponding
-     * message hash is stored in ActiveProcess against the staker/redeemer
+     * message hash is stored  against the staker/redeemer
      * address. This is used to restrict simultaneous/multiple minting and
      * redeem for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
-    mapping(address /*address*/ => ActiveProcess) activeProcess;
+    mapping(address /*address*/ => bytes32 /*messageHash*/) inboxActiveProcess;
+    mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
     /* internal variables */
 
@@ -378,18 +362,109 @@ contract GatewayBase {
     view
     returns (uint256 /* nonce */)
     {
-        ActiveProcess storage previousProcess = activeProcess[_account];
 
-        if (previousProcess.messageHash == bytes32(0)) {
+        bytes32 previousProcessMessageHash = outboxActiveProcess[_account];
+
+        if (previousProcessMessageHash == bytes32(0)) {
             return 1;
         }
 
         MessageBus.Message storage message =
-        messages[previousProcess.messageHash];
+        messages[previousProcessMessageHash];
 
         return message.nonce.add(1);
     }
 
+    /**
+     * @notice Clears the previous outbox process. Validates the
+     *         nonce. Updates the process with new process
+     *
+     * @param _account Account address
+     * @param _nonce Nonce for the account address
+     * @param _messageHash Message hash
+     *
+     * @return previousMessageHash_ previous messageHash
+     */
+
+    function registerOutboxProcess(
+        address _account,
+        uint256 _nonce,
+        bytes32 _messageHash
+
+    )
+    internal
+    returns (bytes32 previousMessageHash_)
+    {
+        require(
+            _nonce == _getNonce(_account),
+            "Invalid nonce"
+        );
+
+        previousMessageHash_ = outboxActiveProcess[_account];
+
+        if (previousMessageHash_ != bytes32(0)) {
+
+            MessageBus.MessageStatus status =
+            messageBox.outbox[previousMessageHash_];
+
+            require(
+                status != MessageBus.MessageStatus.Progressed ||
+                status != MessageBus.MessageStatus.Revoked,
+                "Previous process is not completed"
+            );
+
+            delete messages[previousMessageHash_];
+        }
+
+        // Update the active proccess.
+        outboxActiveProcess[_account] = _messageHash;
+
+    }
 
 
+    /**
+     * @notice Clears the previous outbox process. Validates the
+     *         nonce. Updates the process with new process
+     *
+     * @param _account Account address
+     * @param _nonce Nonce for the account address
+     * @param _messageHash Message hash
+     *
+     * @return previousMessageHash_ previous messageHash
+     */
+
+    function registerInboxProcess(
+        address _account,
+        uint256 _nonce,
+        bytes32 _messageHash
+    )
+    internal
+    returns (bytes32 previousMessageHash_)
+    {
+        require(
+            _nonce == _getNonce(_account),
+            "Invalid nonce"
+        );
+
+        previousMessageHash_ = inboxActiveProcess[_account];
+
+        if (previousMessageHash_ != bytes32(0)) {
+
+            MessageBus.MessageStatus status =
+            messageBox.inbox[previousMessageHash_];
+
+            require(
+                status != MessageBus.MessageStatus.Progressed ||
+                status != MessageBus.MessageStatus.Revoked,
+                "Previous process is not completed"
+            );
+
+            delete messages[previousMessageHash_];
+        }
+
+        // Update the active proccess.
+        inboxActiveProcess[_account] = _messageHash;
+
+    }
 }
+
