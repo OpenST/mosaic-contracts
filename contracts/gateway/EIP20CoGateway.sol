@@ -493,7 +493,8 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Declare staking revert intent
+     * @notice Declare staking revert intent. This will set message status to
+     *         revoked. This method will also clear mint mapping storage.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -558,6 +559,9 @@ contract EIP20CoGateway is CoGateway {
         stakerNonce_ = message.nonce;
         amount_ = mint.amount;
 
+        // delete the mint data
+        delete mints[_messageHash];
+
         // Emit RevertStakingIntentConfirmed event
         emit RevertStakingIntentConfirmed(
             _messageHash,
@@ -565,72 +569,8 @@ contract EIP20CoGateway is CoGateway {
             message.nonce,
             mint.amount
         );
-
         // Update the gas consumed for this function.
         message.gasConsumed = initialGas.sub(gasleft());
-    }
-
-    /**
-     * @notice Complete revert staking by providing the merkle proof
-     *
-     * @param _messageHash Message hash.
-     *
-     * @return staker_ Staker address
-     * @return stakerNonce_ Staker nonce
-     * @return amount_ Stake amount
-     */
-    function progressRevertStaking(
-        bytes32 _messageHash
-    )
-        external
-        returns (
-            address staker_,
-            uint256 stakerNonce_,
-            uint256 amount_
-        )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
-        require(
-            message.intentHash != bytes32(0),
-            "StakingIntentHash must not be zero"
-        );
-
-        // TODO: @dev should we directly change the status ?
-        bool isChanged = false;
-        MessageBus.MessageStatus nextStatus;
-        (isChanged, nextStatus) = MessageBus.changeInboxState(
-            messageBox,
-            _messageHash
-        );
-
-        require(isChanged == true,
-            "MessageBox state must change"
-        );
-
-        require(nextStatus == MessageBus.MessageStatus.Revoked,
-            "Next status must be Revoked"
-        );
-
-        staker_ = message.sender;
-        stakerNonce_ = message.nonce;
-        amount_ = mints[_messageHash].amount;
-
-        // delete the mint data
-        delete mints[_messageHash];
-
-        // Emit RevertStakeProgressed event
-        emit RevertStakeProgressed(
-            _messageHash,
-            staker_,
-            stakerNonce_,
-            amount_
-        );
     }
 
     /**

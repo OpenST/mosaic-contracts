@@ -570,7 +570,7 @@ library MessageBus {
         );
 
         // Update the message box inbox status to `DeclaredRevocation`.
-        _messageBox.inbox[messageHash_] = MessageStatus.DeclaredRevocation;
+        _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
     }
 
     /**
@@ -653,88 +653,6 @@ library MessageBus {
 
         // Update the status to `Revoked`
         _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
-    }
-
-    /**
-     * @notice Update the status for the inbox for a given message hash to
-     *         `Revoked`. Merkle proof is used to verify status of outbox in
-     *         source chain.
-     *
-     * @dev The messsage status in the outbox should be
-     *      either `DeclaredRevocation` or `Revoked`. Either of this status
-     *      will be verified in the merkle proof
-     *
-     * @param _messageBox Message Box
-     * @param _message Message object
-     * @param _messageTypeHash Message type hash
-     * @param _messageBoxOffset position of the messageBox.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
-     * @return messageHash_ Message hash
-     */
-    function progressInboxRevocation(
-        MessageBox storage _messageBox,
-        Message storage _message,
-        bytes32 _messageTypeHash,
-        uint8 _messageBoxOffset,
-        bytes _rlpEncodedParentNodes,
-        bytes32 _storageRoot,
-        MessageStatus _messageStatus
-    )
-        external
-        returns (bytes32 messageHash_)
-    {
-
-        // the message status for the message hash in the outbox must be either
-        // `DeclaredRevocation` or `Revoked`
-        require(
-            _messageStatus == MessageStatus.DeclaredRevocation ||
-            _messageStatus == MessageStatus.Revoked,
-            "Message status must be DeclaredRevocation or Revoked"
-        );
-
-        // Get the message hash
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
-
-        // The existing message status must be `DeclaredRevocation`
-        require(
-            _messageBox.inbox[messageHash_] ==
-            MessageStatus.DeclaredRevocation,
-            "Message status must be DeclaredRevocation"
-        );
-
-        // @dev the out box is at location 0 of the MessageBox struct, so we
-        // can use _messageBoxOffset as it is
-        bytes memory path = bytes32ToBytes(
-            storageVariablePathForStruct(
-                _messageBoxOffset,
-                OUTBOX_OFFSET,
-                messageHash_
-            )
-        );
-
-        // Perform the merkle proof
-        require(
-            MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
-                path,
-                _rlpEncodedParentNodes,
-                _storageRoot),
-            "Merkle proof verification failed"
-        );
-
-        // Update the status to `Revoked`
-        _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
     }
 
     /**

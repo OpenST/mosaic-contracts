@@ -879,7 +879,9 @@ contract EIP20Gateway is Gateway {
     }
 
     /**
-     * @notice Declare redemption revert intent
+     * @notice Declare redemption revert intent.
+     *         This will set message status to revoked. This method will also
+     *         clear unstakes mapping storage.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -939,6 +941,9 @@ contract EIP20Gateway is Gateway {
             storageRoot
         );
 
+        // delete the unstake data
+        delete unstakes[_messageHash];
+
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = unstakes[_messageHash].amount;
@@ -953,73 +958,6 @@ contract EIP20Gateway is Gateway {
 
         // Update the gas consumed for this function.
         message.gasConsumed = initialGas.sub(gasleft());
-    }
-
-    /**
-     * @notice Complete revert redemption
-     *
-     * @dev Any once can call this.
-     *
-     * @param _messageHash Message hash.
-     *
-     * @return redeemer_ Redeemer address
-     * @return redeemerNonce_ Redeemer nonce
-     * @return amount_ Redeem amount
-     */
-    function progressRevertRedemption(
-        bytes32 _messageHash
-    )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
-        require(
-            message.intentHash != bytes32(0),
-            "StakingIntentHash must not be zero"
-        );
-
-        // TODO: @dev should we directly change the status ?
-        bool isChanged = false;
-        MessageBus.MessageStatus nextStatus;
-        (isChanged, nextStatus) = MessageBus.changeInboxState(
-            messageBox,
-            _messageHash
-        );
-
-        require(isChanged == true,
-            "MessageBox state must change"
-        );
-
-        require(nextStatus == MessageBus.MessageStatus.Revoked,
-            "Next status must be Revoked"
-        );
-
-        Unstake storage unstakeData = unstakes[_messageHash];
-
-        redeemer_ = message.sender;
-        redeemerNonce_ = message.nonce;
-        amount_ = unstakeData.amount;
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
-        // Emit RevertedRedemption event
-        emit RevertRedemptionComplete(
-            _messageHash,
-            message.sender,
-            message.nonce,
-            unstakeData.amount
-        );
     }
 
     /* private functions */
