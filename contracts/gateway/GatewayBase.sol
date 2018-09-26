@@ -26,6 +26,16 @@ contract GatewayBase {
         bool _wasAlreadyProved
     );
 
+    event BountyChangeInitiated(
+        uint256 _currentBounty,
+        uint256 _proposedBounty
+    );
+
+    event BountyChangeConfirmed(
+        uint256 _currentBounty,
+        uint256 _changedBounty
+    );
+
     bytes32 constant STAKE_TYPEHASH = keccak256(
         abi.encode(
             "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
@@ -63,7 +73,7 @@ contract GatewayBase {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is deactivated for any new staking process. */
+    /** Specifies if the Gateway is deactivated for any new process. */
     bool public deactivated;
 
     /** Organisation address. */
@@ -72,13 +82,19 @@ contract GatewayBase {
     /** amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
+    /** Proposed new bounty amount for bounty change. */
+    uint256 public proposedBounty;
+
     /** address of core contract. */
     CoreInterface public core;
 
     /** path to prove merkle account proof for Gateway/CoGateway contract. */
     bytes internal encodedGatewayPath;
 
-    /** Remote gateway contract address. */
+    /**
+     * Remote gateway contract address. If gateway contract remote gateway
+     * is CoGateway and vice versa.
+     */
     address public remoteGateway;
 
     /** Gateway link message hash. */
@@ -87,14 +103,14 @@ contract GatewayBase {
     /** Maps messageHash to the Message object. */
     mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
 
-    /** Maps blockHeight to storageRoot*/
-    mapping(uint256 /* block height */ => bytes32) internal storageRoots;
+    /** Mapping to store blockHeight to storageRoot. */
+    mapping(uint256 /* block height */ => bytes32 /* storageRoot */) internal storageRoots;
 
     /**
      * Maps address to message hash.
      *
      * Once the inbox process is started the corresponding
-     * message hash is stored  against the address starting process.
+     * message hash is stored against the address starting process.
      * This is used to restrict simultaneous/multiple process
      * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
@@ -137,6 +153,17 @@ contract GatewayBase {
         _;
     }
 
+    /* Constructor */
+
+    /**
+     * @notice Initialise the contract and set default values.
+     *
+     * @param _core Core contract address.
+     * @param _messageBus Message bus contract address.
+     * @param _bounty The amount that facilitator will stakes to initiate the
+     *                staking process.
+     * @param _organisation Organisation address.
+     */
     constructor(
         CoreInterface _core,
         address _messageBus,
@@ -174,25 +201,26 @@ contract GatewayBase {
     /* external functions */
 
     /**
- *  @notice External function prove gateway/co-gateway.
- *
- *  @dev proveGateway can be called by anyone to verify merkle proof of
- *       gateway/co-gateway contract address. Trust factor is brought by stateRoots
- *       mapping. stateRoot is committed in commitStateRoot function by
- *       mosaic process which is a trusted decentralized system running
- *       separately. It's important to note that in replay calls of
- *       proveGateway bytes _rlpParentNodes variable is not validated. In
- *       this case input storage root derived from merkle proof account
- *       nodes is verified with stored storage root of given blockHeight.
- *		 GatewayProven event has parameter wasAlreadyProved to
- *       differentiate between first call and replay calls.
- *
- *  @param _blockHeight Block height at which Gateway/CoGateway is to be proven.
- *  @param _rlpEncodedAccount RLP encoded account node object.
- *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
- *
- *  @return `true` if Gateway account is proved
- */
+     *  @notice External function prove gateway/co-gateway.
+     *
+     *  @dev proveGateway can be called by anyone to verify merkle proof of
+     *       gateway/co-gateway contract address. Trust factor is brought by
+     *       stateRoots mapping. stateRoot is committed in commitStateRoot
+     *       function by mosaic process which is a trusted decentralized system
+     *       running separately. It's important to note that in replay calls of
+     *       proveGateway bytes _rlpParentNodes variable is not validated. In
+     *       this case input storage root derived from merkle proof account
+     *       nodes is verified with stored storage root of given blockHeight.
+     *		 GatewayProven event has parameter wasAlreadyProved to
+     *       differentiate between first call and replay calls.
+     *
+     *  @param _blockHeight Block height at which Gateway/CoGateway is to be
+     *                      proven.
+     *  @param _rlpEncodedAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
+     *
+     *  @return `true` if Gateway account is proved
+     */
     function proveGateway(
         uint256 _blockHeight,
         bytes _rlpEncodedAccount,
@@ -266,7 +294,6 @@ contract GatewayBase {
 
         return true;
     }
-
 
     /**
      * @notice Activate Gateway contract. Can be set only by the
@@ -474,5 +501,29 @@ contract GatewayBase {
         // Update the active proccess.
         inboxActiveProcess[_account] = _messageHash;
     }
+
+    function initiateBountyAmountChange(uint256 _proposedBounty)
+        onlyOrganisation()
+        external
+    {
+        proposedBounty = _proposedBounty;
+
+        emit BountyChangeInitiated(bounty, _proposedBounty);
+    }
+
+    function confirmBountyAmountChange()
+        onlyOrganisation()
+        external
+    {
+        require(proposedBounty != bounty,
+        "Proposed bounty should be different from existing bounty");
+
+        emit BountyChangeConfirmed(bounty, proposedBounty);
+
+        bounty = proposedBounty;
+
+        proposedBounty = 0;
+    }
+
 }
 

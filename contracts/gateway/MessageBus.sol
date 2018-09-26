@@ -31,7 +31,7 @@ library MessageBus {
 
     /* Enum */
 
-    /** Status of the message state machine*/
+    /** Status of the message state machine */
     enum MessageStatus {
         Undeclared,
         Declared,
@@ -40,7 +40,7 @@ library MessageBus {
         Revoked
     }
 
-    /** Status of the message state machine*/
+    /** Status of the message state machine */
     enum MessageBoxType {
         Outbox,
         Inbox
@@ -70,7 +70,7 @@ library MessageBus {
         /** nonce of the sender */
         uint256 nonce;
 
-        /** gas price that sender will pay for reward*/
+        /** gas price that sender will pay for reward */
         uint256 gasPrice;
 
         /** gas limit that sender will pay */
@@ -83,7 +83,7 @@ library MessageBus {
         bytes32 hashLock;
 
         /**
-         *the amount of the gas consumed, this is used for reward
+         * the amount of the gas consumed, this is used for reward
          * calculation
          */
         uint256 gasConsumed;
@@ -753,9 +753,9 @@ library MessageBus {
         bytes32 _messageHash,
         uint256 _nonce
     )
-    public
-    pure
-    returns (bytes32 /* revocationMessageHash */)
+        public
+        pure
+        returns (bytes32 /* revocationMessageHash */)
     {
         return keccak256(
             abi.encode(
@@ -782,9 +782,9 @@ library MessageBus {
         uint256 _gasPrice,
         uint256 _gasLimit
     )
-    public
-    pure
-    returns (bytes32 /* messageHash */)
+        public
+        pure
+        returns (bytes32 /* messageHash */)
     {
         return keccak256(
             abi.encode(
@@ -813,9 +813,9 @@ library MessageBus {
         bytes _signature,
         address _signer
     )
-    private
-    pure
-    returns (bool /*success*/)
+        private
+        pure
+        returns (bool /*success*/)
     {
         if (_signature.length != 65) {
             return false;
@@ -844,27 +844,30 @@ library MessageBus {
         return (ecrecover(_message, v, r, s) == _signer);
     }
 
-    /**
-  *	@notice Get the storage path of the variable inside the struct
-  *
-  *	@param _structPosition Position of struct variable
-  *   @param _offset Offset of variable inside the struct
-  *	@param _key Key of variable incase of mapping
-  *
-  *	@return bytes32 Storage path of the variable
-  */
+    /*
+     * @notice Get the storage path of the variable inside the struct
+     *
+     * @param _structPosition Position of struct variable
+     * @param _offset Offset of variable inside the struct
+     * @param _key Key of variable incase of mapping
+     *
+     * @return bytes32 Storage path of the variable
+     */
     function storageVariablePathForStruct(
         uint8 _structPosition,
         uint8 _offset,
-        bytes32 _key)
-    private
-    pure
-    returns(bytes32 /* storage path */)
+        bytes32 _key
+    )
+        private
+        pure
+        returns(bytes32 /* storage path */)
     {
-        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_structPosition)));
+        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(
+                bytes32(_structPosition)));
         bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
-        bytes32 structPath = keccak256(abi.encodePacked(keccak256(abi.encodePacked(path))));
+        bytes32 structPath = keccak256(abi.encodePacked(keccak256(
+                abi.encodePacked(path))));
         if (_offset == 0) {
             return structPath;
         }
@@ -884,9 +887,9 @@ library MessageBus {
      *	@return bytes value
      */
     function bytes32ToBytes(bytes32 _inBytes32)
-    private
-    pure
-    returns (bytes)
+        private
+        pure
+        returns (bytes)
     {
         bytes memory res = new bytes(32);
         assembly {

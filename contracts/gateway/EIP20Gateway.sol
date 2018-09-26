@@ -57,11 +57,11 @@ import "./SimpleStake.sol";
 import "./Gateway.sol";
 
 /**
- * @title Gateway Contract
+ * @title EIP20Gateway Contract
  *
- * @notice Gateway act as medium to send messages from origin chain to
+ * @notice EIP20Gateway act as medium to send messages from origin chain to
  *         auxiliary chain. Currently gateway supports stake and mint , revert
- *         stake message & linking of gateway and cogateway.
+ *         stake message & linking of EIP20Gateway and EIP20CoGateway.
  */
 contract EIP20Gateway is Gateway {
 
@@ -683,10 +683,6 @@ contract EIP20Gateway is Gateway {
             "Gas limit must not be zero"
         );
         require(
-            _hashLock != bytes32(0),
-            "Hashlock must not be zero"
-        );
-        require(
             _rlpEncodedParentNodes.length > 0,
             "RLP encoded parent nodes must not be zero"
         );
@@ -710,15 +706,11 @@ contract EIP20Gateway is Gateway {
             _gasLimit
         );
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerInboxProcess(
+        registerInboxProcess(
             _redeemer,
             _redeemerNonce,
             messageHash_
         );
-
-        // Delete the progressed/Revoked unstake data
-        delete unstakes[previousMessageHash];
 
         unstakes[messageHash_] = Unstake({
             amount : _amount,

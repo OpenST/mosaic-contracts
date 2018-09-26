@@ -43,11 +43,11 @@ import "./UtilityTokenInterface.sol";
 import "./GatewayLib.sol";
 
 /**
- *  @title CoGatewaySetup contract.
+ *  @title CoGateway contract.
  *
- *  @notice CoGatewaySetup contains functions for initial setup of co-gateway.
+ *  @notice CoGateway contains functions for initial setup of EIP20CoGateway.
  */
-contract CoGateway is  GatewayBase {
+contract CoGateway is GatewayBase {
 
     using SafeMath for uint256;
 
@@ -92,7 +92,7 @@ contract CoGateway is  GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _organisation Organisation address.
-     * @param _remoteGateway Gateway contract address.
+     * @param _gateway Gateway contract address.
      * @param _messageBus Message bus address.
      */
     constructor(
@@ -101,7 +101,7 @@ contract CoGateway is  GatewayBase {
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _remoteGateway,
+        address _gateway,
         address _messageBus
     )
         GatewayBase(
@@ -110,7 +110,7 @@ contract CoGateway is  GatewayBase {
             _bounty,
             _organisation
         )
-    public
+        public
     {
         require(
             _valueToken != address(0),
@@ -121,18 +121,18 @@ contract CoGateway is  GatewayBase {
             "Utility token address must not be zero"
         );
         require(
-            _remoteGateway != address(0),
+            _gateway != address(0),
             "Gateway address must not be zero"
         );
 
         valueToken = _valueToken;
         utilityToken = _utilityToken;
         core = _core;
-        remoteGateway = _remoteGateway;
+        remoteGateway = _gateway;
 
         // update the encodedGatewayPath
         encodedGatewayPath = GatewayLib.bytes32ToBytes(
-            keccak256(abi.encodePacked(_remoteGateway))
+            keccak256(abi.encodePacked(remoteGateway))
         );
     }
 
@@ -182,14 +182,6 @@ contract CoGateway is  GatewayBase {
         require(
             _sender != address(0),
             "Sender must be not be zero"
-        );
-        require(
-            _nonce == _getNonce(_sender),
-            "Sender nonce must be in sync"
-        );
-        require(
-            _hashLock != bytes32(0),
-            "Hash lock must not be zero"
         );
         require(
             _rlpParentNodes.length > 0,
@@ -279,10 +271,6 @@ contract CoGateway is  GatewayBase {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
-        );
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
         );
         require(
             gatewayLinkHash == _messageHash,

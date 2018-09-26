@@ -35,9 +35,9 @@ library GatewayLib {
      * @return codeHash_ return code hash of library
      */
     function libraryCodeHash(address _libraryAddress)
-    view
-    public
-    returns (bytes32)
+        view
+        public
+        returns (bytes32)
     {
         bytes memory code = getCode(_libraryAddress);
         /** trim the first 21 bytes in library code.
@@ -57,9 +57,9 @@ library GatewayLib {
      * @return codehash_ return code hash of contract
      */
     function getCode(address _contractAddress)
-    view
-    public
-    returns (bytes codeHash_)
+        view
+        public
+        returns (bytes codeHash_)
     {
         assembly {
         // retrieve the size of the code, this needs assembly
@@ -96,12 +96,12 @@ library GatewayLib {
         uint256 _initialGas,
         uint256 _estimatedAdditionalGasUsage
     )
-    view
-    external
-    returns (
-        uint256 fee_,
-        uint256 totalGasConsumed_
-    )
+        view
+        external
+        returns (
+            uint256 fee_,
+            uint256 totalGasConsumed_
+        )
     {
         totalGasConsumed_ = _initialGas.sub(
             gasleft()
@@ -128,9 +128,9 @@ library GatewayLib {
      *	@return bytes value
      */
     function bytes32ToBytes(bytes32 _inBytes32)
-    public
-    pure
-    returns (bytes)
+        public
+        pure
+        returns (bytes)
     {
         bytes memory res = new bytes(32);
         assembly {
@@ -149,12 +149,15 @@ library GatewayLib {
      */
     function storageVariablePath(
         uint8 _index,
-        bytes32 _key)
-    external
-    pure
-    returns (bytes32 /* storage path */)
+        bytes32 _key
+    )
+        external
+        pure
+        returns (bytes32 /* storage path */)
     {
-        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(bytes32(_index)));
+        bytes memory indexBytes = BytesLib.leftPad(
+            bytes32ToBytes(bytes32(_index))
+        );
         bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
         return keccak256(abi.encodePacked(keccak256(abi.encodePacked(path))));
@@ -176,9 +179,9 @@ library GatewayLib {
         bytes _encodedPath,
         bytes32 _stateRoot
     )
-    external
-    pure
-    returns (bytes32 storageRoot_)
+        external
+        pure
+        returns (bytes32 storageRoot_)
     {
         // Decode RLP encoded account value
         RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
@@ -187,10 +190,16 @@ library GatewayLib {
         // Array 3rd position is storage root
         storageRoot_ = RLP.toBytes32(accountArray[2]);
         // Hash the rlpEncodedValue value
-        bytes32 hashedAccount = keccak256(abi.encodePacked(_rlpEncodedAccount));
+        bytes32 hashedAccount = keccak256(
+            abi.encodePacked(_rlpEncodedAccount)
+        );
 
-        // Verify the remote OpenST contract against the committed state root with the state trie Merkle proof
-        require(MerklePatriciaProof.verify(hashedAccount, _encodedPath, _rlpParentNodes, _stateRoot), "Account proof is not verified.");
+        /**
+         * Verify the remote OpenST contract against the committed state
+         * root with the state trie Merkle proof
+         */
+        require(MerklePatriciaProof.verify(hashedAccount, _encodedPath,
+            _rlpParentNodes, _stateRoot), "Account proof is not verified.");
 
         return storageRoot_;
     }
@@ -219,9 +228,9 @@ library GatewayLib {
         uint256 _nonce,
         address _token
     )
-    external
-    view
-    returns (bytes32)
+        external
+        view
+        returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(

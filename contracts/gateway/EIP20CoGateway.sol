@@ -56,11 +56,12 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
 import "./CoGateway.sol";
 
 /**
- * @title CoGateway Contract
+ * @title EIP20CoGateway Contract
  *
- * @notice CoGateway act as medium to send messages from auxiliary chain to
- *         origin chain. Currently CoGateway supports redeem and unstake,
- *         revert redeem message & linking of gateway and cogateway.
+ * @notice EIP20CoGateway act as medium to send messages from auxiliary
+ *         chain to origin chain. Currently CoGateway supports redeem and
+ *         unstake, redeem and unstake, revert redeem message & linking of
+ *         gateway and cogateway.
  */
 contract EIP20CoGateway is CoGateway {
 
@@ -158,7 +159,7 @@ contract EIP20CoGateway is CoGateway {
         address beneficiary;
 
         /** Address of the facilitator that initiates the staking process. */
-        address facilitator;
+        address facilitator;  //todo need to discuss revocation process
         /** bounty amount kept by facilitator for transferring redeem messages*/
         uint256 bounty;
     }
@@ -282,10 +283,6 @@ contract EIP20CoGateway is CoGateway {
             "Gas limit must not be zero"
         );
         require(
-            _hashLock != bytes32(0),
-            "Hash lock must not be zero"
-        );
-        require(
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero"
         );
@@ -309,15 +306,11 @@ contract EIP20CoGateway is CoGateway {
             _gasLimit
         );
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerInboxProcess(
+         registerInboxProcess(
             _staker,
             _stakerNonce,
             messageHash_
         );
-
-        // Delete the previous progressed / revoked mint data
-        delete mints[previousMessageHash];
 
         // Create new mint object
         mints[messageHash_] = Mint({
@@ -392,10 +385,6 @@ contract EIP20CoGateway is CoGateway {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
-        );
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -726,11 +715,6 @@ contract EIP20CoGateway is CoGateway {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
-        );
-        //TODO: unlock secret can be zero. Discuss if this check is needed.
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
         );
 
         // Get the message object

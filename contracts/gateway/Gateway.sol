@@ -39,9 +39,9 @@ import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
 
 /**
- *  @title GatewaySetup contract.
+ *  @title Gateway contract.
  *
- *  @notice GatewaySetup contains functions for initial setup of gateway.
+ *  @notice Gateway contains functions for initial setup of EIP20-gateway.
  */
 contract Gateway is  GatewayBase {
 
@@ -170,15 +170,10 @@ contract Gateway is  GatewayBase {
             "Linking is already initiated"
         );
         require(
-            _hashLock != bytes32(0),
-            "Hash lock must not be zero"
-        );
-        require(
             _signature.length == 65,
             "Signature must be of length 65"
         );
 
-        //       (This is already done in other branch)
         bytes32 intentHash = GatewayLib.hashLinkGateway(
             address(this),
             _coGateway,
@@ -271,10 +266,6 @@ contract Gateway is  GatewayBase {
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
-        );
-        require(
-            _unlockSecret != bytes32(0),
-            "Unlock secret must not be zero"
         );
         require(
             gatewayLinkHash == _messageHash,
