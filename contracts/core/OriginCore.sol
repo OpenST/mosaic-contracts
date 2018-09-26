@@ -71,9 +71,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes20 _coreIdentifier;
 
         /**
-         * The block hash of the last finalised checkpoint on auxiliary thot is
+         * The block hash of the last finalised checkpoint on auxiliary that is
          * contained within this meta-block. This block hash may be used to
-         * proove state.
+         * prove state.
          */
         bytes32 _auxiliaryBlockHash;
 
@@ -91,6 +91,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         /** The dynasty of the auxiliary block with the above block hash. */
         uint256 _auxiliaryDynasty;
+
         /**
          * The root hash of the state trie of the latest finalised checkpoint
          * on auxiliary that is part of this meta-block.
@@ -198,7 +199,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _transition The hash of the transition part of the meta-block
      *                    header at the source block.
      * @param _source The hash of the source block.
-     * @param _target The hash of the target blokc.
+     * @param _target The hash of the target block.
      * @param _sourceHeight The height of the source block.
      * @param _targetHeight The height of the target block.
      * @param _v V of the signature.

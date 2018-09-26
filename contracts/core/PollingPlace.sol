@@ -189,7 +189,7 @@ contract PollingPlace is PollingPlaceInterface {
      *                    header at the source block. The meta-block is not yet
      *                    closed when this vote is cast.
      * @param _source The hash of the source block.
-     * @param _target The hash of the target blokc.
+     * @param _target The hash of the target block.
      * @param _sourceHeight The height of the source block.
      * @param _targetHeight The height of the target block.
      * @param _v V of the signature.
