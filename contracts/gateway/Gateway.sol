@@ -21,6 +21,19 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
+/*
+Origin chain      |       Auxiliary chain
+-------------------------------------------------------------------------------
+EIP20Gateway - - - - - - - - - - - EIP20CoGateway
+-------------------------------------------------------------------------------
+1. GatewayLinking:
+
+initiateGatewayLink  --->   confirmGatewayLinkIntent
+|
+progressGatewayLink  --->   progressGatewayLink
+-------------------------------------------------------------------------------
+*/
+
 import './MessageBus.sol';
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";

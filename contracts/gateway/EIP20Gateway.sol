@@ -28,19 +28,14 @@ pragma solidity ^0.4.23;
 -------------------------------------------------------------------------------
            EIP20Gateway - - - - - - - - - - - EIP20CoGateway
 -------------------------------------------------------------------------------
-1. GatewayLinking:
 
-        initiateGatewayLink  --->   confirmGatewayLinkIntent
-             |
-        progressGatewayLink  --->   progressGatewayLink
--------------------------------------------------------------------------------
-2. Staking and Minting: Normal flow
+1. Staking and Minting: Normal flow
 
            stake             --->   confirmStakingIntent
              |
     progressStaking (HL)     --->   progressMinting (HL)
 -------------------------------------------------------------------------------
-3. Staking and Minting (Revert): Normal flow
+2. Staking and Minting (Revert): Normal flow
 
            stake             --->   confirmStakingIntent
              |
@@ -48,7 +43,7 @@ pragma solidity ^0.4.23;
                                             |
     progressRevertStaking    <---   progressRevertStaking
 -------------------------------------------------------------------------------
-4. Staking and Minting: Incase the facilitator is not able to progress
+3. Staking and Minting: Incase the facilitator is not able to progress
 
     stake (by facilitator)    --->   confirmStakingIntent (by facilitator)
                                |

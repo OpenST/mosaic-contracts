@@ -27,19 +27,14 @@ pragma solidity ^0.4.23;
 -------------------------------------------------------------------------------
                 EIP20Gateway - - - - - - - - - - -EIP20CoGateway
 -------------------------------------------------------------------------------
-1. GatewayLinking:
 
-            initiateGatewayLink  --->   confirmGatewayLinkIntent
-                 |
-            progressGatewayLink  --->   progressGatewayLink
--------------------------------------------------------------------------------
-2. Redeem and Unstake: Normal flow
+1. Redeem and Unstake: Normal flow
 
         confirmRedemptionIntent  <---   redeem
                                            |
         progressUnstake (HL)     --->   progressRedemption (HL)
 -------------------------------------------------------------------------------
-3. Redeem and Unstake (Revert): Normal flow
+2. Redeem and Unstake (Revert): Normal flow
 
         confirmRedemptionIntent   <---   redeem
                                             |
@@ -47,7 +42,7 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
             |
     progressRevertRedemption      --->   progressRevertRedemption
 -------------------------------------------------------------------------------
-4.  Redeem and Unstake: Incase the facilitator is not able to progress
+3.  Redeem and Unstake: Incase the facilitator is not able to progress
 
         confirmRedemptionIntent   <---   redeem
         (by facilitator)                 (by facilitator)
