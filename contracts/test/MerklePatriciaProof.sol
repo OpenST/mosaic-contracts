@@ -9,7 +9,7 @@
 //
 ////import "./RLP.sol";
 //
-library MerklePatriciaProof {
+library MockMerklePatriciaProof {
     /*
      * @dev Verifies a merkle patricia proof.
      * @param value The terminating value in the trie.
