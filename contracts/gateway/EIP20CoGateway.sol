@@ -570,7 +570,6 @@ contract EIP20CoGateway is CoGateway {
         message.gasConsumed = initialGas.sub(gasleft());
     }
 
-    //TODO: Discuss this with team. We may not need this at all.
     /**
      * @notice Complete revert staking by providing the merkle proof
      *
@@ -679,12 +678,6 @@ contract EIP20CoGateway is CoGateway {
             "Redeem amount must not be zero"
         );
 
-        //TODO: This check will be removed so that tokens can be burnt.
-        //      Discuss and verify all the cases
-        require(
-            _beneficiary != address(0),
-            "Beneficiary address must not be zero"
-        );
         require(
             _facilitator != address(0),
             "Facilitator address must not be zero"
@@ -696,12 +689,6 @@ contract EIP20CoGateway is CoGateway {
         require(
             _gasLimit != 0,
             "Gas limit must not be zero"
-        );
-
-        //TODO: Do we need this check ?
-        require(
-            _hashLock != bytes32(0),
-            "HashLock must not be zero"
         );
 
         // Get the redemption intent hash
@@ -751,7 +738,6 @@ contract EIP20CoGateway is CoGateway {
             _hashLock
         );
 
-        //TODO: Move this code in MessageBus.
         require(
             messageBox.outbox[messageHash_] ==
             MessageBus.MessageStatus.Undeclared,
@@ -952,7 +938,6 @@ contract EIP20CoGateway is CoGateway {
             "msg.value must match the penalty amount"
         );
 
-        //TODO: Move this code in MessageBus. Should we use changeOutboxState?
         require(
             messageBox.outbox[_messageHash] ==
             MessageBus.MessageStatus.Undeclared,

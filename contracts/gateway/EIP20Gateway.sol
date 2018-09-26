@@ -286,11 +286,6 @@ contract EIP20Gateway is Gateway {
             _gasLimit != 0,
             "Gas limit must not be zero"
         );
-        //TODO: Do we need this check ?
-        require(
-            _hashLock != bytes32(0),
-            "HashLock must not be zero"
-        );
         require(
             _signature.length == 65,
             "Signature must be of length 65"
@@ -1171,7 +1166,6 @@ contract EIP20Gateway is Gateway {
         // Release the amount to beneficiary
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
-        //TODO: Should the rewared here be in OST (bountyToken)?
         //reward facilitator with the reward amount
         stakeVault.releaseTo(msg.sender, rewardAmount_);
 
