@@ -54,9 +54,9 @@ contract Gateway is  GatewayBase {
 
     /**
      * address of ERC20 token in which
-     * the facilitator will stake for a process
+     * the facilitator will stake(bounty) for a process
      */
-    EIP20Interface public bountyToken;
+    EIP20Interface public baseToken;
 
     /** Gateway link message hash. */
 
@@ -68,7 +68,7 @@ contract Gateway is  GatewayBase {
      * @param _token The ERC20 token contract address that will be
      *               staked and corresponding utility tokens will be minted
      *               in auxiliary chain.
-     * @param _bountyToken The ERC20 token address that will be used for
+     * @param _baseToken The ERC20 token address that will be used for
      *                     staking bounty from the facilitators.
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
@@ -77,7 +77,7 @@ contract Gateway is  GatewayBase {
      */
     constructor(
         EIP20Interface _token,
-        EIP20Interface _bountyToken, //TODO: think of a better name
+        EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
@@ -97,11 +97,11 @@ contract Gateway is  GatewayBase {
             "Token contract address must not be zero"
         );
         require(
-            _bountyToken != address(0),
-            "Token contract address for bounty must not be zero"
+            _baseToken != address(0),
+            "Base token contract address for bounty must not be zero"
         );
         token = _token;
-        bountyToken = _bountyToken;
+        baseToken = _baseToken;
 
 
     }

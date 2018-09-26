@@ -205,7 +205,7 @@ contract EIP20Gateway is Gateway {
      * @param _token The ERC20 token contract address that will be
      *               staked and corresponding utility tokens will be minted
      *               in auxiliary chain.
-     * @param _bountyToken The ERC20 token address that will be used for
+     * @param _baseToken The ERC20 token address that will be used for
      *                     staking bounty from the facilitators.
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
@@ -213,9 +213,8 @@ contract EIP20Gateway is Gateway {
      * @param _organisation Organisation address.
      */
     constructor(
-    //TODO: think if this should this be ERC20TokenInterface
         EIP20Interface _token,
-        EIP20Interface _bountyToken, //TODO: think of a better name
+        EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
@@ -223,8 +222,9 @@ contract EIP20Gateway is Gateway {
     )
         Gateway(
             _token,
-            _bountyToken,
-            _core, _bounty,
+            _baseToken,
+            _core,
+            _bounty,
             _organisation,
             _messageBus
         )
@@ -360,7 +360,7 @@ contract EIP20Gateway is Gateway {
         require(token.transferFrom(_staker, address(this), _amount));
 
         // transfer the bounty amount
-        require(bountyToken.transferFrom(msg.sender, address(this), bounty));
+        require(baseToken.transferFrom(msg.sender, address(this), bounty));
 
         // Emit StakingIntentDeclared event
         emit StakingIntentDeclared(
@@ -534,7 +534,7 @@ contract EIP20Gateway is Gateway {
         .div(100);
 
         // transfer the penalty amount
-        require(bountyToken.transferFrom(msg.sender, address(this), penalty));
+        require(baseToken.transferFrom(msg.sender, address(this), penalty));
 
 
         // Emit RevertStakeIntentDeclared event.
@@ -615,14 +615,14 @@ contract EIP20Gateway is Gateway {
         token.transfer(message.sender, amount_);
 
         // burn facilitator bounty
-        bountyToken.transfer(address(0), bounty);
+        baseToken.transfer(address(0), bounty);
         //penalty charged to staker
         uint256 penalty = stakes[_messageHash].bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
 
         // burn staker penalty
-        bountyToken.transfer(address(0), penalty);
+        baseToken.transfer(address(0), penalty);
 
         // delete the stake data
         delete stakes[_messageHash];
@@ -1108,7 +1108,7 @@ contract EIP20Gateway is Gateway {
         // Transfer the staked amount to stakeVault.
         token.transfer(stakeVault, stakeAmount_);
 
-        bountyToken.transfer(msg.sender, stakes[_messageHash].bounty);
+        baseToken.transfer(msg.sender, stakes[_messageHash].bounty);
 
         // delete the stake data
         delete stakes[_messageHash];
