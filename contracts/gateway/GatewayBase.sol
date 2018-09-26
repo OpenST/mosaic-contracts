@@ -14,9 +14,10 @@ import "./MessageBus.sol";
 contract GatewayBase {
 
     using SafeMath for uint256;
-    /** Emitted whenever a Gateway/CoGateway contract is proven.
-     *	wasAlreadyProved parameter differentiates between first call and replay
-     *  call of proveGateway method for same block height
+    /**
+     * Emitted whenever a Gateway/CoGateway contract is proven.
+     * wasAlreadyProved parameter differentiates between first call and replay
+     * call of proveGateway method for same block height
      */
     event GatewayProven(
         address _gateway,
@@ -43,9 +44,12 @@ contract GatewayBase {
     );
 
     /* constants */
+
     /** Position of message bus in the storage */
     uint8 constant MESSAGE_BOX_OFFSET = 1;
-    /** Penalty in bounty amount percentage charged to staker on revert staking
+
+    /**
+     * Penalty in bounty amount percentage charged to staker on revert staking
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
@@ -55,10 +59,9 @@ contract GatewayBase {
     /**
      * Message box.
      * @dev keep this is at location 1, in case this is changed then update
-     *      constant OUTBOX_OFFSET accordingly.
+     *      constant MESSAGE_BOX_OFFSET accordingly.
      */
     MessageBus.MessageBox messageBox;
-
 
     /** Specifies if the Gateway is deactivated for any new staking process. */
     bool public deactivated;
@@ -69,11 +72,10 @@ contract GatewayBase {
     /** amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
-
     /** address of core contract. */
     CoreInterface public core;
 
-    /** path to prove merkle account proof for CoGateway contract. */
+    /** path to prove merkle account proof for Gateway/CoGateway contract. */
     bytes internal encodedGatewayPath;
 
     /** Remote gateway contract address. */
@@ -91,20 +93,29 @@ contract GatewayBase {
     /**
      * Maps address to message hash.
      *
-     * Once the minting or redeem process is started the corresponding
-     * message hash is stored  against the staker/redeemer
-     * address. This is used to restrict simultaneous/multiple minting and
-     * redeem for a particular address. This is also used to determine the
+     * Once the inbox process is started the corresponding
+     * message hash is stored  against the address starting process.
+     * This is used to restrict simultaneous/multiple process
+     * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
     mapping(address /*address*/ => bytes32 /*messageHash*/) inboxActiveProcess;
+
+    /**
+     * Maps address to message hash.
+     *
+     * Once the outbox process is started the corresponding
+     * message hash is stored  against the address starting process.
+     * This is used to restrict simultaneous/multiple process
+     * for a particular address. This is also used to determine the
+     * nonce of the particular address. Refer getNonce for the details.
+     */
     mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
     /* internal variables */
 
     /** address of message bus used to fetch codehash during gateway linking */
     address internal messageBus;
-
 
     /* modifiers */
 
@@ -187,8 +198,8 @@ contract GatewayBase {
         bytes _rlpEncodedAccount,
         bytes _rlpParentNodes
     )
-    external
-    returns (bool /* success */)
+        external
+        returns (bool /* success */)
     {
         // _rlpEncodedAccount should be valid
         require(
@@ -264,9 +275,9 @@ contract GatewayBase {
      * @return `true` if value is set
      */
     function activateGateway()
-    external
-    onlyOrganisation
-    returns (bool)
+        external
+        onlyOrganisation
+        returns (bool)
     {
         require(
             deactivated == true,
@@ -283,9 +294,9 @@ contract GatewayBase {
      * @return `true` if value is set
      */
     function deactivateGateway()
-    external
-    onlyOrganisation
-    returns (bool)
+        external
+        onlyOrganisation
+        returns (bool)
     {
         require(
             deactivated == false,
@@ -303,9 +314,9 @@ contract GatewayBase {
      * @return nonce
      */
     function getNonce(address _account)
-    external
-    view
-    returns (uint256 /* nonce */)
+        external
+        view
+        returns (uint256 /* nonce */)
     {
         // call the private method
         return _getNonce(_account);
@@ -333,9 +344,9 @@ contract GatewayBase {
         bytes32 _intentHash,
         bytes32 _hashLock
     )
-    internal
-    pure
-    returns (MessageBus.Message)
+        internal
+        pure
+        returns (MessageBus.Message)
     {
         return MessageBus.Message(
             {
@@ -358,9 +369,9 @@ contract GatewayBase {
      * @return nonce
      */
     function _getNonce(address _account)
-    internal
-    view
-    returns (uint256 /* nonce */)
+        internal
+        view
+        returns (uint256 /* nonce */)
     {
 
         bytes32 previousProcessMessageHash = outboxActiveProcess[_account];
@@ -385,15 +396,14 @@ contract GatewayBase {
      *
      * @return previousMessageHash_ previous messageHash
      */
-
     function registerOutboxProcess(
         address _account,
         uint256 _nonce,
         bytes32 _messageHash
 
     )
-    internal
-    returns (bytes32 previousMessageHash_)
+        internal
+        returns (bytes32 previousMessageHash_)
     {
         require(
             _nonce == _getNonce(_account),
@@ -432,14 +442,13 @@ contract GatewayBase {
      *
      * @return previousMessageHash_ previous messageHash
      */
-
     function registerInboxProcess(
         address _account,
         uint256 _nonce,
         bytes32 _messageHash
     )
-    internal
-    returns (bytes32 previousMessageHash_)
+        internal
+        returns (bytes32 previousMessageHash_)
     {
         require(
             _nonce == _getNonce(_account),
@@ -464,7 +473,6 @@ contract GatewayBase {
 
         // Update the active proccess.
         inboxActiveProcess[_account] = _messageHash;
-
     }
 }
 

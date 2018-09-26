@@ -26,7 +26,7 @@ pragma solidity ^0.4.23;
 
            Origin chain      |       Auxiliary chain
 -------------------------------------------------------------------------------
-           Gateway - - - - - - - - - - - CoGateway
+           EIP20Gateway - - - - - - - - - - - EIP20CoGateway
 -------------------------------------------------------------------------------
 1. GatewayLinking:
 
@@ -476,23 +476,6 @@ contract EIP20Gateway is Gateway {
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
-
-        /*
-         TODO: Points to be discussed for return bounty
-         1. We do not know the reason why progressStakingWithProof was
-            initiated. Either the facilitator died or staker initiated the
-            revert. So we dont know if the facilitator is genuine or not
-         2. There can also be a scenario where a bad actor will keep observing
-            the ConfirmStakingIntent declared on the CoGateway and can initiate
-            the progressStakingWithProof to take away the bounty.
-         3. proposal: We should provide a grace period before this function can
-             be called.
-         4. proposal: The staker should call this function or provide a
-             signature
-         5. If the point 3 and 4 is accepted then the bounty can always be
-             burnt or transferred to a special address
-        */
-        // Currently we are transferring the bounty amount to the msg.sender
     }
 
     /**
@@ -683,8 +666,8 @@ contract EIP20Gateway is Gateway {
         bytes32 _hashLock,
         bytes memory _rlpEncodedParentNodes
     )
-    public
-    returns (bytes32 messageHash_)
+        public
+        returns (bytes32 messageHash_)
     {
         // Get the initial gas
         uint256 initialGas = gasleft();
@@ -1068,8 +1051,8 @@ contract EIP20Gateway is Gateway {
         uint256 _blockHeight,
         bytes _rlpParentNodes
     )
-    private
-    returns (bool)
+        private
+        returns (bool)
     {
         // Get storage root
         bytes32 storageRoot = storageRoots[_blockHeight];
@@ -1107,12 +1090,12 @@ contract EIP20Gateway is Gateway {
         bytes32 _unlockSecret,
         bool _proofProgress
     )
-    private
-    returns (
-        address staker_,
-        uint256 stakeAmount_,
-        MessageBus.Message storage message_
-    )
+        private
+        returns (
+            address staker_,
+            uint256 stakeAmount_,
+            MessageBus.Message storage message_
+        )
     {
 
         message_ = messages[_messageHash];
@@ -1164,12 +1147,12 @@ contract EIP20Gateway is Gateway {
         bytes32 _unlockSecret,
         bool _proofProgress
     )
-    private
-    returns (
-        uint256 redeemAmount_,
-        uint256 unstakeAmount_,
-        uint256 rewardAmount_
-    )
+        private
+        returns (
+            uint256 redeemAmount_,
+            uint256 unstakeAmount_,
+            uint256 rewardAmount_
+        )
     {
 
         Unstake storage unStake = unstakes[_messageHash];
@@ -1235,9 +1218,9 @@ contract EIP20Gateway is Gateway {
         uint256 _gasPrice,
         uint256 _gasLimit
     )
-    private
-    view
-    returns(bytes32)
+        private
+        view
+        returns(bytes32)
     {
         return GatewayLib.hashRedemptionIntent(
             _amount,

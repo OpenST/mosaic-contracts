@@ -91,7 +91,12 @@ contract CoGateway is  GatewayBase {
         address _remoteGateway,
         address _messageBus
     )
-    GatewayBase(_core, _messageBus, _bounty, _organisation)
+        GatewayBase(
+            _core,
+            _messageBus,
+            _bounty,
+            _organisation
+        )
     public
     {
         require(
@@ -146,8 +151,8 @@ contract CoGateway is  GatewayBase {
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
     )
-    public // TODO: check to change it to external, getting stack to deep.
-    returns (bytes32 messageHash_)
+        public // TODO: check to change it to external, getting stack to deep.
+        returns (bytes32 messageHash_)
     {
         require(
             linked == false,
@@ -255,8 +260,8 @@ contract CoGateway is  GatewayBase {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (bool)
+        external
+        returns (bool)
     {
         require(
             _messageHash != bytes32(0),
@@ -308,9 +313,9 @@ contract CoGateway is  GatewayBase {
     function hashLinkGateway(
         uint256 _nonce
     )
-    private
-    view
-    returns (bytes32)
+        private
+        view
+        returns (bytes32)
     {
         return GatewayLib.hashLinkGateway(
             remoteGateway,

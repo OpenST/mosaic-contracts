@@ -25,7 +25,7 @@ pragma solidity ^0.4.23;
 
                 Origin chain      |       Auxiliary chain
 -------------------------------------------------------------------------------
-                Gateway - - - - - - - - - - - CoGateway
+                EIP20Gateway - - - - - - - - - - -EIP20CoGateway
 -------------------------------------------------------------------------------
 1. GatewayLinking:
 
@@ -215,8 +215,16 @@ contract EIP20CoGateway is CoGateway {
         address _gateway,
         address _messageBus
     )
-    CoGateway(_valueToken, _utilityToken, _core, _bounty, _organisation, _gateway, _messageBus)
-    public
+        CoGateway(
+            _valueToken,
+            _utilityToken,
+            _core,
+            _bounty,
+            _organisation,
+            _gateway,
+            _messageBus
+        )
+        public
     {
 
     }
@@ -252,8 +260,8 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
     )
-    public
-    returns (bytes32 messageHash_)
+        public
+        returns (bytes32 messageHash_)
     {
         // Get the initial gas amount
         uint256 initialGas = gasleft();
@@ -375,13 +383,13 @@ contract EIP20CoGateway is CoGateway {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (
-        address beneficiary_,
-        uint256 stakeAmount_,
-        uint256 mintedAmount_,
-        uint256 rewardAmount_
-    )
+        external
+        returns (
+            address beneficiary_,
+            uint256 stakeAmount_,
+            uint256 mintedAmount_,
+            uint256 rewardAmount_
+        )
     {
         // Get the initial gas amount
         uint256 initialGas = gasleft();
@@ -443,13 +451,13 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-    public
-    returns (
-        address beneficiary_,
-        uint256 stakeAmount_,
-        uint256 mintedAmount_,
-        uint256 rewardAmount_
-    )
+        public
+        returns (
+            address beneficiary_,
+            uint256 stakeAmount_,
+            uint256 mintedAmount_,
+            uint256 rewardAmount_
+        )
     {
         // Get the inital gas
         uint256 initialGas = gasleft();
@@ -507,12 +515,12 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         bytes _rlpEncodedParentNodes
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakerNonce_,
+            uint256 amount_
+        )
     {
         // Get the initial gas value
         uint256 initialGas = gasleft();
@@ -580,12 +588,12 @@ contract EIP20CoGateway is CoGateway {
     function progressRevertStaking(
         bytes32 _messageHash
     )
-    external
-    returns (
-        address staker_,
-        uint256 stakerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address staker_,
+            uint256 stakerNonce_,
+            uint256 amount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -662,10 +670,10 @@ contract EIP20CoGateway is CoGateway {
         uint256 _nonce,
         bytes32 _hashLock
     )
-    public
-    payable
-    isActive
-    returns (bytes32 messageHash_)
+        public
+        payable
+        isActive
+        returns (bytes32 messageHash_)
     {
         require(
             msg.value == bounty,
@@ -788,11 +796,11 @@ contract EIP20CoGateway is CoGateway {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemAmount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -852,11 +860,11 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemAmount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -910,13 +918,13 @@ contract EIP20CoGateway is CoGateway {
     function revertRedemption(
         bytes32 _messageHash
     )
-    payable
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
+        payable
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemerNonce_,
+            uint256 amount_
+        )
     {
 
         require(
@@ -991,12 +999,12 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         bytes _rlpEncodedParentNodes
     )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemerNonce_,
+            uint256 amount_
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -1071,9 +1079,9 @@ contract EIP20CoGateway is CoGateway {
      * @return `true` if value is set
      */
     function activateCoGateway()
-    external
-    onlyOrganisation
-    returns (bool)
+        external
+        onlyOrganisation
+        returns (bool)
     {
         require(
             deactivated == true,
@@ -1090,9 +1098,9 @@ contract EIP20CoGateway is CoGateway {
      * @return `true` if value is set
      */
     function deactivateCoGateway()
-    external
-    onlyOrganisation
-    returns (bool)
+        external
+        onlyOrganisation
+        returns (bool)
     {
         require(
             deactivated == false,
@@ -1121,8 +1129,8 @@ contract EIP20CoGateway is CoGateway {
         uint256 _blockHeight,
         bytes _rlpParentNodes
     )
-    private
-    returns (bool)
+        private
+        returns (bool)
     {
         // Get storage root
         bytes32 storageRoot = storageRoots[_blockHeight];
@@ -1167,9 +1175,9 @@ contract EIP20CoGateway is CoGateway {
         uint256 _gasPrice,
         uint256 _gasLimit
     )
-    private
-    view
-    returns(bytes32)
+        private
+        view
+        returns(bytes32)
     {
         return GatewayLib.hashStakingIntent(
             _amount,
@@ -1209,13 +1217,13 @@ contract EIP20CoGateway is CoGateway {
         bool _proofProgress,
         bytes32 _unlockSecret
     )
-    private
-    returns (
-        address beneficiary_,
-        uint256 stakeAmount_,
-        uint256 mintedAmount_,
-        uint256 rewardAmount_
-    )
+        private
+        returns (
+            address beneficiary_,
+            uint256 stakeAmount_,
+            uint256 mintedAmount_,
+            uint256 rewardAmount_
+        )
     {
         Mint storage mint = mints[_messageHash];
         MessageBus.Message storage message = messages[_messageHash];

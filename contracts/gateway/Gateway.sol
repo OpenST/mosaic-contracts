@@ -15,7 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Origin Chain: GatewaySetup Contract
+// Origin Chain: Gateway Contract
 //
 // http://www.simpletoken.org/
 //
@@ -83,8 +83,13 @@ contract Gateway is  GatewayBase {
         address _organisation,
         address _messageBus
     )
-    GatewayBase(_core, _messageBus, _bounty, _organisation)
-    public
+        GatewayBase(
+            _core,
+            _messageBus,
+            _bounty,
+            _organisation
+        )
+        public
     {
 
         require(
@@ -128,8 +133,8 @@ contract Gateway is  GatewayBase {
         bytes32 _hashLock,
         bytes _signature
     )
-    external
-    returns (bytes32 messageHash_)
+        external
+        returns (bytes32 messageHash_)
     {
         require(
             linked == false,
@@ -247,8 +252,8 @@ contract Gateway is  GatewayBase {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (bool)
+        external
+        returns (bool)
     {
         require(
             _messageHash != bytes32(0),
