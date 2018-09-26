@@ -56,7 +56,8 @@ contract SimpleStake is ProtocolVersioned {
 	 */
 	constructor(
 		EIP20Interface _eip20Token,
-		address _gateway)
+		address _gateway
+	)
 		ProtocolVersioned(_gateway)
 		public
 	{

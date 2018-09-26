@@ -21,10 +21,9 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-
-import "./ProofLib.sol";
 import "./MerklePatriciaProof.sol";
 import "./SafeMath.sol";
+import './BytesLib.sol';
 
 library MessageBus {
 
@@ -32,7 +31,7 @@ library MessageBus {
 
     /* Enum */
 
-    /** Status of the message state machine*/
+    /** Status of the message state machine */
     enum MessageStatus {
         Undeclared,
         Declared,
@@ -41,7 +40,7 @@ library MessageBus {
         Revoked
     }
 
-    /** Status of the message state machine*/
+    /** Status of the message state machine */
     enum MessageBoxType {
         Outbox,
         Inbox
@@ -71,7 +70,7 @@ library MessageBus {
         /** nonce of the sender */
         uint256 nonce;
 
-        /** gas price that sender will pay for reward*/
+        /** gas price that sender will pay for reward */
         uint256 gasPrice;
 
         /** gas limit that sender will pay */
@@ -84,7 +83,7 @@ library MessageBus {
         bytes32 hashLock;
 
         /**
-         *the amount of the gas consumed, this is used for reward
+         * the amount of the gas consumed, this is used for reward
          * calculation
          */
         uint256 gasConsumed;
@@ -189,8 +188,8 @@ library MessageBus {
         );
 
         // get the storage path for proof
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -312,13 +311,13 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
             _messageBox.outbox[messageHash_] ==
-            MessageStatus.DeclaredRevocation ,
+            MessageStatus.DeclaredRevocation,
             "Message status must be Declared"
         );
 
         // Get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
                 messageHash_
@@ -444,8 +443,8 @@ library MessageBus {
 
         // @dev the out box is at location 0 of the MessageBox struct, so it
         // is same as _messageBoxOffset
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -467,82 +466,6 @@ library MessageBus {
     }
 
     /**
-     * @notice Verify the signature is signed by the signer address.
-     *
-     * @param _message Message hash
-     * @param _signature Signature
-     * @param _signer Signer address
-     *
-     * @return `true` if the signature is signed by the signer
-     */
-    function verifySignature(
-        bytes32 _message,
-        bytes _signature,
-        address _signer
-    )
-        internal
-        pure
-        returns (bool /*success*/)
-    {
-        if (_signature.length != 65) {
-            return false;
-        }
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-
-        _message = keccak256(abi.encodePacked(prefix, _message));
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := mload(add(_signature, 32))
-            s := mload(add(_signature, 64))
-            v := byte(0, mload(add(_signature, 96)))
-        }
-        // Version of signature should be 27 or 28, but 0 and 1 are also
-        // possible versions
-        if (v < 27) {
-            v += 27;
-        }
-        if (v != 27 && v != 28) {
-            return false;
-        }
-        return (ecrecover(_message, v, r, s) == _signer);
-    }
-
-    /**
-     * @notice Generate message hash from the input params
-     *
-     * @param _messageTypeHash Message type hash
-     * @param _intentHash Intent hash
-     * @param _nonce Nonce
-     * @param _gasPrice Gas price
-     *
-     * @return Message hash
-     */
-    function messageDigest(
-        bytes32 _messageTypeHash,
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
-    )
-        internal
-        pure
-        returns (bytes32 /* messageHash */)
-    {
-        return keccak256(
-            abi.encode(
-                _messageTypeHash,
-                _intentHash,
-                _nonce,
-                _gasPrice,
-                _gasLimit
-            )
-        );
-    }
-
-    /**
      * @notice Declare a new revocation message. This will update the outbox
      *         status to `DeclaredRevocation` for the given message hash
      *
@@ -552,15 +475,13 @@ library MessageBus {
      * @param _messageBox Message Box
      * @param _messageTypeHash Message type hash
      * @param _message Message object
-     * @param _signature Signed data.
      *
      * @return messageHash_ Message hash
      */
-    function declareRevocationMessage (
+    function declareRevocationMessage(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
-        Message storage _message,
-        bytes _signature
+        Message storage _message
     )
         external
         returns (bytes32 messageHash_)
@@ -579,26 +500,6 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared,
             "Message status must be Declared"
-        );
-
-        // Get the revocation message digest for the signature verification
-        // @dev When sender wants to revert any message. Sender needs to sign
-        // the messageDigest that is generated by the sha3 of the messageHash
-        // and that message`s nonce + 1.
-        // This approach can be discussed and changed accordingly.
-        bytes32 revocationMessageHash = revocationMessageDigest(
-            messageHash_,
-            _message.nonce+1
-        );
-
-        // verify if revocation is signed by the same address that declared
-        // the message
-        require(
-            verifySignature(
-                revocationMessageHash,
-                _signature,
-                _message.sender),
-            "Invalid signature"
         );
 
         // change the status of outbox
@@ -651,8 +552,8 @@ library MessageBus {
         );
 
         // Get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -669,7 +570,7 @@ library MessageBus {
         );
 
         // Update the message box inbox status to `DeclaredRevocation`.
-        _messageBox.inbox[messageHash_] = MessageStatus.DeclaredRevocation;
+        _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
     }
 
     /**
@@ -732,8 +633,8 @@ library MessageBus {
 
         // @dev the out box is at location 1 of the MessageBox struct, so we
         // add one to get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
                 messageHash_
@@ -752,88 +653,6 @@ library MessageBus {
 
         // Update the status to `Revoked`
         _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
-    }
-
-    /**
-     * @notice Update the status for the inbox for a given message hash to
-     *         `Revoked`. Merkle proof is used to verify status of outbox in
-     *         source chain.
-     *
-     * @dev The messsage status in the outbox should be
-     *      either `DeclaredRevocation` or `Revoked`. Either of this status
-     *      will be verified in the merkle proof
-     *
-     * @param _messageBox Message Box
-     * @param _message Message object
-     * @param _messageTypeHash Message type hash
-     * @param _messageBoxOffset position of the messageBox.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
-     * @return messageHash_ Message hash
-     */
-    function progressInboxRevocation(
-        MessageBox storage _messageBox,
-        Message storage _message,
-        bytes32 _messageTypeHash,
-        uint8 _messageBoxOffset,
-        bytes _rlpEncodedParentNodes,
-        bytes32 _storageRoot,
-        MessageStatus _messageStatus
-    )
-        external
-        returns (bytes32 messageHash_)
-    {
-
-        // the message status for the message hash in the outbox must be either
-        // `DeclaredRevocation` or `Revoked`
-        require(
-            _messageStatus == MessageStatus.DeclaredRevocation ||
-            _messageStatus == MessageStatus.Revoked,
-            "Message status must be DeclaredRevocation or Revoked"
-        );
-
-        // Get the message hash
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
-
-        // The existing message status must be `DeclaredRevocation`
-        require(
-            _messageBox.inbox[messageHash_] ==
-            MessageStatus.DeclaredRevocation,
-            "Message status must be DeclaredRevocation"
-        );
-
-        // @dev the out box is at location 0 of the MessageBox struct, so we
-        // can use _messageBoxOffset as it is
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
-                _messageBoxOffset,
-                OUTBOX_OFFSET,
-                messageHash_
-            )
-        );
-
-        // Perform the merkle proof
-        require(
-            MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
-                path,
-                _rlpEncodedParentNodes,
-                _storageRoot),
-            "Merkle proof verification failed"
-        );
-
-        // Update the status to `Revoked`
-        _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
     }
 
     /**
@@ -920,6 +739,8 @@ library MessageBus {
         }
     }
 
+    /* public functions */
+
     /**
      * @notice Generate revocation message hash from the input params
      *
@@ -932,7 +753,7 @@ library MessageBus {
         bytes32 _messageHash,
         uint256 _nonce
     )
-        internal
+        public
         pure
         returns (bytes32 /* revocationMessageHash */)
     {
@@ -945,37 +766,137 @@ library MessageBus {
     }
 
     /**
-     * @notice Calculate the fee amount
+     * @notice Generate message hash from the input params
      *
-     * @param _message Message object
-     * @param _initialGas  initial gas at the start of the process
-     * @param _estimatedAdditionalGasUsage Estimated gas that will be used
+     * @param _messageTypeHash Message type hash
+     * @param _intentHash Intent hash
+     * @param _nonce Nonce
+     * @param _gasPrice Gas price
      *
-     * @return fee amount
+     * @return Message hash
      */
-    function feeAmount(
-        Message storage _message,
-        uint256 _initialGas,
-        uint256 _estimatedAdditionalGasUsage
+    function messageDigest(
+        bytes32 _messageTypeHash,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit
     )
-        external
-        returns (uint256 fee_)
+        public
+        pure
+        returns (bytes32 /* messageHash */)
     {
-        _message.gasConsumed = _initialGas.sub(
-            gasleft()
-        ).add(
-            _estimatedAdditionalGasUsage
-        ).add(
-            _message.gasConsumed
+        return keccak256(
+            abi.encode(
+                _messageTypeHash,
+                _intentHash,
+                _nonce,
+                _gasPrice,
+                _gasLimit
+            )
         );
-
-        if (_message.gasConsumed < _message.gasLimit) {
-            fee_ = _message.gasConsumed.mul(_message.gasPrice);
-        } else {
-            fee_ = _message.gasLimit.mul(_message.gasPrice);
-        }
     }
 
+    /* private functions */
+
+    /**
+     * @notice Verify the signature is signed by the signer address.
+     *
+     * @param _message Message hash
+     * @param _signature Signature
+     * @param _signer Signer address
+     *
+     * @return `true` if the signature is signed by the signer
+     */
+    function verifySignature(
+        bytes32 _message,
+        bytes _signature,
+        address _signer
+    )
+        private
+        pure
+        returns (bool /*success*/)
+    {
+        if (_signature.length != 65) {
+            return false;
+        }
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+
+        _message = keccak256(abi.encodePacked(prefix, _message));
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 32))
+            s := mload(add(_signature, 64))
+            v := byte(0, mload(add(_signature, 96)))
+        }
+        // Version of signature should be 27 or 28, but 0 and 1 are also
+        // possible versions
+        if (v < 27) {
+            v += 27;
+        }
+
+        if (v != 27 && v != 28) {
+            return false;
+        }
+        return (ecrecover(_message, v, r, s) == _signer);
+    }
+
+    /*
+     * @notice Get the storage path of the variable inside the struct
+     *
+     * @param _structPosition Position of struct variable
+     * @param _offset Offset of variable inside the struct
+     * @param _key Key of variable incase of mapping
+     *
+     * @return bytes32 Storage path of the variable
+     */
+    function storageVariablePathForStruct(
+        uint8 _structPosition,
+        uint8 _offset,
+        bytes32 _key
+    )
+        private
+        pure
+        returns(bytes32 /* storage path */)
+    {
+        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(
+                bytes32(_structPosition)));
+        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+        bytes memory path = BytesLib.concat(keyBytes, indexBytes);
+        bytes32 structPath = keccak256(abi.encodePacked(keccak256(
+                abi.encodePacked(path))));
+        if (_offset == 0) {
+            return structPath;
+        }
+        bytes32 storagePath;
+        uint8 offset = _offset;
+        assembly {
+            storagePath := add(structPath, offset)
+        }
+        return keccak256(abi.encodePacked(storagePath));
+    }
+
+    /**
+     *	@notice Convert bytes32 to bytes
+     *
+     *	@param _inBytes32 bytes32 value
+     *
+     *	@return bytes value
+     */
+    function bytes32ToBytes(bytes32 _inBytes32)
+        private
+        pure
+        returns (bytes)
+    {
+        bytes memory res = new bytes(32);
+        assembly {
+            mstore(add(32,res), _inBytes32)
+        }
+        return res;
+    }
 }
 
 
