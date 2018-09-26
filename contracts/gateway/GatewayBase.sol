@@ -502,6 +502,12 @@ contract GatewayBase {
         inboxActiveProcess[_account] = _messageHash;
     }
 
+    /**
+     * @notice Method allows organization to propose new bounty amount.
+     *
+     * @param _proposedBounty proposed bounty amount.
+     *
+     */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()
         external
@@ -511,18 +517,29 @@ contract GatewayBase {
         emit BountyChangeInitiated(bounty, _proposedBounty);
     }
 
+    /**
+     * @notice Method allows organization to confirm proposed bounty amount.
+     *
+     */
     function confirmBountyAmountChange()
         onlyOrganisation()
         external
+        returns(
+            uint256 changedBountyAmount_,
+            uint256 previousBountyAmount_
+        )
     {
         require(proposedBounty != bounty,
-        "Proposed bounty should be different from existing bounty");
+            "Proposed bounty should be different from existing bounty");
 
-        emit BountyChangeConfirmed(bounty, proposedBounty);
+        changedBountyAmount_ = proposedBounty;
+        previousBountyAmount_ = bounty;
 
         bounty = proposedBounty;
 
         proposedBounty = 0;
+
+        emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
 }
