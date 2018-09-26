@@ -16,12 +16,12 @@ pragma solidity ^0.4.23;
 
 //import "truffle/Assert.sol";
 //import "truffle/DeployedAddresses.sol";
-import "../../contracts/gateway/MessageBus.sol";
+import "../../contracts/gateway/MockMessageBus.sol";
 import "../../contracts/gateway/Hasher.sol";
 
 contract MessageBusTestWrapper {
 
-    MessageBus.MessageBox messageBox;
+    MockMessageBus.MessageBox messageBox;
 
     bytes32 unlockSecret = keccak256(abi.encodePacked('secret'));
     bytes32 unlockSecret1 = keccak256(abi.encodePacked('secret1'));
@@ -43,14 +43,14 @@ contract MessageBusTestWrapper {
     /* Signature Verification Parameters */
     address sender = address(0x8014986b452DE9f00ff9B036dcBe522f918E2fE4);
     bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
-    bytes32 messageHash = MessageBus.messageDigest(
+    bytes32 messageHash = MockMessageBus.messageDigest(
         hasher.stakeTypeHash(),
         intentHash,
         nonce,
         gasPrice,
         gasLimit
     );
-    MessageBus.Message message = MessageBus.Message({
+    MockMessageBus.Message message = MockMessageBus.Message({
         intentHash : intentHash,
         nonce : nonce,
         gasPrice : gasPrice,
@@ -72,14 +72,14 @@ contract MessageBusTestWrapper {
         bytes32 _hashLock,
         uint256 _gasConsumed,
         bytes _signature,
-        MessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash
     )
         public
         returns(bytes32)
     {
 
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -90,7 +90,7 @@ contract MessageBusTestWrapper {
         });
         messageBox.outbox[_messageHash] = _status;
 
-        bytes32 messageHashFromDeclare= MessageBus.declareMessage(
+        bytes32 messageHashFromDeclare= MockMessageBus.declareMessage(
             messageBox,
             _messageTypeHash,
             message,
@@ -98,7 +98,6 @@ contract MessageBusTestWrapper {
         );
 
         return(messageHashFromDeclare);
-
     }
 
     function progressOutbox
@@ -112,12 +111,12 @@ contract MessageBusTestWrapper {
         bytes32 _hashLock,
         uint256 _gasConsumed,
         bytes _signature,
-        MessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -129,7 +128,7 @@ contract MessageBusTestWrapper {
 
         messageBox.outbox[_messageHash] = _status;
 
-        bytes32 messageHashReturned = MessageBus.progressOutbox(
+        bytes32 messageHashReturned = MockMessageBus.progressOutbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -148,12 +147,12 @@ contract MessageBusTestWrapper {
         bytes32 _hashLock,
         uint256 _gasConsumed,
         bytes _signature,
-        MessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -165,13 +164,12 @@ contract MessageBusTestWrapper {
 
         messageBox.inbox[_messageHash] = _status;
 
-        bytes32 messageHashReturned = MessageBus.progressOutbox(
+        bytes32 messageHashReturned = MockMessageBus.progressOutbox(
             messageBox,
             _messageTypeHash,
             message,
             _unlockSecret
         );
-
     }
 
     function progressInboxRevocation
@@ -183,14 +181,14 @@ contract MessageBusTestWrapper {
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash,
-        MessageBus.MessageStatus _inboxStatus
+        MockMessageBus.MessageStatus _inboxStatus
     )
-    public
-    returns(bytes32)
+        public
+        returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -200,10 +198,8 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        // When the state for messageHash in inbox is DeclaredRevocation
-        // with outbox state for messageHash is DeclaredRevocation
-        messageBox.inbox[_messageHash] = _inboxStatus;//MessageBus.MessageStatus.DeclaredRevocation;
-        bytes32 messageHashFromConfirmRevocation = MessageBus.progressInboxRevocation(
+        messageBox.inbox[_messageHash] = _inboxStatus;
+        messageHash_ = MockMessageBus.progressInboxRevocation(
             messageBox,
             message,
             _messageTypeHash,
@@ -212,7 +208,6 @@ contract MessageBusTestWrapper {
             _storageRoot,
             _messageStatus
         );
-        return messageHashFromConfirmRevocation;
     }
 
     function progressOutboxRevocation
@@ -224,14 +219,14 @@ contract MessageBusTestWrapper {
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash,
-        MessageBus.MessageStatus _inboxStatus
+        MockMessageBus.MessageStatus _outboxStatus
     )
-    public
-    returns(bytes32)
+        public
+        returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -239,12 +234,10 @@ contract MessageBusTestWrapper {
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
-            });
+        });
 
-        // When the state for messageHash in inbox is DeclaredRevocation
-        // with outbox state for messageHash is DeclaredRevocation
-        messageBox.outbox[_messageHash] = _inboxStatus;//MessageBus.MessageStatus.DeclaredRevocation;
-        bytes32 messageHashFromConfirmRevocation = MessageBus.progressOutboxRevocation(
+        messageBox.outbox[_messageHash] = _outboxStatus;
+        messageHash_ = MockMessageBus.progressOutboxRevocation(
             messageBox,
             message,
             _messageTypeHash,
@@ -253,7 +246,6 @@ contract MessageBusTestWrapper {
             _storageRoot,
             _messageStatus
         );
-        return messageHashFromConfirmRevocation;
     }
 
     function confirmRevocation
@@ -264,13 +256,13 @@ contract MessageBusTestWrapper {
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash
     )
-    public
-    returns(bytes32)
+        public
+        returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -280,10 +272,8 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        // When the state for messageHash in inbox is DeclaredRevocation
-        // with outbox state for messageHash is DeclaredRevocation
         messageBox.inbox[_messageHash] = _messageStatus;
-        bytes32 messageHashFromConfirmRevocation = MessageBus.confirmRevocation(
+        messageHash_ = MockMessageBus.confirmRevocation(
             messageBox,
             _messageTypeHash,
             message,
@@ -291,7 +281,6 @@ contract MessageBusTestWrapper {
             _messageBoxOffset,
             _storageRoot
         );
-        return messageHashFromConfirmRevocation;
     }
 
     function confirmMessage
@@ -302,13 +291,13 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -318,10 +307,8 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        // When the state for messageHash in inbox is DeclaredRevocation
-        // with outbox state for messageHash is DeclaredRevocation
         messageBox.inbox[_messageHash] = _messageStatus;
-        messageHash_ = MessageBus.confirmMessage(
+        messageHash_ = MockMessageBus.confirmMessage(
             messageBox,
             _messageTypeHash,
             message,
@@ -382,14 +369,14 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash,
-        MessageBus.MessageStatus _outboxStatus
+        MockMessageBus.MessageStatus _outboxStatus
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -402,7 +389,7 @@ contract MessageBusTestWrapper {
         // When the state for messageHash in inbox is DeclaredRevocation
         // with outbox state for messageHash is DeclaredRevocation
         messageBox.outbox[_messageHash] = _outboxStatus;
-        messageHash_ = MessageBus.progressOutboxWithProof(
+        messageHash_ = MockMessageBus.progressOutboxWithProof(
             messageBox,
             _messageTypeHash,
             message,
@@ -422,14 +409,14 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageBus.MessageStatus _messageStatus,
+        MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash,
-        MessageBus.MessageStatus _inboxStatus
+        MockMessageBus.MessageStatus _inboxStatus
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MessageBus.Message({
+        message = MockMessageBus.Message({
             intentHash : intentHash,
             nonce : nonce,
             gasPrice : uint256(0x12A05F200),
@@ -437,10 +424,10 @@ contract MessageBusTestWrapper {
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
-            });
+        });
 
         messageBox.inbox[_messageHash] = _inboxStatus;
-        messageHash_ = MessageBus.progressInboxWithProof(
+        messageHash_ = MockMessageBus.progressInboxWithProof(
             messageBox,
             _messageTypeHash,
             message,
@@ -449,10 +436,7 @@ contract MessageBusTestWrapper {
             _storageRoot,
             _messageStatus
         );
-
-
     }
-
 
 }
 
