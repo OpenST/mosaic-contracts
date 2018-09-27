@@ -346,7 +346,7 @@ contract GatewayBase {
         returns (uint256 /* nonce */)
     {
         // call the private method
-        return _getNonce(_account);
+        return _getOutboxNonce(_account);
     }
 
     /**
@@ -389,13 +389,14 @@ contract GatewayBase {
     }
 
     /**
-     * @notice Private function to get the nonce for the given account address
+     * @notice Internal function to get the outbox nonce for the given account
+     address
      *
      * @param _account Account address for which the nonce is to fetched
      *
      * @return nonce
      */
-    function _getNonce(address _account)
+    function _getOutboxNonce(address _account)
         internal
         view
         returns (uint256 /* nonce */)
@@ -412,6 +413,33 @@ contract GatewayBase {
 
         return message.nonce.add(1);
     }
+
+    /**
+     * @notice Internal function to get the inbox nonce for the given account
+     *         address.
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function _getInboxNonce(address _account)
+        internal
+        view
+        returns (uint256 /* nonce */)
+    {
+
+        bytes32 previousProcessMessageHash = inboxActiveProcess[_account];
+
+        if (previousProcessMessageHash == bytes32(0)) {
+            return 1;
+        }
+
+        MessageBus.Message storage message =
+        messages[previousProcessMessageHash];
+
+        return message.nonce.add(1);
+    }
+
 
     /**
      * @notice Clears the previous outbox process. Validates the
@@ -433,7 +461,7 @@ contract GatewayBase {
         returns (bytes32 previousMessageHash_)
     {
         require(
-            _nonce == _getNonce(_account),
+            _nonce == _getOutboxNonce(_account),
             "Invalid nonce"
         );
 
@@ -478,7 +506,7 @@ contract GatewayBase {
         returns (bytes32 previousMessageHash_)
     {
         require(
-            _nonce == _getNonce(_account),
+            _nonce == _getInboxNonce(_account),
             "Invalid nonce"
         );
 
