@@ -18,13 +18,12 @@ import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../../contracts/gateway/MockMessageBus.sol";
 import "../../contracts/gateway/Hasher.sol";
-//import "./KeyValueStoreStub.sol";
 
 
 /**
  * @title Tests the MessageBus library.
  */
-contract TestMessageBus { //is KeyValueStoreStub{
+contract TestMessageBus {
 
     MockMessageBus.MessageBox messageBox;
 
