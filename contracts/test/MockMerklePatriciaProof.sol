@@ -1,14 +1,13 @@
-///*
-// * @title MerklePatriciaVerifier
-// * @author Sam Mayo (sammayo888@gmail.com)
-// *
-// * @dev Library for verifing merkle patricia proofs.
-// */
-//
-//pragma solidity ^0.4.23;
-//
-////import "./RLP.sol";
-//
+/*
+ * @title MerklePatriciaVerifier
+ * @author Sam Mayo (sammayo888@gmail.com)
+ *
+ * @dev Library for verifing merkle patricia proofs.
+ */
+
+pragma solidity ^0.4.23;
+
+
 library MockMerklePatriciaProof {
     /*
      * @dev Verifies a merkle patricia proof.

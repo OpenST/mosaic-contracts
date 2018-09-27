@@ -73,7 +73,7 @@ library MerklePatriciaProof {
         }
     }
 
-    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) external pure returns (bool res, uint loc, bytes path_debug) {
+    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) public pure returns (bool res, uint loc, bytes path_debug) {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
