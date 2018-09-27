@@ -73,72 +73,72 @@ library MerklePatriciaProof {
         }
     }
 
-//    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) external pure returns (bool res, uint loc, bytes path_debug) {
-//        RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
-//        RLP.RLPItem[] memory parentNodes = RLP.toList(item);
-//
-//        bytes memory currentNode;
-//        RLP.RLPItem[] memory currentNodeList;
-//
-//        bytes32 nodeKey = root;
-//        uint pathPtr = 0;
-//
-//        bytes memory path = _getNibbleArray2(not_encodedPath);
-//        path_debug = path;
-//        if(path.length == 0) { loc = 0; res = false; return;}
-//
-//        for (uint i=0; i<parentNodes.length; i++) {
-//            if(pathPtr > path.length) {loc = 1; res = false; return;}
-//
-//            currentNode = RLP.toBytes(parentNodes[i]);
-//            if(nodeKey != keccak256(abi.encodePacked(currentNode))) { res = false; loc = 100+i; return;}
-//            currentNodeList = RLP.toList(parentNodes[i]);
-//
-//            loc = currentNodeList.length;
-//
-//            if(currentNodeList.length == 17) {
-//                if(pathPtr == path.length) {
-//                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
-//                        res = true; return;
-//                    } else {
-//                        loc = 3;
-//                        return;
-//                    }
-//                }
-//
-//                uint8 nextPathNibble = uint8(path[pathPtr]);
-//                if(nextPathNibble > 16) {
-//                    loc = 4;
-//                    return; }
-//                nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
-//                pathPtr += 1;
-//            } else if(currentNodeList.length == 2) {
-//                pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
-//
-//                if(pathPtr == path.length) {//leaf node
-//                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[1]))) == value) {
-//                        res = true; return;
-//                    } else {
-//                        loc = 5;
-//                        return;
-//                    }
-//                }
-//                //extension node
-//                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
-//                    loc = 6;
-//                    res = (keccak256() == value);
-//                    return;
-//                }
-//
-//                nodeKey = RLP.toBytes32(currentNodeList[1]);
-//            } else {
-//                loc = 7;
-//                return;
-//            }
-//        }
-//        loc = 8;
-//        return;
-//    }
+    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) external pure returns (bool res, uint loc, bytes path_debug) {
+        RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
+        RLP.RLPItem[] memory parentNodes = RLP.toList(item);
+
+        bytes memory currentNode;
+        RLP.RLPItem[] memory currentNodeList;
+
+        bytes32 nodeKey = root;
+        uint pathPtr = 0;
+
+        bytes memory path = _getNibbleArray2(not_encodedPath);
+        path_debug = path;
+        if(path.length == 0) { loc = 0; res = false; return;}
+
+        for (uint i=0; i<parentNodes.length; i++) {
+            if(pathPtr > path.length) {loc = 1; res = false; return;}
+
+            currentNode = RLP.toBytes(parentNodes[i]);
+            if(nodeKey != keccak256(abi.encodePacked(currentNode))) { res = false; loc = 100+i; return;}
+            currentNodeList = RLP.toList(parentNodes[i]);
+
+            loc = currentNodeList.length;
+
+            if(currentNodeList.length == 17) {
+                if(pathPtr == path.length) {
+                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
+                        res = true; return;
+                    } else {
+                        loc = 3;
+                        return;
+                    }
+                }
+
+                uint8 nextPathNibble = uint8(path[pathPtr]);
+                if(nextPathNibble > 16) {
+                    loc = 4;
+                    return; }
+                nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
+                pathPtr += 1;
+            } else if(currentNodeList.length == 2) {
+                pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
+
+                if(pathPtr == path.length) {//leaf node
+                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[1]))) == value) {
+                        res = true; return;
+                    } else {
+                        loc = 5;
+                        return;
+                    }
+                }
+                //extension node
+                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
+                    loc = 6;
+                    res = (keccak256() == value);
+                    return;
+                }
+
+                nodeKey = RLP.toBytes32(currentNodeList[1]);
+            } else {
+                loc = 7;
+                return;
+            }
+        }
+        loc = 8;
+        return;
+    }
 
     function _nibblesToTraverse(bytes encodedPartialPath, bytes path, uint pathPtr) private pure returns (uint) {
         uint len;
