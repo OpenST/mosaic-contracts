@@ -24,61 +24,77 @@ interface OriginCoreInterface {
      *
      * @param _height Height of the meta-block in the chain of meta-blocks.
      * @param _parent The hash of the parent meta-block.
-     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _updatedValidators The array of addresses of the validators that
+     *                           are updated within this block. Updated weights
+     *                           at the same index relate to the address in
+     *                           this array.
+     * @param _updatedWeights The array of weights that corresponds to the
+     *                        updated validators. Updated validators at the
+     *                        same index relate to the weight in this array.
+     *                        Weights of existing validators can only decrease.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
      * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
      *                            that is part of this meta-block.
-     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
-     *                          on the auxiliary chain.
-     * @param _stateRoot The state root of the last finalised checkpoint that
-     *                   is part of this meta-block.
+     * @param _gas The total consumed gas on auxiliary within this meta-block.
      * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
-     * @param _signatureRoot The root of the trie of votes from the last
-     *                       finalised checkpoint to its direct child
-     *                       checkpoint.
-     * @param _depositedValidators Auxiliary addresses of the validators that
-     *                             deposited during the previous meta-block.
-     * @param _loggedOutValidators  Auxiliary addresses of the validators that
-     *                              logged out during the previous meta-block.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
      *
      * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
         uint256 _height,
         bytes32 _parent,
-        uint256 _gas,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes20 _coreIdentifier,
         bytes32 _auxiliaryBlockHash,
-        uint256 _auxiliaryDynasty,
-        bytes32 _stateRoot,
+        uint256 _gas,
         bytes32 _transactionRoot,
-        bytes32 _signatureRoot,
-        address[] _depositedValidators,
-        address[] _loggedOutValidators
+        uint256 _auxiliaryDynasty
     )
         external
         returns (bool success_);
 
     /**
-     * @notice Verifies two of the votes that justified the direct child
-     *         checkpoint of the last justified auxiliary checkpoint in the
-     *         meta-block. A supermajority of such votes finalise the last
-     *         auxiliary checkpoint of this meta-block.
+     * @notice Verifies a vote that justified the direct child checkpoint of
+     *         the last justified auxiliary checkpoint in the meta-block. A
+     *         supermajority of such votes finalise the last auxiliary
+     *         checkpoint of this meta-block.
      *
-     * @dev Verifies two votes, as the trie branch includes two leaf nodes in
-     *      order to verify all hashes.
+     * @dev Must track which votes have already been verified so that the same
+     *      vote never gets verified more than once.
      *
      * @param _metaBlockHash The block hash of the meta-block for which the
      *                       votes shall be verified.
-     * @param _voteTrieBranchRlp The trie branch of the trie of votes from the
-     *                           last finalised checkpoint to its direct child
-     *                           checkpoint.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target blokc.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
      *
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
         bytes32 _metaBlockHash,
-        bytes _voteTrieBranchRlp
+        bytes20 _coreIdentifier,
+        bytes32 _transition,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     )
         external
         returns (bool success_);
