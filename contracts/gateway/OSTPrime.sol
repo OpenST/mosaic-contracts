@@ -1,7 +1,7 @@
 /* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,20 +22,23 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-/// Simple Token Prime [ST'] is equivalently staked for with Simple Token
-/// on the value chain and is the base token that pays for gas on the utility chain.
-/// The gasprice on utility chains is set in [ST'-Wei/gas] (like Ether pays for gas
-/// on Ethereum mainnet) when sending a transaction on the open utility chain.
+/// Simple Token Prime [OST'] is equivalently staked for with Simple Token
+/// on the value chain and is the base token that pays for gas on the utility
+/// chain. The gasprice on utility chains is set in [ST'-Wei/gas] (like
+/// Ether pays for gas on Ethereum mainnet) when sending a transaction on
+/// the open utility chain.
 
 import "./SafeMath.sol";
 
 /** utility chain contracts */
+import "./EIP20Token.sol";
 import "./UtilityTokenAbstract.sol";
 import "./OSTPrimeConfig.sol";
 
 
 /**
- *  @title OSTPrime contract which implements UtilityTokenAbstract and OSTPrimeConfig.
+ *  @title OSTPrime contract which implements UtilityTokenAbstract and
+ *         OSTPrimeConfig.
  *
  *  @notice A freely tradable equivalent representation of Simple Token [ST]
  *          on Ethereum mainnet on the utility chain.
@@ -44,8 +47,23 @@ import "./OSTPrimeConfig.sol";
  *       It is not an EIP20 token, but functions as the genesis guardian
  *       of the finite amount of base tokens on the utility chain.
  */
-contract OSTPrime is UtilityTokenAbstract, OSTPrimeConfig {
+contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
     using SafeMath for uint256;
+
+    event Claim(
+        address indexed _beneficiary,
+        uint256 _amount,
+        uint256 _totalSupply,
+        address _utilityToken
+    );
+
+    event Redeem(
+        address indexed _redeemer,
+        uint256 _amount,
+        uint256 _totalSupply,
+        address _utilityToken
+    );
+
 
     /** Storage */
 
@@ -71,26 +89,20 @@ contract OSTPrime is UtilityTokenAbstract, OSTPrimeConfig {
     /**
      *  @notice Contract constructor.
      *
-     *  @dev Sets the UtilityTokenAbstract contract. 
-     *
-     *  @param _token ERC20 token address
-     *  @param _conversionRate Conversion rate of the token.
-     *  @param _conversionRateDecimals Decimal places of conversion rate of token.
-     */    
-    constructor(
-        address _token,
-        uint256 _conversionRate,
-        uint8 _conversionRateDecimals)
+     *  @param _token ERC20 token address in origin chain
+     */
+    constructor(address _token)
         public
-        UtilityTokenAbstract(
-        _conversionRate,
-        _conversionRateDecimals)
-        {
-            require(_token != address(0),
-            "ERC20 token address cannot be 0");
+        UtilityTokenAbstract()
+    {
+        require(
+            _token != address(0),
+            "ERC20 token address cannot be 0"
+        );
 
-            token = _token;
-        }
+        totalTokenSupply = 0;
+        token = _token;
+    }
 
     /**
      *  @notice Public function initialize. 
@@ -108,6 +120,22 @@ contract OSTPrime is UtilityTokenAbstract, OSTPrimeConfig {
         require(msg.value == TOKENS_MAX);
         initialized = true;
     }
+
+    /**
+     *  @notice Public view function totalSupply.
+     *
+     *  @dev Get totalTokenSupply as view so that child cannot edit.
+     *
+     *  @return uint256 Total token supply.
+     */
+    function totalSupply()
+        public
+        view
+        returns (uint256)
+    {
+        return totalTokenSupply;
+    }
+
 
     /**
      *  @notice Public function mint.
@@ -131,11 +159,11 @@ contract OSTPrime is UtilityTokenAbstract, OSTPrimeConfig {
     {
         // add the minted amount to the beneficiary's claim 
         require(mintInternal(_beneficiary, _amount));
+        require(mintEIP20(_beneficiary, _amount));
 
         assert(address(this).balance >= _amount);
 
-        // transfer throws if insufficient funds
-        _beneficiary.transfer(_amount);
+        Minted(_beneficiary, _amount, address(this), token, totalTokenSupply);
 
         return true;
     }
@@ -158,13 +186,67 @@ contract OSTPrime is UtilityTokenAbstract, OSTPrimeConfig {
         public
         onlyProtocol
         onlyInitialized
+        returns (bool /** success */)
+    {
+        require(burnInternal(_beneficiary, _amount));
+        require(burnEIP20(_beneficiary, _amount));
+
+
+        Burnt(_burner, _amount, address(this), token, totalTokenSupply);
+
+        return true;
+    }
+
+    /// @dev transfer full claim to beneficiary
+    ///      claim can be called publicly as the beneficiary
+    ///      and amount are set, and this allows for reduced
+    ///      steps on the user experience to complete the claim
+    ///      automatically.
+    /// @notice for first stake of ST' the gas price by one validator
+    ///         has to be zero to deploy the contracts and accept the very
+    ///         first staking of ST for ST' and its protocol executions.
+    function claim(
+        uint256 _amount
+    )
+        public
+        onlyInitialized
+        returns (bool /* success */)
+    {
+        require(
+            _amount <= balances[msg.sender],
+            "Insufficient balance"
+        );
+
+        assert(this.balance >= amount);
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        balances[address(this)] = balances[address(this)].add(_amount);
+
+        // transfer throws if insufficient funds
+        msg.sender.transfer(amount);
+
+        emit Transfer(msg.sender, address(this), _amount);
+
+        emit Claim(msg.sender, _amount, totalTokenSupply, address(this));
+
+        return true;
+    }
+
+    function redeem(uint256 _amount)
+        public
+        onlyInitialized
         payable
         returns (bool /** success */)
     {
-        // only accept the exact amount of base tokens to be returned
-        // to the ST' minting contract
         require(msg.value == _amount);
+        assert(address(this).balance >= _amount);
 
-        return burnInternal(_burner, _amount);
+        balances[_beneficiary] = balances[_beneficiary].add(_amount);
+        balances[address(this)] = balances[address(this)].sub(_amount);
+
+        emit Transfer(address(this), msg.sender, _amount);
+
+        emit Redeem(msg.sender, _amount, totalTokenSupply, address(this));
+
+
     }
 }

@@ -29,30 +29,47 @@ pragma solidity ^0.4.23;
  */
 contract UtilityTokenInterface {
 
-   /**
-    *  Minted raised when new utility tokens are minted for a beneficiary
-    *  Minted utility tokens still need to be claimed by anyone to transfer
-    *  them to the beneficiary.
-    */
+    /** Events */
+
+    /**
+     *  Minted raised when new utility tokens are minted for a beneficiary
+     *  Minted utility tokens still need to be claimed by anyone to transfer
+     *  them to the beneficiary.
+     */
     event Minted(
         address indexed _beneficiary,
         uint256 _amount,
-        uint256 _totalSupply
+        uint256 _totalSupply,
+        address _utilityToken
     );
 
     event Burnt(
         address indexed _account,
         uint256 _amount,
-        uint256 _totalSupply
+        uint256 _totalSupply,
+        address _utilityToken
     );
 
     /** Public Functions */
 
-    /** @dev Mint new utility token into  claim for beneficiary */
-    function mint(address _beneficiary, uint256 _amount) public returns (bool success);
+    function totalSupply()
+        public
+        view
+        returns (uint256);
 
-    /** @dev Burn utility tokens after having redeemed them
-     *       through the protocol for the staked Simple Token
-     */
-    function burn(address _burner, uint256 _amount) public payable returns (bool success);
+    /** @dev Mint new utility token into  claim for beneficiary */
+    function mint(
+        address _beneficiary,
+        uint256 _amount
+    )
+        internal
+        returns (bool success);
+
+    /** @dev Burn utility tokens */
+    function burn(
+        address _burner,
+        uint256 _amount
+    )
+        internal
+        returns (bool success);
 }
