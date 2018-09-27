@@ -262,7 +262,7 @@ contract PollingPlace is PollingPlaceInterface {
      *                        meta-block that would result from the source
      *                        block being finalised and proposed to origin.
      * @param _source The hash of the source block.
-     * @param _target The hash of the target blokc.
+     * @param _target The hash of the target block.
      * @param _sourceHeight The height of the source block.
      * @param _targetHeight The height of the target block.
      * @param _v V of the signature.
