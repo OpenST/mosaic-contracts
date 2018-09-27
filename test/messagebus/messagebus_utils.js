@@ -1,8 +1,8 @@
 'use strict'
 
-const MessageBus = artifacts.require('MessageBusTestWrapper');
-const web3 = require("web3");
-const utils =  require("../lib/utils");
+const MessageBus = artifacts.require('MessageBusTestWrapper'),
+			web3 = require("web3"),
+			utils =  require("../lib/utils");
 
 let messageBus;
 
