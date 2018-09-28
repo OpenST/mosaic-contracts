@@ -23,7 +23,6 @@ pragma solidity ^0.4.23;
 
 import "./CoreInterface.sol";
 import "./MerklePatriciaProof.sol";
-import "./ProofLib.sol";
 import "./WorkersInterface.sol";
 import "./RLP.sol";
 import "./SafeMath.sol";
