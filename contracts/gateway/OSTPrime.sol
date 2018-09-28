@@ -32,7 +32,7 @@ import "./SafeMath.sol";
 
 /** utility chain contracts */
 import "./EIP20Token.sol";
-import "./UtilityTokenAbstract.sol";
+import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 
 
@@ -64,11 +64,6 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
         address _utilityToken
     );
 
-
-    /** Storage */
-
-    address public token;
-
     /** set when ST' has received TOKENS_MAX tokens; when uninitialised minting is not allowed */
     bool private initialized;
 
@@ -78,7 +73,7 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
      *  @notice Modifier onlyInitialized.
      *
      *  @dev Checks if initialized is set to True to proceed.
-     */    
+     */
     modifier onlyInitialized() {
         require(initialized);
         _;
@@ -121,81 +116,7 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
         initialized = true;
     }
 
-    /**
-     *  @notice Public view function totalSupply.
-     *
-     *  @dev Get totalTokenSupply as view so that child cannot edit.
-     *
-     *  @return uint256 Total token supply.
-     */
-    function totalSupply()
-        public
-        view
-        returns (uint256)
-    {
-        return totalTokenSupply;
-    }
 
-
-    /**
-     *  @notice Public function mint.
-     *
-     *  @dev Only callable by Protocol, Inititalized. Mint new Simple Token Prime into circulation and increase 
-     *       total supply accordingly. Tokens are minted into a claim to ensure that the protocol completion does 
-     *       not continue into foreign contracts at _beneficiary.
-     *  
-     *  @param _beneficiary Address of the beneficiary.
-     *  @param _amount Amount of tokens to mint.
-     *
-     *  @return bool True if mint is successful for beneficiary, false otherwise.
-     */
-    function mint(
-        address _beneficiary,
-        uint256 _amount)
-        public
-        onlyProtocol
-        onlyInitialized
-        returns (bool /** success */)
-    {
-        // add the minted amount to the beneficiary's claim 
-        require(mintInternal(_beneficiary, _amount));
-        require(mintEIP20(_beneficiary, _amount));
-
-        assert(address(this).balance >= _amount);
-
-        Minted(_beneficiary, _amount, address(this), token, totalTokenSupply);
-
-        return true;
-    }
-
-    /**
-     *  @notice Public function burn.
-     *
-     *  @dev Only callable by Protocol, Inititalized. Substracts _amount tokens from the balance of 
-     *       function caller's address. Burn utility tokens after having redeemed them through 
-     *       the protocol for the staked Simple Token.
-     *
-     *  @param _burner Address of token burner.
-     *  @param _amount Amount of tokens to burn.
-     *
-     *  @return bool True if burn is successful, false otherwise.
-     */    
-    function burn(
-        address _burner,
-        uint256 _amount)
-        public
-        onlyProtocol
-        onlyInitialized
-        returns (bool /** success */)
-    {
-        require(burnInternal(_beneficiary, _amount));
-        require(burnEIP20(_beneficiary, _amount));
-
-
-        Burnt(_burner, _amount, address(this), token, totalTokenSupply);
-
-        return true;
-    }
 
     /// @dev transfer full claim to beneficiary
     ///      claim can be called publicly as the beneficiary
@@ -217,12 +138,12 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
             "Insufficient balance"
         );
 
-        assert(this.balance >= amount);
+        assert(address(this).balance >= _amount);
         balances[msg.sender] = balances[msg.sender].sub(_amount);
         balances[address(this)] = balances[address(this)].add(_amount);
 
         // transfer throws if insufficient funds
-        msg.sender.transfer(amount);
+        msg.sender.transfer(_amount);
 
         emit Transfer(msg.sender, address(this), _amount);
 
@@ -240,7 +161,7 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
         require(msg.value == _amount);
         assert(address(this).balance >= _amount);
 
-        balances[_beneficiary] = balances[_beneficiary].add(_amount);
+        balances[msg.sender] = balances[msg.sender].add(_amount);
         balances[address(this)] = balances[address(this)].sub(_amount);
 
         emit Transfer(address(this), msg.sender, _amount);

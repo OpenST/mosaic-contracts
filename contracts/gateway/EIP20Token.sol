@@ -35,6 +35,7 @@ contract EIP20Token is EIP20Interface {
     string private tokenName;
     string private tokenSymbol;
     uint8  private tokenDecimals;
+    uint256 totalTokenSupply;
 
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
@@ -51,6 +52,7 @@ contract EIP20Token is EIP20Interface {
         tokenSymbol      = _symbol;
         tokenName        = _name;
         tokenDecimals    = _decimals;
+        totalTokenSupply = 0;
     }
 
     /**
@@ -90,6 +92,22 @@ contract EIP20Token is EIP20Interface {
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
     }
+
+    /**
+     *  @notice Public view function totalSupply.
+     *
+     *  @dev Get totalTokenSupply as view so that child cannot edit.
+     *
+     *  @return uint256 Total token supply.
+     */
+    function totalSupply()
+        public
+        view
+        returns (uint256)
+    {
+        return totalTokenSupply;
+    }
+
 
     /**
      *  @notice Public view function allowance.
@@ -199,46 +217,6 @@ contract EIP20Token is EIP20Interface {
 
         emit Approval(msg.sender, _spender, _value);
 
-        return true;
-    }
-
-    /**
-     *  @notice Internal function mintEIP20.
-     *
-     *  @dev Adds _amount tokens to EIP20Token contract balance.
-     *
-     *  @param _beneficiary Address of tokens beneficiary.
-     *  @param _amount Amount of tokens to mint.
-     *
-     *  @return bool True if mint is successful, false otherwise.
-     */
-    function mintEIP20(
-        address _beneficiary,
-        uint256 _amount
-    )
-        internal
-        returns (bool /* success */)
-    {
-        // mint EIP20 tokens in contract address for them to be claimed
-        balances[_beneficiary] = balances[_beneficiary].add(_amount);
-        return true;
-    }
-
-    /**
-     *  @notice Internal function burnEIP20.
-     *
-     *  @dev Subtracts _amount tokens from the balance of function caller's
-     *       address.
-     *
-     *  @param _amount Amount of tokens to burn.
-     *
-     *  @return bool True if burn is successful, false otherwise.
-     */
-    function burnEIP20(uint256 _amount)
-        internal
-        returns (bool /* success */)
-    {
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
         return true;
     }
 }

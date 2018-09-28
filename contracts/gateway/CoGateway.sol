@@ -259,7 +259,7 @@ contract CoGateway is Hasher {
     uint256 public bounty;
 
     /** address of utility token. */
-    address public utilityToken;
+    address private utilityToken;
 
     /** address of value token. */
     address public valueToken;
