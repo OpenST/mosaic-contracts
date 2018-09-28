@@ -43,7 +43,7 @@ contract TestMessageBus is KeyValueStoreStub {
 
         bytes32 returnedMessageHash = MessageBus.progressInbox(
             messageBox,
-            hasher.stakeTypeHash(),
+            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes32("UNLOCK_SECRET")
         );
@@ -60,58 +60,20 @@ contract TestMessageBus is KeyValueStoreStub {
     }
 
     /**
-     * @notice it tests verify signature method of messageBus.
-     */
-    function testVerifySignature()
-        external
-    {
-        bytes memory signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
-        Assert.equal(
-            MessageBus.verifySignature(
-                getBytes32("HASHED_MESSAGE_TO_SIGN"),
-                signature,
-                address(0)
-            ),
-            false,
-            "Signer is not verified when signer address is empty."
-        );
-        Assert.equal(
-            MessageBus.verifySignature(
-                getBytes32("HASHED_MESSAGE_TO_SIGN"),
-                '',
-                getAddress("SENDER")
-            ),
-            false,
-            "Signer is not verified when signature is empty."
-        );
-        Assert.equal(
-            MessageBus.verifySignature(
-                getBytes32("HASHED_MESSAGE_TO_SIGN"),
-                signature,
-                getAddress("SENDER")
-            ),
-            true,
-            "Signer not verified."
-        );
-    }
-
-    /**
      * @notice it tests declare revocation method of messageBus.
      */
     function testDeclareRevocationMessage()
         external
     {
         // Calculated by hashing revocationMessage
-        bytes memory revocationSignature = hex"bda7f05d7bcbac276482ff0809c532edd57b10cce5638d3dede72bfd73a3ef3140e200b0a0e313beacdb79491d387000949751f2e6fe7eec4c03044ecc14fc2d00";
         bytes32 messageHash = getBytes32(
             "MESSAGE_BUS_DIGEST"
         );
         messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
         bytes32 returnedMessageHash = MessageBus.declareRevocationMessage(
             messageBox,
-            hasher.stakeTypeHash(),
-            message,
-            revocationSignature
+            getBytes32("STAKE_TYPEHASH"),
+            message
         );
         Assert.equal(
             bytes32(returnedMessageHash),

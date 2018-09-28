@@ -14,8 +14,9 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../contracts/gateway/Hasher.sol";
+
 import "../../contracts/gateway/MessageBus.sol";
+import "../../contracts/gateway/GatewayBase.sol";
 
 /**
  * @title Stub data used across tests.
@@ -27,9 +28,14 @@ contract KeyValueStoreStub {
     mapping(bytes32 => bytes32) public bytes32Storage;
     mapping(bytes32 => bytes) public bytesStorage;
 
-    Hasher hasher = new Hasher();
     MessageBus.MessageBox messageBox;
     MessageBus.Message message;
+
+    bytes32 constant public STAKE_TYPEHASH = keccak256(
+        abi.encode(
+            "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
+        )
+    );
 
     /* Special Functions */
 
@@ -75,13 +81,15 @@ contract KeyValueStoreStub {
         setBytes32(
             "MESSAGE_BUS_DIGEST",
             MessageBus.messageDigest(
-                hasher.stakeTypeHash(),
+                STAKE_TYPEHASH,
                 getBytes32("INTENT_HASH"),
                 getUint256("NONCE"),
                 getUint256("GAS_PRICE"),
                 getUint256("GAS_LIMIT")
             )
         );
+
+        setBytes32("STAKE_TYPEHASH", STAKE_TYPEHASH);
 
         // Set Message
         message = MessageBus.Message({
@@ -106,6 +114,7 @@ contract KeyValueStoreStub {
      */
     function getUint256(string key)
         internal
+        view
         returns (uint256)
     {
         return uintStorage[hashed(key)];
@@ -120,6 +129,7 @@ contract KeyValueStoreStub {
      */
     function getAddress(string key)
         internal
+        view
         returns (address)
     {
         return addressStorage[hashed(key)];
@@ -134,6 +144,7 @@ contract KeyValueStoreStub {
      */
     function getBytes32(string key)
         internal
+        view
         returns (bytes32)
     {
         return bytes32Storage[hashed(key)];
@@ -148,6 +159,7 @@ contract KeyValueStoreStub {
      */
     function getBytes(string key)
         internal
+        view
         returns (bytes)
     {
         return bytesStorage[hashed(key)];
@@ -218,6 +230,7 @@ contract KeyValueStoreStub {
      */
     function hashed(string data)
         internal
+        pure
         returns (bytes32)
     {
         return keccak256(abi.encodePacked(data));
