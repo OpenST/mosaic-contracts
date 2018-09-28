@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../lib/web3.js');
+
+const BN = require('bn.js');
 const Utils = require('../lib/utils.js');
 const SimpleStake_utils = require('./SimpleStake_utils.js');
 
@@ -37,10 +39,11 @@ const SimpleStake_utils = require('./SimpleStake_utils.js');
 ///
 
 contract('SimpleStake', function(accounts) {
-	const gateway = accounts[4];
+	const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
+	const openSTProtocol = accounts[4];
 	const to = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
+	const ST1 = web3.utils.toWei(new BN('1'), "ether");
+	const ST2 = web3.utils.toWei(new BN('2'), "ether");
 
 	describe ('Properties', async () => {
 		before(async () => {
@@ -52,6 +55,10 @@ contract('SimpleStake', function(accounts) {
 		it('has eip20Token', async () => {
 			assert.equal(await simpleStake.eip20Token.call(), token.address);
 		})
+		
+		it('has uuid', async () => {
+			assert.equal(await simpleStake.uuid.call(), UUID);
+		})
 	})
 	
 	describe('ReleaseTo', async () => {
@@ -62,23 +69,23 @@ contract('SimpleStake', function(accounts) {
 	        await token.transfer(simpleStake.address, ST2, { from: accounts[0] });
 		})
 
-		it('fails to release by non-gateway', async () => {
+		it('fails to release by non-openSTProtocol', async () => {
             await Utils.expectThrow(simpleStake.releaseTo(to, ST1, { from: accounts[0] }));
 		});
 
-		it('fails to release by gateway with null to', async () => {
-            await Utils.expectThrow(simpleStake.releaseTo(0, ST1, { from: gateway }));
+		it('fails to release by openSTProtocol with null to', async () => {
+            await Utils.expectThrow(simpleStake.releaseTo(0, ST1, { from: openSTProtocol }));
 		});
 
 		it('successfully releases to', async () => {
 			var stake = await simpleStake.getTotalStake.call();
-			assert.equal(stake.toNumber(), ST2.toNumber());
-			assert.equal(await simpleStake.releaseTo.call(to, ST1, { from: gateway }), true);
-			result = await simpleStake.releaseTo(to, ST1, { from: gateway });
+			assert(stake.eq(ST2));
+			assert.equal(await simpleStake.releaseTo.call(to, ST1, { from: openSTProtocol }), true);
+			result = await simpleStake.releaseTo(to, ST1, { from: openSTProtocol });
 
 			var updatedStake = await simpleStake.getTotalStake.call();
-			assert.equal(updatedStake.toNumber(), stake.minus(ST1).toNumber());
-			SimpleStake_utils.checkReleasedEventGroup(result, gateway, to, ST1);
+			assert(updatedStake.eq(stake.sub(ST1)));
+			SimpleStake_utils.checkReleasedEventGroup(result, openSTProtocol, to, ST1);
 		});
 	})
 })

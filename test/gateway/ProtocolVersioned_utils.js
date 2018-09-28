@@ -32,13 +32,13 @@ module.exports.deployProtocolVersioned = async (artifacts, accounts) => {
 
 module.exports.checkProtocolTransferInitiatedEvent = (event, _existingProtocol, _proposedProtocol, _activationHeight) => {
    if (Number.isInteger(_activationHeight)) {
-      _activationHeight = new BigNumber(_activationHeight);
+      _activationHeight = new BN(_activationHeight);
    }
 
    assert.equal(event.event, "ProtocolTransferInitiated");
    assert.equal(event.args._existingProtocol, _existingProtocol);
    assert.equal(event.args._proposedProtocol, _proposedProtocol);
-   assert.equal(event.args._activationHeight.toNumber(), _activationHeight.toNumber());
+   assert(event.args._activationHeight.eq(_activationHeight));
 }
 
 module.exports.checkProtocolTransferCompletedEvent = (event, _newProtocol) => {
