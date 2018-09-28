@@ -26,6 +26,7 @@ import "../../contracts/gateway/Hasher.sol";
 contract TestMessageBus {
 
     MockMessageBus.MessageBox messageBox;
+    MockMessageBus.Message message;
 
     bytes32 unlockSecret = keccak256(abi.encodePacked('secret'));
     bytes32 hashLock = keccak256(abi.encodePacked(unlockSecret));
@@ -92,7 +93,8 @@ contract TestMessageBus {
     function testVerifySignature()
         external
     {
-        bytes memory signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
+        bytes memory signature = new bytes(65);
+        signature = hex"1d1491a8373bcd39c9b779edc17e391dcf5f34becae481594e7e9fc9f1df6807399d4d13735e0e54e95f848a648856c2499de7a94832192e2038e0374f14bc211b";
         Assert.equal(
             MockMessageBus.verifySignature(hashedMessage, signature, address(0)),
             false,
