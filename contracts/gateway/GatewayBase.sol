@@ -350,6 +350,46 @@ contract GatewayBase {
     }
 
     /**
+     * @notice Method allows organization to propose new bounty amount.
+     *
+     * @param _proposedBounty proposed bounty amount.
+     */
+    function initiateBountyAmountChange(uint256 _proposedBounty)
+        onlyOrganisation()
+        external
+    {
+        proposedBounty = _proposedBounty;
+
+        emit BountyChangeInitiated(bounty, _proposedBounty);
+    }
+
+    /**
+     * @notice Method allows organization to confirm proposed bounty amount.
+     */
+    function confirmBountyAmountChange()
+        onlyOrganisation()
+        external
+        returns(
+            uint256 changedBountyAmount_,
+            uint256 previousBountyAmount_
+        )
+    {
+        require(
+            proposedBounty != bounty,
+            "Proposed bounty should be different from existing bounty."
+        );
+
+        changedBountyAmount_ = proposedBounty;
+        previousBountyAmount_ = bounty;
+
+        bounty = proposedBounty;
+
+        proposedBounty = 0;
+
+        emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
+    }
+
+    /**
      * @notice Create and return Message object.
      *
      * @dev This function is to avoid stack too deep error.
@@ -390,7 +430,7 @@ contract GatewayBase {
 
     /**
      * @notice Internal function to get the outbox nonce for the given account
-     address
+     *         address
      *
      * @param _account Account address for which the nonce is to fetched
      *
@@ -403,15 +443,7 @@ contract GatewayBase {
     {
 
         bytes32 previousProcessMessageHash = outboxActiveProcess[_account];
-
-        if (previousProcessMessageHash == bytes32(0)) {
-            return 1;
-        }
-
-        MessageBus.Message storage message =
-        messages[previousProcessMessageHash];
-
-        return message.nonce.add(1);
+        return getMessageNonce(previousProcessMessageHash);
     }
 
     /**
@@ -429,15 +461,7 @@ contract GatewayBase {
     {
 
         bytes32 previousProcessMessageHash = inboxActiveProcess[_account];
-
-        if (previousProcessMessageHash == bytes32(0)) {
-            return 1;
-        }
-
-        MessageBus.Message storage message =
-        messages[previousProcessMessageHash];
-
-        return message.nonce.add(1);
+        return getMessageNonce(previousProcessMessageHash);
     }
 
 
@@ -531,44 +555,26 @@ contract GatewayBase {
     }
 
     /**
-     * @notice Method allows organization to propose new bounty amount.
+     * @notice Returns the next nonce of inbox or outbox process
      *
-     * @param _proposedBounty proposed bounty amount.
+     * @param _messageHash Message hash
      *
+     * @return _nonce nonce of next inbox or outbox process
      */
-    function initiateBountyAmountChange(uint256 _proposedBounty)
-        onlyOrganisation()
-        external
+    function getMessageNonce(bytes32 _messageHash)
+        private
+        returns(uint256)
     {
-        proposedBounty = _proposedBounty;
+        if (_messageHash == bytes32(0)) {
+            return 1;
+        }
 
-        emit BountyChangeInitiated(bounty, _proposedBounty);
+        MessageBus.Message storage message =
+        messages[_messageHash];
+
+        return message.nonce.add(1);
     }
 
-    /**
-     * @notice Method allows organization to confirm proposed bounty amount.
-     *
-     */
-    function confirmBountyAmountChange()
-        onlyOrganisation()
-        external
-        returns(
-            uint256 changedBountyAmount_,
-            uint256 previousBountyAmount_
-        )
-    {
-        require(proposedBounty != bounty,
-            "Proposed bounty should be different from existing bounty");
-
-        changedBountyAmount_ = proposedBounty;
-        previousBountyAmount_ = bounty;
-
-        bounty = proposedBounty;
-
-        proposedBounty = 0;
-
-        emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
-    }
 
 }
 
