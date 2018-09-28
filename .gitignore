@@ -13,6 +13,7 @@ contracts/abi/
 # don't commit node_modules
 node_modules
 
+package-lock.json
 # Do not track builds
 build/
 
