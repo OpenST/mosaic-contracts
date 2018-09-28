@@ -15,8 +15,8 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 
-import "../../contracts/gateway/MessageBus.sol";
-import "../../contracts/gateway/GatewayBase.sol";
+import "../../gateway/MessageBus.sol";
+import "../../gateway/GatewayBase.sol";
 
 /**
  * @title Stub data used across tests.
