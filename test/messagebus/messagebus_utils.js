@@ -69,7 +69,6 @@ MessageBusUtils.prototype = {
 			sender,
 			hashLock,
 			gasConsumed,
-			signature,
 			messageStatus,
 			messageHash,
 			unlockSecret
@@ -86,7 +85,6 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			hashLock = params.hashLock,
 			gasConsumed = params.gasConsumed,
-			signature = params.signature,
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			unlockSecret = params.unlockSecret;
@@ -100,7 +98,6 @@ MessageBusUtils.prototype = {
 			sender,
 			hashLock,
 			gasConsumed,
-			signature,
 			messageStatus,
 			messageHash,
 			unlockSecret
@@ -194,7 +191,8 @@ MessageBusUtils.prototype = {
 			messageStatus = params.messageStatus,
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			messageBoxOffset = params.messageBoxOffset;
 		
 		await utils.expectThrow(messageBus.confirmMessage.call(
 			messageTypeHash,
@@ -203,6 +201,7 @@ MessageBusUtils.prototype = {
 			sender,
 			rlpEncodedParentNodes,
 			storageRoot,
+			messageBoxOffset,
 			messageStatus,
 			messageHash
 		));

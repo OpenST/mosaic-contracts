@@ -22,9 +22,9 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 
-import "./ProofLib.sol";
 import "../test/MockMerklePatriciaProof.sol";
 import "./SafeMath.sol";
+import "./BytesLib.sol";
 
 library MockMessageBus {
 
@@ -189,8 +189,8 @@ library MockMessageBus {
         );
 
         // get the storage path for proof
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -317,8 +317,8 @@ library MockMessageBus {
         );
 
         // Get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
                 messageHash_
@@ -444,8 +444,8 @@ library MockMessageBus {
 
         // @dev the out box is at location 0 of the MessageBox struct, so it
         // is same as _messageBoxOffset
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -651,8 +651,8 @@ library MockMessageBus {
         );
 
         // Get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -732,8 +732,8 @@ library MockMessageBus {
 
         // @dev the out box is at location 1 of the MessageBox struct, so we
         // add one to get the path
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
                 messageHash_
@@ -814,8 +814,8 @@ library MockMessageBus {
 
         // @dev the out box is at location 0 of the MessageBox struct, so we
         // can use _messageBoxOffset as it is
-        bytes memory path = ProofLib.bytes32ToBytes(
-            ProofLib.storageVariablePathForStruct(
+        bytes memory path = bytes32ToBytes(
+            storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
                 messageHash_
@@ -943,6 +943,62 @@ library MockMessageBus {
             )
         );
     }
+
+
+    /**
+     *	@notice Convert bytes32 to bytes
+     *
+     *	@param _inBytes32 bytes32 value
+     *
+     *	@return bytes value
+     */
+    function bytes32ToBytes(bytes32 _inBytes32)
+        private
+        pure
+        returns (bytes)
+    {
+        bytes memory res = new bytes(32);
+        assembly {
+            mstore(add(32,res), _inBytes32)
+        }
+        return res;
+    }
+
+    /*
+     * @notice Get the storage path of the variable inside the struct
+     *
+     * @param _structPosition Position of struct variable
+     * @param _offset Offset of variable inside the struct
+     * @param _key Key of variable incase of mapping
+     *
+     * @return bytes32 Storage path of the variable
+     */
+    function storageVariablePathForStruct(
+        uint8 _structPosition,
+        uint8 _offset,
+        bytes32 _key
+    )
+        private
+        pure
+        returns(bytes32 /* storage path */)
+    {
+        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(
+                bytes32(_structPosition)));
+        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+        bytes memory path = BytesLib.concat(keyBytes, indexBytes);
+        bytes32 structPath = keccak256(abi.encodePacked(keccak256(
+                abi.encodePacked(path))));
+        if (_offset == 0) {
+            return structPath;
+        }
+        bytes32 storagePath;
+        uint8 offset = _offset;
+        assembly {
+            storagePath := add(structPath, offset)
+        }
+        return keccak256(abi.encodePacked(storagePath));
+    }
+
 
     /**
      * @notice Calculate the fee amount

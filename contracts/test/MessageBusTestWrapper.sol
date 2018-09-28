@@ -14,10 +14,7 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//import "truffle/Assert.sol";
-//import "truffle/DeployedAddresses.sol";
 import "../../contracts/gateway/MockMessageBus.sol";
-import "../../contracts/gateway/Hasher.sol";
 
 contract MessageBusTestWrapper {
 
@@ -35,7 +32,12 @@ contract MessageBusTestWrapper {
     bytes rlpEncodedParentNodes = '0xf8f8f8b18080a011eb05caf5fa62e9b0fffc9118cf6c7a6f10870db11d837223bf585fc7283b2c80a0be65b7596c589a734b53d15e0cc9f13eae2083bf0173b1c2baf1534d9273882d8080808080a0997f2ab256882c505e8887d9f7622a18a17dc5727a0e9d04d314e59d482a508780a088976b814f3477b2d25aa3992c31abc4a4299557a6e94ca7786a440b15a07f1e80a04b140101c7c54b2c4d69e4cf35a353d7d969e439c48fe7388eaec325f1bfe6578080f843a0390decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563a1a03132333400000000000000000000000000000000000000000000000000000008' ;
     uint8 outboxOffset = 0;
     bytes32 storageRoot = 0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d;
-    Hasher hasher = new Hasher();
+
+    bytes32 constant STAKE_TYPEHASH = keccak256(
+        abi.encode(
+            "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
+        )
+    );
 
     bytes32 messageTypeHash = keccak256(abi.encodePacked("gatewayLink"));
 
@@ -44,7 +46,7 @@ contract MessageBusTestWrapper {
     address sender = address(0x8014986b452DE9f00ff9B036dcBe522f918E2fE4);
     bytes32 hashedMessage = 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a;
     bytes32 messageHash = MockMessageBus.messageDigest(
-        hasher.stakeTypeHash(),
+        STAKE_TYPEHASH,
         intentHash,
         nonce,
         gasPrice,
@@ -86,7 +88,7 @@ contract MessageBusTestWrapper {
             sender : _sender,
             gasLimit : _gasLimit,
             hashLock : _hashLock,
-            gasConsumed: 0
+            gasConsumed: _gasConsumed
         });
         messageBox.outbox[_messageHash] = _status;
 
@@ -110,11 +112,12 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        bytes _signature,
         MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
+        public
+        returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
             intentHash : _intentHash,
@@ -123,12 +126,12 @@ contract MessageBusTestWrapper {
             sender : _sender,
             gasLimit : _gasLimit,
             hashLock : _hashLock,
-            gasConsumed: 0
+            gasConsumed: _gasConsumed
         });
 
         messageBox.outbox[_messageHash] = _status;
 
-        bytes32 messageHashReturned = MockMessageBus.progressOutbox(
+        messageHash_ = MockMessageBus.progressOutbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -146,11 +149,12 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        bytes _signature,
         MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
+        public
+        returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
             intentHash : _intentHash,
@@ -159,12 +163,12 @@ contract MessageBusTestWrapper {
             sender : _sender,
             gasLimit : _gasLimit,
             hashLock : _hashLock,
-            gasConsumed: 0
+            gasConsumed: _gasConsumed
         });
 
         messageBox.inbox[_messageHash] = _status;
 
-        bytes32 messageHashReturned = MockMessageBus.progressOutbox(
+        messageHash_ = MockMessageBus.progressOutbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -189,10 +193,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
@@ -203,7 +207,7 @@ contract MessageBusTestWrapper {
             messageBox,
             message,
             _messageTypeHash,
-            1,
+            _messageBoxOffset,
             _rlpEncodedParentNodes,
             _storageRoot,
             _messageStatus
@@ -227,10 +231,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
@@ -241,7 +245,7 @@ contract MessageBusTestWrapper {
             messageBox,
             message,
             _messageTypeHash,
-            1,
+            _messageBoxOffset,
             _rlpEncodedParentNodes,
             _storageRoot,
             _messageStatus
@@ -253,6 +257,7 @@ contract MessageBusTestWrapper {
         bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
+        address _sender,
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
@@ -263,10 +268,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
@@ -291,6 +296,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
+        uint8 _messageBoxOffset,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _messageHash
     )
@@ -298,10 +304,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
@@ -313,53 +319,48 @@ contract MessageBusTestWrapper {
             _messageTypeHash,
             message,
             _rlpEncodedParentNodes,
-            1,
+            _messageBoxOffset,
             _storageRoot
         );
-        return messageHash_;
     }
 
-//    function declareRevocationMessage
-//    (
-//        bytes32 _messageTypeHash,
-//        bytes32 _intentHash,
-//        uint256 _nonce,
-//        uint256 _gasPrice,
-//        uint256 _gasLimit,
-//        address _sender,
-//        bytes32 _hashLock,
-//        uint256 _gasConsumed,
-//        bytes _signature,
-//        MessageBus.MessageStatus  _status,
-//        bytes32 _messageHash
-//    )
-//    public
-//    returns(bytes32)
-//    {
-//
-//        message = MessageBus.Message({
-//            intentHash : _intentHash,
-//            nonce : _nonce,
-//            gasPrice : _gasPrice,
-//            sender : _sender,
-//            gasLimit : _gasLimit,
-//            hashLock : _hashLock,
-//            gasConsumed: 0
-//            });
-//        messageBox.outbox[_messageHash] = _status;
-//
-//        bytes32 messageHashFromDeclare= MessageBus.declareRevocationMessage(
-//            messageBox,
-//            _messageTypeHash,
-//            message,
-//            _signature
-//        );
-//
-//        return(messageHashFromDeclare);
-//
-//    }
+    function declareRevocationMessage
+    (
+        bytes32 _messageTypeHash,
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _sender,
+        bytes32 _hashLock,
+        uint256 _gasConsumed,
+        bytes _signature,
+        MockMessageBus.MessageStatus  _status,
+        bytes32 _messageHash
+    )
+        public
+        returns(bytes32 messageHash_)
+    {
 
+        message = MockMessageBus.Message({
+            intentHash : _intentHash,
+            nonce : _nonce,
+            gasPrice : _gasPrice,
+            sender : _sender,
+            gasLimit : _gasLimit,
+            hashLock : _hashLock,
+            gasConsumed: _gasConsumed
+            });
+        messageBox.outbox[_messageHash] = _status;
 
+        messageHash_= MockMessageBus.declareRevocationMessage(
+            messageBox,
+            _messageTypeHash,
+            message,
+            _signature
+        );
+
+    }
 
     function progressOutboxWithProof
     (
@@ -377,10 +378,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0
@@ -417,10 +418,10 @@ contract MessageBusTestWrapper {
         returns(bytes32 messageHash_)
     {
         message = MockMessageBus.Message({
-            intentHash : intentHash,
-            nonce : nonce,
+            intentHash : _intentHash,
+            nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
-            sender : sender,
+            sender : _sender,
             gasLimit : 0,
             hashLock : hashLock,
             gasConsumed: 0

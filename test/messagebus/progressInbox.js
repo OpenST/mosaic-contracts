@@ -46,7 +46,6 @@ let intentHash,
 			nonce: nonce,
 			sender: sender,
 			hashLock: hashLock,
-			signature: signature,
 			gasLimit: gasLimit,
 			gasConsumed: gasConsumed,
 			messageStatus: messageStatus,
@@ -74,7 +73,6 @@ let intentHash,
 					, gasConsumed = 0
 					, messageHash = '0x9bdab5cbc3ebd8d50e3831bc73da35c1170e21bfb7145e41ce4a952b977a8f84'
 					, messageStatus = 1
-					, signature = "0xd0448f820b67d07ee7c7d1a4141177401933d97f744e785c435458032b7c8ae46a482c3c058fc94c3110df3488e1e537bcd8b13468f16aaea5d203e17301d47300"
 					, unlockSecret = web3.utils.soliditySha3({type: 'bytes32', value: 'secret'})
 					, hashLock = web3.utils.soliditySha3({type: 'bytes32', value: unlockSecret});
 				await messageBusUtils.deployedMessageBus();
