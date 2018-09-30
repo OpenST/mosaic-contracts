@@ -16,6 +16,9 @@ pragma solidity ^0.4.23;
 
 import "../../contracts/gateway/MockMessageBus.sol";
 
+/**
+ * @title Tests the MessageBus library.
+ */
 contract MessageBusTestWrapper {
 
     MockMessageBus.MessageBox messageBox;
@@ -334,7 +337,6 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        bytes _signature,
         MockMessageBus.MessageStatus  _status,
         bytes32 _messageHash
     )
@@ -356,8 +358,7 @@ contract MessageBusTestWrapper {
         messageHash_= MockMessageBus.declareRevocationMessage(
             messageBox,
             _messageTypeHash,
-            message,
-            _signature
+            message
         );
 
     }

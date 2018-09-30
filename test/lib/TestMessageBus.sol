@@ -17,7 +17,6 @@ pragma solidity ^0.4.23;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../../contracts/test/test_lib/KeyValueStoreStub.sol";
-import "../../contracts/gateway/MockMessageBus.sol";
 
 
 /**
@@ -36,12 +35,12 @@ contract TestMessageBus is KeyValueStoreStub{
      * @notice it tests progress inbox method of messageBus.
      */
     function testProgressInbox()
-    external
+        external
     {
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
+        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
 
-        bytes32 returnedMessageHash = MessageBus.progressInbox(
+        bytes32 returnedMessageHash = MockMessageBus.progressInbox(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
             message,
@@ -54,7 +53,7 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(messageBox.inbox[messageHash]),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "Status not changed to progressed."
         );
     }
@@ -63,14 +62,14 @@ contract TestMessageBus is KeyValueStoreStub{
      * @notice it tests declare revocation method of messageBus.
      */
     function testDeclareRevocationMessage()
-    external
+        external
     {
         // Calculated by hashing revocationMessage
         bytes32 messageHash = getBytes32(
             "MESSAGE_BUS_DIGEST"
         );
-        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
-        bytes32 returnedMessageHash = MessageBus.declareRevocationMessage(
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
+        bytes32 returnedMessageHash = MockMessageBus.declareRevocationMessage(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
             message
@@ -82,7 +81,7 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(messageBox.outbox[messageHash]),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "Status not changed to DeclaredRevocation."
         );
     }
@@ -91,37 +90,37 @@ contract TestMessageBus is KeyValueStoreStub{
      * @notice it tests change inbox state method of messageBus.
      */
     function testChangeInboxState()
-    external
+        external
     {
         bool isChanged;
-        MessageBus.MessageStatus nextState;
+        MockMessageBus.MessageStatus nextState;
         bytes32 messageHash = getBytes32(
             "MESSAGE_BUS_DIGEST"
         );
         // Test Undeclared => Declared
-        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Undeclared;
-        (isChanged, nextState) = MessageBus.changeInboxState(
+        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MockMessageBus.changeInboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState should not be equal to Progressed."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState should not be equal to Revoked."
         );
         Assert.equal(
@@ -131,35 +130,35 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState not changed to Declared."
         );
 
 
         // Test Declared => Progressed
-        messageBox.inbox[messageHash] = MessageBus.MessageStatus.Declared;
-        (isChanged, nextState) = MessageBus.changeInboxState(
+        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MockMessageBus.changeInboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState should not be equal to Declared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState should not be equal to Revoked."
         );
         Assert.equal(
@@ -169,34 +168,34 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState not changed to Progressed."
         );
 
         // Test DeclaredRevocation => Revoked
-        messageBox.inbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
-        (isChanged, nextState) = MessageBus.changeInboxState(
+        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MockMessageBus.changeInboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState should not be equal to Declared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState should not be equal to Progressed."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.equal(
@@ -206,47 +205,47 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState not changed to Revoked."
         );
     }
 
     /**
-     * @notice it tests change outbox state method of messageBus.
+     * @notice it tests change outbox state method of MockMessageBus.
      */
     function testChangeOutboxState()
-    external
+        external
     {
         bool isChanged;
-        MessageBus.MessageStatus nextState;
+        MockMessageBus.MessageStatus nextState;
         bytes32 messageHash = getBytes32(
             "MESSAGE_BUS_DIGEST"
         );
 
         // Test Undeclared => Declared
-        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Undeclared;
-        (isChanged, nextState) = MessageBus.changeOutboxState(
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState should not be equal to Progressed."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState should not be equal to Revoked."
         );
         Assert.equal(
@@ -256,34 +255,34 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState is not changed to Declared."
         );
 
         // Test Declared => Progressed
-        messageBox.outbox[messageHash] = MessageBus.MessageStatus.Declared;
-        (isChanged, nextState) = MessageBus.changeOutboxState(
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState should not be equal to Declared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState should not be equal to Revoked."
         );
         Assert.equal(
@@ -293,34 +292,34 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState is not changed to Progressed."
         );
 
         // Test DeclaredRevocation => Revoked
-        messageBox.outbox[messageHash] = MessageBus.MessageStatus.DeclaredRevocation;
-        (isChanged, nextState) = MessageBus.changeOutboxState(
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
+        (isChanged, nextState) = MockMessageBus.changeOutboxState(
             messageBox,
             messageHash
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Undeclared),
+            uint256(MockMessageBus.MessageStatus.Undeclared),
             "nextState should not be equal to Undeclared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Declared),
+            uint256(MockMessageBus.MessageStatus.Declared),
             "nextState should not be equal to Declared."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Progressed),
+            uint256(MockMessageBus.MessageStatus.Progressed),
             "nextState should not be equal to Progressed."
         );
         Assert.notEqual(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.DeclaredRevocation),
+            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
             "nextState should not be equal to DeclaredRevocation."
         );
         Assert.equal(
@@ -330,11 +329,14 @@ contract TestMessageBus is KeyValueStoreStub{
         );
         Assert.equal(
             uint256(nextState),
-            uint256(MessageBus.MessageStatus.Revoked),
+            uint256(MockMessageBus.MessageStatus.Revoked),
             "nextState is not changed to Revoked."
         );
     }
 
+    /**
+     * @notice it tests declare message method of MockMessageBus.
+     */
     function testDeclareMessage()
         public
     {
@@ -342,7 +344,7 @@ contract TestMessageBus is KeyValueStoreStub{
         signature = hex"b3ea4cd2196f5723de9bda449c8bb7745a444383f27586148a358ab855aed1bd4b9b3ebf0920982d016b6b5eaa00a83ddf1b07bb9b154677f005d08db5c5240d00";
 
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-        messageBox.outbox[messageHash] == MockMessageBus.MessageStatus.Undeclared;
+        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromDeclare = MockMessageBus.declareMessage(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
@@ -363,6 +365,9 @@ contract TestMessageBus is KeyValueStoreStub{
         );
     }
 
+    /**
+     * @notice it tests progress outbox method of messageBus.
+     */
     function testProgressOutbox()
         public
     {
@@ -388,12 +393,15 @@ contract TestMessageBus is KeyValueStoreStub{
         );
     }
 
+    /**
+     * @notice it tests confirm message method of messageBus.
+     */
     function testConfirmMessage()
         public
     {
 
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
+        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromConfirm = MockMessageBus.confirmMessage(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
@@ -404,7 +412,7 @@ contract TestMessageBus is KeyValueStoreStub{
         );
 
         Assert.equal(
-            uint256(messageBox.outbox[messageHashFromConfirm]),
+            uint256(messageBox.inbox[messageHashFromConfirm]),
             uint256(MockMessageBus.MessageStatus.Declared),
             "Status not changed to Declared."
         );
@@ -416,6 +424,9 @@ contract TestMessageBus is KeyValueStoreStub{
         );
     }
 
+    /**
+     * @notice it tests progress inbox with proof method of messageBus.
+     */
     function testProgressInboxWithProof()
         public
     {
@@ -467,6 +478,9 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
+    /**
+     * @notice it tests progress outbox with proof method of messageBus.
+     */
     function testProgressOutboxWithProof()
         public
     {
@@ -575,6 +589,9 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
+    /**
+     * @notice it tests confirm revocation method of messageBus.
+     */
     function testConfirmRevocation()
         public
     {
@@ -605,6 +622,9 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
+    /**
+     * @notice it tests progress inbox revocation method of messageBus.
+     */
     function testProgressInboxRevocation()
         public
     {
@@ -662,7 +682,9 @@ contract TestMessageBus is KeyValueStoreStub{
         );
     }
 
-
+    /**
+     * @notice it tests progress outbox revocation method of messageBus.
+     */
     function testProgressOutboxRevocation()
         public
     {

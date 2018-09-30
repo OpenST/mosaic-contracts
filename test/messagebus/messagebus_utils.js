@@ -2,7 +2,7 @@
 
 const MessageBus = artifacts.require('MessageBusTestWrapper'),
 			web3 = require("web3"),
-			utils =  require("../lib/utils");
+			utils =  require("./utils");
 
 let messageBus;
 
@@ -168,12 +168,14 @@ MessageBusUtils.prototype = {
 			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			sender = params.sender;
 		
 		await utils.expectThrow(messageBus.confirmRevocation.call(
 			messageTypeHash,
 			intentHash,
 			nonce,
+			sender,
 			messageBoxOffset,
 			rlpEncodedParentNodes,
 			storageRoot,
@@ -194,7 +196,7 @@ MessageBusUtils.prototype = {
 			storageRoot = params.storageRoot,
 			messageBoxOffset = params.messageBoxOffset;
 		
-		await utils.expectThrow(messageBus.confirmMessage.call(
+		await (messageBus.confirmMessage.call(
 			messageTypeHash,
 			intentHash,
 			nonce,

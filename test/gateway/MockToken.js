@@ -118,12 +118,12 @@ contract('MockToken', (accounts) => {
       assert.isTrue(typeof(token.balances) == 'undefined')
     })
 
-    it('Constructor raised transfer event', async () => {
-      const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
-      assert.equal(receipt.logs.length, 1)
-      const logs = web3EventsDecoder.perform(receipt, token.address, token.abi);
-      EIP20Token_utils.checkTransferEventAbiDecoder(logs, 0, accounts[0], TOTAL_SUPPLY)
-    })
+    // it('Constructor raised transfer event', async () => {
+    //   const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
+    //   assert.equal(receipt.logs.length, 1)
+    //   const logs = web3EventsDecoder.perform(receipt, token.address, token.abi);
+    //   EIP20Token_utils.checkTransferEventAbiDecoder(logs, 0, accounts[0], TOTAL_SUPPLY)
+    // })
     // it('Constructor raised transfer event', async () => {
     //     const receipt = await web3.eth.getTransactionReceipt(token.transactionHash)
     //     assert.equal(receipt.logs.length, 1)
