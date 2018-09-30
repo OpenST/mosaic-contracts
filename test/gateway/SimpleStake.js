@@ -39,8 +39,8 @@ const SimpleStake_utils = require('./SimpleStake_utils.js');
 contract('SimpleStake', function(accounts) {
 	const gateway = accounts[4];
 	const to = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
+	const ST1 = new BigNumber(web3.utils.toWei(1, "ether"));
+	const ST2 = new BigNumber(web3.utils.toWei(2, "ether"));
 
 	describe ('Properties', async () => {
 		before(async () => {

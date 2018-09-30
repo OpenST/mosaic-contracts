@@ -45,10 +45,10 @@ contract('SimpleStake', function(accounts) {
 		var simpleStake = null;
 		var totalSupply = new BigNumber(0);
 
-		const ST0 = new BigNumber(web3.toWei(0, "ether"));
-		const ST2 = new BigNumber(web3.toWei(2, "ether"));
-		const ST3 = new BigNumber(web3.toWei(3, "ether"));
-		const ST5 = new BigNumber(web3.toWei(5, "ether"));
+		const ST0 = new BigNumber(web3.utils.toWei(0, "ether"));
+		const ST2 = new BigNumber(web3.utils.toWei(2, "ether"));
+		const ST3 = new BigNumber(web3.utils.toWei(3, "ether"));
+		const ST5 = new BigNumber(web3.utils.toWei(5, "ether"));
 
 		before(async () => {
 			var contracts =

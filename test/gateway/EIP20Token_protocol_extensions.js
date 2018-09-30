@@ -35,9 +35,9 @@ const EIP20Token_utils = require('./EIP20Token_utils.js');
 contract('EIP20Token', function(accounts) {
 	const beneficiary1 = accounts[0];
 	const beneficiary2 = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
-	const ST3 = new BigNumber(web3.toWei(3, "ether"));
+	const ST1 = new BigNumber(web3.utils.toWei(1, "ether"));
+	const ST2 = new BigNumber(web3.utils.toWei(2, "ether"));
+	const ST3 = new BigNumber(web3.utils.toWei(3, "ether"));
 
 	var result = null;
 	var tokenBalance = null;

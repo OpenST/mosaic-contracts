@@ -38,7 +38,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
         , ops = accounts[3]
         , chainIdOrigin = 3
         , chainIdRemote = 1410
-        , deactivationHeight = new BigNumber(web3.toWei(100000000, "ether"))
+        , deactivationHeight = new BigNumber(web3.utils.toWei(100000000, "ether"))
         , worker1 = accounts[7]
     ;
 

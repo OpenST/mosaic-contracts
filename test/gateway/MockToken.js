@@ -72,13 +72,13 @@ contract('MockToken', (accounts) => {
   const SYMBOL = "MOCK"
   const NAME = "Mock Token"
   const DECIMALS = 18
-  const TOTAL_SUPPLY = new BigNumber(web3.toWei(800000000, "ether"));
+  const TOTAL_SUPPLY = new BigNumber(web3.utils.toWei(800000000, "ether"));
 
-  const ST10000 = new BigNumber(web3.toWei(10000, "ether"));
-  const ST9000 = new BigNumber(web3.toWei(9000, "ether"));
-  const ST1000 = new BigNumber(web3.toWei(1000, "ether"));
-  const ST10 = new BigNumber(web3.toWei(10, "ether"));
-  const ST1 = new BigNumber(web3.toWei(1, "ether"));
+  const ST10000 = new BigNumber(web3.utils.toWei(10000, "ether"));
+  const ST9000 = new BigNumber(web3.utils.toWei(9000, "ether"));
+  const ST1000 = new BigNumber(web3.utils.toWei(1000, "ether"));
+  const ST10 = new BigNumber(web3.utils.toWei(10, "ether"));
+  const ST1 = new BigNumber(web3.utils.toWei(1, "ether"));
 
   const owner = accounts[0]
   const admin = accounts[1]
