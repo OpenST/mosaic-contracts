@@ -63,6 +63,10 @@ contract GatewayBase {
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
+    //todo identify how to get block time for both chains
+    /** Unlock period for change bounty in block height */
+    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+
     /** Specifies if the Gateway and CoGateway contracts are linked. */
     bool public linked;
 
@@ -79,12 +83,6 @@ contract GatewayBase {
     /** Organisation address. */
     address public organisation;
 
-    /** amount of ERC20 which is staked by facilitator. */
-    uint256 public bounty;
-
-    /** Proposed new bounty amount for bounty change. */
-    uint256 public proposedBounty;
-
     /** address of core contract. */
     CoreInterface public core;
 
@@ -99,6 +97,14 @@ contract GatewayBase {
 
     /** Gateway link message hash. */
     bytes32 public gatewayLinkHash;
+    
+    /** amount of ERC20 which is staked by facilitator. */
+    uint256 public bounty;
+
+    /** Proposed new bounty amount for bounty change. */
+    uint256 public proposedBounty;
+    /** bounty proposal block height*/
+    uint256 public proposedBountyUnlockHeight;
 
     /** Maps messageHash to the Message object. */
     mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
@@ -346,7 +352,54 @@ contract GatewayBase {
         returns (uint256 /* nonce */)
     {
         // call the private method
-        return _getNonce(_account);
+        return _getOutboxNonce(_account);
+    }
+
+    /**
+     * @notice Method allows organization to propose new bounty amount.
+     *
+     * @param _proposedBounty proposed bounty amount.
+     */
+    function initiateBountyAmountChange(uint256 _proposedBounty)
+        onlyOrganisation()
+        external
+    {
+        proposedBounty = _proposedBounty;
+        proposedBountyUnlockHeight = block.number;
+
+        emit BountyChangeInitiated(bounty, _proposedBounty);
+    }
+
+    /**
+     * @notice Method allows organization to confirm proposed bounty amount
+     *         after unlock period.
+     */
+    function confirmBountyAmountChange()
+        onlyOrganisation()
+        external
+        returns (
+            uint256 changedBountyAmount_,
+            uint256 previousBountyAmount_
+        )
+    {
+        require(
+            proposedBounty != bounty,
+            "Proposed bounty should be different from existing bounty."
+        );
+        require(
+            proposedBountyUnlockHeight.add(BOUNTY_CHANGE_UNLOCK_PERIOD) < block.number,
+            "Confirm bounty amount change can only be done after unlock period."
+        );
+
+        changedBountyAmount_ = proposedBounty;
+        previousBountyAmount_ = bounty;
+
+        bounty = proposedBounty;
+
+        proposedBounty = 0;
+        proposedBountyUnlockHeight = 0;
+
+        emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
     /**
@@ -389,29 +442,41 @@ contract GatewayBase {
     }
 
     /**
-     * @notice Private function to get the nonce for the given account address
+     * @notice Internal function to get the outbox nonce for the given account
+     *         address
      *
      * @param _account Account address for which the nonce is to fetched
      *
      * @return nonce
      */
-    function _getNonce(address _account)
+    function _getOutboxNonce(address _account)
         internal
         view
         returns (uint256 /* nonce */)
     {
 
         bytes32 previousProcessMessageHash = outboxActiveProcess[_account];
-
-        if (previousProcessMessageHash == bytes32(0)) {
-            return 1;
-        }
-
-        MessageBus.Message storage message =
-        messages[previousProcessMessageHash];
-
-        return message.nonce.add(1);
+        return getMessageNonce(previousProcessMessageHash);
     }
+
+    /**
+     * @notice Internal function to get the inbox nonce for the given account
+     *         address.
+     *
+     * @param _account Account address for which the nonce is to fetched
+     *
+     * @return nonce
+     */
+    function _getInboxNonce(address _account)
+        internal
+        view
+        returns (uint256 /* nonce */)
+    {
+
+        bytes32 previousProcessMessageHash = inboxActiveProcess[_account];
+        return getMessageNonce(previousProcessMessageHash);
+    }
+
 
     /**
      * @notice Clears the previous outbox process. Validates the
@@ -433,7 +498,7 @@ contract GatewayBase {
         returns (bytes32 previousMessageHash_)
     {
         require(
-            _nonce == _getNonce(_account),
+            _nonce == _getOutboxNonce(_account),
             "Invalid nonce"
         );
 
@@ -478,7 +543,7 @@ contract GatewayBase {
         returns (bytes32 previousMessageHash_)
     {
         require(
-            _nonce == _getNonce(_account),
+            _nonce == _getInboxNonce(_account),
             "Invalid nonce"
         );
 
@@ -502,28 +567,26 @@ contract GatewayBase {
         inboxActiveProcess[_account] = _messageHash;
     }
 
-    function initiateBountyAmountChange(uint256 _proposedBounty)
-        onlyOrganisation()
-        external
+    /**
+     * @notice Returns the next nonce of inbox or outbox process
+     *
+     * @param _messageHash Message hash
+     *
+     * @return _nonce nonce of next inbox or outbox process
+     */
+    function getMessageNonce(bytes32 _messageHash)
+        private
+        view
+        returns(uint256)
     {
-        proposedBounty = _proposedBounty;
+        if (_messageHash == bytes32(0)) {
+            return 1;
+        }
 
-        emit BountyChangeInitiated(bounty, _proposedBounty);
+        MessageBus.Message storage message =
+        messages[_messageHash];
+
+        return message.nonce.add(1);
     }
-
-    function confirmBountyAmountChange()
-        onlyOrganisation()
-        external
-    {
-        require(proposedBounty != bounty,
-        "Proposed bounty should be different from existing bounty");
-
-        emit BountyChangeConfirmed(bounty, proposedBounty);
-
-        bounty = proposedBounty;
-
-        proposedBounty = 0;
-    }
-
 }
 
