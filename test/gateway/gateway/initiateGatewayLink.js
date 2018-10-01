@@ -19,19 +19,17 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('web3'),
-    Bignumber = require("bignumber.js");
-
 const Gateway = artifacts.require("Gateway"),
     MockToken = artifacts.require("MockToken"),
     MessageBus = artifacts.require("MessageBus");
 
-const GatewayUtilsKlass = require("../../../test/gateway/gateway/gateway_utils"),
-    utils = require("./utils"),
-    Helper = require("../../../test/gateway/gateway/helper");
+const GatewayKlass = require("./helpers/gateway"),
+    utils = require("./helpers/utils"),
+    Helper = require("./helpers/helper"),
+    web3 = require('../../lib/web3.js'),
+    BN = require('bn.js');
 
-const gatewayUtils = new GatewayUtilsKlass();
-const InitiateGatewayLink = function(){};
+const gatewayTest = new GatewayKlass();
 
 let mockToken,
     gateway,
@@ -49,7 +47,10 @@ let mockToken,
     facilitator,
     messageBusAddress;
 
+const InitiateGatewayLink = function(){};
+
 InitiateGatewayLink.prototype = {
+
     initiateGatewayLink: async function (resultType) {
         let params = {
             coGateway: coGatewayAddress,
@@ -72,7 +73,7 @@ InitiateGatewayLink.prototype = {
             }
         };
 
-        await gatewayUtils.initiateGatewayLink(
+        await gatewayTest.initiateGatewayLink(
             params,
             resultType,
             expectedResult,
@@ -91,11 +92,10 @@ InitiateGatewayLink.prototype = {
         beforeEach(async function() {
             messageBusAddress = MessageBus.address;
             organisationAddress = accounts[2],
-            bounty = new Bignumber(100),
+            bounty = new BN(100),
             facilitator = accounts[4];
             hashLock = utils.generateHashLock();
 
-            // deploy Mocktoken
             coGatewayAddress = accounts[3];
 
             mockToken = await MockToken.new();
@@ -110,7 +110,7 @@ InitiateGatewayLink.prototype = {
             };
 
             // deploy gateway
-            gateway = await gatewayUtils.deployGateway(
+            gateway = await gatewayTest.deployGateway(
                 deploymentParams,
                 utils.ResultType.SUCCESS
             );
@@ -138,8 +138,8 @@ InitiateGatewayLink.prototype = {
                 typeHash,
                 intentHash,
                 nonce,
-                new Bignumber(0),
-                new Bignumber(0),
+                new BN(0),
+                new BN(0),
                 sender);
 
             txOption = {
@@ -169,7 +169,7 @@ InitiateGatewayLink.prototype = {
 
         it('fails when nonce is does not match the nonce in contract',
             async function() {
-                nonce = new Bignumber(2);
+                nonce = new BN(2);
                 await oThis.initiateGatewayLink(utils.ResultType.FAIL);
             }
         );
@@ -189,8 +189,8 @@ InitiateGatewayLink.prototype = {
                 typeHash,
                 hashLock.s,
                 nonce,
-                new Bignumber(0),
-                new Bignumber(0),
+                new BN(0),
+                new BN(0),
                 sender);
             signData.signature = sign.signature;
             await oThis.initiateGatewayLink(utils.ResultType.FAIL);

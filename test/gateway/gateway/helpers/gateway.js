@@ -1,8 +1,7 @@
 'use strict';
 
 const Gateway = artifacts.require("Gateway");
-const web3 = require("web3");
-
+const web3 = require('../../../lib/web3.js');
 const utils = require("./utils");
 
 var gateway;
@@ -155,34 +154,7 @@ GatewayUtils.prototype = {
             let eventData = response.logs;
 
             utils.validateEvents(eventData, expectedResults.events);
-            //oThis.validateEvents(eventData, expectedResults.events);
         }
     }
-    /*,
-    
-    validateEvents: function (events, expectedData) {
-        assert.equal(
-            events.length,
-            Object.keys(expectedData).length,
-            "Number of events emited must match expected event counts"
-        );
-
-        events.forEach(function (event) {
-            var eventName = event.event;
-            var eventData = event.args;
-            var eventExpectedData = expectedData[eventName];
-            assert.notEqual(eventExpectedData, undefined, "Expected event not found");
-
-            for (var key in eventData) {
-                assert.equal(
-                    eventData[key],
-                    eventExpectedData[key],
-                    `Event data ${key} must match the expectedData`
-                );
-            }
-        });
-
-    }
-    */
 };
 module.exports = GatewayUtils;

@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: OSTPrime
+// Auxiliary chain: OSTPrime
 //
 // http://www.simpletoken.org/
 //
@@ -26,11 +26,9 @@ pragma solidity ^0.4.23;
 /// on the value chain and is the base token that pays for gas on the utility
 /// chain. The gasprice on utility chains is set in [ST'-Wei/gas] (like
 /// Ether pays for gas on Ethereum mainnet) when sending a transaction on
-/// the open utility chain.
+/// the auxiliary chain.
 
 import "./SafeMath.sol";
-
-/** utility chain contracts */
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 
@@ -42,13 +40,14 @@ import "./OSTPrimeConfig.sol";
  *  @notice A freely tradable equivalent representation of Simple Token [ST]
  *          on Ethereum mainnet on the utility chain.
  *
- *  @dev OSTPrime functions as the base token to pay for gas consumption on the utility chain
- *       It is not an EIP20 token, but functions as the genesis guardian
- *       of the finite amount of base tokens on the utility chain.
+ *  @dev OSTPrime functions as the base token to pay for gas consumption on the
+ *       utility chain.
  */
 contract OSTPrime is UtilityToken, OSTPrimeConfig {
+
     using SafeMath for uint256;
 
+    /** Emitted whenever OSTPrime base token is claimed. */
     event Claim(
         address indexed _beneficiary,
         uint256 _amount,
@@ -56,6 +55,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         address _utilityToken
     );
 
+    /** Emitted whenever basetoken is converted to OSTPrime */
     event Redeem(
         address indexed _redeemer,
         uint256 _amount,
@@ -63,7 +63,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         address _utilityToken
     );
 
-    /** set when ST' has received TOKENS_MAX tokens; when uninitialised minting is not allowed */
+    /**
+     * set when OST' has received TOKENS_MAX tokens;
+     * when uninitialised minting is not allowed
+     */
     bool private initialized;
 
     /**  Modifiers */
@@ -81,30 +84,27 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /** Public functions */
 
     /**
-     *  @notice Contract constructor.
+     * @notice Contract constructor.
      *
-     *  @param _valueToken ERC20 token address in origin chain
+     * @dev this contract should be deployed with zero gas
+     *
+     * @param _valueToken ERC20 token address in origin chain
      */
     constructor(address _valueToken)
         public
-        UtilityToken(
-            TOKEN_SYMBOL,
-            TOKEN_NAME,
-            TOKEN_DECIMALS,
-            _valueToken
-        )
+        UtilityToken(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, _valueToken)
     {
 
     }
 
     /**
-     *  @notice Public function initialize. 
+     * @notice Public function initialize.
      *
-     *  @dev Before the registrar registers a core on the value chain
-     *       it must verify that the genesis exactly specified TOKENS_MAX
-     *       so that all base tokens are held by OSTPrime.
-     *       On setup of the utility chain the base tokens need to be transfered 
-     *       in full to OSTPrime for the base tokens to be minted as ST'
+     * @dev it must verify that the genesis exactly specified TOKENS_MAX
+     *      so that all base tokens are held by OSTPrime.
+     *      On setup of the auxiliary chain the base tokens need to be
+     *      transferred in full to OSTPrime for the base tokens to be
+     *      minted as OST'
      */    
     function initialize()
         public
@@ -114,16 +114,13 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         initialized = true;
     }
 
-
-
-    /// @dev transfer full claim to beneficiary
-    ///      claim can be called publicly as the beneficiary
-    ///      and amount are set, and this allows for reduced
-    ///      steps on the user experience to complete the claim
-    ///      automatically.
-    /// @notice for first stake of ST' the gas price by one validator
-    ///         has to be zero to deploy the contracts and accept the very
-    ///         first staking of ST for ST' and its protocol executions.
+    /**
+     * @notice convert the OST utility token to base token
+     *
+     * @param _amount Amount of basetoken
+     *
+     * @return `true` if claim was successfully progressed
+     */
     function claim(
         uint256 _amount
     )
@@ -144,12 +141,18 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         msg.sender.transfer(_amount);
 
         emit Transfer(msg.sender, address(this), _amount);
-
         emit Claim(msg.sender, _amount, totalTokenSupply, address(this));
 
         return true;
     }
 
+    /**
+     * @notice convert the base token to OST utility token
+     *
+     * @param _amount Amount of utility token
+     *
+     * @return `true` if claim was successfully progressed
+     */
     function redeem(uint256 _amount)
         public
         onlyInitialized
@@ -163,9 +166,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         balances[address(this)] = balances[address(this)].sub(_amount);
 
         emit Transfer(address(this), msg.sender, _amount);
-
         emit Redeem(msg.sender, _amount, totalTokenSupply, address(this));
-
 
     }
 }

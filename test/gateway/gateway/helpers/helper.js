@@ -1,7 +1,6 @@
 'use strict';
 
-var Web3 = require('web3'),
-    web3 = new Web3("http://localhost:8545");
+const web3 = require('../../../lib/web3.js');
 
 const GatewayLib = artifacts.require("GatewayLib");
 
@@ -11,7 +10,6 @@ const GatewayHelper = function(gateway) {
 };
 GatewayHelper.prototype = {
 
-    // Utils
     getNonce: async function (address) {
         const oThis = this;
         return await oThis.gateway.getNonce.call(address);

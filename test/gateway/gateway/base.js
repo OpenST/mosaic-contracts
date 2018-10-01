@@ -26,10 +26,4 @@ contract('Gateway',  function(accounts) {
     describe('initiateGatewayLink', async function () {
         await initiateGatewayLink.perform(accounts)
     });
-
-    /*
-    after(function(){
-
-    });
-    */
 });

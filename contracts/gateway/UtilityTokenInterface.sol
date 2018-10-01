@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: UtilityTokenInterface
+// Auxiliary chain: UtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
@@ -31,11 +31,7 @@ contract UtilityTokenInterface {
 
     /** Events */
 
-    /**
-     *  Minted raised when new utility tokens are minted for a beneficiary
-     *  Minted utility tokens still need to be claimed by anyone to transfer
-     *  them to the beneficiary.
-     */
+    /** Minted raised when new utility tokens are minted for a beneficiary */
     event Minted(
         address indexed _beneficiary,
         uint256 _amount,
@@ -43,6 +39,7 @@ contract UtilityTokenInterface {
         address _utilityToken
     );
 
+    /** Burnt raised when new utility tokens are burnt for an address */
     event Burnt(
         address indexed _account,
         uint256 _amount,
@@ -52,7 +49,17 @@ contract UtilityTokenInterface {
 
     /** Public Functions */
 
-    /** @dev Mint new utility token into  claim for beneficiary */
+    /**
+     * @notice Mints the utility token
+     *
+     * @dev Adds _amount tokens to beneficiary balance and increases the
+     *      totalTokenSupply. Can be called only by CoGateway.
+     *
+     * @param _beneficiary Address of tokens beneficiary.
+     * @param _amount Amount of tokens to mint.
+     *
+     * @return bool `true` if mint is successful, false otherwise.
+     */
     function mint(
         address _beneficiary,
         uint256 _amount
@@ -60,7 +67,17 @@ contract UtilityTokenInterface {
         external
         returns (bool success);
 
-    /** @dev Burn utility tokens */
+    /**
+     * @notice Burns the balance for the burner's address
+     *
+     * @dev only burns the amount from CoGateway address, So to burn
+     *      transfer the amount to CoGateway.
+     *
+     * @param _burner Burner address.
+     * @param _amount Amount of tokens to burn.
+     *
+     * @return bool `true` if burn is successful, false otherwise.
+     */
     function burn(
         address _burner,
         uint256 _amount

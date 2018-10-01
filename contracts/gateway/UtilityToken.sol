@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: UtilityToken
+// Auxiliary chain: UtilityToken
 //
 // http://www.simpletoken.org/
 //
@@ -28,8 +28,7 @@ import "./EIP20Token.sol";
 import "./CoGatewayUtilityTokenInterface.sol";
 
 /**
- *  @title UtilityTokenAbstract contract which implements
- *         UtilityTokenInterface.
+ *  @title UtilityToken contract which implements UtilityTokenInterface.
  *         TODO: Add organisation.
  *
  *  @notice Contains methods for utility tokens.
@@ -41,11 +40,15 @@ contract UtilityToken is
 {
     using SafeMath for uint256;
 
-    /** Storage */
+    /* Storage */
 
+    /** Address of the EIP20 token(VBT) in origin chain */
     address public valueToken;
 
+    /** Address of CoGateway contract*/
     address coGateway;
+
+    /* Modifiers */
 
     /** checks that only organisation can call a particular function. */
     modifier onlyCoGateway() {
@@ -56,13 +59,17 @@ contract UtilityToken is
         _;
     }
 
-    /** Public functions */
+    /* Public functions */
 
     /**
-     *  @notice Contract constructor.
+     * @notice Contract constructor.
      *
-     *  @dev TODO: Sets Organisation with msg.sender address.
+     * @dev TODO: Sets Organisation with msg.sender address.
      *
+     * @param _symbol Symbol of token
+     * @param _name Name of token
+     * @param _decimals Decimal of token
+     * @param _valueToken Address of value branded token
      */
     constructor(
         string _symbol,
@@ -82,7 +89,15 @@ contract UtilityToken is
         valueToken = _valueToken;
     }
 
-    // This will be set with zero gas
+    /**
+     * @notice Sets the CoGateway contract address.
+     *
+     * @dev This will be set with zero gas. Can be called only by Organisation
+     *
+     * @param _coGatewayAddress CoGateway contract address
+     *
+     * @return `true` if CoGateway address was set
+     */
     function setCoGateway(address _coGatewayAddress)
         external
         //TODO: add organisation
@@ -104,17 +119,17 @@ contract UtilityToken is
         emit CoGatewaySet(address(this), coGateway);
     }
 
-
     /**
-    *  @notice Internal function mintEIP20.
-    *
-    *  @dev Adds _amount tokens to EIP20Token contract balance.
-    *
-    *  @param _beneficiary Address of tokens beneficiary.
-    *  @param _amount Amount of tokens to mint.
-    *
-    *  @return bool True if mint is successful, false otherwise.
-    */
+     * @notice Mints the utility token
+     *
+     * @dev Adds _amount tokens to beneficiary balance and increases the
+     *      totalTokenSupply. Can be called only by CoGateway.
+     *
+     * @param _beneficiary Address of tokens beneficiary.
+     * @param _amount Amount of tokens to mint.
+     *
+     * @return bool `true` if mint is successful, false otherwise.
+     */
     function mint(
         address _beneficiary,
         uint256 _amount
@@ -132,14 +147,15 @@ contract UtilityToken is
     }
 
     /**
-     *  @notice Internal function burnEIP20.
+     * @notice Burns the balance for the burner's address
      *
-     *  @dev only burns the amount from CoGateway address, So to burn
-     *       transfer the amount to CoGateway.
+     * @dev only burns the amount from CoGateway address, So to burn
+     *      transfer the amount to CoGateway.
      *
-     *  @param _amount Amount of tokens to burn.
+     * @param _burner Burner address.
+     * @param _amount Amount of tokens to burn.
      *
-     *  @return bool True if burn is successful, false otherwise.
+     * @return bool `true` if burn is successful, false otherwise.
      */
     function burn(
         address _burner,

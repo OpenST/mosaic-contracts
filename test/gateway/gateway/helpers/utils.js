@@ -13,19 +13,19 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: lib/gateway_utils.js
+// Test: lib/gateway.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-var Web3 = require('web3'),
-    web3 = new Web3("http://localhost:8545");
+//TODO: Move this file to test/lib/ folder and update all reference.
+const web3 = require('../../../lib/web3.js');
 
-
-const hashLock = require("../../lib/hash_lock");
+const hashLock = require("../../../lib/hash_lock");
 const NullAddress = "0x0000000000000000000000000000000000000000";
-var ResultType = {
+
+const ResultType = {
     FAIL:0,
     SUCCESS:1
 };
