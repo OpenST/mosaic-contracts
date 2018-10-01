@@ -23,6 +23,8 @@ install:
 before_script:
   - nohup ./tools/runGanacheCli.sh </dev/null >/dev/null 2>&1 &
 script:
+  - truffle version
   - truffle test
+
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
