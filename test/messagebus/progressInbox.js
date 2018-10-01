@@ -115,7 +115,7 @@ let intentHash,
 			
 			it('should fail when unlock secret is empty', async () => {
 				
-				unlockSecret = '';
+				unlockSecret = '0x00';
 				await progressInbox();
 				
 			});

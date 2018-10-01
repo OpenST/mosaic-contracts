@@ -137,7 +137,7 @@ contract('MessageBus',  async (accounts) => {
 		
 		it('should fail when signature is empty', async () => {
 			
-			signature = '';
+			signature = '0x00';
 			await declareMessage();
 			
 		});
