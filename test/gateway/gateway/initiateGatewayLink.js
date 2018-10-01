@@ -23,10 +23,11 @@ const web3 = require('web3'),
     Bignumber = require("bignumber.js");
 
 const Gateway = artifacts.require("Gateway"),
-    MockToken = artifacts.require("MockToken");
+    MockToken = artifacts.require("MockToken"),
+    MessageBus = artifacts.require("MessageBus");
 
 const GatewayUtilsKlass = require("../../../test/gateway/gateway/gateway_utils"),
-    utils = require("../../../test/lib/utils"),
+    utils = require("./utils"),
     Helper = require("../../../test/gateway/gateway/helper");
 
 const gatewayUtils = new GatewayUtilsKlass();
@@ -45,7 +46,8 @@ let mockToken,
     hashLock,
     organisationAddress,
     bounty,
-    facilitator;
+    facilitator,
+    messageBusAddress;
 
 InitiateGatewayLink.prototype = {
     initiateGatewayLink: async function (resultType) {
@@ -82,11 +84,12 @@ InitiateGatewayLink.prototype = {
 
         const oThis = this;
 
-        const tokenName = "MockToken",
+        const tokenName = "Mock Token",
             tokenSymbol = "MOCK",
             tokenDecimals = 18;
 
         beforeEach(async function() {
+            messageBusAddress = MessageBus.address;
             organisationAddress = accounts[2],
             bounty = new Bignumber(100),
             facilitator = accounts[4];
@@ -102,7 +105,8 @@ InitiateGatewayLink.prototype = {
                 bountyToken: mockToken.address,
                 core: accounts[1],
                 bounty: bounty,
-                organisation: organisationAddress
+                organisation: organisationAddress,
+                messageBusAddress: messageBusAddress
             };
 
             // deploy gateway
@@ -122,7 +126,7 @@ InitiateGatewayLink.prototype = {
             intentHash = await gatewayHelper.hashLinkGateway(
                 gateway.address,
                 coGatewayAddress,
-                bounty,
+                messageBusAddress,
                 tokenName,
                 tokenSymbol,
                 tokenDecimals,

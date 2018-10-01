@@ -31,13 +31,12 @@ pragma solidity ^0.4.23;
 import "./SafeMath.sol";
 
 /** utility chain contracts */
-import "./EIP20Token.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 
 
 /**
- *  @title OSTPrime contract which implements UtilityTokenAbstract and
+ *  @title OSTPrime contract which implements UtilityToken and
  *         OSTPrimeConfig.
  *
  *  @notice A freely tradable equivalent representation of Simple Token [ST]
@@ -47,7 +46,7 @@ import "./OSTPrimeConfig.sol";
  *       It is not an EIP20 token, but functions as the genesis guardian
  *       of the finite amount of base tokens on the utility chain.
  */
-contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
+contract OSTPrime is UtilityToken, OSTPrimeConfig {
     using SafeMath for uint256;
 
     event Claim(
@@ -84,19 +83,18 @@ contract OSTPrime is EIP20Token, UtilityTokenAbstract, OSTPrimeConfig {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _token ERC20 token address in origin chain
+     *  @param _valueToken ERC20 token address in origin chain
      */
-    constructor(address _token)
+    constructor(address _valueToken)
         public
-        UtilityTokenAbstract()
+        UtilityToken(
+            TOKEN_SYMBOL,
+            TOKEN_NAME,
+            TOKEN_DECIMALS,
+            _valueToken
+        )
     {
-        require(
-            _token != address(0),
-            "ERC20 token address cannot be 0"
-        );
 
-        totalTokenSupply = 0;
-        token = _token;
     }
 
     /**

@@ -3,7 +3,7 @@
 const Gateway = artifacts.require("Gateway");
 const web3 = require("web3");
 
-const utils = require("../../../test/lib/utils");
+const utils = require("./utils");
 
 var gateway;
 
@@ -22,7 +22,8 @@ GatewayUtils.prototype = {
             bountyToken = params.bountyToken,
             coreAddress = params.core,
             bountyAmount = params.bounty,
-            organisationAddress = params.organisation;
+            organisationAddress = params.organisation,
+            messageBusAddress = params.messageBusAddress;
 
         const oThis = this;
 
@@ -32,7 +33,8 @@ GatewayUtils.prototype = {
                 bountyToken,
                 coreAddress,
                 bountyAmount,
-                organisationAddress
+                organisationAddress,
+                messageBusAddress
             ));
         } else {
             gateway = await Gateway.new(
@@ -40,7 +42,8 @@ GatewayUtils.prototype = {
                 bountyToken,
                 coreAddress,
                 bountyAmount,
-                organisationAddress
+                organisationAddress,
+                messageBusAddress
             );
 
             let addressValidationResult = await oThis.isAddress(gateway.address);
@@ -58,7 +61,7 @@ GatewayUtils.prototype = {
                 "Invalid valueTokenAddress address from contract"
             );
 
-            let bountyTokenAdd = await gateway.bountyToken.call();
+            let bountyTokenAdd = await gateway.baseToken.call();
             assert.equal(
                 bountyTokenAdd,
                 bountyToken,
@@ -128,11 +131,11 @@ GatewayUtils.prototype = {
                 txOptions
             );
 
-            assert.equal(
-                result,
-                expectedResults.returns.messageHash,
-                "messageHash must match"
-            );
+           assert.equal(
+               result,
+               expectedResults.returns.messageHash,
+               "messageHash must match"
+           );
 
             let response = await gateway.initiateGatewayLink(
                 coGateway,
@@ -147,7 +150,7 @@ GatewayUtils.prototype = {
             assert.equal(
                 response.receipt.status,
                 1,
-                "Receipt status is unsuccessfull"
+                "Receipt status is unsuccessful"
             );
             let eventData = response.logs;
 

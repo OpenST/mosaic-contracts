@@ -242,6 +242,7 @@ contract Gateway is  GatewayBase {
             _coGateway,
             token
         );
+
     }
 
     /**

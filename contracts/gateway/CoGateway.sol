@@ -73,7 +73,7 @@ contract CoGateway is GatewayBase {
     /* public variables */
 
     /** address of utility token. */
-    address private utilityToken;
+    address public utilityToken;
 
     /** address of value token. */
     address public valueToken;

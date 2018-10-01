@@ -34,7 +34,7 @@ import "./CoGatewayUtilityTokenInterface.sol";
  *
  *  @notice Contains methods for utility tokens.
  */
-contract UtilityTokenAbstract is
+contract UtilityToken is
     EIP20Token,
     UtilityTokenInterface,
     CoGatewayUtilityTokenInterface
@@ -43,7 +43,7 @@ contract UtilityTokenAbstract is
 
     /** Storage */
 
-    address public token;
+    address public valueToken;
 
     address coGateway;
 
@@ -64,12 +64,22 @@ contract UtilityTokenAbstract is
      *  @dev TODO: Sets Organisation with msg.sender address.
      *
      */
-    constructor(string _symbol, string _name, uint8 _decimals)
+    constructor(
+        string _symbol,
+        string _name,
+        uint8 _decimals,
+        address _valueToken
+    )
         public
         EIP20Token(_symbol, _name, _decimals)
         //TODO: add organisation
     {
+        require(
+            _valueToken != address(0),
+            "ERC20 token should not be zero"
+        );
 
+        valueToken = _valueToken;
     }
 
     // This will be set with zero gas

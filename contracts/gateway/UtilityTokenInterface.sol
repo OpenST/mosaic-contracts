@@ -52,17 +52,12 @@ contract UtilityTokenInterface {
 
     /** Public Functions */
 
-    function totalSupply()
-        public
-        view
-        returns (uint256);
-
     /** @dev Mint new utility token into  claim for beneficiary */
     function mint(
         address _beneficiary,
         uint256 _amount
     )
-        internal
+        external
         returns (bool success);
 
     /** @dev Burn utility tokens */
@@ -70,6 +65,6 @@ contract UtilityTokenInterface {
         address _burner,
         uint256 _amount
     )
-        internal
+        external
         returns (bool success);
 }
