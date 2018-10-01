@@ -11,8 +11,11 @@
     "rlp": "2.1.0",
     "solidity-coverage": "^0.5.5",
     "solparse": "2.2.5",
-    "truffle": "4.1.8",
+    "truffle": "beta",
     "web3": "1.0.0-beta.33"
+  },
+  "scripts": {
+    "test": "truffle test"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
