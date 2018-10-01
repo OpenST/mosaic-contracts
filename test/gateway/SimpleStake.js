@@ -19,7 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
+const web3 = require('../lib/web3.js');
+
+const BN = require('bn.js');
 const Utils = require('../lib/utils.js');
 const SimpleStake_utils = require('./SimpleStake_utils.js');
 
@@ -39,8 +41,8 @@ const SimpleStake_utils = require('./SimpleStake_utils.js');
 contract('SimpleStake', function(accounts) {
 	const gateway = accounts[4];
 	const to = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-	const ST1 = new BigNumber(web3.toWei(1, "ether"));
-	const ST2 = new BigNumber(web3.toWei(2, "ether"));
+	const ST1 = web3.utils.toWei(new BN('1'), "ether");
+	const ST2 = web3.utils.toWei(new BN('2'), "ether");
 
 	describe ('Properties', async () => {
 		before(async () => {
@@ -72,12 +74,12 @@ contract('SimpleStake', function(accounts) {
 
 		it('successfully releases to', async () => {
 			var stake = await simpleStake.getTotalStake.call();
-			assert.equal(stake.toNumber(), ST2.toNumber());
+			assert(stake.eq(ST2));
 			assert.equal(await simpleStake.releaseTo.call(to, ST1, { from: gateway }), true);
 			result = await simpleStake.releaseTo(to, ST1, { from: gateway });
 
 			var updatedStake = await simpleStake.getTotalStake.call();
-			assert.equal(updatedStake.toNumber(), stake.minus(ST1).toNumber());
+			assert(updatedStake.eq(stake.sub(ST1)));
 			SimpleStake_utils.checkReleasedEventGroup(result, gateway, to, ST1);
 		});
 	})
