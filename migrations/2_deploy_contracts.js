@@ -1,7 +1,7 @@
 let MockMessageBus = artifacts.require("./gateway/MockMessageBus.sol"),
-	MesssageBusTestWrapper = artifacts.require('./test/MessageBusTestWrapper'),
+  MesssageBusTestWrapper = artifacts.require('./test/MessageBusTestWrapper'),
   MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof'),
-	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest'),
+  MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest'),
   MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
 
 module.exports = function(deployer) {
@@ -12,8 +12,8 @@ module.exports = function(deployer) {
   deployer.link(MockMessageBus,MesssageBusTestWrapper);
   
   // for merklepatricia unit test cases
-	deployer.deploy(MerklePatriciaProof);
-	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
+  deployer.deploy(MerklePatriciaProof);
+  deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
 
 };
 
