@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('./web3.js');
+
 const Assert = require('assert');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
@@ -30,46 +32,46 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 const receipts = [];
 
 module.exports.logResponse = (response, description) => {
-    receipts.push({
-        receipt: response.receipt,
-        description: description,
-        response: response
-    });
+  receipts.push({
+    receipt: response.receipt,
+    description: description,
+    response: response
+  });
 }
 
 module.exports.logReceipt = (receipt, description) => {
-    receipts.push({
-        receipt: receipt,
-        description: description,
-        response: null
-    })
+  receipts.push({
+    receipt: receipt,
+    description: description,
+    response: null
+  })
 }
 
 module.exports.logTransaction = async (hash, description) => {
-    const receipt = await web3.eth.getTransactionReceipt(hash)
-    await this.logReceipt(receipt, description)
+  const receipt = await web3.eth.getTransactionReceipt(hash)
+  await this.logReceipt(receipt, description)
 }
 
 module.exports.printGasStatistics = () => {
-    var totalGasUsed = 0
+  var totalGasUsed = 0
 
-    console.log("      -----------------------------------------------------");
-    console.log("      Report gas usage\n");
+  console.log("      -----------------------------------------------------");
+  console.log("      Report gas usage\n");
 
-    for (i = 0; i < receipts.length; i++) {
-        const entry = receipts[i]
+  for (i = 0; i < receipts.length; i++) {
+    const entry = receipts[i]
 
-        totalGasUsed += entry.receipt.gasUsed
+    totalGasUsed += entry.receipt.gasUsed
 
-        console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
-    }
+    console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
+  }
 
-    console.log("      -----------------------------------------------------")
-    console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
+  console.log("      -----------------------------------------------------")
+  console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
 }
 
 module.exports.clearReceipts = () => {
-    receipts.splice(0, receipts.length);
+  receipts.splice(0, receipts.length);
 }
 
 
@@ -77,7 +79,7 @@ module.exports.clearReceipts = () => {
  *  General event checks
  */
 module.exports.expectNoEvents = (result) => {
-    Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
+  Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
 }
 
 /*
@@ -86,72 +88,97 @@ module.exports.expectNoEvents = (result) => {
 
 /// @dev Compare to null address
 module.exports.isNullAddress = function (address) {
-    Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
-    return (address == NullAddress);
+  Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
+  return (address == NullAddress);
 }
 
 /// @dev Expect failure from invalid opcode or out of gas,
 ///      but returns error instead
-module.exports.expectThrow = async (promise) => {
-    try {
-        await promise;
-    } catch (error) {
-        const invalidOpcode = error.message.search('invalid opcode') > -1;
+module.exports.expectThrow = async (promise, expectedMessage) => {
+  try {
+    await promise;
+  } catch (error) {
+    if (expectedMessage !== undefined) {
+      assertExpectedMessage(expectedMessage, error);
+    } else {
+      const invalidOpcode = error.message.search('invalid opcode') > -1;
+      const outOfGas = error.message.search('out of gas') > -1;
+      // Latest TestRPC has trouble with require
+      const revertInstead = error.message.search('revert') > -1;
 
-        const outOfGas = error.message.search('out of gas') > -1;
-
-        // Latest TestRPC has trouble with require
-        const revertInstead = error.message.search('revert') > -1;
-
-        assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
-
-        return;
+      assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
     }
 
-    assert(false, "Did not throw as expected");
+    return;
+  }
+
+  assert(false, "Did not throw as expected");
 };
 
-/// @dev Expect failure from revert,
-///      but returns error instead
-module.exports.expectRevert = async (promise) => {
-    try {
-        await promise;
-    } catch (error) {
-        // TODO: Truffle v5 will support require messages with web3 1.0 and we can
-        //       check for a specific message.
-        assert(
-            error.message.search('revert') > -1,
-            'The contract should revert. Instead: ' + error.message
-        );
+/**
+ * Asserts that a given ethereum call/transaction leads to a revert. The
+ * call/transaction is given as a promise.
+ *
+ * @param {promise} promise Awaiting this promise must lead to a revert.
+ * @param {string} expectedMessage If given, the returned error message must
+ *                                 include this string (optional).
+ */
+module.exports.expectRevert = async (promise, expectedMessage) => {
+  try {
+    await promise;
+  } catch (error) {
+    assert(
+      error.message.search('revert') > -1,
+      'The contract should revert. Instead: ' + error.message
+    );
 
-        return;
-    }
+    assertExpectedMessage(expectedMessage, error);
 
-    assert(false, "Did not revert as expected.");
+    return;
+  }
+
+  assert(false, "Did not revert as expected.");
 };
 
 /// @dev Get account balance
 module.exports.getBalance = function (address) {
-    return new Promise(function (resolve, reject) {
-        web3.eth.getBalance(address, function (error, result) {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result);
-            }
-        })
+  return new Promise(function (resolve, reject) {
+    web3.eth.getBalance(address, function (error, result) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
     })
+  })
 }
 
 /// @dev Get gas price
 module.exports.getGasPrice = function () {
-    return new Promise(function (resolve, reject) {
-        web3.eth.getGasPrice(function (error, result) {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result);
-            }
-        })
+  return new Promise(function (resolve, reject) {
+    web3.eth.getGasPrice(function (error, result) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
     })
+  })
 }
+
+/**
+ * Asserts that an error message contains a string given as message. Always
+ * passes if the message is `undefined`.
+ * 
+ * @param {string} message The message that the error should contain.
+ * @param {object} error The error.
+ */
+function assertExpectedMessage(message, error) {
+  if (message !== undefined) {
+    assert(
+      error.message.search(message) > -1,
+      'The contract was expected to error including "' + message + '", but instead: "' + error.message + '"'
+    );
+  }
+}
+

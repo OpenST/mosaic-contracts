@@ -23,6 +23,7 @@
 // The MIT License.
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const Utils = require('../lib/utils.js');
 
 var SafeMathMock = artifacts.require('./SafeMathMock.sol');
@@ -67,14 +68,14 @@ contract('SafeMath', function (accounts) {
   });
 
   it('should throw an error on addition overflow', async function () {
-    let a = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
-    let b = 1;
+    let a = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935');
+    let b = new BN(1);
     await Utils.expectThrow(safeMath.add(a, b));
   });
 
   it('should throw an error on multiplication overflow', async function () {
-    let a = 115792089237316195423570985008687907853269984665640564039457584007913129639933;
-    let b = 2;
+    let a = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639933');
+    let b = new BN(2);
     await Utils.expectThrow(safeMath.multiply(a, b));
   });
 });

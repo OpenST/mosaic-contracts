@@ -19,8 +19,10 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Assert = require('assert');
-const BigNumber = require('bignumber.js');
+const BN = require('bn.js');
 const Utils = require('../lib/utils.js');
 const SimpleStakeUtils = require('./SimpleStake_utils.js')
 
@@ -43,12 +45,12 @@ contract('SimpleStake', function(accounts) {
 
 		var token = null;
 		var simpleStake = null;
-		var totalSupply = new BigNumber(0);
+		var totalSupply = new BN(0);
 
-		const ST0 = new BigNumber(web3.utils.toWei(0, "ether"));
-		const ST2 = new BigNumber(web3.utils.toWei(2, "ether"));
-		const ST3 = new BigNumber(web3.utils.toWei(3, "ether"));
-		const ST5 = new BigNumber(web3.utils.toWei(5, "ether"));
+		const ST0 = web3.utils.toWei(new BN('0'), "ether");
+		const ST2 = web3.utils.toWei(new BN('2'), "ether");
+		const ST3 = web3.utils.toWei(new BN('3'), "ether");
+		const ST5 = web3.utils.toWei(new BN('5'), "ether");
 
 		before(async () => {
 			var contracts =
@@ -58,8 +60,8 @@ contract('SimpleStake', function(accounts) {
 			token = contracts.token;
 			simpleStake = contracts.simpleStake;
 
-			totalSupply = new BigNumber(await token.balanceOf.call(accounts[0]));
-			Assert.ok(totalSupply.toNumber() >= ST5.toNumber());
+			totalSupply = new BN(await token.balanceOf.call(accounts[0]));
+			Assert(totalSupply.gte(ST5));
 		});
 
 		context("on construction", async () => {
@@ -92,27 +94,27 @@ contract('SimpleStake', function(accounts) {
 			it("can stake 5ST", async () => {
 				Assert.ok(await token.transfer(simpleStake.address, ST5, { from: accounts[0] }));
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST5);
-				Assert.equal((await token.balanceOf.call(accounts[0])).toNumber(), totalSupply.sub(ST5).toNumber());
+				assert((await token.balanceOf.call(accounts[0])).eq(totalSupply.sub(ST5)));
 			});
 
 			it("can release 3ST", async () => {
 				const result = await simpleStake.releaseTo(accounts[0], ST3, { from: gateway });
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST2);
-				Assert.equal((await token.balanceOf(accounts[0])).toNumber(), totalSupply.sub(ST2).toNumber());
+				assert((await token.balanceOf(accounts[0])).eq(totalSupply.sub(ST2)));
 				SimpleStakeUtils.checkReleasedEventGroup(result, gateway, accounts[0], ST3);
 			});
 
 			it("must fail to release 3ST", async () => {
 				await Utils.expectThrow(simpleStake.releaseTo(accounts[0], ST3, { from: gateway }));
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST2);
-				Assert.equal((await token.balanceOf(accounts[0])).toNumber(), totalSupply.sub(ST2).toNumber());
+				assert((await token.balanceOf(accounts[0])).eq(totalSupply.sub(ST2)));
 			});
 
 			it("can release all remaining stake", async () => {
 				var remainingStake = await simpleStake.getTotalStake.call();
 				Assert.ok(await simpleStake.releaseTo(accounts[0], remainingStake, { from: gateway }));
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST0);
-				Assert.equal((await token.balanceOf(accounts[0])).toNumber(), totalSupply.toNumber());
+				assert((await token.balanceOf(accounts[0])).eq(totalSupply));
 			});
 		});
 

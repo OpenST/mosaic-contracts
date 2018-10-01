@@ -19,11 +19,13 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const coreUtils = require('./Core_utils.js')
     , utils = require('../lib/utils.js')
     , proof = require('../data/proof')
     , RLP = require('rlp')
-    , BigNumber = require('bignumber.js')
+    , BN = require('bn.js')
     , web3EventsDecoder = require('../lib/event_decoder.js')
 ;
 
@@ -32,7 +34,7 @@ contract('Core', function (accounts) {
     describe('Properties', async () => {
         before(async () => {
             openSTRemote = proof.account.accountAddress;
-            blockHeight = new BigNumber(5);
+            blockHeight = new BN(5);
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;
             workersContract = contractsData.workersContract;
@@ -49,7 +51,6 @@ contract('Core', function (accounts) {
         it('has coreChainIdOrigin', async () => {
             assert.equal(await core.coreChainIdOrigin.call(), chainIdOrigin);
         });
-
 
         it('has workers', async () => {
             assert.equal(await core.workers.call(), workersContract.address);
