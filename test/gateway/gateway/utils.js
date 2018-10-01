@@ -222,7 +222,7 @@ Utils.prototype = {
 
         eventLogs.forEach(function (event) {
             var eventName = event.event;
-            var eventData = event.args;
+            var eventData = event.args.Result;
             var eventExpectedData = expectedData[eventName];
             assert.notEqual(eventExpectedData, undefined, "Expected event not found");
 

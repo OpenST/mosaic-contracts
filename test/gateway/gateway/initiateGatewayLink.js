@@ -158,7 +158,7 @@ InitiateGatewayLink.prototype = {
         });
 
         it('fails when signature is 0', async function() {
-            signData.signature = 0;
+            signData.signature = web3.utils.asciiToHex("");
             await oThis.initiateGatewayLink(utils.ResultType.FAIL);
         });
 
