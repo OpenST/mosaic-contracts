@@ -107,23 +107,16 @@ contract('MessageBus',  async (accounts) => {
 			
 		});
 		
-		it('should fail when message status is Progressed in outbox', async () => {
-			
-			messageStatus = 3;
-			await declareMessage();
-			
-		});
-		
 		it('should fail when message status is DeclaredRevocation in outbox', async () => {
 			
-			messageStatus = 4;
+			messageStatus = 3;
 			await declareMessage();
 			
 		});
 		
 		it('should fail when message status is Revoked in outbox', async () => {
 			
-			messageStatus = 3;
+			messageStatus = 4;
 			await declareMessage();
 			
 		});
