@@ -7,12 +7,13 @@ contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
     let core, messageBus, bounty, organisation;
+
     before(function () {
 
-      core = accounts[0]
+      organisation = accounts[2]
+        , core = accounts[0]
         , messageBus = accounts[1]
-        , bounty = new BN(100)
-        , organisation = accounts[2];
+        , bounty = new BN(100);
     });
 
     it('should pass with right set of parameters', async function () {
@@ -29,7 +30,8 @@ contract('GatewayBase.sol', function (accounts) {
       assert.equal(await gatewayBaseInstance.messageBus.call(), messageBus);
       assert.equal(await gatewayBaseInstance.organisation.call(), organisation);
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-
+      assert(!(await gatewayBaseInstance.linked.call()));
+      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should pass with right set of parameters and zero bounty', async function () {
@@ -47,7 +49,8 @@ contract('GatewayBase.sol', function (accounts) {
       assert.equal(await gatewayBaseInstance.messageBus.call(), messageBus);
       assert.equal(await gatewayBaseInstance.organisation.call(), organisation);
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-
+      assert(!(await gatewayBaseInstance.linked.call()));
+      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should fail if core address is not passed', async function () {
