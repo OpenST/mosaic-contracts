@@ -6,6 +6,7 @@ const Utils = require('../../../test/lib/utils');
 contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
+
     let core, messageBus, bounty, organisation;
 
     before(function () {
@@ -18,7 +19,6 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should pass with right set of parameters', async function () {
 
-
       let gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
@@ -26,9 +26,9 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
 
-      assert.equal(await gatewayBaseInstance.core.call(), core);
-      assert.equal(await gatewayBaseInstance.messageBus.call(), messageBus);
-      assert.equal(await gatewayBaseInstance.organisation.call(), organisation);
+      assert.equal(core,await gatewayBaseInstance.core.call());
+      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
+      assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
       assert(!(await gatewayBaseInstance.linked.call()));
       assert(!(await gatewayBaseInstance.deactivated.call()));
@@ -45,9 +45,9 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
 
-      assert.equal(await gatewayBaseInstance.core.call(), core);
-      assert.equal(await gatewayBaseInstance.messageBus.call(), messageBus);
-      assert.equal(await gatewayBaseInstance.organisation.call(), organisation);
+      assert.equal(core, await gatewayBaseInstance.core.call());
+      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
+      assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
       assert(!(await gatewayBaseInstance.linked.call()));
       assert(!(await gatewayBaseInstance.deactivated.call()));
