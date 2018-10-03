@@ -35,6 +35,7 @@ contract EIP20Token is EIP20Interface {
     string private tokenName;
     string private tokenSymbol;
     uint8  private tokenDecimals;
+    uint256 internal totalTokenSupply;
 
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
@@ -51,6 +52,7 @@ contract EIP20Token is EIP20Interface {
         tokenSymbol      = _symbol;
         tokenName        = _name;
         tokenDecimals    = _decimals;
+        totalTokenSupply = 0;
     }
 
     /**
@@ -92,6 +94,22 @@ contract EIP20Token is EIP20Interface {
     }
 
     /**
+     *  @notice Public view function totalSupply.
+     *
+     *  @dev Get totalTokenSupply as view so that child cannot edit.
+     *
+     *  @return uint256 Total token supply.
+     */
+    function totalSupply()
+        public
+        view
+        returns (uint256)
+    {
+        return totalTokenSupply;
+    }
+
+
+    /**
      *  @notice Public view function allowance.
      *
      *  @param _owner Address of the owner account.
@@ -99,25 +117,41 @@ contract EIP20Token is EIP20Interface {
      *
      *  @return uint256 Remaining allowance for the spender to spend from owner's account.
      */
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+    function allowance(
+        address _owner,
+        address _spender
+    )
+        public
+        view
+        returns (uint256 /* remaining */)
+    {
         return allowed[_owner][_spender];
     }
 
     /**
      *  @notice Public function transfer.
      *
-     *  @dev Fires the transfer event, throws if, _from account does not have enough
-     *       tokens to spend.
+     *  @dev Fires the transfer event, throws if, _from account does not have
+     *       enough tokens to spend.
      *
      *  @param _to Address to which tokens are transferred.
      *  @param _value Amount of tokens to be transferred.
      *
      *  @return bool True for a successful transfer, false otherwise.
      */
-    function transfer(address _to, uint256 _value) public returns (bool success) {
-        // According to the EIP20 spec, "transfers of 0 values MUST be treated as normal
-        // transfers and fire the Transfer event".
-        // Also, should throw if not enough balance. This is taken care of by SafeMath.
+    function transfer(
+        address _to,
+        uint256 _value
+    )
+        public
+        returns (bool success)
+    {
+        /**
+         * According to the EIP20 spec, "transfers of 0 values MUST be treated
+         * as normal transfers and fire the Transfer event".
+         * Also, should throw if not enough balance. This is taken care of by
+         * SafeMath.
+         */
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 
@@ -129,9 +163,10 @@ contract EIP20Token is EIP20Interface {
     /**
      *  @notice Public function transferFrom.
      *
-     *  @dev Allows a contract to transfer tokens on behalf of _from address to _to address,
-     *       the function caller has to be pre-authorized for multiple transfers up to the 
-     *       total of _value amount by the _from address.
+     *  @dev Allows a contract to transfer tokens on behalf of _from address
+     *       to _to address, the function caller has to be pre-authorized
+     *       for multiple transfers up to the total of _value amount by
+     *       the _from address.
      *
      *  @param _from Address from which tokens are transferred.
      *  @param _to Address to which tokens are transferred.
@@ -139,7 +174,14 @@ contract EIP20Token is EIP20Interface {
      *
      *  @return bool True for a successful transfer, false otherwise.
      */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    )
+        public
+        returns (bool success)
+    {
         balances[_from] = balances[_from].sub(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
@@ -152,73 +194,28 @@ contract EIP20Token is EIP20Interface {
     /**
      *  @notice Public function approve.
      *
-     *  @dev Allows _spender address to withdraw from function caller's account, multiple times up 
-     *       to the _value amount, if this function is called again 
-     *       it overwrites the current allowance with _value.
+     *  @dev Allows _spender address to withdraw from function caller's
+     *       account, multiple times up to the _value amount, if this
+     *       function is called again it overwrites the current allowance
+     *       with _value.
      *
-     *  @param _spender Address authorized to spend from the function caller's address.
+     *  @param _spender Address authorized to spend from the function caller's
+     *                  address.
      *  @param _value Amount up to which spender is authorized to spend.
      *
      *  @return bool True for a successful approval, false otherwise.
      */
-    function approve(address _spender, uint256 _value) public returns (bool success) {
+    function approve(
+        address _spender,
+        uint256 _value
+    )
+        public
+        returns (bool success)
+    {
 
         allowed[msg.sender][_spender] = _value;
 
         emit Approval(msg.sender, _spender, _value);
-
-        return true;
-    }
-
-    /**
-     *  @notice Internal function claimEIP20.
-     *
-     *  @dev Subtracts _amount of tokens from EIP20Token contract balance,
-     *       adds _amount to beneficiary's balance.
-     *
-     *  @param _beneficiary Address of tokens beneificary.
-     *  @param _amount Amount of tokens claimed for beneficiary.
-     *
-     *  @return bool True if claim of tokens for beneficiary address is successful,
-     *          false otherwise.
-     */
-    function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {
-        // claimable tokens are minted in the contract address to be pulled on claim
-        balances[address(this)] = balances[address(this)].sub(_amount);
-        balances[_beneficiary] = balances[_beneficiary].add(_amount);
-
-        emit Transfer(address(this), _beneficiary, _amount);
-
-        return true;
-    }
-
-    /**
-     *  @notice Internal function mintEIP20.
-     *
-     *  @dev Adds _amount tokens to EIP20Token contract balance.
-     *
-     *  @param _amount Amount of tokens to mint.
-     *
-     *  @return bool True if mint is successful, false otherwise.
-     */
-    function mintEIP20(uint256 _amount) internal returns (bool /* success */) {
-        // mint EIP20 tokens in contract address for them to be claimed
-        balances[address(this)] = balances[address(this)].add(_amount);
-    
-        return true;
-    }
-
-    /**
-     *  @notice Internal function burnEIP20.
-     *
-     *  @dev Subtracts _amount tokens from the balance of function caller's address.  
-     *
-     *  @param _amount Amount of tokens to burn.
-     *
-     *  @return bool True if burn is successful, false otherwise.
-     */
-    function burnEIP20(uint256 _amount) internal returns (bool /* success */) {
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
 
         return true;
     }

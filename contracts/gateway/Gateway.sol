@@ -71,8 +71,6 @@ contract Gateway is  GatewayBase {
      */
     EIP20Interface public baseToken;
 
-    /** Gateway link message hash. */
-
     /**
      * @notice Initialise the contract by providing the ERC20 token address
      *         for which the gateway will enable facilitation of staking and
@@ -242,6 +240,7 @@ contract Gateway is  GatewayBase {
             _coGateway,
             token
         );
+
     }
 
     /**
