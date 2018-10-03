@@ -77,7 +77,7 @@ contract MessageBusTestWrapper {
         bytes32 _hashLock,
         uint256 _gasConsumed,
         bytes _signature,
-        MockMessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus _status,
         bytes32 _messageHash
     )
         public
@@ -115,7 +115,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        MockMessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
@@ -152,7 +152,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        MockMessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus _status,
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
@@ -171,7 +171,7 @@ contract MessageBusTestWrapper {
 
         messageBox.inbox[_messageHash] = _status;
 
-        messageHash_ = MockMessageBus.progressOutbox(
+        messageHash_ = MockMessageBus.progressInbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -337,7 +337,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        MockMessageBus.MessageStatus  _status,
+        MockMessageBus.MessageStatus _status,
         bytes32 _messageHash
     )
         public
