@@ -134,10 +134,8 @@ contract GatewayBase {
      */
     mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
-    /* internal variables */
-
     /** address of message bus used to fetch codehash during gateway linking */
-    address internal messageBus;
+    address public messageBus;
 
     /* modifiers */
 
