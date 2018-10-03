@@ -28,17 +28,25 @@ import "./EIP20Token.sol";
 import "./CoGatewayUtilityTokenInterface.sol";
 
 /**
- *  @title UtilityToken contract which implements UtilityTokenInterface.
- *         TODO: Add organisation.
+ *  @title UtilityToken is an EIP20Token and implements UtilityTokenInterface.
  *
- *  @notice Contains methods for utility tokens.
+ *  @notice This contract has mint and burn functions and can be called only
+ *          by CoGateway. TODO: Add organisation details.
+ *
  */
 contract UtilityToken is
     EIP20Token,
-    UtilityTokenInterface,
-    CoGatewayUtilityTokenInterface
+    UtilityTokenInterface
 {
     using SafeMath for uint256;
+
+    /* events */
+
+    /** Emitted whenever a CoGateway address is set */
+    event CoGatewaySet(
+        address _utilityToken,
+        address _coGateway
+    );
 
     /* Storage */
 
@@ -46,7 +54,7 @@ contract UtilityToken is
     address public valueToken;
 
     /** Address of CoGateway contract*/
-    address coGateway;
+    address public coGateway;
 
     /* Modifiers */
 
@@ -59,7 +67,7 @@ contract UtilityToken is
         _;
     }
 
-    /* Public functions */
+    /* Constructor */
 
     /**
      * @notice Contract constructor.
@@ -88,6 +96,8 @@ contract UtilityToken is
 
         valueToken = _valueToken;
     }
+
+    /* external functions */
 
     /**
      * @notice Sets the CoGateway contract address.
@@ -152,13 +162,11 @@ contract UtilityToken is
      * @dev only burns the amount from CoGateway address, So to burn
      *      transfer the amount to CoGateway.
      *
-     * @param _burner Burner address.
      * @param _amount Amount of tokens to burn.
      *
      * @return bool `true` if burn is successful, false otherwise.
      */
     function burn(
-        address _burner,
         uint256 _amount
     )
         external
@@ -168,7 +176,7 @@ contract UtilityToken is
         balances[msg.sender] = balances[msg.sender].sub(_amount);
         totalTokenSupply = totalTokenSupply.sub(_amount);
 
-        emit Burnt(_burner, _amount, totalTokenSupply, address(this));
+        emit Burnt(msg.sender, _amount, totalTokenSupply, address(this));
         return true;
     }
 

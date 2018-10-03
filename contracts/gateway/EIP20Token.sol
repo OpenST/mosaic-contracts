@@ -35,7 +35,7 @@ contract EIP20Token is EIP20Interface {
     string private tokenName;
     string private tokenSymbol;
     uint8  private tokenDecimals;
-    uint256 totalTokenSupply;
+    uint256 internal totalTokenSupply;
 
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
@@ -123,7 +123,7 @@ contract EIP20Token is EIP20Interface {
     )
         public
         view
-        returns (uint256 remaining)
+        returns (uint256 /* remaining */)
     {
         return allowed[_owner][_spender];
     }

@@ -47,41 +47,39 @@ let mockToken,
     facilitator,
     messageBusAddress;
 
-const InitiateGatewayLink = function(){};
 
-InitiateGatewayLink.prototype = {
+async function initiateGatewayLink (resultType) {
+    let params = {
+        coGateway: coGatewayAddress,
+        intentHash: intentHash,
+        nonce: nonce,
+        sender: sender,
+        hashLock: hashLock.l,
+        signature: signData.signature
+    };
 
-    initiateGatewayLink: async function (resultType) {
-        let params = {
-            coGateway: coGatewayAddress,
-            intentHash: intentHash,
-            nonce: nonce,
-            sender: sender,
-            hashLock: hashLock.l,
-            signature: signData.signature
-        };
-
-        let expectedResult = {
-            returns: {messageHash: signData.digest},
-            events: {
-                GatewayLinkInitiated: {
-                    _messageHash: signData.digest,
-                    _gateway: gateway.address,
-                    _cogateway: coGatewayAddress,
-                    _token: mockToken.address,
-                }
+    let expectedResult = {
+        returns: {messageHash: signData.digest},
+        events: {
+            GatewayLinkInitiated: {
+                _messageHash: signData.digest,
+                _gateway: gateway.address,
+                _cogateway: coGatewayAddress,
+                _token: mockToken.address,
             }
-        };
+        }
+    };
 
-        await gatewayTest.initiateGatewayLink(
-            params,
-            resultType,
-            expectedResult,
-            txOption
-        );
-    },
+    await gatewayTest.initiateGatewayLink(
+        params,
+        resultType,
+        expectedResult,
+        txOption
+    );
+}
 
-    perform: function (accounts) {
+contract('Gateway ',  function(accounts) {
+    describe('initiateGatewayLink', async function () {
 
         const oThis = this;
 
@@ -95,9 +93,7 @@ InitiateGatewayLink.prototype = {
             bounty = new BN(100),
             facilitator = accounts[4];
             hashLock = utils.generateHashLock();
-
             coGatewayAddress = accounts[3];
-
             mockToken = await MockToken.new();
 
             let deploymentParams = {
@@ -149,39 +145,39 @@ InitiateGatewayLink.prototype = {
 
         it('fails when CoGateway is 0', async function() {
             coGatewayAddress = 0;
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('fails when sender is 0', async function() {
             sender = 0;
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('fails when signature is 0', async function() {
             signData.signature = web3.utils.asciiToHex("");
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('fails when signature length is not 65', async function() {
             signData.signature = hashLock.s;
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
-        it('fails when nonce is does not match the nonce in contract',
+        it('fails when nonce does not match the nonce in contract',
             async function() {
                 nonce = new BN(2);
-                await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+                await initiateGatewayLink(utils.ResultType.FAIL);
             }
         );
 
         it('fails when sender is not the signer', async function() {
             sender = accounts[8];
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('fails when intent hash is invalid', async function() {
             intentHash = hashLock.s;
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('fails when signature is invalid', async function() {
@@ -193,14 +189,16 @@ InitiateGatewayLink.prototype = {
                 new BN(0),
                 sender);
             signData.signature = sign.signature;
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.FAIL);
         });
 
         it('Successfully initiates Gateway linking', async function() {
-            await oThis.initiateGatewayLink(utils.ResultType.SUCCESS);
-            await oThis.initiateGatewayLink(utils.ResultType.FAIL);
+            await initiateGatewayLink(utils.ResultType.SUCCESS);
         });
-    }
-};
 
-module.exports = InitiateGatewayLink;
+        it('fails if already linked', async function() {
+            await initiateGatewayLink(utils.ResultType.SUCCESS);
+            await initiateGatewayLink(utils.ResultType.FAIL);
+        });
+    });
+});

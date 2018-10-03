@@ -134,13 +134,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         );
 
         assert(address(this).balance >= _amount);
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
-        balances[address(this)] = balances[address(this)].add(_amount);
 
-        // transfer throws if insufficient funds
+        transfer(address(this),_amount);
         msg.sender.transfer(_amount);
 
-        emit Transfer(msg.sender, address(this), _amount);
         emit Claim(msg.sender, _amount, totalTokenSupply, address(this));
 
         return true;
@@ -162,10 +159,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         require(msg.value == _amount);
         assert(address(this).balance >= _amount);
 
-        balances[msg.sender] = balances[msg.sender].add(_amount);
-        balances[address(this)] = balances[address(this)].sub(_amount);
+        allowed[address(this)][msg.sender] = _amount;
+        transferFrom(address(this), msg.sender, _amount);
 
-        emit Transfer(address(this), msg.sender, _amount);
         emit Redeem(msg.sender, _amount, totalTokenSupply, address(this));
 
     }
