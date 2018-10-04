@@ -20,10 +20,18 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('./web3.js');
+const hashLock = require("./hash_lock");
 
 const Assert = require('assert');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
+
+const ResultType = {
+  FAIL:0,
+  SUCCESS:1
+};
+Object.freeze(ResultType);
+
 
 /*
  *  Tracking Gas Usage
@@ -166,10 +174,63 @@ module.exports.getGasPrice = function () {
   })
 }
 
+module.exports.validateEvents = function (eventLogs, expectedData) {
+  assert.equal(
+    eventLogs.length,
+    Object.keys(expectedData).length,
+    "Number of events emitted must match expected event counts"
+  );
+
+  eventLogs.forEach(function (event) {
+    var eventName = event.event;
+    var eventData = event.args.Result;
+    var eventExpectedData = expectedData[eventName];
+    assert.notEqual(eventExpectedData, undefined, "Expected event not found");
+
+    for (var key in eventData) {
+      assert.equal(
+        eventData[key],
+        eventExpectedData[key],
+        `Event data ${key} must match the expectedData`
+      );
+    }
+  });
+
+}
+
+
+//Get latest hash
+module.exports.generateHashLock = function () {
+  return hashLock.getHashLock();
+}
+
+module.exports.signHash = async function (
+  typeHash,
+  intentHash,
+  nonce,
+  gasPrice,
+  gasLimit,
+  signerAddress) {
+
+  let digest = web3.utils.soliditySha3(
+    {t: 'bytes32', v: typeHash},
+    {t: 'bytes32', v: intentHash},
+    {t: 'uint256', v: nonce},
+    {t: 'uint256', v: gasPrice},
+    {t: 'uint256', v: gasLimit}
+  );
+  let signature = await web3.eth.sign(digest, signerAddress);
+  return {
+    signature: signature,
+    digest: digest
+  };
+}
+module.exports.ResultType = ResultType;
+
 /**
  * Asserts that an error message contains a string given as message. Always
  * passes if the message is `undefined`.
- * 
+ *
  * @param {string} message The message that the error should contain.
  * @param {object} error The error.
  */
@@ -181,4 +242,6 @@ function assertExpectedMessage(message, error) {
     );
   }
 }
+
+
 

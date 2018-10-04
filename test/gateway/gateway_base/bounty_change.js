@@ -28,17 +28,33 @@ contract('GatewayBase.sol', function (accounts) {
     it('should be able to propose bounty change', async function () {
 
       let proposedBounty = new BN(50);
+
+      let expectedEvent = {
+        BountyChangeInitiated: {
+          _currentBounty: 100,
+          _proposedBounty: 50,
+        }
+      };
+
       let actualProposedBounty = await gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, {from: organisation});
 
       assert(proposedBounty.eq(actualProposedBounty));
 
-      let receipt = await gatewayBaseInstance.initiateBountyAmountChange(proposedBounty, {from: organisation});
+      let response = await gatewayBaseInstance.initiateBountyAmountChange(proposedBounty, {from: organisation});
+
+      assert.equal(
+        response.receipt.status,
+        1,
+        "Receipt status is unsuccessful"
+      );
+      let eventData = response.logs;
+      Utils.validateEvents(eventData, expectedEvent);
     });
 
     it('only organization should be able to propose bounty change', async function () {
 
       let proposedBounty = new BN(50);
-      Utils.expectThrow(gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, {from: accounts[1]}));
+      await  Utils.expectThrow(gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, {from: accounts[1]}));
     });
 
 
