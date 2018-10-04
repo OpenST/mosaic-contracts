@@ -361,11 +361,14 @@ contract GatewayBase {
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()
         external
+        returns(uint256 /*proposedBounty*/)
     {
         proposedBounty = _proposedBounty;
         proposedBountyUnlockHeight = block.number;
 
         emit BountyChangeInitiated(bounty, _proposedBounty);
+
+        return _proposedBounty;
     }
 
     /**
