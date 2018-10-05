@@ -21,7 +21,7 @@
 
 const web3 = require('./web3.js');
 const hashLock = require("./hash_lock");
-
+const BN = require('bn.js');
 const Assert = require('assert');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
@@ -182,21 +182,26 @@ module.exports.validateEvents = function (eventLogs, expectedData) {
   );
 
   eventLogs.forEach(function (event) {
-    var eventName = event.event;
-    var eventData = event.args.Result;
-    var eventExpectedData = expectedData[eventName];
+    let eventName = event.event;
+    let eventData = Object.keys(event.args);
+    let eventExpectedData = expectedData[eventName];
+
     assert.notEqual(eventExpectedData, undefined, "Expected event not found");
 
-    for (var key in eventData) {
-      assert.equal(
-        eventData[key],
-        eventExpectedData[key],
-        `Event data ${key} must match the expectedData`
-      );
+    for (let index in eventData) {
+
+      let key = eventData[index];
+      if (eventExpectedData[key]) {
+        if (eventExpectedData[key] instanceof BN) {
+          assert(event.args[key].eq(eventExpectedData[key]), `Event data ${key} must match the expectedData`)
+
+        } else {
+          assert.equal(event.args[key], (eventExpectedData[key]), `Event data ${key} must match the expectedData`);
+        }
+      }
     }
   });
-
-}
+};
 
 
 //Get latest hash

@@ -28,7 +28,8 @@ contract GatewayBase {
 
     event BountyChangeInitiated(
         uint256 _currentBounty,
-        uint256 _proposedBounty
+        uint256 _proposedBounty,
+        uint256 _unlockHeight
     );
 
     event BountyChangeConfirmed(
@@ -65,7 +66,7 @@ contract GatewayBase {
 
     //todo identify how to get block time for both chains
     /** Unlock period for change bounty in block height */
-    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+    uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
     /** Specifies if the Gateway and CoGateway contracts are linked. */
     bool public linked;
@@ -366,7 +367,11 @@ contract GatewayBase {
         proposedBounty = _proposedBounty;
         proposedBountyUnlockHeight = block.number;
 
-        emit BountyChangeInitiated(bounty, _proposedBounty);
+        emit BountyChangeInitiated(
+                bounty,
+                _proposedBounty,
+                proposedBountyUnlockHeight.add(BOUNTY_CHANGE_UNLOCK_PERIOD)
+        );
 
         return _proposedBounty;
     }
