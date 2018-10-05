@@ -1,7 +1,6 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.4.23;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,30 +13,22 @@ pragma solidity ^0.4.23;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Utility chain: OSTPrimeConfig
+// Auxiliary Chain: CoGatewayUtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-/* solhint-disable-next-line two-lines-top-level-separator */
-/**
- *  @title OSTPrimeConfig contract.
- *
- *  @notice Contains configuration constants utilized by the OSTPrime contract.
- */
-contract OSTPrimeConfig {
+contract CoGatewayUtilityTokenInterface {
 
-    /** Constants */
-
-    string public constant TOKEN_SYMBOL = "ST";
-    string public constant TOKEN_NAME = "Simple Token";
-    uint8 public constant TOKEN_DECIMALS = 18;
-
-    /** Storage */
-
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX = 800000000 * DECIMALSFACTOR;
+    /**
+     * @notice Get the utility token address.
+     *
+     * @return address of utility token.
+     */
+	function utilityToken()
+        public
+        returns (address);
 }
