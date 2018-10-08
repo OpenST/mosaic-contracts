@@ -1,13 +1,14 @@
 pragma solidity ^0.4.23;
 
-import "./Core.sol";
+import "../gateway/WorkersInterface.sol";
+import "../gateway/Core.sol";
 
 /**
  * @title CoreMock contract
  *
  * @notice Used for test only
  */
-contract CoreMock is Core {
+contract MockCore is Core {
 
 
 	/*  Public functions */
@@ -41,6 +42,24 @@ contract CoreMock is Core {
 	  * @return bytes32 storage root
 	  */
 	function getStorageRoot(
+		uint256 _blockHeight)
+		public
+		view
+		returns (bytes32 /* storage root */)
+	{
+		return keccak256(abi.encodePacked(_blockHeight));
+	}
+
+	/**
+	  * @notice get state root for a given block height
+	  *
+	  * @dev this is for testing only so the data is mocked here
+	  *
+	  * @param _blockHeight block height for which state root is needed
+	  *
+	  * @return bytes32 state root
+	  */
+	function getStateRoot(
 		uint256 _blockHeight)
 		public
 		view

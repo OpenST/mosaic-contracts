@@ -259,13 +259,6 @@ contract GatewayBase {
 
         if (provenStorageRoot != bytes32(0)) {
 
-            // Check extracted storage root is matching with existing stored
-            // storage root
-            require(
-                provenStorageRoot == storageRoot,
-                "Storage root mismatch when account is already proven"
-            );
-
             // wasAlreadyProved is true here since proveOpenST is replay call
             // for same block height
             emit GatewayProven(
