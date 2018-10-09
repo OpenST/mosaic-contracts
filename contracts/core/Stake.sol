@@ -18,7 +18,7 @@ import "../gateway/EIP20Interface.sol";
 import "./StakeInterface.sol";
 
 /**
- * @title The Stake controct trocks deposits, logouts, slashings etc. on origin.
+ * @title The Stake contract tracks deposits, logouts, slashings etc. on origin.
  */
 contract Stake is StakeInterface {
 
@@ -51,16 +51,15 @@ contract Stake is StakeInterface {
         address auxiliaryAddress;
 
         /**
-         * The stake initially equals the deposit. It can increase due to
+         * The stake initially equals the deposit. It can decrease due to
          * withdrawal or slashing. Initially, the weight on auxiliary will 
          * equal the stake.
          */
         uint256 stake;
 
         /**
-         * Will be true if a validator has been slashed. An evicted validator
-         * may still have stake that the depositor can withdraw. However the
-         * weight of an evicted validator is always zero.
+         * This is the height at which the validator's weight is greater than
+         * zero for the first time.
          */
         uint256 startingHeight;
 
@@ -130,6 +129,15 @@ contract Stake is StakeInterface {
      *                    called from the origin core.
      */
     constructor(address _stakingToken, address _originCore) public {
+        require(
+            _stakingToken != address(0),
+            "The address of the staking token must not be zero."
+        );
+        require(
+            _originCore != address(0),
+            "The address of the origin core must not be zero."
+        );
+
         stakingToken = EIP20Interface(_stakingToken);
         originCore = _originCore;
     }
@@ -258,8 +266,7 @@ contract Stake is StakeInterface {
      * @param _closingHeight The height of the meta-block to close.
      *
      * @return The set of updated validators. Could be new validators or
-     *         existing validators with an updated weight. Weights can only
-     *         decrease.
+     *         existing validators with an updated weight.
      */
     function closeMetaBlock(
         uint256 _closingHeight

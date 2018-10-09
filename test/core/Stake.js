@@ -38,7 +38,7 @@ contract('Stake', async (accounts) => {
         stake = await Stake.new(ost.address, originCoreAccount);
     });
 
-    describe('closing an meta-block', async () => {
+    describe('closing a meta-block', async () => {
 
         it('should increase the meta-block height by 1', async () => {
             for (let expectedHeight = 1; expectedHeight < 5; expectedHeight++) {
