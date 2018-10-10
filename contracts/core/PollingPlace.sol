@@ -14,6 +14,7 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../lib/SafeMath.sol";
 import "./BlockStoreInterface.sol";
 import "./PollingPlaceInterface.sol";
 
@@ -27,6 +28,7 @@ import "./PollingPlaceInterface.sol";
  *         validators and their respective weight.
  */
 contract PollingPlace is PollingPlaceInterface {
+    using SafeMath for uint256;
 
     /* Structs */
 
@@ -86,7 +88,7 @@ contract PollingPlace is PollingPlaceInterface {
     mapping (bytes20 => BlockStoreInterface) public blockStores;
 
     /**
-     * Maps core identifires to their respective chain heights at the currently
+     * Maps core identifiers to their respective chain heights at the currently
      * open meta-block. Targets of votes must have a height >= the core height.
      * This way, we only allow votes that target the current "epoch" (open meta-
      * block).
@@ -101,7 +103,7 @@ contract PollingPlace is PollingPlaceInterface {
 
     /**
      * Maps validator addresses to the highest target vote they have voted. All
-     * future votes must target a hegiht greater than the last voted target
+     * future votes must target a height greater than the last voted target
      * height.
      */
     mapping (address => uint256) public validatorTargetHeights;
@@ -419,7 +421,12 @@ contract PollingPlace is PollingPlaceInterface {
     }
 
     /**
-     * @notice
+     * @notice Stores a vote and checks subsuquently if the target checkpoint
+     *         is now justified. If so, it calls justify on the given block
+     *         store.
+     *
+     * @dev All requirement checks must have been made before calling this
+     *      method.
      *
      * @param _voteHash The hash of the vote object. The hash is used to
      *                  identify the vote.
@@ -472,7 +479,7 @@ contract PollingPlace is PollingPlaceInterface {
     }
 
     /**
-     * @notice Usese the signature of a vote to recover the public address of
+     * @notice Uses the signature of a vote to recover the public address of
      *         the signer.
      *
      * @param _voteHash The hashed vote. It is the message that was signed.
@@ -541,14 +548,15 @@ contract PollingPlace is PollingPlaceInterface {
         view
         returns (uint256 required_)
     {
-        required_ = (totalWeights[_metaBlockHeight] * 2 / 3);
+        // 2/3 are required (a supermajority).
+        required_ = (totalWeights[_metaBlockHeight].mul(2).div(3));
 
         /**
          * Solidity always rounds down, but we have to round up if there is a
-         * remainder.
+         * remainder. It has to be *at least* 2/3.
          */
-        if (((totalWeights[_metaBlockHeight] * 2) % 3) > 0) {
-            required_ += 1;
+        if (((totalWeights[_metaBlockHeight].mul(2)) % 3) > 0) {
+            required_++;
         }
     }
 
