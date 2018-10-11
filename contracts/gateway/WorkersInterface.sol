@@ -83,20 +83,4 @@ contract WorkersInterface {
         view
         returns (bool /* is active worker */);
 
-    /**
-     *  @notice External function approve.
-     *
-     *  @dev Takes _spender and _amount, approves spender to spend amount.
-     *
-     *  @param _spender Spender address.
-     *  @param _amount Amount to approve for spender.
-     *
-     *  @return bool True if spender approved, false otherwise.
-     */
-    function approve(
-        address _spender,
-        uint256 _amount)
-        external
-        returns (bool success);
-
 }

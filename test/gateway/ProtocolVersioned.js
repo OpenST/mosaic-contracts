@@ -19,7 +19,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const BigNumber = require('bignumber.js');
 const Utils = require('../lib/utils.js');
 const ProtocolVersioned_utils = require('./ProtocolVersioned_utils.js');
 

@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: STPrimeConfig
+// Utility chain: OSTPrimeConfig
 //
 // http://www.simpletoken.org/
 //
@@ -24,22 +24,20 @@ pragma solidity ^0.4.23;
 
 /* solhint-disable-next-line two-lines-top-level-separator */
 /**
- *  @title STPrimeConfig contract.
+ *  @title OSTPrimeConfig contract.
  *
- *  @notice Contains configuration constants utilized by the STPrime contract.
+ *  @notice Contains configuration constants utilized by the OSTPrime contract.
  */
-contract STPrimeConfig {
+contract OSTPrimeConfig {
 
     /** Constants */
 
-    string  public constant STPRIME_SYMBOL          = "STP";
-    string  public constant STPRIME_NAME            = "SimpleTokenPrime";
-    uint256 public constant STPRIME_CONVERSION_RATE = 1;
-    uint8   public constant TOKEN_DECIMALS          = 18;
-    uint8   public constant STPRIME_CONVERSION_RATE_TOKEN_DECIMALS = 0;
+    string public constant TOKEN_SYMBOL = "ST";
+    string public constant TOKEN_NAME = "Simple Token";
+    uint8 public constant TOKEN_DECIMALS = 18;
 
     /** Storage */
 
     uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
+    uint256 public constant TOKENS_MAX = 800000000 * DECIMALSFACTOR;
 }

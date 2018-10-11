@@ -19,6 +19,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../lib/web3.js');
+
 const Assert = require('assert');
 
 var MockToken = artifacts.require("./MockToken.sol");
@@ -26,14 +28,12 @@ var SimpleStake = artifacts.require("./SimpleStake.sol");
 
 /// @dev Deploy 
 module.exports.deploySimpleStake = async (artifacts, accounts) => {
-	/// mock unique identifier for utility token
-	const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
 	/// mock OpenST protocol contract address with an external account
-	const openSTProtocol = accounts[4];
+	const gateway = accounts[4];
 
 	const token = await MockToken.new({ from: accounts[0] });
 
-	const simpleStake = await SimpleStake.new(token.address, openSTProtocol, UUID, { from: accounts[0] });
+	const simpleStake = await SimpleStake.new(token.address, gateway, { from: accounts[0] });
 
 	return {
 		token       : token,
@@ -43,8 +43,8 @@ module.exports.deploySimpleStake = async (artifacts, accounts) => {
 
 /// @dev Check staked balance
 module.exports.checkTotalStaked = async (stake, token, amount) => {
-	Assert.equal((await stake.getTotalStake.call()).toNumber(), amount.toNumber());
-	Assert.equal((await token.balanceOf.call(stake.address)).toNumber(), amount.toNumber());
+	assert((await stake.getTotalStake.call()).eq(amount));
+	assert((await token.balanceOf.call(stake.address)).eq(amount));
 };
 
 /*
@@ -54,7 +54,7 @@ module.exports.checkTotalStaked = async (stake, token, amount) => {
 /// @dev Check stake release events
 module.exports.checkReleasedEventGroup = (result, _protocol, _to, _amount) => {
 	if (Number.isInteger(_amount)) {
-	   _amount = new BigNumber(_amount);
+	   _amount = new BN(_amount);
 	};
    	// TODO: [ben] parse result.receipt.logs for EIP20.Transfer event too
 	Assert.equal(result.logs.length, 1);
@@ -62,16 +62,16 @@ module.exports.checkReleasedEventGroup = (result, _protocol, _to, _amount) => {
 	const releaseEvent = result.logs[0];
 	Assert.equal(releaseEvent.event, "ReleasedStake");
 	Assert.equal(releaseEvent.args._protocol, _protocol);
-	Assert.equal(releaseEvent.args._to, _to);
-	Assert.equal(releaseEvent.args._amount.toNumber(), _amount.toNumber());
+	Assert.equal(releaseEvent.args._to, web3.utils.toChecksumAddress(_to));
+	assert(releaseEvent.args._amount.eq(_amount));
 };
 
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
    if (Number.isInteger(_value)) {
-      _value = new BigNumber(_value);
+      _value = new BN(_value);
    }
    Assert.equal(event.event, "Transfer");
    Assert.equal(event.args._from, _from);
    Assert.equal(event.args._to, _to);
-   Assert.equal(event.args._value.toNumber(), _value.toNumber());
+   assert(event.args._value.eq(_value));
 }

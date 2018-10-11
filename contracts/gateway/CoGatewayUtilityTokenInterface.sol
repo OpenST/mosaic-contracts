@@ -1,4 +1,6 @@
-// Copyright 2017 OpenST Ltd.
+pragma solidity ^0.4.23;
+
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,20 +15,20 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: SimpleToken_utils.js
+// Auxiliary Chain: CoGatewayUtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-var MockToken = artifacts.require("./MockToken.sol");
+contract CoGatewayUtilityTokenInterface {
 
-/// @dev Deploy 
-module.exports.deployMockToken = async (artifacts, accounts) => {
-
-   const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
-
-   return {
-      token : token
-   }
+    /**
+     * @notice Get the utility token address.
+     *
+     * @return address of utility token.
+     */
+	function utilityToken()
+        public
+        returns (address);
 }
