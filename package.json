@@ -14,6 +14,9 @@
     "truffle": "beta",
     "web3": "1.0.0-beta.36"
   },
+  "scripts": {
+    "test": "truffle test"
+  },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
 }

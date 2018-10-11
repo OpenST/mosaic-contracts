@@ -15,7 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Origin Chain: Gateway Contract
+// Auxiliary Chain: CoGateway Contract
 //
 // http://www.simpletoken.org/
 //
@@ -34,64 +34,74 @@ progressGatewayLink  --->   progressGatewayLink
 -------------------------------------------------------------------------------
 */
 
-import './MessageBus.sol';
+import "./MessageBus.sol";
 import "./EIP20Interface.sol";
+import "../lib/SafeMath.sol";
 import "./GatewayBase.sol";
+import "./CoreInterface.sol";
+import "./UtilityTokenInterface.sol";
+import "../lib/GatewayLib.sol";
 
 /**
- *  @title Gateway contract.
+ *  @title CoGateway contract.
  *
- *  @notice Gateway contains functions for initial setup of EIP20-gateway.
+ *  @notice CoGateway contains functions for initial setup of EIP20CoGateway.
  */
-contract Gateway is  GatewayBase {
+contract CoGateway is GatewayBase {
 
-    /** Emitted whenever a gateway and coGateway linking is initiated. */
-    event GatewayLinkInitiated(
+    using SafeMath for uint256;
+
+    /** Emitted whenever a gateway and coGateway linking is confirmed. */
+    event GatewayLinkConfirmed(
         bytes32 indexed _messageHash,
         address _gateway,
         address _cogateway,
-        address _token
+        address _valueToken,
+        address _utilityToken
     );
 
-    /** Emitted whenever a gateway and coGateway linking is completed. */
+    /** Emitted whenever a gateway and coGateway linking is complete. */
     event GatewayLinkProgressed(
         bytes32 indexed _messageHash,
         address _gateway,
         address _cogateway,
-        address _token,
+        address _valueToken,
+        address _utilityToken,
         bytes32 _unlockSecret
     );
 
-    /** address of ERC20 token. */
-    EIP20Interface public token;
+    /* public variables */
+
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
+    /* Constructor */
 
     /**
-     * address of ERC20 token in which
-     * the facilitator will stake(bounty) for a process
-     */
-    EIP20Interface public baseToken;
-
-    /**
-     * @notice Initialise the contract by providing the ERC20 token address
-     *         for which the gateway will enable facilitation of staking and
-     *         minting.
+     * @notice Initialise the contract by providing the Gateway contract
+     *         address for which the CoGateway will enable facilitation of
+     *         minting and redeeming.
      *
-     * @param _token The ERC20 token contract address that will be
-     *               staked and corresponding utility tokens will be minted
-     *               in auxiliary chain.
-     * @param _baseToken The ERC20 token address that will be used for
-     *                     staking bounty from the facilitators.
+     * @param _valueToken The value token contract address.
+     * @param _utilityToken The utility token address that will be used for
+     *                      minting the utility token.
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _organisation Organisation address.
+     * @param _gateway Gateway contract address.
+     * @param _messageBus Message bus address.
      */
     constructor(
-        EIP20Interface _token,
-        EIP20Interface _baseToken,
+        address _valueToken,
+        address _utilityToken,
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
+        address _gateway,
         address _messageBus
     )
         GatewayBase(
@@ -102,85 +112,89 @@ contract Gateway is  GatewayBase {
         )
         public
     {
-
         require(
-            _token != address(0),
-            "Token contract address must not be zero"
+            _valueToken != address(0),
+            "Value token address must not be zero"
         );
         require(
-            _baseToken != address(0),
-            "Base token contract address for bounty must not be zero"
+            _utilityToken != address(0),
+            "Utility token address must not be zero"
         );
-        token = _token;
-        baseToken = _baseToken;
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero"
+        );
 
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        core = _core;
+        remoteGateway = _gateway;
 
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
     }
 
     /* External functions */
 
     /**
-     * @notice Initiate the Gateway and CoGateway contracts linking.
+     * @notice Confirm the Gateway and CoGateway contracts initiation.
      *
-     * @param _coGateway CoGateway contract address.
      * @param _intentHash Gateway and CoGateway linking intent hash.
      *                    This is a sha3 of gateway address, cogateway address,
      *                    bounty, token name, token symbol, token decimals,
      *                    _nonce, token.
      * @param _nonce Nonce of the sender. Here in this case its organisation
-     *               address
+     *               address of Gateway
      * @param _sender The address that signs the message hash. In this case it
-     *                has to be organisation address
+     *                has to be organisation address of Gateway
      * @param _hashLock Hash lock, set by the facilitator.
-     * @param _signature Signed data.
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox of Gateway
      *
      * @return messageHash_ Message hash
      */
-    function initiateGatewayLink(
-        address _coGateway,
+    function confirmGatewayLinkIntent(
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
         bytes32 _hashLock,
-        bytes _signature
+        uint256 _blockHeight,
+        bytes memory _rlpParentNodes
     )
-        external
+        public // TODO: check to change it to external, getting stack to deep.
         returns (bytes32 messageHash_)
     {
         require(
             linked == false,
-            "Gateway contract must not be already linked"
+            "CoGateway contract must not be already linked"
         );
         require(
             deactivated == false,
             "Gateway contract must not be deactivated"
         );
         require(
-            _coGateway != address(0),
-            "CoGateway address must not be zero"
-        );
-        require(
-            _sender == organisation,
-            "Sender must be organisation address"
-        );
-        require(
             gatewayLinkHash == bytes32(0),
             "Linking is already initiated"
         );
         require(
-            _signature.length == 65,
-            "Signature must be of length 65"
+            _sender != address(0),
+            "Sender must be not be zero"
+        );
+        require(
+            _rlpParentNodes.length > 0,
+            "RLP parent nodes must not be zero"
         );
 
-        bytes32 intentHash = GatewayLib.hashLinkGateway(
-            address(this),
-            _coGateway,
-            messageBus,
-            token.name(),
-            token.symbol(),
-            token.decimals(),
-            _nonce,
-            token);
+        bytes32 storageRoot = storageRoots[_blockHeight];
+        require(
+            storageRoot != bytes32(0),
+            "Storage root for given block height must not be zero"
+        );
+
+        bytes32 intentHash = hashLinkGateway(_nonce);
 
         // Ensure that the _intentHash matches the calculated intentHash
         require(
@@ -196,7 +210,6 @@ contract Gateway is  GatewayBase {
             0,
             0
         );
-
         // create Message object
         messages[messageHash_] = getMessage(
             _sender,
@@ -207,46 +220,39 @@ contract Gateway is  GatewayBase {
             _hashLock
         );
 
-        // initiate new new outbox process
-        registerOutboxProcess(
+        // initiate new inbox process
+        registerInboxProcess(
             _sender,
             _nonce,
             messageHash_
         );
 
-        // Declare message in outbox
-        MessageBus.declareMessage(
+        // Declare message in inbox
+        MessageBus.confirmMessage(
             messageBox,
             GATEWAY_LINK_TYPEHASH,
             messages[messageHash_],
-            _signature
+            _rlpParentNodes,
+            MESSAGE_BOX_OFFSET,
+            storageRoot
         );
 
-        // update the coGateway address
-        remoteGateway = _coGateway;
-
-        // update gateway link hash
         gatewayLinkHash = messageHash_;
 
-        // update the encodedGatewayPath
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
-            keccak256(abi.encodePacked(_coGateway))
-        );
-
-        // emit GatewayLinkInitiated event
-        emit GatewayLinkInitiated(
+        // Emit GatewayLinkConfirmed event
+        emit GatewayLinkConfirmed(
             messageHash_,
+            remoteGateway,
             address(this),
-            _coGateway,
-            token
+            valueToken,
+            utilityToken
         );
-
     }
 
     /**
      * @notice Complete the Gateway and CoGateway contracts linking. This will
      *         set the variable linked to true, and thus it will activate the
-     *         Gateway contract for stake and mint.
+     *         CoGateway contract for mint and redeem.
      *
      * @param _messageHash Message hash
      * @param _unlockSecret Unlock secret for the hashLock provide by the
@@ -271,8 +277,8 @@ contract Gateway is  GatewayBase {
             "Invalid message hash"
         );
 
-        // Progress the outbox.
-        MessageBus.progressOutbox(
+        // Progress inbox
+        MessageBus.progressInbox(
             messageBox,
             GATEWAY_LINK_TYPEHASH,
             messages[_messageHash],
@@ -285,15 +291,44 @@ contract Gateway is  GatewayBase {
         // Emit GatewayLinkProgressed event
         emit GatewayLinkProgressed(
             _messageHash,
-            address(this),
             remoteGateway,
-            token,
+            address(this),
+            valueToken,
+            utilityToken,
             _unlockSecret
         );
 
         return true;
     }
 
-    /** internal methods*/
+    /**
+     * @notice private function to calculate gateway link intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmGatewayLinkIntent function
+     *
+     * @param _nonce nonce of message
+     *
+     * @return bytes32 link intent hash
+     */
+    function hashLinkGateway(
+        uint256 _nonce
+    )
+        private
+        view
+        returns (bytes32)
+    {
+        return GatewayLib.hashLinkGateway(
+            remoteGateway,
+            address(this),
+            messageBus,
+            EIP20Interface(utilityToken).name(),
+            EIP20Interface(utilityToken).symbol(),
+            EIP20Interface(utilityToken).decimals(),
+            _nonce,
+            valueToken);
+
+
+    }
 
 }
