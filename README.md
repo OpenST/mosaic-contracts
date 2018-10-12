@@ -24,6 +24,7 @@ Significant implementations of and projects related to the OpenST Protocol are:
 ## Contributing
 There are multiple ways to contribute to this project. However, before contributing, please first review the [Code of Conduct](https://github.com/OpenSTFoundation/openst-protocol/blob/develop/CODE_OF_CONDUCT.md).
 
-To participate in the discussion on technical matters, please join the project's [Gitter](https://gitter.im/OpenSTFoundation/SimpleToken) channel or review the project's [issues](https://github.com/OpenSTFoundation/openst-protocol/issues).
+To participate in the discussion on technical matters, please join our [forum](https://discuss.openst.org/).
+The project also has a [Gitter](https://gitter.im/OpenSTFoundation/SimpleToken) channel and we track our [issues](https://github.com/OpenSTFoundation/openst-protocol/issues) in GitHub.
 
 To contribute code, please ensure that your submissions adhere to the [Style Guide](https://github.com/OpenSTFoundation/openst-protocol/blob/develop/SOLIDITY_STYLE_GUIDE.md); please also be aware, this project is under active development and we have not yet established firm contribution guidelines or acceptance criteria.
