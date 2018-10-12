@@ -21,9 +21,9 @@ pragma solidity ^0.4.23;
 //
 // ----------------------------------------------------------------------------
 
-import "./MerklePatriciaProof.sol";
-import "./SafeMath.sol";
-import './BytesLib.sol';
+import "../lib/MerklePatriciaProof.sol";
+import "../lib/SafeMath.sol";
+import "../lib/BytesLib.sol";
 
 library MessageBus {
 

@@ -13,18 +13,18 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: AuxiliaryCore.js
+// Test: PollingPlace.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const BN = require('bn.js');
-const utils = require('../lib/utils.js');
+const utils = require('../test_lib/utils.js');
 
-const AuxiliaryStake = artifacts.require('AuxiliaryStake');
+const PollingPlace = artifacts.require('PollingPlace');
 
 const ValidatorIndexAuxiliaryAddress = 0;
 const ValidatorIndexStake = 1;
@@ -32,14 +32,14 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
-contract('AuxiliaryStake', async (accounts) => {
-    describe('deploying an auxiliary stake contract', async () => {
+contract('PollingPlace', async (accounts) => {
+    describe('deploying a polling place contract', async () => {
         /*
-         * Make the first address the default OSTblock gate to be able to
+         * Make the first address the default meta-block gate to be able to
          * call methods that change the set of validators from the default
          * message caller address.
          */
-        let defaultOstBlockGate = accounts[0];
+        let defaultMetaBlockGate = accounts[0];
 
         it('should store a correct list of initial validators', async () => {
             let expectedStakes = {
@@ -87,22 +87,22 @@ contract('AuxiliaryStake', async (accounts) => {
                 ]
             };
 
-            let auxiliaryStake = await AuxiliaryStake.new(
-                defaultOstBlockGate,
+            let pollingPlace = await PollingPlace.new(
+                defaultMetaBlockGate,
                 expectedStakes.addresses,
                 expectedStakes.values
             );
 
-            let ostBlockGate = await auxiliaryStake.ostBlockGate.call();
+            let metaBlockGate = await pollingPlace.metaBlockGate.call();
             assert.strictEqual(
-                ostBlockGate,
-                defaultOstBlockGate,
-                'The contract must store the correct OSTblock gate.'
+                metaBlockGate,
+                defaultMetaBlockGate,
+                'The contract must store the correct meta-block gate.'
             );
 
             // Check for all individual stakes to be recorded
             for (var i = 0; i < 19; i++) {
-                let validator = await auxiliaryStake.validators.call(expectedStakes.addresses[i]);
+                let validator = await pollingPlace.validators.call(expectedStakes.addresses[i]);
 
                 assert.strictEqual(
                     validator[ValidatorIndexAuxiliaryAddress],
@@ -128,16 +128,16 @@ contract('AuxiliaryStake', async (accounts) => {
                 );
             }
 
-            let totalStakeAtZero = await auxiliaryStake.totalStakes.call(0);
+            let totalStakeAtZero = await pollingPlace.totalStakes.call(0);
             assert(
                 totalStakeAtZero.eq(new BN('190')),
                 'The contract must track the sum of all stakes as total stakes.'
             );
         });
 
-        it('should not accept a zero OSTblock gate', async () => {
+        it('should not accept a zero meta-block gate', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
+                PollingPlace.new(
                     '0x0000000000000000000000000000000000000000',
                     [
                         '0x0000000000000000000000000000000000000001',
@@ -153,8 +153,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept an empty validator set', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [],
                     []
                 )
@@ -163,8 +163,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept two arrays of different length', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -178,8 +178,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero stake', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',
@@ -194,8 +194,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept a zero address', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000000',
@@ -210,8 +210,8 @@ contract('AuxiliaryStake', async (accounts) => {
 
         it('should not accept the same address more than once', async () => {
             await utils.expectRevert(
-                AuxiliaryStake.new(
-                    defaultOstBlockGate,
+                PollingPlace.new(
+                    defaultMetaBlockGate,
                     [
                         '0x0000000000000000000000000000000000000001',
                         '0x0000000000000000000000000000000000000002',

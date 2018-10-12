@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const Assert = require('assert');
 

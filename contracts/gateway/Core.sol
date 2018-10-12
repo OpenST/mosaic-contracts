@@ -22,10 +22,11 @@ pragma solidity ^0.4.23;
 // ----------------------------------------------------------------------------
 
 import "./CoreInterface.sol";
-import "./MerklePatriciaProof.sol";
+import "../lib/MerklePatriciaProof.sol";
+import "../lib/ProofLib.sol";
 import "./WorkersInterface.sol";
-import "./RLP.sol";
-import "./SafeMath.sol";
+import "../lib//RLP.sol";
+import "../lib/SafeMath.sol";
 
 /**
  *  @title Core contract which implements CoreInterface.

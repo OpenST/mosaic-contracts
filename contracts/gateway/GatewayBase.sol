@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 
-import './GatewayLib.sol';
+import "../lib/GatewayLib.sol";
 import "./CoreInterface.sol";
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 import "./MessageBus.sol";
 
 /**

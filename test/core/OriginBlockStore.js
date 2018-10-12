@@ -13,35 +13,35 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: AuxiliaryCore.js
+// Test: OriginBlockStore.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-const eventsDecoder = require('../lib/event_decoder.js');
-const utils = require('../lib/utils.js');
+const eventsDecoder = require('../test_lib/event_decoder.js');
+const utils = require('../test_lib/utils.js');
 
-const OriginObserver = artifacts.require('OriginObserver');
+const OriginBlockStore = artifacts.require('OriginBlockStore');
 
-contract('OriginObserver', async (accounts) => {
+contract('OriginBlockStore', async (accounts) => {
     describe('reporting an origin block', async () => {
-        let originObserver;
+        let originBlockStore;
 
         beforeEach(async () => {
-            originObserver = await OriginObserver.new(1);
+            originBlockStore = await OriginBlockStore.new(1);
         });
 
         it('should accept a correct block report', async () => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 37;
 
-            await originObserver.reportBlock(
+            await originBlockStore.reportBlock(
                 chainHeight,
                 expectedStateRoot
             );
 
-            let reportedBlock = await originObserver.reportedBlocks.call(expectedStateRoot);
+            let reportedBlock = await originBlockStore.reportedBlocks.call(expectedStateRoot);
 
             // Access properties by index
             assert.strictEqual(
@@ -60,12 +60,12 @@ contract('OriginObserver', async (accounts) => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 37;
 
-            let tx = await originObserver.reportBlock(
+            let tx = await originBlockStore.reportBlock(
                 chainHeight,
                 expectedStateRoot
             );
 
-            let events = eventsDecoder.perform(tx.receipt, originObserver.address, originObserver.abi);
+            let events = eventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
             assert.strictEqual(
                 Number(events.BlockReported.height),
                 chainHeight,
@@ -85,16 +85,16 @@ contract('OriginObserver', async (accounts) => {
             let chainHeight = 33;
 
             // Report two different state roots
-            await originObserver.reportBlock(
+            await originBlockStore.reportBlock(
                 chainHeight,
                 expectedStateRootOne
             );
-            await originObserver.reportBlock(
+            await originBlockStore.reportBlock(
                 chainHeight,
                 expectedStateRootTwo
             );
 
-            let reportedBlock = await originObserver.reportedBlocks.call(expectedStateRootOne);
+            let reportedBlock = await originBlockStore.reportedBlocks.call(expectedStateRootOne);
             // Access properties by index
             assert.strictEqual(
                 reportedBlock[0].toNumber(),
@@ -107,7 +107,7 @@ contract('OriginObserver', async (accounts) => {
                 'The contract did not store the state root that was reported.'
             );
 
-            reportedBlock = await originObserver.reportedBlocks.call(expectedStateRootTwo);
+            reportedBlock = await originBlockStore.reportedBlocks.call(expectedStateRootTwo);
             // Access properties by index
             assert.strictEqual(
                 reportedBlock[0].toNumber(),
@@ -126,7 +126,7 @@ contract('OriginObserver', async (accounts) => {
             let chainHeight = 12;
 
             await utils.expectRevert(
-                originObserver.reportBlock(
+                originBlockStore.reportBlock(
                     chainHeight,
                     invalidStateRoot
                 )
@@ -137,14 +137,14 @@ contract('OriginObserver', async (accounts) => {
             let expectedStateRoot = '0xb59b762b2a1d476556dd6163bc8ec39967c4debec82ee534c0aed7a143939ed2';
             let chainHeight = 3;
 
-            await originObserver.reportBlock(
+            await originBlockStore.reportBlock(
                 chainHeight,
                 expectedStateRoot
             );
 
             // Reporting the same state root again should lead to an error.
             await utils.expectRevert(
-                originObserver.reportBlock(
+                originBlockStore.reportBlock(
                     chainHeight,
                     expectedStateRoot
                 )

@@ -14,13 +14,14 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./OriginObserverInterface.sol";
+import "./BlockStore.sol";
+import "./OriginBlockStoreInterface.sol";
 
 /**
- * @title OriginObserver observes the origin chain in a smart contract on the
- *        auxiliary chain.
+ * @title OriginBlockStore stores blocks of the origin chain in a smart
+ *        contract on the auxiliary chain.
  */
-contract OriginObserver is OriginObserverInterface {
+contract OriginBlockStore is OriginBlockStoreInterface, BlockStore {
 
     /* Events */
 
@@ -102,6 +103,23 @@ contract OriginObserver is OriginObserverInterface {
         emit BlockReported(_height, _stateRoot);
 
         success_ = true;
+    }
+    
+    /**
+     * @notice Get the state root of a block in this store.
+     *
+     * @param _blockHeight For which blockheight to get the state root.
+     *
+     * @return The state root of the block.
+     */
+    function getStateRoot(
+        uint256 _blockHeight
+    )
+        external
+        view
+        returns (bytes32 stateRoot_)
+    {
+        revert("This method is not implemented.");
     }
 
     /* Private Functions */

@@ -28,7 +28,7 @@ pragma solidity ^0.4.23;
 /// Ether pays for gas on Ethereum mainnet) when sending a transaction on
 /// the auxiliary chain.
 
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 

@@ -14,14 +14,14 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./AuxiliaryObserverConfig.sol";
-import "./AuxiliaryObserverInterface.sol";
+import "./AuxiliaryBlockStoreConfig.sol";
+import "./BlockStore.sol";
 
 /**
- * @title AuxiliaryObserver observes the auxiliary chain in a smart contract on
- *        the auxiliary chain.
+ * @title AuxiliaryBlockstore stores blocks of the auxiliary chain in a smart
+ *        contract on the auxiliary chain.
  */
-contract AuxiliaryObserver is AuxiliaryObserverInterface, AuxiliaryObserverConfig {
+contract AuxiliaryBlockStore is AuxiliaryBlockStoreConfig, BlockStore {
 
     /* Events */
 
