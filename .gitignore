@@ -13,6 +13,9 @@ contracts/abi/
 # don't commit node_modules
 node_modules
 
+# Don't commit package-lock.json file
+package-lock.json
+
 # Do not track builds
 build/
 
@@ -29,3 +32,5 @@ build/
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+build/

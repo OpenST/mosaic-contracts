@@ -34,10 +34,6 @@ import "./WorkersInterface.sol";
 contract Workers is WorkersInterface, OpsManaged {
     using SafeMath for uint256;
 
-    /** Constants */
-    
-    EIP20Interface private eip20token;
-    
     /**  Storage */
     /** Workers are not active once the deactivation height is passed. */
     mapping(address => uint256 /* deactivation height */) public workers;
@@ -57,20 +53,11 @@ contract Workers is WorkersInterface, OpsManaged {
 
     /**
      *  @notice Contract constructor.
-     *
-     *  @dev Sets the EIP20TokenInterface address.
-     * 
-     *  @param _eip20token Address of the EIP20Token.
      */  
-    constructor(
-        address _eip20token)
+    constructor()
         public
         OpsManaged()
-    {
-        require(_eip20token != address(0));
-        
-        eip20token = EIP20Interface(_eip20token);
-    }
+    {}
 
     /** External Functions */
     
@@ -156,28 +143,6 @@ contract Workers is WorkersInterface, OpsManaged {
         returns (bool /* is active worker */)
     {
         return (workers[_worker] >= block.number);
-    }
-    
-    /**
-     *  @notice External function approve.
-     *
-     *  @dev Takes _spender and _amount, approves spender to spend amount.
-     *
-     *  @param _spender Spender address.
-     *  @param _amount Amount to approve for spender.
-     *
-     *  @return bool True if spender approved, false otherwise.
-     */
-    function approve(
-        address _spender,
-        uint256 _amount)
-        external
-        onlyOps()
-        returns (bool success)
-    {
-        require(eip20token.approve(_spender, _amount));
-
-        return true;
     }
 
 }

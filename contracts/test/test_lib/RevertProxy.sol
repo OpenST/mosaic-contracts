@@ -14,9 +14,6 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "truffle/Assert.sol";
-import "truffle/DeployedAddresses.sol";
-
 /**
  * @title A proxy contract to catch and test for reverts in other contracts.
  *

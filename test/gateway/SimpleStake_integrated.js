@@ -34,12 +34,10 @@ const SimpleStakeUtils = require('./SimpleStake_utils.js')
 
 contract('SimpleStake', function(accounts) {
 
-	/// mock unique identifier for utility token
-	const UUID = "0xbce8a3809c9356cf0e5178a2aef207f50df7d32b388c8fceb8e363df00efce31";
-	/// mock OpenST protocol contract address with an external account
-	const openSTProtocol = accounts[4];
-	/// mock upgraded OpenST protocol contract address with an external account
-	const upgradedOpenSTProtocol = accounts[5];
+	/// mock gateway contract address with an external account
+	const gateway = accounts[4];
+	/// mock upgraded gateway contract address with an external account
+	const upgradedGateway = accounts[5];
 	/// constant protocol wait time for protocol transfer in blocks
 	const PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 40320;
 
@@ -67,19 +65,15 @@ contract('SimpleStake', function(accounts) {
 		});
 
 		context("on construction", async () => {
-			
-			it("should store a UUID", async() => {
-				Assert.equal(await simpleStake.uuid.call(), UUID);
-			});
 
 			it("should have an EIP20Token contract", async() => {
 				Assert.equal(await simpleStake.eip20Token.call(), token.address);
 			});
 
-			it("should have a well-defined OpenSTProtocol", async() => {
-				// assert protocol contract address is set
-				Assert.equal(await simpleStake.openSTProtocol.call(), openSTProtocol);
-				// assert no new protocol contract address is proposed
+			it("should have a well-defined Gateway", async() => {
+				// assert gateway contract address is set
+				Assert.equal(await simpleStake.openSTProtocol.call(), gateway);
+				// assert no new gateway contract address is proposed
 				Assert.ok(Utils.isNullAddress(await simpleStake.proposedProtocol.call()));
 				// assert transfer height is zero
 				Assert.equal(await simpleStake.earliestTransferHeight.call(), 0);
@@ -104,21 +98,21 @@ contract('SimpleStake', function(accounts) {
 			});
 
 			it("can release 3ST", async () => {
-				const result = await simpleStake.releaseTo(accounts[0], ST3, { from: openSTProtocol });
+				const result = await simpleStake.releaseTo(accounts[0], ST3, { from: gateway });
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST2);
 				assert((await token.balanceOf(accounts[0])).eq(totalSupply.sub(ST2)));
-				SimpleStakeUtils.checkReleasedEventGroup(result, openSTProtocol, accounts[0], ST3);
+				SimpleStakeUtils.checkReleasedEventGroup(result, gateway, accounts[0], ST3);
 			});
 
 			it("must fail to release 3ST", async () => {
-				await Utils.expectThrow(simpleStake.releaseTo(accounts[0], ST3, { from: openSTProtocol }));
+				await Utils.expectThrow(simpleStake.releaseTo(accounts[0], ST3, { from: gateway }));
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST2);
 				assert((await token.balanceOf(accounts[0])).eq(totalSupply.sub(ST2)));
 			});
 
 			it("can release all remaining stake", async () => {
 				var remainingStake = await simpleStake.getTotalStake.call();
-				Assert.ok(await simpleStake.releaseTo(accounts[0], remainingStake, { from: openSTProtocol }));
+				Assert.ok(await simpleStake.releaseTo(accounts[0], remainingStake, { from: gateway }));
 				await SimpleStakeUtils.checkTotalStaked(simpleStake, token, ST0);
 				assert((await token.balanceOf(accounts[0])).eq(totalSupply));
 			});

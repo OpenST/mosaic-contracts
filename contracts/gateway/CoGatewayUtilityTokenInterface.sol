@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,29 +15,20 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Common: CoreInterface
+// Auxiliary Chain: CoGatewayUtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-/**
- *  @title CoreInterface contract.
- *
- *  @notice Provides interface for core contract.
- */
-contract CoreInterface {
+contract CoGatewayUtilityTokenInterface {
 
-	/** Public functions */
-
-	function chainIdRemote() public view returns (uint256 /** chainIdRemote */);
-	/** get highest state root block height for which state root is committed. */
-	function getLatestStateRootBlockHeight() public view returns (uint256 /** latest state root block height */);
-	function getStateRoot(uint256 _blockHeight) public view returns (bytes32 /** state root */);
-
-
-	/** External functions */
-
-	/** commitStateRoot external function to be called by game process */
-	function commitStateRoot(uint256 _blockHeight, bytes32 _stateRoot) external returns (bytes32 /** stateRoot */);
+    /**
+     * @notice Get the utility token address.
+     *
+     * @return address of utility token.
+     */
+	function utilityToken()
+        public
+        returns (address);
 }
