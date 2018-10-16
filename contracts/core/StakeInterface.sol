@@ -18,31 +18,31 @@ pragma solidity ^0.4.23;
 interface StakeInterface {
 
     /**
-     * @notice The message sender deposits the given amount of OST in the stake
-     *         contract to give the validator addresses voting weight equal to
-     *         the deposit. The validator will be able to cast votes starting
-     *         at the current meta-block height plus two.
-     *         Prior to this call, the message sender must approve an OST
+     * @notice The message sender deposits the given amount of ERC-20 in the
+     *         stake contract to give the validator addresses voting weight
+     *         equal to the deposit. The validator will be able to cast votes
+     *         starting at the current meta-block height plus two.
+     *         Prior to this call, the message sender must approve an ERC-20
      *         transfer of the specified deposit ammount from her account to
      *         the stake contract.
      *         The `msg.sender` will be the only address that is allowed to
      *         log out or withdraw.
      *
-     * @param _amount The amount of OST to deposit.
      * @param _validator The address of the validator on auxiliary, where the
      *                   voting takes place.
+     * @param _amount The amount of ERC-20 to deposit.
      *
-     * @return The unique index of the registered validator.
+     * @return `true` if the deposit succeeded.
      */
     function deposit(
-        uint256 _amount,
-        address _validator
+        address _validator,
+        uint256 _amount
     )
         external
-        returns (uint256 validatorIndex_);
+        returns (bool success_);
 
     /**
-     * @notice A logout is a prerequisite to withdrawing the deposited OST
+     * @notice A logout is a prerequisite to withdrawing the deposited ERC-20
      *         after the holding period. A validator that is logged out has no
      *         more voting power starting from the current meta-block height
      *         plus two.
