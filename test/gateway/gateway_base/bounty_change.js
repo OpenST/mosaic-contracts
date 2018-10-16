@@ -78,7 +78,7 @@ contract('GatewayBase.sol', function (accounts) {
       await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
     });
 
-    it('only organization should be able to propose bounty change', async function () {
+    it('should bounty change be proposed by organization only', async function () {
 
       let proposedBounty = new BN(50);
       await Utils.expectThrow(

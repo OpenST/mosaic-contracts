@@ -27,8 +27,16 @@ contract MockCore is Core {
 		uint256 _chainIdRemote,
 		uint256 _blockHeight,
 		bytes32 _stateRoot,
-		WorkersInterface _workers)
-	Core(_chainIdOrigin, _chainIdRemote, _blockHeight, _stateRoot, _workers) public
+		WorkersInterface _workers
+	)
+		Core(
+			_chainIdOrigin,
+			_chainIdRemote,
+			_blockHeight,
+			_stateRoot,
+			_workers
+		)
+		public
 	{
 	}
 

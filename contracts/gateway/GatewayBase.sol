@@ -341,7 +341,7 @@ contract GatewayBase {
     function getNonce(address _account)
         external
         view
-        returns (uint256 /* nonce */)
+        returns (uint256)
     {
         // call the private method
         return _getOutboxNonce(_account);
@@ -357,7 +357,7 @@ contract GatewayBase {
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()
         external
-        returns(uint256 /*proposedBounty*/)
+        returns(uint256)
     {
         proposedBounty = _proposedBounty;
         proposedBountyUnlockHeight = block.number.add(BOUNTY_CHANGE_UNLOCK_PERIOD);
