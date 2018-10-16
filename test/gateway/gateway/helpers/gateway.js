@@ -1,7 +1,7 @@
 'use strict';
 
 const Gateway = artifacts.require("Gateway");
-const web3 = require('../../../lib/web3.js');
+const web3 = require('../../../test_lib/web3.js');
 const utils = require("./utils");
 
 const GatewayUtils = function(gateway) {

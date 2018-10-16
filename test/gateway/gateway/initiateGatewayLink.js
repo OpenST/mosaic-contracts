@@ -26,7 +26,7 @@ const Gateway = artifacts.require("Gateway"),
 const GatewayKlass = require("./helpers/gateway"),
     utils = require("./helpers/utils"),
     Helper = require("./helpers/helper"),
-    web3 = require('../../lib/web3.js'),
+    web3 = require('../../test_lib/web3.js'),
     BN = require('bn.js');
 
 const gatewayTest = new GatewayKlass();

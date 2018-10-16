@@ -19,11 +19,11 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const Assert = require('assert');
 const BN = require('bn.js');
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const SimpleStakeUtils = require('./SimpleStake_utils.js')
 
 ///
