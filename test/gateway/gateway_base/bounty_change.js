@@ -3,7 +3,7 @@ const GatewayBase = artifacts.require("./GatewayBase.sol")
 
 const Utils = require('../../../test/lib/utils');
 
-let unlockTimeInBlock = 100;
+let unlockTimeInBlocks = 100;
 
 async function proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty) {
 
@@ -13,7 +13,7 @@ async function proposeBountyChange(gatewayBaseInstance, proposedBounty, organisa
 
   let response = await gatewayBaseInstance.initiateBountyAmountChange(proposedBounty, { from: organisation });
 
-  let expectedUnlockHeight = response.receipt.blockNumber + unlockTimeInBlock;
+  let expectedUnlockHeight = response.receipt.blockNumber + unlockTimeInBlocks;
 
   let expectedEvent = {
     BountyChangeInitiated: {
@@ -78,7 +78,7 @@ contract('GatewayBase.sol', function (accounts) {
       await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
     });
 
-    it('should bounty change be proposed by organization only', async function () {
+    it('should accept propose bounty change from organization only', async function () {
 
       let proposedBounty = new BN(50);
       await Utils.expectThrow(
@@ -111,7 +111,7 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
-      currentBlock = unlockHeight - unlockTimeInBlock;
+      currentBlock = unlockHeight - unlockTimeInBlocks;
     });
 
     it('should be able to confirm bounty change after unlockHeight', async function () {

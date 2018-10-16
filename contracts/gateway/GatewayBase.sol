@@ -352,7 +352,7 @@ contract GatewayBase {
      *
      * @param _proposedBounty proposed bounty amount.
      *
-     * @return proposedBounty_ proposed bounty amount.
+     * @return uint256 proposed bounty amount.
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()

@@ -167,8 +167,8 @@ Utils.prototype = {
 
   /// @dev Get account balance
   getBalance: (address) => {
-    return new Promise(function (resolve, reject) {
-      web3.eth.getBalance(address, function (error, result) {
+    return new Promise((resolve, reject) => {
+      web3.eth.getBalance(address, (error, result) => {
         if (error) {
           reject(error);
         } else {
@@ -180,8 +180,8 @@ Utils.prototype = {
 
   /// @dev Get gas price
   getGasPrice: () => {
-    return new Promise(function (resolve, reject) {
-      web3.eth.getGasPrice(function (error, result) {
+    return new Promise((resolve, reject) => {
+      web3.eth.getGasPrice((error, result) => {
         if (error) {
           reject(error);
         } else {
@@ -197,7 +197,7 @@ Utils.prototype = {
       Object.keys(expectedData).length,
       "Number of events emitted must match expected event counts"
     );
-    eventLogs.forEach(function (event) {
+    eventLogs.forEach((event) => {
       let eventName = event.event;
       let eventData = Object.keys(event.args);
       let eventExpectedData = expectedData[eventName];
@@ -223,13 +223,13 @@ Utils.prototype = {
   generateHashLock: () => {
     return hashLock.getHashLock();
   },
-  signHash: async function (
+  signHash: async (
     typeHash,
     intentHash,
     nonce,
     gasPrice,
     gasLimit,
-    signerAddress) {
+    signerAddress) => {
 
     let digest = web3.utils.soliditySha3(
       { t: 'bytes32', v: typeHash },

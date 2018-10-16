@@ -53,7 +53,7 @@ contract MockGatewayBase is GatewayBase {
         bytes _rlpParentNodes
     )
         external
-        returns (bool /* success */)
+        returns (bool )
     {
         // _rlpEncodedAccount should be valid
         require(
