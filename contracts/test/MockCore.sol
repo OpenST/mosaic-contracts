@@ -41,11 +41,10 @@ contract MockCore is Core {
 	  *
 	  * @return bytes32 storage root
 	  */
-	function getStorageRoot(
-		uint256 _blockHeight)
+	function getStorageRoot(uint256 _blockHeight)
 		public
 		view
-		returns (bytes32 /* storage root */)
+		returns (bytes32)
 	{
 		return keccak256(abi.encodePacked(_blockHeight));
 	}
@@ -59,11 +58,10 @@ contract MockCore is Core {
 	  *
 	  * @return bytes32 state root
 	  */
-	function getStateRoot(
-		uint256 _blockHeight)
+	function getStateRoot(uint256 _blockHeight)
 		public
 		view
-		returns (bytes32 /* storage root */)
+		returns (bytes32)
 	{
 		return keccak256(abi.encodePacked(_blockHeight));
 	}

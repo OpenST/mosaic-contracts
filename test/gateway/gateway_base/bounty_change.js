@@ -3,15 +3,17 @@ const GatewayBase = artifacts.require("./GatewayBase.sol")
 
 const Utils = require('../../../test/lib/utils');
 
+let unlockTimeInBlock = 100;
+
 async function proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty) {
 
-  let actualProposedBounty = await gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, {from: organisation});
+  let actualProposedBounty = await gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, { from: organisation });
 
   assert(proposedBounty.eq(actualProposedBounty));
 
-  let response = await gatewayBaseInstance.initiateBountyAmountChange(proposedBounty, {from: organisation});
+  let response = await gatewayBaseInstance.initiateBountyAmountChange(proposedBounty, { from: organisation });
 
-  let expectedUnlockHeight = response.receipt.blockNumber + 100;
+  let expectedUnlockHeight = response.receipt.blockNumber + unlockTimeInBlock;
 
   let expectedEvent = {
     BountyChangeInitiated: {
@@ -70,8 +72,8 @@ contract('GatewayBase.sol', function (accounts) {
 
       await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
 
-       proposedBounty = new BN(150);
-       currentBounty = new BN(100);
+      proposedBounty = new BN(150);
+      currentBounty = new BN(100);
 
       await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
     });
@@ -79,7 +81,11 @@ contract('GatewayBase.sol', function (accounts) {
     it('only organization should be able to propose bounty change', async function () {
 
       let proposedBounty = new BN(50);
-      await  Utils.expectThrow(gatewayBaseInstance.initiateBountyAmountChange.call(proposedBounty, {from: accounts[1]}));
+      await Utils.expectThrow(
+        gatewayBaseInstance.initiateBountyAmountChange.call(
+          proposedBounty, { from: accounts[1] }
+        )
+      );
     });
   });
 
@@ -105,16 +111,16 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, organisation, currentBounty);
-      currentBlock = unlockHeight - 100;
+      currentBlock = unlockHeight - unlockTimeInBlock;
     });
 
     it('should be able to confirm bounty change after unlockHeight', async function () {
 
-      while(currentBlock < unlockHeight){
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({from:organisation}));
-        currentBlock ++;
+      while (currentBlock < unlockHeight) {
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: organisation }));
+        currentBlock++;
       }
-     let response = await gatewayBaseInstance.confirmBountyAmountChange({from:organisation})
+      let response = await gatewayBaseInstance.confirmBountyAmountChange({ from: organisation })
 
       let expectedEvent = {
         BountyChangeConfirmed: {
@@ -135,20 +141,19 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should not be able to confirm bounty change before unlockHeight', async function () {
 
-      while(currentBlock < unlockHeight){
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({from:organisation}));
-        currentBlock ++;
+      while (currentBlock < unlockHeight) {
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: organisation }));
+        currentBlock++;
       }
     });
 
-    it('only organization should be able to confirm bounty change after' +
-      ' unlockHeight', async function () {
+    it('should not accept a bounty change from another address than the organization', async function () {
 
-      while(currentBlock < unlockHeight){
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({from:organisation}));
-        currentBlock ++;
+      while (currentBlock < unlockHeight) {
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: organisation }));
+        currentBlock++;
       }
-      await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({from:accounts[5]}));
+      await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: accounts[5] }));
     });
 
 

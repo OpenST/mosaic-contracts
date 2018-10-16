@@ -27,8 +27,8 @@ const Assert = require('assert');
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 const ResultType = {
-  FAIL:0,
-  SUCCESS:1
+  FAIL: 0,
+  SUCCESS: 1
 };
 Object.freeze(ResultType);
 
@@ -52,13 +52,11 @@ function assertExpectedMessage(message, error) {
 /*
  *  Tracking Gas Usage
  */
-
 const receipts = [];
 
 function Utils() {
 
 }
-
 
 Utils.prototype = {
 
@@ -69,13 +67,13 @@ Utils.prototype = {
       response: response
     });
   },
+
   logReceipt: (receipt, description) => {
     receipts.push({
       receipt: receipt,
       description: description,
       response: null
     })
-
   },
 
   logTransaction: async (hash, description) => {
@@ -105,7 +103,6 @@ Utils.prototype = {
     receipts.splice(0, receipts.length);
   },
 
-
   /*
    *  General event checks
    */
@@ -116,15 +113,14 @@ Utils.prototype = {
   /*
    *  Basic Ethereum checks
    */
-
-/// @dev Compare to null address
-  isNullAddress: function (address) {
+  /// @dev Compare to null address
+  isNullAddress: (address) => {
     Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
     return (address == NullAddress);
   },
 
-/// @dev Expect failure from invalid opcode or out of gas,
-///      but returns error instead
+  /// @dev Expect failure from invalid opcode or out of gas,
+  ///      but returns error instead
   expectThrow: async (promise, expectedMessage) => {
     try {
       await promise;
@@ -142,7 +138,6 @@ Utils.prototype = {
 
       return;
     }
-
     assert(false, "Did not throw as expected");
   },
 
@@ -162,7 +157,7 @@ Utils.prototype = {
         error.message.search('revert') > -1,
         'The contract should revert. Instead: ' + error.message
       );
-        assertExpectedMessage(expectedMessage, error);
+      assertExpectedMessage(expectedMessage, error);
       console.log("expect revert  ");
       return;
     }
@@ -170,8 +165,8 @@ Utils.prototype = {
     assert(false, "Did not revert as expected.");
   },
 
-/// @dev Get account balance
-  getBalance: function (address) {
+  /// @dev Get account balance
+  getBalance: (address) => {
     return new Promise(function (resolve, reject) {
       web3.eth.getBalance(address, function (error, result) {
         if (error) {
@@ -183,8 +178,8 @@ Utils.prototype = {
     })
   },
 
-/// @dev Get gas price
-  getGasPrice: function () {
+  /// @dev Get gas price
+  getGasPrice: () => {
     return new Promise(function (resolve, reject) {
       web3.eth.getGasPrice(function (error, result) {
         if (error) {
@@ -195,14 +190,13 @@ Utils.prototype = {
       })
     })
   },
-
-  validateEvents: function (eventLogs, expectedData) {
+  
+  validateEvents: (eventLogs, expectedData) => {
     assert.equal(
       eventLogs.length,
       Object.keys(expectedData).length,
       "Number of events emitted must match expected event counts"
     );
-
     eventLogs.forEach(function (event) {
       let eventName = event.event;
       let eventData = Object.keys(event.args);
@@ -225,11 +219,10 @@ Utils.prototype = {
     });
   },
 
-//Get latest hash
-  generateHashLock: function () {
+  //Get latest hash
+  generateHashLock: () => {
     return hashLock.getHashLock();
   },
-
   signHash: async function (
     typeHash,
     intentHash,
@@ -239,11 +232,11 @@ Utils.prototype = {
     signerAddress) {
 
     let digest = web3.utils.soliditySha3(
-      {t: 'bytes32', v: typeHash},
-      {t: 'bytes32', v: intentHash},
-      {t: 'uint256', v: nonce},
-      {t: 'uint256', v: gasPrice},
-      {t: 'uint256', v: gasLimit}
+      { t: 'bytes32', v: typeHash },
+      { t: 'bytes32', v: intentHash },
+      { t: 'uint256', v: nonce },
+      { t: 'uint256', v: gasPrice },
+      { t: 'uint256', v: gasLimit }
     );
     let signature = await web3.eth.sign(digest, signerAddress);
     return {
@@ -253,7 +246,6 @@ Utils.prototype = {
   },
   ResultType: ResultType
 }
-
 
 module.exports = new Utils();
 

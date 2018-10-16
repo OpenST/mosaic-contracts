@@ -41,7 +41,7 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should return nonce incremented by 1 if linking process is initiated', async function () {
 
-      //todo implement this when liking unit tests are done
+      //todo implement this when linking unit tests are done
     });
 
 

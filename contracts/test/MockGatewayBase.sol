@@ -8,7 +8,6 @@ import "./MockGatewayLib.sol";
  *
  * @notice Used for test only
  */
-
 contract MockGatewayBase is GatewayBase {
 
     constructor(
@@ -17,10 +16,13 @@ contract MockGatewayBase is GatewayBase {
         uint256 _bounty,
         address _organisation
     )
-    GatewayBase(_core, _messageBus, _bounty, _organisation)
-    {
-
-    }
+        GatewayBase(
+            _core,
+            _messageBus,
+            _bounty,
+            _organisation
+        )
+    {}
 
     /* external functions */
 
@@ -45,14 +47,13 @@ contract MockGatewayBase is GatewayBase {
      *
      *  @return `true` if Gateway account is proved
      */
-
-    function proveGateway(
+  function proveGateway(
         uint256 _blockHeight,
         bytes _rlpEncodedAccount,
         bytes _rlpParentNodes
     )
-    external
-    returns (bool /* success */)
+        external
+        returns (bool /* success */)
     {
         // _rlpEncodedAccount should be valid
         require(
@@ -71,7 +72,7 @@ contract MockGatewayBase is GatewayBase {
         //State root should be present for the block height
         require(
             stateRoot != bytes32(0),
-            "State root must not be zero"
+            "height must have a known state root"
         );
 
         // If account already proven for block height
@@ -91,7 +92,9 @@ contract MockGatewayBase is GatewayBase {
             // return true
             return true;
         }
-
+        
+        //on successful proof verification storage root is returned other wise
+        // transaction is reverted. 
         bytes32 storageRoot = MockGatewayLib.proveAccount(
             _rlpEncodedAccount,
             _rlpParentNodes,

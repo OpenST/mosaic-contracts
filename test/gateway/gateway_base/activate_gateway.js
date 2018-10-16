@@ -36,7 +36,7 @@ contract('GatewayBase.sol', function (accounts) {
       await Utils.expectThrow(gatewayBaseInstance.deactivateGateway.call({from: organisation}));
     });
 
-    it('only organization should be able to deactivate', async function () {
+    it('should deactivated by organization only', async function () {
 
       await Utils.expectThrow(gatewayBaseInstance.deactivateGateway.call({from: accounts[0]}));
     });
@@ -73,9 +73,9 @@ contract('GatewayBase.sol', function (accounts) {
       await Utils.expectThrow(gatewayBaseInstance.activateGateway.call({from: organisation}));
     });
 
-    it('only organization should be able to activate', async function () {
+    it('should be activated by organization only', async function () {
 
-      await Utils.expectThrow(gatewayBaseInstance.deactivateGateway.call({from: accounts[0]}));
+      await Utils.expectThrow(gatewayBaseInstance.activateGateway.call({from: accounts[0]}));
     });
 
 

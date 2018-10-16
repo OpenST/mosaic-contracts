@@ -351,6 +351,8 @@ contract GatewayBase {
      * @notice Method allows organization to propose new bounty amount.
      *
      * @param _proposedBounty proposed bounty amount.
+     *
+     * @return proposedBounty_ proposed bounty amount.
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()
@@ -358,12 +360,12 @@ contract GatewayBase {
         returns(uint256 /*proposedBounty*/)
     {
         proposedBounty = _proposedBounty;
-        proposedBountyUnlockHeight = block.number;
+        proposedBountyUnlockHeight = block.number.add(BOUNTY_CHANGE_UNLOCK_PERIOD);
 
         emit BountyChangeInitiated(
                 bounty,
                 _proposedBounty,
-                proposedBountyUnlockHeight.add(BOUNTY_CHANGE_UNLOCK_PERIOD)
+                proposedBountyUnlockHeight
         );
 
         return _proposedBounty;
@@ -372,6 +374,9 @@ contract GatewayBase {
     /**
      * @notice Method allows organization to confirm proposed bounty amount
      *         after unlock period.
+     *
+     * @return changedBountyAmount_  updated bounty amount.
+     * @return previousBountyAmount_ previous bounty amount.
      */
     function confirmBountyAmountChange()
         onlyOrganisation()
@@ -386,7 +391,7 @@ contract GatewayBase {
             "Proposed bounty should be different from existing bounty."
         );
         require(
-            proposedBountyUnlockHeight.add(BOUNTY_CHANGE_UNLOCK_PERIOD) < block.number,
+            proposedBountyUnlockHeight < block.number,
             "Confirm bounty amount change can only be done after unlock period."
         );
 

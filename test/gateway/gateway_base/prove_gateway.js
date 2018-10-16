@@ -53,7 +53,7 @@ contract('GatewayBase.sol', function (accounts) {
       await Utils.validateEvents(eventData, expectedEvent);
     });
 
-    it('should be not prove  with if already proven', async function () {
+    it('should return already proven flag as true if already proven', async function () {
 
       await gatewayBaseInstance.proveGateway(2, rlpEncodedAccount,
         rlpParentNodes);
@@ -80,13 +80,13 @@ contract('GatewayBase.sol', function (accounts) {
       await Utils.validateEvents(eventData, expectedEvent);
     });
 
-    it('should fail if rlp encodedAccount is not passed', async function () {
+    it('should fail if rlp encoded account is not passed', async function () {
 
       await Utils.expectThrow(gatewayBaseInstance.proveGateway(1, "0x", rlpParentNodes));
 
     });
 
-    it('should fail if rlp rlpParentNodes is not passed', async function () {
+    it('should fail if rlp parent nodes is not passed', async function () {
 
       await Utils.expectThrow(gatewayBaseInstance.proveGateway(1, rlpEncodedAccount, "0x"));
 
