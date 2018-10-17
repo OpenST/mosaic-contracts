@@ -53,7 +53,7 @@ contract MockGatewayBase is GatewayBase {
         bytes _rlpParentNodes
     )
         external
-        returns (bool )
+        returns (bool)
     {
         // _rlpEncodedAccount should be valid
         require(
@@ -93,7 +93,7 @@ contract MockGatewayBase is GatewayBase {
             return true;
         }
         
-        //on successful proof verification storage root is returned other wise
+        //On successful proof verification storage root is returned other wise
         // transaction is reverted. 
         bytes32 storageRoot = MockGatewayLib.proveAccount(
             _rlpEncodedAccount,

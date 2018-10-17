@@ -38,8 +38,7 @@ contract MockCore is Core {
 		)
 		public
 	{}
-	}
-
+	
 	/**
 	  * @notice get storage root for a given block height
 	  *
