@@ -154,7 +154,7 @@ contract BlockStore is BlockStoreInterface {
             "Initial state root must not be zero."
         );
         require(
-            _initialBlockHeight % _epochLength == 0,
+            _initialBlockHeight.mod(_epochLength) == 0,
             "The initial block height is incompatible to the epoch length. Must be a multiple."
         );
 
@@ -246,8 +246,6 @@ contract BlockStore is BlockStoreInterface {
             _targetBlockHash
         );
         require(blockValid, reason);
-
-        isValidTransitionHash(_sourceBlockHash, _sourceBlockHash);
 
         // Finalise first as it may increase the dynasty number of target.
         if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {

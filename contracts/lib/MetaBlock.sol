@@ -34,7 +34,7 @@ library MetaBlock {
         bytes32 blockHash;
 
         /**
-         * The core identifier indentifies which chain this transition object
+         * The core identifier identifies which chain this transition object
          * belongs to.
          */
         bytes20 coreIdentifier;
@@ -46,7 +46,8 @@ library MetaBlock {
     );
 
     /**
-     * @notice
+     * @notice Takes the parameters of an origin transition and returns the
+     *         typed hash of it.
      *
      * @param _dynasty The dynasty of the origin transition object.
      * @param _blockHash The block hash of the origin transition object.
