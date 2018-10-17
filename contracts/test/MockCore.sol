@@ -37,7 +37,7 @@ contract MockCore is Core {
 			_workers
 		)
 		public
-	{
+	{}
 	}
 
 	/**
