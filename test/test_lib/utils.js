@@ -116,12 +116,13 @@ module.exports.expectThrow = async (promise, expectedMessage) => {
 };
 
 /**
- * Asserts that a given ethereum call/transaction leads to a revert. The
- * call/transaction is given as a promise.
- *
- * @param {promise} promise Awaiting this promise must lead to a revert.
- * @param {string} expectedMessage If given, the returned error message must
- *                                 include this string (optional).
+ * Asserts that a call or transaction reverts.
+ * 
+ * @param {promise} promise The call or transaction.
+ * @param {string} expectedMessage Optional. If given, the revert message will
+ *                                 be checked to contain this string. Works with
+ *                                 web3 >= 1.0.
+ * @throws Will fail an assertion if the call or transaction is not reverted.
  */
 module.exports.expectRevert = async (promise, expectedMessage) => {
   try {

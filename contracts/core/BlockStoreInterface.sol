@@ -47,6 +47,22 @@ interface BlockStoreInterface {
         external;
 
     /**
+     * @notice Returns the state root of the block that is stored at the given
+     *         height. The height must be <= the height of the latest finalised
+     *         checkpoint.
+     *
+     * @param _height The blockheight.
+     *
+     * @return The state root of the block at the given height.
+     */
+    function stateRoot(
+        uint256 _height
+    )
+        external
+        view
+        returns (bytes32 stateRoot_);
+
+    /**
      * @notice Returns the height of the latest block that has been finalised.
      *
      * @return The height of the latest finalised block.
