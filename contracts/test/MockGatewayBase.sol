@@ -93,7 +93,7 @@ contract MockGatewayBase is GatewayBase {
             return true;
         }
         
-        //On successful proof verification storage root is returned other wise
+        // On successful proof verification storage root is returned other wise
         // transaction is reverted. 
         bytes32 storageRoot = MockGatewayLib.proveAccount(
             _rlpEncodedAccount,

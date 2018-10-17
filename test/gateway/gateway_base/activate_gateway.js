@@ -64,9 +64,10 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should activate if deActivated', async function () {
 
-      assert((await gatewayBaseInstance.activateGateway.call({from: organisation})),
-             "Gateway activation failed, activateGateway returned false."
-            );
+      assert(
+        (await gatewayBaseInstance.activateGateway.call({from: organisation})),
+        "Gateway activation failed, activateGateway returned false.",
+      );
     });
 
     it('should not activate if already activated', async function () {
