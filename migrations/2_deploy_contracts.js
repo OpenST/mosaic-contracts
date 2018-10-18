@@ -3,6 +3,9 @@ let GatewayLib = artifacts.require("./gateway/GatewayLib.sol");
 let Gateway = artifacts.require("Gateway");
 let MetaBlock = artifacts.require("../contracts/lib/MetaBlock.sol");
 let BlockStore = artifacts.require("../contracts/BlockStore.sol");
+let AuxiliaryBlockStore = artifacts.require(
+  "../contracts/AuxiliaryBlockStore.sol"
+);
 
 module.exports = function(deployer) {
   deployer.deploy(MessageBus);
@@ -12,5 +15,5 @@ module.exports = function(deployer) {
 
   deployer.deploy(MetaBlock);
   deployer.link(MetaBlock, BlockStore);
+  deployer.link(MetaBlock, AuxiliaryBlockStore);
 };
-

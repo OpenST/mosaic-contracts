@@ -301,4 +301,36 @@ contract('BlockStore.justify()', async (accounts) => {
         );
     });
 
+    it('should not allow the target to be justified with a different source', async () => {
+        await blockStore.justify(
+            blockHashAtZero,
+            blockHashAtTen,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTen,
+            blockHashAtTwenty,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtThirty,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtFourty,
+            {from: pollingPlaceAddress},
+        );
+
+        await Utils.expectRevert(
+            blockStore.justify(
+                blockHashAtThirty,
+                blockHashAtFourty,
+                {from: pollingPlaceAddress},
+            ),
+            'The target must not be justified already.',
+        );
+    });
+
 });

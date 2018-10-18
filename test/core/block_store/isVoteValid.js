@@ -331,4 +331,43 @@ contract('BlockStore.isVoteValid()', async (accounts) => {
         );
     });
 
+    it('should not allow the target to be justified with a different source', async () => {
+        await blockStore.justify(
+            blockHashAtZero,
+            blockHashAtTen,
+            {from: pollingPlaceAddress}
+        );
+        await blockStore.justify(
+            blockHashAtTen,
+            blockHashAtTwenty,
+            {from: pollingPlaceAddress}
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtThirty,
+            {from: pollingPlaceAddress}
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtFourty,
+            {from: pollingPlaceAddress}
+        );
+
+        let isValid = await blockStore.isVoteValid.call(
+            MetaBlock.hashOriginTransition(
+                {
+                    dynasty: new BN('3'),
+                    blockHash: blockHashAtThirty,
+                    coreIdentifier: coreIdentifier
+                }
+            ),
+            blockHashAtThirty,
+            blockHashAtFourty,
+        );
+        assert(
+            !isValid,
+            'The target must not be justified before.'
+        );
+    });
+
 });
