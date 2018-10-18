@@ -74,11 +74,11 @@ interface BlockStoreInterface {
 
     /**
      * @notice Validates a given vote. For a vote to be valid:
-     *         - The transition object must be correct and
-     *         - The hashes must exist and
-     *         - The blocks of the hashes must be at checkpoint heights and
-     *         - The source checkpoint must be justified and
-     *         - The target must be higher than the current head.
+     *         - The transition object must be correct
+     *         - The hashes must exist
+     *         - The blocks of the hashes must be at checkpoint heights
+     *         - The source checkpoint must be justified
+     *         - The target must be higher than the current head
      *
      * @param _transitionHash The hash of the transition object of the related
      *                        meta-block. Depends on the source block.

@@ -108,6 +108,21 @@ contract BlockStore is BlockStoreInterface {
      */
     uint256 public currentDynasty;
 
+    /* Modifiers */
+
+    /**
+     * @notice Functions with this modifier can only be called from the address
+     *         that is registered as the pollingPlace.
+     */
+    modifier onlyPollingPlace() {
+        require(
+            msg.sender == pollingPlace,
+            "This method must be called frome the registered polling place."
+        );
+
+        _;
+    }
+
     /* Constructor */
 
     /**
@@ -229,12 +244,8 @@ contract BlockStore is BlockStoreInterface {
         bytes32 _targetBlockHash
     )
         external
+        onlyPollingPlace()
     {
-        require(
-            msg.sender == pollingPlace,
-            "This method must be called frome the registered polling place."
-        );
-
         bool blockValid;
         string memory reason;
 
@@ -329,11 +340,11 @@ contract BlockStore is BlockStoreInterface {
 
     /**
      * @notice Validates a given vote. For a vote to be valid:
-     *         - The transition object must be correct and
-     *         - The hashes must exist and
-     *         - The blocks of the hashes must be at checkpoint heights and
-     *         - The source checkpoint must be justified and
-     *         - The target must be higher than the current head.
+     *         - The transition object must be correct
+     *         - The hashes must exist
+     *         - The blocks of the hashes must be at checkpoint heights
+     *         - The source checkpoint must be justified
+     *         - The target must be higher than the current head
      *
      * @param _transitionHash The hash of the transition object of the related
      *                        meta-block. Depends on the source block.
@@ -366,7 +377,7 @@ contract BlockStore is BlockStoreInterface {
             _sourceBlockHash
         );
 
-        return sourceValid && targetValid && transitionValid;
+        valid_ = sourceValid && targetValid && transitionValid;
     }
 
     /**
@@ -521,7 +532,7 @@ contract BlockStore is BlockStoreInterface {
         returns (bool atBlockChainHeight_)
     {
         uint256 blockHeight = reportedBlocks[_blockHash].height;
-        atBlockChainHeight_ = blockHeight % epochLength == 0;
+        atBlockChainHeight_ = blockHeight.mod(epochLength) == 0;
     }
 
     /**
@@ -544,7 +555,7 @@ contract BlockStore is BlockStoreInterface {
     {
         uint256 firstHeight = reportedBlocks[_firstBlockHash].height;
         uint256 secondHeight = reportedBlocks[_secondBlockHash].height;
-        return firstHeight > secondHeight;
+        above_ = firstHeight > secondHeight;
     }
 
     /**
@@ -616,6 +627,6 @@ contract BlockStore is BlockStoreInterface {
             coreIdentifier
         );
 
-        return _transitionHash == expectedHash;
+        valid_ = _transitionHash == expectedHash;
     }
 }
