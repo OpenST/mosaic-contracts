@@ -17,6 +17,9 @@ pragma solidity ^0.4.23;
 import "../OstInterface.sol";
 import "./OriginCoreConfig.sol";
 import "./OriginCoreInterface.sol";
+import "./MetaBlock.sol";
+import "./Stake.sol";
+
 
 /**
  * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
@@ -31,13 +34,20 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 indexed blockHash
     );
 
+    /** Emitted whenever a meta-block is proposed. */
+    event BlockProposed(
+        uint256 indexed height,
+        bytes32 indexed kernelHash,
+        bytes32 transitionHash
+    );
+
     /* Structs */
 
     /** The header of a meta-block. */
     struct Header {
 
         Kernel kernel;
-        Transition transition;
+        MetaBlock.Transition transition;
     }
 
     /** The kernel of a meta-block header. */
@@ -54,57 +64,24 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
          * this block. Updated weights at the same index relate to the address
          * in this array.
          */
-        address[] _updatedValidators;
+        address[] updatedValidators;
 
         /**
          * The array of weights that corresponds to the updated validators.
          * Updated validators at the same index relate to the weight in this
          * array. Weights of existing validators can only decrease.
          */
-        uint256[] _updatedWeights;
-    }
-
-    /** The transition of a meta-block header. */
-    struct Transition {
-
-        /** A unique identifier that identifies what chain this vote is about. */
-        bytes20 _coreIdentifier;
-
-        /**
-         * The block hash of the last finalised checkpoint on auxiliary that is
-         * contained within this meta-block. This block hash may be used to
-         * prove state.
-         */
-        bytes32 _auxiliaryBlockHash;
-
-        /**
-         * The total gas that has been consumed on auxiliary for all blocks
-         * that are inside this meta-block.
-         */
-        uint256 gas;
-
-        /**
-         * The transaction root of the meta-block. A trie created by the
-         * auxiliary block store from the transaction roots of all blocks.
-         */
-        bytes32 _transactionRoot;
-
-        /** The dynasty of the auxiliary block with the above block hash. */
-        uint256 _auxiliaryDynasty;
-
-        /**
-         * The root hash of the state trie of the latest finalised checkpoint
-         * on auxiliary that is part of this meta-block.
-         */
-        bytes32 stateRoot;
+        uint256[] updatedWeights;
     }
 
     /* Public Variables */
 
     OstInterface public Ost;
 
-    uint256 public chainIdAuxiliary;
+    bytes32 public auxiliaryCoreIdentifier;
 
+    /** The stake contract address. */
+    StakeInterface public stake;
     /** Height of the open block. */
     uint256 public height;
 
@@ -117,23 +94,43 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      */
     mapping (bytes32 => Header) public reportedHeaders;
 
+    /**
+     * Mapping of kernel hash to transition object map.
+     * where transition object map is transition hash to transition mapping.
+     */
+    mapping(bytes32 => mapping(bytes32 => MetaBlock.Transition)) public proposedMetaBlock;
+
     /* Constructor */
 
     /**
-     * @param _chainIdAuxiliary The id of the auxiliary chain that this core
-     *                          contract tracks.
+     * @param _auxiliaryCoreIdentifier The core identifier of the auxiliary
+     *                        chain that this core contract tracks.
      * @param _ost The address of the OST ERC-20 token.
+     * @param _initialValidators The array of addresses of the validators.
+     * @param _validatorsWeights The array of weights that corresponds to
+     *                        the updated validators.
      */
     constructor(
-        uint256 _chainIdAuxiliary,
-        address _ost
+        bytes32 _auxiliaryCoreIdentifier,
+        address _ost,
+        address[] _initialValidators,
+        uint256[] _validatorsWeights
     )
         public
     {
         require(_ost != address(0), "Address for OST should not be zero.");
 
-        chainIdAuxiliary = _chainIdAuxiliary;
+        auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
         Ost = OstInterface(_ost);
+
+        // deploy stake contract
+        stake = new Stake(
+            _ost,
+            address(this),
+            _initialValidators,
+            _validatorsWeights
+        );
+        head = reportGenesisBlock(_initialValidators, _validatorsWeights);
     }
 
     /* External Functions */
@@ -144,43 +141,125 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *         it to be committed.
      *
      * @param _height Height of the meta-block in the chain of meta-blocks.
-     * @param _parent The hash of the parent meta-block.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
-     * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
-     *                            that is part of this meta-block.
+     * @param _kernelHash The hash of the current kernel.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
+     * @param _auxiliaryBlockHash The block hash where the meta-block closes
+     *                          on the auxiliary chain.
      * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _originDynasty Dynasty of origin block within latest meta-block
+     *                          reported at auxiliary chain.
+     * @param _originBlockHash Block hash of origin block within latest
+     *                          meta-block reported at auxiliary chain.
      * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
-     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
-     *                          on the auxiliary chain.
-     *
+     * @param _stateRoot The state root of the last finalised checkpoint
+     *                            that is part of this meta-block.
      * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
         uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes20 _coreIdentifier,
+        bytes32 _coreIdentifier,
+        bytes32 _kernelHash,
+        uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
         uint256 _gas,
+        uint256 _originDynasty,
+        bytes32 _originBlockHash,
         bytes32 _transactionRoot,
-        uint256 _auxiliaryDynasty
+        bytes32 _stateRoot
     )
         external
         returns (bool success_)
     {
-        revert("Method not implemented.");
+
+        require(
+            _kernelHash != bytes32(0),
+            'Kernel hash should not be `0`.'
+        );
+
+        require(
+            _originDynasty > 0,
+            'Kernel hash should not be `0`.'
+        );
+
+        require(
+            _originBlockHash != bytes32(0),
+            'Kernel hash should not be `0`.'
+        );
+
+        require(
+            _transactionRoot != bytes32(0),
+            'Transaction Root hash should not be `0`.'
+        );
+
+        require(
+            _stateRoot != bytes32(0),
+            'State Root should not be `0`.'
+        );
+
+        require(
+            _coreIdentifier == auxiliaryCoreIdentifier,
+            'CoreIdentifier should be same as auxiliary core identifier.'
+        );
+
+        /* header of last meta block */
+        Header memory latestMetaBlockHeader = reportedHeaders[head];
+
+        require(
+            latestMetaBlockHeader.transition.kernelHash != bytes32(0),
+            'Last meta-block should be defined.'
+        );
+
+        require(
+            latestMetaBlockHeader.kernel.height + 1 == height,
+            'Height should be one more than last meta-block.'
+        );
+
+        require(
+            _auxiliaryDynasty > latestMetaBlockHeader.transition.auxiliaryDynasty,
+            'Auxiliary dynasty should be greater than last meta-block auxiliary dynasty.'
+        );
+
+        require(
+            _gas > latestMetaBlockHeader.transition.gas,
+            'Gas consumed should be greater than last meta-block gas.'
+        );
+
+
+        bytes32 transitionHash = MetaBlock.hashOriginTransition(
+            _coreIdentifier,
+            _kernelHash,
+            _auxiliaryDynasty,
+            _auxiliaryBlockHash,
+            _gas,
+            _originDynasty,
+            _originBlockHash,
+            _transactionRoot,
+            _stateRoot
+        );
+        require(
+            proposedMetaBlock[_kernelHash][transitionHash].kernelHash == bytes32(0),
+            "Meta-block with same transition object is already proposed."
+        );
+
+        proposedMetaBlock[_kernelHash][transitionHash] = MetaBlock.Transition(
+            _coreIdentifier,
+            _kernelHash,
+            _auxiliaryDynasty,
+            _auxiliaryBlockHash,
+            _gas,
+            _originDynasty,
+            _originBlockHash,
+            _transactionRoot,
+            _stateRoot
+        );
+        emit BlockProposed(height, _kernelHash, transitionHash);
+
+        return true;
     }
 
     /**
@@ -227,16 +306,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice The id of the remote chain that is tracked by this core.
+     * @notice The identifier of the remote chain core that is tracked by this core.
      *
-     * @return The id of the remote chain.
+     * @return The identifier of auxiliary core.
      */
-    function chainIdAuxiliary()
+    function auxiliaryCoreIdentifier()
         external
         view
-        returns (uint256)
+    returns (bytes32)
     {
-        return chainIdAuxiliary;
+        return auxiliaryCoreIdentifier;
     }
 
     /**
@@ -275,5 +354,57 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (bytes32 stateRoot_)
     {
         revert("Method not implemented.");
+    }
+
+    /**
+     * @notice private method to create genesis block.
+     *
+     * @param _initialValidators initial validators addresses.
+     * @param _validatorsWeights initial validators weights.
+     *
+     * @return bytes32 head of meta-block chain pointing to genesis block.
+     */
+    function reportGenesisBlock(
+        address[] _initialValidators,
+        uint256[] _validatorsWeights
+    )
+        private
+        returns (bytes32)
+    {
+       /*
+        * Kernel for genesis block with height 0, no parent block and
+        * initial set of validators with their weights.
+        */
+        Kernel genesisKernel = Kernel(
+            0,
+            bytes32(0),
+            _initialValidators,
+            _validatorsWeights
+        );
+        bytes32 kernelHash = MetaBlock.hashKernel(
+            0,
+            bytes32(0),
+            _initialValidators,
+            _validatorsWeights
+        );
+        /*
+         * Transition object for genesis block with all parameter as 0 except
+         * auxiliaryCoreIdentifier and kernel Hash.
+         */
+        MetaBlock.Transition genesisTransition = Transition(
+            auxiliaryCoreIdentifier,
+            kernelHash,
+            0,
+            bytes32(0),
+            0,
+            0,
+            bytes32(0),
+            bytes32(0),
+            bytes32(0)
+        );
+
+        reportedHeaders[kernelHash] = Header(genesisKernel, genesisTransition);
+
+        return kernelHash;
     }
 }
