@@ -83,11 +83,21 @@ contract Stake is StakeInterface {
 
     /* Public Variables */
 
+    /** Stores whether the initialize function has been called. */
+    bool public isInitialized;
+
     /** The token that is used as staking currency. */
     EIP20Interface public stakingToken;
 
     /** Address of the origin core. */
     address public originCore;
+
+    /**
+     * The minimum weight that is required for this meta-blockchain to function.
+     * If the total weight goes below the minimum weight, the meta-blockchain is
+     * considered halted. See also the modifier `aboveMinimumWeight()`.
+     */
+    uint256 public minimumWeight;
 
     /** The current, open meta-block height. */
     uint256 public height;
@@ -120,15 +130,50 @@ contract Stake is StakeInterface {
      */
     mapping (uint256 => uint256[]) private updateWeights;
 
+    /* Modifiers */
+
+    /**
+     * Verifies that the current weight is greater than or equal to the minimum
+     * weight.
+     */
+    modifier aboveMinimumWeight() {
+        /*
+         * Auxiliary has halted as it is no longer possible to add new
+         * validators. As the current set of validators does not reach the
+         * minimum weight, it cannot update meta-blocks anymore to add new
+         * validators.
+         */
+        require(
+            totalWeightAtHeight_(height) >= minimumWeight,
+            "The total weight must be greater than the minimum weight. Auxiliary has halted."
+        );
+
+        _;
+    }
+
     /* Constructor */
 
     /**
+     * @notice Stake is deployed in two phases. First, it is constructed. Then,
+     *         before it becomes functional, the initial set of validators must
+     *         be set by calling `initialize()`.
+     *
      * @param _stakingToken The address of the ERC-20 token that is used to
      *                      deposit stakes.
      * @param _originCore Address of the origin core. Some methods may only be
      *                    called from the origin core.
+     * @param _minimumWeight The minimum total weight that all active validators
+     *                       must have so that the meta-blockchain is not
+     *                       considered halted. See also the modifier
+     *                       `aboveMinimumWeight()`.
      */
-    constructor(address _stakingToken, address _originCore) public {
+    constructor(
+        address _stakingToken,
+        address _originCore,
+        uint256 _minimumWeight
+    )
+        public
+    {
         require(
             _stakingToken != address(0),
             "The address of the staking token must not be zero."
@@ -137,12 +182,69 @@ contract Stake is StakeInterface {
             _originCore != address(0),
             "The address of the origin core must not be zero."
         );
+        require(
+            _minimumWeight > 0,
+            "Minimum weight must be greater than zero."
+        );
 
         stakingToken = EIP20Interface(_stakingToken);
         originCore = _originCore;
+        minimumWeight = _minimumWeight;
     }
 
     /* External Functions */
+
+    /**
+     * @notice Must be called after construction and before Stake becomes
+     *         operational. This initializes Stake with an initial set of
+     *         validators so that that initial set can start working.
+     *
+     * @param _initialDepositors An array of addresses that deposit the given
+     *                           stakes for the given validators.
+     * @param _initialValidators An array of addresses that represents the
+     *                           validators' addresses on auxiliary.
+     * @param _initialStakes The amount that the depositors will deposit for
+     *                       the validators.
+     */
+    function initialize(
+        address[] _initialDepositors,
+        address[] _initialValidators,
+        uint256[] _initialStakes
+    )
+        external
+    {
+        require(
+            !isInitialized,
+            "Initialize can only be called once."
+        );
+        isInitialized = true;
+
+        require(
+            _initialDepositors.length == _initialValidators.length &&
+            _initialDepositors.length == _initialStakes.length,
+            "The initial validator arrays must all have the same length."
+        );
+
+        uint256 startingHeight = 0;
+        for (uint256 i = 0; i < _initialDepositors.length; i++) {
+            verifyNewValidator(
+                _initialDepositors[i],
+                _initialValidators[i],
+                _initialStakes[i]
+            );
+            registerNewValidator(
+                _initialDepositors[i],
+                _initialValidators[i],
+                _initialStakes[i],
+                startingHeight
+            );
+        }
+
+        require(
+            totalWeightAtHeight_(0) >= minimumWeight,
+            "The total initial weight must be greater than the minimum weight."
+        );
+    }
 
     /**
      * @notice The message sender deposits the given amount of ERC-20 in the
@@ -166,27 +268,13 @@ contract Stake is StakeInterface {
         uint256 _amount
     )
         external
+        aboveMinimumWeight()
         returns (bool success_)
     {
-        require(
-            _validator != address(0),
-            "The validator address may not be zero."
-        );
-        require(
-            _amount > 0,
-            "The deposit amount must be greater than zero."
-        );
-        require(
-            !validatorExists(_validator),
-            "You must deposit for a validator that is not staked yet."
-        );
+        verifyNewValidator(msg.sender, _validator, _amount);
 
-        require(
-            stakingToken.transferFrom(msg.sender, address(this), _amount),
-            "Could not transfer deposit to the stake contract."
-        );
-
-        registerNewValidator(_validator, _amount);
+        uint256 startingHeight = height + 2;
+        registerNewValidator(msg.sender, _validator, _amount, startingHeight);
 
         emit NewDeposit(
             _validator,
@@ -272,6 +360,7 @@ contract Stake is StakeInterface {
         uint256 _closingHeight
     )
         external
+        aboveMinimumWeight()
         returns (
             address[] updatedValidators_,
             uint256[] updatedWeights_
@@ -308,10 +397,7 @@ contract Stake is StakeInterface {
         view
         returns (uint256 totalWeight_)
     {
-        for (uint256 i = 0; i < validatorAddresses.length; i++) {
-            address validator = validatorAddresses[i];
-            totalWeight_ += validatorWeightAtHeight(_height, validator);
-        }
+        totalWeight_ = totalWeightAtHeight_(_height);
     }
 
     /**
@@ -341,32 +427,98 @@ contract Stake is StakeInterface {
         validatorWeight_ = validatorWeightAtHeight(_height, _validator);
     }
 
+    /**
+     * @notice Returns all registered validator addresses.
+     *
+     * @return An array of validator addresses. Includes evicted validators.
+     */
+    function validatorAddresses() external view returns (address[]) {
+        return validatorAddresses;
+    }
+
     /* Private Functions */
 
     /**
-     * @notice Creates a new validator and adds it to the list of validators.
+     * @notice Calculates the total weight of all active validators at a given
+     *         height.
      *
-     * @dev You must check that the validator is not yet part of the validators
-     *      before you call this method.
+     * @param _height For which height to get the total weight.
      *
-     * @param _validator The address of the new validator.
-     * @param _amount The initial stake of the new validator.
-     *
-     * @return The index under which the new validator is stored.
+     * @return totalWeight_ At the given height.
      */
-    function registerNewValidator(
+    function totalWeightAtHeight_(
+        uint256 _height
+    )
+        private
+        view
+        returns (uint256 totalWeight_)
+    {
+        for (uint256 i = 0; i < validatorAddresses.length; i++) {
+            address validator = validatorAddresses[i];
+            totalWeight_ += validatorWeightAtHeight(_height, validator);
+        }
+    }
+
+    /**
+     * @notice Verifies a new validator to be valid. Includes transfer of the
+     *         deposit amount from the depositor to this contract.
+     *
+     * @param _depositor The address that the deposit is transferred from.
+     * @param _validator The address of the new validator.
+     * @param _amount The initial deposit of the new validator.
+     */
+    function verifyNewValidator(
+        address _depositor,
         address _validator,
         uint256 _amount
     )
         private
     {
-        uint256 startingHeight = height + 2;
+        require(
+            _validator != address(0),
+            "The validator address may not be zero."
+        );
+        require(
+            _amount > 0,
+            "The deposit amount must be greater than zero."
+        );
+        require(
+            !validatorExists(_validator),
+            "You must deposit for a validator that is not staked yet."
+        );
 
+        require(
+            stakingToken.transferFrom(_depositor, address(this), _amount),
+            "Could not transfer deposit to the stake contract."
+        );
+    }
+
+    /**
+     * @notice Creates a new validator and adds it to the list of validators.
+     *
+     * @dev You must verify the validator  before you call this method.
+     *
+     * @param _depositor The address that the deposit is transferred from.
+     * @param _validator The address of the new validator.
+     * @param _amount The initial deposit of the new validator.
+     * @param _startingHeight The height at which the validator will enter the
+     *                        set of validators.
+     *
+     * @return The index under which the new validator is stored.
+     */
+    function registerNewValidator(
+        address _depositor,
+        address _validator,
+        uint256 _amount,
+        uint256 _startingHeight
+    )
+        private
+    {
         Validator memory validator = Validator(
-            msg.sender,
+            _depositor,
             _validator,
             _amount,
-            startingHeight,
+            _startingHeight,
             false,
             0
         );
@@ -374,8 +526,8 @@ contract Stake is StakeInterface {
         validators[_validator] = validator;
         validatorAddresses.push(_validator);
 
-        updateAddresses[startingHeight].push(_validator);
-        updateWeights[startingHeight].push(_amount);
+        updateAddresses[_startingHeight].push(_validator);
+        updateWeights[_startingHeight].push(_amount);
     }
 
     /**
