@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const Core = artifacts.require("./Core.sol")
     , MockToken = artifacts.require("./MockToken.sol")
@@ -30,7 +30,7 @@ const Core = artifacts.require("./Core.sol")
 const BN = require('bn.js')
 ;
 const rootPrefix = "../.."
-    , constants = require(rootPrefix + '/test/lib/constants')
+    , constants = require(rootPrefix + '/test/test_lib/constants')
 ;
 
 /// @dev Deploy 

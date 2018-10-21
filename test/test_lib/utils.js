@@ -157,12 +157,28 @@ Utils.prototype = {
         error.message.search('revert') > -1,
         'The contract should revert. Instead: ' + error.message
       );
+
       assertExpectedMessage(expectedMessage, error);
-      console.log("expect revert  ");
       return;
     }
 
     assert(false, "Did not revert as expected.");
+  },
+
+  /// @dev Expect failure from assert, but returns error instead
+  expectFailedAssert: async (promise) => {
+    try {
+      await promise;
+    } catch (error) {
+      assert(
+        error.message.search('invalid opcode') > -1,
+        'The contract should fail an assert. Instead: ' + error.message
+      );
+
+      return;
+    }
+
+    assert(false, "Did not fail assert as expected.");
   },
 
   /// @dev Get account balance
@@ -190,7 +206,7 @@ Utils.prototype = {
       })
     })
   },
-  
+
   validateEvents: (eventLogs, expectedData) => {
     assert.equal(
       eventLogs.length,
@@ -245,7 +261,7 @@ Utils.prototype = {
     };
   },
   ResultType: ResultType
-}
+};
 
 module.exports = new Utils();
 

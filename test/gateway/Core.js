@@ -19,14 +19,14 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const coreUtils = require('./Core_utils.js')
-    , utils = require('../lib/utils.js')
+    , utils = require('../test_lib/utils.js')
     , proof = require('../data/proof')
     , RLP = require('rlp')
     , BN = require('bn.js')
-    , web3EventsDecoder = require('../lib/event_decoder.js')
+    , web3EventsDecoder = require('../test_lib/event_decoder.js')
 ;
 
 contract('Core', function (accounts) {

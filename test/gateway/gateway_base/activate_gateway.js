@@ -1,7 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const Utils = require('../../../test/lib/utils');
+const Utils = require('../../../test/test_lib/utils');
 
 
 contract('GatewayBase.sol', function (accounts) {
