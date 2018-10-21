@@ -514,8 +514,8 @@ contract GatewayBase {
             messageBox.outbox[previousMessageHash_];
 
             require(
-                status != MessageBus.MessageStatus.Progressed ||
-                status != MessageBus.MessageStatus.Revoked,
+                status == MessageBus.MessageStatus.Progressed ||
+                status == MessageBus.MessageStatus.Revoked,
                 "Previous process is not completed"
             );
 
@@ -559,8 +559,8 @@ contract GatewayBase {
             messageBox.inbox[previousMessageHash_];
 
             require(
-                status != MessageBus.MessageStatus.Progressed ||
-                status != MessageBus.MessageStatus.Revoked,
+                status == MessageBus.MessageStatus.Progressed ||
+                status == MessageBus.MessageStatus.Revoked,
                 "Previous process is not completed"
             );
 
