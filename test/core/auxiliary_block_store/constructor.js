@@ -132,7 +132,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
 
         let count = testData.length;
         for(i = 0; i < count; i++) {
-            testDate = testData[i];
+            let testDate = testData[i];
 
             await Utils.expectRevert(
                 AuxiliaryBlockStore.new(

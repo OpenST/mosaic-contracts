@@ -204,7 +204,7 @@ contract('BlockStore.justify()', async (accounts) => {
                     blockHashAtTwenty,
                     {from: accounts[4]}
                 ),
-                'This method must be called frome the registered polling place.'
+                'This method must be called from the registered polling place.'
             );
         }
     );

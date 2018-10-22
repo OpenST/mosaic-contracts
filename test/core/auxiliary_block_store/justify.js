@@ -179,7 +179,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
                     testData[6].hash,
                     {from: accounts[4]}
                 ),
-                'This method must be called frome the registered polling place.'
+                'This method must be called from the registered polling place.'
             );
         }
     );
@@ -303,7 +303,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
         );
     });
 
-    it('should not allow the target to not be a descandant of the source', async () => {
+    it('should not allow the target to not be a descendant of the source', async () => {
         // The fork blocks have a different transaction root (and thus hash).
         let forkBlocks = {
             1: {

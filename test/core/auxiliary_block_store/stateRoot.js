@@ -116,7 +116,7 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
 
         // The starting height is 3.
         await Utils.expectRevert(
-            blockStore.stateRoot.call(new BN('8')),
+            blockStore.stateRoot.call(new BN('6')),
             'State roots are only known for heights at justified checkpoints.'
         );
     });

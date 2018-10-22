@@ -117,7 +117,7 @@ contract BlockStore is BlockStoreInterface {
     modifier onlyPollingPlace() {
         require(
             msg.sender == pollingPlace,
-            "This method must be called frome the registered polling place."
+            "This method must be called from the registered polling place."
         );
 
         _;
@@ -274,9 +274,9 @@ contract BlockStore is BlockStoreInterface {
     /**
      * @notice Returns the state root of the block that is stored at the given
      *         height. The height must be <= the height of the latest finalised
-     *         checkpoint.
+     *         checkpoint. Only state roots of checkpoints are known.
      *
-     * @param _height The blockheight.
+     * @param _height The block height.
      *
      * @return The state root of the block at the given height.
      */
@@ -295,6 +295,11 @@ contract BlockStore is BlockStoreInterface {
         require(
             _height >= startingHeight,
             "The state root is only known from the starting height upwards."
+        );
+
+        require(
+            isAtCheckpointHeight(_height),
+            "The height must be at a valid checkpoint height."
         );
 
         /*
@@ -391,7 +396,7 @@ contract BlockStore is BlockStoreInterface {
         view
         returns (bool reported_)
     {
-        reported_ = reportedBlocks[_blockHash].blockHash == _blockHash;
+        reported_ = isReported(_blockHash);
     }
 
     /* Internal Functions */
@@ -552,10 +557,28 @@ contract BlockStore is BlockStoreInterface {
     )
         private
         view
-        returns (bool atBlockChainHeight_)
+        returns (bool atCheckpointHeight_)
     {
         uint256 blockHeight = reportedBlocks[_blockHash].height;
-        atBlockChainHeight_ = blockHeight.mod(epochLength) == 0;
+        atCheckpointHeight_ = isAtCheckpointHeight(blockHeight);
+    }
+
+    /**
+     * @notice Returns true if the given height corresponds to a valid
+     *         checkpoint height (multiple of the epoch length).
+     *
+     * @param _height The block height to check.
+     *
+     * @return `true` if the given block height is at a valid height.
+     */
+    function isAtCheckpointHeight(
+        uint256 _height
+    )
+        private
+        view
+        returns (bool atCheckpointHeight_)
+    {
+        atCheckpointHeight_ = _height.mod(epochLength) == 0;
     }
 
     /**
@@ -659,7 +682,7 @@ contract BlockStore is BlockStoreInterface {
      *
      * @param _blockHash The block hash for which to check.
      *
-     * @return isCheckpoint_ `true` if the bloock hash represents a justified
+     * @return isCheckpoint_ `true` if the block hash represents a justified
      *                       checkpoint.
      */
     function isCheckpoint(
