@@ -121,8 +121,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
-     * @param _stateRoot The state root of the last finalised checkpoint
-     *                            that is part of this meta-block.
      * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
@@ -134,11 +132,10 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint256 _gas,
         uint256 _originDynasty,
         bytes32 _originBlockHash,
-        bytes32 _transactionRoot,
-        bytes32 _stateRoot
+        bytes32 _transactionRoot
     )
         external
-        returns (bool success_)
+        returns (bool)
     {
 
         require(
@@ -148,22 +145,17 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         require(
             _originDynasty > 0,
-            'Kernel hash should not be `0`.'
+            'Origin dynasty should not be `0`.'
         );
 
         require(
             _originBlockHash != bytes32(0),
-            'Kernel hash should not be `0`.'
+            'Origin block should not be `0`.'
         );
 
         require(
             _transactionRoot != bytes32(0),
             'Transaction Root hash should not be `0`.'
-        );
-
-        require(
-            _stateRoot != bytes32(0),
-            'State Root should not be `0`.'
         );
 
         require(
@@ -175,12 +167,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         MetaBlock.Header memory latestMetaBlockHeader = reportedHeaders[head];
 
         require(
-            latestMetaBlockHeader.transition.kernelHash != bytes32(0),
-            'Last meta-block should be defined.'
-        );
-
-        require(
-            latestMetaBlockHeader.kernel.height + 1 == height,
+            latestMetaBlockHeader.kernel.height + 1 == _height,
             'Height should be one more than last meta-block.'
         );
 
@@ -194,7 +181,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             'Gas consumed should be greater than last meta-block gas.'
         );
 
-
         bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
             _coreIdentifier,
             _kernelHash,
@@ -203,8 +189,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _gas,
             _originDynasty,
             _originBlockHash,
-            _transactionRoot,
-            _stateRoot
+            _transactionRoot
         );
         require(
             proposedMetaBlock[_kernelHash][transitionHash].kernelHash == bytes32(0),
@@ -219,10 +204,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _gas,
             _originDynasty,
             _originBlockHash,
-            _transactionRoot,
-            _stateRoot
+            _transactionRoot
         );
-        emit BlockProposed(height, _kernelHash, transitionHash);
+        emit BlockProposed(_height, _kernelHash, transitionHash);
 
         return true;
     }
@@ -278,7 +262,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     function auxiliaryCoreIdentifier()
         external
         view
-    returns (bytes32)
+        returns (bytes32)
     {
         return auxiliaryCoreIdentifier;
     }
@@ -363,7 +347,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             bytes32(0),
             0,
             0,
-            bytes32(0),
             bytes32(0),
             bytes32(0)
         );

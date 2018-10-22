@@ -23,41 +23,36 @@ interface OriginCoreInterface {
      *         it to be committed.
      *
      * @param _height Height of the meta-block in the chain of meta-blocks.
-     * @param _parent The hash of the parent meta-block.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
-     * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
-     *                            that is part of this meta-block.
+     * @param _kernelHash The hash of the current kernel.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
+     * @param _auxiliaryBlockHash The block hash where the meta-block closes
+     *                          on the auxiliary chain.
      * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _originDynasty Dynasty of origin block within latest meta-block
+     *                          reported at auxiliary chain.
+     * @param _originBlockHash Block hash of origin block within latest
+     *                          meta-block reported at auxiliary chain.
      * @param _transactionRoot The transaction root of the meta-block. A trie
      *                         created by the auxiliary block store from the
      *                         transaction roots of all blocks.
-     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
-     *                          on the auxiliary chain.
-     *
      * @return `true` if the proposal succeeds.
      */
     function proposeBlock(
         uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes20 _coreIdentifier,
+        bytes32 _coreIdentifier,
+        bytes32 _kernelHash,
+        uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
         uint256 _gas,
-        bytes32 _transactionRoot,
-        uint256 _auxiliaryDynasty
+        uint256 _originDynasty,
+        bytes32 _originBlockHash,
+        bytes32 _transactionRoot
     )
         external
-        returns (bool success_);
+        returns (bool);
 
     /**
      * @notice Verifies a vote that justified the direct child checkpoint of
@@ -100,15 +95,14 @@ interface OriginCoreInterface {
         returns (bool success_);
 
     /**
-     * @notice Returns the chain id of the auxiliary chain that this core is
-     *         tracking.
+     * @notice The identifier of the remote chain core that is tracked by this core.
      *
-     * @return The id of the remote chain.
+     * @return The identifier of auxiliary core.
      */
-    function chainIdAuxiliary()
+    function auxiliaryCoreIdentifier()
         external
         view
-        returns (uint256);
+        returns (bytes32);
 
     /**
      * @notice Returns the block height of the latest meta-block that has been
