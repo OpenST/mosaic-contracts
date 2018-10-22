@@ -20,173 +20,23 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('./web3.js');
-
+const hashLock = require("./hash_lock");
+const BN = require('bn.js');
 const Assert = require('assert');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
-/*
- *  Tracking Gas Usage
- */
-
-const receipts = [];
-
-module.exports.logResponse = (response, description) => {
-  receipts.push({
-    receipt: response.receipt,
-    description: description,
-    response: response
-  });
-}
-
-module.exports.logReceipt = (receipt, description) => {
-  receipts.push({
-    receipt: receipt,
-    description: description,
-    response: null
-  })
-}
-
-module.exports.logTransaction = async (hash, description) => {
-  const receipt = await web3.eth.getTransactionReceipt(hash)
-  await this.logReceipt(receipt, description)
-}
-
-module.exports.printGasStatistics = () => {
-  var totalGasUsed = 0
-
-  console.log("      -----------------------------------------------------");
-  console.log("      Report gas usage\n");
-
-  for (i = 0; i < receipts.length; i++) {
-    const entry = receipts[i]
-
-    totalGasUsed += entry.receipt.gasUsed
-
-    console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
-  }
-
-  console.log("      -----------------------------------------------------")
-  console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
-}
-
-module.exports.clearReceipts = () => {
-  receipts.splice(0, receipts.length);
-}
-
-
-/*
- *  General event checks
- */
-module.exports.expectNoEvents = (result) => {
-  Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
-}
-
-/*
- *  Basic Ethereum checks
- */
-
-/// @dev Compare to null address
-module.exports.isNullAddress = function (address) {
-  Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
-  return (address == NullAddress);
-}
-
-/// @dev Expect failure from invalid opcode or out of gas,
-///      but returns error instead
-module.exports.expectThrow = async (promise, expectedMessage) => {
-  try {
-    await promise;
-  } catch (error) {
-    if (expectedMessage !== undefined) {
-      assertExpectedMessage(expectedMessage, error);
-    } else {
-      const invalidOpcode = error.message.search('invalid opcode') > -1;
-      const outOfGas = error.message.search('out of gas') > -1;
-      // Latest TestRPC has trouble with require
-      const revertInstead = error.message.search('revert') > -1;
-
-      assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
-    }
-
-    return;
-  }
-
-  assert(false, "Did not throw as expected");
+const ResultType = {
+  FAIL: 0,
+  SUCCESS: 1
 };
+Object.freeze(ResultType);
 
-/**
- * Asserts that a call or transaction reverts.
- * 
- * @param {promise} promise The call or transaction.
- * @param {string} expectedMessage Optional. If given, the revert message will
- *                                 be checked to contain this string. Works with
- *                                 web3 >= 1.0.
- * @throws Will fail an assertion if the call or transaction is not reverted.
- */
-module.exports.expectRevert = async (promise, expectedMessage) => {
-  try {
-    await promise;
-  } catch (error) {
-    assert(
-      error.message.search('revert') > -1,
-      'The contract should revert. Instead: ' + error.message
-    );
-
-    assertExpectedMessage(expectedMessage, error);
-
-    return;
-  }
-
-  assert(false, "Did not revert as expected.");
-};
-
-/// @dev Expect failure from assert, but returns error instead
-module.exports.expectFailedAssert = async (promise) => {
-  try {
-    await promise;
-  } catch (error) {
-    assert(
-      error.message.search('invalid opcode') > -1,
-      'The contract should fail an assert. Instead: ' + error.message
-    );
-
-    return;
-  }
-
-  assert(false, "Did not fail assert as expected.");
-};
-
-/// @dev Get account balance
-module.exports.getBalance = function (address) {
-  return new Promise(function (resolve, reject) {
-    web3.eth.getBalance(address, function (error, result) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    })
-  })
-}
-
-/// @dev Get gas price
-module.exports.getGasPrice = function () {
-  return new Promise(function (resolve, reject) {
-    web3.eth.getGasPrice(function (error, result) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    })
-  })
-}
 
 /**
  * Asserts that an error message contains a string given as message. Always
  * passes if the message is `undefined`.
- * 
+ *
  * @param {string} message The message that the error should contain.
  * @param {object} error The error.
  */
@@ -197,5 +47,224 @@ function assertExpectedMessage(message, error) {
       'The contract was expected to error including "' + message + '", but instead: "' + error.message + '"'
     );
   }
+};
+
+/*
+ *  Tracking Gas Usage
+ */
+const receipts = [];
+
+function Utils() {
+
 }
+
+Utils.prototype = {
+
+  logResponse: (response, description) => {
+    receipts.push({
+      receipt: response.receipt,
+      description: description,
+      response: response
+    });
+  },
+
+  logReceipt: (receipt, description) => {
+    receipts.push({
+      receipt: receipt,
+      description: description,
+      response: null
+    })
+  },
+
+  logTransaction: async (hash, description) => {
+    const receipt = await web3.eth.getTransactionReceipt(hash)
+    await this.logReceipt(receipt, description)
+  },
+
+  printGasStatistics: () => {
+    var totalGasUsed = 0
+
+    console.log("      -----------------------------------------------------");
+    console.log("      Report gas usage\n");
+
+    for (i = 0; i < receipts.length; i++) {
+      const entry = receipts[i]
+
+      totalGasUsed += entry.receipt.gasUsed
+
+      console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
+    }
+
+    console.log("      -----------------------------------------------------")
+    console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
+  },
+
+  clearReceipts: () => {
+    receipts.splice(0, receipts.length);
+  },
+
+  /*
+   *  General event checks
+   */
+  expectNoEvents: (result) => {
+    Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
+  },
+
+  /*
+   *  Basic Ethereum checks
+   */
+  /// @dev Compare to null address
+  isNullAddress: (address) => {
+    Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
+    return (address == NullAddress);
+  },
+
+  /// @dev Expect failure from invalid opcode or out of gas,
+  ///      but returns error instead
+  expectThrow: async (promise, expectedMessage) => {
+    try {
+      await promise;
+    } catch (error) {
+      if (expectedMessage !== undefined) {
+        assertExpectedMessage(expectedMessage, error);
+      } else {
+        const invalidOpcode = error.message.search('invalid opcode') > -1;
+        const outOfGas = error.message.search('out of gas') > -1;
+        // Latest TestRPC has trouble with require
+        const revertInstead = error.message.search('revert') > -1;
+
+        assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+      }
+
+      return;
+    }
+    assert(false, "Did not throw as expected");
+  },
+
+  /**
+   * Asserts that a given ethereum call/transaction leads to a revert. The
+   * call/transaction is given as a promise.
+   *
+   * @param {promise} promise Awaiting this promise must lead to a revert.
+   * @param {string} expectedMessage If given, the returned error message must
+   *                                 include this string (optional).
+   */
+  expectRevert: async (promise, expectedMessage) => {
+    try {
+      await promise;
+    } catch (error) {
+      assert(
+        error.message.search('revert') > -1,
+        'The contract should revert. Instead: ' + error.message
+      );
+
+      assertExpectedMessage(expectedMessage, error);
+      return;
+    }
+
+    assert(false, "Did not revert as expected.");
+  },
+
+  /// @dev Expect failure from assert, but returns error instead
+  expectFailedAssert: async (promise) => {
+    try {
+      await promise;
+    } catch (error) {
+      assert(
+        error.message.search('invalid opcode') > -1,
+        'The contract should fail an assert. Instead: ' + error.message
+      );
+
+      return;
+    }
+
+    assert(false, "Did not fail assert as expected.");
+  },
+
+  /// @dev Get account balance
+  getBalance: (address) => {
+    return new Promise((resolve, reject) => {
+      web3.eth.getBalance(address, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      })
+    })
+  },
+
+  /// @dev Get gas price
+  getGasPrice: () => {
+    return new Promise((resolve, reject) => {
+      web3.eth.getGasPrice((error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      })
+    })
+  },
+
+  validateEvents: (eventLogs, expectedData) => {
+    assert.equal(
+      eventLogs.length,
+      Object.keys(expectedData).length,
+      "Number of events emitted must match expected event counts"
+    );
+    eventLogs.forEach((event) => {
+      let eventName = event.event;
+      let eventData = Object.keys(event.args);
+      let eventExpectedData = expectedData[eventName];
+
+      assert.notEqual(eventExpectedData, undefined, "Expected event not found");
+
+      for (let index in eventData) {
+
+        let key = eventData[index];
+        if (eventExpectedData[key]) {
+          if (eventExpectedData[key] instanceof BN) {
+            assert(event.args[key].eq(eventExpectedData[key]), `Event data ${key} must match the expectedData`)
+
+          } else {
+            assert.equal(event.args[key], (eventExpectedData[key]), `Event data ${key} must match the expectedData`);
+          }
+        }
+      }
+    });
+  },
+
+  //Get latest hash
+  generateHashLock: () => {
+    return hashLock.getHashLock();
+  },
+  signHash: async (
+    typeHash,
+    intentHash,
+    nonce,
+    gasPrice,
+    gasLimit,
+    signerAddress) => {
+
+    let digest = web3.utils.soliditySha3(
+      { t: 'bytes32', v: typeHash },
+      { t: 'bytes32', v: intentHash },
+      { t: 'uint256', v: nonce },
+      { t: 'uint256', v: gasPrice },
+      { t: 'uint256', v: gasLimit }
+    );
+    let signature = await web3.eth.sign(digest, signerAddress);
+    return {
+      signature: signature,
+      digest: digest
+    };
+  },
+  ResultType: ResultType
+};
+
+module.exports = new Utils();
+
+
+
 
