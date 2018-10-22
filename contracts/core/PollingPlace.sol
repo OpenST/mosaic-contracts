@@ -97,11 +97,9 @@ contract PollingPlace is PollingPlaceInterface {
 
     /** Vote object */
     struct Vote {
+
         /** Vote message. */
         VoteMessage voteMessage;
-
-        /** Vote hash. */
-        bytes32 voteHash;
 
         /** v component of signature */
         uint8 v;
@@ -482,9 +480,10 @@ contract PollingPlace is PollingPlaceInterface {
         private
     {
         VoteMessage memory voteMessage = _voteObject.voteMessage;
+        bytes32 voteHash = hashVote(_voteObject.voteMessage);
 
         validatorTargetHeights[_validator.auxiliaryAddress] = voteMessage.targetHeight;
-        votesWeights[_voteObject.voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
+        votesWeights[voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
 
         /*
          * Because the target must be within the currently open meta-block, the
@@ -492,7 +491,7 @@ contract PollingPlace is PollingPlaceInterface {
          */
         uint256 required = requiredWeight(currentMetaBlockHeight);
         
-        if (votesWeights[_voteObject.voteHash] >= required) {
+        if (votesWeights[voteHash] >= required) {
             _blockStore.justify(voteMessage.source, voteMessage.target);
         }
     }
@@ -529,8 +528,9 @@ contract PollingPlace is PollingPlaceInterface {
         view
         returns (Validator storage validator_)
     {
+        bytes32 voteHash = hashVote(_voteObject.voteMessage);
         address signer = ecrecover(
-            _voteObject.voteHash,
+            voteHash,
             _voteObject.v,
             _voteObject.r,
             _voteObject.s
@@ -670,11 +670,8 @@ contract PollingPlace is PollingPlaceInterface {
             _targetHeight
         );
 
-        bytes32 voteHash = hashVote(voteMessage);
-
         voteObject_ = Vote(
             voteMessage,
-            voteHash,
             _v,
             _r,
             _s
