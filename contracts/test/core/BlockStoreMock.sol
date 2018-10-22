@@ -16,7 +16,7 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../core/BlockStore.sol";
+import "../../core/BlockStoreInterface.sol";
 
 /**
  * @notice BlockStoreMock implements the BlockStoreInterface. It returns pre-
@@ -36,6 +36,7 @@ contract BlockStoreMock is BlockStoreInterface {
     bytes32 public stateRoot;
     uint256 public latestBlockHeight;
     bool public isVoteValid;
+    bool public isBlockReported;
 
     /* External Functions */
 
@@ -55,6 +56,10 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setVoteValid(bool _isValid) external {
         isVoteValid = _isValid;
+    }
+
+    function setIsBlockReported(bool _isReported) external {
+        isBlockReported = _isReported;
     }
 
     /* The methods of the interface, returning values from storage. */
@@ -106,5 +111,15 @@ contract BlockStoreMock is BlockStoreInterface {
         returns (bool valid_)
     {
         valid_ = isVoteValid;
+    }
+
+    function isBlockReported(
+        bytes32
+    )
+        external
+        view
+        returns (bool reported_)
+    {
+        reported_ = isBlockReported;
     }
 }

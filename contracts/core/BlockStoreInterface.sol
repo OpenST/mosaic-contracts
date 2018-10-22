@@ -18,7 +18,8 @@ pragma solidity ^0.4.23;
 interface BlockStoreInterface {
 
     /**
-     * @notice Report a block.
+     * @notice Report a block. A reported block header is stored and can then
+     *         be part of subsequent votes.
      *
      * @param _blockHeaderRlp The header of the reported block, RLP encoded.
      *
@@ -73,9 +74,11 @@ interface BlockStoreInterface {
 
     /**
      * @notice Validates a given vote. For a vote to be valid:
-     *         - The hashes must exist and
-     *         - The blocks of the hashes must be at checkpoint heights and
+     *         - The transition object must be correct
+     *         - The hashes must exist
+     *         - The blocks of the hashes must be at checkpoint heights
      *         - The source checkpoint must be justified
+     *         - The target must be higher than the current head
      *
      * @param _transitionHash The hash of the transition object of the related
      *                        meta-block. Depends on the source block.
@@ -93,4 +96,19 @@ interface BlockStoreInterface {
         external
         view
         returns (bool valid_);
+
+    /**
+     * @notice Check, whether a block with a given block hash has been reported
+     *         before.
+     *
+     * @param _blockHash The hash of the block that should be checked.
+     *
+     * @return `true` if the block has been reported before.
+     */
+    function isBlockReported(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bool reported_);
 }

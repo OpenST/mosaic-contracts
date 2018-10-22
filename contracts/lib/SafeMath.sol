@@ -96,4 +96,18 @@ library SafeMath {
 
         return c;
     }
+
+    /**
+    * @notice Divides two numbers and returns the remainder.
+    *
+    * @param a Unsigned integer dividend.
+    * @param b Unsigned integer divisor.
+    *
+    * @return uint256 Remainder.
+    */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        assert(b != 0);
+
+        return a % b;
+    }
 }
