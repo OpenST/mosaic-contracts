@@ -127,19 +127,28 @@ contract Stake is StakeInterface {
      *                      deposit stakes.
      * @param _originCore Address of the origin core. Some methods may only be
      *                    called from the origin core.
+     * @param _initialValidators The array of addresses of the validators.
+     * @param _validatorsWeights The array of weights that corresponds to
+     *                        the updated validators.
      */
-    constructor(address _stakingToken, address _originCore) public {
-        require(
-            _stakingToken != address(0),
-            "The address of the staking token must not be zero."
-        );
-        require(
-            _originCore != address(0),
-            "The address of the origin core must not be zero."
-        );
+    constructor(
+        address _stakingToken,
+        address _originCore,
+        address[] _initialValidators,
+        uint256[] _validatorsWeights
+    )
+        public {
+            require(
+                _stakingToken != address(0),
+                "The address of the staking token must not be zero."
+            );
+            require(
+                _originCore != address(0),
+                "The address of the origin core must not be zero."
+            );
 
-        stakingToken = EIP20Interface(_stakingToken);
-        originCore = _originCore;
+            stakingToken = EIP20Interface(_stakingToken);
+            originCore = _originCore;
     }
 
     /* External Functions */

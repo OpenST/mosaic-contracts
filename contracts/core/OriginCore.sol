@@ -17,9 +17,8 @@ pragma solidity ^0.4.23;
 import "../OstInterface.sol";
 import "./OriginCoreConfig.sol";
 import "./OriginCoreInterface.sol";
-import "./MetaBlock.sol";
 import "./Stake.sol";
-
+import "../lib/MetaBlock.sol";
 
 /**
  * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
@@ -40,40 +39,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 indexed kernelHash,
         bytes32 transitionHash
     );
-
-    /* Structs */
-
-    /** The header of a meta-block. */
-    struct Header {
-
-        Kernel kernel;
-        MetaBlock.Transition transition;
-    }
-
-    /** The kernel of a meta-block header. */
-    struct Kernel {
-
-        /** The height of this header's block in the chain. */
-        uint256 height;
-
-        /** The hash of this block's parent. */
-        bytes32 parent;
-
-        /**
-         * The array of addresses of the validators that are updated within
-         * this block. Updated weights at the same index relate to the address
-         * in this array.
-         */
-        address[] updatedValidators;
-
-        /**
-         * The array of weights that corresponds to the updated validators.
-         * Updated validators at the same index relate to the weight in this
-         * array. Weights of existing validators can only decrease.
-         */
-        uint256[] updatedWeights;
-    }
-
     /* Public Variables */
 
     OstInterface public Ost;
@@ -92,13 +57,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * Mapping of block hashes to block headers that were reported with the
      * respective hash.
      */
-    mapping (bytes32 => Header) public reportedHeaders;
+    mapping (bytes32 => MetaBlock.Header) public reportedHeaders;
 
     /**
      * Mapping of kernel hash to transition object map.
      * where transition object map is transition hash to transition mapping.
      */
-    mapping(bytes32 => mapping(bytes32 => MetaBlock.Transition)) public proposedMetaBlock;
+    mapping(bytes32 => mapping(bytes32 => MetaBlock.AuxiliaryTransition)) public proposedMetaBlock;
 
     /* Constructor */
 
@@ -207,7 +172,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
         /* header of last meta block */
-        Header memory latestMetaBlockHeader = reportedHeaders[head];
+        MetaBlock.Header memory latestMetaBlockHeader = reportedHeaders[head];
 
         require(
             latestMetaBlockHeader.transition.kernelHash != bytes32(0),
@@ -230,7 +195,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
 
-        bytes32 transitionHash = MetaBlock.hashOriginTransition(
+        bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
             _coreIdentifier,
             _kernelHash,
             _auxiliaryDynasty,
@@ -246,7 +211,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             "Meta-block with same transition object is already proposed."
         );
 
-        proposedMetaBlock[_kernelHash][transitionHash] = MetaBlock.Transition(
+        proposedMetaBlock[_kernelHash][transitionHash] = MetaBlock.AuxiliaryTransition(
             _coreIdentifier,
             _kernelHash,
             _auxiliaryDynasty,
@@ -375,7 +340,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         * Kernel for genesis block with height 0, no parent block and
         * initial set of validators with their weights.
         */
-        Kernel genesisKernel = Kernel(
+        MetaBlock.Kernel memory genesisKernel = MetaBlock.Kernel(
             0,
             bytes32(0),
             _initialValidators,
@@ -391,7 +356,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
          * Transition object for genesis block with all parameter as 0 except
          * auxiliaryCoreIdentifier and kernel Hash.
          */
-        MetaBlock.Transition genesisTransition = Transition(
+        MetaBlock.AuxiliaryTransition memory genesisTransition = MetaBlock.AuxiliaryTransition(
             auxiliaryCoreIdentifier,
             kernelHash,
             0,
@@ -403,7 +368,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             bytes32(0)
         );
 
-        reportedHeaders[kernelHash] = Header(genesisKernel, genesisTransition);
+        reportedHeaders[kernelHash] = MetaBlock.Header(genesisKernel, genesisTransition);
 
         return kernelHash;
     }
