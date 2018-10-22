@@ -24,12 +24,10 @@ const Gateway = artifacts.require("MockEIP20Gateway"),
   MessageBus = artifacts.require("MessageBus"),
   GatewayLib = artifacts.require("GatewayLib");
 
-
 const utils = require("./../../test_lib/utils"),
   BN = require('bn.js'),
   EIP20GatewayKlass = require("./helpers/eip20gateway"),
   HelperKlass = require("./helpers/helper");
-
 
 let stakeAmount,
   beneficiary,
@@ -156,54 +154,60 @@ async function _stake (resultType) {
     txOption
   );
 }
+
 contract('EIP20Gateway ',  function(accounts) {
+
   describe('stake', async function () {
+
     beforeEach(async function() {
       await _setup(accounts);
     });
 
-    it('fails to stake when stake amount is 0', async function() {
+    it('should fail to stake when stake amount is 0', async function() {
       stakeAmount = new BN(0);
       errorMessage = "Stake amount must not be zero";
       await _prepareData();
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when beneficiary address is 0', async function() {
+    it('should fail to stake when beneficiary address is 0', async function() {
       beneficiary = "0x0000000000000000000000000000000000000000";
       errorMessage = "Beneficiary address must not be zero";
       await _prepareData();
       await _stake(utils.ResultType.FAIL);
     });
 
-   /* it('fails to stake when staker address is 0', async function() {
+    // @reviewer, should we remove the staker address 0 from contract as this
+    // can be valid
+
+   /* it('should fail to stake when staker address is 0', async function() {
       stakerAddress = "0x0000000000000000000000000000000000000000";
       errorMessage = "Staker address must not be zero";
       await _stake(utils.ResultType.FAIL);
     });
     */
 
-    it('fails to stake when gas price is 0', async function() {
+    it('should fail to stake when gas price is 0', async function() {
       gasPrice = new BN(0);
       errorMessage = "Gas price must not be zero";
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when gas limit is 0', async function() {
+    it('should fail to stake when gas limit is 0', async function() {
       gasLimit = new BN(0);
       errorMessage = "Gas limit must not be zero";
       await _prepareData();
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when signature is not of length 65 (invalid bytes)', async function() {
+    it('should fail to stake when signature is not of length 65 (invalid bytes)', async function() {
       await _prepareData();
       signature = accounts[9];
       errorMessage = "Signature must be of length 65";
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when signature is invalid (not signed by staker)', async function() {
+    it('should fail to stake when signature is invalid (not signed by staker)', async function() {
       await _prepareData();
       let typeHash = await helper.stakeTypeHash();
 
@@ -229,9 +233,10 @@ contract('EIP20Gateway ',  function(accounts) {
       errorMessage = "Invalid signature";
 
       await _stake(utils.ResultType.FAIL);
+
     });
 
-    it('fails to stake when staker has balance less than the stake amount', async function() {
+    it('should fail to stake when staker has balance less than the stake amount', async function() {
       stakeAmount = new BN(200000000000);
       await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
       await _prepareData();
@@ -239,14 +244,14 @@ contract('EIP20Gateway ',  function(accounts) {
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when facilator has balance less than the bounty amount', async function() {
+    it('should fail to stake when facilitator has balance less than the bounty amount', async function() {
       await baseToken.transfer(accounts[0], new BN(50), {from: facilitator});
       await _prepareData();
       errorMessage = "revert";
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when gateway is not approved by the staker', async function() {
+    it('should fail to stake when gateway is not approved by the staker', async function() {
       stakerAddress = accounts[5];
       await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
       await _prepareData();
@@ -254,7 +259,7 @@ contract('EIP20Gateway ',  function(accounts) {
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake when gateway is not approved by the facilitator', async function() {
+    it('should fail to stake when gateway is not approved by the facilitator', async function() {
       facilitator = accounts[6];
       await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
       await _prepareData();
@@ -262,12 +267,13 @@ contract('EIP20Gateway ',  function(accounts) {
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('Successfully stakes', async function() {
+    it('should successfully stake', async function() {
       await _prepareData();
       await _stake(utils.ResultType.SUCCESS);
     });
 
-    it('fails when already staked with same data (Handles replay attack)', async function() {
+    it('should fail when its already staked with same data (replay attack)', async function() {
+
       await _prepareData();
       await _stake(utils.ResultType.SUCCESS);
 
@@ -280,7 +286,8 @@ contract('EIP20Gateway ',  function(accounts) {
       await _stake(utils.ResultType.FAIL);
     });
 
-    it('fails to stake before progress', async function() {
+    it('should fail to stake when previous stake for same address is not progressed', async function() {
+
       await _prepareData();
       await _stake(utils.ResultType.SUCCESS);
 
@@ -293,7 +300,9 @@ contract('EIP20Gateway ',  function(accounts) {
       await _prepareData();
       errorMessage = "Previous process is not completed";
       await _stake(utils.ResultType.FAIL);
+
     });
 
   });
+
 });

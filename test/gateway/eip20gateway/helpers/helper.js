@@ -5,6 +5,7 @@ const GatewayHelper = require('../../gateway/helpers/helper');
 
 const EIP20GatewayHelper = function(gateway) {
   const oThis = this;
+
   //Call Super.
   GatewayHelper.apply(oThis, arguments);
   oThis.gateway = gateway;
@@ -15,6 +16,11 @@ EIP20GatewayHelper.prototype = Object.create(GatewayHelper.prototype);
 let proto = {
   constructor: EIP20GatewayHelper,
 
+  /**
+   * Generate the stake type hash. This is as per EIP-712
+   *
+   * @return {string} message type hash.
+   */
   stakeTypeHash: async function() {
     const oThis = this;
 
@@ -26,6 +32,19 @@ let proto = {
     );
   },
 
+  /**
+   * Generate the staking intent hash
+   *
+   * @param {object} amount Staking amount.
+   * @param {string} beneficiary Beneficiary address.
+   * @param {string} staker Staker address.
+   * @param {object} nonce Nonce of staker (Big Number).
+   * @param {object} gasPrice Gas price (Big Number).
+   * @param {object} gasLimit Gas limit (Big Number).
+   * @param {string} token EIP20 token address.
+   *
+   * @return {string} staking intent hash.
+   */
   hashStakingIntent: async function (
     amount,
     beneficiary,

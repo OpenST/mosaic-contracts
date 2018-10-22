@@ -143,18 +143,18 @@ contract('Gateway ',  function(accounts) {
       await _setup(accounts);
     });
 
-    it('fails when messageHash is 0', async function() {
+    it('should fail to progress when messageHash is 0', async function() {
       messageHash = web3.utils.asciiToHex("");
       await progressGatewayLink(utils.ResultType.FAIL);
     });
 
-    it('fails when messageHash does not match ' +
+    it('should fail to progress when messageHash does not match ' +
       'with the initiateGatewayLink messageHash', async function() {
       messageHash = unlockSecret;
       await progressGatewayLink(utils.ResultType.FAIL);
     });
 
-    it('fails when unlock secret is incorrect', async function() {
+    it('should fail to progress when unlock secret is incorrect', async function() {
       unlockSecret = messageHash;
       await progressGatewayLink(utils.ResultType.FAIL);
     });
@@ -163,10 +163,11 @@ contract('Gateway ',  function(accounts) {
       await progressGatewayLink(utils.ResultType.SUCCESS);
     });
 
-    it('fails if already progressed', async function() {
+    it('should fail to progress  if already progressed', async function() {
       await progressGatewayLink(utils.ResultType.SUCCESS);
       await progressGatewayLink(utils.ResultType.FAIL);
     });
 
   });
+
 });

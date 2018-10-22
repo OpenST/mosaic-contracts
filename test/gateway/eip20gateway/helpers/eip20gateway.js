@@ -1,17 +1,33 @@
 'use strict';
 
 const EIP20Gateway = artifacts.require("EIP20Gateway");
-const web3 = require('../../../test_lib/web3.js');
 const utils = require("../../../test_lib/utils");
 
+/**
+ * @constructor
+ *
+ * @param {object} gateway Gateway contract object.
+ * @param {object} token EIP20 token contract object.
+ * @param {baseToken} token EIP20 token contract object. This is the base token.
+ */
 const EIP20GatewayKlass = function(gateway, token, baseToken) {
   const oThis = this;
   oThis.gateway = gateway;
   oThis.token = token;
   oThis.baseToken = baseToken;
 };
+
 EIP20GatewayKlass.prototype = {
 
+  /**
+   * Asserts all the conditions for stake
+   *
+   * @param {object} params All the input params for calling stake function.
+   * @param {object} resultType Expected result success or fail.
+   * @param {object} expectedResults Expected results, returns and events data.
+   * @param {object} txOptions Transaction options.
+   *
+   */
   stake: async function(
     params,
     resultType,
@@ -29,6 +45,7 @@ EIP20GatewayKlass.prototype = {
       hashLock = params.hashLock,
       signature = params.signature;
 
+    // Get the initial balances for all the addresses involved.
     let initialStakerTokenBalance = await oThis.token.balanceOf.call(staker),
       initialGatewayTokenBalance = await oThis.token.balanceOf.call(
         oThis.gateway.address
@@ -37,6 +54,7 @@ EIP20GatewayKlass.prototype = {
         txOptions.from
       );
 
+    // Get the initial balances of base token for all the addresses involved.
     let initialStakerBaseTokenBalance = await oThis.baseToken.balanceOf.call(staker),
       initialGatewayBaseTokenBalance = await oThis.baseToken.balanceOf.call(
         oThis.gateway.address
@@ -101,6 +119,7 @@ EIP20GatewayKlass.prototype = {
       utils.validateEvents(eventData, expectedResults.events);
     }
 
+    // Get the final balances for all the addresses involved.
     let stakerTokenBalance = await oThis.token.balanceOf.call(staker),
       gatewayTokenBalance = await oThis.token.balanceOf.call(
         oThis.gateway.address
@@ -109,6 +128,7 @@ EIP20GatewayKlass.prototype = {
         txOptions.from
       );
 
+    // Get the final balances of base token for all the addresses involved.
     let stakerBaseTokenBalance = await oThis.baseToken.balanceOf.call(staker),
       gatewayBaseTokenBalance = await oThis.baseToken.balanceOf.call(
         oThis.gateway.address
@@ -117,6 +137,7 @@ EIP20GatewayKlass.prototype = {
         txOptions.from
       );
 
+    // Assert the balances
     if (resultType == utils.ResultType.FAIL) {
 
       assert(
@@ -180,7 +201,9 @@ EIP20GatewayKlass.prototype = {
         initialFacilitatorBaseTokenBalance.sub(bounty).eq(facilitatorBaseTokenBalance),
         `Facilitator balance must decrease by ${bounty}`
       );
+
     }
   }
 };
+
 module.exports = EIP20GatewayKlass;
