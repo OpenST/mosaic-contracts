@@ -29,6 +29,8 @@ const utils = require("./../../test_lib/utils"),
   EIP20GatewayKlass = require("./helpers/eip20gateway"),
   HelperKlass = require("./helpers/helper");
 
+const PENALTY_PERCENT = 1.5;
+
 let stakeAmount,
   beneficiary,
   stakerAddress,
@@ -176,16 +178,6 @@ contract('EIP20Gateway ',  function(accounts) {
       await _stake(utils.ResultType.FAIL);
     });
 
-    // @reviewer, should we remove the staker address 0 from contract as this
-    // can be valid
-
-   /* it('should fail to stake when staker address is 0', async function() {
-      stakerAddress = "0x0000000000000000000000000000000000000000";
-      errorMessage = "Staker address must not be zero";
-      await _stake(utils.ResultType.FAIL);
-    });
-    */
-
     it('should fail to stake when gas price is 0', async function() {
       gasPrice = new BN(0);
       errorMessage = "Gas price must not be zero";
@@ -300,6 +292,32 @@ contract('EIP20Gateway ',  function(accounts) {
       errorMessage = "Previous process is not completed";
       await _stake(utils.ResultType.FAIL);
 
+    });
+
+    it('should fail when previous stake for same address is in revocation', async function() {
+
+      await _prepareData();
+      await _stake(utils.ResultType.SUCCESS);
+
+      let penalty = new BN(bountyAmount * PENALTY_PERCENT);
+
+      // funding staker for penalty amount
+      await baseToken.transfer(stakerAddress, penalty, {from: accounts[0]});
+      // approving gateway for penalty amount
+      await baseToken.approve(gateway.address, penalty, {from: stakerAddress});
+
+      //revertStaking
+      await gateway.revertStaking(messageHash,{from: stakerAddress});
+
+      await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+      await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+      await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+      await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+
+      nonce = new BN(2);
+      await _prepareData();
+      errorMessage = "Previous process is not completed";
+      await _stake(utils.ResultType.FAIL);
     });
 
   });

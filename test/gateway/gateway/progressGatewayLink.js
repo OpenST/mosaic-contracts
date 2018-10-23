@@ -28,8 +28,6 @@ const GatewayKlass = require("./helpers/gateway"),
   Helper = require("./helpers/helper"),
   BN = require('bn.js');
 
-const gatewayTest = new GatewayKlass();
-
 let messageHash,
   gatewayAddress,
   coGatewayAddress,
@@ -38,7 +36,8 @@ let messageHash,
   facilitatorAddress;
 
 let gateway,
-  gatewayHelper;
+  gatewayHelper,
+  gatewayTest;
 
 async function _setup(accounts){
 
@@ -61,7 +60,7 @@ async function _setup(accounts){
   gatewayAddress = gateway.address;
   // gateway helper.
   gatewayHelper = new Helper(gateway);
-  gatewayTest.gateway = gateway;
+  gatewayTest = new GatewayKlass(gateway);
 
   let typeHash = await gatewayHelper.gatewayLinkTypeHash(),
     sender = accounts[2],
@@ -89,7 +88,7 @@ async function _setup(accounts){
   messageHash = signData.digest;
 
   // initiateGatewayLink
-  let response = await gateway.initiateGatewayLink(
+  await gateway.initiateGatewayLink(
     coGatewayAddress,
     intentHash,
     nonce,

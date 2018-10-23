@@ -230,7 +230,7 @@ Utils.prototype = {
               `Event data ${key} must match the expectedData`
             );
           } else {
-            assert.equal(
+            assert.strictEqual(
               event.args[key],
               (eventExpectedData[key]),
               `Event data ${key} must match the expectedData`
