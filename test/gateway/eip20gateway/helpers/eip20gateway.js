@@ -62,7 +62,7 @@ EIP20GatewayKlass.prototype = {
 
     let bounty = await this.gateway.bounty.call();
 
-    if (resultType == utils.ResultType.FAIL) {
+    if (resultType === utils.ResultType.FAIL) {
       await utils.expectThrow(this.gateway.stake.call(
         amount,
         beneficiary,
@@ -135,7 +135,7 @@ EIP20GatewayKlass.prototype = {
       );
 
     // Assert the balances
-    if (resultType == utils.ResultType.FAIL) {
+    if (resultType === utils.ResultType.FAIL) {
 
       assert(
         initialStakerTokenBalance.eq(stakerTokenBalance),

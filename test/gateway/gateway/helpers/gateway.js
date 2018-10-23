@@ -24,7 +24,7 @@ GatewayUtils.prototype = {
             organisationAddress = params.organisation,
             messageBusAddress = params.messageBusAddress;
 
-        if (resultType == utils.ResultType.FAIL) {
+        if (resultType === utils.ResultType.FAIL) {
             await utils.expectThrow(Gateway.new(
                 valueTokenAddress,
                 bountyToken,
@@ -105,7 +105,7 @@ GatewayUtils.prototype = {
             hashLock = params.hashLock,
             signature = params.signature;
 
-        if (resultType == utils.ResultType.FAIL) {
+        if (resultType === utils.ResultType.FAIL) {
 
             await utils.expectThrow(this.gateway.initiateGatewayLink.call(
                 coGateway,
@@ -164,7 +164,7 @@ GatewayUtils.prototype = {
     let messageHash = params.messageHash,
       unlockSecret = params.unlockSecret;
 
-    if (resultType == utils.ResultType.FAIL) {
+    if (resultType === utils.ResultType.FAIL) {
 
       await utils.expectThrow(this.gateway.progressGatewayLink.call(
         messageHash,

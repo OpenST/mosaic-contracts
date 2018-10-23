@@ -108,7 +108,7 @@ async function progressGatewayLink(resultType) {
 
   let expectedResult = {
     returns: {
-      isSuccess: resultType == utils.ResultType.FAIL ? false: true
+      isSuccess: resultType === utils.ResultType.FAIL ? false: true
     },
     events: {
       GatewayLinkProgressed: {
