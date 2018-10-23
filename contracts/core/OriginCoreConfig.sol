@@ -17,7 +17,6 @@ pragma solidity ^0.4.23;
 /** @title Configuration constants of the OriginCore contract. */
 contract OriginCoreConfig {
 
-    // TODO: take decimals() from OST
     /** The number of decimals of the base token. */
     uint256 public constant DECIMALSFACTOR = 10 ** uint256(18);
 

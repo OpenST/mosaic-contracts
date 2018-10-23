@@ -36,11 +36,11 @@ progressGatewayLink  --->   progressGatewayLink
 
 import "./MessageBus.sol";
 import "./EIP20Interface.sol";
-import "./SafeMath.sol";
+import "../lib/SafeMath.sol";
 import "./GatewayBase.sol";
 import "./CoreInterface.sol";
 import "./UtilityTokenInterface.sol";
-import "./GatewayLib.sol";
+import "../lib/GatewayLib.sol";
 
 /**
  *  @title CoGateway contract.

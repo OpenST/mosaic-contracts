@@ -20,9 +20,9 @@
 // ----------------------------------------------------------------------------
 
 //TODO: Move this file to test/lib/ folder and update all reference.
-const web3 = require('../../../lib/web3.js');
+const web3 = require('../../../test_lib/web3.js');
 
-const hashLock = require("../../../lib/hash_lock");
+const hashLock = require("../../../test_lib/hash_lock");
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 const ResultType = {
