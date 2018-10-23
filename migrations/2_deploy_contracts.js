@@ -16,6 +16,8 @@ const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
 
 
 module.exports = function(deployer) {
+	deployer.deploy(MerklePatriciaProof);
+	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
 	deployer.deploy(GatewayLib);
 	deployer.deploy(MockGatewayLib);
@@ -32,7 +34,7 @@ module.exports = function(deployer) {
 	deployer.link(MockMessageBus,MessageBusWrapper);
 	
 	// for merklepatricia unit test cases
-	deployer.deploy(MerklePatriciaProof);
+	// deployer.deploy(MerklePatriciaProof);
 	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
 	
 	
