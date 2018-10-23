@@ -19,13 +19,13 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../lib/web3.js');
+const web3 = require('../test_lib/web3.js');
 
 const BN = require('bn.js');
 
-const Utils = require('../lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const EIP20Token_utils = require('./EIP20Token_utils.js')
-const web3EventsDecoder = require('../lib/event_decoder.js');
+const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
 const MockToken = artifacts.require("./MockToken.sol")
 

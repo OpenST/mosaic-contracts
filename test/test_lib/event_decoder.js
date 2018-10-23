@@ -27,6 +27,19 @@ web3EventsDecoder.prototype = {
     return formattedEvents;
   },
 
+  /**
+   * Gets a events from a transaction.
+   *
+   * @param {object} transaction The transaction object returned from truffle
+   *                             when calling a function on a contract.
+   * @param {object} contract A truffle contract object.
+   *
+   * @returns {object} The events, if any.
+   */
+  getEvents: function(transaction, contract) {
+    return this.perform(transaction.receipt, contract.address, contract.abi);
+  },
+
   // decode logs from a transaction receipt
   perform: function (txReceipt, contractAddr, contractAbi) {
     //console.log(txReceipt);

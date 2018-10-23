@@ -33,9 +33,15 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     /* Structs */
 
-    // TODO: We want to find a way to store the transaction root.
-    /** The header of an OSTblock. */
+    /** The header of a meta-block. */
     struct Header {
+
+        Kernel kernel;
+        Transition transition;
+    }
+
+    /** The kernel of a meta-block header. */
+    struct Kernel {
 
         /** The height of this header's block in the chain. */
         uint256 height;
@@ -44,21 +50,51 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 parent;
 
         /**
+         * The array of addresses of the validators that are updated within
+         * this block. Updated weights at the same index relate to the address
+         * in this array.
+         */
+        address[] _updatedValidators;
+
+        /**
+         * The array of weights that corresponds to the updated validators.
+         * Updated validators at the same index relate to the weight in this
+         * array. Weights of existing validators can only decrease.
+         */
+        uint256[] _updatedWeights;
+    }
+
+    /** The transition of a meta-block header. */
+    struct Transition {
+
+        /** A unique identifier that identifies what chain this vote is about. */
+        bytes20 _coreIdentifier;
+
+        /**
+         * The block hash of the last finalised checkpoint on auxiliary that is
+         * contained within this meta-block. This block hash may be used to
+         * prove state.
+         */
+        bytes32 _auxiliaryBlockHash;
+
+        /**
          * The total gas that has been consumed on auxiliary for all blocks
-         * that are inside this OSTblock.
+         * that are inside this meta-block.
          */
         uint256 gas;
 
         /**
-         * The root hash of the trie of signatures of votes on the highest
-         * finalised auxiliary checkpoint that is contained within this
-         * OSTblock.
+         * The transaction root of the meta-block. A trie created by the
+         * auxiliary block store from the transaction roots of all blocks.
          */
-        bytes32 signatureRoot;
+        bytes32 _transactionRoot;
+
+        /** The dynasty of the auxiliary block with the above block hash. */
+        uint256 _auxiliaryDynasty;
 
         /**
          * The root hash of the state trie of the latest finalised checkpoint
-         * on auxiliary that is part of this OSTblock.
+         * on auxiliary that is part of this meta-block.
          */
         bytes32 stateRoot;
     }
@@ -103,65 +139,91 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /* External Functions */
 
     /**
-     * @notice Report an OSTblock. A reported OSTblock can be committed by
-     *         receiving a majority vote from the validators.
+     * @notice Proposes a new meta-block. The block is stored if the proposal
+     *         succeeds, but its votes still need to be verified in order for
+     *         it to be committed.
      *
-     * @dev The core contract must be approved for the `COST_REPORT_BLOCK`.
+     * @param _height Height of the meta-block in the chain of meta-blocks.
+     * @param _parent The hash of the parent meta-block.
+     * @param _updatedValidators The array of addresses of the validators that
+     *                           are updated within this block. Updated weights
+     *                           at the same index relate to the address in
+     *                           this array.
+     * @param _updatedWeights The array of weights that corresponds to the
+     *                        updated validators. Updated validators at the
+     *                        same index relate to the weight in this array.
+     *                        Weights of existing validators can only decrease.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _auxiliaryBlockHash The hash of the last finalised checkpoint
+     *                            that is part of this meta-block.
+     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _transactionRoot The transaction root of the meta-block. A trie
+     *                         created by the auxiliary block store from the
+     *                         transaction roots of all blocks.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
      *
-     * @param _blockHash The hash of the header of the block.
-     * @param _height The OSTblock height of the reported block.
-     * @param _gas The amount of gas consumed on the auxiliary system within
-     *             this block.
-     * @param _signatureRoot The root hash of the trie of validator signatures
-     *                       of votes on the highest finalised auxiliary
-     *                       checkpoint that is contained within this OSTblock.
-     * @param _stateRoot The root hash of the state trie of the highest
-     *                   finalised auxiliary checkpoint that is contained
-     *                   within this OSTblock.
-     *
-     * @return success_ Indicates whether the block report was processed
-     *                  successfully.
+     * @return `true` if the proposal succeeds.
      */
-    function reportBlock (
-        bytes32 _blockHash,
+    function proposeBlock(
         uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes20 _coreIdentifier,
+        bytes32 _auxiliaryBlockHash,
         uint256 _gas,
-        bytes32 _signatureRoot,
-        bytes32 _stateRoot
+        bytes32 _transactionRoot,
+        uint256 _auxiliaryDynasty
     )
         external
         returns (bool success_)
     {
-        require(
-            height == _height,
-            "Cannot report a block at a height different from the open block height."
-        );
+        revert("Method not implemented.");
+    }
 
-        Header memory header = Header(
-            height,
-            head,
-            _gas,
-            _signatureRoot,
-            _stateRoot
-        );
-        require(
-            _blockHash == hashHeader(header),
-            "The reported block hash must match the reported data."
-        );
-        require(
-            !blockHasBeenReported(_blockHash),
-            "The given header has already been reported at the given height."
-        );
-
-        require(
-            Ost.transferFrom(msg.sender, address(this), COST_REPORT_BLOCK),
-            "It must be possible to transfer the cost of the report."
-        );
-
-        reportedHeaders[_blockHash] = header;
-        emit BlockReported(height, _blockHash);
-
-        success_ = true;
+    /**
+     * @notice Verifies a vote that justified the direct child checkpoint of
+     *         the last justified auxiliary checkpoint in the meta-block. A
+     *         supermajority of such votes finalise the last auxiliary
+     *         checkpoint of this meta-block.
+     *
+     * @dev Must track which votes have already been verified so that the same
+     *      vote never gets verified more than once.
+     *
+     * @param _metaBlockHash The block hash of the meta-block for which the
+     *                       votes shall be verified.
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target block.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
+     *
+     * @return `true` if the verification succeeded.
+     */
+    function verifyVote(
+        bytes32 _metaBlockHash,
+        bytes20 _coreIdentifier,
+        bytes32 _transition,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        external
+        returns (bool success_)
+    {
+        revert("Method not implemented.");
     }
 
     /**
@@ -178,13 +240,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice Returns the block height of the latest OSTblock that has been
+     * @notice Returns the block height of the latest meta-block that has been
      *         committed.
      *
-     * @dev An OSTblock has been committed if it has been reported and received
-     *      a majority vote from the validators.
+     * @dev A meta-block has been committed if it has been proposed and the
+     *      votes have been verified.
      *
-     * @return The height of the latest committed OSTblock.
+     * @return The height of the latest committed meta-block.
      */
     function latestBlockHeight()
         external
@@ -192,62 +254,26 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (uint256)
     {
         /*
-         * `height` is the current open OSTblock. The latest committed block is
-         * therefore at `height - 1`.
+         * `height` is the current open meta-block. The latest committed block
+         * is therefore at `height - 1`.
          */
         return height - 1;
     }
 
-    /* Internal Functions */
-
     /**
-     * @notice Creates the hash of the concatenated data of a block header.
+     * @notice Get the state root of a meta-block.
      *
-     * @dev The resulting hash can be used to uniquely identify this block.
+     * @param _blockHeight For which blockheight to get the state root.
      *
-     * @param _header The block header to hash.
-     *
-     * @return The hash for this block header.
+     * @return The state root of the meta-block.
      */
-    function hashHeader (
-        Header _header
+    function getStateRoot(
+        uint256 _blockHeight
     )
-        internal
-        pure
-        returns (bytes32)
-    {
-        /*
-         * The list of excluded validators is expensive to hash and constant
-         * for all reported blocks at a given height so we omit it from the
-         * block hash definition.
-         */
-        return keccak256(
-            abi.encodePacked(
-                _header.height,
-                _header.parent,
-                _header.gas,
-                _header.signatureRoot,
-                _header.stateRoot
-            )
-        );
-    }
-
-    /* Private Functions */
-
-    /**
-     * @notice Returns true if the given hash has already been reported.
-     *
-     * @param _headerHash The hash of the header that should be checked.
-     *
-     * @return `true` if the header already exists.
-     */
-    function blockHasBeenReported(
-        bytes32 _headerHash
-    )
-        private
+        external
         view
-        returns (bool)
+        returns (bytes32 stateRoot_)
     {
-        return reportedHeaders[_headerHash].stateRoot != bytes32(0);
+        revert("Method not implemented.");
     }
 }

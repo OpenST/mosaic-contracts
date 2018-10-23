@@ -1,7 +1,7 @@
 
 const MerklePatriciaProofTest = artifacts.require("./MerklePatriciaProofTest.sol");
 const proofJson =  require("../data/proof.json");
-const Utils = require("../lib/utils.js");
+const Utils = require("../test_lib/utils.js");
 
 contract('MerklePatriciaProof', function(accounts) {
 
