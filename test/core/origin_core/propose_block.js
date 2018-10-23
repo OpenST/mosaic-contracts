@@ -55,7 +55,9 @@ contract('propose meta-block', async (accounts) => {
              auxiliaryCoreIdentifier,
              ost,
              initialValidators,
-             validatorsWeights
+             validatorsWeights,
+             0,
+             web3.utils.sha3("1")
         );
     });
 
