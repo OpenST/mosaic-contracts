@@ -70,6 +70,57 @@ contract PollingPlace is PollingPlaceInterface {
         uint256 endHeight;
     }
 
+    /** Vote message */
+    struct VoteMessage {
+
+        /**
+         * A unique identifier that identifies what chain this vote is about.
+         * To generate the vote hash coreIdentifier is needed. As the votes are
+         * for both origin and auxiliary chain, the core identifier information
+         * is stored in this struct.
+         */
+        bytes20 coreIdentifier;
+
+        /**
+         * The hash of the transition object of the meta-block that would
+         * result from the source block being finalised and proposed to origin.
+         */
+        bytes32 transitionHash;
+
+        /** The hash of the source block. */
+        bytes32 source;
+
+        /** The hash of the target block. */
+        bytes32 target;
+
+        /** The height of the source block. */
+        uint256 sourceHeight;
+
+        /** The height of the target block. */
+        uint256 targetHeight;
+    }
+
+    /** Vote object */
+    struct Vote {
+
+        /** Vote message. */
+        VoteMessage voteMessage;
+
+        /** v component of signature */
+        uint8 v;
+
+        /** r component of signature */
+        bytes32 r;
+
+        /** s component of signature */
+        bytes32 s;
+    }
+
+    /** To hash vote message according to EIP-712, a type hash is required. */
+    bytes32 constant VOTE_MESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
+    );
+
     /* Public Variables */
 
     /**
@@ -300,7 +351,7 @@ contract PollingPlace is PollingPlaceInterface {
         BlockStoreInterface blockStore = blockStores[_coreIdentifier];
         require(
             address(blockStore) != address(0),
-            "The providede core identifier must be known to the PollingPlace."
+            "The provided core identifier must be known to the PollingPlace."
         );
 
         require(
@@ -308,20 +359,25 @@ contract PollingPlace is PollingPlaceInterface {
             "The provided vote is not valid according to the block store."
         );
 
-        bytes32 voteHash = hashVote(
+        Vote memory voteObject = getVoteObject(
             _coreIdentifier,
             _transitionHash,
             _source,
             _target,
             _sourceHeight,
-            _targetHeight
-        );
-        Validator storage validator = getValidatorFromVote(
-            voteHash,
+            _targetHeight,
             _v,
             _r,
             _s
         );
+
+        bytes32 voteHash = hashVote(voteObject.voteMessage);
+
+        Validator storage validator = getValidatorFromVote(
+            voteObject,
+            voteHash
+        );
+
         require(validator.auxiliaryAddress != address(0), "Vote by unknown validator.");
 
         require(
@@ -330,10 +386,8 @@ contract PollingPlace is PollingPlaceInterface {
         );
 
         storeVote(
+            voteObject,
             voteHash,
-            _source,
-            _target,
-            _targetHeight,
             validator,
             blockStore
         );
@@ -426,27 +480,28 @@ contract PollingPlace is PollingPlaceInterface {
      *         store.
      *
      * @dev All requirement checks must have been made before calling this
-     *      method.
+     *      method. As this function is private, we can trust that vote hash
+     *      will be correct. In case if this function changes to external or
+     *      public then we should calculate the vote hash from the vote object in this
+     *      function.
      *
-     * @param _voteHash The hash of the vote object. The hash is used to
-     *                  identify the vote.
-     * @param _source The hash of the source checkpoint of the vote.
-     * @param _target The hash of the target checkpoint of the vote.
-     * @param _targetHeight The height of the target block of the vote.
+     *
+     * @param _voteObject Vote object.
+     * @param _voteHash Hash of the VoteMessage.
      * @param _validator The validator that signed the vote.
      * @param _blockStore The block store that this vote is about.
      */
     function storeVote(
+        Vote memory _voteObject,
         bytes32 _voteHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _targetHeight,
         Validator storage _validator,
         BlockStoreInterface _blockStore
     )
         private
     {
-        validatorTargetHeights[_validator.auxiliaryAddress] = _targetHeight;
+        VoteMessage memory voteMessage = _voteObject.voteMessage;
+
+        validatorTargetHeights[_validator.auxiliaryAddress] = voteMessage.targetHeight;
         votesWeights[_voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
 
         /*
@@ -456,7 +511,7 @@ contract PollingPlace is PollingPlaceInterface {
         uint256 required = requiredWeight(currentMetaBlockHeight);
         
         if (votesWeights[_voteHash] >= required) {
-            _blockStore.justify(_source, _target);
+            _blockStore.justify(voteMessage.source, voteMessage.target);
         }
     }
 
@@ -482,25 +537,28 @@ contract PollingPlace is PollingPlaceInterface {
      * @notice Uses the signature of a vote to recover the public address of
      *         the signer.
      *
-     * @param _voteHash The hashed vote. It is the message that was signed.
-     * @param _v V of the signature.
-     * @param _r R of teh signature.
-     * @param _s S of the signature.
+     * @dev As this function is private, we can trust that vote hash will be
+     *      correct. In case if this function changes to external or public
+     *      then we should calculate the vote hash from the vote object in this
+     *      function.
+     *
+     * @param _voteObject Vote object.
+     * @param _voteHash Hash of vote message.
      *
      * @return The `Validator` that signed the given message with the given
      *         signature.
      */
-    function getValidatorFromVote(
-        bytes32 _voteHash,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    )
+    function getValidatorFromVote(Vote memory _voteObject, bytes32 _voteHash)
         private
         view
         returns (Validator storage validator_)
     {
-        address signer = ecrecover(_voteHash, _v, _r, _s);
+        address signer = ecrecover(
+            _voteHash,
+            _voteObject.v,
+            _voteObject.r,
+            _voteObject.s
+        );
         validator_ = validators[signer];
     }
 
@@ -564,35 +622,24 @@ contract PollingPlace is PollingPlaceInterface {
      * @notice Creates the hash of o vote object. This is the same hash that
      *         the validator has signed.
      *
-     * @param _coreIdentifier Core identifier of the vote object.
-     * @param _transitionHash Transition hash of the vote object.
-     * @param _source Source block hash of the vote object.
-     * @param _target Target block hash of the vote object.
-     * @param _sourceHeight Source height of the vote object.
-     * @param _targetHeight Target height of the vote object.
+     * @param _voteMessage Vote message object.
      *
      * @return The hash of the given vote.
      */
-    function hashVote(
-        bytes20 _coreIdentifier,
-        bytes32 _transitionHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceHeight,
-        uint256 _targetHeight
-    )
+    function hashVote(VoteMessage memory _voteMessage)
         private
         pure
         returns (bytes32 hashed_)
     {
         hashed_ = keccak256(
             abi.encodePacked(
-                _coreIdentifier,
-                _transitionHash,
-                _source,
-                _target,
-                _sourceHeight,
-                _targetHeight
+                VOTE_MESSAGE_TYPEHASH,
+                _voteMessage.coreIdentifier,
+                _voteMessage.transitionHash,
+                _voteMessage.source,
+                _voteMessage.target,
+                _voteMessage.sourceHeight,
+                _voteMessage.targetHeight
             )
         );
 
@@ -603,6 +650,56 @@ contract PollingPlace is PollingPlaceInterface {
                 prefix,
                 hashed_
             )
+        );
+    }
+
+    /**
+     * @notice Creates a vote object
+     *
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transitionHash The hash of the transition object of the
+     *                        meta-block that would result from the source
+     *                        block being finalised and proposed to origin.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target block.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
+     *
+     * @return vote object
+     */
+    function getVoteObject(
+        bytes20 _coreIdentifier,
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        private
+        pure
+        returns (Vote memory voteObject_)
+    {
+        VoteMessage memory voteMessage = VoteMessage(
+            _coreIdentifier,
+            _transitionHash,
+            _source,
+            _target,
+            _sourceHeight,
+            _targetHeight
+        );
+
+        voteObject_ = Vote(
+            voteMessage,
+            _v,
+            _r,
+            _s
         );
     }
 }

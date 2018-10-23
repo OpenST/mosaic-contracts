@@ -34,6 +34,10 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
+const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
+  "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
+);
+
 contract('PollingPlace', async (accounts) => {
     /*
      * Make the first address the default meta-block gate to be able to
@@ -1071,7 +1075,9 @@ contract('PollingPlace', async (accounts) => {
      * @returns {object} The signature of the vote (r, s, and v).
      */
     async function signVote(address, vote) {
+
         let voteDigest = web3.utils.soliditySha3(
+            {type: 'bytes32', value: VOTE_MESSAGE_TYPEHASH},
             {type: 'bytes20', value: web3.utils.toChecksumAddress(vote.coreIdentifier)},
             {type: 'bytes32', value: vote.transitionHash},
             {type: 'bytes32', value: vote.source},
