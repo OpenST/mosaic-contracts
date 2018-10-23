@@ -4,11 +4,9 @@ const web3 = require('../../../test_lib/web3.js');
 const GatewayHelper = require('../../gateway/helpers/helper');
 
 const EIP20GatewayHelper = function(gateway) {
-  const oThis = this;
-
   //Call Super.
-  GatewayHelper.apply(oThis, arguments);
-  oThis.gateway = gateway;
+  GatewayHelper.apply(this, arguments);
+  this.gateway = gateway;
 };
 
 EIP20GatewayHelper.prototype = Object.create(GatewayHelper.prototype);
@@ -22,8 +20,6 @@ let proto = {
    * @return {string} message type hash.
    */
   stakeTypeHash: async function() {
-    const oThis = this;
-
     return web3.utils.soliditySha3(
       web3.eth.abi.encodeParameter(
         'string',
@@ -53,8 +49,6 @@ let proto = {
     gasPrice,
     gasLimit,
     token) {
-
-    const oThis = this;
 
     return web3.utils.soliditySha3(
       { t: 'uint256', v: amount },

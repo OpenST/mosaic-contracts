@@ -51,7 +51,6 @@ let mockToken,
 
 
 async function _setup (accounts){
-  const oThis = this;
 
   mockToken = await MockToken.new();
   baseToken = await MockToken.new();

@@ -6,15 +6,14 @@ const utils = require("../../../test_lib/utils");
 /**
  * @constructor
  *
- * @param {object} gateway Gateway contract object.
- * @param {object} token EIP20 token contract object.
- * @param {baseToken} token EIP20 token contract object. This is the base token.
+ * @param {Object} gateway Gateway contract object.
+ * @param {Object} token EIP20 token contract object.
+ * @param {Object} baseToken EIP20 token contract object. This is the base token.
  */
 const EIP20GatewayKlass = function(gateway, token, baseToken) {
-  const oThis = this;
-  oThis.gateway = gateway;
-  oThis.token = token;
-  oThis.baseToken = baseToken;
+  this.gateway = gateway;
+  this.token = token;
+  this.baseToken = baseToken;
 };
 
 EIP20GatewayKlass.prototype = {
@@ -22,10 +21,10 @@ EIP20GatewayKlass.prototype = {
   /**
    * Asserts all the conditions for stake
    *
-   * @param {object} params All the input params for calling stake function.
-   * @param {object} resultType Expected result success or fail.
-   * @param {object} expectedResults Expected results, returns and events data.
-   * @param {object} txOptions Transaction options.
+   * @param {Object} params All the input params for calling stake function.
+   * @param {Object} resultType Expected result success or fail.
+   * @param {Object} expectedResults Expected results, returns and events data.
+   * @param {Object} txOptions Transaction options.
    *
    */
   stake: async function(
@@ -33,8 +32,6 @@ EIP20GatewayKlass.prototype = {
     resultType,
     expectedResults,
     txOptions ) {
-
-    const oThis = this;
 
     let amount = params.amount,
       beneficiary = params.beneficiary,
@@ -46,27 +43,27 @@ EIP20GatewayKlass.prototype = {
       signature = params.signature;
 
     // Get the initial balances for all the addresses involved.
-    let initialStakerTokenBalance = await oThis.token.balanceOf.call(staker),
-      initialGatewayTokenBalance = await oThis.token.balanceOf.call(
-        oThis.gateway.address
+    let initialStakerTokenBalance = await this.token.balanceOf.call(staker),
+      initialGatewayTokenBalance = await this.token.balanceOf.call(
+        this.gateway.address
       ),
-      initialFacilitatorTokenBalance = await oThis.token.balanceOf.call(
+      initialFacilitatorTokenBalance = await this.token.balanceOf.call(
         txOptions.from
       );
 
     // Get the initial balances of base token for all the addresses involved.
-    let initialStakerBaseTokenBalance = await oThis.baseToken.balanceOf.call(staker),
-      initialGatewayBaseTokenBalance = await oThis.baseToken.balanceOf.call(
-        oThis.gateway.address
+    let initialStakerBaseTokenBalance = await this.baseToken.balanceOf.call(staker),
+      initialGatewayBaseTokenBalance = await this.baseToken.balanceOf.call(
+        this.gateway.address
       ),
-      initialFacilitatorBaseTokenBalance = await oThis.baseToken.balanceOf.call(
+      initialFacilitatorBaseTokenBalance = await this.baseToken.balanceOf.call(
         txOptions.from
       );
 
-    let bounty = await oThis.gateway.bounty.call();
+    let bounty = await this.gateway.bounty.call();
 
     if (resultType == utils.ResultType.FAIL) {
-      await utils.expectThrow(oThis.gateway.stake.call(
+      await utils.expectThrow(this.gateway.stake.call(
         amount,
         beneficiary,
         staker,
@@ -80,7 +77,7 @@ EIP20GatewayKlass.prototype = {
         expectedResults.errorMessage);
     } else {
 
-      let result = await oThis.gateway.stake.call(
+      let result = await this.gateway.stake.call(
         amount,
         beneficiary,
         staker,
@@ -98,7 +95,7 @@ EIP20GatewayKlass.prototype = {
         "messageHash must match"
       );
 
-      let response = await oThis.gateway.stake(
+      let response = await this.gateway.stake(
         amount,
         beneficiary,
         staker,
@@ -120,20 +117,20 @@ EIP20GatewayKlass.prototype = {
     }
 
     // Get the final balances for all the addresses involved.
-    let stakerTokenBalance = await oThis.token.balanceOf.call(staker),
-      gatewayTokenBalance = await oThis.token.balanceOf.call(
-        oThis.gateway.address
+    let stakerTokenBalance = await this.token.balanceOf.call(staker),
+      gatewayTokenBalance = await this.token.balanceOf.call(
+        this.gateway.address
       ),
-      facilitatorTokenBalance = await oThis.token.balanceOf.call(
+      facilitatorTokenBalance = await this.token.balanceOf.call(
         txOptions.from
       );
 
     // Get the final balances of base token for all the addresses involved.
-    let stakerBaseTokenBalance = await oThis.baseToken.balanceOf.call(staker),
-      gatewayBaseTokenBalance = await oThis.baseToken.balanceOf.call(
-        oThis.gateway.address
+    let stakerBaseTokenBalance = await this.baseToken.balanceOf.call(staker),
+      gatewayBaseTokenBalance = await this.baseToken.balanceOf.call(
+        this.gateway.address
       ),
-      facilitatorBaseTokenBalance = await oThis.baseToken.balanceOf.call(
+      facilitatorBaseTokenBalance = await this.baseToken.balanceOf.call(
         txOptions.from
       );
 

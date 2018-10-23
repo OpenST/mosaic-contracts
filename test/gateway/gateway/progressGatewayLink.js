@@ -137,8 +137,6 @@ contract('Gateway ',  function(accounts) {
 
   describe('progressGatewayLink', async function () {
 
-    const oThis = this;
-
     beforeEach(async function() {
       await _setup(accounts);
     });
