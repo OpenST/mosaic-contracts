@@ -28,7 +28,8 @@ contract GatewayBase {
 
     event BountyChangeInitiated(
         uint256 _currentBounty,
-        uint256 _proposedBounty
+        uint256 _proposedBounty,
+        uint256 _unlockHeight
     );
 
     event BountyChangeConfirmed(
@@ -65,7 +66,7 @@ contract GatewayBase {
 
     //todo identify how to get block time for both chains
     /** Unlock period for change bounty in block height */
-    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+    uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
     /** Specifies if the Gateway and CoGateway contracts are linked. */
     bool public linked;
@@ -134,10 +135,8 @@ contract GatewayBase {
      */
     mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
-    /* internal variables */
-
     /** address of message bus used to fetch codehash during gateway linking */
-    address internal messageBus;
+    address public messageBus;
 
     /* modifiers */
 
@@ -260,13 +259,6 @@ contract GatewayBase {
 
         if (provenStorageRoot != bytes32(0)) {
 
-            // Check extracted storage root is matching with existing stored
-            // storage root
-            require(
-                provenStorageRoot == storageRoot,
-                "Storage root mismatch when account is already proven"
-            );
-
             // wasAlreadyProved is true here since proveOpenST is replay call
             // for same block height
             emit GatewayProven(
@@ -349,7 +341,7 @@ contract GatewayBase {
     function getNonce(address _account)
         external
         view
-        returns (uint256 /* nonce */)
+        returns (uint256)
     {
         // call the private method
         return _getOutboxNonce(_account);
@@ -359,20 +351,32 @@ contract GatewayBase {
      * @notice Method allows organization to propose new bounty amount.
      *
      * @param _proposedBounty proposed bounty amount.
+     *
+     * @return uint256 proposed bounty amount.
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         onlyOrganisation()
         external
+        returns(uint256)
     {
         proposedBounty = _proposedBounty;
-        proposedBountyUnlockHeight = block.number;
+        proposedBountyUnlockHeight = block.number.add(BOUNTY_CHANGE_UNLOCK_PERIOD);
 
-        emit BountyChangeInitiated(bounty, _proposedBounty);
+        emit BountyChangeInitiated(
+                bounty,
+                _proposedBounty,
+                proposedBountyUnlockHeight
+        );
+
+        return _proposedBounty;
     }
 
     /**
      * @notice Method allows organization to confirm proposed bounty amount
      *         after unlock period.
+     *
+     * @return changedBountyAmount_  updated bounty amount.
+     * @return previousBountyAmount_ previous bounty amount.
      */
     function confirmBountyAmountChange()
         onlyOrganisation()
@@ -387,7 +391,7 @@ contract GatewayBase {
             "Proposed bounty should be different from existing bounty."
         );
         require(
-            proposedBountyUnlockHeight.add(BOUNTY_CHANGE_UNLOCK_PERIOD) < block.number,
+            proposedBountyUnlockHeight < block.number,
             "Confirm bounty amount change can only be done after unlock period."
         );
 

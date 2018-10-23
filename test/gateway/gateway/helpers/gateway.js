@@ -2,7 +2,7 @@
 
 const Gateway = artifacts.require("Gateway");
 const web3 = require('../../../test_lib/web3.js');
-const utils = require("./utils");
+const utils = require("../../../test_lib/utils");
 
 const GatewayUtils = function(gateway) {
     const oThis = this;
