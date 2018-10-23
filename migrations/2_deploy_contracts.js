@@ -6,6 +6,7 @@ const MockGatewayLib = artifacts.require("MockGatewayLib");
 const MockGatewayBase = artifacts.require("MockGatewayBase");
 const MetaBlock = artifacts.require("../contracts/lib/MetaBlock.sol");
 const BlockStore = artifacts.require("../contracts/BlockStore.sol");
+const MockEIP20Gateway = artifacts.require("MockEIP20Gateway");
 const AuxiliaryBlockStore = artifacts.require(
   "../contracts/AuxiliaryBlockStore.sol"
 );
@@ -15,8 +16,9 @@ module.exports = function(deployer) {
   deployer.deploy(GatewayLib);
   deployer.deploy(MockGatewayLib);
   deployer.deploy(MetaBlock);
-  deployer.link(GatewayLib, [GatewayBase, Gateway]);
-  deployer.link(MessageBus, [Gateway]);
-  deployer.link(MockGatewayLib, [MockGatewayBase]);
+  deployer.link(GatewayLib, [GatewayBase, Gateway, MockEIP20Gateway]);
+  deployer.link(MessageBus, [Gateway, MockEIP20Gateway]);
+  deployer.link(MockGatewayLib, [MockGatewayBase, MockEIP20Gateway]);
   deployer.link(MetaBlock, [BlockStore, AuxiliaryBlockStore]);
 };
+
