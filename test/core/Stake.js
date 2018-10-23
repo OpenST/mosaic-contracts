@@ -35,7 +35,13 @@ contract('Stake', async (accounts) => {
 
     beforeEach(async () => {
         ost = await MockToken.new();
-        stake = await Stake.new(ost.address, originCoreAccount);
+        let initialValidators = [], validatorsWeights = [];
+        stake = await Stake.new(
+             ost.address,
+             originCoreAccount,
+             initialValidators,
+             validatorsWeights
+        );
     });
 
     describe('closing a meta-block', async () => {

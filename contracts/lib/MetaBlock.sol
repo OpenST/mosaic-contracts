@@ -152,8 +152,9 @@ library MetaBlock {
         bytes32 _originBlockHash,
         bytes32 _transactionRoot
     )
-    internal
-    returns (bytes32)
+        internal
+        pure
+        returns (bytes32)
     {
         //todo implement this in separate ticket
         return keccak256(abi.encode(_gas));
@@ -165,7 +166,7 @@ library MetaBlock {
      *
      * @param _height The height of meta-block.
      * @param _parent The hash of this block's parent.
-     * @param _updatedValidators  The array of addresses of the validators.
+     * @param _updatedValidators  The array of addresses of the updated validators.
      * @param _updatedWeights The array of weights that corresponds to
      *                        the updated validators.
      *
@@ -177,8 +178,9 @@ library MetaBlock {
         address[] _updatedValidators,
         uint256[] _updatedWeights
     )
-    internal
-    returns (bytes32)
+        internal
+        pure
+        returns (bytes32)
     {
         //todo implement this in separate ticket
         return keccak256(abi.encode(_height));
@@ -200,7 +202,7 @@ library MetaBlock {
         bytes32 _blockHash,
         bytes20 _coreIdentifier
     )
-    internal
+        internal
         pure
         returns (bytes32)
     {

@@ -35,8 +35,8 @@ contract TestStake {
     /** @notice Deploying the dependant contracts for every test. */
     function beforeEach() external {
 
-        address[] initialValidators;
-        uint256[] validatorsWeights;
+        address[] memory initialValidators = new address[](1);
+        uint256[] memory validatorsWeights = new uint256[](1);
 
         mockToken = new MockToken();
         stake = new Stake(

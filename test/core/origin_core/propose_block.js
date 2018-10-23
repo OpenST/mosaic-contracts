@@ -61,7 +61,7 @@ contract('propose meta-block', async (accounts) => {
 
     it('should be able to propose meta-block', async function () {
 
-        let response = await originCore.proposeBlock(
+        let tx = await originCore.proposeBlock(
              height,
              auxiliaryCoreIdentifier,
              kernelHash,
@@ -72,8 +72,14 @@ contract('propose meta-block', async (accounts) => {
              originBlockHash,
              transactionRoot
         );
-        //todo expect event
-        //console.log(response.logs);
+
+        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+
+        assert.equal(
+             events.BlockProposed.height,
+             height,
+             `Meta-block should be proposed for height ${height}`
+        );
 
     });
 
@@ -123,7 +129,7 @@ contract('propose meta-block', async (accounts) => {
     it('should not be able to propose meta-block for same height and same' +
          ' transition object which is already proposed', async function () {
 
-        let response = await originCore.proposeBlock(
+        let tx = await originCore.proposeBlock(
              height,
              auxiliaryCoreIdentifier,
              kernelHash,
@@ -135,7 +141,14 @@ contract('propose meta-block', async (accounts) => {
              transactionRoot
         );
 
-        //todo assert event
+        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+
+        assert.equal(
+             events.BlockProposed.height,
+             height,
+             `Meta-block should be proposed for height ${height}`
+        );
+
         await Utils.expectThrow(
              originCore.proposeBlock(
                   height,
