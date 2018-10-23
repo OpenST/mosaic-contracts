@@ -171,7 +171,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
         /* header of last meta block */
-        MetaBlock.Header memory latestMetaBlockHeader = reportedHeaders[head];
+        MetaBlock.Header latestMetaBlockHeader = reportedHeaders[head];
 
         require(
             latestMetaBlockHeader.kernel.height + 1 == _height,
