@@ -73,22 +73,16 @@ contract('BlockStore.latestBlockHeight()', async (accounts) => {
                 source: blockHashAtTen,
                 target: blockHashAtTwenty,
                 expectedHeight: new BN('10')
-            },{
-                source: blockHashAtTwenty,
-                target: blockHashAtFourty,
-                expectedHeight: new BN('10')
-            },{
+            },
+            {
                 source: blockHashAtTwenty,
                 target: blockHashAtThirty,
                 expectedHeight: new BN('20')
-            },{
-                source: blockHashAtTen,
-                target: blockHashAtThirty,
-                expectedHeight: new BN('20')
-            },{
-                source: blockHashAtThirty,
+            },
+            {
+                source: blockHashAtTwenty,
                 target: blockHashAtFourty,
-                expectedHeight: new BN('30')
+                expectedHeight: new BN('20')
             },
         ];
 
