@@ -18,8 +18,8 @@ module.exports = function(deployer) {
 	
 	deployer.deploy(MerklePatriciaProof);
 	deployer.link(MerklePatriciaProof, ProofLib);
-	// deployer.deploy(ProofLib);
-	// deployer.
+	deployer.deploy(ProofLib);
+	deployer.deploy(ProofLib, ProofLibTest);
 	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
 	deployer.link(MerklePatriciaProof, GatewayLib);
