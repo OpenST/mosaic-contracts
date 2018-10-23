@@ -19,6 +19,7 @@ module.exports = function(deployer) {
 	deployer.deploy(MerklePatriciaProof);
 	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
+	deployer.link(MerklePatriciaProof, GatewayLib);
 	deployer.deploy(GatewayLib);
 	deployer.deploy(MockGatewayLib);
 	deployer.link(GatewayLib, [GatewayBase, Gateway]);

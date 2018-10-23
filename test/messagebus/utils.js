@@ -21,9 +21,7 @@
 
 var Web3 = require('web3'),
     web3 = new Web3("http://localhost:8545");
-
-
-const hashLock = require("../lib/hash_lock");
+const hashLock = require("../test_lib/hash_lock");
 const NullAddress = "0x0000000000000000000000000000000000000000";
 var ResultType = {
     FAIL:0,
