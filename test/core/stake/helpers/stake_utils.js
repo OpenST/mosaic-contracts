@@ -26,7 +26,7 @@ const StakeUtils = function() {};
      * the senders so that they have the value available in the ERC20 token.
      *
      * @param {string} receiver The address that will receive the amounts.
-     * @param {object} token The token used for staking.
+     * @param {Object} token The token used for staking.
      * @param {string} treasury The address that will send the ERC20 tokens to
      *                           the depositors. Usually the address that
      *                           deployed the token contract.
@@ -53,8 +53,8 @@ StakeUtils.prototype.approveTransfers = async function(
 /**
  * Approves all transfers and then calls initialize on the stake contract.
  *
- * @param {object} stake The stake contract.
- * @param {object} token The token used for staking.
+ * @param {Object} stake The stake contract.
+ * @param {Object} token The token used for staking.
  * @param {string} treasury The address that will send the ERC20 tokens to
  *                           the depositors. Usually the address that
  *                           deployed the token contract.
@@ -89,8 +89,8 @@ StakeUtils.prototype.initializeStake = async function(
  * Deposits the given amount of the given erc20 token from the given
  * address in the given stake contract.
  * 
- * @param {object} erc20 The token to send.
- * @param {object} stake The staking contract.
+ * @param {Object} erc20 The token to send.
+ * @param {Object} stake The staking contract.
  * @param {string} address The address of the validator.
  * @param {BN} amount The amount to deposit.
  */

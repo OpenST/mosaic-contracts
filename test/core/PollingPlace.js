@@ -1067,8 +1067,8 @@ contract('PollingPlace', async (accounts) => {
 
     /**
      * @param {string} address The address of the account that signs the vote.
-     * @param {object} vote The vote object to sign.
-     * @returns {object} The signature of the vote (r, s, and v).
+     * @param {Object} vote The vote object to sign.
+     * @returns {Object} The signature of the vote (r, s, and v).
      */
     async function signVote(address, vote) {
         let voteDigest = web3.utils.soliditySha3(

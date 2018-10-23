@@ -38,7 +38,7 @@ Object.freeze(ResultType);
  * passes if the message is `undefined`.
  *
  * @param {string} message The message that the error should contain.
- * @param {object} error The error.
+ * @param {Object} error The error.
  */
 function assertExpectedMessage(message, error) {
   if (message !== undefined) {
