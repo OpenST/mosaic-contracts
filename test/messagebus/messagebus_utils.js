@@ -1,6 +1,6 @@
 'use strict'
 
-const MessageBus = artifacts.require('MessageBusTestWrapper'),
+const MessageBus = artifacts.require('MessageBusWrapper'),
 			utils =  require("./utils");
 
 let messageBus;
