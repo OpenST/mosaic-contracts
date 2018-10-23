@@ -55,7 +55,7 @@ StakeUtils.prototype.approveTransfers = async function(
  *
  * @param {StakeInterface} stake The stake contract.
  * @param {ERC20Interface} token The token used for staking.
- * @param {address} treasury The address that will send the ERC20 tokens to
+ * @param {string} treasury The address that will send the ERC20 tokens to
  *                           the depositors. Usually the address that
  *                           deployed the token contract.
  * @param {array} senders An array of addresses that will deposit stake.

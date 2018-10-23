@@ -133,6 +133,18 @@ contract Stake is StakeInterface {
     /* Modifiers */
 
     /**
+     * Verifies that the message was sent by the origin core.
+     */
+    modifier onlyOriginCore() {
+        require(
+            msg.sender == originCore,
+            "Caller must be the registered Origin Core."
+        );
+
+        _;
+    }
+
+    /**
      * Verifies that the current weight is greater than or equal to the minimum
      * weight.
      */
@@ -241,7 +253,7 @@ contract Stake is StakeInterface {
         }
 
         require(
-            totalWeightAtHeight_(0) >= minimumWeight,
+            totalWeightAtHeight_(startingHeight) >= minimumWeight,
             "The total initial weight must be greater than the minimum weight."
         );
     }
@@ -252,7 +264,7 @@ contract Stake is StakeInterface {
      *         equal to the deposit. The validator will be able to cast votes
      *         starting at the current meta-block height plus two.
      *         Prior to this call, the message sender must approve an ERC-20
-     *         transfer of the specified deposit ammount from her account to
+     *         transfer of the specified deposit amount from her account to
      *         the stake contract.
      *         The `msg.sender` will be the only address that is allowed to
      *         log out or withdraw (the depositor).
@@ -360,6 +372,7 @@ contract Stake is StakeInterface {
         uint256 _closingHeight
     )
         external
+        onlyOriginCore()
         aboveMinimumWeight()
         returns (
             address[] updatedValidators_,
@@ -367,10 +380,6 @@ contract Stake is StakeInterface {
         )
     {
         assert(_closingHeight == height);
-        require(
-            msg.sender == originCore,
-            "Caller must be the registered Origin Core."
-        );
 
         height++;
 

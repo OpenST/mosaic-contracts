@@ -70,7 +70,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
             new BN(0),
             {from: originCoreAccount}
         );
-        let events = Events.perform(tx.receipt, stake.address, stake.abi)
+        let events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
             Number(events.HeightIncreased.newHeight),
             1,
@@ -81,7 +81,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
             new BN(1),
             {from: originCoreAccount}
         );
-        events = Events.perform(tx.receipt, stake.address, stake.abi)
+        events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
             Number(events.HeightIncreased.newHeight),
             2,
