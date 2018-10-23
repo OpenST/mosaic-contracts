@@ -19,7 +19,7 @@ import "../../contracts/gateway/MockMessageBus.sol";
 /**
  * @title Tests the MessageBus library.
  */
-contract MessageBusTestWrapper {
+contract MessageBusWrapper {
 
     MockMessageBus.MessageBox messageBox;
 

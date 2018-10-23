@@ -23,8 +23,8 @@ pragma solidity ^0.4.23;
 
 
 import "../test/MockMerklePatriciaProof.sol";
-import "./SafeMath.sol";
-import "./BytesLib.sol";
+import "../lib/SafeMath.sol";
+import "../lib/BytesLib.sol";
 
 library MockMessageBus {
 
