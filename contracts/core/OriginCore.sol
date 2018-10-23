@@ -45,7 +45,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     bytes32 public auxiliaryCoreIdentifier;
 
-    /** The stake contract address. */
+    /** The stake contract that tracks deposits and weights. */
     StakeInterface public stake;
     /** Height of the open block. */
     uint256 public height;
@@ -60,7 +60,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     mapping (bytes32 => MetaBlock.Header) public reportedHeaders;
 
     /**
-     * Mapping of kernel hash to transition object map.
+     * Mapping of kernel hash to transition object map,
      * where transition object map is transition hash to transition mapping.
      */
     mapping(bytes32 => mapping(bytes32 => MetaBlock.AuxiliaryTransition)) public proposedMetaBlock;
@@ -69,11 +69,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     /**
      * @param _auxiliaryCoreIdentifier The core identifier of the auxiliary
-     *                        chain that this core contract tracks.
+     *                                 chain that this core contract tracks.
      * @param _ost The address of the OST ERC-20 token.
-     * @param _initialValidators The array of addresses of the validators.
-     * @param _validatorsWeights The array of weights that corresponds to
-     *                        the updated validators.
      * @param _initialAuxiliaryGas Initial gas consumed on auxiliary before
      *                             reporting genesis meta-block.
      * @param _initialTransactionRoot Transaction root of auxiliary chain
@@ -82,8 +79,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     constructor(
         bytes32 _auxiliaryCoreIdentifier,
         address _ost,
-        address[] _initialValidators,
-        uint256[] _validatorsWeights,
         uint256 _initialAuxiliaryGas,
         bytes32 _initialTransactionRoot
     )
@@ -101,13 +96,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         // deploy stake contract
         stake = new Stake(
             _ost,
-            address(this),
-            _initialValidators,
-            _validatorsWeights
+            address(this)
         );
         head = reportGenesisBlock(
-            _initialValidators,
-            _validatorsWeights,
             _initialAuxiliaryGas,
             _initialTransactionRoot
         );
@@ -128,7 +119,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                          on the auxiliary chain.
      * @param _auxiliaryBlockHash The block hash where the meta-block closes
      *                          on the auxiliary chain.
-     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _accumulatedGas The total consumed gas on auxiliary within
+     *                        this meta-block.
      * @param _originDynasty Dynasty of origin block within latest meta-block
      *                          reported at auxiliary chain.
      * @param _originBlockHash Block hash of origin block within latest
@@ -144,7 +136,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 _kernelHash,
         uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
-        uint256 _gas,
+        uint256 _accumulatedGas,
         uint256 _originDynasty,
         bytes32 _originBlockHash,
         bytes32 _transactionRoot
@@ -192,7 +184,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
         require(
-            _gas > latestMetaBlockHeader.transition.gas,
+            _accumulatedGas > latestMetaBlockHeader.transition.gas,
             'Gas consumed should be greater than last meta-block gas.'
         );
 
@@ -201,7 +193,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _kernelHash,
             _auxiliaryDynasty,
             _auxiliaryBlockHash,
-            _gas,
+            _accumulatedGas,
             _originDynasty,
             _originBlockHash,
             _transactionRoot
@@ -216,7 +208,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _kernelHash,
             _auxiliaryDynasty,
             _auxiliaryBlockHash,
-            _gas,
+            _accumulatedGas,
             _originDynasty,
             _originBlockHash,
             _transactionRoot
@@ -320,28 +312,27 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         revert("Method not implemented.");
     }
 
+    /* Private Functions */
+
     /**
      * @notice private method to create genesis block.
      *
-     * @param _initialValidators initial validators addresses.
-     * @param _validatorsWeights initial validators weights.
      * @param _initialAuxiliaryGas Initial gas consumed on auxiliary before
      *                             reporting genesis meta-block.
      * @param _initialTransactionRoot Transaction root of auxiliary chain
      *                                before reporting genesis meta-block.
      *
      * @return bytes32 head of meta-block chain pointing to genesis block.
-
      */
     function reportGenesisBlock(
-        address[] _initialValidators,
-        uint256[] _validatorsWeights,
         uint256 _initialAuxiliaryGas,
         bytes32 _initialTransactionRoot
     )
         private
         returns (bytes32)
     {
+        address[] memory initialValidators;
+        uint256[] memory validatorsWeights;
        /*
         * Kernel for genesis block with height 0, no parent block and
         * initial set of validators with their weights.
@@ -349,15 +340,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         MetaBlock.Kernel memory genesisKernel = MetaBlock.Kernel(
             0,
             bytes32(0),
-            _initialValidators,
-            _validatorsWeights
+            initialValidators,
+            validatorsWeights
         );
         bytes32 kernelHash = MetaBlock.hashKernel(
             0,
             bytes32(0),
-            _initialValidators,
-            _validatorsWeights
+            initialValidators,
+            validatorsWeights
         );
+
         /*
          * Transition object for genesis block with all parameter as 0 except
          * auxiliaryCoreIdentifier, kernel Hash, gas and transactionRoot.

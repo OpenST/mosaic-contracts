@@ -35,12 +35,10 @@ contract('Stake', async (accounts) => {
 
     beforeEach(async () => {
         ost = await MockToken.new();
-        let initialValidators = [], validatorsWeights = [];
+
         stake = await Stake.new(
              ost.address,
-             originCoreAccount,
-             initialValidators,
-             validatorsWeights
+             originCoreAccount
         );
     });
 

@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: propose_block.js
 //
 // http://www.simpletoken.org/
 //
@@ -25,14 +24,14 @@ const Utils = require('../../test_lib/utils.js');
 
 const OriginCore = artifacts.require('OriginCore');
 
-contract('propose meta-block', async (accounts) => {
+contract('OriginCore.proposeBlock()', async (accounts) => {
 
 
     let originCore;
     let auxiliaryCoreIdentifier = web3.utils.sha3("1");
 
     let height, kernelHash, auxiliaryDynasty, auxiliaryBlockHash, gas,
-         originDynasty, originBlockHash, transactionRoot, stateRoot;
+         originDynasty, originBlockHash, transactionRoot;
 
     beforeEach(async () => {
 
@@ -45,15 +44,11 @@ contract('propose meta-block', async (accounts) => {
              originBlockHash = web3.utils.sha3("1"),
              transactionRoot = web3.utils.sha3("1");
 
-        let ost = accounts[0]
-             , initialValidators = [accounts[1], accounts[2]]
-             , validatorsWeights = [10, 20];
+        let ost = accounts[0];
 
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
              ost,
-             initialValidators,
-             validatorsWeights,
              0,
              web3.utils.sha3("1")
         );
@@ -188,7 +183,7 @@ contract('propose meta-block', async (accounts) => {
 
     });
 
-    it('should not be able to propose meta-block for correct auxiliary' +
+    it('should not be able to propose meta-block for wrong auxiliary' +
          ' block chain', async function () {
 
         auxiliaryCoreIdentifier = web3.utils.sha3("2");
@@ -212,7 +207,7 @@ contract('propose meta-block', async (accounts) => {
 
     });
 
-    it('should not be able to propose meta-block if transition root is' +
+    it('should not be able to propose meta-block if transaction root is' +
          ' not defined', async function () {
 
         transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -254,8 +249,7 @@ contract('propose meta-block', async (accounts) => {
         );
     });
 
-    it('should not be able to propose meta-block if origin Dynasty is' +
-         ' not zero', async function () {
+    it('should not be able to propose meta-block if origin Dynasty is zero', async function () {
 
         originDynasty = 0;
 

@@ -24,14 +24,12 @@ const Utils = require('../../test_lib/utils.js');
 
 const OriginCore = artifacts.require('OriginCore');
 
-contract('Constructor Origin core', async (accounts) => {
+contract('OriginCore.constructor()', async (accounts) => {
 
 
     let originCore;
     let auxiliaryCoreIdentifier = web3.utils.sha3("1"),
-         gas, transactionRoot, ost = accounts[0],
-         initialValidators = [accounts[1], accounts[2]],
-         validatorsWeights = [10, 20];
+         gas, transactionRoot, ost = accounts[0];
 
     beforeEach(async () => {
 
@@ -46,8 +44,6 @@ contract('Constructor Origin core', async (accounts) => {
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
              ost,
-             initialValidators,
-             validatorsWeights,
              gas,
              transactionRoot
         );
@@ -60,8 +56,6 @@ contract('Constructor Origin core', async (accounts) => {
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
              ost,
-             initialValidators,
-             validatorsWeights,
              gas,
              transactionRoot
         );
@@ -78,8 +72,6 @@ contract('Constructor Origin core', async (accounts) => {
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
              ost,
-             initialValidators,
-             validatorsWeights,
              gas,
              transactionRoot
         );
@@ -98,8 +90,6 @@ contract('Constructor Origin core', async (accounts) => {
              OriginCore.new(
                   auxiliaryCoreIdentifier,
                   ost,
-                  initialValidators,
-                  validatorsWeights,
                   gas,
                   transactionRoot
              )
@@ -114,8 +104,6 @@ contract('Constructor Origin core', async (accounts) => {
              OriginCore.new(
                   auxiliaryCoreIdentifier,
                   ost,
-                  initialValidators,
-                  validatorsWeights,
                   gas,
                   transactionRoot
              )

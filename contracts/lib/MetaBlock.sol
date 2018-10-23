@@ -29,7 +29,7 @@ library MetaBlock {
     struct Header {
 
         Kernel kernel;
-        MetaBlock.AuxiliaryTransition transition;
+        AuxiliaryTransition transition;
     }
 
     /** The kernel of a meta-block header. */
@@ -156,7 +156,6 @@ library MetaBlock {
         pure
         returns (bytes32)
     {
-        //todo implement this in separate ticket
         return keccak256(abi.encode(_gas));
     }
 
@@ -182,7 +181,6 @@ library MetaBlock {
         pure
         returns (bytes32)
     {
-        //todo implement this in separate ticket
         return keccak256(abi.encode(_height));
     }
 
