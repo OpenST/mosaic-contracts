@@ -55,6 +55,7 @@ contract MessageBusTestWrapper {
         gasPrice,
         gasLimit
     );
+
     MockMessageBus.Message message = MockMessageBus.Message({
         intentHash : intentHash,
         nonce : nonce,
@@ -63,8 +64,7 @@ contract MessageBusTestWrapper {
         sender : sender,
         hashLock : hashLock,
         gasConsumed: gasConsumed
-        });
-
+    });
 
     function declareMessage
     (
@@ -76,9 +76,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        bytes _signature,
-        MockMessageBus.MessageStatus _status,
-        bytes32 _messageHash
+        bytes _signature
     )
         public
         returns(bytes32)
@@ -93,7 +91,6 @@ contract MessageBusTestWrapper {
             hashLock : _hashLock,
             gasConsumed: _gasConsumed
         });
-        messageBox.outbox[_messageHash] = _status;
 
         bytes32 messageHashFromDeclare= MockMessageBus.declareMessage(
             messageBox,
@@ -115,8 +112,6 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        MockMessageBus.MessageStatus _status,
-        bytes32 _messageHash,
         bytes32 _unlockSecret
     )
         public
@@ -131,8 +126,6 @@ contract MessageBusTestWrapper {
             hashLock : _hashLock,
             gasConsumed: _gasConsumed
         });
-
-        messageBox.outbox[_messageHash] = _status;
 
         messageHash_ = MockMessageBus.progressOutbox(
             messageBox,
@@ -152,8 +145,6 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        MockMessageBus.MessageStatus _status,
-        bytes32 _messageHash,
         bytes32 _unlockSecret
     )
         public
@@ -168,8 +159,6 @@ contract MessageBusTestWrapper {
             hashLock : _hashLock,
             gasConsumed: _gasConsumed
         });
-
-        messageBox.inbox[_messageHash] = _status;
 
         messageHash_ = MockMessageBus.progressInbox(
             messageBox,
@@ -188,9 +177,7 @@ contract MessageBusTestWrapper {
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash,
-        MockMessageBus.MessageStatus _inboxStatus
+        MockMessageBus.MessageStatus _messageStatus
     )
         public
         returns(bytes32 messageHash_)
@@ -205,7 +192,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        messageBox.inbox[_messageHash] = _inboxStatus;
         messageHash_ = MockMessageBus.progressInboxRevocation(
             messageBox,
             message,
@@ -226,9 +212,7 @@ contract MessageBusTestWrapper {
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash,
-        MockMessageBus.MessageStatus _outboxStatus
+        MockMessageBus.MessageStatus _messageStatus
     )
         public
         returns(bytes32 messageHash_)
@@ -243,7 +227,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        messageBox.outbox[_messageHash] = _outboxStatus;
         messageHash_ = MockMessageBus.progressOutboxRevocation(
             messageBox,
             message,
@@ -263,9 +246,7 @@ contract MessageBusTestWrapper {
         address _sender,
         uint8 _messageBoxOffset,
         bytes _rlpEncodedParentNodes,
-        bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash
+        bytes32 _storageRoot
     )
         public
         returns(bytes32 messageHash_)
@@ -280,7 +261,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        messageBox.inbox[_messageHash] = _messageStatus;
         messageHash_ = MockMessageBus.confirmRevocation(
             messageBox,
             _messageTypeHash,
@@ -299,9 +279,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        uint8 _messageBoxOffset,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash
+        uint8 _messageBoxOffset
     )
         public
         returns(bytes32 messageHash_)
@@ -316,7 +294,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        messageBox.inbox[_messageHash] = _messageStatus;
         messageHash_ = MockMessageBus.confirmMessage(
             messageBox,
             _messageTypeHash,
@@ -336,9 +313,7 @@ contract MessageBusTestWrapper {
         uint256 _gasLimit,
         address _sender,
         bytes32 _hashLock,
-        uint256 _gasConsumed,
-        MockMessageBus.MessageStatus _status,
-        bytes32 _messageHash
+        uint256 _gasConsumed
     )
         public
         returns(bytes32 messageHash_)
@@ -353,7 +328,6 @@ contract MessageBusTestWrapper {
             hashLock : _hashLock,
             gasConsumed: _gasConsumed
             });
-        messageBox.outbox[_messageHash] = _status;
 
         messageHash_= MockMessageBus.declareRevocationMessage(
             messageBox,
@@ -371,9 +345,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash,
-        MockMessageBus.MessageStatus _outboxStatus
+        MockMessageBus.MessageStatus _messageStatus
     )
         public
         returns(bytes32 messageHash_)
@@ -388,9 +360,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        // When the state for messageHash in inbox is DeclaredRevocation
-        // with outbox state for messageHash is DeclaredRevocation
-        messageBox.outbox[_messageHash] = _outboxStatus;
         messageHash_ = MockMessageBus.progressOutboxWithProof(
             messageBox,
             _messageTypeHash,
@@ -411,9 +380,7 @@ contract MessageBusTestWrapper {
         address _sender,
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _messageHash,
-        MockMessageBus.MessageStatus _inboxStatus
+        MockMessageBus.MessageStatus _messageStatus
     )
         public
         returns(bytes32 messageHash_)
@@ -428,7 +395,6 @@ contract MessageBusTestWrapper {
             gasConsumed: 0
         });
 
-        messageBox.inbox[_messageHash] = _inboxStatus;
         messageHash_ = MockMessageBus.progressInboxWithProof(
             messageBox,
             _messageTypeHash,
@@ -438,6 +404,26 @@ contract MessageBusTestWrapper {
             _storageRoot,
             _messageStatus
         );
+    }
+
+    function getOutboxStatus(bytes32 _messageHash)
+        public
+        view
+        returns(uint256)
+    {
+
+        return uint256(messageBox.outbox[_messageHash]);
+
+    }
+
+    function getInboxStatus(bytes32 _messageHash)
+        public
+        view
+        returns(uint256)
+    {
+
+        return uint256(messageBox.inbox[_messageHash]);
+
     }
 
 }

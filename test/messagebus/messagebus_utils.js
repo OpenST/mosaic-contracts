@@ -1,7 +1,6 @@
 'use strict'
 
 const MessageBus = artifacts.require('MessageBusTestWrapper'),
-			web3 = require("web3"),
 			utils =  require("./utils");
 
 let messageBus;
@@ -16,7 +15,7 @@ MessageBusUtils.prototype = {
 		
 	},
 	
-	declareMessage: async function(params){
+	declareMessage: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
@@ -26,26 +25,40 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			hashLock = params.hashLock,
 			gasConsumed = params.gasConsumed,
-			signature = params.signature,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash;
-
-		await utils.expectThrow(messageBus.declareMessage.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			gasPrice,
-			gasLimit,
-			sender,
-			hashLock,
-			gasConsumed,
-			signature,
-			messageStatus,
-			messageHash
-		));
+			signature = params.signature;
+		
+		if(changeState === false) {
+			
+			await utils.expectThrow(messageBus.declareMessage.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				signature
+			));
+			
+		}
+		else{
+			
+			await messageBus.declareMessage(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				signature
+			);
+		}
 	},
 	
-	progressOutbox: async function(params){
+	progressOutbox: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
@@ -55,27 +68,79 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			hashLock = params.hashLock,
 			gasConsumed = params.gasConsumed,
-			signature = params.signature,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			unlockSecret = params.unlockSecret;
 		
-		await utils.expectThrow(messageBus.progressOutbox.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			gasPrice,
-			gasLimit,
-			sender,
-			hashLock,
-			gasConsumed,
-			messageStatus,
-			messageHash,
-			unlockSecret
-		));
+		if(changeState === false){
+			
+			await utils.expectThrow(messageBus.progressOutbox.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				unlockSecret
+			));
+			
+		}
+		else{
+			
+			await messageBus.progressOutbox(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				unlockSecret
+			);
+		}
 	},
 	
-	progressInbox: async function(params){
+	declareRevocationMessage: async function(params, changeState){
+		
+		let messageTypeHash = params.messageTypeHash,
+			intentHash = params.intentHash,
+			nonce = params.nonce,
+			gasPrice = params.gasPrice,
+			gasLimit = params.gasLimit,
+			sender = params.sender,
+			hashLock = params.hashLock,
+			gasConsumed = params.gasConsumed;
+		
+		if (changeState === false)
+		{
+			await utils.expectThrow(messageBus.declareRevocationMessage.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed
+			));
+		}
+		else
+		{
+			await messageBus.declareRevocationMessage(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed
+			);
+		}
+	},
+	
+	progressInbox: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
@@ -85,210 +150,278 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			hashLock = params.hashLock,
 			gasConsumed = params.gasConsumed,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			unlockSecret = params.unlockSecret;
 		
-		await utils.expectThrow(messageBus.progressInbox.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			gasPrice,
-			gasLimit,
-			sender,
-			hashLock,
-			gasConsumed,
-			messageStatus,
-			messageHash,
-			unlockSecret
-		));
-		
+		if(changeState === false) {
+			
+			await utils.expectThrow(messageBus.progressInbox.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				unlockSecret
+			));
+		}
+		else
+		{
+			
+			await messageBus.progressInbox(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				gasPrice,
+				gasLimit,
+				sender,
+				hashLock,
+				gasConsumed,
+				unlockSecret
+			);
+		}
 	},
 	
-	progressInboxRevocation: async function(params){
+	progressInboxRevocation: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
 			sender = params.sender,
 			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
-			storageRoot = params.storageRoot,
-			inboxStatus = params.inboxStatus;
+			storageRoot = params.storageRoot;
 		
-		await utils.expectThrow(messageBus.progressInboxRevocation.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			messageBoxOffset,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageStatus,
-			messageHash,
-			inboxStatus
-		));
+		if(changeState === false) {
+			
+			await utils.expectThrow(messageBus.progressInboxRevocation.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			));
+		}
+		else
+		{
+			await messageBus.progressInboxRevocation(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			)
+			
+		}
 	},
 	
-	progressOutboxRevocation: async function(params){
+	progressOutboxRevocation: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
 			sender = params.sender,
 			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
-			storageRoot = params.storageRoot,
-			inboxStatus = params.inboxStatus;
+			storageRoot = params.storageRoot;
 		
-		await utils.expectThrow(messageBus.progressOutboxRevocation.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			messageBoxOffset,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageStatus,
-			messageHash,
-			inboxStatus
-		));
+		if(changeState === false) {
+			
+			await utils.expectThrow(messageBus.progressOutboxRevocation.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			));
+		}
+		
+		else
+		{
+			await messageBus.progressOutboxRevocation(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			);
+		}
 	},
 	
-	confirmRevocation: async function(params){
+	confirmRevocation: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
 			storageRoot = params.storageRoot,
 			sender = params.sender;
 		
-		await utils.expectThrow(messageBus.confirmRevocation.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			messageBoxOffset,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageStatus,
-			messageHash
-		));
+		if(changeState === false) {
+			
+			await utils.expectThrow(messageBus.confirmRevocation.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot
+			));
+		}
+		else
+		{
+			
+			await messageBus.confirmRevocation(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				messageBoxOffset,
+				rlpEncodedParentNodes,
+				storageRoot,
+			);
+		
+		}
 	},
 	
-	confirmMessage: async function(params){
+	confirmMessage: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
 			sender = params.sender,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			storageRoot = params.storageRoot,
 			messageBoxOffset = params.messageBoxOffset;
 		
-		await (messageBus.confirmMessage.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageBoxOffset,
-			messageStatus,
-			messageHash
-		));
+		if(changeState === false)
+		{
+			await utils.expectThrow((messageBus.confirmMessage.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageBoxOffset
+			)));
+		}
+		else
+		{
+			await messageBus.confirmMessage(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageBoxOffset
+			);
+		}
 	},
 	
-	declareRevocationMessage: async function(params){
-		
-		let messageTypeHash = params.messageTypeHash,
-			intentHash = params.intentHash,
-			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
-			sender = params.sender,
-			hashLock = params.hashLock,
-			gasConsumed = params.gasConsumed,
-			signature = params.signature,
-			messageStatus = params.messageStatus,
-			messageHash = params.messageHash;
-		
-		await messageBus.declareRevocationMessage.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			gasPrice,
-			gasLimit,
-			sender,
-			hashLock,
-			gasConsumed,
-			signature,
-			messageStatus,
-			messageHash
-		);
-	},
-	
-	progressOutboxWithProof: async function(params){
+	progressOutboxWithProof: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
 			sender = params.sender,
 			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
-			storageRoot = params.storageRoot,
-			outboxStatus = params.outboxStatus;
+			storageRoot = params.storageRoot;
 		
-		await utils.expectThrow(messageBus.progressOutboxWithProof.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageStatus,
-			messageHash,
-			outboxStatus
-		));
+		if (changeState === false) {
+			
+			await utils.expectThrow(messageBus.progressOutboxWithProof.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			));
+		}
+		else
+		{
+			
+			await messageBus.progressOutboxWithProof(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			);
+			
+		}
 	},
 	
-	progressInboxWithProof: async function(params){
+	progressInboxWithProof: async function(params, changeState){
 		
 		let messageTypeHash = params.messageTypeHash,
 			intentHash = params.intentHash,
 			nonce = params.nonce,
-			gasPrice = params.gasPrice,
-			gasLimit = params.gasLimit,
 			sender = params.sender,
-			gasConsumed = params.gasConsumed,
 			messageStatus = params.messageStatus,
-			messageHash = params.messageHash,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
-			storageRoot = params.storageRoot,
-			inboxStatus = params.inboxStatus;
+			storageRoot = params.storageRoot;
 		
-		await utils.expectThrow(messageBus.progressInboxWithProof.call(
-			messageTypeHash,
-			intentHash,
-			nonce,
-			sender,
-			rlpEncodedParentNodes,
-			storageRoot,
-			messageStatus,
-			messageHash,
-			inboxStatus
-		));
+		if(changeState === false) {
+			await utils.expectThrow(messageBus.progressInboxWithProof.call(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			));
+		}
+		else
+		{
+			
+			await messageBus.progressInboxWithProof(
+				messageTypeHash,
+				intentHash,
+				nonce,
+				sender,
+				rlpEncodedParentNodes,
+				storageRoot,
+				messageStatus
+			);
+			
+		}
+	},
+	
+	getOutboxStatus : async function(msgHash){
+	
+		return messageBus.getOutboxStatus.call(msgHash);
+	
+	},
+	
+	getInboxStatus : async function(msgHash){
+		
+		return messageBus.getInboxStatus.call(msgHash);
+		
 	}
 };
 
