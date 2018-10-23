@@ -7,7 +7,7 @@ const MockGatewayBase = artifacts.require("MockGatewayBase");
 const MetaBlock = artifacts.require("../contracts/lib/MetaBlock.sol");
 const BlockStore = artifacts.require("../contracts/BlockStore.sol");
 const MockMessageBus = artifacts.require("./gateway/MockMessageBus.sol");
-const	MesssageBusTestWrapper = artifacts.require('./test/MessageBusWrapper');
+const	MessageBusWrapper = artifacts.require('./test/MessageBusWrapper');
 const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof');
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
@@ -29,7 +29,7 @@ module.exports = function(deployer) {
 	deployer.deploy(MockMerklePatriciaProof);
 	deployer.link(MockMerklePatriciaProof,MockMessageBus);
 	deployer.deploy(MockMessageBus);
-	deployer.link(MockMessageBus,MesssageBusTestWrapper);
+	deployer.link(MockMessageBus,MessageBusWrapper);
 	
 	// for merklepatricia unit test cases
 	deployer.deploy(MerklePatriciaProof);
