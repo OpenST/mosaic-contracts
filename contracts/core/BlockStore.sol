@@ -94,7 +94,7 @@ contract BlockStore is BlockStoreInterface {
     address public pollingPlace;
 
     /** A mapping of block hashes to their reported headers. */
-    mapping (bytes32 => Block.Header) private reportedBlocks;
+    mapping (bytes32 => Block.Header) internal reportedBlocks;
 
     /** A mapping of block headers to their recorded checkpoints. */
     mapping (bytes32 => Checkpoint) public checkpoints;
@@ -117,7 +117,7 @@ contract BlockStore is BlockStoreInterface {
     modifier onlyPollingPlace() {
         require(
             msg.sender == pollingPlace,
-            "This method must be called frome the registered polling place."
+            "This method must be called from the registered polling place."
         );
 
         _;
@@ -223,11 +223,7 @@ contract BlockStore is BlockStoreInterface {
         returns (bool success_)
     {
         Block.Header memory header = Block.decodeHeader(_blockHeaderRlp);
-        reportedBlocks[header.blockHash] = header;
-
-        emit BlockReported(header.blockHash);
-
-        success_ = true;
+        success_ = reportBlock_(header);
     }
 
     /**
@@ -278,9 +274,9 @@ contract BlockStore is BlockStoreInterface {
     /**
      * @notice Returns the state root of the block that is stored at the given
      *         height. The height must be <= the height of the latest finalised
-     *         checkpoint.
+     *         checkpoint. Only state roots of checkpoints are known.
      *
-     * @param _height The blockheight.
+     * @param _height The block height.
      *
      * @return The state root of the block at the given height.
      */
@@ -299,6 +295,11 @@ contract BlockStore is BlockStoreInterface {
         require(
             _height >= startingHeight,
             "The state root is only known from the starting height upwards."
+        );
+
+        require(
+            isAtCheckpointHeight(_height),
+            "The height must be at a valid checkpoint height."
         );
 
         /*
@@ -395,7 +396,87 @@ contract BlockStore is BlockStoreInterface {
         view
         returns (bool reported_)
     {
-        reported_ = reportedBlocks[_blockHash].blockHash == _blockHash;
+        reported_ = isReported(_blockHash);
+    }
+
+    /* Internal Functions */
+
+    /**
+     * @notice Report a block. A reported block header is stored and can then
+     *         be part of subsequent votes.
+     *
+     * @param _header The header object of the reported block.
+     */
+    function reportBlock_(
+        Block.Header memory _header
+    )
+        internal
+        returns (bool success_)
+    {
+        reportedBlocks[_header.blockHash] = _header;
+
+        emit BlockReported(_header.blockHash);
+
+        success_ = true;
+    }
+
+    /**
+     * @notice Returns true if the given block hash corresponds to a block that
+     *         has been reported.
+     *
+     * @param _blockHash The block hash to check.
+     *
+     * @return `true` if the given block hash was reported before.
+     */
+    function isReported(
+        bytes32 _blockHash
+    )
+        internal
+        view
+        returns (bool wasReported_)
+    {
+        wasReported_ = reportedBlocks[_blockHash].blockHash == _blockHash;
+    }
+
+    /**
+     * @notice Checks if a target block is valid. The same criteria apply for
+     *         voting and justifying, as justifying results from voting.
+     *
+     * @param _sourceBlockHash The hash of the corresponding source.
+     * @param _targetBlockHash The hash of the potential target block.
+     *
+     * @return valid_ `true` if the given block hash is a valid target.
+     * @return reason_ Gives the reason in case the block is not a valid target.
+     */
+    function isTargetValid(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        internal
+        view
+        returns (bool valid_, string reason_)
+    {
+        if (!isReported(_targetBlockHash)) {
+            valid_ = false;
+            reason_ = "The target block must first be reported.";
+        } else if (!isAtCheckpointHeight(_targetBlockHash)) {
+            valid_ = false;
+            reason_ = "The target must be at a height that is a multiple of the epoch length.";
+        } else if (!isAboveHead(_targetBlockHash)) {
+            valid_ = false;
+            reason_ = "The target must be higher than the head.";
+        } else if (!isAbove(_targetBlockHash, _sourceBlockHash)) {
+            valid_ = false;
+            reason_ = "The target must be above the source in height.";
+        } else if (
+            isCheckpoint(_targetBlockHash) &&
+            !isParentCheckpoint(_sourceBlockHash, _targetBlockHash)
+        ) {
+            valid_ = false;
+            reason_ = "The target must not be justified already with a different source.";
+        } else {
+            valid_ = true;
+        }
     }
 
     /* Private Functions */
@@ -445,59 +526,6 @@ contract BlockStore is BlockStoreInterface {
     }
 
     /**
-     * @notice Checks if a target block is valid. The same criteria apply for
-     *         voting and justifying, as justifying results from voting.
-     *
-     * @param _sourceBlockHash The hash of the corresponding source.
-     * @param _targetBlockHash The hash of the potential target block.
-     *
-     * @return valid_ `true` if the given block hash is a valid target.
-     * @return reason_ Gives the reason in case the block is not a valid target.
-     */
-    function isTargetValid(
-        bytes32 _sourceBlockHash,
-        bytes32 _targetBlockHash
-    )
-        private
-        view
-        returns (bool valid_, string reason_)
-    {
-        if (!isReported(_targetBlockHash)) {
-            valid_ = false;
-            reason_ = "The target block must first be reported.";
-        } else if (!isAtCheckpointHeight(_targetBlockHash)) {
-            valid_ = false;
-            reason_ = "The target must be at a height that is a multiple of the epoch length.";
-        } else if (!isAboveHead(_targetBlockHash)) {
-            valid_ = false;
-            reason_ = "The target must be higher than the head.";
-        } else if (!isAbove(_targetBlockHash, _sourceBlockHash)) {
-            valid_ = false;
-            reason_ = "The target must be above the source in height.";
-        } else {
-            valid_ = true;
-        }
-    }
-
-    /**
-     * @notice Returns true if the given block hash corresponds to a block that
-     *         has been reported.
-     *
-     * @param _blockHash The block hash to check.
-     *
-     * @return `true` if the given block hash was reported before.
-     */
-    function isReported(
-        bytes32 _blockHash
-    )
-        private
-        view
-        returns (bool wasReported_)
-    {
-        wasReported_ = reportedBlocks[_blockHash].blockHash == _blockHash;
-    }
-
-    /**
      * @notice Returns true if the given block hash corresponds to a checkpoint
      *         that has been justified.
      *
@@ -529,10 +557,28 @@ contract BlockStore is BlockStoreInterface {
     )
         private
         view
-        returns (bool atBlockChainHeight_)
+        returns (bool atCheckpointHeight_)
     {
         uint256 blockHeight = reportedBlocks[_blockHash].height;
-        atBlockChainHeight_ = blockHeight.mod(epochLength) == 0;
+        atCheckpointHeight_ = isAtCheckpointHeight(blockHeight);
+    }
+
+    /**
+     * @notice Returns true if the given height corresponds to a valid
+     *         checkpoint height (multiple of the epoch length).
+     *
+     * @param _height The block height to check.
+     *
+     * @return `true` if the given block height is at a valid height.
+     */
+    function isAtCheckpointHeight(
+        uint256 _height
+    )
+        private
+        view
+        returns (bool atCheckpointHeight_)
+    {
+        atCheckpointHeight_ = _height.mod(epochLength) == 0;
     }
 
     /**
@@ -628,5 +674,45 @@ contract BlockStore is BlockStoreInterface {
         );
 
         valid_ = _transitionHash == expectedHash;
+    }
+
+    /**
+     * @notice Checks whether the given block hash represents a justified
+     *         checkpoint.
+     *
+     * @param _blockHash The block hash for which to check.
+     *
+     * @return isCheckpoint_ `true` if the block hash represents a justified
+     *                       checkpoint.
+     */
+    function isCheckpoint(
+        bytes32 _blockHash
+    )
+        private
+        view
+        returns (bool isCheckpoint_)
+    {
+        isCheckpoint_ = checkpoints[_blockHash].blockHash == _blockHash;
+    }
+
+    /**
+     * @notice Checks whether the older checkpoint is the parent of the
+     *         younger checkpoint.
+     *
+     * @param _olderBlockHash The block hash representing the older checkpoint.
+     * @param _youngerBlockHash The block hash representing the younger
+     *                          checkpoint.
+     *
+     * @return isParent_ `true` if the older is the parent of the younger.
+     */
+    function isParentCheckpoint(
+        bytes32 _olderBlockHash,
+        bytes32 _youngerBlockHash
+    )
+        private
+        view
+        returns (bool isParent_)
+    {
+        isParent_ = checkpoints[_youngerBlockHash].parent == _olderBlockHash;
     }
 }
