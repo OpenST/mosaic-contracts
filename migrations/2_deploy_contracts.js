@@ -17,8 +17,6 @@ const ProofLibTest = artifacts.require('./ProofLibTest.sol');
 module.exports = function(deployer) {
 	
 	deployer.deploy(MerklePatriciaProof);
-	deployer.link(MerklePatriciaProof, ProofLib);
-	deployer.deploy(ProofLib);
 	deployer.link(ProofLib, ProofLibTest);
 	deployer.link(MerklePatriciaProof, ProofLibTest);
 	deployer.deploy(ProofLibTest);
