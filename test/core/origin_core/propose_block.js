@@ -20,8 +20,6 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../test_lib/web3.js');
-
-const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
@@ -217,7 +215,7 @@ contract('propose meta-block', async (accounts) => {
     it('should not be able to propose meta-block if transition root is' +
          ' not defined', async function () {
 
-        transactionRoot = "0x00000000000000000000000000000000";
+        transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
              originCore.proposeBlock(
@@ -238,7 +236,7 @@ contract('propose meta-block', async (accounts) => {
     it('should not be able to propose meta-block if origin BlockHash is' +
          ' not defined', async function () {
 
-        originBlockHash = "0x00000000000000000000000000000000";
+        originBlockHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
              originCore.proposeBlock(
@@ -280,7 +278,7 @@ contract('propose meta-block', async (accounts) => {
     it('should not be able to propose meta-block if kernel Hash is' +
          ' not defined', async function () {
 
-        kernelHash = "0x00000000000000000000000000000000";
+        kernelHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
              originCore.proposeBlock(
