@@ -363,7 +363,8 @@ contract PollingPlace is PollingPlaceInterface {
             _targetHeight,
             _v,
             _r,
-            _s);
+            _s
+        );
 
         bytes32 voteHash = hashVote(voteObject.voteMessage);
 
