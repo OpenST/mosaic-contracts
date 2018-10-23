@@ -12,35 +12,38 @@ const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProo
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
 const ProofLib = artifacts.require('./ProofLib');
-const ProofLibTest = artifacts.require('./ProofLibTest');
+const ProofLibTest = artifacts.require('./ProofLibTest.sol');
 
 module.exports = function(deployer) {
 	
 	deployer.deploy(MerklePatriciaProof);
 	deployer.link(MerklePatriciaProof, ProofLib);
 	deployer.deploy(ProofLib);
-	deployer.deploy(ProofLib, ProofLibTest);
-	deployer.link(MerklePatriciaProof, MessageBus);
-	deployer.deploy(MessageBus);
-	deployer.link(MerklePatriciaProof, GatewayLib);
-	deployer.deploy(GatewayLib);
-	deployer.deploy(MockGatewayLib);
-	deployer.link(GatewayLib, [GatewayBase, Gateway]);
-	deployer.link(MessageBus, [Gateway]);
-	deployer.link(MockGatewayLib, [MockGatewayBase]);
-	deployer.deploy(MetaBlock);
-	deployer.link(MetaBlock, BlockStore);
+	deployer.link(ProofLib, ProofLibTest);
+	deployer.link(MerklePatriciaProof, ProofLibTest);
+	deployer.deploy(ProofLibTest);
 	
-	
-	deployer.deploy(MockMerklePatriciaProof);
-	deployer.link(MockMerklePatriciaProof,MockMessageBus);
-	deployer.deploy(MockMessageBus);
-	deployer.link(MockMessageBus,MessageBusWrapper);
-	
-	// for merklepatricia unit test cases
-	// deployer.deploy(MerklePatriciaProof);
-	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
-	
+	// deployer.link(MerklePatriciaProof, MessageBus);
+	// deployer.deploy(MessageBus);
+	// deployer.link(MerklePatriciaProof, GatewayLib);
+	// deployer.deploy(GatewayLib);
+	// deployer.deploy(MockGatewayLib);
+	// deployer.link(GatewayLib, [GatewayBase, Gateway]);
+	// deployer.link(MessageBus, [Gateway]);
+	// deployer.link(MockGatewayLib, [MockGatewayBase]);
+	// deployer.deploy(MetaBlock);
+	// deployer.link(MetaBlock, BlockStore);
+	//
+	//
+	// deployer.deploy(MockMerklePatriciaProof);
+	// deployer.link(MockMerklePatriciaProof,MockMessageBus);
+	// deployer.deploy(MockMessageBus);
+	// deployer.link(MockMessageBus,MessageBusWrapper);
+	//
+	// // for merklepatricia unit test cases
+	// // deployer.deploy(MerklePatriciaProof);
+	// deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
+	//
 };
 
 
