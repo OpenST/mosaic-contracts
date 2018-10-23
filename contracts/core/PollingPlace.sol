@@ -73,7 +73,12 @@ contract PollingPlace is PollingPlaceInterface {
     /** Vote message */
     struct VoteMessage {
 
-        /** A unique identifier that identifies what chain this vote is about. */
+        /**
+         * A unique identifier that identifies what chain this vote is about.
+         * To generate the vote hash coreIdentifier is needed. As the votes are
+         * for both origin and auxiliary chain, the core identifier information
+         * is stored in this struct.
+         */
         bytes20 coreIdentifier;
 
         /**
