@@ -365,7 +365,12 @@ contract PollingPlace is PollingPlaceInterface {
             _r,
             _s);
 
-        Validator storage validator = getValidatorFromVote(voteObject);
+        bytes32 voteHash = hashVote(voteObject.voteMessage);
+
+        Validator storage validator = getValidatorFromVote(
+            voteObject,
+            voteHash
+        );
 
         require(validator.auxiliaryAddress != address(0), "Vote by unknown validator.");
 
@@ -376,6 +381,7 @@ contract PollingPlace is PollingPlaceInterface {
 
         storeVote(
             voteObject,
+            voteHash,
             validator,
             blockStore
         );
@@ -468,22 +474,29 @@ contract PollingPlace is PollingPlaceInterface {
      *         store.
      *
      * @dev All requirement checks must have been made before calling this
-     *      method.
+     *      method. As this function is private, we can trust that vote hash
+     *      will be correct. In case if this function changes to external or
+     *      public then we should calculate the vote hash from the vote object in this
+     *      function.
+     *
      *
      * @param _voteObject Vote object.
+     * @param _voteHash Hash of the VoteMessage.
+     * @param _validator The validator that signed the vote.
+     * @param _blockStore The block store that this vote is about.
      */
     function storeVote(
         Vote memory _voteObject,
+        bytes32 _voteHash,
         Validator storage _validator,
         BlockStoreInterface _blockStore
     )
         private
     {
         VoteMessage memory voteMessage = _voteObject.voteMessage;
-        bytes32 voteHash = hashVote(_voteObject.voteMessage);
 
         validatorTargetHeights[_validator.auxiliaryAddress] = voteMessage.targetHeight;
-        votesWeights[voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
+        votesWeights[_voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
 
         /*
          * Because the target must be within the currently open meta-block, the
@@ -491,7 +504,7 @@ contract PollingPlace is PollingPlaceInterface {
          */
         uint256 required = requiredWeight(currentMetaBlockHeight);
         
-        if (votesWeights[voteHash] >= required) {
+        if (votesWeights[_voteHash] >= required) {
             _blockStore.justify(voteMessage.source, voteMessage.target);
         }
     }
@@ -518,19 +531,24 @@ contract PollingPlace is PollingPlaceInterface {
      * @notice Uses the signature of a vote to recover the public address of
      *         the signer.
      *
+     * @dev As this function is private, we can trust that vote hash will be
+     *      correct. In case if this function changes to external or public
+     *      then we should calculate the vote hash from the vote object in this
+     *      function.
+     *
      * @param _voteObject Vote object.
+     * @param _voteHash Hash of vote message.
      *
      * @return The `Validator` that signed the given message with the given
      *         signature.
      */
-    function getValidatorFromVote(Vote memory _voteObject)
+    function getValidatorFromVote(Vote memory _voteObject, bytes32 _voteHash)
         private
         view
         returns (Validator storage validator_)
     {
-        bytes32 voteHash = hashVote(_voteObject.voteMessage);
         address signer = ecrecover(
-            voteHash,
+            _voteHash,
             _voteObject.v,
             _voteObject.r,
             _voteObject.s
@@ -659,6 +677,7 @@ contract PollingPlace is PollingPlaceInterface {
         bytes32 _s
     )
         private
+        pure
         returns (Vote memory voteObject_)
     {
         VoteMessage memory voteMessage = VoteMessage(
