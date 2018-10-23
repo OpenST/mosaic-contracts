@@ -74,16 +74,26 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _initialValidators The array of addresses of the validators.
      * @param _validatorsWeights The array of weights that corresponds to
      *                        the updated validators.
+     * @param _initialAuxiliaryGas Initial gas consumed on auxiliary before
+     *                             reporting genesis meta-block.
+     * @param _initialTransactionRoot Transaction root of auxiliary chain
+     *                                before reporting genesis meta-block.
      */
     constructor(
         bytes32 _auxiliaryCoreIdentifier,
         address _ost,
         address[] _initialValidators,
-        uint256[] _validatorsWeights
+        uint256[] _validatorsWeights,
+        uint256 _initialAuxiliaryGas,
+        bytes32 _initialTransactionRoot
     )
         public
     {
         require(_ost != address(0), "Address for OST should not be zero.");
+        require(
+            _initialTransactionRoot != bytes32(0),
+            "Auxiliary transaction root should be defined."
+        );
 
         auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
         Ost = OstInterface(_ost);
@@ -95,7 +105,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _initialValidators,
             _validatorsWeights
         );
-        head = reportGenesisBlock(_initialValidators, _validatorsWeights);
+        head = reportGenesisBlock(
+            _initialValidators,
+            _validatorsWeights,
+            _initialAuxiliaryGas,
+            _initialTransactionRoot
+        );
     }
 
     /* External Functions */
@@ -310,12 +325,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *
      * @param _initialValidators initial validators addresses.
      * @param _validatorsWeights initial validators weights.
+     * @param _initialAuxiliaryGas Initial gas consumed on auxiliary before
+     *                             reporting genesis meta-block.
+     * @param _initialTransactionRoot Transaction root of auxiliary chain
+     *                                before reporting genesis meta-block.
      *
      * @return bytes32 head of meta-block chain pointing to genesis block.
+
      */
     function reportGenesisBlock(
         address[] _initialValidators,
-        uint256[] _validatorsWeights
+        uint256[] _validatorsWeights,
+        uint256 _initialAuxiliaryGas,
+        bytes32 _initialTransactionRoot
     )
         private
         returns (bytes32)
@@ -338,17 +360,17 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
         /*
          * Transition object for genesis block with all parameter as 0 except
-         * auxiliaryCoreIdentifier and kernel Hash.
+         * auxiliaryCoreIdentifier, kernel Hash, gas and transactionRoot.
          */
         MetaBlock.AuxiliaryTransition memory genesisTransition = MetaBlock.AuxiliaryTransition(
             auxiliaryCoreIdentifier,
             kernelHash,
             0,
             bytes32(0),
-            0,
+            _initialAuxiliaryGas,
             0,
             bytes32(0),
-            bytes32(0)
+            _initialTransactionRoot
         );
 
         reportedHeaders[kernelHash] = MetaBlock.Header(genesisKernel, genesisTransition);
