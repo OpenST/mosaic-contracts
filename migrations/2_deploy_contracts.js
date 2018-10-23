@@ -11,12 +11,15 @@ const	MessageBusWrapper = artifacts.require('./test/MessageBusWrapper');
 const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof');
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
-
-
-
+const ProofLib = artifacts.require('./ProofLib');
+const ProofLibTest = artifacts.require('./ProofLibTest');
 
 module.exports = function(deployer) {
+	
 	deployer.deploy(MerklePatriciaProof);
+	deployer.link(MerklePatriciaProof, ProofLib);
+	// deployer.deploy(ProofLib);
+	// deployer.
 	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
 	deployer.link(MerklePatriciaProof, GatewayLib);
@@ -37,8 +40,6 @@ module.exports = function(deployer) {
 	// for merklepatricia unit test cases
 	// deployer.deploy(MerklePatriciaProof);
 	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
-	
-	
 	
 };
 
