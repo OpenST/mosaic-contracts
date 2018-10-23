@@ -23,27 +23,26 @@ module.exports = function(deployer) {
 	deployer.link(MerklePatriciaProof, ProofLibTest);
 	deployer.deploy(ProofLibTest);
 	
-	// deployer.link(MerklePatriciaProof, MessageBus);
-	// deployer.deploy(MessageBus);
-	// deployer.link(MerklePatriciaProof, GatewayLib);
-	// deployer.deploy(GatewayLib);
-	// deployer.deploy(MockGatewayLib);
-	// deployer.link(GatewayLib, [GatewayBase, Gateway]);
-	// deployer.link(MessageBus, [Gateway]);
-	// deployer.link(MockGatewayLib, [MockGatewayBase]);
-	// deployer.deploy(MetaBlock);
-	// deployer.link(MetaBlock, BlockStore);
-	//
-	//
-	// deployer.deploy(MockMerklePatriciaProof);
-	// deployer.link(MockMerklePatriciaProof,MockMessageBus);
-	// deployer.deploy(MockMessageBus);
-	// deployer.link(MockMessageBus,MessageBusWrapper);
-	//
-	// // for merklepatricia unit test cases
-	// // deployer.deploy(MerklePatriciaProof);
-	// deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
-	//
+	deployer.link(MerklePatriciaProof, MessageBus);
+	deployer.deploy(MessageBus);
+	deployer.link(MerklePatriciaProof, GatewayLib);
+	deployer.deploy(GatewayLib);
+	deployer.deploy(MockGatewayLib);
+	deployer.link(GatewayLib, [GatewayBase, Gateway]);
+	deployer.link(MessageBus, [Gateway]);
+	deployer.link(MockGatewayLib, [MockGatewayBase]);
+	deployer.deploy(MetaBlock);
+	deployer.link(MetaBlock, BlockStore);
+
+
+	deployer.deploy(MockMerklePatriciaProof);
+	deployer.link(MockMerklePatriciaProof,MockMessageBus);
+	deployer.deploy(MockMessageBus);
+	deployer.link(MockMessageBus,MessageBusWrapper);
+
+	// for merklepatricia unit test cases
+	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
+
 };
 
 
