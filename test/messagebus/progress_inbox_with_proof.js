@@ -22,7 +22,6 @@
 const messageBusUtilsKlass = require('./messagebus_utils'),
 	web3 = require('web3');
 const messageBusUtils = new messageBusUtilsKlass();
-// const hasher = artifacts.require('./Hasher');
 const ProgressInboxWithProof = function(){};
 
 var params,
@@ -102,7 +101,6 @@ var params,
 				' status inbox  is undeclared', async () => {
 
 				params.messageStatus = MessageStatusEnum.Undeclared;
-				// inboxStatus = 0;
 				await messageBusUtils.progressInboxWithProof(params, false);
 
 			});

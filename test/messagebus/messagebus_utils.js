@@ -383,7 +383,8 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			hashLock = params.hashLock;
 		
 		if(changeState === false) {
 			await utils.expectThrow(messageBus.progressInboxWithProof.call(
@@ -393,7 +394,8 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			));
 		}
 		else
@@ -406,7 +408,8 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			);
 			
 		}
