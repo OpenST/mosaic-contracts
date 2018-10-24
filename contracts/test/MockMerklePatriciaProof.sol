@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-/*
+/**
  * @title MerklePatriciaVerifier
  * @author Sam Mayo (sammayo888@gmail.com)
  *
@@ -8,7 +8,7 @@ pragma solidity ^0.4.23;
  */
 
 library MockMerklePatriciaProof {
-    /*
+    /**
      * @dev Mock for merkle patricia proof verifier.
      * @param value The terminating value in the trie.
      * @param encodedPath The path in the trie leading to value.
@@ -24,8 +24,7 @@ library MockMerklePatriciaProof {
     )
         external
         pure
-        returns
-        (bool)
+        returns (bool)
     {
         return true;
     }

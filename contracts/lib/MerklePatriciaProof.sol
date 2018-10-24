@@ -1,5 +1,5 @@
 pragma solidity ^0.4.23;
-/*
+/**
  * @title MerklePatriciaVerifier
  * @author Sam Mayo (sammayo888@gmail.com)
  *
@@ -9,7 +9,7 @@ pragma solidity ^0.4.23;
 import "./RLP.sol";
 
 library MerklePatriciaProof {
-    /*
+    /**
      * @dev Verifies a merkle patricia proof.
      * @param value The terminating value in the trie.
      * @param encodedPath The path in the trie leading to value.

@@ -193,13 +193,13 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _messageBoxOffset position of the messageBox.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 * @param _hashLock Hash lock.
-	 *
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+     *                               messageBox inbox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     * @param _hashLock Hash lock.
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxRevocation(
@@ -250,10 +250,10 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof.
-	 * @param _hashLock Hash lock.
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof.
+     * @param _hashLock Hash lock.
      *
      * @return messageHash_ Message hash
      */
@@ -301,10 +301,10 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof.
-	 * @param _hashLock Hash lock.
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof.
+     * @param _hashLock Hash lock.
      *
      * @return messageHash_ Message hash
      */
@@ -405,12 +405,12 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 * @param _hashLock Hash lock.
-	 *
+     *                               messageBox inbox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     * @param _hashLock Hash lock.
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxWithProof(
@@ -421,7 +421,8 @@ contract MessageBusWrapper {
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _hashLock
+        bytes32 _hashLock,
+        uint8 _messageBoxOffset
     )
         public
         returns(bytes32 messageHash_)
@@ -441,7 +442,7 @@ contract MessageBusWrapper {
             _messageTypeHash,
             message,
             _rlpEncodedParentNodes,
-            1,
+            _messageBoxOffset,
             _storageRoot,
             _messageStatus
         );
@@ -462,10 +463,10 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the outbox of
-	 *                       source chain
+     *                               messageBox outbox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the outbox of
+     *                       source chain
 	 *
      * @return messageHash_ Message hash
      */
@@ -477,7 +478,8 @@ contract MessageBusWrapper {
         bytes _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
-        bytes32 _hashLock
+        bytes32 _hashLock,
+        uint8 _messageBoxOffset
     )
         public
         returns(bytes32 messageHash_)
@@ -497,7 +499,7 @@ contract MessageBusWrapper {
             _messageTypeHash,
             message,
             _rlpEncodedParentNodes,
-            1,
+            _messageBoxOffset,
             _storageRoot,
             _messageStatus
         );

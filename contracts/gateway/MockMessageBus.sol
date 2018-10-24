@@ -155,9 +155,9 @@ library MockMessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
      *
      * @return messageHash_ Message hash
      */
@@ -220,7 +220,7 @@ library MockMessageBus {
      * @param _message Message object
      * @param _unlockSecret unlock secret for the hash lock provided while
      *                      declaration
-	 *
+     *
      * @return messageHash_ Message hash
      */
     function progressOutbox(
@@ -270,12 +270,12 @@ library MockMessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
+     *                               messageBox inbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxWithProof(
@@ -398,12 +398,12 @@ library MockMessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the outbox of
-	 *                       source chain
-	 *
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the outbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
 
@@ -480,7 +480,7 @@ library MockMessageBus {
         bytes _signature,
         address _signer
     )
-        internal
+        private
         pure
         returns (bool /*success*/)
     {
@@ -595,9 +595,9 @@ library MockMessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
      *
      * @return messageHash_ Message hash
      */
@@ -663,12 +663,12 @@ library MockMessageBus {
      * @param _message Message object
      * @param _messageTypeHash Message type hash
      * @param _messageBoxOffset position of the messageBox.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+     *                               messageBox inbox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxRevocation(
@@ -733,18 +733,18 @@ library MockMessageBus {
     }
 
     /**
-	 * @notice Change inbox state to the next possible state
-	 *
-	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
-	 *      Undeclared -> Declared, Declared -> Progressed,
-	 *      DeclaredRevocation -> Revoked
-	 *
-	 * @param _messageBox Message box.
-	 * @param _messageHash Message hash
-	 *
-	 * @return isChanged_ `true` if the state is changed
-	 * @return nextState_ Next state to which its changed
-	 */
+     * @notice Change inbox state to the next possible state
+     *
+     * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+     *      Undeclared -> Declared, Declared -> Progressed,
+     *      DeclaredRevocation -> Revoked
+     *
+     * @param _messageBox Message box.
+     * @param _messageHash Message hash
+     *
+     * @return isChanged_ `true` if the state is changed
+     * @return nextState_ Next state to which its changed
+     */
     function changeInboxState(
         MessageBox storage _messageBox,
         bytes32 _messageHash
@@ -775,18 +775,18 @@ library MockMessageBus {
     }
 
     /**
-	 * @notice Change outbox state to the next possible state
-	 *
-	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
-	 *      Undeclared -> Declared, Declared -> Progressed,
-	 *      DeclaredRevocation -> Revoked
-	 *
-	 * @param _messageBox Message box.
-	 * @param _messageHash Message hash
-	 *
-	 * @return isChanged_ `true` if the state is changed
-	 * @return nextState_ Next state to which its changed
-	 */
+     * @notice Change outbox state to the next possible state
+     *
+     * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+     *      Undeclared -> Declared, Declared -> Progressed,
+     *      DeclaredRevocation -> Revoked
+     *
+     * @param _messageBox Message box.
+     * @param _messageHash Message hash
+     *
+     * @return isChanged_ `true` if the state is changed
+     * @return nextState_ Next state to which its changed
+     */
     function changeOutboxState(
         MessageBox storage _messageBox,
         bytes32 _messageHash
@@ -842,11 +842,11 @@ library MockMessageBus {
 
 
     /**
-     *	@notice Convert bytes32 to bytes
+     * @notice Convert bytes32 to bytes
      *
-     *	@param _inBytes32 bytes32 value
+     * @param _inBytes32 bytes32 value
      *
-     *	@return bytes value
+     * @return bytes value
      */
     function bytes32ToBytes(bytes32 _inBytes32)
         private
@@ -860,7 +860,7 @@ library MockMessageBus {
         return res;
     }
 
-    /*
+    /**
      * @notice Get the storage path of the variable inside the struct
      *
      * @param _structPosition Position of struct variable
@@ -896,6 +896,4 @@ library MockMessageBus {
     }
 
 }
-
-
 

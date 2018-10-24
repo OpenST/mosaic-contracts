@@ -360,7 +360,8 @@ MessageBusUtils.prototype = {
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			storageRoot = params.storageRoot,
-			hashLock = params.hashLock;
+			hashLock = params.hashLock,
+			messageBoxOffset = params.messageBoxOffset;;
 		
 		if (changeState === false) {
 			
@@ -372,7 +373,8 @@ MessageBusUtils.prototype = {
 				rlpEncodedParentNodes,
 				storageRoot,
 				messageStatus,
-				hashLock
+				hashLock,
+				messageBoxOffset
 			));
 		}
 		else
@@ -386,7 +388,8 @@ MessageBusUtils.prototype = {
 				rlpEncodedParentNodes,
 				storageRoot,
 				messageStatus,
-				hashLock
+				hashLock,
+				messageBoxOffset
 			);
 			
 		}
@@ -401,7 +404,8 @@ MessageBusUtils.prototype = {
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			storageRoot = params.storageRoot,
-			hashLock = params.hashLock;
+			hashLock = params.hashLock,
+			messageBoxOffset = params.messageBoxOffset;
 		
 		if(changeState === false) {
 			await utils.expectThrow(messageBus.progressInboxWithProof.call(
@@ -412,7 +416,8 @@ MessageBusUtils.prototype = {
 				rlpEncodedParentNodes,
 				storageRoot,
 				messageStatus,
-				hashLock
+				hashLock,
+				messageBoxOffset
 			));
 		}
 		else
@@ -426,7 +431,8 @@ MessageBusUtils.prototype = {
 				rlpEncodedParentNodes,
 				storageRoot,
 				messageStatus,
-				hashLock
+				hashLock,
+				messageBoxOffset
 			);
 			
 		}
