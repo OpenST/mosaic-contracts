@@ -226,7 +226,7 @@ contract EIP20Gateway is Gateway {
         public
     {
         // deploy simpleStake contract that will keep the staked amounts.
-        stakeVault = new SimpleStake(token, address(this));
+        stakeVault = new SimpleStake(_token, address(this));
     }
 
     /* External functions */
@@ -347,10 +347,16 @@ contract EIP20Gateway is Gateway {
         );
 
         //transfer staker amount to gateway
-        require(token.transferFrom(_staker, address(this), _amount));
+        require(
+            token.transferFrom(_staker, address(this), _amount),
+            "Stake amount must be transferred to gateway"
+        );
 
         // transfer the bounty amount
-        require(baseToken.transferFrom(msg.sender, address(this), bounty));
+        require(
+            baseToken.transferFrom(msg.sender, address(this), bounty),
+            "Bounty amount must be transferred to gateway"
+        );
 
         // Emit StakingIntentDeclared event
         emit StakingIntentDeclared(
