@@ -22,7 +22,6 @@
 const messageBusUtilsKlass = require('./messagebus_utils'),
 	web3 = require('web3');
 const messageBusUtils = new messageBusUtilsKlass();
-const ProgressInboxWithProof = function(){};
 
 var params,
 	intentHash,
@@ -39,8 +38,7 @@ var params,
 	unlockSecret,
 	hashLock,
 	rlpEncodedParentNodes,
-	storageRoot,
-	inboxStatus;
+	storageRoot;
 
 	let MessageStatusEnum = {
 	

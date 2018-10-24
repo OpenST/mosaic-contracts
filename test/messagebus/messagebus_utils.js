@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const MessageBus = artifacts.require('MessageBusWrapper'),
 			utils =  require("./utils");
@@ -192,7 +192,8 @@ MessageBusUtils.prototype = {
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			hashLock = params.hashLock;
 		
 		if(changeState === false) {
 			
@@ -204,7 +205,8 @@ MessageBusUtils.prototype = {
 				messageBoxOffset,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			));
 		}
 		else
@@ -217,7 +219,8 @@ MessageBusUtils.prototype = {
 				messageBoxOffset,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			)
 			
 		}
@@ -232,7 +235,8 @@ MessageBusUtils.prototype = {
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			hashLock = params.hashLock;
 		
 		if(changeState === false) {
 			
@@ -244,7 +248,8 @@ MessageBusUtils.prototype = {
 				messageBoxOffset,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			));
 		}
 		
@@ -258,7 +263,8 @@ MessageBusUtils.prototype = {
 				messageBoxOffset,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			);
 		}
 	},
@@ -271,7 +277,8 @@ MessageBusUtils.prototype = {
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			messageBoxOffset = params.messageBoxOffset,
 			storageRoot = params.storageRoot,
-			sender = params.sender;
+			sender = params.sender,
+			hashLock = params.hashLock;
 		
 		if(changeState === false) {
 			
@@ -282,7 +289,8 @@ MessageBusUtils.prototype = {
 				sender,
 				messageBoxOffset,
 				rlpEncodedParentNodes,
-				storageRoot
+				storageRoot,
+				hashLock
 			));
 		}
 		else
@@ -296,6 +304,7 @@ MessageBusUtils.prototype = {
 				messageBoxOffset,
 				rlpEncodedParentNodes,
 				storageRoot,
+				hashLock
 			);
 		
 		}
@@ -309,10 +318,12 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
 			storageRoot = params.storageRoot,
-			messageBoxOffset = params.messageBoxOffset;
+			messageBoxOffset = params.messageBoxOffset,
+			hashLock = params.hashLock;
 		
 		if(changeState === false)
 		{
+			
 			await utils.expectThrow((messageBus.confirmMessage.call(
 				messageTypeHash,
 				intentHash,
@@ -320,8 +331,10 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageBoxOffset
+				messageBoxOffset,
+				hashLock
 			)));
+			
 		}
 		else
 		{
@@ -332,7 +345,8 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageBoxOffset
+				messageBoxOffset,
+				hashLock
 			);
 		}
 	},
@@ -345,7 +359,8 @@ MessageBusUtils.prototype = {
 			sender = params.sender,
 			messageStatus = params.messageStatus,
 			rlpEncodedParentNodes = params.rlpEncodedParentNodes,
-			storageRoot = params.storageRoot;
+			storageRoot = params.storageRoot,
+			hashLock = params.hashLock;
 		
 		if (changeState === false) {
 			
@@ -356,7 +371,8 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			));
 		}
 		else
@@ -369,7 +385,8 @@ MessageBusUtils.prototype = {
 				sender,
 				rlpEncodedParentNodes,
 				storageRoot,
-				messageStatus
+				messageStatus,
+				hashLock
 			);
 			
 		}
