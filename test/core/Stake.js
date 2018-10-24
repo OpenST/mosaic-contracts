@@ -35,7 +35,11 @@ contract('Stake', async (accounts) => {
 
     beforeEach(async () => {
         ost = await MockToken.new();
-        stake = await Stake.new(ost.address, originCoreAccount);
+
+        stake = await Stake.new(
+             ost.address,
+             originCoreAccount
+        );
     });
 
     describe('closing a meta-block', async () => {

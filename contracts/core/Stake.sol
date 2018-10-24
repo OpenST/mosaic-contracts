@@ -128,18 +128,22 @@ contract Stake is StakeInterface {
      * @param _originCore Address of the origin core. Some methods may only be
      *                    called from the origin core.
      */
-    constructor(address _stakingToken, address _originCore) public {
-        require(
-            _stakingToken != address(0),
-            "The address of the staking token must not be zero."
-        );
-        require(
-            _originCore != address(0),
-            "The address of the origin core must not be zero."
-        );
+    constructor(
+        address _stakingToken,
+        address _originCore
+    )
+        public {
+            require(
+                _stakingToken != address(0),
+                "The address of the staking token must not be zero."
+            );
+            require(
+                _originCore != address(0),
+                "The address of the origin core must not be zero."
+            );
 
-        stakingToken = EIP20Interface(_stakingToken);
-        originCore = _originCore;
+            stakingToken = EIP20Interface(_stakingToken);
+            originCore = _originCore;
     }
 
     /* External Functions */

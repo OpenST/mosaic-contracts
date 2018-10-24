@@ -34,6 +34,7 @@ contract TestStake {
 
     /** @notice Deploying the dependant contracts for every test. */
     function beforeEach() external {
+
         mockToken = new MockToken();
         stake = new Stake(
             address(mockToken),
