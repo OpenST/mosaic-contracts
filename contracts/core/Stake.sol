@@ -169,6 +169,9 @@ contract Stake is StakeInterface {
      * @notice Stake is deployed in two phases. First, it is constructed. Then,
      *         before it becomes functional, the initial set of validators must
      *         be set by calling `initialize()`.
+     *         !!! You probably don't want to deploy the Stake contract
+     *         !!! yourself. Instead, it should be deployed from the OriginCore
+     *         !!! constructor.
      *
      * @param _stakingToken The address of the ERC-20 token that is used to
      *                      deposit stakes.

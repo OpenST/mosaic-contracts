@@ -204,7 +204,7 @@ contract('BlockStore.justify()', async (accounts) => {
                     blockHashAtTwenty,
                     {from: accounts[4]}
                 ),
-                'This method must be called frome the registered polling place.'
+                'This method must be called from the registered polling place.'
             );
         }
     );
@@ -298,6 +298,38 @@ contract('BlockStore.justify()', async (accounts) => {
                 {from: pollingPlaceAddress}
             ),
             'The target must be above the source in height.'
+        );
+    });
+
+    it('should not allow the target to be justified with a different source', async () => {
+        await blockStore.justify(
+            blockHashAtZero,
+            blockHashAtTen,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTen,
+            blockHashAtTwenty,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtThirty,
+            {from: pollingPlaceAddress},
+        );
+        await blockStore.justify(
+            blockHashAtTwenty,
+            blockHashAtFourty,
+            {from: pollingPlaceAddress},
+        );
+
+        await Utils.expectRevert(
+            blockStore.justify(
+                blockHashAtThirty,
+                blockHashAtFourty,
+                {from: pollingPlaceAddress},
+            ),
+            'The target must not be justified already.',
         );
     });
 

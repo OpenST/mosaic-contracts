@@ -18,6 +18,87 @@ pragma solidity ^0.4.24;
 /** @title A meta-block of the meta-chain. */
 library MetaBlock {
 
+    /** To hash structs according to EIP-712, a type hash is required. */
+    bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
+        "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
+    );
+
+    /* Structs */
+
+    /** The header of a meta-block. */
+    struct Header {
+
+        Kernel kernel;
+        AuxiliaryTransition transition;
+    }
+
+    /** The kernel of a meta-block header. */
+    struct Kernel {
+
+        /** The height of this header's block in the chain. */
+        uint256 height;
+
+        /** The hash of this block's parent. */
+        bytes32 parent;
+
+        /**
+         * The array of addresses of the validators that are updated within
+         * this block. Updated weights at the same index relate to the address
+         * in this array.
+         */
+        address[] updatedValidators;
+
+        /**
+         * The array of weights that corresponds to the updated validators.
+         * Updated validators at the same index relate to the weight in this
+         * array. Weights of existing validators can only decrease.
+         */
+        uint256[] updatedWeights;
+    }
+
+    /** The transition of a meta-block header. */
+    struct AuxiliaryTransition {
+
+        /** A unique identifier that identifies what chain this vote is about. */
+        bytes32 coreIdentifier;
+
+        /** Hash of kernel of meta-block for given transition object. */
+        bytes32 kernelHash;
+
+        /** The dynasty of the auxiliary block with the above block hash. */
+        uint256 auxiliaryDynasty;
+
+        /**
+         * The block hash of the last finalised checkpoint on auxiliary that is
+         * contained within this meta-block. This block hash may be used to
+         * prove state.
+         */
+        bytes32 auxiliaryBlockHash;
+
+        /**
+         * The total gas that has been consumed on auxiliary for all blocks
+         * that are inside this meta-block.
+         */
+        uint256 gas;
+
+        /**
+         * Dynasty of origin block within latest meta-block
+         * reported at auxiliary chain.
+         */
+        uint256 originDynasty;
+
+        /**
+         * Block hash of origin block within latest meta-block reported
+         * at auxiliary chain.
+         */
+        bytes32 originBlockHash;
+        /**
+         * The transaction root of the meta-block. A trie created by the
+         * auxiliary block store from the transaction roots of all blocks.
+         */
+        bytes32 transactionRoot;
+    }
+
     /**
      * The transition object about the origin chain. It differs from the
      * transition object about the auxiliary chain, as not all data of an
@@ -40,10 +121,68 @@ library MetaBlock {
         bytes20 coreIdentifier;
     }
 
-    /** To hash structs according to EIP-712, a type hash is required. */
-    bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
-        "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
-    );
+    /**
+     * @notice Takes the parameters of an transition object and returns the
+     *         typed hash of it.
+     *
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _kernelHash The hash of the current kernel.
+     * @param _auxiliaryDynasty The dynasty number where the meta-block closes
+     *                          on the auxiliary chain.
+     * @param _auxiliaryBlockHash The block hash where the meta-block closes
+     *                          on the auxiliary chain.
+     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _originDynasty Dynasty of origin block within latest meta-block
+     *                          reported at auxiliary chain.
+     * @param _originBlockHash Block hash of origin block within latest
+     *                          meta-block reported at auxiliary chain.
+     * @param _transactionRoot The transaction root of the meta-block. A trie
+     *                         created by the auxiliary block store from the
+     *                         transaction roots of all blocks.
+     * @return The hash of this transition object.
+     */
+    function hashAuxiliaryTransition(
+        bytes32 _coreIdentifier,
+        bytes32 _kernelHash,
+        uint256 _auxiliaryDynasty,
+        bytes32 _auxiliaryBlockHash,
+        uint256 _gas,
+        uint256 _originDynasty,
+        bytes32 _originBlockHash,
+        bytes32 _transactionRoot
+    )
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(_gas));
+    }
+
+    /**
+     * @notice Takes the parameters of a kernel object and returns the
+     *         typed hash of it.
+     *
+     * @param _height The height of meta-block.
+     * @param _parent The hash of this block's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedWeights The array of weights that corresponds to
+     *                        the updated validators.
+     *
+     * @return The hash of kernel.
+     */
+    function hashKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights
+    )
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(_height));
+    }
 
     /**
      * @notice Takes the parameters of an origin transition and returns the
@@ -61,7 +200,7 @@ library MetaBlock {
         bytes32 _blockHash,
         bytes20 _coreIdentifier
     )
-        external
+        internal
         pure
         returns (bytes32)
     {
