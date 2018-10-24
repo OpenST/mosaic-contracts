@@ -602,7 +602,7 @@ contract TestMessageBus is KeyValueStoreStub{
     }
 
     /**
-     * @notice it tests confirm revocation method of messageBus.
+     * @notice it tests confirm revocation method of MessageBus.
      */
     function testConfirmRevocation()
         public
