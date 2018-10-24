@@ -424,7 +424,8 @@ contract TestMessageBus is KeyValueStoreStub{
     }
 
     /**
-     * @notice it tests progress inbox with proof method of messageBus.
+     * @notice it tests progress inbox with proof method of messageBus if
+     *         inbox status is declared.
      */
     function testProgressInboxWithProofIfInboxIsDeclared()
         public
@@ -452,6 +453,10 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
+    /**
+     * @notice it tests progress inbox with proof method of messageBus
+     *         if inbox status is progressed.
+     */
     function testProgressInboxWithProofIfInboxIsProgressed()
         public
     {
@@ -482,9 +487,10 @@ contract TestMessageBus is KeyValueStoreStub{
     }
 
     /**
-     * @notice it tests progress outbox with proof method of messageBus.
+     * @notice it tests progress outbox with proof method of messageBus if
+     *         outbox and inbox status is declared.
      */
-    function testProgressOutboxWithProofIfOutboxIsDeclaredAndInboxIsDeclared()
+    function testProgressOutboxWithProofODID()
         public
     {
 
@@ -514,7 +520,12 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
-    function testProgressOutboxWithProofIfOutboxIsDeclaredRevocationAndInboxIsDeclared()
+    /**
+     * @notice it tests progress outbox with proof method of messageBus
+     *         if outbox status is declared revocation and inbox status is
+     *         declared.
+     */
+    function testProgressOutboxWithProofODRID()
         public
     {
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
@@ -543,7 +554,11 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
-    function testProgressOutboxWithProofIfOutboxIsDeclaredAndInboxIsProgressed()
+    /**
+     * @notice it tests progress outbox with proof method of messageBus
+     *         if outbox status is declared and inbox status is progressed.
+     */
+    function testProgressOutboxWithProofODIP()
         public
     {
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
@@ -572,7 +587,12 @@ contract TestMessageBus is KeyValueStoreStub{
 
     }
 
-    function testProgressOutboxWithProofIfOutboxIsDeclaredRevocationAndInboxIsProgressed()
+    /**
+     * @notice it tests progress outbox with proof method of messageBus
+     *         if outbox status is declared revocation and inbox status is
+     *         progressed.
+     */
+    function testProgressOutboxWithProofODRIP()
         public
     {
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
