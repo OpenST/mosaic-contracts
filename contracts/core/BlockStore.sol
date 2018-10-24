@@ -492,7 +492,7 @@ contract BlockStore is BlockStoreInterface {
 
         if (reportedBlocks[_blockHash].height > reportedBlocks[head].height) {
             head = _blockHash;
-            currentDynasty++;
+            currentDynasty = currentDynasty.add(1);
         }
 
         emit BlockFinalised(_blockHash);

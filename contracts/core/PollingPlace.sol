@@ -292,14 +292,14 @@ contract PollingPlace is PollingPlaceInterface {
             "meta-block updates must be done by the registered meta-block gate."
         );
 
-        currentMetaBlockHeight++;
+        currentMetaBlockHeight = currentMetaBlockHeight.add(1);
 
         /*
          * Before adding the new validators, copy the total weights from the
          * previous height. The new validators' weights for this height will be
          * added on top in `addValidators()`.
          */
-        totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight - 1];
+        totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight.sub(1)];
         addValidators(_validators, _weights);
         updateCoreHeights(_originHeight, _auxiliaryHeight);
 
@@ -443,7 +443,9 @@ contract PollingPlace is PollingPlaceInterface {
                 0
             );
 
-            totalWeights[currentMetaBlockHeight] += weight;
+            totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight].add(
+                weight
+            );
         }
     }
 
@@ -502,7 +504,9 @@ contract PollingPlace is PollingPlaceInterface {
         VoteMessage memory voteMessage = _voteObject.voteMessage;
 
         validatorTargetHeights[_validator.auxiliaryAddress] = voteMessage.targetHeight;
-        votesWeights[_voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
+        votesWeights[_voteHash] = votesWeights[_voteHash].add(
+            validatorWeight(_validator, currentMetaBlockHeight)
+        );
 
         /*
          * Because the target must be within the currently open meta-block, the
