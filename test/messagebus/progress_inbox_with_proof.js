@@ -38,7 +38,8 @@ var params,
 	unlockSecret,
 	hashLock,
 	rlpEncodedParentNodes,
-	storageRoot;
+	storageRoot,
+	generatedHashLock;
 
 	let MessageStatusEnum = {
 	
@@ -65,8 +66,9 @@ var params,
 					, gasConsumed = 0
 					, messageHash = '0x9bdab5cbc3ebd8d50e3831bc73da35c1170e21bfb7145e41ce4a952b977a8f84'
 					, messageStatus = 3
-					, unlockSecret = web3.utils.soliditySha3({type: 'bytes32', value: 'secret'})
-					, hashLock = web3.utils.soliditySha3({type: 'bytes32', value: unlockSecret})
+					, generatedHashLock = messageBusUtils.utils.generateHashLock()
+					, unlockSecret = generatedHashLock.s
+					, hashLock = generatedHashLock.l
 					,	rlpEncodedParentNodes = '0xf9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7'
 					, storageRoot = '0x9642e5c7f830dbf5cb985c9a2755ea2e5e560dbe12f98fd19d9b5b6463c2e771'
 					,	messageBoxOffset = 1
@@ -95,16 +97,16 @@ var params,
 
 			});
 
-			it('should fail when message status is undeclared and messagehash' +
-				' status inbox  is undeclared', async () => {
+			it('should fail when message status at source is undeclared and' +
+				' messagehash status in inbox at target is undeclared', async () => {
 
 				params.messageStatus = MessageStatusEnum.Undeclared;
 				await messageBusUtils.progressInboxWithProof(params, false);
 
 			});
 
-			it('should fail when message status is undeclared and messagehash' +
-				' status in inbox is declared', async () => {
+			it('should fail when message status at source is undeclared and' +
+				' messagehash status in inbox at target is declared', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				
@@ -113,8 +115,8 @@ var params,
 
 			});
 
-			it('should fail when message status is undeclared and messagehash' +
-				' status in inbox is progressed', async () => {
+			it('should fail when message status at source is undeclared and' +
+				' messagehash status in inbox at target is progressed', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				params.messageStatus = MessageStatusEnum.Declared;
@@ -125,39 +127,27 @@ var params,
 
 			});
 
-			it('should fail when message status is undeclared and messagehash' +
-				' status in inbox is declared revocation', async () => {
-				
-				await messageBusUtils.confirmMessage(params, true);
-				await messageBusUtils.confirmRevocation(params, true);
-				
-				params.messageStatus = MessageStatusEnum.Undeclared;
-				await messageBusUtils.progressInboxWithProof(params, false);
-
-			});
-
-			it('should fail when message status is undeclared and messagehash' +
-				' status in inbox is revoked', async () => {
+			it('should fail when message status at source is undeclared and' +
+				' messagehash status in inbox at target is revoked', async () => {
 
 				await messageBusUtils.confirmMessage(params, true);
 				await messageBusUtils.confirmRevocation(params, true);
-				await messageBusUtils.progressInboxRevocation(params, true);
 				
 				params.messageStatus = MessageStatusEnum.Undeclared;
 				await messageBusUtils.progressInboxWithProof(params, false);
 
 			});
 			
-			it('should fail when message status is declared revocation and' +
-				' messagehash status in inbox is undeclared', async () => {
+			it('should fail when message status at source is declared revocation' +
+				' and messagehash status in inbox at target is undeclared', async () => {
 
 				params.messageStatus = MessageStatusEnum.DeclaredRevocation;
 				await messageBusUtils.progressInboxWithProof(params, false);
 
 			});
 
-			it('should fail when message status is declared revocation and' +
-				' messagehash status in inbox is declared', async () => {
+			it('should fail when message status at source is declared revocation' +
+				' and messagehash status in inbox at target is declared', async () => {
 
 				await messageBusUtils.confirmMessage(params, true);
 				
@@ -166,7 +156,8 @@ var params,
 
 			});
 
-			it('should fail when message status is declared revocation and messagehash status in outbox is progressed', async () => {
+			it('should fail when message status at source is declared revocation' +
+				' and messagehash status in inbox at target is progressed', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				params.messageStatus = MessageStatusEnum.Declared;
@@ -176,23 +167,12 @@ var params,
 				await messageBusUtils.progressInboxWithProof(params, false);
 
 			});
-
-			it('should fail when message status is declared revocation and messagehash status in outbox is declared revocation', async () => {
-				
-				await messageBusUtils.confirmMessage(params, true);
-				// params.messageStatus = MessageStatusEnum.Declared;
-				await messageBusUtils.confirmRevocation(params, true);
-				
-				params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-				await messageBusUtils.progressInboxWithProof(params, false);
-				
-			});
-
-			it('should fail when message status is declared revocation and messagehash status in outbox is revoked', async () => {
+			
+			it('should fail when message status at source is declared revocation' +
+				' and messagehash status in inbox at target is revoked', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				await messageBusUtils.confirmRevocation(params, true);
-				await messageBusUtils.progressInboxRevocation(params, true);
 				
 				params.messageStatus = MessageStatusEnum.DeclaredRevocation;
 				await messageBusUtils.progressInboxWithProof(params, false);
@@ -200,14 +180,16 @@ var params,
 				
 			});
 			
-			it('should fail when message status is revoked and messagehash status in outbox is undeclared', async () => {
+			it('should fail when message status at source is revoked and' +
+				' messagehash status in inbox at target is undeclared', async () => {
 				
 				params.messageStatus = MessageStatusEnum.Revoked;
 				await messageBusUtils.progressInboxWithProof(params, false);
 				
 			});
 
-			it('should fail when message status is revoked and messagehash status in outbox is declared', async () => {
+			it('should fail when message status at source is revoked and' +
+				' messagehash status in inbox at target is declared', async () => {
 
 				await messageBusUtils.confirmMessage(params, true);
 				
@@ -216,7 +198,8 @@ var params,
 				
 			});
 
-			it('should fail when message status is revoked and messagehash status in outbox is progressed', async () => {
+			it('should fail when message status at source is revoked and' +
+				' messagehash status in inbox at target is progressed', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				params.messageStatus = MessageStatusEnum.Declared;
@@ -228,34 +211,26 @@ var params,
 				
 			});
 
-			it('should fail when message status is revoked and messagehash status in outbox is declared revocation', async () => {
+			it('should fail when message status at source is revoked and' +
+				' messagehash status in inbox at target is revoked', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				await messageBusUtils.confirmRevocation(params, true);
 				
 				params.messageStatus = MessageStatusEnum.Revoked;
 				await messageBusUtils.progressInboxWithProof(params, false);
-
 			});
 
-			it('should fail when message status is revoked and messagehash status in outbox is revoked', async () => {
-				
-				await messageBusUtils.confirmMessage(params, true);
-				await messageBusUtils.confirmRevocation(params, true);
-				await messageBusUtils.progressInboxRevocation(params, true);
-				
-				params.messageStatus = MessageStatusEnum.Revoked;
-				await messageBusUtils.progressInboxWithProof(params, false);
-			});
-
-			it('should fail when message status is empty and messagehash status in outbox is undeclared', async () => {
+			it('should fail when message status at source is empty and messagehash' +
+				' status in inbox at target is undeclared', async () => {
 
 				params.messageStatus = '';
 				await messageBusUtils.progressInboxWithProof(params, false);
 				
 			});
 
-			it('should fail when message status is empty and messagehash status in outbox is progressed', async () => {
+			it('should fail when message status at source is empty and messagehash' +
+				' status in inbox at target is progressed', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				params.messageStatus = MessageStatusEnum.Declared;
@@ -266,11 +241,11 @@ var params,
 
 			});
 
-			it('should fail when message status is empty and messagehash status in outbox is revoked', async () => {
+			it('should fail when message status at source is empty and' +
+				' messagehash status in inbox at target is revoked', async () => {
 				
 				await messageBusUtils.confirmMessage(params, true);
 				await messageBusUtils.confirmRevocation(params, true);
-				await messageBusUtils.progressInboxRevocation(params, true);
 				
 				params.messageStatus = '';
 				await messageBusUtils.progressInboxWithProof(params, false);

@@ -405,7 +405,6 @@ library MessageBus {
 	 *
      * @return messageHash_ Message hash
      */
-
     function progressInboxWithProof(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
@@ -509,7 +508,7 @@ library MessageBus {
     /**
      * @notice Confirm a revocation message that is declared in the outbox of
      *         source chain. This will update the outbox status to
-     *         `DeclaredRevocation` for the given message hash.
+     *         `Revoked` for the given message hash.
      *
      * @dev In order to declare revocation the existing message status for the
      *      given message hash should be `Declared`.
@@ -569,7 +568,7 @@ library MessageBus {
             "Merkle proof verification failed"
         );
 
-        // Update the message box inbox status to `DeclaredRevocation`.
+        // Update the message box inbox status to `Revoked`.
         _messageBox.inbox[messageHash_] = MessageStatus.Revoked;
     }
 

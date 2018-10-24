@@ -1,7 +1,7 @@
 'use strict';
 
 const MessageBus = artifacts.require('MessageBusWrapper'),
-			utils =  require("./utils");
+			utils = require('../test_lib/utils');
 
 let messageBus;
 
@@ -442,7 +442,9 @@ MessageBusUtils.prototype = {
 		
 		return messageBus.getInboxStatus.call(msgHash);
 		
-	}
+	},
+	
+	utils: utils
 };
 
 module.exports = MessageBusUtils;

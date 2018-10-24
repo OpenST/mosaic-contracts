@@ -15,16 +15,12 @@ const	MessageBusWrapper = artifacts.require('./test/MessageBusWrapper');
 const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof');
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
-const ProofLib = artifacts.require('./ProofLib');
 const ProofLibTest = artifacts.require('./ProofLibTest.sol');
 
 
 module.exports = function(deployer) {
 	
 	deployer.deploy(MerklePatriciaProof);
-	deployer.link(MerklePatriciaProof, ProofLib);
-	deployer.deploy(ProofLib);
-	deployer.link(ProofLib, ProofLibTest);
 	deployer.link(MerklePatriciaProof, ProofLibTest);
 	deployer.deploy(ProofLibTest);
 	
