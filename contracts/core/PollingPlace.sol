@@ -611,14 +611,14 @@ contract PollingPlace is PollingPlaceInterface {
         returns (uint256 required_)
     {
         // 2/3 are required (a supermajority).
-        required_ = (totalWeights[_metaBlockHeight].mul(2).div(3));
+        required_ = totalWeights[_metaBlockHeight].mul(2).div(3);
 
-        /**
+        /*
          * Solidity always rounds down, but we have to round up if there is a
          * remainder. It has to be *at least* 2/3.
          */
-        if (((totalWeights[_metaBlockHeight].mul(2)) % 3) > 0) {
-            required_++;
+        if (totalWeights[_metaBlockHeight].mul(2).mod(3) > 0) {
+            required_ = required_.add(1);
         }
     }
 
