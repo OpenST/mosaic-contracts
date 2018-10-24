@@ -5,12 +5,10 @@ const web3 = require('../../../test_lib/web3.js');
 const utils = require("../../../test_lib/utils");
 
 const GatewayUtils = function(gateway) {
-    const oThis = this;
-    oThis.gateway = gateway;
+    this.gateway = gateway;
 };
 GatewayUtils.prototype = {
 
-    gateway: null,
     // Utils
     isAddress: async function(address) {
         return await web3.utils.isAddress(address);
@@ -18,7 +16,6 @@ GatewayUtils.prototype = {
 
     //Deployment functions
     deployGateway: async function(params, resultType) {
-        const oThis = this;
 
         let valueTokenAddress = params.token,
             bountyToken = params.bountyToken,
@@ -27,7 +24,7 @@ GatewayUtils.prototype = {
             organisationAddress = params.organisation,
             messageBusAddress = params.messageBusAddress;
 
-        if (resultType == utils.ResultType.FAIL) {
+        if (resultType === utils.ResultType.FAIL) {
             await utils.expectThrow(Gateway.new(
                 valueTokenAddress,
                 bountyToken,
@@ -37,7 +34,7 @@ GatewayUtils.prototype = {
                 messageBusAddress
             ));
         } else {
-            oThis.gateway = await Gateway.new(
+            this.gateway = await Gateway.new(
                 valueTokenAddress,
                 bountyToken,
                 coreAddress,
@@ -46,8 +43,8 @@ GatewayUtils.prototype = {
                 messageBusAddress
             );
 
-            let addressValidationResult = await oThis.isAddress(
-                oThis.gateway.address
+            let addressValidationResult = await this.isAddress(
+                this.gateway.address
             );
 
             assert.equal(
@@ -56,35 +53,35 @@ GatewayUtils.prototype = {
                 "Invalid gateway address"
             );
 
-            let tokenAdd = await oThis.gateway.token.call();
+            let tokenAdd = await this.gateway.token.call();
             assert.equal(
                 tokenAdd,
                 valueTokenAddress,
                 "Invalid valueTokenAddress address from contract"
             );
 
-            let bountyTokenAdd = await oThis.gateway.baseToken.call();
+            let bountyTokenAdd = await this.gateway.baseToken.call();
             assert.equal(
                 bountyTokenAdd,
                 bountyToken,
                 "Invalid bounty token address from contract"
             );
 
-            let coreAdd = await oThis.gateway.core.call();
+            let coreAdd = await this.gateway.core.call();
             assert.equal(
                 coreAdd,
                 coreAddress,
                 "Invalid core address from contract"
             );
 
-            let bounty = await oThis.gateway.bounty.call();
+            let bounty = await this.gateway.bounty.call();
             assert.equal(
                 bounty.toString(10),
                 bountyAmount.toString(10),
                 "Invalid bounty amount from contract"
             );
 
-            let orgAdd = await oThis.gateway.organisation.call();
+            let orgAdd = await this.gateway.organisation.call();
             assert.equal(
                 orgAdd,
                 organisationAddress,
@@ -92,7 +89,7 @@ GatewayUtils.prototype = {
             );
         }
 
-        return oThis.gateway;
+        return this.gateway;
     },
 
     initiateGatewayLink: async function(
@@ -101,8 +98,6 @@ GatewayUtils.prototype = {
         expectedResults,
         txOptions ) {
 
-        const oThis = this;
-
         let coGateway = params.coGateway,
             intentHash = params.intentHash,
             nonce = params.nonce,
@@ -110,9 +105,9 @@ GatewayUtils.prototype = {
             hashLock = params.hashLock,
             signature = params.signature;
 
-        if (resultType == utils.ResultType.FAIL) {
+        if (resultType === utils.ResultType.FAIL) {
 
-            await utils.expectThrow(oThis.gateway.initiateGatewayLink.call(
+            await utils.expectThrow(this.gateway.initiateGatewayLink.call(
                 coGateway,
                 intentHash,
                 nonce,
@@ -123,7 +118,7 @@ GatewayUtils.prototype = {
             ));
         } else {
 
-            let result = await oThis.gateway.initiateGatewayLink.call(
+            let result = await this.gateway.initiateGatewayLink.call(
                 coGateway,
                 intentHash,
                 nonce,
@@ -139,7 +134,7 @@ GatewayUtils.prototype = {
                "messageHash must match"
            );
 
-            let response = await oThis.gateway.initiateGatewayLink(
+            let response = await this.gateway.initiateGatewayLink(
                 coGateway,
                 intentHash,
                 nonce,
@@ -158,6 +153,53 @@ GatewayUtils.prototype = {
 
             utils.validateEvents(eventData, expectedResults.events);
         }
+    },
+
+  progressGatewayLink: async function(
+    params,
+    resultType,
+    expectedResults,
+    txOptions ) {
+
+    let messageHash = params.messageHash,
+      unlockSecret = params.unlockSecret;
+
+    if (resultType === utils.ResultType.FAIL) {
+
+      await utils.expectThrow(this.gateway.progressGatewayLink.call(
+        messageHash,
+        unlockSecret,
+        txOptions
+      ));
+
+    } else {
+
+      let result = await this.gateway.progressGatewayLink.call(
+        messageHash,
+        unlockSecret,
+        txOptions
+      );
+
+      assert.equal(
+        result,
+        expectedResults.returns.isSuccess,
+        "messageHash must match"
+      );
+
+      let response = await this.gateway.progressGatewayLink(
+        messageHash,
+        unlockSecret,
+        txOptions
+      );
+
+      assert.equal(
+        response.receipt.status,
+        1,
+        "Receipt status is unsuccessful"
+      );
+      let eventData = response.logs;
+      utils.validateEvents(eventData, expectedResults.events);
     }
+  }
 };
 module.exports = GatewayUtils;
