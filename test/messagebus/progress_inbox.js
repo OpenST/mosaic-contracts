@@ -96,9 +96,9 @@ contract('MessageBus',  async (accounts) => {
     
     it('should fail when message status is already progressed in inbox', async () => {
       
-      // messageStatus = 2;
       await messageBusUtils.confirmMessage(params, true);
       await messageBusUtils.progressInbox(params, true);
+      
       await messageBusUtils.progressInbox(params, false);
       
     });
