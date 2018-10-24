@@ -43,10 +43,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     OstInterface public Ost;
 
-    bytes32 public auxiliaryCoreIdentifier;
+    /** The core identifier of the tracked auxiliary chain. */
+    bytes20 public auxiliaryCoreIdentifier;
 
     /** The stake contract that tracks deposits and weights. */
     StakeInterface public stake;
+
     /** Height of the open block. */
     uint256 public height;
 
@@ -84,7 +86,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                       the constructor of the Stake contract.
      */
     constructor(
-        bytes32 _auxiliaryCoreIdentifier,
+        bytes20 _auxiliaryCoreIdentifier,
         address _ost,
         uint256 _initialAuxiliaryGas,
         bytes32 _initialTransactionRoot,
@@ -141,7 +143,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      */
     function proposeBlock(
         uint256 _height,
-        bytes32 _coreIdentifier,
+        bytes20 _coreIdentifier,
         bytes32 _kernelHash,
         uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,

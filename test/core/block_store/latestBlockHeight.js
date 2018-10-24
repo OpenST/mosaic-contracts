@@ -68,7 +68,7 @@ contract('BlockStore.latestBlockHeight()', async (accounts) => {
     });
 
     it('should return the correct block height', async () => {
-        let testData = [
+        let testJustifications = [
             {
                 source: blockHashAtTen,
                 target: blockHashAtTwenty,
@@ -86,16 +86,16 @@ contract('BlockStore.latestBlockHeight()', async (accounts) => {
             },
         ];
 
-        let count = testData.length;
+        let count = testJustifications.length;
         for (i = 0; i < count; i++) {
-            let testDate = testData[i];
+            let testJustification = testJustifications[i];
 
-            await blockStore.justify(testDate.source, testDate.target);
+            await blockStore.justify(testJustification.source, testJustification.target);
             let height = await blockStore.latestBlockHeight.call();
             assert(
-                height.eq(testDate.expectedHeight),
+                height.eq(testJustification.expectedHeight),
                 "The  wrong height was returned. Expected: " + 
-                testDate.expectedHeight + " Actual: " + height
+                testJustification.expectedHeight + " Actual: " + height
             );
         }
     });

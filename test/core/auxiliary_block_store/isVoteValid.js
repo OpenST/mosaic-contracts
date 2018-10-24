@@ -22,29 +22,35 @@ const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 const MetaBlock = require('../../test_lib/meta_block.js');
 
-const testData = require('./helpers/data.js');
+const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
     let epochLength = new BN('3');
     let pollingPlaceAddress = accounts[0];
-    let initialBlockHash = '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c';
-    let initialStateRoot = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
-    let initialGas = new BN('21000');
-    let initialTransactionRoot = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
-    let initialHeight = new BN('0');
+    let originBlockStore;
+    let testBlocks = TestData.blocks;
+    let initialBlockHash = TestData.initialBlock.hash;
+    let initialStateRoot = TestData.initialBlock.stateRoot;
+    let initialGas = TestData.initialBlock.gas;
+    let initialTransactionRoot = TestData.initialBlock.transactionRoot;
+    let initialHeight = TestData.initialBlock.height;
     let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
 
     let blockStore;
 
     beforeEach(async () => {
+        originBlockStore = await BlockStoreMock.new();
+
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,
             epochLength,
             pollingPlaceAddress,
+            originBlockStore.address,
             initialBlockHash,
             initialStateRoot,
             initialHeight,
@@ -52,7 +58,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             initialTransactionRoot,
         );
 
-        await AuxStoreUtils.reportBlocks(blockStore, testData);
+        await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 
     it('should return true for valid votes', async () => {
@@ -63,29 +69,37 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: testData[3].hash,
+                    target: testBlocks[3].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: testData[6].hash,
+                    target: testBlocks[6].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: testData[9].hash,
+                    target: testBlocks[9].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: testData[12].hash,
+                    target: testBlocks[12].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
             ],
         );
 
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
         await AuxStoreUtils.testValidVotes(
@@ -94,25 +108,31 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             [
                 {
                     dynasty: new BN('1'),
-                    source: testData[3].hash,
-                    target: testData[6].hash,
+                    source: testBlocks[3].hash,
+                    target: testBlocks[6].hash,
+                    accumulatedGas: testBlocks[3].accumulatedGas,
+                    accumulatedTransactionRoot: testBlocks[3].accumulatedTransactionRoot,
                 },
                 {
                     dynasty: new BN('1'),
-                    source: testData[3].hash,
-                    target: testData[9].hash,
+                    source: testBlocks[3].hash,
+                    target: testBlocks[9].hash,
+                    accumulatedGas: testBlocks[3].accumulatedGas,
+                    accumulatedTransactionRoot: testBlocks[3].accumulatedTransactionRoot,
                 },
                 {
                     dynasty: new BN('1'),
-                    source: testData[3].hash,
-                    target: testData[12].hash,
+                    source: testBlocks[3].hash,
+                    target: testBlocks[12].hash,
+                    accumulatedGas: testBlocks[3].accumulatedGas,
+                    accumulatedTransactionRoot: testBlocks[3].accumulatedTransactionRoot,
                 },
             ],
         );
 
         await blockStore.justify(
-            testData[3].hash,
-            testData[6].hash,
+            testBlocks[3].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress},
         );
         await AuxStoreUtils.testValidVotes(
@@ -121,89 +141,113 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             [
                 {
                     dynasty: new BN('2'),
-                    source: testData[6].hash,
-                    target: testData[9].hash,
+                    source: testBlocks[6].hash,
+                    target: testBlocks[9].hash,
+                    accumulatedGas: testBlocks[6].accumulatedGas,
+                    accumulatedTransactionRoot: testBlocks[6].accumulatedTransactionRoot,
                 },
                 {
                     dynasty: new BN('2'),
-                    source: testData[6].hash,
-                    target: testData[12].hash,
+                    source: testBlocks[6].hash,
+                    target: testBlocks[12].hash,
+                    accumulatedGas: testBlocks[6].accumulatedGas,
+                    accumulatedTransactionRoot: testBlocks[6].accumulatedTransactionRoot,
                 },
             ],
         );
     });
 
     it('should not accept an unknown source hash', async () => {
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('1'),
+            auxiliaryBlockHash: unknownBlockHash,
+            gas: initialGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: initialTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('0'),
-                    blockHash: unknownBlockHash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
+            MetaBlock.hashAuxiliaryTransition(transition),
             unknownBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
         );
         assert(
             !isValid,
-            'Vote expected to be invalid; instead it was.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it('should not accept an unknown target hash', async () => {
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('0'),
+            auxiliaryBlockHash: initialBlockHash,
+            gas: initialGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: initialTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('0'),
-                    blockHash: initialBlockHash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
+            MetaBlock.hashAuxiliaryTransition(transition),
             initialBlockHash,
             unknownBlockHash,
         );
         assert(
             !isValid,
-            'Vote expected to be invalid; instead it was.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it('should not accept a source checkpoint that is not justified', async () => {
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('1'),
+            auxiliaryBlockHash: testBlocks[3].hash,
+            gas: testBlocks[3].accumulatedGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: testBlocks[3].accumulatedTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('0'),
-                    blockHash: testData[3].hash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
-            testData[3].hash,
-            testData[6].hash,
+            MetaBlock.hashAuxiliaryTransition(transition),
+            testBlocks[3].hash,
+            testBlocks[6].hash,
         );
         assert(
             !isValid,
-            'Vote expected to be invalid; instead it was.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it( 'should not accept a target block that has a height that is not a ' +
         'multiple of the epoch length',
         async () => {
+            let transition = {
+                coreIdentifier: coreIdentifier,
+                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                auxiliaryDynasty: new BN('0'),
+                auxiliaryBlockHash: initialBlockHash,
+                gas: initialGas,
+                originDynasty: new BN('0'),
+                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                transactionRoot: initialTransactionRoot,
+            };
+
             let isValid = await blockStore.isVoteValid.call(
-                MetaBlock.hashOriginTransition(
-                    {
-                        dynasty: new BN('0'),
-                        blockHash: initialBlockHash,
-                        coreIdentifier: coreIdentifier,
-                    },
-                ),
+                MetaBlock.hashAuxiliaryTransition(transition),
                 initialBlockHash,
-                testData[4].hash,
+                testBlocks[4].hash,
             );
             assert(
                 !isValid,
-                'Vote expected to be invalid; instead it was.',
+                'Vote expected to be invalid; instead it was valid.',
             );
         }
     );
@@ -211,113 +255,133 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
     it('should not accept a target block that has a height lower than the head', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[6].hash,
+            testBlocks[3].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[6].hash,
-            testData[9].hash,
+            testBlocks[6].hash,
+            testBlocks[9].hash,
             {from: pollingPlaceAddress},
         );
 
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('1'),
+            auxiliaryBlockHash: testBlocks[3].hash,
+            gas: testBlocks[3].accumulatedGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: testBlocks[3].accumulatedTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('1'),
-                    blockHash: testData[3].hash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
-            testData[3].hash,
-            testData[6].hash,
+            MetaBlock.hashAuxiliaryTransition(transition),
+            testBlocks[3].hash,
+            testBlocks[6].hash,
         );
         assert(
             !isValid,
-            'The target must be higher than the head.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it('should not accept an invalid transition hash', async () => {
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x1234560000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('0'),
+            auxiliaryBlockHash: initialBlockHash,
+            gas: initialGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: initialTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('1337'),
-                    blockHash: initialBlockHash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
+            MetaBlock.hashAuxiliaryTransition(transition),
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
         );
         assert(
             !isValid,
-            'It should not accept an invalid transition hash.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it('should not allow the target to be below the source', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[6].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress},
         );
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('1'),
+            auxiliaryBlockHash: testBlocks[6].hash,
+            gas: testBlocks[6].accumulatedGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: testBlocks[6].accumulatedTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('1'),
-                    blockHash: testData[6].hash,
-                    coreIdentifier: coreIdentifier
-                }
-            ),
-            testData[6].hash,
-            testData[3].hash,
+            MetaBlock.hashAuxiliaryTransition(transition),
+            testBlocks[6].hash,
+            testBlocks[3].hash,
         );
         assert(
             !isValid,
-            'It should not accept a target below the source.'
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
     it('should not allow the target to be justified with a different source', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[6].hash,
+            testBlocks[3].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[9].hash,
+            testBlocks[3].hash,
+            testBlocks[9].hash,
             {from: pollingPlaceAddress},
         );
 
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('2'),
+            auxiliaryBlockHash: testBlocks[6].hash,
+            gas: testBlocks[6].accumulatedGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: testBlocks[6].accumulatedTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('2'),
-                    blockHash: testData[6].hash,
-                    coreIdentifier: coreIdentifier,
-                },
-            ),
-            testData[6].hash,
-            testData[9].hash,
+            MetaBlock.hashAuxiliaryTransition(transition),
+            testBlocks[6].hash,
+            testBlocks[9].hash,
         );
         assert(
             !isValid,
-            'The target must be higher than the head.',
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
-    it('should not allow the target to not be a descandant of the source', async () => {
+    it('should not allow the target to not be a descendant of the source', async () => {
         // The fork blocks have a different transaction root (and thus hash).
         let forkBlocks = {
             1: {
@@ -358,12 +422,16 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: forkBlocks[3].hash,
+                    target: testBlocks[3].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
                 {
                     dynasty: new BN('0'),
                     source: initialBlockHash,
-                    target: forkBlocks[6].hash,
+                    target: testBlocks[6].hash,
+                    accumulatedGas: initialGas,
+                    accumulatedTransactionRoot: initialTransactionRoot,
                 },
             ],
         );
@@ -374,23 +442,28 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
          */
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
+        let transition = {
+            coreIdentifier: coreIdentifier,
+            kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            auxiliaryDynasty: new BN('1'),
+            auxiliaryBlockHash: testBlocks[3].hash,
+            gas: testBlocks[3].accumulatedGas,
+            originDynasty: new BN('0'),
+            originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            transactionRoot: testBlocks[3].accumulatedTransactionRoot,
+        };
+
         let isValid = await blockStore.isVoteValid.call(
-            MetaBlock.hashOriginTransition(
-                {
-                    dynasty: new BN('1'),
-                    blockHash: testData[3].hash,
-                    coreIdentifier: coreIdentifier
-                }
-            ),
-            testData[3].hash,
+            MetaBlock.hashAuxiliaryTransition(transition),
+            testBlocks[3].hash,
             forkBlocks[6].hash,
         );
         assert(
             !isValid,
-            'It should not allow jumping forks.'
+            'Vote expected to be invalid; instead it was valid.',
         );
     });
 
