@@ -26,7 +26,7 @@ const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
 
 /**
  * 
- * @param {object} transition The transition object to hash.
+ * @param {Object} transition The transition object to hash.
  * 
  * @returns {string} The hash of the transition.
  */

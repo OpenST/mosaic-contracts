@@ -68,6 +68,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /* Constructor */
 
     /**
+     * The OriginCore constructor initializes the OriginCore and deploys an
+     * instance of the Stake contract.
+     *
      * @param _auxiliaryCoreIdentifier The core identifier of the auxiliary
      *                                 chain that this core contract tracks.
      * @param _ost The address of the OST ERC-20 token.
@@ -75,12 +78,17 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                             reporting genesis meta-block.
      * @param _initialTransactionRoot Transaction root of auxiliary chain
      *                                before reporting genesis meta-block.
+     * @param _minimumWeight The minimum total weight that all active validators
+     *                       of this meta-blockchain must have so that the
+     *                       meta-blockchain is not considered halted. Used in
+     *                       the constructor of the Stake contract.
      */
     constructor(
         bytes32 _auxiliaryCoreIdentifier,
         address _ost,
         uint256 _initialAuxiliaryGas,
-        bytes32 _initialTransactionRoot
+        bytes32 _initialTransactionRoot,
+        uint256 _minimumWeight
     )
         public
     {
@@ -96,7 +104,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         // deploy stake contract
         stake = new Stake(
             _ost,
-            address(this)
+            address(this),
+            _minimumWeight
         );
         head = reportGenesisBlock(
             _initialAuxiliaryGas,
@@ -147,27 +156,27 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         require(
             _kernelHash != bytes32(0),
-            'Kernel hash should not be `0`.'
+            "Kernel hash should not be `0`."
         );
 
         require(
             _originDynasty > 0,
-            'Origin dynasty should not be `0`.'
+            "Origin dynasty should not be `0`."
         );
 
         require(
             _originBlockHash != bytes32(0),
-            'Origin block should not be `0`.'
+            "Origin block should not be `0`."
         );
 
         require(
             _transactionRoot != bytes32(0),
-            'Transaction Root hash should not be `0`.'
+            "Transaction Root hash should not be `0`."
         );
 
         require(
             _coreIdentifier == auxiliaryCoreIdentifier,
-            'CoreIdentifier should be same as auxiliary core identifier.'
+            "CoreIdentifier should be same as auxiliary core identifier."
         );
 
         /* header of last meta block */
@@ -175,17 +184,17 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         require(
             latestMetaBlockHeader.kernel.height + 1 == _height,
-            'Height should be one more than last meta-block.'
+            "Height should be one more than last meta-block."
         );
 
         require(
             _auxiliaryDynasty > latestMetaBlockHeader.transition.auxiliaryDynasty,
-            'Auxiliary dynasty should be greater than last meta-block auxiliary dynasty.'
+            "Auxiliary dynasty should be greater than last meta-block auxiliary dynasty."
         );
 
         require(
             _accumulatedGas > latestMetaBlockHeader.transition.gas,
-            'Gas consumed should be greater than last meta-block gas.'
+            "Gas consumed should be greater than last meta-block gas."
         );
 
         bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(

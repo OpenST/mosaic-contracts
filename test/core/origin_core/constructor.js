@@ -20,6 +20,8 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../test_lib/web3.js');
+
+const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
 const OriginCore = artifacts.require('OriginCore');
@@ -29,23 +31,25 @@ contract('OriginCore.constructor()', async (accounts) => {
 
     let originCore;
     let auxiliaryCoreIdentifier = web3.utils.sha3("1"),
-         gas, transactionRoot, ost = accounts[0];
+        gas, transactionRoot, ost = accounts[0];
+    let minimumWeight = new BN('1');
 
     beforeEach(async () => {
 
         ost = accounts[0]
-             , gas = 1000
-             , transactionRoot = web3.utils.sha3("1");
+            , gas = 1000
+            , transactionRoot = web3.utils.sha3("1");
     });
 
     it('should be able to deploy Origin core', async function () {
 
 
         originCore = await OriginCore.new(
-             auxiliaryCoreIdentifier,
-             ost,
-             gas,
-             transactionRoot
+            auxiliaryCoreIdentifier,
+            ost,
+            gas,
+            transactionRoot,
+            minimumWeight,
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -54,10 +58,11 @@ contract('OriginCore.constructor()', async (accounts) => {
     it('should deploy stake contract on Origin core deployment', async function () {
 
         originCore = await OriginCore.new(
-             auxiliaryCoreIdentifier,
-             ost,
-             gas,
-             transactionRoot
+            auxiliaryCoreIdentifier,
+            ost,
+            gas,
+            transactionRoot,
+            minimumWeight,
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -70,10 +75,11 @@ contract('OriginCore.constructor()', async (accounts) => {
     it('should report genesis block on Origin core deployment', async function () {
 
         originCore = await OriginCore.new(
-             auxiliaryCoreIdentifier,
-             ost,
-             gas,
-             transactionRoot
+            auxiliaryCoreIdentifier,
+            ost,
+            gas,
+            transactionRoot,
+            minimumWeight,
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -87,12 +93,13 @@ contract('OriginCore.constructor()', async (accounts) => {
 
         transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
         await Utils.expectThrow(
-             OriginCore.new(
-                  auxiliaryCoreIdentifier,
-                  ost,
-                  gas,
-                  transactionRoot
-             )
+            OriginCore.new(
+                auxiliaryCoreIdentifier,
+                ost,
+                gas,
+                transactionRoot,
+                minimumWeight,
+            ),
         );
     });
 
@@ -101,12 +108,13 @@ contract('OriginCore.constructor()', async (accounts) => {
         ost = 0;
 
         await Utils.expectThrow(
-             OriginCore.new(
-                  auxiliaryCoreIdentifier,
-                  ost,
-                  gas,
-                  transactionRoot
-             )
+            OriginCore.new(
+                auxiliaryCoreIdentifier,
+                ost,
+                gas,
+                transactionRoot,
+                minimumWeight,
+            ),
         );
     });
 });

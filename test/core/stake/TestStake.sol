@@ -16,8 +16,8 @@ pragma solidity ^0.4.23;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../../contracts/core/Stake.sol";
-import "../../contracts/gateway/MockToken.sol";
+import "../../../contracts/core/Stake.sol";
+import "../../../contracts/gateway/MockToken.sol";
 
 /**
  * @title Testing the functions of the Stake contract that will be invoked by
@@ -34,11 +34,27 @@ contract TestStake {
 
     /** @notice Deploying the dependant contracts for every test. */
     function beforeEach() external {
+        uint256 minimumWeight = 1;
 
         mockToken = new MockToken();
         stake = new Stake(
             address(mockToken),
-            address(this)
+            address(this),
+            minimumWeight
+        );
+
+        address[] memory initialDepositors = new address[](1);
+        initialDepositors[0] = address(this);
+        address[] memory initialValidators = new address[](1);
+        initialValidators[0] = address(19850912);
+        uint256[] memory initialDeposits = new uint256[](1);
+        initialDeposits[0] = uint256(2);
+
+        mockToken.approve(address(stake), 2);
+        stake.initialize(
+            initialDepositors,
+            initialValidators,
+            initialDeposits
         );
     }
 

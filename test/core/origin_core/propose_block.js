@@ -19,6 +19,8 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../test_lib/web3.js');
+
+const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
@@ -26,8 +28,8 @@ const OriginCore = artifacts.require('OriginCore');
 
 contract('OriginCore.proposeBlock()', async (accounts) => {
 
-
     let originCore;
+    let minimumWeight = new BN('1');
     let auxiliaryCoreIdentifier = web3.utils.sha3("1");
 
     let height, kernelHash, auxiliaryDynasty, auxiliaryBlockHash, gas,
@@ -50,7 +52,8 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
              auxiliaryCoreIdentifier,
              ost,
              0,
-             web3.utils.sha3("1")
+             web3.utils.sha3("1"),
+             minimumWeight,
         );
     });
 
