@@ -224,11 +224,17 @@ Utils.prototype = {
 
         let key = eventData[index];
         if (eventExpectedData[key]) {
-          if (eventExpectedData[key] instanceof BN) {
-            assert(event.args[key].eq(eventExpectedData[key]), `Event data ${key} must match the expectedData`)
-
+          if (web3.utils.isBN(eventExpectedData[key])) {
+            assert(
+              event.args[key].eq(eventExpectedData[key]),
+              `Event data ${key} must match the expectedData`
+            );
           } else {
-            assert.equal(event.args[key], (eventExpectedData[key]), `Event data ${key} must match the expectedData`);
+            assert.strictEqual(
+              event.args[key],
+              (eventExpectedData[key]),
+              `Event data ${key} must match the expectedData`
+            );
           }
         }
       }
