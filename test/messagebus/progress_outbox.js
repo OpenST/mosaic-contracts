@@ -46,7 +46,7 @@ let intentHash,
 		describe('progressOutbox', async () => {
 
 			beforeEach(async function() {
-
+				
 				intentHash = web3.utils.soliditySha3({type: 'bytes32', value:'intent'})
 					, nonce = 1
 					, gasPrice = 0x12A05F200
