@@ -15,7 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Origin Chain: Gateway Contract
+// Origin Chain: MessageBusWrapper
 //
 // http://www.simpletoken.org/
 //
