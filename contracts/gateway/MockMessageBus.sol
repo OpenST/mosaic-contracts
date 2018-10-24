@@ -828,7 +828,7 @@ library MockMessageBus {
         bytes32 _messageHash,
         uint256 _nonce
     )
-        internal
+        public
         pure
         returns (bytes32 /* revocationMessageHash */)
     {

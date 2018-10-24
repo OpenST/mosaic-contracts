@@ -456,9 +456,6 @@ contract TestMessageBus is KeyValueStoreStub{
         public
     {
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-
-        // When the state for messageHash in inbox is Progressed
-        // with outbox state for messageHash is Declared
         messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromProgressInboxWithProof = MockMessageBus.progressInboxWithProof(
             messageBox,
@@ -487,14 +484,11 @@ contract TestMessageBus is KeyValueStoreStub{
     /**
      * @notice it tests progress outbox with proof method of messageBus.
      */
-    function testProgressOutboxWithProof()
+    function testProgressOutboxWithProofIfOutboxIsDeclaredAndInboxIsDeclared()
         public
     {
 
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-
-        // When the state for messageHash in inbox is Declared
-        // with outbox state for messageHash is Declared
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
@@ -518,10 +512,14 @@ contract TestMessageBus is KeyValueStoreStub{
             "Message hash not equal"
         );
 
-        // When the state for messageHash in inbox is Declared
-        // with outbox state for messageHash is DeclaredRevocation
+    }
+
+    function testProgressOutboxWithProofIfOutboxIsDeclaredRevocationAndInboxIsDeclared()
+        public
+    {
+        bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-        messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
+        bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
             message,
@@ -543,10 +541,14 @@ contract TestMessageBus is KeyValueStoreStub{
             "Message hash not equal"
         );
 
-        // When the state for messageHash in inbox is Progressed
-        // with outbox state for messageHash is Declared
+    }
+
+    function testProgressOutboxWithProofIfOutboxIsDeclaredAndInboxIsProgressed()
+        public
+    {
+        bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
-        messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
+        bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
             message,
@@ -568,10 +570,14 @@ contract TestMessageBus is KeyValueStoreStub{
             "Message hash not equal"
         );
 
-         // When the state for messageHash in inbox is Progressed
-         // with outbox state for messageHash is Declared
+    }
+
+    function testProgressOutboxWithProofIfOutboxIsDeclaredRevocationAndInboxIsProgressed()
+        public
+    {
+        bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-        messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
+        bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
             message,
@@ -637,8 +643,6 @@ contract TestMessageBus is KeyValueStoreStub{
 
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
 
-        // When the state for messageHash in outbox is DeclaredRevocation
-        // with inbox state for messageHash is DeclaredRevocation
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         bytes32 messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
             messageBox,
@@ -662,8 +666,6 @@ contract TestMessageBus is KeyValueStoreStub{
             "Message hash not equal"
         );
 
-        // When the state for messageHash in inbox is Revoked
-        // with outbox state for messageHash is Revoked
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
             messageBox,
