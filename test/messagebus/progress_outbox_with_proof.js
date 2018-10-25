@@ -96,60 +96,7 @@ contract('MessageBus',  async (accounts) => {
       };
       
     });
-    
-    it('should fail when message status at target is declared revocation' +
-      ' and message status at source is undeclared', async () => {
-      
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at target is declared revocation' +
-      ' and message status at source is declared', async () => {
-      
-      await messageBusUtils.declareMessage(params, true);
-      
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at target is declared revocation' +
-      ' and message status at source is progressed', async () => {
-      
-      await messageBusUtils.declareMessage(params, true);
-      params.messageStatus = MessageStatusEnum.Declared;
-      await messageBusUtils.progressOutboxWithProof(params, true);
-      
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at target is declared revocation' +
-      ' and message status at source is declared revocation', async () => {
-      
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.declareRevocationMessage(params, true);
-      
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at target is declared revocation' +
-      ' and message status at source is revoked', async () => {
-      
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.declareRevocationMessage(params, true);
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-      await messageBusUtils.progressOutboxRevocation(params, true);
-      
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-    });
-    
+
     it('should fail when message status at target is revoked and message' +
       ' status at source is undeclared', async () => {
       

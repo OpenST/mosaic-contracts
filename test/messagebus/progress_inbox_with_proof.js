@@ -105,40 +105,7 @@ contract('MessageBus',  async (accounts) => {
       await messageBusUtils.progressInboxWithProof(params, false);
       
     });
-    
-    it('should fail when message status at source is undeclared and' +
-      ' messagehash status in inbox at target is declared', async () => {
-      
-      await messageBusUtils.confirmMessage(params, true);
-      
-      params.messageStatus = MessageStatusEnum.Undeclared;
-      await messageBusUtils.progressInboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at source is undeclared and' +
-      ' messagehash status in inbox at target is progressed', async () => {
-      
-      await messageBusUtils.confirmMessage(params, true);
-      params.messageStatus = MessageStatusEnum.Declared;
-      await messageBusUtils.progressInboxWithProof(params, true);
-      
-      params.messageStatus = MessageStatusEnum.Undeclared;
-      await messageBusUtils.progressInboxWithProof(params, false);
-      
-    });
-    
-    it('should fail when message status at source is undeclared and' +
-      ' messagehash status in inbox at target is revoked', async () => {
-      
-      await messageBusUtils.confirmMessage(params, true);
-      await messageBusUtils.confirmRevocation(params, true);
-      
-      params.messageStatus = MessageStatusEnum.Undeclared;
-      await messageBusUtils.progressInboxWithProof(params, false);
-      
-    });
-    
+
     it('should fail when message status at source is declared revocation' +
       ' and messagehash status in inbox at target is undeclared', async () => {
       
@@ -177,7 +144,6 @@ contract('MessageBus',  async (accounts) => {
       
       params.messageStatus = MessageStatusEnum.DeclaredRevocation;
       await messageBusUtils.progressInboxWithProof(params, false);
-      
       
     });
     

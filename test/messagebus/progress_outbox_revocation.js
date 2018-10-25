@@ -119,7 +119,7 @@ contract('MessageBus',  async (accounts) => {
       
     });
     
-    it('should fail when message status is already revoked in outbox', async () => {
+    it('should fail when message status is already revoked in inbox', async () => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
@@ -130,41 +130,32 @@ contract('MessageBus',  async (accounts) => {
       
     });
     
-    
-    
-    it('should fail when message status of the message hash in outbox is undeclared ', async () => {
+    it('should fail when message status of the message hash in inbox is undeclared ', async () => {
       
       params.messageStatus = MessageStatusEnum.Undeclared;
       await messageBusUtils.progressOutboxRevocation(params, false);
       
     });
     
-    it('should fail when message status of the message hash in outbox is declared ', async () => {
+    it('should fail when message status of the message hash in inbox is declared ', async () => {
       
       params.messageStatus = MessageStatusEnum.Declared;
       await messageBusUtils.progressOutboxRevocation(params, false);
       
     });
     
-    it('should fail when message status of the message hash in outbox is progressed ', async () => {
+    it('should fail when message status of the message hash in inbox is progressed ', async () => {
       
-      params.messageStatus = MessageStatusEnum;
-      
+      params.messageStatus = MessageStatusEnum.Progressed;
+
       await messageBusUtils.declareMessage(params, true);
       params.messageStatus = MessageStatusEnum.Declared;
       await messageBusUtils.progressOutboxWithProof(params, true);
       await messageBusUtils.progressOutboxRevocation(params, false);
       
     });
-    
-    it('should fail when message status of the message hash in outbox is revoked ', async () => {
-      
-      params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxRevocation(params, false);
-      
-    });
-    
-    it('should fail when message status of the message hash in outbox is empty ', async () => {
+
+    it('should fail when message status of the message hash in inbox is empty ', async () => {
       
       params.messageStatus = '';
       await messageBusUtils.progressOutboxRevocation(params, false);
