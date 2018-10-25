@@ -29,20 +29,18 @@ const OriginCore = artifacts.require('OriginCore');
 contract('OriginCore.constructor()', async (accounts) => {
 
 
-    let originCore;
-    let auxiliaryCoreIdentifier = web3.utils.sha3("1"),
-        gas, transactionRoot, ost = accounts[0];
+    let originCore, gas, transactionRoot, ost, maxAccumulateGasLimit;
+    let auxiliaryCoreIdentifier = web3.utils.sha3("1");
     let minimumWeight = new BN('1');
 
     beforeEach(async () => {
-
-        ost = accounts[0]
-            , gas = 1000
-            , transactionRoot = web3.utils.sha3("1");
+        ost = accounts[0];
+        gas = new BN(1000);
+        transactionRoot = web3.utils.sha3("1");
+        maxAccumulateGasLimit = new BN(105000);
     });
 
     it('should be able to deploy Origin core', async function () {
-
 
         originCore = await OriginCore.new(
             auxiliaryCoreIdentifier,
@@ -50,6 +48,7 @@ contract('OriginCore.constructor()', async (accounts) => {
             gas,
             transactionRoot,
             minimumWeight,
+            maxAccumulateGasLimit
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -63,6 +62,7 @@ contract('OriginCore.constructor()', async (accounts) => {
             gas,
             transactionRoot,
             minimumWeight,
+            maxAccumulateGasLimit
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -80,6 +80,7 @@ contract('OriginCore.constructor()', async (accounts) => {
             gas,
             transactionRoot,
             minimumWeight,
+            maxAccumulateGasLimit
         );
 
         assert(web3.utils.isAddress(originCore.address));
@@ -99,6 +100,7 @@ contract('OriginCore.constructor()', async (accounts) => {
                 gas,
                 transactionRoot,
                 minimumWeight,
+                maxAccumulateGasLimit
             ),
         );
     });
@@ -114,7 +116,27 @@ contract('OriginCore.constructor()', async (accounts) => {
                 gas,
                 transactionRoot,
                 minimumWeight,
+                maxAccumulateGasLimit
             ),
         );
     });
+
+    it('should not deploy origin core if max accumulated gas limit is zero',
+        async function () {
+
+        maxAccumulateGasLimit = new BN(0);
+
+        await Utils.expectThrow(
+            OriginCore.new(
+                auxiliaryCoreIdentifier,
+                ost,
+                gas,
+                transactionRoot,
+                minimumWeight,
+                maxAccumulateGasLimit
+            ),
+            "Max accumulated gas limit should not be zero."
+    );
+  });
 });
+

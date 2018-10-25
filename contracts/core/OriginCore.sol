@@ -56,6 +56,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     bytes32 public head;
 
     /**
+     * maximum amount of gas that a meta-block could accumulate for proposing
+     * a new meta-block.
+     */
+    uint256 public maxAccumulateGasLimit;
+    /**
      * Mapping of block hashes to block headers that were reported with the
      * respective hash.
      */
@@ -90,7 +95,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         address _ost,
         uint256 _initialAuxiliaryGas,
         bytes32 _initialTransactionRoot,
-        uint256 _minimumWeight
+        uint256 _minimumWeight,
+        uint256 _maxAccumulateGasLimit
     )
         public
     {
@@ -99,9 +105,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _initialTransactionRoot != bytes32(0),
             "Auxiliary transaction root should be defined."
         );
+        require(
+            _maxAccumulateGasLimit != uint256(0),
+            "Max accumulated gas limit should not be zero."
+        );
 
         auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
         Ost = OstInterface(_ost);
+        maxAccumulateGasLimit = _maxAccumulateGasLimit;
 
         // deploy stake contract
         stake = new Stake(
@@ -321,6 +332,22 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (bytes32 stateRoot_)
     {
         revert("Method not implemented.");
+    }
+
+    /**
+     * @notice Get next accumulated gas target.
+     *
+     * @return The state root of the meta-block.
+     */
+    function getAccumulateGasTarget()
+        external
+        view
+        returns (uint256 accumulateGasTarget_)
+    {
+        MetaBlock.Header storage lastCommittedMetaBlock = reportedHeaders[head];
+        accumulateGasTarget_ = lastCommittedMetaBlock.transition.gas.add(
+            maxAccumulateGasLimit
+        );
     }
 
     /* Private Functions */
