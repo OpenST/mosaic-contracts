@@ -24,6 +24,7 @@ const web3 = require('../test_lib/web3.js');
 const BN = require('bn.js');
 const EventsDecoder = require('../test_lib/event_decoder.js');
 const Utils = require('../test_lib/utils.js');
+const CoreUtils = require('./utils.js');
 
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 const PollingPlace = artifacts.require('PollingPlace');
@@ -34,9 +35,6 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
-const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
-  "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
-);
 
 contract('PollingPlace', async (accounts) => {
     /*
@@ -396,7 +394,7 @@ contract('PollingPlace', async (accounts) => {
 
         it('should accept a valid vote', async () => {
 
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
 
             let pollingPlace = await PollingPlace.new(
                 metaBlockGate,
@@ -424,7 +422,7 @@ contract('PollingPlace', async (accounts) => {
         it('should not accept a vote signed by an unknown validator', async () => {
 
             // Signing for accounts[1], but adding accounts[0] as validator.
-            let signature = await signVote(accounts[1], vote);
+            let signature = await CoreUtils.signVote(accounts[1], vote);
 
             let pollingPlace = await PollingPlace.new(
                 metaBlockGate,
@@ -455,7 +453,7 @@ contract('PollingPlace', async (accounts) => {
             let unknownCoreIdentifier = '0x1234500000000000000000000000000000000001';
             vote.coreIdentifier = unknownCoreIdentifier;
 
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
 
             let pollingPlace = await PollingPlace.new(
                 metaBlockGate,
@@ -486,7 +484,7 @@ contract('PollingPlace', async (accounts) => {
             // Target height is less than source height.
             vote.targetHeight = new BN('0');
 
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
 
             let pollingPlace = await PollingPlace.new(
                 metaBlockGate,
@@ -529,7 +527,7 @@ contract('PollingPlace', async (accounts) => {
 
             // Origin block store should pass.
             vote.coreIdentifier = originCoreIdentifier;
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
             await pollingPlace.vote(
                 vote.coreIdentifier,
                 vote.transitionHash,
@@ -544,7 +542,7 @@ contract('PollingPlace', async (accounts) => {
 
             // Auxiliary block store should fail.
             vote.coreIdentifier = auxiliaryCoreIdentifier;
-            signature = await signVote(accounts[0], vote);
+            signature = await CoreUtils.signVote(accounts[0], vote);
             await Utils.expectRevert(
                 pollingPlace.vote(
                     vote.coreIdentifier,
@@ -607,7 +605,7 @@ contract('PollingPlace', async (accounts) => {
              * for the first 7 there should not be a justification event.
              */
             for (var i = 0; i < 7; i++) {
-                let signature = await signVote(expectedWeights.addresses[i], vote);
+                let signature = await CoreUtils.signVote(expectedWeights.addresses[i], vote);
                 let tx = await pollingPlace.vote(
                     vote.coreIdentifier,
                     vote.transitionHash,
@@ -638,7 +636,7 @@ contract('PollingPlace', async (accounts) => {
              * The eighth vote sohuld trigger the expected event as a 2/3
              * majority is reached
              */
-            let signature = await signVote(expectedWeights.addresses[7], vote);
+            let signature = await CoreUtils.signVote(expectedWeights.addresses[7], vote);
             let tx = await pollingPlace.vote(
                 vote.coreIdentifier,
                 vote.transitionHash,
@@ -726,7 +724,7 @@ contract('PollingPlace', async (accounts) => {
                 let coreIdentifier = coreIdentifiers[i % 2];
                 vote.coreIdentifier = coreIdentifier;
 
-                let signature = await signVote(expectedWeights.addresses[i], vote);
+                let signature = await CoreUtils.signVote(expectedWeights.addresses[i], vote);
                 let tx = await pollingPlace.vote(
                     vote.coreIdentifier,
                     vote.transitionHash,
@@ -800,7 +798,7 @@ contract('PollingPlace', async (accounts) => {
                 // Incrementing source hashes to split the votes
                 vote.source = '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112' + i.toString(16);
 
-                let signature = await signVote(expectedWeights.addresses[i], vote);
+                let signature = await CoreUtils.signVote(expectedWeights.addresses[i], vote);
                 let tx = await pollingPlace.vote(
                     vote.coreIdentifier,
                     vote.transitionHash,
@@ -835,7 +833,7 @@ contract('PollingPlace', async (accounts) => {
                 // Incrementing target hashes to split the votes
                 vote.target = '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9c' + i.toString(16);
 
-                let signature = await signVote(expectedWeights.addresses[i], vote);
+                let signature = await CoreUtils.signVote(expectedWeights.addresses[i], vote);
                 let tx = await pollingPlace.vote(
                     vote.coreIdentifier,
                     vote.transitionHash,
@@ -910,7 +908,7 @@ contract('PollingPlace', async (accounts) => {
             // The first 8 validators will validate 40 of 61 weight.
             for (var i = 0; i < 8; i++) {
 
-                let signature = await signVote(expectedWeights.addresses[i], vote);
+                let signature = await CoreUtils.signVote(expectedWeights.addresses[i], vote);
                 let tx = await pollingPlace.vote(
                     vote.coreIdentifier,
                     vote.transitionHash,
@@ -966,7 +964,7 @@ contract('PollingPlace', async (accounts) => {
              */
             vote.sourceHeight = new BN('5');
             vote.targetHeight = new BN('15');
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
             await pollingPlace.vote(
                 vote.coreIdentifier,
                 vote.transitionHash,
@@ -981,7 +979,7 @@ contract('PollingPlace', async (accounts) => {
 
             // Even with a different source.
             vote.sourceHeight = new BN('8');
-            signature = await signVote(accounts[0], vote);
+            signature = await CoreUtils.signVote(accounts[0], vote);
             await Utils.expectRevert(
                 pollingPlace.vote(
                     vote.coreIdentifier,
@@ -1016,7 +1014,7 @@ contract('PollingPlace', async (accounts) => {
             );
 
             vote.targetHeight = new BN('19891109');
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
 
             await pollingPlace.vote(
                 vote.coreIdentifier,
@@ -1050,7 +1048,7 @@ contract('PollingPlace', async (accounts) => {
             );
 
             vote.targetHeight = new BN('19851209');
-            let signature = await signVote(accounts[0], vote);
+            let signature = await CoreUtils.signVote(accounts[0], vote);
 
             await Utils.expectRevert(
                 pollingPlace.vote(
@@ -1068,46 +1066,5 @@ contract('PollingPlace', async (accounts) => {
         });
 
     });
-
-    /**
-     * @param {string} address The address of the account that signs the vote.
-     * @param {Object} vote The vote object to sign.
-     * @returns {Object} The signature of the vote (r, s, and v).
-     */
-    async function signVote(address, vote) {
-
-        let voteDigest = web3.utils.soliditySha3(
-            {type: 'bytes32', value: VOTE_MESSAGE_TYPEHASH},
-            {type: 'bytes20', value: web3.utils.toChecksumAddress(vote.coreIdentifier)},
-            {type: 'bytes32', value: vote.transitionHash},
-            {type: 'bytes32', value: vote.source},
-            {type: 'bytes32', value: vote.target},
-            {type: 'uint256', value: vote.sourceHeight},
-            {type: 'uint256', value: vote.targetHeight},
-        );
-
-        /*
-         * Signature adds the prefix `\x19Ethereum Signed Message:\n32` to the
-         * voteDigest.
-         */
-        let signature = await web3.eth.sign(
-            voteDigest,
-            address
-        );
-
-        // Removing the `0x` prefix.
-        signature = signature.substring(2);
-
-        let r = '0x' + signature.substring(0, 64);
-        let s = '0x' + signature.substring(64, 128);
-        // Adding 27 as per the web3 documentation.
-        let v = Number(signature.substring(128, 130)) + 27;
-
-        return {
-            r: r,
-            s: s,
-            v: v,
-        };
-    }
 
 });

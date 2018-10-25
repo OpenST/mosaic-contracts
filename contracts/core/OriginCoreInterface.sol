@@ -63,8 +63,7 @@ interface OriginCoreInterface {
      * @dev Must track which votes have already been verified so that the same
      *      vote never gets verified more than once.
      *
-     * @param _metaBlockHash The block hash of the meta-block for which the
-     *                       votes shall be verified.
+     * @param _kernelHash The hash of the current kernel.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
      * @param _transition The hash of the transition part of the meta-block
@@ -80,7 +79,7 @@ interface OriginCoreInterface {
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
-        bytes32 _metaBlockHash,
+        bytes32 _kernelHash,
         bytes20 _coreIdentifier,
         bytes32 _transition,
         bytes32 _source,

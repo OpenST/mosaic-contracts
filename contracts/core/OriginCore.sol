@@ -41,6 +41,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 indexed kernelHash,
         bytes32 transitionHash
     );
+    /** Emitted whenever a vote is verified for proposed meta-block. */
+    event VoteVerified(
+        bytes32 indexed kernelHash,
+        bytes32 transitionHash,
+        address validator,
+        bytes32 voteHash
+    );
     /* Public Variables */
 
     OstInterface public Ost;
@@ -238,8 +245,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @dev Must track which votes have already been verified so that the same
      *      vote never gets verified more than once.
      *
-     * @param _metaBlockHash The block hash of the meta-block for which the
-     *                       votes shall be verified.
+     * @param _kernelHash The hash of the current kernel.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
      * @param _transition The hash of the transition part of the meta-block
@@ -255,7 +261,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
-        bytes32 _metaBlockHash,
+        bytes32 _kernelHash,
         bytes20 _coreIdentifier,
         bytes32 _transition,
         bytes32 _source,
@@ -269,7 +275,31 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         external
         returns (bool success_)
     {
-        revert("Method not implemented.");
+        bytes32 voteHash = MetaBlock.hashVote(
+            _coreIdentifier,
+            _transition,
+            _source,
+            _target,
+            _sourceHeight,
+            _targetHeight
+        );
+        // As per https://github.com/ethereum/go-ethereum/pull/2940
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        voteHash = keccak256(
+            abi.encodePacked(
+                prefix,
+                voteHash
+            )
+        );
+
+        address signer = ecrecover(
+            voteHash,
+            _v,
+            _r,
+            _s
+        );
+
+        emit VoteVerified(_kernelHash, _transition, signer, voteHash );
     }
 
     /**

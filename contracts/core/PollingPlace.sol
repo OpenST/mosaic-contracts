@@ -15,6 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "../lib/SafeMath.sol";
+import "../lib/MetaBlock.sol";
 import "./BlockStoreInterface.sol";
 import "./PollingPlaceInterface.sol";
 
@@ -115,11 +116,6 @@ contract PollingPlace is PollingPlaceInterface {
         /** s component of signature */
         bytes32 s;
     }
-
-    /** To hash vote message according to EIP-712, a type hash is required. */
-    bytes32 constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
-    );
 
     /* Public Variables */
 
@@ -635,16 +631,13 @@ contract PollingPlace is PollingPlaceInterface {
         pure
         returns (bytes32 hashed_)
     {
-        hashed_ = keccak256(
-            abi.encodePacked(
-                VOTE_MESSAGE_TYPEHASH,
-                _voteMessage.coreIdentifier,
-                _voteMessage.transitionHash,
-                _voteMessage.source,
-                _voteMessage.target,
-                _voteMessage.sourceHeight,
-                _voteMessage.targetHeight
-            )
+        hashed_ = MetaBlock.hashVote(
+            _voteMessage.coreIdentifier,
+            _voteMessage.transitionHash,
+            _voteMessage.source,
+            _voteMessage.target,
+            _voteMessage.sourceHeight,
+            _voteMessage.targetHeight
         );
 
         // As per https://github.com/ethereum/go-ethereum/pull/2940

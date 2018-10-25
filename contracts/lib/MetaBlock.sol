@@ -22,6 +22,11 @@ library MetaBlock {
     bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
         "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
     );
+    /** To hash vote message according to EIP-712, a type hash is required. */
+    bytes32 constant VOTE_MESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
+    );
+
 
     /* Structs */
 
@@ -213,4 +218,44 @@ library MetaBlock {
             )
         );
     }
+
+    /**
+     * @notice Creates the hash of vote.
+     *
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target block.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     *
+     * @return The hash of the given vote.
+     */
+    function hashVote(
+        bytes20 _coreIdentifier,
+        bytes32 _transition,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight
+    )
+        internal
+        pure
+        returns (bytes32 hashed_)
+    {
+        hashed_ = keccak256(
+            abi.encodePacked(
+                VOTE_MESSAGE_TYPEHASH,
+                _coreIdentifier,
+                _transition,
+                _source,
+                _target,
+                _sourceHeight,
+                _targetHeight
+            )
+        );
+    }
+
 }
