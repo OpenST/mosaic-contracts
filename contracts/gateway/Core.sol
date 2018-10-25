@@ -23,7 +23,6 @@ pragma solidity ^0.4.23;
 
 import "./CoreInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
-import "../lib/ProofLib.sol";
 import "./WorkersInterface.sol";
 import "../lib//RLP.sol";
 import "../lib/SafeMath.sol";
@@ -77,8 +76,6 @@ contract Core is CoreInterface {
 
 	/**
 	 *  @notice Contract constructor.
-	 *
-	 *  @dev bytes32ToBytes is ProofLib contract method.
 	 *
 	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
 	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.

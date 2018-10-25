@@ -16,11 +16,13 @@ pragma solidity ^0.4.23;
 
 import "../gateway/EIP20Interface.sol";
 import "./StakeInterface.sol";
+import "../lib/SafeMath.sol";
 
 /**
  * @title The Stake contract tracks deposits, logouts, slashings etc. on origin.
  */
 contract Stake is StakeInterface {
+    using SafeMath for uint256;
 
     /* Events */
 
@@ -288,7 +290,7 @@ contract Stake is StakeInterface {
     {
         verifyNewValidator(msg.sender, _validator, _amount);
 
-        uint256 startingHeight = height + 2;
+        uint256 startingHeight = height.add(2);
         registerNewValidator(msg.sender, _validator, _amount, startingHeight);
 
         emit NewDeposit(
@@ -384,7 +386,7 @@ contract Stake is StakeInterface {
     {
         assert(_closingHeight == height);
 
-        height++;
+        height = height.add(1);
 
         updatedValidators_ = updateAddresses[height];
         updatedWeights_ = updateWeights[height];
@@ -467,7 +469,9 @@ contract Stake is StakeInterface {
     {
         for (uint256 i = 0; i < validatorAddresses.length; i++) {
             address validator = validatorAddresses[i];
-            totalWeight_ += validatorWeightAtHeight(_height, validator);
+            totalWeight_ = totalWeight_.add(
+                validatorWeightAtHeight(_height, validator)
+            );
         }
     }
 

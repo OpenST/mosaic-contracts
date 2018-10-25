@@ -292,14 +292,14 @@ contract PollingPlace is PollingPlaceInterface {
             "meta-block updates must be done by the registered meta-block gate."
         );
 
-        currentMetaBlockHeight++;
+        currentMetaBlockHeight = currentMetaBlockHeight.add(1);
 
         /*
          * Before adding the new validators, copy the total weights from the
          * previous height. The new validators' weights for this height will be
          * added on top in `addValidators()`.
          */
-        totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight - 1];
+        totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight.sub(1)];
         addValidators(_validators, _weights);
         updateCoreHeights(_originHeight, _auxiliaryHeight);
 
@@ -443,7 +443,9 @@ contract PollingPlace is PollingPlaceInterface {
                 0
             );
 
-            totalWeights[currentMetaBlockHeight] += weight;
+            totalWeights[currentMetaBlockHeight] = totalWeights[currentMetaBlockHeight].add(
+                weight
+            );
         }
     }
 
@@ -502,7 +504,9 @@ contract PollingPlace is PollingPlaceInterface {
         VoteMessage memory voteMessage = _voteObject.voteMessage;
 
         validatorTargetHeights[_validator.auxiliaryAddress] = voteMessage.targetHeight;
-        votesWeights[_voteHash] += validatorWeight(_validator, currentMetaBlockHeight);
+        votesWeights[_voteHash] = votesWeights[_voteHash].add(
+            validatorWeight(_validator, currentMetaBlockHeight)
+        );
 
         /*
          * Because the target must be within the currently open meta-block, the
@@ -607,14 +611,14 @@ contract PollingPlace is PollingPlaceInterface {
         returns (uint256 required_)
     {
         // 2/3 are required (a supermajority).
-        required_ = (totalWeights[_metaBlockHeight].mul(2).div(3));
+        required_ = totalWeights[_metaBlockHeight].mul(2).div(3);
 
-        /**
+        /*
          * Solidity always rounds down, but we have to round up if there is a
          * remainder. It has to be *at least* 2/3.
          */
-        if (((totalWeights[_metaBlockHeight].mul(2)) % 3) > 0) {
-            required_++;
+        if (totalWeights[_metaBlockHeight].mul(2).mod(3) > 0) {
+            required_ = required_.add(1);
         }
     }
 
