@@ -19,11 +19,13 @@ import "./OriginCoreConfig.sol";
 import "./OriginCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
+import "../lib/SafeMath.sol";
 
 /**
  * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
  */
 contract OriginCore is OriginCoreInterface, OriginCoreConfig {
+    using SafeMath for uint256;
 
     /* Events */
 
@@ -183,7 +185,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
 
         require(
-            latestMetaBlockHeader.kernel.height + 1 == _height,
+            latestMetaBlockHeader.kernel.height.add(1) == _height,
             "Height should be one more than last meta-block."
         );
 
@@ -301,7 +303,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
          * `height` is the current open meta-block. The latest committed block
          * is therefore at `height - 1`.
          */
-        return height - 1;
+        return height.sub(1);
     }
 
     /**
