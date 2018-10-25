@@ -1,16 +1,15 @@
-/*
+pragma solidity ^0.4.23;
+/**
  * @title MerklePatriciaVerifier
  * @author Sam Mayo (sammayo888@gmail.com)
  *
  * @dev Library for verifing merkle patricia proofs.
  */
 
-pragma solidity ^0.4.23;
-
 import "./RLP.sol";
 
 library MerklePatriciaProof {
-    /*
+    /**
      * @dev Verifies a merkle patricia proof.
      * @param value The terminating value in the trie.
      * @param encodedPath The path in the trie leading to value.
@@ -18,7 +17,16 @@ library MerklePatriciaProof {
      * @param root The root hash of the trie.
      * @return The boolean validity of the proof.
      */
-    function verify(bytes32 value, bytes encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool) {
+    function verify(
+        bytes32 value,
+        bytes encodedPath,
+        bytes rlpParentNodes,
+        bytes32 root
+    )
+        external
+        pure
+        returns (bool)
+    {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 
@@ -73,7 +81,16 @@ library MerklePatriciaProof {
         }
     }
 
-    function verifyDebug(bytes32 value, bytes not_encodedPath, bytes rlpParentNodes, bytes32 root) internal pure returns (bool res, uint loc, bytes path_debug) {
+    function verifyDebug(
+        bytes32 value,
+        bytes not_encodedPath,
+        bytes rlpParentNodes,
+        bytes32 root
+    )
+        public
+        pure
+        returns (bool res, uint loc, bytes path_debug)
+    {
         RLP.RLPItem memory item = RLP.toRLPItem(rlpParentNodes);
         RLP.RLPItem[] memory parentNodes = RLP.toList(item);
 

@@ -32,5 +32,3 @@ build/
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
-
-build/
