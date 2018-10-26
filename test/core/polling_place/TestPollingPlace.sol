@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -16,8 +16,9 @@ pragma solidity ^0.4.23;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../../contracts/test/test_lib/RevertProxy.sol";
-import "../../contracts/core/PollingPlace.sol";
+import "../../../contracts/test/test_lib/RevertProxy.sol";
+import "../../../contracts/test/core/BlockStoreMock.sol";
+import "../../../contracts/core/PollingPlace.sol";
 
 /**
  * @title Wrapper to wrap polling place methods.
@@ -36,7 +37,7 @@ contract PollingPlaceWrapper {
     PollingPlace pollingPlace;
 
     /**
-     * @notice Setting the wrapped contruct. It is not necessarily known at
+     * @notice Setting the wrapped construct. It is not necessarily known at
      *         construction.
      *
      * @param _pollingPlace The address of the wrapped contract.
@@ -98,12 +99,12 @@ contract TestPollingPlace {
         Assert.equal(
             pollingPlace.currentMetaBlockHeight(),
             uint256(0),
-            "meta-block height after initialisation should be 0."
+            "meta-block height after initialization should be 0."
         );
         Assert.equal(
             pollingPlace.totalWeights(uint256(0)),
             initialWeight,
-            "Total weight after initialisation should be 1337."
+            "Total weight after initialization should be 1337."
         );
 
         address[] memory updateAddresses = new address[](1);
@@ -174,6 +175,11 @@ contract TestPollingPlace {
         uint256[] memory initialWeights = new uint256[](1);
         initialWeights[0] = initialWeight;
 
+        BlockStoreMock originBlockStore = new BlockStoreMock();
+        BlockStoreMock auxiliaryBlockStore = new BlockStoreMock();
+        originBlockStore.setCoreIdentifier(bytes20(1));
+        auxiliaryBlockStore.setCoreIdentifier(bytes20(2));
+
         wrapper = new PollingPlaceWrapper();
         /*
          * Address 1 is not the wrapper, thus the wrapper is not allowed to
@@ -181,10 +187,8 @@ contract TestPollingPlace {
          */
         pollingPlace = new PollingPlace(
             address(1),
-            bytes20(1),
-            address(2),
-            bytes20(2),
-            address(3),
+            address(originBlockStore),
+            address(auxiliaryBlockStore),
             initialAddresses,
             initialWeights
         );
@@ -373,13 +377,16 @@ contract TestPollingPlace {
         uint256[] memory initialWeights = new uint256[](1);
         initialWeights[0] = initialWeight;
 
+        BlockStoreMock originBlockStore = new BlockStoreMock();
+        BlockStoreMock auxiliaryBlockStore = new BlockStoreMock();
+        originBlockStore.setCoreIdentifier(bytes20(1));
+        auxiliaryBlockStore.setCoreIdentifier(bytes20(2));
+
         wrapper = new PollingPlaceWrapper();
         pollingPlace = new PollingPlace(
             address(wrapper),
-            bytes20(1),
-            address(2),
-            bytes20(2),
-            address(3),
+            address(originBlockStore),
+            address(auxiliaryBlockStore),
             initialAddresses,
             initialWeights
         );
