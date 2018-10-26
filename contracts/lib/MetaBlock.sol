@@ -125,6 +125,19 @@ library MetaBlock {
          */
         bytes20 coreIdentifier;
     }
+    /**
+     * Seal object which tracks vote of validators for an given transition hash.
+     */
+    struct Seal {
+        /**
+         * Mapping of validator address and boolean which represents all the
+         * validators who has voted for given transition object.
+         */
+        mapping(address => bool) validators;
+
+        /** Sum of all vote weight. */
+        uint256 totalVoteWeight;
+    }
 
     /**
      * @notice Takes the parameters of an transition object and returns the
