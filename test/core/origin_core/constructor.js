@@ -136,7 +136,7 @@ contract('OriginCore.constructor()', async (accounts) => {
                 maxAccumulateGasLimit
             ),
             "Max accumulated gas limit should not be zero."
-    );
-  });
+        );
+    });
 });
 

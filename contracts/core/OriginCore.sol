@@ -210,7 +210,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
         require(
-            _accumulatedGas > latestMetaBlockHeader.transition.gas,
+            _accumulatedGas > latestMetaBlockHeader.transition.accumulatedGas,
             "Gas consumed should be greater than last meta-block gas."
         );
 
@@ -343,13 +343,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *
      * @return Accumulated gas target.
      */
-    function getAccumulateGasTarget()
+    function getAccumulatedGasTarget()
         external
         view
         returns (uint256 accumulateGasTarget_)
     {
         MetaBlock.Header storage lastCommittedMetaBlock = reportedHeaders[head];
-        accumulateGasTarget_ = lastCommittedMetaBlock.transition.gas.add(
+        accumulateGasTarget_ = lastCommittedMetaBlock.transition.accumulatedGas.add(
             maxAccumulateGasLimit
         );
     }

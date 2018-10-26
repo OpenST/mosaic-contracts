@@ -22,10 +22,9 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const OriginCore = artifacts.require('OriginCore');
 
-contract('OriginCore.getAccumulateGasTarget()', async (accounts) => {
+contract('OriginCore.getAccumulatedGasTarget()', async (accounts) => {
 
   /**
-   * TODO:
    * @dev while writing this test commitMetaBlock function is not
    *      implemented, So once its updated the tests should be updated to use
    *      commitMetaBlock function. Currently this tests are using the genesis
@@ -49,14 +48,14 @@ contract('OriginCore.getAccumulateGasTarget()', async (accounts) => {
       gas,
       transactionRoot,
       minimumWeight,
-      maxAccumulateGasLimit
+      maxAccumulateGasLimit,
     );
   }
 
   /** Asserts the accumulated gas target */
   async function testAccumulatedGasTarget(){
     await deployOriginCore();
-    let accumulatedGasTarget = await originCore.getAccumulateGasTarget.call();
+    let accumulatedGasTarget = await originCore.getAccumulatedGasTarget.call();
     assert(
       accumulatedGasTarget.eq(gas.add(maxAccumulateGasLimit)),
       `Accumulated gas target should` +

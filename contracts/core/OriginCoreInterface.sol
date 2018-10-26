@@ -137,7 +137,7 @@ interface OriginCoreInterface {
      *
      * @return Accumulated gas target.
      */
-    function getAccumulateGasTarget()
+    function getAccumulatedGasTarget()
         external
         view
         returns (uint256 accumulateGasTarget_);
