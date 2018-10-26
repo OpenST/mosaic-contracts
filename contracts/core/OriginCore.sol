@@ -339,7 +339,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice Get next accumulated gas target.
+     * @notice Get accumulated gas target for next meta-block.
      *
      * @return Accumulated gas target.
      */

@@ -133,7 +133,7 @@ interface OriginCoreInterface {
         returns (bytes32 stateRoot_);
 
     /**
-     * @notice Get next accumulated gas target.
+     * @notice Get accumulated gas target for next meta-block.
      *
      * @return Accumulated gas target.
      */
