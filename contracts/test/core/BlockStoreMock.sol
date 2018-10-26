@@ -34,6 +34,7 @@ contract BlockStoreMock is BlockStoreInterface {
     /* Return variables for the various methods. */
     bool public reportBlockSuccess;
     bytes32 public stateRoot;
+    bytes20 public coreIdentifier;
     uint256 public latestBlockHeight;
     bool public isVoteValid;
     bool public isBlockReported;
@@ -48,6 +49,10 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setStateRoot(bytes32 _stateRoot) external {
         stateRoot = _stateRoot;
+    }
+
+    function setCoreIdentifier(bytes20 _coreIdentifier) external {
+        coreIdentifier = _coreIdentifier;
     }
 
     function setLatestBlockHeight(uint256 _height) external {
@@ -91,6 +96,10 @@ contract BlockStoreMock is BlockStoreInterface {
         returns (bytes32 stateRoot_)
     {
         stateRoot_ = stateRoot;
+    }
+
+    function coreIdentifier() external view returns (bytes20 coreIdentifier_) {
+        coreIdentifier_ = coreIdentifier;
     }
 
     function latestBlockHeight()

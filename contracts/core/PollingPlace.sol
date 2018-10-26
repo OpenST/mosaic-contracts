@@ -189,7 +189,7 @@ contract PollingPlace is PollingPlaceInterface {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract with an initial set of validators.
+     * @notice Initialize the contract with an initial set of validators.
      *         Provide two arrays with the validators' addresses on auxiliary
      *         and their respective weights at the same index. If an auxiliary
      *         address and a weight have the same index in the provided arrays,
@@ -198,11 +198,7 @@ contract PollingPlace is PollingPlaceInterface {
      * @param _metaBlockGate The meta-block gate is the only address that is
      *                       allowed to call methods that update the current
      *                       height of the meta-block chain.
-     * @param _originCoreIdentifier The identifier of the core that tracks the
-     *                              origin chain.
      * @param _originBlockStore The block store that stores the origin chain.
-     * @param _auxiliaryCoreIdentifier The identifier of the core that tracks
-     *                                 the auxiliary chain.
      * @param _auxiliaryBlockStore The block store that stores the auxiliary
      *                             chain.
      * @param _auxiliaryAddresses An array of validators' addresses on
@@ -212,9 +208,7 @@ contract PollingPlace is PollingPlaceInterface {
      */
     constructor (
         address _metaBlockGate,
-        bytes20 _originCoreIdentifier,
         address _originBlockStore,
-        bytes20 _auxiliaryCoreIdentifier,
         address _auxiliaryBlockStore,
         address[] _auxiliaryAddresses,
         uint256[] _weights
@@ -223,19 +217,11 @@ contract PollingPlace is PollingPlaceInterface {
     {
         require(
             _metaBlockGate != address(0),
-            "The address of the validator manager must not be zero."
-        );
-        require(
-            _originCoreIdentifier != bytes20(0),
-            "The core id of origin must not be zero."
+            "The address of the meta-block gate must not be zero."
         );
         require(
             _originBlockStore != address(0),
             "The address of the origin block store must not be zero."
-        );
-        require(
-            _auxiliaryCoreIdentifier != bytes20(0),
-            "The core id of auxiliary must not be zero."
         );
         require(
             _auxiliaryBlockStore != address(0),
@@ -249,10 +235,14 @@ contract PollingPlace is PollingPlaceInterface {
 
         metaBlockGate = _metaBlockGate;
 
-        originCoreIdentifier = _originCoreIdentifier;
-        auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
-        blockStores[originCoreIdentifier] = BlockStoreInterface(_originBlockStore);
-        blockStores[auxiliaryCoreIdentifier] = BlockStoreInterface(_auxiliaryBlockStore);
+        BlockStoreInterface originBlockStore = BlockStoreInterface(_originBlockStore);
+        BlockStoreInterface auxiliaryBlockStore = BlockStoreInterface(_auxiliaryBlockStore);
+
+        originCoreIdentifier = originBlockStore.coreIdentifier();
+        auxiliaryCoreIdentifier = auxiliaryBlockStore.coreIdentifier();
+
+        blockStores[originCoreIdentifier] = originBlockStore;
+        blockStores[auxiliaryCoreIdentifier] = auxiliaryBlockStore;
 
         addValidators(_auxiliaryAddresses, _weights);
     }
@@ -378,7 +368,10 @@ contract PollingPlace is PollingPlaceInterface {
             voteHash
         );
 
-        require(validator.auxiliaryAddress != address(0), "Vote by unknown validator.");
+        require(
+            validator.auxiliaryAddress != address(0),
+            "A vote by an unknown validator cannot be recorded."
+        );
 
         require(
             _targetHeight > validatorTargetHeights[validator.auxiliaryAddress],

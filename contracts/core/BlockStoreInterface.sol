@@ -63,6 +63,14 @@ interface BlockStoreInterface {
         returns (bytes32 stateRoot_);
 
     /**
+     * @notice Returns the core identifier of the chain that this block store
+     *         tracks.
+     *
+     * @return coreIdentifier_ The core identifier of the tracked chain.
+     */
+    function coreIdentifier() external view returns (bytes20 coreIdentifier_);
+
+    /**
      * @notice Returns the height of the latest block that has been finalised.
      *
      * @return The height of the latest finalised block.
