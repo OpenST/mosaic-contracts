@@ -56,8 +56,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     bytes32 public head;
 
     /**
-     * maximum amount of gas that a meta-block could accumulate for proposing
-     * a new meta-block.
+     * The maximum amount of gas that a meta-block could accumulate on an
+     * auxiliary chain before proposing a new meta-block.
      */
     uint256 public maxAccumulateGasLimit;
     /**
@@ -89,6 +89,10 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                       of this meta-blockchain must have so that the
      *                       meta-blockchain is not considered halted. Used in
      *                       the constructor of the Stake contract.
+     * @param _maxAccumulateGasLimit The maximum amount of gas that a
+     *                               meta-block could accumulate on an
+     *                               auxiliary chain before proposing a new
+     *                               meta-block.
      */
     constructor(
         bytes32 _auxiliaryCoreIdentifier,
@@ -337,7 +341,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /**
      * @notice Get next accumulated gas target.
      *
-     * @return The state root of the meta-block.
+     * @return Accumulated gas target.
      */
     function getAccumulateGasTarget()
         external
