@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: get_accumulate_gas_target.js
 //
 // http://www.simpletoken.org/
 //

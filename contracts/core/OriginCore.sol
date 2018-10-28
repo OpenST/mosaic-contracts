@@ -60,6 +60,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * auxiliary chain before proposing a new meta-block.
      */
     uint256 public maxAccumulateGasLimit;
+
     /**
      * Mapping of block hashes to block headers that were reported with the
      * respective hash.
