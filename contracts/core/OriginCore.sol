@@ -56,6 +56,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     bytes32 public head;
 
     /**
+     * The maximum amount of gas that a meta-block could accumulate on an
+     * auxiliary chain before proposing a new meta-block.
+     */
+    uint256 public maxAccumulateGasLimit;
+
+    /**
      * Mapping of block hashes to block headers that were reported with the
      * respective hash.
      */
@@ -84,13 +90,18 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                       of this meta-blockchain must have so that the
      *                       meta-blockchain is not considered halted. Used in
      *                       the constructor of the Stake contract.
+     * @param _maxAccumulateGasLimit The maximum amount of gas that a
+     *                               meta-block could accumulate on an
+     *                               auxiliary chain before proposing a new
+     *                               meta-block.
      */
     constructor(
         bytes32 _auxiliaryCoreIdentifier,
         address _ost,
         uint256 _initialAuxiliaryGas,
         bytes32 _initialTransactionRoot,
-        uint256 _minimumWeight
+        uint256 _minimumWeight,
+        uint256 _maxAccumulateGasLimit
     )
         public
     {
@@ -99,9 +110,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _initialTransactionRoot != bytes32(0),
             "Auxiliary transaction root should be defined."
         );
+        require(
+            _maxAccumulateGasLimit != uint256(0),
+            "Max accumulated gas limit should not be zero."
+        );
 
         auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
         Ost = OstInterface(_ost);
+        maxAccumulateGasLimit = _maxAccumulateGasLimit;
 
         // deploy stake contract
         stake = new Stake(
@@ -195,7 +211,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
 
         require(
-            _accumulatedGas > latestMetaBlockHeader.transition.gas,
+            _accumulatedGas > latestMetaBlockHeader.transition.accumulatedGas,
             "Gas consumed should be greater than last meta-block gas."
         );
 
@@ -321,6 +337,22 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (bytes32 stateRoot_)
     {
         revert("Method not implemented.");
+    }
+
+    /**
+     * @notice Get accumulated gas target for next meta-block.
+     *
+     * @return Accumulated gas target.
+     */
+    function getAccumulatedGasTarget()
+        external
+        view
+        returns (uint256 accumulateGasTarget_)
+    {
+        MetaBlock.Header storage lastCommittedMetaBlock = reportedHeaders[head];
+        accumulateGasTarget_ = lastCommittedMetaBlock.transition.accumulatedGas.add(
+            maxAccumulateGasLimit
+        );
     }
 
     /* Private Functions */
