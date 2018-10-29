@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: verfiy_vote.js
 //
 // http://www.simpletoken.org/
 //
