@@ -124,14 +124,14 @@ library SafeMath {
     }
 
     /**
-    * @notice Divides two numbers and returns the remainder (unsigned integer
-    *         modulo), reverts when dividing by zero.
-    *
-    * @param a Unsigned integer dividend.
-    * @param b Unsigned integer divisor.
-    *
-    * @return uint256 Remainder.
-    */
+     * @notice Divides two numbers and returns the remainder (unsigned integer
+     *         modulo), reverts when dividing by zero.
+     *
+     * @param a Unsigned integer dividend.
+     * @param b Unsigned integer divisor.
+     *
+     * @return uint256 Remainder.
+     */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
         require(
             b != 0,
