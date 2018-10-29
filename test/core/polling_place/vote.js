@@ -269,17 +269,29 @@ contract('PollingPlace.vote()', async (accounts) => {
                 signature.s,
             );
 
-            let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the origin block store.'
+            let events = EventsDecoder.perform(
+                tx.receipt,
+                originBlockStore.address,
+                originBlockStore.abi
             );
-            events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
+
             assert.strictEqual(
                 events.Justified,
                 undefined,
-                'There should not be a Justify event emitted by the auxiliary block store.'
+                'There should not be a Justify event emitted by the origin ' +
+                    'block store.',
+            );
+            events = EventsDecoder.perform(
+                tx.receipt,
+                auxiliaryBlockStore.address,
+                auxiliaryBlockStore.abi
+            );
+
+            assert.strictEqual(
+                events.Justified,
+                undefined,
+                'There should not be a Justify event emitted by the auxiliary' +
+                    ' block store.',
             );
         }
 
@@ -300,23 +312,36 @@ contract('PollingPlace.vote()', async (accounts) => {
             signature.s,
         );
 
-        let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
+        let events = EventsDecoder.perform(
+            tx.receipt,
+            originBlockStore.address,
+            originBlockStore.abi
+        );
+
         assert.strictEqual(
             events.Justified['_source'],
             vote.source,
-            'There should be a Justify event with the source emitted by the origin block store.'
+            'There should be a Justify event with the source emitted by the ' +
+                'origin block store.',
         );
         assert.strictEqual(
             events.Justified['_target'],
             vote.target,
-            'There should be a Justify event with the target emitted by the origin block store.'
+            'There should be a Justify event with the target emitted by the ' +
+                'origin block store.',
         );
         // The auxiliary block store should still not emit an event.
-        events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
+        events = EventsDecoder.perform(
+            tx.receipt,
+            auxiliaryBlockStore.address,
+            auxiliaryBlockStore.abi
+        );
+
         assert.strictEqual(
             events.Justified,
             undefined,
-            'There should not be a Justify event emitted by the auxiliary block store.'
+            'There should not be a Justify event emitted by the auxiliary ' +
+                'block store.',
         );
     });
 
@@ -386,129 +411,176 @@ contract('PollingPlace.vote()', async (accounts) => {
                 signature.s,
             );
 
-            let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the origin block store.'
+            let events = EventsDecoder.perform(
+                tx.receipt,
+                originBlockStore.address,
+                originBlockStore.abi
             );
-            events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
+
             assert.strictEqual(
                 events.Justified,
                 undefined,
-                'There should not be a Justify event emitted by the auxiliary block store.'
+                'There should not be a Justify event emitted by the origin ' +
+                    'block store.',
+            );
+
+            events = EventsDecoder.perform(
+                tx.receipt,
+                auxiliaryBlockStore.address,
+                auxiliaryBlockStore.abi
+            );
+
+            assert.strictEqual(
+                events.Justified,
+                undefined,
+                'There should not be a Justify event emitted by the auxiliary' +
+                    ' block store.',
             );
         }
     });
 
-    it('should not achieve a majority by combining different source or target hashes', async () => {
-        /*
-         * There is a total weight of 60. That means a voting weight of
-         * >=40 is >=2/3 of the total weight.
-         */
-        let expectedWeights = {
-            addresses: [
-                accounts[0],
-                accounts[1],
-                accounts[2],
-                accounts[3],
-                accounts[4],
-                accounts[5],
-                accounts[6],
-                accounts[7],
-                accounts[8],
-                accounts[9],
-            ],
-            values: [
-                new BN('2'),
-                new BN('3'),
-                new BN('4'),
-                new BN('5'),
-                new BN('6'),
-                new BN('6'),
-                new BN('7'),
-                new BN('8'),
-                new BN('9'),
-                new BN('10'),
-            ]
-        };
-
-        let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
-            originBlockStore.address,
-            auxiliaryBlockStore.address,
-            expectedWeights.addresses,
-            expectedWeights.values
-        );
-
-        for (var i = 0; i < 10; i++) {
-            // Incrementing source hashes to split the votes
-            vote.source = '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112' + i.toString(16);
-
-            let signature = await signVote(expectedWeights.addresses[i], vote);
-            let tx = await pollingPlace.vote(
-                vote.coreIdentifier,
-                vote.transitionHash,
-                vote.source,
-                vote.target,
-                vote.sourceHeight,
-                vote.targetHeight,
-                signature.v,
-                signature.r,
-                signature.s,
-            );
-
-            let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the origin block store.'
-            );
-            events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the auxiliary block store.'
-            );
-        }
-        for (var i = 0; i < 10; i++) {
+    it(
+        'should not achieve a majority by combining different source or ' +
+        'target hashes',
+        async () => {
             /*
-             * New target height as validators are not allowed to vote on
-             * the same height from the previous loop again.
-             */
-            vote.targetHeight = new BN('999');
-            // Incrementing target hashes to split the votes
-            vote.target = '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9c' + i.toString(16);
+            * There is a total weight of 60. That means a voting weight of
+            * >=40 is >=2/3 of the total weight.
+            */
+            let expectedWeights = {
+                addresses: [
+                    accounts[0],
+                    accounts[1],
+                    accounts[2],
+                    accounts[3],
+                    accounts[4],
+                    accounts[5],
+                    accounts[6],
+                    accounts[7],
+                    accounts[8],
+                    accounts[9],
+                ],
+                values: [
+                    new BN('2'),
+                    new BN('3'),
+                    new BN('4'),
+                    new BN('5'),
+                    new BN('6'),
+                    new BN('6'),
+                    new BN('7'),
+                    new BN('8'),
+                    new BN('9'),
+                    new BN('10'),
+                ]
+            };
 
-            let signature = await signVote(expectedWeights.addresses[i], vote);
-            let tx = await pollingPlace.vote(
-                vote.coreIdentifier,
-                vote.transitionHash,
-                vote.source,
-                vote.target,
-                vote.sourceHeight,
-                vote.targetHeight,
-                signature.v,
-                signature.r,
-                signature.s,
+            let pollingPlace = await PollingPlace.new(
+                metaBlockGate,
+                originBlockStore.address,
+                auxiliaryBlockStore.address,
+                expectedWeights.addresses,
+                expectedWeights.values
             );
 
-            let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the origin block store.'
-            );
-            events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the auxiliary block store.'
-            );
+            for (var i = 0; i < 10; i++) {
+                // Incrementing source hashes to split the votes
+                vote.source = '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f9' +
+                    '83e593ac4302d38a112' + i.toString(16);
+
+                let signature = await signVote(
+                    expectedWeights.addresses[i],
+                    vote
+                );
+                let tx = await pollingPlace.vote(
+                    vote.coreIdentifier,
+                    vote.transitionHash,
+                    vote.source,
+                    vote.target,
+                    vote.sourceHeight,
+                    vote.targetHeight,
+                    signature.v,
+                    signature.r,
+                    signature.s,
+                );
+
+                let events = EventsDecoder.perform(
+                    tx.receipt,
+                    originBlockStore.address,
+                    originBlockStore.abi
+                );
+                assert.strictEqual(
+                    events.Justified,
+                    undefined,
+                    'There should not be a Justify event emitted by the ' +
+                        'origin block store.',
+                );
+
+                events = EventsDecoder.perform(
+                    tx.receipt,
+                    auxiliaryBlockStore.address,
+                    auxiliaryBlockStore.abi
+                );
+                assert.strictEqual(
+                    events.Justified,
+                    undefined,
+                    'There should not be a Justify event emitted by the ' +
+                        'auxiliary block store.',
+                );
+            }
+            for (var i = 0; i < 10; i++) {
+                /*
+                * New target height as validators are not allowed to vote on
+                * the same height from the previous loop again.
+                */
+                vote.targetHeight = new BN('999');
+                // Incrementing target hashes to split the votes
+                vote.target = '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f' +
+                    '772893618943ea2dab9c' + i.toString(16);
+
+                let signature = await signVote(
+                    expectedWeights.addresses[i],
+                    vote
+                );
+                let tx = await pollingPlace.vote(
+                    vote.coreIdentifier,
+                    vote.transitionHash,
+                    vote.source,
+                    vote.target,
+                    vote.sourceHeight,
+                    vote.targetHeight,
+                    signature.v,
+                    signature.r,
+                    signature.s,
+                );
+
+                let events = EventsDecoder.perform(
+                    tx.receipt,
+                    originBlockStore.address,
+                    originBlockStore.abi
+                );
+                assert.strictEqual(
+                    events.Justified,
+                    undefined,
+                    'There should not be a Justify event emitted by the ' +
+                        'origin block store.',
+                );
+
+                events = EventsDecoder.perform(
+                    tx.receipt,
+                    auxiliaryBlockStore.address,
+                    auxiliaryBlockStore.abi
+                );
+                assert.strictEqual(
+                    events.Justified,
+                    undefined,
+                    'There should not be a Justify event emitted by the ' +
+                        'auxiliary block store.',
+                );
+            }
         }
-    });
+    );
 
-    it('should not have a rounding error to achive 2/3 majority', async () => {
+    it('should not have a rounding error to achieve 2/3 majority', async () => {
         /*
          * There is a total weight of **61**. That means a voting weight of
          * >=41 is >=2/3 of the total weight.
@@ -566,17 +638,28 @@ contract('PollingPlace.vote()', async (accounts) => {
                 signature.s,
             );
 
-            let events = EventsDecoder.perform(tx.receipt, originBlockStore.address, originBlockStore.abi);
-            assert.strictEqual(
-                events.Justified,
-                undefined,
-                'There should not be a Justify event emitted by the origin block store.'
+            let events = EventsDecoder.perform(
+                tx.receipt,
+                originBlockStore.address,
+                originBlockStore.abi
             );
-            events = EventsDecoder.perform(tx.receipt, auxiliaryBlockStore.address, auxiliaryBlockStore.abi);
             assert.strictEqual(
                 events.Justified,
                 undefined,
-                'There should not be a Justify event emitted by the auxiliary block store.'
+                'There should not be a Justify event emitted by the origin ' +
+                    'block store.',
+            );
+
+            events = EventsDecoder.perform(
+                tx.receipt,
+                auxiliaryBlockStore.address,
+                auxiliaryBlockStore.abi
+            );
+            assert.strictEqual(
+                events.Justified,
+                undefined,
+                'There should not be a Justify event emitted by the auxiliary' +
+                    ' block store.',
             );
         }
     });
@@ -700,13 +783,34 @@ contract('PollingPlace.vote()', async (accounts) => {
     async function signVote(address, vote) {
 
         let voteDigest = web3.utils.soliditySha3(
-            {type: 'bytes32', value: VOTE_MESSAGE_TYPEHASH},
-            {type: 'bytes20', value: web3.utils.toChecksumAddress(vote.coreIdentifier)},
-            {type: 'bytes32', value: vote.transitionHash},
-            {type: 'bytes32', value: vote.source},
-            {type: 'bytes32', value: vote.target},
-            {type: 'uint256', value: vote.sourceHeight},
-            {type: 'uint256', value: vote.targetHeight},
+            {
+                type: 'bytes32',
+                value: VOTE_MESSAGE_TYPEHASH,
+            },
+            {
+                type: 'bytes20',
+                value: web3.utils.toChecksumAddress(vote.coreIdentifier)
+            },
+            {
+                type: 'bytes32',
+                value: vote.transitionHash
+            },
+            {
+                type: 'bytes32',
+                value: vote.source
+            },
+            {
+                type: 'bytes32',
+                value: vote.target
+            },
+            {
+                type: 'uint256',
+                value: vote.sourceHeight
+            },
+            {
+                type: 'uint256',
+                value: vote.targetHeight
+            },
         );
 
         /*
