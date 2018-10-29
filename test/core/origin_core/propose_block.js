@@ -33,18 +33,19 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
     let auxiliaryCoreIdentifier = web3.utils.sha3("1");
 
     let height, kernelHash, auxiliaryDynasty, auxiliaryBlockHash, gas,
-         originDynasty, originBlockHash, transactionRoot;
+         originDynasty, originBlockHash, transactionRoot, maxAccumulateGasLimit;
 
     beforeEach(async () => {
 
-        height = 1,
-             kernelHash = web3.utils.sha3("1"),
-             auxiliaryDynasty = 50,
-             auxiliaryBlockHash = web3.utils.sha3("1"),
-             gas = 1000,
-             originDynasty = 1,
-             originBlockHash = web3.utils.sha3("1"),
-             transactionRoot = web3.utils.sha3("1");
+        height = 1;
+        kernelHash = web3.utils.sha3("1");
+        auxiliaryDynasty = 50;
+        auxiliaryBlockHash = web3.utils.sha3("1");
+        gas = 1000;
+        originDynasty = 1;
+        originBlockHash = web3.utils.sha3("1");
+        transactionRoot = web3.utils.sha3("1");
+        maxAccumulateGasLimit = new BN(105000);
 
         let ost = accounts[0];
 
@@ -54,6 +55,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
              0,
              web3.utils.sha3("1"),
              minimumWeight,
+             maxAccumulateGasLimit
         );
     });
 
