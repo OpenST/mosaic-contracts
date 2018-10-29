@@ -42,24 +42,6 @@ EIP20GatewayKlass.prototype = {
       hashLock = params.hashLock,
       signature = params.signature;
 
-    // Get the initial balances for all the addresses involved.
-    let initialStakerTokenBalance = await this.token.balanceOf.call(staker),
-      initialGatewayTokenBalance = await this.token.balanceOf.call(
-        this.gateway.address
-      ),
-      initialFacilitatorTokenBalance = await this.token.balanceOf.call(
-        txOptions.from
-      );
-
-    // Get the initial balances of base token for all the addresses involved.
-    let initialStakerBaseTokenBalance = await this.baseToken.balanceOf.call(staker),
-      initialGatewayBaseTokenBalance = await this.baseToken.balanceOf.call(
-        this.gateway.address
-      ),
-      initialFacilitatorBaseTokenBalance = await this.baseToken.balanceOf.call(
-        txOptions.from
-      );
-
     let initialBalance = await this._getBalances(
       staker,
       this.gateway.address,
