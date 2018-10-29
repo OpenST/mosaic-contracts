@@ -111,6 +111,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     let initialValidators;
     let initialDepositors;
     let initialStakes;
+    let maxAccumulateGasLimit = new BN(105000);
 
     beforeEach(async () => {
 
@@ -122,7 +123,8 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              ost.address,
              initialGas,
              transactionRoot,
-             minimumWeight
+             minimumWeight,
+             maxAccumulateGasLimit
         );
         let stakeAddress = await originCore.stake.call();
 
