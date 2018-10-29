@@ -73,7 +73,6 @@ Utils.prototype = {
              `expected total weight ${expectedTotalWeight.toString(10)}` +
              `and actual total weight ${events.VoteVerified.totalWeight.toString(10)}`
         );
-
     },
 
     initializeStakeContract: async function ( stakeAddress, ost, tokenDeployer, initialDepositors, initialStakes, initialValidators) {
@@ -93,7 +92,6 @@ Utils.prototype = {
              initialStakes,
         );
     }
-
 };
 
 module.exports = new Utils();
