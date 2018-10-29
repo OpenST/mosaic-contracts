@@ -130,4 +130,14 @@ interface OriginCoreInterface {
         external
         view
         returns (bytes32 stateRoot_);
+
+    /**
+     * @notice Get accumulated gas target for next meta-block.
+     *
+     * @return Accumulated gas target.
+     */
+    function getAccumulatedGasTarget()
+        external
+        view
+        returns (uint256 accumulateGasTarget_);
 }

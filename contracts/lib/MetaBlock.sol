@@ -84,7 +84,7 @@ library MetaBlock {
          * The total gas that has been consumed on auxiliary for all blocks
          * that are inside this meta-block.
          */
-        uint256 gas;
+        uint256 accumulatedGas;
 
         /**
          * Dynasty of origin block within latest meta-block
@@ -150,7 +150,8 @@ library MetaBlock {
      *                          on the auxiliary chain.
      * @param _auxiliaryBlockHash The block hash where the meta-block closes
      *                          on the auxiliary chain.
-     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
      * @param _originDynasty Dynasty of origin block within latest meta-block
      *                          reported at auxiliary chain.
      * @param _originBlockHash Block hash of origin block within latest
@@ -165,7 +166,7 @@ library MetaBlock {
         bytes32 _kernelHash,
         uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
-        uint256 _gas,
+        uint256 _accumulatedGas,
         uint256 _originDynasty,
         bytes32 _originBlockHash,
         bytes32 _transactionRoot
@@ -174,7 +175,7 @@ library MetaBlock {
         pure
         returns (bytes32)
     {
-        return keccak256(abi.encode(_gas));
+        return keccak256(abi.encode(_accumulatedGas));
     }
 
     /**
