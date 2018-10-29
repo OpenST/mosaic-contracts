@@ -21,7 +21,7 @@
 const web3 = require('./web3.js');
 
 const AUXILIARYTRANSITION_TYPEHASH = web3.utils.sha3(
-    'AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 gas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)',
+    'AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 accumulatedGas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)',
 );
 
 const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
@@ -33,7 +33,7 @@ const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
  *
  * @returns {string} The hash of the transition.
  */
-module.exports.hashAuxiliaryTransition = function(transition) {
+module.exports.hashAuxiliaryTransition = function (transition) {
     let encodedParameters = web3.eth.abi.encodeParameters(
         [
             'bytes32',
@@ -68,7 +68,7 @@ module.exports.hashAuxiliaryTransition = function(transition) {
  *
  * @returns {string} The hash of the transition.
  */
-module.exports.hashOriginTransition = function(transition) {
+module.exports.hashOriginTransition = function (transition) {
     let encodedParameters = web3.eth.abi.encodeParameters(
         [
             'bytes32',

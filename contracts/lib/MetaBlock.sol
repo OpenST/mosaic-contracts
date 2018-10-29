@@ -25,7 +25,7 @@ library MetaBlock {
 
     /** To hash structs according to EIP-712, a type hash is required. */
     bytes32 constant AUXILIARYTRANSITION_TYPEHASH = keccak256(
-        "AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 gas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)"
+        "AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 accumulatedGas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)"
     );
 
     /** To hash structs according to EIP-712, a type hash is required. */
@@ -88,7 +88,7 @@ library MetaBlock {
          * The total gas that has been consumed on auxiliary for all blocks
          * since the meta-blockchain genesis.
          */
-        uint256 gas;
+        uint256 accumulatedGas;
 
         /**
          * Dynasty of origin block within latest meta-block
@@ -141,7 +141,8 @@ library MetaBlock {
      *                          on the auxiliary chain.
      * @param _auxiliaryBlockHash The block hash where the meta-block closes
      *                          on the auxiliary chain.
-     * @param _gas The total consumed gas on auxiliary within this meta-block.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
      * @param _originDynasty Dynasty of origin block within latest meta-block
      *                          reported at auxiliary chain.
      * @param _originBlockHash Block hash of origin block within latest
@@ -156,7 +157,7 @@ library MetaBlock {
         bytes32 _kernelHash,
         uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
-        uint256 _gas,
+        uint256 _accumulatedGas,
         uint256 _originDynasty,
         bytes32 _originBlockHash,
         bytes32 _transactionRoot
@@ -172,7 +173,7 @@ library MetaBlock {
                 _kernelHash,
                 _auxiliaryDynasty,
                 _auxiliaryBlockHash,
-                _gas,
+                _accumulatedGas,
                 _originDynasty,
                 _originBlockHash,
                 _transactionRoot
