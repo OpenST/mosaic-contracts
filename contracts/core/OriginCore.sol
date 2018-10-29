@@ -288,7 +288,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     {
         /**
          * This check if valid meta-block proposal exists for given
-         * kernel hash and transition hash. This will revert transaction if
+         * kernel hash and transition hash. This will revert transaction
          * if proposal doesn't exist.
          */
         checkMetaBlockProposal(
@@ -445,6 +445,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /**
      * @notice private method to check vote validity.
      *
+     * @dev This method will revert the transaction if validator is not
+     *       eligible for voting.
      *
      * @param _voteHash The hash of the transition part of the meta-block
      *                    header at the source block.
@@ -463,6 +465,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     )
         private
+        view
         returns (address signer_, uint256 weight_)
     {
         // As per https://github.com/ethereum/go-ethereum/pull/2940
@@ -481,10 +484,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _s
         );
 
-        /* header of last meta block */
+        /* Header of last meta block. */
         MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
-        uint256 height = latestMetaBlockHeader.kernel.height;
-        weight_ = stake.weight(height, signer_);
+        /* Current meta-block height. */
+        uint256 currentHeight = latestMetaBlockHeader.kernel.height.add(1);
+        weight_ = stake.weight(currentHeight, signer_);
 
         require(
             weight_ != 0,
@@ -495,7 +499,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /**
      * @notice private method to save vote into the seal.
      *
-     * @dev This method assumes that vote has been successfully verified.
+     * @dev This method assumes that vote has been successfully verified. It
+     *      will revert the transaction if validator already voted for this
+     *      transition object.
      *
      * @param _transition The hash of the transition part of the meta-block
      *                    header at the source block.
@@ -530,17 +536,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice private method to check if meta-block proposal exists.
+     * @notice private method to check if meta-block proposal exists. This will
+     *         revert the transaction if proposal doesn't exist.
      *
      * @param _kernelHash The hash of the current kernel.
-     * @param _transition The hash of the transition part of the meta-block
-     *                    header at the source block.
+     * @param _transition The hash of the transition object which is proposed
+     *                    with meta-block.
      */
     function checkMetaBlockProposal(
         bytes32 _kernelHash,
         bytes32 _transition
     )
         private
+        view
     {
         MetaBlock.AuxiliaryTransition storage transitionObject =
             proposedMetaBlock[_kernelHash][_transition];

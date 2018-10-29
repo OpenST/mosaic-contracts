@@ -126,7 +126,7 @@ library MetaBlock {
         bytes20 coreIdentifier;
     }
     /**
-     * Seal object which tracks vote of validators for an given transition hash.
+     * Seal object which tracks vote of validators for a given transition hash.
      */
     struct Seal {
         /**

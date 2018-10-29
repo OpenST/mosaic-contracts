@@ -59,6 +59,36 @@ async function verifyVote(stakeAmount, validator, vote, originCore, kernelHash, 
          `Verify event should recover validator signature`
     );
 
+    assert.equal(
+         events.VoteVerified.kernelHash,
+         kernelHash,
+         `Kernel hash should match`
+    );
+
+    assert.equal(
+         events.VoteVerified.transitionHash,
+         vote.transitionHash,
+         `transitionHash hash should match`
+    );
+
+    assert.equal(
+         events.VoteVerified.v,
+         sig.v,
+         `V of signature should match`
+    );
+
+    assert.equal(
+         events.VoteVerified.r,
+         sig.r,
+         `R of signature should match`
+    );
+
+    assert.equal(
+         events.VoteVerified.s,
+         sig.s,
+         `S of signature should match`
+    );
+
     assert(
          expectedTotalWeight.eq(new BN(events.VoteVerified.totalWeight)),
          `expected total weight ${expectedTotalWeight.toString(10)}` +
