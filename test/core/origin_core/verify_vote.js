@@ -25,81 +25,14 @@ const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 const CoreUtils = require('../utils.js');
-const StakeUtils = require('../stake/helpers/stake_utils.js');
-
+const OriginCoreUtils = require('./helpers/utils');
 
 const OriginCore = artifacts.require('OriginCore');
-const Stake = artifacts.require('Stake');
 const MockToken = artifacts.require('MockToken');
-
-async function verifyVote(stakeAmount, validator, vote, originCore, kernelHash, expectedTotalWeight) {
-
-    validator = web3.utils.toChecksumAddress(validator);
-
-    let sig = await CoreUtils.signVote(validator, vote);
-
-    let tx = await originCore.verifyVote(
-         kernelHash,
-         vote.coreIdentifier,
-         vote.transitionHash,
-         vote.source,
-         vote.target,
-         vote.sourceHeight,
-         vote.targetHeight,
-         sig.v,
-         sig.r,
-         sig.s
-    );
-
-    let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
-
-    assert.equal(
-         web3.utils.toChecksumAddress(events.VoteVerified.validator),
-         validator,
-         `Verify event should recover validator signature`
-    );
-
-    assert.equal(
-         events.VoteVerified.kernelHash,
-         kernelHash,
-         `Kernel hash should match`
-    );
-
-    assert.equal(
-         events.VoteVerified.transitionHash,
-         vote.transitionHash,
-         `transitionHash hash should match`
-    );
-
-    assert.equal(
-         events.VoteVerified.v,
-         sig.v,
-         `V of signature should match`
-    );
-
-    assert.equal(
-         events.VoteVerified.r,
-         sig.r,
-         `R of signature should match`
-    );
-
-    assert.equal(
-         events.VoteVerified.s,
-         sig.s,
-         `S of signature should match`
-    );
-
-    assert(
-         expectedTotalWeight.eq(new BN(events.VoteVerified.totalWeight)),
-         `expected total weight ${expectedTotalWeight.toString(10)}` +
-         `and actual total weight ${events.VoteVerified.totalWeight.toString(10)}`
-    );
-
-}
 
 contract('OriginCore.verifyVote()', async (accounts) => {
 
-    let originCore, stake;
+    let originCore;
     let transitionHash;
     let vote;
     let minimumWeight = new BN('1');
@@ -114,21 +47,6 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     let maxAccumulateGasLimit = new BN(105000);
 
     beforeEach(async () => {
-
-        let tokenDeployer = accounts[0];
-        ost = await MockToken.new({from: tokenDeployer});
-
-        originCore = await OriginCore.new(
-             auxiliaryCoreIdentifier,
-             ost.address,
-             initialGas,
-             transactionRoot,
-             minimumWeight,
-             maxAccumulateGasLimit
-        );
-        let stakeAddress = await originCore.stake.call();
-
-        stake = await Stake.at(stakeAddress);
 
         initialDepositors = [
             accounts[2],
@@ -146,17 +64,26 @@ contract('OriginCore.verifyVote()', async (accounts) => {
             new BN('30000'),
         ];
 
-        await StakeUtils.approveTransfers(
+        let tokenDeployer = accounts[0];
+        ost = await MockToken.new({from: tokenDeployer});
+
+        originCore = await OriginCore.new(
+             auxiliaryCoreIdentifier,
+             ost.address,
+             initialGas,
+             transactionRoot,
+             minimumWeight,
+             maxAccumulateGasLimit
+        );
+        let stakeAddress = await originCore.stake.call();
+
+        await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
              ost,
              tokenDeployer,
              initialDepositors,
              initialStakes,
-        );
-        await stake.initialize(
-             initialDepositors,
-             initialValidators,
-             initialStakes,
+             initialValidators
         );
 
         let height = 1,
@@ -199,7 +126,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     it('should be able to verify vote for proposed meta-block', async function () {
 
         let expectedTotalWeight = new BN(initialStakes[0]);
-        await verifyVote(
+        await OriginCoreUtils.verifyVote(
              initialStakes[0],
              initialValidators[0],
              vote,
@@ -217,7 +144,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         let sig = await CoreUtils.signVote(validator, vote);
 
         let expectedTotalWeight = new BN(initialStakes[0]);
-        await verifyVote(
+        await OriginCoreUtils.verifyVote(
              initialStakes[0],
              validator,
              vote,
@@ -272,7 +199,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let expectedTotalWeight = new BN(initialStakes[0]);
 
-        await verifyVote(
+        await OriginCoreUtils.verifyVote(
              initialStakes[0],
              initialValidators[0],
              vote,
@@ -283,7 +210,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         expectedTotalWeight = expectedTotalWeight.add(new BN(initialStakes[1]));
 
-        await verifyVote(
+        await OriginCoreUtils.verifyVote(
              initialStakes[1],
              initialValidators[1],
              vote,
