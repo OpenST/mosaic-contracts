@@ -1,4 +1,4 @@
-const MetaBlockUtils = require('../../../test_lib/event_decoder.js')
+const MetaBlockUtils = require('../../../test_lib/meta_block.js')
 const EventsDecoder = require('../../../test_lib/event_decoder.js');
 const web3 = require('../../../test_lib/web3.js');
 const BN = require('bn.js');
