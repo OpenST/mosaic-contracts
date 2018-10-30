@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,98 +15,128 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Common: SafeMath Library Implementation
 //
 // http://www.simpletoken.org/
 //
 // Based on the SafeMath library by the OpenZeppelin team.
-// Copyright (c) 2016 Smart Contract Solutions, Inc.
+// Copyright (c) 2018 Smart Contract Solutions, Inc.
 // https://github.com/OpenZeppelin/zeppelin-solidity
 // The MIT License.
 // ----------------------------------------------------------------------------
 
 
 /**
- *  @title SafeMath library.
+ * @title SafeMath library.
  *
- *  @notice Based on the SafeMath library by the OpenZeppelin team.
+ * @notice Based on the SafeMath library by the OpenZeppelin team.
+ *
+ * @dev Math operations with safety checks that revert on error.
  */
 library SafeMath {
-    
-    /** Internal Functions */
+
+    /* Internal Functions */
 
     /**
-     *  @notice Internal pure function mul.
+     * @notice Multiplies two numbers, reverts on overflow.
      *
-     *  @param a Unsigned integer multiplicand.
-     *  @param b Unsigned integer multiplier.
+     * @param a Unsigned integer multiplicand.
+     * @param b Unsigned integer multiplier.
      *
-     *  @return uint256 Product.
+     * @return uint256 Product.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a * b;
+        /*
+         * Gas optimization: this is cheaper than requiring 'a' not being zero,
+         * but the benefit is lost if 'b' is also tested.
+         * See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
+         */
+        if (a == 0) {
+            return 0;
+        }
 
-        assert(a == 0 || c / a == b);
+        uint256 c = a * b;
+        require(
+            c / a == b,
+            "Overflow when multiplying."
+        );
 
         return c;
     }
 
     /**
-     *  @notice Internal pure function div.
+     * @notice Integer division of two numbers truncating the quotient, reverts
+     *         on division by zero.
      *
-     *  @param a Unsigned integer dividend.
-     *  @param b Unsigned integer divisor.
+     * @param a Unsigned integer dividend.
+     * @param b Unsigned integer divisor.
      *
-     *  @return uint256 Quotient.
+     * @return uint256 Quotient.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Solidity automatically throws when dividing by 0
+        // Solidity only automatically asserts when dividing by 0.
+        require(
+            b > 0,
+            "Cannot do attempted division by less than or equal to zero."
+        );
         uint256 c = a / b;
 
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+        // There is no case in which the following doesn't hold:
+        // assert(a == b * c + a % b);
+
         return c;
     }
 
     /**
-     *  @notice Internal pure function sub.
+     * @notice Subtracts two numbers, reverts on underflow (i.e. if subtrahend
+     *         is greater than minuend).
      *
-     *  @param a Unsigned integer minuend.
-     *  @param b Unsigned integer subtrahend.
+     * @param a Unsigned integer minuend.
+     * @param b Unsigned integer subtrahend.
      *
-     *  @return uint256 Difference.
+     * @return uint256 Difference.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        assert(b <= a);
+        require(
+            b <= a,
+            "Underflow when subtracting."
+        );
+        uint256 c = a - b;
 
-        return a - b;
+        return c;
     }
 
     /**
-     *  @notice Internal pure function add.
+     * @notice Adds two numbers, reverts on overflow.
      *
-     *  @param a Unsigned integer augend.
-     *  @param b Unsigned integer addend.
+     * @param a Unsigned integer augend.
+     * @param b Unsigned integer addend.
      *
-     *  @return uint256 Sum.
+     * @return uint256 Sum.
      */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-
-        assert(c >= a);
+        require(
+            c >= a,
+            "Overflow when adding."
+        );
 
         return c;
     }
 
     /**
-    * @notice Divides two numbers and returns the remainder.
-    *
-    * @param a Unsigned integer dividend.
-    * @param b Unsigned integer divisor.
-    *
-    * @return uint256 Remainder.
-    */
+     * @notice Divides two numbers and returns the remainder (unsigned integer
+     *         modulo), reverts when dividing by zero.
+     *
+     * @param a Unsigned integer dividend.
+     * @param b Unsigned integer divisor.
+     *
+     * @return uint256 Remainder.
+     */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        assert(b != 0);
+        require(
+            b != 0,
+            "Cannot do attempted division by zero (in `mod()`)."
+        );
 
         return a % b;
     }
