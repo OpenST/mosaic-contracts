@@ -20,7 +20,6 @@ import "./OriginCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
-import "../lib/MetaBlock.sol";
 
 /**
  * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
@@ -353,7 +352,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _r,
             _s,
             verifiedWeight,
-            requiredWeight(stake.totalWeightAtHeight(height))
+            MetaBlock.requiredWeightForSuperMajority(
+                    stake.totalWeightAtHeight(height)
+            )
         );
     }
 
@@ -489,7 +490,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *       eligible for voting.
      *
      * @param _transitionHash The hash of the transition part of the meta-block
-     *                    header at the source block.
+     *                        header at the source block.
      * @param _voteHash The hash of the vote object.
      * @param _v V of the signature.
      * @param _r R of the signature.
@@ -571,8 +572,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         totalVoteWeight_ = seal.totalVoteWeight.add(stake.weight(_height,_signer));
 
         seal.totalVoteWeight = totalVoteWeight_;
-
-        //seals[_transition] = seal;
     }
 
     /**
@@ -581,6 +580,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _kernelHash The hash of the current kernel.
      * @param _transitionHash The hash of the transition object which is proposed
      *                    with meta-block.
+     *
      * @return bool `true` If meta-block proposal exists.
      */
     function existsMetaBlockProposal(
@@ -597,19 +597,4 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         return transitionObject.kernelHash == _kernelHash;
     }
 
-    /**
-     * @notice Function to calculated weight required for super majority
-     *         i.e 2/3rd of total weight.
-     *
-     * @param _totalWeight Total weight of all the validators at current
-     *                     meta-block height.
-     * @return uint256 Required weight for 2/3rd super majority.
-     */
-    function requiredWeight(uint256 _totalWeight)
-        private
-        pure
-        returns(uint256)
-    {
-        return _totalWeight.mul(2).div(3);
-    }
 }

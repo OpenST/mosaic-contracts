@@ -54,4 +54,32 @@ contract TestMetaBlock {
             "The origin transition hash did not equal the expected hash."
         );
     }
+
+    function testRequiredWeightForSuperMajority() external{
+        uint256 totalWeight = 3;
+
+        uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(
+            totalWeight
+        );
+        uint256 expectedRequiredWeight  = 2;
+        Assert.equal(
+            requiredWeight,
+            expectedRequiredWeight,
+            "The required weight is not equal the expected required weight"
+        );
+    }
+
+    function testRequiredWeightForSuperMajorityWithRoundUp() external{
+        uint256 totalWeight = 4;
+
+        uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(
+            totalWeight
+        );
+        uint256 expectedRequiredWeight  = 3;
+        Assert.equal(
+            requiredWeight,
+            expectedRequiredWeight,
+            "The required weight is not equal the expected required weight"
+        );
+    }
 }

@@ -14,9 +14,11 @@ pragma solidity ^0.4.24;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../lib/SafeMath.sol";
 
 /** @title A meta-block of the meta-chain. */
 library MetaBlock {
+    using SafeMath for uint256;
 
     /** To hash structs according to EIP-712, a type hash is required. */
     bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
@@ -298,6 +300,32 @@ library MetaBlock {
                 _updatedWeights
             )
         );
+    }
+
+    /**
+     * @notice Function to calculated weight required for super majority
+     *         i.e 2/3rd of total weight.
+     *
+     * @param _totalWeight Total weight of all the validators at current
+     *                     meta-block height.
+     *
+     * @return requiredWeight_ Required weight for 2/3rd super majority.
+     */
+    function requiredWeightForSuperMajority(uint256 _totalWeight)
+        internal
+        pure
+        returns(uint256 requiredWeight_)
+    {
+        // 2/3 are required (a supermajority).
+        requiredWeight_ = _totalWeight.mul(2).div(3);
+
+        /*
+         * Solidity always rounds down, but we have to round up if there is a
+         * remainder. It has to be *at least* 2/3.
+         */
+        if (_totalWeight.mul(2).mod(3) > 0) {
+            requiredWeight_ = requiredWeight_.add(1);
+        }
     }
 
 }

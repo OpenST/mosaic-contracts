@@ -590,25 +590,19 @@ contract PollingPlace is PollingPlaceInterface {
      * @param _metaBlockHeight The height of the meta-block for which the
      *                         required weight must be known.
      *
-     * @return The minimum weight of votes that achieve a >=2/3 majority.
+     * @return requiredWeight_ The minimum weight of votes that achieve
+     *                         a >=2/3 majority.
      */
     function requiredWeight(
         uint256 _metaBlockHeight
     )
         private
         view
-        returns (uint256 required_)
+        returns (uint256 requiredWeight_)
     {
-        // 2/3 are required (a supermajority).
-        required_ = totalWeights[_metaBlockHeight].mul(2).div(3);
-
-        /*
-         * Solidity always rounds down, but we have to round up if there is a
-         * remainder. It has to be *at least* 2/3.
-         */
-        if (totalWeights[_metaBlockHeight].mul(2).mod(3) > 0) {
-            required_ = required_.add(1);
-        }
+        requiredWeight_ = MetaBlock.requiredWeightForSuperMajority(
+            totalWeights[_metaBlockHeight]
+        );
     }
 
     /**
