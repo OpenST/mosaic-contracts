@@ -154,8 +154,8 @@ contract AuxiliaryBlockStore is BlockStore {
                 )
             );
 
-            originDynasties[header.blockHash] = originBlockStore.currentDynasty();
-            originBlockHashes[header.blockHash] = originBlockStore.head();
+            originDynasties[header.blockHash] = originBlockStore.getCurrentDynasty();
+            originBlockHashes[header.blockHash] = originBlockStore.getHead();
         }
     }
 

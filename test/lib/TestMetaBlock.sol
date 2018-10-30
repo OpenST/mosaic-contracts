@@ -28,7 +28,7 @@ contract TestMetaBlock {
             bytes32(hex"14739574832097584935602afcbdef65498750164935602afcbdef6549875011"),
             uint256(1337),
             bytes32(hex"24739574832097584935602afcbdef65498750164935602afcbdef6549875012"),
-            uint256(19851209),
+            uint256(19850912),
             uint256(20181025),
             bytes32(hex"34739574832097584935602afcbdef65498750164935602afcbdef6549875013"),
             bytes32(hex"44739574832097584935602afcbdef65498750164935602afcbdef6549875014")
@@ -36,8 +36,8 @@ contract TestMetaBlock {
 
         Assert.equal(
             actualHash,
-            hex"c74ca259ea4286e887d3a4a5174a47e0c59152e8ccac4f7c37de6ddee4c750d5",
-            ""
+            hex"e9cddf2017d6b244e8e5736ba480df5f1d4f4f042ff027057ac09b193538cffc",
+            "The auxiliary transition hash did not equal the expected hash."
         );
     }
 
@@ -51,7 +51,7 @@ contract TestMetaBlock {
         Assert.equal(
             actualHash,
             hex"39caef53c03cdbe3db387ae0a60efd5bd01985a7ca3edeedabf66a6be3ce8ff8",
-            ""
+            "The origin transition hash did not equal the expected hash."
         );
     }
 }
