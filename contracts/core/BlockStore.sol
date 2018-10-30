@@ -100,13 +100,13 @@ contract BlockStore is BlockStoreInterface {
     mapping (bytes32 => Checkpoint) public checkpoints;
 
     /** The block hash of the highest finalised checkpoint. */
-    bytes32 public head;
+    bytes32 internal head;
 
     /**
      * The current dynasty. The highest finalised checkpoint's dynasty is one
      * less.
      */
-    uint256 public currentDynasty;
+    uint256 internal currentDynasty;
 
     /* Modifiers */
 
