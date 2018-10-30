@@ -599,6 +599,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @return uint256 Required weight for 2/3rd super majority.
      */
     function requiredWeight(uint256 _totalWeight)
+        private
+        pure
         returns(uint256)
     {
         return _totalWeight.mul(2).div(3);
