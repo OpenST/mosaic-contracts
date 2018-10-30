@@ -18,34 +18,39 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../../test_lib/web3.js');
-
+const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
-const testData = require('./helpers/data.js');
+const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
     let epochLength = new BN('3');
     let pollingPlaceAddress = accounts[0];
-    let initialBlockHash = '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c';
-    let initialStateRoot = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
-    let initialGas = new BN('21000');
-    let initialTransactionRoot = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
-    let initialHeight = new BN('0');
+    let originBlockStore;
+    let testBlocks = TestData.blocks;
+    let initialBlockHash = TestData.initialBlock.hash;
+    let initialStateRoot = TestData.initialBlock.stateRoot;
+    let initialGas = TestData.initialBlock.gas;
+    let initialTransactionRoot = TestData.initialBlock.transactionRoot;
+    let initialHeight = TestData.initialBlock.height;
 
     let blockStore;
 
     beforeEach(async () => {
+        originBlockStore = await BlockStoreMock.new();
+
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,
             epochLength,
             pollingPlaceAddress,
+            originBlockStore.address,
             initialBlockHash,
             initialStateRoot,
             initialHeight,
@@ -55,12 +60,12 @@ contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
     });
 
     it('should accept a valid report', async () => {
-        for (let i in testData) {
-            let testDate = testData[i];
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
 
-            await blockStore.reportBlock(testDate.header);
+            await blockStore.reportBlock(testBlock.header);
 
-            let reported = await blockStore.isBlockReported.call(testDate.hash);
+            let reported = await blockStore.isBlockReported.call(testBlock.hash);
             assert.strictEqual(
                 reported,
                 true,
@@ -70,15 +75,15 @@ contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
     });
 
     it('should emit an event when a block is reported', async () => {
-        for (let i in testData) {
-            let testDate = testData[i];
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
 
-            let tx = await blockStore.reportBlock(testDate.header);
+            let tx = await blockStore.reportBlock(testBlock.header);
 
             let event = EventDecoder.getEvents(tx, blockStore);
             assert.strictEqual(
                 event.BlockReported.blockHash,
-                testDate.hash
+                testBlock.hash
             );
         }
     });
@@ -94,49 +99,76 @@ contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
         );
     });
 
-    it('should track the accumulated gases', async () => {
+    it('should track the accumulated gas', async () => {
         let expectedAccumulatedGas = initialGas;
 
-        for (let i in testData) {
-            let testDate = testData[i];
-            expectedAccumulatedGas = expectedAccumulatedGas.add(testDate.gas);
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
+            expectedAccumulatedGas = expectedAccumulatedGas.add(testBlock.gas);
 
-            await blockStore.reportBlock(testDate.header);
+            await blockStore.reportBlock(testBlock.header);
 
-            let accumulatedGas = await blockStore.accumulatedGases.call(testDate.hash);
+            let accumulatedGas = await blockStore.accumulatedGases.call(testBlock.hash);
             assert(
                 accumulatedGas.eq(expectedAccumulatedGas),
-                'The accumulated gas must increas by the amount of the block.'
+                'The accumulated gas must increase by the amount of the block.',
             );
         }
     });
 
-    it('should track the accumulated transaction roots', async () => {
+    it('should track the accumulated transaction root', async () => {
         let expectedAccumulatedTxRoot = initialTransactionRoot;
 
-        for (let i in testData) {
-            let testDate = testData[i];
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
 
-            expectedAccumulatedTxRoot = web3.utils.sha3(
-                web3.eth.abi.encodeParameters(
-                    [
-                        'bytes32',
-                        'bytes32',
-                    ],
-                    [
-                        expectedAccumulatedTxRoot,
-                        testDate.transactionRoot,
-                    ],
-                )
+            expectedAccumulatedTxRoot = AuxStoreUtils.accumulateTransactionRoot(
+                expectedAccumulatedTxRoot,
+                testBlock.transactionRoot,
             );
 
-            await blockStore.reportBlock(testDate.header);
+            await blockStore.reportBlock(testBlock.header);
 
-            let accumulatedTxRoot = await blockStore.accumulatedTransactionRoots.call(testDate.hash);
+            let accumulatedTxRoot = await blockStore
+                .accumulatedTransactionRoots
+                .call(testBlock.hash);
+
             assert.strictEqual(
                 accumulatedTxRoot,
                 expectedAccumulatedTxRoot,
-                'The accumulated transaction root must be correct for a new block.'
+                'The accumulated transaction root must be correct for a new block.',
+            );
+        }
+    });
+
+    it('should track the origin dynasty', async () => {
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
+            let expectedDynasty = new BN(i);
+
+            await originBlockStore.setCurrentDynasty(expectedDynasty);
+            await blockStore.reportBlock(testBlock.header);
+
+            let recordedDynasty = await blockStore.originDynasties.call(testBlock.hash);
+            assert(
+                recordedDynasty.eq(expectedDynasty),
+                'The origin dynasty must be correct for a new block.',
+            );
+        }
+    });
+
+    it('should track the origin head\'s hash', async () => {
+        for (let i in testBlocks) {
+            let testBlock = testBlocks[i];
+
+            await originBlockStore.setHead(testBlock.hash);
+            await blockStore.reportBlock(testBlock.header);
+
+            let recordedHead = await blockStore.originBlockHashes.call(testBlock.hash);
+            assert.strictEqual(
+                recordedHead,
+                testBlock.hash,
+                'The origin head hash must be correct for a new block.',
             );
         }
     });

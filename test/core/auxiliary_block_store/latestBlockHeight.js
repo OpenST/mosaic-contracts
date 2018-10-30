@@ -21,31 +21,36 @@
 const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 
-const initialTestData = require('./helpers/data.js');
+const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
     let epochLength = new BN('3');
     let pollingPlaceAddress = accounts[0];
-    let initialBlockHash = '0xdcd79d30c0d69fa20dd8fe8f6bf356db5a91228e8eea30ab7d497984e9d88220';
-    let initialStateRoot = '0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017';
-    let initialGas = new BN('21000');
-    let initialTransactionRoot = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
+    let originBlockStore;
+    let initialBlockHash = TestData.blocks[3].hash;
+    let initialStateRoot = TestData.blocks[3].stateRoot;
+    let initialGas = TestData.blocks[3].accumulatedGas;
+    let initialTransactionRoot = TestData.blocks[3].transactionRoot;
     let initialHeight = new BN('3');
 
     let blockStore;
 
     // Heights 4-12
-    let testData = AuxStoreUtils.getSubset(4, 12, initialTestData);
+    let testBlocks = AuxStoreUtils.getSubset(4, 12, TestData.blocks);
 
     beforeEach(async () => {
+        originBlockStore = await BlockStoreMock.new();
+
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,
             epochLength,
             pollingPlaceAddress,
+            originBlockStore.address,
             initialBlockHash,
             initialStateRoot,
             initialHeight,
@@ -53,24 +58,24 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
             initialTransactionRoot
         );
 
-        await AuxStoreUtils.reportBlocks(blockStore, testData);
+        await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 
     it('should return the correct block height', async () => {
         let testJustifications = [
             {
                 source: initialBlockHash,
-                target: testData[6].hash,
+                target: testBlocks[6].hash,
                 expectedHeight: new BN('3')
             },
             {
-                source: testData[6].hash,
-                target: testData[12].hash,
+                source: testBlocks[6].hash,
+                target: testBlocks[12].hash,
                 expectedHeight: new BN('3')
             },
             {
-                source: testData[6].hash,
-                target: testData[9].hash,
+                source: testBlocks[6].hash,
+                target: testBlocks[9].hash,
                 expectedHeight: new BN('6')
             },
         ];

@@ -18,10 +18,19 @@
 //
 // ----------------------------------------------------------------------------
 
+const AuxStoreUtils = require('./aux_store_utils.js');
 const BN = require('bn.js');
 
+const initialBlock = {
+        height: 0,
+        hash: '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
+        stateRoot: '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
+        gas: new BN('2100'),
+        transactionRoot: '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+};
+
 // Maps heights to block data at that height, including an RLP encoded header.
-module.exports = {
+const blocks = {
     1: {
         header: '0xf901f9a07f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a0ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017a05fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67a0bc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000001832fefd8825208845506eb0780a0bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff49888a13a5a8c8f2bb1c4',
         hash: '0xc5a48e5dc71e5e4a96b14f2564d0c95b1b37bad30f3abd12577b7da06ad01d37',
@@ -106,4 +115,46 @@ module.exports = {
         gas: new BN('21000'),
         transactionRoot: '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
     },
+};
+
+/**
+ * Calculates the accumulated gas from an accumulated gas and a new one.
+ *
+ * @param {BN} oldAccumulatedGos The accumulated gas so far.
+ * @param {BN} newGas The new gas to add.
+ *
+ * @returns {BN} The new accumulated gas that includes the new gas.
+ */
+accumulateGas = (oldAccumulatedGos, newGas) => {
+    return oldAccumulatedGos.add(newGas);
+};
+
+/**
+ * Iterates over all blocks and calculates the accumulated gas and transaction
+ * root, based on the accumulated gas and transaction root of the previous item
+ * in the list.
+ */
+calculateAccumulatedValues = () => {
+    blocks[1].accumulatedGas = accumulateGas(initialBlock.gas, blocks[1].gas);
+    blocks[1].accumulatedTransactionRoot = AuxStoreUtils.accumulateTransactionRoot(
+        initialBlock.transactionRoot,
+        blocks[1].transactionRoot
+    );
+    for (let i = 2; i < 13; i++) {
+        blocks[i].accumulatedGas = accumulateGas(
+            blocks[i-1].accumulatedGas,
+            blocks[i].gas,
+        );
+        blocks[i].accumulatedTransactionRoot = AuxStoreUtils.accumulateTransactionRoot(
+            blocks[i-1].accumulatedTransactionRoot,
+            blocks[i].transactionRoot,
+        );
+    }
+};
+
+calculateAccumulatedValues();
+
+module.exports = {
+    initialBlock: initialBlock,
+    blocks: blocks,
 };
