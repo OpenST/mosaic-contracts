@@ -72,7 +72,7 @@ contract BlockStore is BlockStoreInterface {
      * The core identifier identifies the chain that this block store is
      * tracking.
      */
-    bytes20 public coreIdentifier;
+    bytes20 internal coreIdentifier;
 
     /**
      * The epoch length is the number of blocks from one checkpoint to the
@@ -342,6 +342,16 @@ contract BlockStore is BlockStoreInterface {
         );
 
         stateRoot_ = header.stateRoot;
+    }
+
+    /**
+     * @notice Returns the core identifier of the chain that this block store
+     *         tracks.
+     *
+     * @return coreIdentifier_ The core identifier of the tracked chain.
+     */
+    function getCoreIdentifier() external view returns (bytes20 coreIdentifier_) {
+        coreIdentifier_ = coreIdentifier;
     }
 
     /**
