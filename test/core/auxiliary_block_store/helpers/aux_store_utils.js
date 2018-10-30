@@ -18,11 +18,41 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../../../test_lib/web3.js');
+
+const BN = require('bn.js');
 const MetaBlock = require('../../../test_lib/meta_block.js');
 
 const AuxStoreUtils = function() {};
 
 AuxStoreUtils.prototype = {
+
+    /**
+     * Calculates the accumulated transaction root from an accumulated
+     * transaction root and a new one.
+     *
+     * @param {string} oldAccumulatedTxRoot The accumulated transaction root so
+     *                                      far.
+     * @param {string} newTxRoot The new transaction root to add.
+     *
+     * @returns {string} The new accumulated transaction root that includes the
+     *                   new transaction root.
+     */
+    accumulateTransactionRoot: (oldAccumulatedTxRoot, newTxRoot) => {
+        return web3.utils.sha3(
+            web3.eth.abi.encodeParameters(
+                [
+                    'bytes32',
+                    'bytes32',
+                ],
+                [
+                    oldAccumulatedTxRoot,
+                    newTxRoot,
+                ],
+            )
+        );
+    },
+
     /**
      * Reports all given blocks on the given block store.
      *
@@ -45,17 +75,23 @@ AuxStoreUtils.prototype = {
      */
     testValidVotes: async (blockStore, coreIdentifier, votes) => {
         let count = votes.length;
+
         for (let i = 0; i < count; i++) {
             let vote = votes[i];
 
+            let transition = {
+                coreIdentifier: coreIdentifier,
+                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                auxiliaryDynasty: vote.dynasty,
+                auxiliaryBlockHash: vote.source,
+                gas: vote.accumulatedGas,
+                originDynasty: new BN('0'),
+                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                transactionRoot: vote.accumulatedTransactionRoot,
+            };
+
             let isValid = await blockStore.isVoteValid.call(
-                MetaBlock.hashOriginTransition(
-                    {
-                        dynasty: vote.dynasty,
-                        blockHash: vote.source,
-                        coreIdentifier: coreIdentifier,
-                    }
-                ),
+                MetaBlock.hashAuxiliaryTransition(transition),
                 vote.source,
                 vote.target,
             );

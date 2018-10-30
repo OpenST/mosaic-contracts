@@ -15,6 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "../lib/Block.sol";
+import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "./BlockStore.sol";
 
@@ -27,11 +28,32 @@ contract AuxiliaryBlockStore is BlockStore {
 
     /* Variables */
 
-    /** Maps a block hash to the accumulated gas at that block. */
+    /** A mapping of block hashes to their respective accumulated gas. */
     mapping(bytes32 => uint256) public accumulatedGases;
 
-    /** Maps a block hash to the accumulated transaction root at that block. */
+    /**
+     * A mapping of block hashes to their respective accumulated transaction
+     * root.
+     */
     mapping(bytes32 => bytes32) public accumulatedTransactionRoots;
+
+    /**
+     * A mapping of auxiliary block hashes to the current origin dynasty at the
+     * time of reporting the auxiliary block.
+     */
+    mapping(bytes32 => uint256) public originDynasties;
+
+    /**
+     * A mapping of auxiliary block hashes to the latest finalized origin block
+     * hash at the time of reporting the auxiliary block.
+     */
+    mapping(bytes32 => bytes32) public originBlockHashes;
+
+    /** The hash of the currently active kernel. */
+    bytes32 public kernelHash;
+
+    /** The corresponding origin block store that tracks the origin chain. */
+    BlockStore public originBlockStore;
 
     /* Constructor */
 
@@ -47,6 +69,9 @@ contract AuxiliaryBlockStore is BlockStore {
      *                     checkpoint to the next.
      * @param _pollingPlace The address of the polling place address. Only the
      *                      polling place may call the justify method.
+     * @param _originBlockStore The address where the origin block store is
+     *                          deployed. Required to get the latest
+     *                          observations of origin for the transition hash.
      * @param _initialBlockHash The block hash of the initial starting block.
      * @param _initialStateRoot The state root of the initial starting block.
      * @param _initialBlockHeight The block height of the initial starting
@@ -61,6 +86,7 @@ contract AuxiliaryBlockStore is BlockStore {
         bytes20 _coreIdentifier,
         uint256 _epochLength,
         address _pollingPlace,
+        address _originBlockStore,
         bytes32 _initialBlockHash,
         bytes32 _initialStateRoot,
         uint256 _initialBlockHeight,
@@ -77,6 +103,12 @@ contract AuxiliaryBlockStore is BlockStore {
         )
         public
     {
+        require(
+            _originBlockStore != address(0),
+            "The given origin block store address must not be zero."
+        );
+
+        originBlockStore = BlockStore(_originBlockStore);
         accumulatedGases[_initialBlockHash] = _initialGas;
         accumulatedTransactionRoots[_initialBlockHash] = _initialTransactionRoot;
     }
@@ -111,16 +143,19 @@ contract AuxiliaryBlockStore is BlockStore {
         success_ = super.reportBlock_(header);
 
         if (success_) {
-            accumulatedGases[header.blockHash] = accumulatedGases[header.parentHash].add(
+            accumulatedGases[header.blockHash] = accumulatedGases[parent.blockHash].add(
                 header.gasUsed
             );
 
             accumulatedTransactionRoots[header.blockHash] = keccak256(
                 abi.encode(
-                    accumulatedTransactionRoots[header.parentHash],
+                    accumulatedTransactionRoots[parent.blockHash],
                     header.transactionRoot
                 )
             );
+
+            originDynasties[header.blockHash] = originBlockStore.getCurrentDynasty();
+            originBlockHashes[header.blockHash] = originBlockStore.getHead();
         }
     }
 
@@ -159,6 +194,37 @@ contract AuxiliaryBlockStore is BlockStore {
             valid_ = false;
             reason_ = "The source must be an ancestor of the target.";
         }
+    }
+
+    /**
+     * @notice Takes a transition hash and checks that the given checkpoint has
+     *         the same transition hash.
+     *
+     * @param _transitionHash The hash to check.
+     * @param _blockHash The checkpoint to test the hash against.
+     *
+     * @return `true` if the given checkpoint has the same transition hash.
+     */
+    function isValidTransitionHash(
+        bytes32 _transitionHash,
+        bytes32 _blockHash
+    )
+        internal
+        view
+        returns (bool valid_)
+    {
+        bytes32 expectedTransitionHash = MetaBlock.hashAuxiliaryTransition(
+            coreIdentifier,
+            kernelHash,
+            checkpoints[_blockHash].dynasty,
+            _blockHash,
+            accumulatedGases[_blockHash],
+            originDynasties[_blockHash],
+            originBlockHashes[_blockHash],
+            accumulatedTransactionRoots[_blockHash]
+        );
+
+        valid_ = _transitionHash == expectedTransitionHash;
     }
 
     /* Private Functions */

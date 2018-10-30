@@ -20,17 +20,55 @@
 
 const web3 = require('./web3.js');
 
+const AUXILIARYTRANSITION_TYPEHASH = web3.utils.sha3(
+    'AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 accumulatedGas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)',
+);
+
 const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
-    "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
+    'OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)',
 );
 
 /**
- * 
  * @param {Object} transition The transition object to hash.
- * 
+ *
  * @returns {string} The hash of the transition.
  */
-module.exports.hashOriginTransition = function(transition) {
+module.exports.hashAuxiliaryTransition = function (transition) {
+    let encodedParameters = web3.eth.abi.encodeParameters(
+        [
+            'bytes32',
+            'bytes20',
+            'bytes32',
+            'uint256',
+            'bytes32',
+            'uint256',
+            'uint256',
+            'bytes32',
+            'bytes32',
+        ],
+        [
+            AUXILIARYTRANSITION_TYPEHASH,
+            transition.coreIdentifier,
+            transition.kernelHash,
+            transition.auxiliaryDynasty.toString(),
+            transition.auxiliaryBlockHash,
+            transition.gas.toString(),
+            transition.originDynasty.toString(),
+            transition.originBlockHash,
+            transition.transactionRoot,
+        ],
+    );
+    let hash = web3.utils.sha3(encodedParameters);
+
+    return hash;
+}
+
+/**
+ * @param {Object} transition The transition object to hash.
+ *
+ * @returns {string} The hash of the transition.
+ */
+module.exports.hashOriginTransition = function (transition) {
     let encodedParameters = web3.eth.abi.encodeParameters(
         [
             'bytes32',
@@ -42,7 +80,7 @@ module.exports.hashOriginTransition = function(transition) {
             ORIGINTRANSITION_TYPEHASH,
             transition.dynasty.toString(),
             transition.blockHash,
-            transition.coreIdentifier
+            transition.coreIdentifier,
         ]
     );
     let hash = web3.utils.sha3(encodedParameters);

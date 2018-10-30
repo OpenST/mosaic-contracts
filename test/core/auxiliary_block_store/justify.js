@@ -23,29 +23,35 @@ const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
-const testData = require('./helpers/data.js');
+const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('AuxiliaryBlockStore.justify()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
     let epochLength = new BN('3');
     let pollingPlaceAddress = accounts[0];
-    let initialBlockHash = '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c';
-    let initialStateRoot = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
-    let initialGas = new BN('21000');
-    let initialTransactionRoot = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
-    let initialHeight = new BN('0');
+    let originBlockStore;
+    let testBlocks = TestData.blocks;
+    let initialBlockHash = TestData.initialBlock.hash;
+    let initialStateRoot = TestData.initialBlock.stateRoot;
+    let initialGas = TestData.initialBlock.gas;
+    let initialTransactionRoot = TestData.initialBlock.transactionRoot;
+    let initialHeight = TestData.initialBlock.height;
     let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
 
     let blockStore;
 
     beforeEach(async () => {
+        originBlockStore = await BlockStoreMock.new();
+
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,
             epochLength,
             pollingPlaceAddress,
+            originBlockStore.address,
             initialBlockHash,
             initialStateRoot,
             initialHeight,
@@ -53,29 +59,29 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
             initialTransactionRoot,
         );
 
-        await AuxStoreUtils.reportBlocks(blockStore, testData);
+        await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 
     it('should accept a valid justification', async () => {
         let testJustifications = [
             {
                 source: initialBlockHash,
-                target: testData[3].hash,
+                target: testBlocks[3].hash,
                 sourceFinalised: true,
             },
             {
-                source: testData[3].hash,
-                target: testData[6].hash,
+                source: testBlocks[3].hash,
+                target: testBlocks[6].hash,
                 sourceFinalised: true,
             },
             {
-                source: testData[6].hash,
-                target: testData[12].hash,
+                source: testBlocks[6].hash,
+                target: testBlocks[12].hash,
                 sourceFinalised: false,
             },
             {
-                source: testData[6].hash,
-                target: testData[9].hash,
+                source: testBlocks[6].hash,
+                target: testBlocks[9].hash,
                 sourceFinalised: true,
             },
         ];
@@ -121,33 +127,33 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
     it('should emit an event when a checkpoint is justified', async () => {
         let tx = await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress}
         );
 
         let event = EventDecoder.getEvents(tx, blockStore);
         assert.strictEqual(
             event.BlockJustified.blockHash,
-            testData[3].hash
+            testBlocks[3].hash
         );
     });
 
     it('should emit an event when a checkpoint is finalised', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[6].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress}
         );
         let tx = await blockStore.justify(
-            testData[6].hash,
-            testData[9].hash,
+            testBlocks[6].hash,
+            testBlocks[9].hash,
             {from: pollingPlaceAddress}
         );
 
         let event = EventDecoder.getEvents(tx, blockStore);
         assert.strictEqual(
             event.BlockFinalised.blockHash,
-            testData[6].hash
+            testBlocks[6].hash
         );
     });
 
@@ -157,7 +163,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
         async () => {
             let tx = await blockStore.justify(
                 initialBlockHash,
-                testData[6].hash,
+                testBlocks[6].hash,
                 {from: pollingPlaceAddress}
             );
 
@@ -176,7 +182,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
             await Utils.expectRevert(
                 blockStore.justify(
                     initialBlockHash,
-                    testData[6].hash,
+                    testBlocks[6].hash,
                     {from: accounts[4]}
                 ),
                 'This method must be called from the registered polling place.'
@@ -188,7 +194,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
         await Utils.expectRevert(
             blockStore.justify(
                 unknownBlockHash,
-                testData[6].hash,
+                testBlocks[6].hash,
                 {from: pollingPlaceAddress}
             ),
             'The source block must first be reported.'
@@ -209,8 +215,8 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
     it('should not accept a source checkpoint that is not justified', async () => {
         await Utils.expectRevert(
             blockStore.justify(
-                testData[6].hash,
-                testData[9].hash,
+                testBlocks[6].hash,
+                testBlocks[9].hash,
                 {from: pollingPlaceAddress}
             ),
             'The source block must first be justified.'
@@ -224,7 +230,7 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
             await Utils.expectRevert(
                 blockStore.justify(
                     initialBlockHash,
-                    testData[2].hash,
+                    testBlocks[2].hash,
                     {from: pollingPlaceAddress}
                 ),
                 'The target must be at a height that is a multiple of the ' +
@@ -236,24 +242,24 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
     it('should not accept a target block that has a height lower than the head', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress}
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[6].hash,
+            testBlocks[3].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress}
         );
         await blockStore.justify(
-            testData[6].hash,
-            testData[9].hash,
+            testBlocks[6].hash,
+            testBlocks[9].hash,
             {from: pollingPlaceAddress}
         );
 
         await Utils.expectRevert(
             blockStore.justify(
-                testData[3].hash,
-                testData[6].hash,
+                testBlocks[3].hash,
+                testBlocks[6].hash,
                 {from: pollingPlaceAddress}
             ),
             'The target must be higher than the head.'
@@ -263,13 +269,13 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
     it('should not allow the target to be below the source', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[6].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress}
         );
         await Utils.expectRevert(
             blockStore.justify(
-                testData[6].hash,
-                testData[3].hash,
+                testBlocks[6].hash,
+                testBlocks[3].hash,
                 {from: pollingPlaceAddress}
             ),
             'The target must be above the source in height.'
@@ -279,24 +285,24 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
     it('should not allow the target to be justified with a different source', async () => {
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[6].hash,
+            testBlocks[3].hash,
+            testBlocks[6].hash,
             {from: pollingPlaceAddress},
         );
         await blockStore.justify(
-            testData[3].hash,
-            testData[9].hash,
+            testBlocks[3].hash,
+            testBlocks[9].hash,
             {from: pollingPlaceAddress},
         );
 
         await Utils.expectRevert(
             blockStore.justify(
-                testData[6].hash,
-                testData[9].hash,
+                testBlocks[6].hash,
+                testBlocks[9].hash,
                 {from: pollingPlaceAddress}
             ),
             'The target must not be justified already.',
@@ -339,12 +345,12 @@ contract('AuxiliaryBlockStore.justify()', async (accounts) => {
          */
         await blockStore.justify(
             initialBlockHash,
-            testData[3].hash,
+            testBlocks[3].hash,
             {from: pollingPlaceAddress},
         );
         await Utils.expectRevert(
             blockStore.justify(
-                testData[3].hash,
+                testBlocks[3].hash,
                 forkBlocks[6].hash,
                 {from: pollingPlaceAddress}
             ),

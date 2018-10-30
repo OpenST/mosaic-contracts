@@ -18,6 +18,20 @@ pragma solidity ^0.4.23;
 interface BlockStoreInterface {
 
     /**
+     * @notice Returns the current head that is finalized in the block store.
+     *
+     * @return head_ The block hash of the head.
+     */
+    function getHead() external view returns (bytes32 head_);
+
+    /**
+     * @notice Returns the current dynasty in the block store.
+     *
+     * @return dynasty_ The current dynasty.
+     */
+    function getCurrentDynasty() external view returns (uint256 dynasty_);
+
+    /**
      * @notice Report a block. A reported block header is stored and can then
      *         be part of subsequent votes.
      *
