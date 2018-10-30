@@ -11,7 +11,15 @@ const Utils = function () {
 
 Utils.prototype = {
 
-    verifyVote: async function (stakeAmount, validator, vote, originCore, kernelHash, expectedTotalWeight) {
+    verifyVote: async function (
+         stakeAmount,
+         validator,
+         vote,
+         originCore,
+         kernelHash,
+         expectedVerifiedWeight,
+         totalWeight
+    ) {
 
         validator = web3.utils.toChecksumAddress(validator);
 
@@ -69,9 +77,15 @@ Utils.prototype = {
         );
 
         assert(
-             expectedTotalWeight.eq(new BN(events.VoteVerified.totalWeight)),
-             `expected total weight ${expectedTotalWeight.toString(10)}` +
-             `and actual total weight ${events.VoteVerified.totalWeight.toString(10)}`
+             expectedVerifiedWeight.eq(new BN(events.VoteVerified.verifiedWeight)),
+             `expected total weight ${expectedVerifiedWeight.toString(10)}` +
+             `and actual total weight ${events.VoteVerified.verifiedWeight.toString(10)}`
+        );
+
+        assert(
+             totalWeight.eq(new BN(events.VoteVerified.requiredWeight)),
+             `expected required weight ${totalWeight.toString(10)}` +
+             `and actual required weight ${events.VoteVerified.requiredWeight.toString(10)}`
         );
     },
 

@@ -44,6 +44,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     let initialDepositors;
     let initialStakes;
     let maxAccumulateGasLimit = new BN(105000);
+    let totalStakedAmount;
 
     beforeEach(async () => {
 
@@ -62,6 +63,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
             new BN('2000'),
             new BN('30000'),
         ];
+        totalStakedAmount = new BN(32100);
 
         let tokenDeployer = accounts[0];
         ost = await MockToken.new({from: tokenDeployer});
@@ -124,14 +126,16 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
     it('should be able to verify vote for proposed meta-block', async function () {
 
-        let expectedTotalWeight = new BN(initialStakes[0]);
+        let expectedVerifiedWeight = new BN(initialStakes[0]);
+
         await OriginCoreUtils.verifyVote(
              initialStakes[0],
              initialValidators[0],
              vote,
              originCore,
              kernelHash,
-             expectedTotalWeight
+             expectedVerifiedWeight,
+             totalStakedAmount
         );
 
     });
@@ -142,14 +146,16 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let sig = await CoreUtils.signVote(validator, vote);
 
-        let expectedTotalWeight = new BN(initialStakes[0]);
+        let expectedVerifiedWeight = new BN(initialStakes[0]);
+
         await OriginCoreUtils.verifyVote(
              initialStakes[0],
              validator,
              vote,
              originCore,
              kernelHash,
-             expectedTotalWeight
+             expectedVerifiedWeight,
+             totalStakedAmount
         );
 
         await Utils.expectThrow(
@@ -196,7 +202,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
     it('should increase total weight on successful verification of vote', async function () {
 
-        let expectedTotalWeight = new BN(initialStakes[0]);
+        let expectedVerifiedWeight = new BN(initialStakes[0]);
 
         await OriginCoreUtils.verifyVote(
              initialStakes[0],
@@ -204,10 +210,11 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              vote,
              originCore,
              kernelHash,
-             expectedTotalWeight
+             expectedVerifiedWeight,
+             totalStakedAmount
         );
 
-        expectedTotalWeight = expectedTotalWeight.add(new BN(initialStakes[1]));
+        expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
         await OriginCoreUtils.verifyVote(
              initialStakes[1],
@@ -215,7 +222,8 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              vote,
              originCore,
              kernelHash,
-             expectedTotalWeight
+             expectedVerifiedWeight,
+             totalStakedAmount
         );
     });
 

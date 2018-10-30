@@ -51,7 +51,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint8 v,
         bytes32 r,
         bytes32 s,
-        uint256 totalWeight
+        uint256 verifiedWeight,
+        uint256 requiredWeight
     );
     /* Public Variables */
 
@@ -321,22 +322,22 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _targetHeight
         );
 
-        uint256 weight;
+        uint256 height;
         address signer;
 
         /**
          * This check the validity of vote, on successful validation it returns
-         * address of validator and weight at current meta-block.
+         * address of validator, and height of current meta-block.
          * This will revert transaction if vote validation fails.
          */
-        (signer, weight) = checkVoteValidity(
+        (height, signer) = checkVoteValidity(
             voteHash,
             _v,
             _r,
             _s
         );
         /** This saves vote in the seal. */
-        uint256 totalVoteWeight = saveVote(_transition, signer,weight);
+        uint256 verifiedWeight = saveVote(_transition, signer, height);
 
         emit VoteVerified(
             _kernelHash,
@@ -346,7 +347,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _v,
             _r,
             _s,
-            totalVoteWeight
+            verifiedWeight,
+            stake.totalWeightAtHeight(height)
         );
     }
 
@@ -474,6 +476,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         return kernelHash;
     }
+
     /**
      * @notice private method to check vote validity.
      *
@@ -486,8 +489,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _r R of the signature.
      * @param _s S of the signature.
      *
+     * @return currentHeight_ Height of current meta-block.
      * @return signer_ Address of validator who has signed the vote.
-     * @return weight_ Weight of validator at given meta-block height.
      */
     function checkVoteValidity(
         bytes32 _voteHash,
@@ -498,7 +501,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     )
         private
         view
-        returns (address signer_, uint256 weight_)
+        returns (uint256 currentHeight_, address signer_)
     {
         // As per https://github.com/ethereum/go-ethereum/pull/2940
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -519,11 +522,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         /* Header of last meta block. */
         MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
         /* Current meta-block height. */
-        uint256 currentHeight = latestMetaBlockHeader.kernel.height.add(1);
-        weight_ = stake.weight(currentHeight, signer_);
+        currentHeight_ = latestMetaBlockHeader.kernel.height.add(1);
+        uint256 weight = stake.weight(currentHeight_, signer_);
 
         require(
-            weight_ != 0,
+            weight != 0,
             'Only validator with non zero weight can vote.'
         );
     }
@@ -538,12 +541,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _transition The hash of the transition part of the meta-block
      *                    header at the source block.
      * @param _signer Address of validator who has signed vote object.
-     * @param _weight Weight of validator at given meta-block height.
+     * @param _height Height of current meta-block.
      */
     function saveVote(
         bytes32 _transition,
         address _signer,
-        uint256 _weight
+        uint256 _height
     )
         private
         returns(uint256 totalVoteWeight_)
@@ -561,7 +564,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         }
 
         sealObj.validators[_signer] = true;
-        totalVoteWeight_ = sealObj.totalVoteWeight.add(_weight);
+        totalVoteWeight_ = sealObj.totalVoteWeight.add(stake.weight(_height,_signer));
         sealObj.totalVoteWeight = totalVoteWeight_;
 
         seal[_transition] = sealObj;
