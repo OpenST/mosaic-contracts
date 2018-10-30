@@ -50,7 +50,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
             '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
         );
 
-        let coreId = await blockStore.coreIdentifier.call();
+        let coreId = await blockStore.getCoreIdentifier.call();
         assert.strictEqual(
             coreId,
             '0x0000000000000000000000000000000000000001',
@@ -124,14 +124,14 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
 
     it('should not accept incompatible epoch length and initial block height', async () => {
         let testData = [
-            {epochLength: 2, initialBlockHeight: 3},
-            {epochLength: 10, initialBlockHeight: 66},
-            {epochLength: 15, initialBlockHeight: 20},
-            {epochLength: 300, initialBlockHeight: 150},
+            { epochLength: 2, initialBlockHeight: 3 },
+            { epochLength: 10, initialBlockHeight: 66 },
+            { epochLength: 15, initialBlockHeight: 20 },
+            { epochLength: 300, initialBlockHeight: 150 },
         ];
 
         let count = testData.length;
-        for(i = 0; i < count; i++) {
+        for (i = 0; i < count; i++) {
             let testDate = testData[i];
 
             await Utils.expectRevert(

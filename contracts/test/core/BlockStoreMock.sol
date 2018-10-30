@@ -98,7 +98,7 @@ contract BlockStoreMock is BlockStoreInterface {
         stateRoot_ = stateRoot;
     }
 
-    function coreIdentifier() external view returns (bytes20 coreIdentifier_) {
+    function getCoreIdentifier() external view returns (bytes20 coreIdentifier_) {
         coreIdentifier_ = coreIdentifier;
     }
 

@@ -238,8 +238,8 @@ contract PollingPlace is PollingPlaceInterface {
         BlockStoreInterface originBlockStore = BlockStoreInterface(_originBlockStore);
         BlockStoreInterface auxiliaryBlockStore = BlockStoreInterface(_auxiliaryBlockStore);
 
-        originCoreIdentifier = originBlockStore.coreIdentifier();
-        auxiliaryCoreIdentifier = auxiliaryBlockStore.coreIdentifier();
+        originCoreIdentifier = originBlockStore.getCoreIdentifier();
+        auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
         blockStores[originCoreIdentifier] = originBlockStore;
         blockStores[auxiliaryCoreIdentifier] = auxiliaryBlockStore;

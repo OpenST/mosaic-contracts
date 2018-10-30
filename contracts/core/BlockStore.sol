@@ -332,7 +332,7 @@ contract BlockStore is BlockStoreInterface {
      *
      * @return coreIdentifier_ The core identifier of the tracked chain.
      */
-    function coreIdentifier() external view returns (bytes20 coreIdentifier_) {
+    function getCoreIdentifier() external view returns (bytes20 coreIdentifier_) {
         coreIdentifier_ = coreIdentifier;
     }
 
