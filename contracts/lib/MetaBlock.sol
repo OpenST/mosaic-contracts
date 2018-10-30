@@ -23,7 +23,7 @@ library MetaBlock {
         "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
     );
     /** To hash vote message according to EIP-712, a type hash is required. */
-    bytes32 constant VOTE_MESSAGE_TYPEHASH = keccak256(
+    bytes32 constant VOTEMESSAGE_TYPEHASH = keccak256(
         "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
     );
 
@@ -130,12 +130,11 @@ library MetaBlock {
      */
     struct Seal {
         /**
-         * Mapping of validator address and boolean which represents all the
-         * validators who has voted for given transition object.
+         * This tracks validators which have been added to this seal.
          */
         mapping(address => bool) validators;
 
-        /** Sum of all vote weight. */
+        /** Sum of validator weights that have been added to this seal. */
         uint256 totalVoteWeight;
     }
 
@@ -261,7 +260,7 @@ library MetaBlock {
     {
         hashed_ = keccak256(
             abi.encodePacked(
-                VOTE_MESSAGE_TYPEHASH,
+                VOTEMESSAGE_TYPEHASH,
                 _coreIdentifier,
                 _transition,
                 _source,

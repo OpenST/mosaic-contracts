@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: core/utils.js
 //
 // http://www.simpletoken.org/
 //
@@ -21,7 +20,7 @@
 
 const web3 = require('../test_lib/web3.js');
 
-const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
+const VOTEMESSAGE_TYPEHASH = web3.utils.sha3(
      "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
 );
 
@@ -38,7 +37,7 @@ Utils.prototype = {
     signVote : async function (address, vote) {
 
         let voteDigest = web3.utils.soliditySha3(
-             {type: 'bytes32', value: VOTE_MESSAGE_TYPEHASH},
+             {type: 'bytes32', value: VOTEMESSAGE_TYPEHASH},
              {type: 'bytes20', value: web3.utils.toChecksumAddress(vote.coreIdentifier)},
              {type: 'bytes32', value: vote.transitionHash},
              {type: 'bytes32', value: vote.source},

@@ -274,7 +274,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
                   sig.r,
                   sig.s
              ),
-             `Given transition object is not proposed for given kernel.`
+             `A vote can only be verified for an existing meta-block proposal.`
         );
     });
 
@@ -299,7 +299,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
                   sig.r,
                   sig.s
              ),
-             `Given transition object is not proposed for given kernel.`
+             `A vote can only be verified for an existing meta-block proposal.`
         );
     });
 });
