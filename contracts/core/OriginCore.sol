@@ -346,7 +346,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _r,
             _s,
             verifiedWeight,
-            stake.totalWeightAtHeight(height)
+            requiredWeight(stake.totalWeightAtHeight(height))
         );
     }
 
@@ -588,5 +588,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             proposedMetaBlock[_kernelHash][_transitionHash];
 
         return transitionObject.kernelHash == _kernelHash;
+    }
+
+    /**
+     * @notice Function to calculated weight required for super majority
+     *         i.e 2/3rd of total weight.
+     *
+     * @param _totalWeight Total weight of all the validators at current
+     *                     meta-block height.
+     * @return uint256 Required weight for 2/3rd super majority.
+     */
+    function requiredWeight(uint256 _totalWeight)
+        returns(uint256)
+    {
+        return _totalWeight.mul(2).div(3);
     }
 }

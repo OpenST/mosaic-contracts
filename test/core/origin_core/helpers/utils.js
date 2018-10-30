@@ -18,7 +18,7 @@ Utils.prototype = {
          originCore,
          kernelHash,
          expectedVerifiedWeight,
-         totalWeight
+         requiredWeight
     ) {
 
         validator = web3.utils.toChecksumAddress(validator);
@@ -83,8 +83,8 @@ Utils.prototype = {
         );
 
         assert(
-             totalWeight.eq(new BN(events.VoteVerified.requiredWeight)),
-             `expected required weight ${totalWeight.toString(10)}` +
+             requiredWeight.eq(new BN(events.VoteVerified.requiredWeight)),
+             `expected required weight ${requiredWeight.toString(10)}` +
              `and actual required weight ${events.VoteVerified.requiredWeight.toString(10)}`
         );
     },

@@ -44,7 +44,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     let initialDepositors;
     let initialStakes;
     let maxAccumulateGasLimit = new BN(105000);
-    let totalStakedAmount;
+    let requiredWeight;
 
     beforeEach(async () => {
 
@@ -63,7 +63,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
             new BN('2000'),
             new BN('30000'),
         ];
-        totalStakedAmount = new BN(32100);
+        requiredWeight = new BN(21400);
 
         let tokenDeployer = accounts[0];
         ost = await MockToken.new({from: tokenDeployer});
@@ -135,7 +135,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              originCore,
              kernelHash,
              expectedVerifiedWeight,
-             totalStakedAmount
+             requiredWeight
         );
 
     });
@@ -155,7 +155,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              originCore,
              kernelHash,
              expectedVerifiedWeight,
-             totalStakedAmount
+             requiredWeight
         );
 
         await Utils.expectThrow(
@@ -211,7 +211,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              originCore,
              kernelHash,
              expectedVerifiedWeight,
-             totalStakedAmount
+             requiredWeight
         );
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
@@ -223,7 +223,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              originCore,
              kernelHash,
              expectedVerifiedWeight,
-             totalStakedAmount
+             requiredWeight
         );
     });
 
