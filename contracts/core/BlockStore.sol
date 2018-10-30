@@ -72,7 +72,7 @@ contract BlockStore is BlockStoreInterface {
      * The core identifier identifies the chain that this block store is
      * tracking.
      */
-    bytes20 public coreIdentifier;
+    bytes20 internal coreIdentifier;
 
     /**
      * The epoch length is the number of blocks from one checkpoint to the
