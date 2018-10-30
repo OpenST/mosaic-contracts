@@ -23,7 +23,7 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
-const CoreUtils = require('../utils.js');
+const MetaBlockUtils = require('../../test_lib/meta_block.js');
 const OriginCoreUtils = require('./helpers/utils');
 
 const OriginCore = artifacts.require('OriginCore');
@@ -144,7 +144,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let validator = initialValidators[0];
 
-        let sig = await CoreUtils.signVote(validator, vote);
+        let sig = await MetaBlockUtils.signVote(validator, vote);
 
         let expectedVerifiedWeight = new BN(initialStakes[0]);
 
@@ -180,7 +180,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let validator = web3.utils.toChecksumAddress(accounts[0]);
 
-        let sig = await CoreUtils.signVote(validator, vote);
+        let sig = await MetaBlockUtils.signVote(validator, vote);
 
         await Utils.expectThrow(
              originCore.verifyVote(
@@ -257,7 +257,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let validator = initialValidators[0];
 
-        let sig = await CoreUtils.signVote(validator, vote);
+        let sig = await MetaBlockUtils.signVote(validator, vote);
 
         let wrongTransitionHash = web3.utils.sha3("wrong transition hash");
 
@@ -282,7 +282,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let validator = initialValidators[0];
 
-        let sig = await CoreUtils.signVote(validator, vote);
+        let sig = await MetaBlockUtils.signVote(validator, vote);
 
         kernelHash = web3.utils.sha3("wrong kernel hash");
 

@@ -1,4 +1,4 @@
-const CoreUtils = require('../../utils.js');
+const MetaBlockUtils = require('../../../test_lib/event_decoder.js')
 const EventsDecoder = require('../../../test_lib/event_decoder.js');
 const web3 = require('../../../test_lib/web3.js');
 const BN = require('bn.js');
@@ -23,7 +23,7 @@ Utils.prototype = {
 
         validator = web3.utils.toChecksumAddress(validator);
 
-        let sig = await CoreUtils.signVote(validator, vote);
+        let sig = await MetaBlockUtils.signVote(validator, vote);
 
         let tx = await originCore.verifyVote(
              kernelHash,
