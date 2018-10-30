@@ -22,11 +22,11 @@ library MetaBlock {
     bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
         "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
     );
+
     /** To hash vote message according to EIP-712, a type hash is required. */
     bytes32 constant VOTEMESSAGE_TYPEHASH = keccak256(
         "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
     );
-
 
     /** To hash structs according to EIP-712, a type hash is required. */
     bytes32 constant AUXILIARYTRANSITION_TYPEHASH = keccak256(
@@ -263,6 +263,39 @@ library MetaBlock {
                 _target,
                 _sourceHeight,
                 _targetHeight
+            )
+        );
+    }
+
+    /**
+     * @notice Takes the parameters of a kernel object and returns the
+     *         typed hash of it.
+     *
+     * @param _height The height of meta-block.
+     * @param _parent The hash of this block's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedWeights The array of weights that corresponds to
+     *                        the updated validators.
+     *
+     * @return hash_ The hash of kernel.
+     */
+    function hashKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights
+    )
+        internal
+        pure
+        returns (bytes32 hash_)
+    {
+        hash_ = keccak256(
+            abi.encode(
+                KERNEL_TYPEHASH,
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedWeights
             )
         );
     }

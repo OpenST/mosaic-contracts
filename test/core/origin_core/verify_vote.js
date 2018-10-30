@@ -38,7 +38,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     let ost;
     let initialGas = 0;
     let transactionRoot = web3.utils.sha3("1");
-    let auxiliaryCoreIdentifier = web3.utils.sha3("1");
+    let auxiliaryCoreIdentifier = accounts[0]
     let kernelHash = web3.utils.sha3("1");
     let initialValidators;
     let initialDepositors;
@@ -115,7 +115,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         transitionHash = events.BlockProposed.transitionHash;
 
         vote = {
-            coreIdentifier: accounts[0],//auxiliaryCoreIdentifier,
+            coreIdentifier: auxiliaryCoreIdentifier,
             transitionHash: transitionHash,
             source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
             target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
@@ -300,6 +300,31 @@ contract('OriginCore.verifyVote()', async (accounts) => {
                   sig.s
              ),
              `A vote can only be verified for an existing meta-block proposal.`
+        );
+    });
+
+    it('should not verify vote for invalid core identifier', async function () {
+
+        let validator = initialValidators[0];
+
+        let sig = await MetaBlockUtils.signVote(validator, vote);
+
+        let wrongCoreIdentifier = accounts[8];
+
+        await Utils.expectThrow(
+             originCore.verifyVote(
+                  kernelHash,
+                  wrongCoreIdentifier,
+                  vote.transitionHash,
+                  vote.source,
+                  vote.target,
+                  vote.sourceHeight,
+                  vote.targetHeight,
+                  sig.v,
+                  sig.r,
+                  sig.s
+             ),
+             `Core identifier must match with auxiliary core identifier.`
         );
     });
 });

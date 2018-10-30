@@ -308,6 +308,11 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         returns (bool success_)
     {
         require(
+            _coreIdentifier == auxiliaryCoreIdentifier,
+            "Core identifier must match with auxiliary core identifier."
+        );
+
+        require(
             existsMetaBlockProposal(_kernelHash, _transitionHash),
             "A vote can only be verified for an existing meta-block proposal."
         );
