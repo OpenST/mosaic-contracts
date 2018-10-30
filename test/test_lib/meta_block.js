@@ -20,11 +20,16 @@
 
 const web3 = require('./web3.js');
 
+const AUXILIARYTRANSITION_TYPEHASH = web3.utils.sha3(
+     'AuxiliaryTransition(bytes20 coreIdentifier,bytes32 kernelHash,uint256 auxiliaryDynasty,bytes32 auxiliaryBlockHash,uint256 accumulatedGas,uint256 originDynasty,bytes32 originBlockHash,bytes32 transactionRoot)',
+);
+
 const VOTEMESSAGE_TYPEHASH = web3.utils.sha3(
      "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
 );
+
 const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
-     "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
+     'OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)',
 );
 
 function MetaBlockUtils() {
@@ -93,6 +98,41 @@ MetaBlockUtils.prototype = {
                  transition.blockHash,
                  transition.coreIdentifier
              ]
+        );
+        let hash = web3.utils.sha3(encodedParameters);
+
+        return hash;
+    },
+
+    /**
+     * @param {Object} transition The transition object to hash.
+     *
+     * @returns {string} The hash of the transition.
+     */
+    hashAuxiliaryTransition: function (transition) {
+        let encodedParameters = web3.eth.abi.encodeParameters(
+             [
+                 'bytes32',
+                 'bytes20',
+                 'bytes32',
+                 'uint256',
+                 'bytes32',
+                 'uint256',
+                 'uint256',
+                 'bytes32',
+                 'bytes32',
+             ],
+             [
+                 AUXILIARYTRANSITION_TYPEHASH,
+                 transition.coreIdentifier,
+                 transition.kernelHash,
+                 transition.auxiliaryDynasty.toString(),
+                 transition.auxiliaryBlockHash,
+                 transition.gas.toString(),
+                 transition.originDynasty.toString(),
+                 transition.originBlockHash,
+                 transition.transactionRoot,
+             ],
         );
         let hash = web3.utils.sha3(encodedParameters);
 

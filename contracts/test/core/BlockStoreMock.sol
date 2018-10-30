@@ -1,7 +1,5 @@
 pragma solidity ^0.4.23;
 
-/* solium-disable */
-
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,9 +27,11 @@ contract BlockStoreMock is BlockStoreInterface {
     /** Emitted when the justify method is called. To be caught by tests. */
     event Justified(bytes32 _source, bytes32 _target);
 
-    /* Public Variable */
+    /* Public Variables */
 
     /* Return variables for the various methods. */
+    bytes32 public head;
+    uint256 public currentDynasty;
     bool public reportBlockSuccess;
     bytes32 public stateRoot;
     uint256 public latestBlockHeight;
@@ -41,6 +41,14 @@ contract BlockStoreMock is BlockStoreInterface {
     /* External Functions */
 
     /* Setter functions to set the wanted return values for testing. */
+
+    function setHead(bytes32 _head) external {
+        head = _head;
+    }
+
+    function setCurrentDynasty(uint256 _currentDynasty) external {
+        currentDynasty = _currentDynasty;
+    }
 
     function setReportBlockSuccess(bool _success) external {
         reportBlockSuccess = _success;
@@ -63,6 +71,14 @@ contract BlockStoreMock is BlockStoreInterface {
     }
 
     /* The methods of the interface, returning values from storage. */
+
+    function getHead() external view returns (bytes32) {
+        return head;
+    }
+
+    function getCurrentDynasty() external view returns (uint256) {
+        return currentDynasty;
+    }
 
     function reportBlock(
         bytes

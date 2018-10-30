@@ -100,13 +100,13 @@ contract BlockStore is BlockStoreInterface {
     mapping (bytes32 => Checkpoint) public checkpoints;
 
     /** The block hash of the highest finalised checkpoint. */
-    bytes32 public head;
+    bytes32 internal head;
 
     /**
      * The current dynasty. The highest finalised checkpoint's dynasty is one
      * less.
      */
-    uint256 public currentDynasty;
+    uint256 internal currentDynasty;
 
     /* Modifiers */
 
@@ -209,6 +209,24 @@ contract BlockStore is BlockStoreInterface {
     }
 
     /* External Functions */
+
+    /**
+     * @notice Returns the current head that is finalized in the block store.
+     *
+     * @return head_ The block hash of the head.
+     */
+    function getHead() external view returns (bytes32 head_) {
+        head_ = head;
+    }
+
+    /**
+     * @notice Returns the current dynasty in the block store.
+     *
+     * @return dynasty_ The current dynasty.
+     */
+    function getCurrentDynasty() external view returns (uint256 dynasty_) {
+        dynasty_ = currentDynasty;
+    }
 
     /**
      * @notice Report a block. A reported block header is stored and can then
@@ -479,6 +497,32 @@ contract BlockStore is BlockStoreInterface {
         }
     }
 
+    /**
+     * @notice Takes a transition hash and checks that the given block results
+     *         in the same transition hash.
+     *
+     * @param _transitionHash The hash to check.
+     * @param _blockHash The block to test the hash against.
+     *
+     * @return `true` if the given block results in the same transition hash.
+     */
+    function isValidTransitionHash(
+        bytes32 _transitionHash,
+        bytes32 _blockHash
+    )
+        internal
+        view
+        returns (bool valid_)
+    {
+        bytes32 expectedHash = MetaBlock.hashOriginTransition(
+            checkpoints[_blockHash].dynasty,
+            _blockHash,
+            coreIdentifier
+        );
+
+        valid_ = _transitionHash == expectedHash;
+    }
+
     /* Private Functions */
 
     /**
@@ -648,32 +692,6 @@ contract BlockStore is BlockStoreInterface {
         uint256 higherHeight = reportedBlocks[_higherBlockHash].height;
         uint256 blockDistance = higherHeight.sub(lowerHeight);
         epochDistance_ = blockDistance.div(epochLength);
-    }
-
-    /**
-     * @notice Takes a transition hash and checks that the given block results
-     *         in the same transition hash.
-     *
-     * @param _transitionHash The hash to check.
-     * @param _blockHash The block to test the hash against.
-     *
-     * @return `true` if the given block results in the same transition hash.
-     */
-    function isValidTransitionHash(
-        bytes32 _transitionHash,
-        bytes32 _blockHash
-    )
-        private
-        view
-        returns (bool valid_)
-    {
-        bytes32 expectedHash = MetaBlock.hashOriginTransition(
-            checkpoints[_blockHash].dynasty,
-            _blockHash,
-            coreIdentifier
-        );
-
-        valid_ = _transitionHash == expectedHash;
     }
 
     /**

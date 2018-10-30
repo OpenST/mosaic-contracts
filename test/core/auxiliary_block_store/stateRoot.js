@@ -22,31 +22,36 @@ const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
-const initialTestData = require('./helpers/data.js');
+const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
     let epochLength = new BN('3');
     let pollingPlaceAddress = accounts[0];
-    let initialBlockHash = '0xdcd79d30c0d69fa20dd8fe8f6bf356db5a91228e8eea30ab7d497984e9d88220';
-    let initialStateRoot = '0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017';
-    let initialGas = new BN('21000');
-    let initialTransactionRoot = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
+    let originBlockStore;
+    let initialBlockHash = TestData.blocks[3].hash;
+    let initialStateRoot = TestData.blocks[3].stateRoot;
+    let initialGas = TestData.blocks[3].accumulatedGas;
+    let initialTransactionRoot = TestData.blocks[3].transactionRoot;
     let initialHeight = new BN('3');
 
     let blockStore;
 
     // Heights 4-12
-    let testData = AuxStoreUtils.getSubset(4, 12, initialTestData);
+    let testBlocks = AuxStoreUtils.getSubset(4, 12, TestData.blocks);
 
     beforeEach(async () => {
+        originBlockStore = await BlockStoreMock.new();
+
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,
             epochLength,
             pollingPlaceAddress,
+            originBlockStore.address,
             initialBlockHash,
             initialStateRoot,
             initialHeight,
@@ -54,16 +59,16 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
             initialTransactionRoot,
         );
 
-        await AuxStoreUtils.reportBlocks(blockStore, testData);
+        await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 
     it('should return a known state root', async () => {
-        await blockStore.justify(initialBlockHash, testData[9].hash);
-        await blockStore.justify(testData[9].hash, testData[12].hash);
+        await blockStore.justify(initialBlockHash, testBlocks[9].hash);
+        await blockStore.justify(testBlocks[9].hash, testBlocks[12].hash);
 
         let testStateRoots = [
-            {height: new BN('3'), expectedStateRoot: testData[6].stateRoot},
-            {height: new BN('9'), expectedStateRoot: testData[9].stateRoot},
+            {height: new BN('3'), expectedStateRoot: testBlocks[6].stateRoot},
+            {height: new BN('9'), expectedStateRoot: testBlocks[9].stateRoot},
         ];
 
         let count = testStateRoots.length;
@@ -74,61 +79,61 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
             assert.strictEqual(
                 stateRoot,
                 testStateRoot.expectedStateRoot,
-                "The state root was not returned as expected at height " +
-                testStateRoot.height
+                'The state root was not returned as expected at height ' +
+                testStateRoot.height,
             );
         }
     });
 
     it('should fail when the height exceeds the latest finalised checkpoint', async () => {
-        await blockStore.justify(initialBlockHash, testData[9].hash);
-        await blockStore.justify(testData[9].hash, testData[12].hash);
+        await blockStore.justify(initialBlockHash, testBlocks[9].hash);
+        await blockStore.justify(testBlocks[9].hash, testBlocks[12].hash);
 
         // Height 12 is justified, but not finalised.
         await Utils.expectRevert(
             blockStore.stateRoot.call(new BN('12')),
             'The state root is only known up to the height of the last ' +
-            'finalised checkpoint.'
+            'finalised checkpoint.',
         );
 
         // Height 15 was never reported.
         await Utils.expectRevert(
             blockStore.stateRoot.call(new BN('15')),
             'The state root is only known up to the height of the last ' +
-            'finalised checkpoint.'
+            'finalised checkpoint.',
         );
     });
 
     it('should fail when the height is lower than the starting height', async () => {
-        await blockStore.justify(initialBlockHash, testData[9].hash);
-        await blockStore.justify(testData[9].hash, testData[12].hash);
+        await blockStore.justify(initialBlockHash, testBlocks[9].hash);
+        await blockStore.justify(testBlocks[9].hash, testBlocks[12].hash);
 
         // The starting height is 3.
         await Utils.expectRevert(
             blockStore.stateRoot.call(new BN('0')),
-            'The state root is only known from the starting height upwards.'
+            'The state root is only known from the starting height upwards.',
         );
     });
 
     it('should fail when the block at the given height was not reported', async () => {
-        await blockStore.justify(initialBlockHash, testData[9].hash);
-        await blockStore.justify(testData[9].hash, testData[12].hash);
+        await blockStore.justify(initialBlockHash, testBlocks[9].hash);
+        await blockStore.justify(testBlocks[9].hash, testBlocks[12].hash);
 
         // The starting height is 3.
         await Utils.expectRevert(
             blockStore.stateRoot.call(new BN('6')),
-            'State roots are only known for heights at justified checkpoints.'
+            'State roots are only known for heights at justified checkpoints.',
         );
     });
 
     it('should fail when the checkpoint at the given height was not justified', async () => {
-        await blockStore.justify(initialBlockHash, testData[9].hash);
-        await blockStore.justify(testData[9].hash, testData[12].hash);
+        await blockStore.justify(initialBlockHash, testBlocks[9].hash);
+        await blockStore.justify(testBlocks[9].hash, testBlocks[12].hash);
 
         // The starting height is 3.
         await Utils.expectRevert(
             blockStore.stateRoot.call(new BN('6')),
-            'State roots are only known for heights at justified checkpoints.'
+            'State roots are only known for heights at justified checkpoints.',
         );
     });
 

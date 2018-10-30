@@ -16,6 +16,7 @@ contract MockGatewayBase is GatewayBase {
         uint256 _bounty,
         address _organisation
     )
+        public
         GatewayBase(
             _core,
             _messageBus,
@@ -47,7 +48,7 @@ contract MockGatewayBase is GatewayBase {
      *
      *  @return `true` if Gateway account is proved
      */
-  function proveGateway(
+    function proveGateway(
         uint256 _blockHeight,
         bytes _rlpEncodedAccount,
         bytes _rlpParentNodes

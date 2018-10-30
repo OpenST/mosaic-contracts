@@ -42,7 +42,7 @@ interface OriginCoreInterface {
      */
     function proposeBlock(
         uint256 _height,
-        bytes32 _coreIdentifier,
+        bytes20 _coreIdentifier,
         bytes32 _kernelHash,
         uint256 _auxiliaryDynasty,
         bytes32 _auxiliaryBlockHash,
