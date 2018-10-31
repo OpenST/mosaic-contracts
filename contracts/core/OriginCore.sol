@@ -556,6 +556,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *                    header at the source block.
      * @param _signer Address of validator who has signed vote object.
      * @param _height Height of current meta-block.
+     *
+     * @return totalVoteWeight_ Total verified vote.
      */
     function saveVote(
         bytes32 _transitionHash,
