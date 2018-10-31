@@ -14,8 +14,8 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title The interface for the meta-block Gateway on auxiliary. */
-interface MetaBlockGatewayInterface {
+/** @title The interface for the kernel gateway on auxiliary. */
+interface KernelGatewayInterface {
 
     /**
      * @notice Prove the opening of a new meta-block on origin. The method will
@@ -23,20 +23,20 @@ interface MetaBlockGatewayInterface {
      *         given the state trie branch.
      *
      * @param _metaBlockHeaderRlp The entire new meta-block header, RLP encoded.
-     * @param _stateTrieBranchRlp The trie branch of the state truie of origin
+     * @param _stateTrieBranchRlp The trie branch of the state trie of origin
      *                            that proves that the opening took place on
      *                            origin.
      * @param _originBlockHeight The block height on origin where the opening
      *                           took place. Must be a height that is finalised
      *                           in the OriginBlockStore.
      *
-     * @return `true` if the proof succeeded.
+     * @return success_ `true` if the proof succeeded.
      */
     function proveBlockOpening(
         bytes _metaBlockHeaderRlp,
         bytes _stateTrieBranchRlp,
         uint256 _originBlockHeight
     )
-        external
-        returns (bool success_);
+    external
+    returns (bool success_);
 }
