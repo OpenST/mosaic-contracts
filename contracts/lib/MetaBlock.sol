@@ -14,13 +14,20 @@ pragma solidity ^0.4.24;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../lib/SafeMath.sol";
 
 /** @title A meta-block of the meta-chain. */
 library MetaBlock {
+    using SafeMath for uint256;
 
     /** To hash structs according to EIP-712, a type hash is required. */
     bytes32 constant ORIGINTRANSITION_TYPEHASH = keccak256(
         "OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)"
+    );
+
+    /** To hash vote message according to EIP-712, a type hash is required. */
+    bytes32 constant VOTEMESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)"
     );
 
     /** To hash structs according to EIP-712, a type hash is required. */
@@ -129,6 +136,18 @@ library MetaBlock {
          */
         bytes20 coreIdentifier;
     }
+    /**
+     * Seal object which tracks vote of validators for a given transition hash.
+     */
+    struct Seal {
+        /**
+         * This tracks validators which have been added to this seal.
+         */
+        mapping(address => bool) validators;
+
+        /** Sum of validator weights that have been added to this seal. */
+        uint256 totalVoteWeight;
+    }
 
     /**
      * @notice Takes the parameters of an transition object and returns the
@@ -212,6 +231,45 @@ library MetaBlock {
     }
 
     /**
+     * @notice Creates the hash of vote.
+     *
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transition The hash of the transition part of the meta-block
+     *                    header at the source block.
+     * @param _source The hash of the source block.
+     * @param _target The hash of the target block.
+     * @param _sourceHeight The height of the source block.
+     * @param _targetHeight The height of the target block.
+     *
+     * @return The hash of the given vote.
+     */
+    function hashVote(
+        bytes20 _coreIdentifier,
+        bytes32 _transition,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceHeight,
+        uint256 _targetHeight
+    )
+        internal
+        pure
+        returns (bytes32 hashed_)
+    {
+        hashed_ = keccak256(
+            abi.encodePacked(
+                VOTEMESSAGE_TYPEHASH,
+                _coreIdentifier,
+                _transition,
+                _source,
+                _target,
+                _sourceHeight,
+                _targetHeight
+            )
+        );
+    }
+
+    /**
      * @notice Takes the parameters of a kernel object and returns the
      *         typed hash of it.
      *
@@ -243,4 +301,31 @@ library MetaBlock {
             )
         );
     }
+
+    /**
+     * @notice Function to calculated weight required for super majority
+     *         i.e 2/3rd of total weight.
+     *
+     * @param _totalWeight Total weight of all the validators at current
+     *                     meta-block height.
+     *
+     * @return requiredWeight_ Required weight for 2/3rd super majority.
+     */
+    function requiredWeightForSuperMajority(uint256 _totalWeight)
+        internal
+        pure
+        returns(uint256 requiredWeight_)
+    {
+        // 2/3 are required (a supermajority).
+        requiredWeight_ = _totalWeight.mul(2).div(3);
+
+        /*
+         * Solidity always rounds down, but we have to round up if there is a
+         * remainder. It has to be *at least* 2/3.
+         */
+        if (_totalWeight.mul(2).mod(3) > 0) {
+            requiredWeight_ = requiredWeight_.add(1);
+        }
+    }
+
 }
