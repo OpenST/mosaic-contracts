@@ -50,7 +50,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
     });
 
     it('should increase the meta-block height by 1', async () => {
-        for (let expectedHeight = 1; expectedHeight < 5; expectedHeight++) {
+        for (let expectedHeight = 2; expectedHeight < 5; expectedHeight++) {
             await stake.closeMetaBlock(
                 new BN(expectedHeight - 1),
                 {from: originCoreAccount}
@@ -66,25 +66,26 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
     });
 
     it('should emit an event when an meta-block is closed', async () => {
+
         let tx = await stake.closeMetaBlock(
-            new BN(0),
+            new BN(1),
             {from: originCoreAccount}
         );
         let events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
             Number(events.HeightIncreased.newHeight),
-            1,
+            2,
             'The contract did not emit an event with the new height.'
         );
 
         tx = await stake.closeMetaBlock(
-            new BN(1),
+            new BN(2),
             {from: originCoreAccount}
         );
         events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
             Number(events.HeightIncreased.newHeight),
-            2,
+            3,
             'The contract did not emit an event with the new height.'
         );
     });

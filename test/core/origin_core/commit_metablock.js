@@ -362,8 +362,8 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
     });
 
-    it('should save meta-block on commit and head should point to committed' +
-         ' meta-block', async function () {
+    it('should update head to latest committed meta-block', async function () {
+
         let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
