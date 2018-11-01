@@ -335,10 +335,16 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let openKernel = await originCore.openKernel.call();
 
-        assert.deepEqual(
-             kernel,
-             openKernel,
-             `Expected open kernel is different for actual kernel`
+        assert.equal(
+             kernel.height,
+             openKernel.height,
+             `Expected open kernel height is different for actual kernel`
+        );
+
+        assert.equal(
+             kernel.parent,
+             openKernel.parent,
+             `Expected open kernel parent is different for actual kernel`
         );
 
     });

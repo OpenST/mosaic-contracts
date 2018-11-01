@@ -85,7 +85,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * used by kernel gateway to prove kernel opening on auxiliary chain
      * using merkel proof.
      */
-    MetaBlock.Kernel public openKernelHash;
+    bytes32 public openKernelHash;
 
     /** This represents kernel of current open meta-block. */
     MetaBlock.Kernel public openKernel;
@@ -684,6 +684,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _transitionHash
         );
 
+        /* Report meta-block. */
+        reportedHeaders[metaBlockHash] = MetaBlock.Header(
+            openKernel,
+            proposedMetaBlock[_kernelHash][_transitionHash]
+        );
+
+        /* Update head */
+        head = metaBlockHash;
         openNextKernel(_height, metaBlockHash);
 
         emit MetaBlockCommitted(
@@ -716,7 +724,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         openKernelHash = MetaBlock.hashKernel(
             _height.add(1),
-            metaBlockHash_,
+            _metaBlockHash,
             updatedValidators,
             updatedWeights
         );
