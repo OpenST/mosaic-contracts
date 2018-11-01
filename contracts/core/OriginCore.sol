@@ -80,6 +80,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /** head is the block header hash of the latest committed block. */
     bytes32 public head;
 
+    /**
+     * This represents kernel hash of current open meta-block. This will be
+     * used by kernel gateway to prove kernel opening on auxiliary chain
+     * using merkel proof.
+     */
+    MetaBlock.Kernel public openKernelHash;
+
     /** This represents kernel of current open meta-block. */
     MetaBlock.Kernel public openKernel;
 
@@ -521,6 +528,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             initialValidators,
             validatorsWeights
         );
+
+        openKernelHash = MetaBlock.hashKernel(
+            1,
+            metaBlockHash_,
+            initialValidators,
+            validatorsWeights
+        );
     }
 
     /**
@@ -696,6 +710,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         openKernel = MetaBlock.Kernel(
             _height.add(1),
             _metaBlockHash,
+            updatedValidators,
+            updatedWeights
+        );
+
+        openKernelHash = MetaBlock.hashKernel(
+            _height.add(1),
+            metaBlockHash_,
             updatedValidators,
             updatedWeights
         );
