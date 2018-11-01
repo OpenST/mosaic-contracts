@@ -207,6 +207,7 @@ contract Stake is StakeInterface {
         stakingToken = EIP20Interface(_stakingToken);
         originCore = _originCore;
         minimumWeight = _minimumWeight;
+        height = 1;
     }
 
     /* External Functions */

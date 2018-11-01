@@ -55,6 +55,15 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint256 requiredWeight
     );
 
+    /** Emitted whenever a meta-block is committed after 2/3rd majority. */
+    event MetaBlockCommitted(
+        bytes32 indexed kernelHash,
+        bytes32 transitionHash,
+        uint256 height,
+        uint256 verifiedWeight,
+        uint256 requiredWeight
+    );
+
     /* Public Variables */
 
     OstInterface public Ost;
@@ -70,6 +79,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     /** head is the block header hash of the latest committed block. */
     bytes32 public head;
+
+    /** This represents kernel of current open meta-block. */
+    MetaBlock.Kernel public openKernel;
 
     /**
      * The maximum amount of gas that a meta-block could accumulate on an
@@ -353,8 +365,15 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _s,
             verifiedWeight,
             MetaBlock.requiredWeightForSuperMajority(
-                    stake.totalWeightAtHeight(height)
+                stake.totalWeightAtHeight(height)
             )
+        );
+
+        commitMetaBlock(
+            _kernelHash,
+            _transitionHash,
+            height,
+            verifiedWeight
         );
     }
 
@@ -442,7 +461,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 _initialTransactionRoot
     )
         private
-        returns (bytes32)
+        returns (bytes32 metaBlockHash_)
     {
         address[] memory initialValidators;
         uint256[] memory validatorsWeights;
@@ -478,9 +497,30 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _initialTransactionRoot
         );
 
-        reportedHeaders[kernelHash] = MetaBlock.Header(genesisKernel, genesisTransition);
+        bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
+            auxiliaryCoreIdentifier,
+            kernelHash,
+            0,
+            bytes32(0),
+            _initialAuxiliaryGas,
+            0,
+            bytes32(0),
+            _initialTransactionRoot
+        );
 
-        return kernelHash;
+        metaBlockHash_  = MetaBlock.hashMetaBlock(
+            kernelHash,
+            transitionHash
+        );
+
+        reportedHeaders[metaBlockHash_] = MetaBlock.Header(genesisKernel, genesisTransition);
+
+        openKernel = MetaBlock.Kernel(
+            1,
+            metaBlockHash_,
+            initialValidators,
+            validatorsWeights
+        );
     }
 
     /**
@@ -599,4 +639,65 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         return transitionObject.kernelHash == _kernelHash;
     }
 
+    /**
+     * @notice Function to commit meta-block if 2/3rd majority is achieved.
+     *
+     * @param _kernelHash The hash of the current kernel.
+     * @param _transitionHash The hash of the transition object which is proposed
+     *                    with meta-block.
+     * @param _height Height of current meta-block.
+     * @param _verifiedWeight Total verified weight.
+     */
+    function commitMetaBlock(
+        bytes32  _kernelHash,
+        bytes32 _transitionHash,
+        uint256 _height,
+        uint256 _verifiedWeight
+    )
+        private
+    {
+
+        uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(
+            stake.totalWeightAtHeight(height)
+        );
+
+        if (_verifiedWeight < requiredWeight) {
+            return;
+        }
+
+        bytes32 metaBlockHash = MetaBlock.hashMetaBlock(
+            _kernelHash,
+            _transitionHash
+        );
+
+        openNextKernel(_height, metaBlockHash);
+
+        emit MetaBlockCommitted(
+            _kernelHash,
+            _transitionHash,
+            _height,
+            requiredWeight,
+            _verifiedWeight
+        );
+    }
+    /**
+     * @notice Function to open new Kernel by closing current meta-block.
+     *
+     * @param  _height Height of current meta-block.
+     */
+    function openNextKernel(uint256 _height, bytes32 _metaBlockHash)
+        private
+    {
+        address[] memory updatedValidators;
+        uint256[] memory updatedWeights;
+
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(_height);
+
+        openKernel = MetaBlock.Kernel(
+            _height.add(1),
+            _metaBlockHash,
+            updatedValidators,
+            updatedWeights
+        );
+    }
 }
