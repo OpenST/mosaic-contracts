@@ -376,12 +376,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             )
         );
 
-        commitMetaBlock(
-            _kernelHash,
-            _transitionHash,
-            height,
-            verifiedWeight
-        );
+        /* Meta-block should only be committed once. */
+        if (_kernelHash == openKernelHash) {
+            commitMetaBlock(
+                _kernelHash,
+                _transitionHash,
+                height,
+                verifiedWeight
+            );
+        }
+
     }
 
     /**
@@ -698,8 +702,8 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _kernelHash,
             _transitionHash,
             _height,
-            requiredWeight,
-            _verifiedWeight
+            _verifiedWeight,
+            requiredWeight
         );
     }
     /**

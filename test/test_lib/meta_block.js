@@ -32,6 +32,9 @@ const ORIGINTRANSITION_TYPEHASH = web3.utils.sha3(
      'OriginTransition(uint256 dynasty,bytes32 blockHash,bytes20 coreIdentifier)',
 );
 
+ const METABLOCK_TYPEHASH = web3.utils.sha3(
+     "MetaBlock(bytes32 kernelHash,bytes32 transitionHash)"
+);
 function MetaBlockUtils() {
 
 }
@@ -132,6 +135,31 @@ MetaBlockUtils.prototype = {
                  transition.originDynasty.toString(),
                  transition.originBlockHash,
                  transition.transactionRoot,
+             ],
+        );
+        let hash = web3.utils.sha3(encodedParameters);
+
+        return hash;
+    },
+    /**
+     *
+     * @param {string} kernelHash Hash of kernel.
+     * @param {string} transitionHash Hash of transition object.
+     *
+     * @returns {string} The hash of the meta-block.
+     */
+    hashMetaBlock: function (kernelHash, transitionHash) {
+
+        let encodedParameters = web3.eth.abi.encodeParameters(
+             [
+                 'bytes32',
+                 'bytes32',
+                 'bytes32',
+             ],
+             [
+                 METABLOCK_TYPEHASH,
+                 kernelHash,
+                 transitionHash
              ],
         );
         let hash = web3.utils.sha3(encodedParameters);
