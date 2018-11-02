@@ -23,7 +23,7 @@ const BN = require('bn.js');
 const BlockStore = artifacts.require('BlockStore');
 const Utils = require('../../test_lib/utils.js');
 
-contract('BlockStore.transitionObject()', async (accounts) => {
+contract('BlockStore.transitionObjectAtBlock()', async (accounts) => {
 
 
     let coreIdentifier = '0x0000000000000000000000000000000000000001';
@@ -90,4 +90,5 @@ contract('BlockStore.transitionObject()', async (accounts) => {
         );
 
     });
+
 });

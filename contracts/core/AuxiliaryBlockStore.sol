@@ -159,6 +159,61 @@ contract AuxiliaryBlockStore is BlockStore {
         }
     }
 
+    /**
+     * @notice Returns auxiliary transition object at the checkpoint defined
+     *         at given block hash.
+     *
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
+     *
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
+     *
+     * @return coreIdentifier_ The core identifier identifies the chain that
+     *                         this block store is tracking.
+     * @return kernelHash_  The hash of the current open meta-block kernel.
+     * @return auxiliaryDynasty_ The dynasty number of auxiliary chain.
+     * @return auxiliaryBlockHash_ The block hash where the meta-block possibly
+                                   closes on the auxiliary chain.
+     * @return accumulatedGas_ The total consumed gas on auxiliary chain.
+     * @return originDynasty_ Dynasty of origin block within latest meta-block
+     *                        reported at auxiliary chain.
+     * @return originBlockHash_ Block hash of origin block within latest
+     *                          meta-block reported at auxiliary chain.
+     * @return transactionRoot_ The root of trie created by the auxiliary block
+                                store from the transaction roots of all blocks.
+     */
+    function  auxiliaryTransitionObjectAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        returns(
+            bytes20 coreIdentifier_,
+            bytes32 kernelHash_,
+            uint256 auxiliaryDynasty_,
+            bytes32 auxiliaryBlockHash_,
+            uint256 accumulatedGas_,
+            uint256 originDynasty_,
+            bytes32 originBlockHash_,
+            bytes32 transactionRoot_
+        )
+    {
+        require(
+            checkpoints[_blockHash].blockHash == _blockHash,
+            "Checkpoint not defined for given block hash."
+        );
+
+        coreIdentifier_ = coreIdentifier;
+        //todo understand updation of kernel hash
+        kernelHash_ = kernelHash;
+        auxiliaryDynasty_= checkpoints[_blockHash].dynasty;
+        auxiliaryBlockHash_=checkpoints[_blockHash].blockHash;
+        accumulatedGas_ = accumulatedGases[_blockHash];
+        originDynasty_ = originDynasties[_blockHash];
+        originBlockHash_ = originBlockHashes[_blockHash];
+        transactionRoot_ = accumulatedTransactionRoots[_blockHash];
+    }
+
     /* Internal Functions */
 
     /**
