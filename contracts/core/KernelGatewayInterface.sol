@@ -18,25 +18,41 @@ pragma solidity ^0.4.23;
 interface KernelGatewayInterface {
 
     /**
-     * @notice Prove the opening of a new meta-block on origin. The method will
-     *         check the proof against the state root from the OriginBlockStore
-     *         given the state trie branch.
-     *
-     * @param _metaBlockHeaderRlp The entire new meta-block header, RLP encoded.
-     * @param _stateTrieBranchRlp The trie branch of the state trie of origin
-     *                            that proves that the opening took place on
-     *                            origin.
-     * @param _originBlockHeight The block height on origin where the opening
-     *                           took place. Must be a height that is finalised
-     *                           in the OriginBlockStore.
-     *
-     * @return success_ `true` if the proof succeeded.
-     */
+    * @notice Prove the opening of a new meta-block on origin. The method will
+    *         check the proof against the state root from the OriginBlockStore
+    *         given the state trie branch.
+    *
+    * @param _height The height of this meta-block in the chain.
+    * @param _parent The hash of this meta-block's parent.
+    * @param _updatedValidators The array of addresses of the validators that
+    *                           are updated within this block. Updated weights
+    *                           at the same index relate to the address in
+    *                           this array.
+    * @param _updatedWeights The array of weights that corresponds to the
+    *                        updated validators. Updated validators at the
+    *                        same index relate to the weight in this array.
+    *                        Weights of existing validators can only decrease.
+    * @param _storageBranchRlp The trie branch of the state trie of origin
+    *                            that proves that the opening took place on
+    *                            origin.
+    * @param _accountBranchRlp RLP encoded path from root node to leaf node to
+    *                          prove account in merkle tree.
+    * @param _originBlockHeight The block height on origin where the opening
+    *                           took place. Must be a height that is finalised
+    *                           in the OriginBlockStore.
+    *
+    * @return success_ `true` if the proof succeeded.
+    */
     function proveBlockOpening(
-        bytes _metaBlockHeaderRlp,
-        bytes _stateTrieBranchRlp,
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes _storageBranchRlp,
+        bytes _accountRlp,
+        bytes _accountBranchRlp,
         uint256 _originBlockHeight
     )
-    external
-    returns (bool success_);
+        public
+        returns (bool success_);
 }

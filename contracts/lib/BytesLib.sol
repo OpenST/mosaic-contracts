@@ -171,4 +171,23 @@ library BytesLib {
         return tempAddress;
     }
 
+    /**
+     *	@notice Convert bytes32 to bytes
+     *
+     *	@param _inBytes32 bytes32 value
+     *
+     *	@return bytes value
+     */
+    function bytes32ToBytes(bytes32 _inBytes32)
+        internal
+        pure
+        returns (bytes)
+    {
+        bytes memory res = new bytes(32);
+        assembly {
+            mstore(add(32, res), _inBytes32)
+        }
+        return res;
+    }
+
 }

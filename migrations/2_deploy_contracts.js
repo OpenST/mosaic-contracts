@@ -15,15 +15,17 @@ const	MessageBusWrapper = artifacts.require('./test/MessageBusWrapper');
 const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof');
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
+const	MockKernelGateway = artifacts.require('MockKernelGateway');
+const	KernelGateway = artifacts.require('KernelGateway');
 
 module.exports = function(deployer) {
 	
 	deployer.deploy(MerklePatriciaProof);
-	
+
 	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
-	
-	deployer.link(MerklePatriciaProof, GatewayLib);
+
+	deployer.link(MerklePatriciaProof, [GatewayLib, KernelGateway, MockKernelGateway]);
 	deployer.deploy(GatewayLib);
 	deployer.deploy(MockGatewayLib);
 	deployer.deploy(MetaBlock);
@@ -33,12 +35,12 @@ module.exports = function(deployer) {
 	deployer.link(MetaBlock, [BlockStore, AuxiliaryBlockStore]);
 	
 	deployer.deploy(MockMerklePatriciaProof);
-	deployer.link(MockMerklePatriciaProof,MockMessageBus);
+	deployer.link(MockMerklePatriciaProof,[MockMessageBus]);
 	deployer.deploy(MockMessageBus);
 	deployer.link(MockMessageBus,MessageBusWrapper);
-	
+
 	// for merklepatricia unit test cases
 	deployer.link(MerklePatriciaProof,MerklePatriciaProofTest);
-	
+
 };
 
