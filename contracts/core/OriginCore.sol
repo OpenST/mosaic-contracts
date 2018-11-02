@@ -662,7 +662,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      *
      * @param _kernelHash The hash of the current kernel.
      * @param _transitionHash The hash of the transition object which is proposed
-     *                    with meta-block.
+     *                        with meta-block.
      * @param _height Height of current meta-block.
      * @param _verifiedWeight Total verified weight.
      */
@@ -707,9 +707,10 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         );
     }
     /**
-     * @notice Function to open new Kernel by closing current meta-block.
+     * @notice Function to open next new Kernel by closing current meta-block.
      *
      * @param  _height Height of current meta-block.
+     * @param  _metaBlockHash Hash of closing meta-block.
      */
     function openNextKernel(uint256 _height, bytes32 _metaBlockHash)
         private
@@ -719,15 +720,17 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         (updatedValidators, updatedWeights) = stake.closeMetaBlock(_height);
 
+        uint256 nextMetaBlockHeight = _height.add(1);
+
         openKernel = MetaBlock.Kernel(
-            _height.add(1),
+            nextMetaBlockHeight,
             _metaBlockHash,
             updatedValidators,
             updatedWeights
         );
 
         openKernelHash = MetaBlock.hashKernel(
-            _height.add(1),
+            nextMetaBlockHeight,
             _metaBlockHash,
             updatedValidators,
             updatedWeights
