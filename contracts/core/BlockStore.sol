@@ -427,6 +427,38 @@ contract BlockStore is BlockStoreInterface {
         reported_ = isReported(_blockHash);
     }
 
+    /**
+     * @notice Returns transition object at the checkpoint defined at given
+     *         block hash.
+     *
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
+     *
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
+     *
+     * @return coreIdentifier_ The core identifier identifies the chain that
+     *                         this block store is tracking.
+     * @return dynasty_  Dynasty number of checkpoint for which transition
+     *                   object is requested.
+     * @return blockHash_ Hash of the block at checkpoint.
+     */
+    function transitionObjectAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        returns(bytes20 coreIdentifier_, uint256  dynasty_, bytes32 blockHash_)
+    {
+        require(
+            checkpoints[_blockHash].blockHash == _blockHash,
+            "Checkpoint not defined for given block hash."
+        );
+
+        coreIdentifier_ = coreIdentifier;
+        dynasty_ = checkpoints[_blockHash].dynasty;
+        blockHash_ = checkpoints[_blockHash].blockHash;
+    }
+
     /* Internal Functions */
 
     /**
