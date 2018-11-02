@@ -526,6 +526,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         reportedHeaders[metaBlockHash_] = MetaBlock.Header(genesisKernel, genesisTransition);
 
+        /* Open Kernel for height 1. */
         openKernel = MetaBlock.Kernel(
             1,
             metaBlockHash_,
