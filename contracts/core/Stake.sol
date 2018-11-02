@@ -207,6 +207,11 @@ contract Stake is StakeInterface {
         stakingToken = EIP20Interface(_stakingToken);
         originCore = _originCore;
         minimumWeight = _minimumWeight;
+
+        /*
+         * Height of meta-block starts with 1 as genesis block at height 0
+         * is considered as finalized by default.  
+         */
         height = 1;
     }
 
