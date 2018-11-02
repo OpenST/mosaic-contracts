@@ -61,7 +61,7 @@ contract('Stake.totalWeightAtHeight()', async (accounts) => {
             new BN('2'),
         );
         await stake.closeMetaBlock(
-            new BN(0),
+            new BN(1),
             {from: originCoreAccount}
         )
         await StakeUtils.deposit(
@@ -71,7 +71,7 @@ contract('Stake.totalWeightAtHeight()', async (accounts) => {
             new BN('4'),
         );
         await stake.closeMetaBlock(
-            new BN(1),
+            new BN(2),
             {from: originCoreAccount}
         )
         await StakeUtils.deposit(
@@ -91,10 +91,10 @@ contract('Stake.totalWeightAtHeight()', async (accounts) => {
         let expectedWeights = [
             {height: 0, totalWeight: new BN('2')},
             {height: 1, totalWeight: new BN('2')},
-            {height: 2, totalWeight: new BN('5')},
-            {height: 3, totalWeight: new BN('9')},
-            {height: 4, totalWeight: new BN('33')},
-            {height: 10, totalWeight: new BN('33')},
+            {height: 2, totalWeight: new BN('2')},
+            {height: 3, totalWeight: new BN('5')},
+            {height: 4, totalWeight: new BN('9')},
+            {height: 6, totalWeight: new BN('33')},
             {height: 1000, totalWeight: new BN('33')},
         ];
 
