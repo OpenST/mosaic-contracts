@@ -41,6 +41,20 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 indexed kernelHash,
         bytes32 transitionHash
     );
+
+    /** Emitted whenever a vote is verified for proposed meta-block. */
+    event VoteVerified(
+        bytes32 indexed kernelHash,
+        bytes32 transitionHash,
+        address validator,
+        bytes32 voteHash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 verifiedWeight,
+        uint256 requiredWeight
+    );
+
     /* Public Variables */
 
     OstInterface public Ost;
@@ -74,6 +88,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * where transition object map is transition hash to transition mapping.
      */
     mapping(bytes32 => mapping(bytes32 => MetaBlock.AuxiliaryTransition)) public proposedMetaBlock;
+
+    /**
+     * Mapping of transition object which were proposed for current open
+     * meta-block with seal i.e. votes by validators.
+     */
+    mapping(bytes32 => MetaBlock.Seal) public seals;
 
     /* Constructor */
 
@@ -250,17 +270,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     /**
      * @notice Verifies a vote that justified the direct child checkpoint of
      *         the last justified auxiliary checkpoint in the meta-block. A
-     *         supermajority of such votes finalise the last auxiliary
+     *         super majority of such votes finalise the last auxiliary
      *         checkpoint of this meta-block.
      *
      * @dev Must track which votes have already been verified so that the same
      *      vote never gets verified more than once.
      *
-     * @param _metaBlockHash The block hash of the meta-block for which the
-     *                       votes shall be verified.
+     * @param _kernelHash The hash of the current kernel.
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
-     * @param _transition The hash of the transition part of the meta-block
+     * @param _transitionHash The hash of the transition part of the meta-block
      *                    header at the source block.
      * @param _source The hash of the source block.
      * @param _target The hash of the target block.
@@ -273,9 +292,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @return `true` if the verification succeeded.
      */
     function verifyVote(
-        bytes32 _metaBlockHash,
+        bytes32 _kernelHash,
         bytes20 _coreIdentifier,
-        bytes32 _transition,
+        bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceHeight,
@@ -287,7 +306,56 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         external
         returns (bool success_)
     {
-        revert("Method not implemented.");
+        require(
+            _coreIdentifier == auxiliaryCoreIdentifier,
+            "Core identifier must match with auxiliary core identifier."
+        );
+
+        require(
+            existsMetaBlockProposal(_kernelHash, _transitionHash),
+            "A vote can only be verified for an existing meta-block proposal."
+        );
+
+        bytes32 voteHash = MetaBlock.hashVote(
+            _coreIdentifier,
+            _transitionHash,
+            _source,
+            _target,
+            _sourceHeight,
+            _targetHeight
+        );
+
+        uint256 height;
+        address signer;
+
+        /*
+         * This check the validity of vote, on successful validation it returns
+         * address of validator, and height of current meta-block.
+         * This will revert transaction if vote validation fails.
+         */
+        (height, signer) = isVoteValid(
+            _transitionHash,
+            voteHash,
+            _v,
+            _r,
+            _s
+        );
+
+        uint256 verifiedWeight = saveVote(_transitionHash, signer, height);
+
+        emit VoteVerified(
+            _kernelHash,
+            _transitionHash,
+            signer,
+            voteHash,
+            _v,
+            _r,
+            _s,
+            verifiedWeight,
+            MetaBlock.requiredWeightForSuperMajority(
+                    stake.totalWeightAtHeight(height)
+            )
+        );
     }
 
     /**
@@ -414,4 +482,121 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         return kernelHash;
     }
+
+    /**
+     * @notice This function checks vote validity.
+     *
+     * @dev This method will revert the transaction if validator is not
+     *       eligible for voting.
+     *
+     * @param _transitionHash The hash of the transition part of the meta-block
+     *                        header at the source block.
+     * @param _voteHash The hash of the vote object.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
+     *
+     * @return currentHeight_ Height of current meta-block.
+     * @return signer_ Address of validator who has signed the vote.
+     */
+    function isVoteValid(
+        bytes32 _transitionHash,
+        bytes32 _voteHash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+
+    )
+        private
+        view
+        returns (uint256 currentHeight_, address signer_)
+    {
+        // As per https://github.com/ethereum/go-ethereum/pull/2940
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        _voteHash = keccak256(
+            abi.encodePacked(
+                prefix,
+                _voteHash
+            )
+        );
+
+        signer_ = ecrecover(
+            _voteHash,
+            _v,
+            _r,
+            _s
+        );
+
+        /* Header of last meta block. */
+        MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
+        /* Current meta-block height. */
+        currentHeight_ = latestMetaBlockHeader.kernel.height.add(1);
+        uint256 weight = stake.weight(currentHeight_, signer_);
+
+        require(
+            weight > 0,
+            "Only validator with non zero weight can vote."
+        );
+
+        require(
+            seals[_transitionHash].validators[signer_] == false,
+            "Vote already verified for this validator."
+        );
+
+    }
+
+    /**
+     * @notice This function saves vote into the seal.
+     *
+     * @dev This method assumes that vote has been successfully verified. It
+     *      will revert the transaction if validator already voted for this
+     *      transition object.
+     *
+     * @param _transitionHash The hash of the transition part of the meta-block
+     *                    header at the source block.
+     * @param _signer Address of validator who has signed vote object.
+     * @param _height Height of current meta-block.
+     *
+     * @return totalVoteWeight_ Total verified vote.
+     */
+    function saveVote(
+        bytes32 _transitionHash,
+        address _signer,
+        uint256 _height
+    )
+        private
+        returns(uint256 totalVoteWeight_)
+    {
+        MetaBlock.Seal storage seal = seals[_transitionHash];
+
+        seal.validators[_signer] = true;
+
+        totalVoteWeight_ = seal.totalVoteWeight.add(stake.weight(_height,_signer));
+
+        seal.totalVoteWeight = totalVoteWeight_;
+    }
+
+    /**
+     * @notice This function checks if meta-block proposal exists.
+     *
+     * @param _kernelHash The hash of the current kernel.
+     * @param _transitionHash The hash of the transition object which is proposed
+     *                    with meta-block.
+     *
+     * @return bool `true` If meta-block proposal exists.
+     */
+    function existsMetaBlockProposal(
+        bytes32 _kernelHash,
+        bytes32 _transitionHash
+    )
+        private
+        view
+        returns(bool)
+    {
+        MetaBlock.AuxiliaryTransition storage transitionObject =
+            proposedMetaBlock[_kernelHash][_transitionHash];
+
+        return transitionObject.kernelHash == _kernelHash;
+    }
+
 }
