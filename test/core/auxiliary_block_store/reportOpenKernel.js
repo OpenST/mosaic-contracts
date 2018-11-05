@@ -438,13 +438,13 @@ contract('AuxiliaryBlockStore.reportOpenKernel()', async (accounts) => {
     );
 
     height = new BN(1);
-    parent = genesisKernelHash;
+    parent = "0xa6c898ec725d242dfdfd2f60abbee221ab06be45d1e06bd0f16571d613f2b174";
     updatedValidators = [accounts[5]];
     updatedWeights = [new BN(5)];
-    auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
+    auxiliaryBlockHash = initialBlockHash;
 
     let kernelHash =
-      '0x5b3d144540d27a4b8911857650ebb039a99d7109dde88b4d74f6b18f82249ad3';
+      '0x486375afd17be0e67a4334d0e32b932f258178b645632c4a31244cd27defed20';
 
     let result = await auxiliaryBlockStore.reportOpenKernel.call(
       height,
@@ -507,10 +507,10 @@ contract('AuxiliaryBlockStore.reportOpenKernel()', async (accounts) => {
     );
 
     height = new BN(1);
-    parent = genesisKernelHash;
+    parent = "0xa6c898ec725d242dfdfd2f60abbee221ab06be45d1e06bd0f16571d613f2b174";
     updatedValidators = [accounts[5]];
     updatedWeights = [new BN(5)];
-    auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
+    auxiliaryBlockHash = initialBlockHash;
 
     await auxiliaryBlockStore.reportOpenKernel(
       height,
@@ -594,12 +594,12 @@ contract('AuxiliaryBlockStore.reportOpenKernel()', async (accounts) => {
     );
 
     height = new BN(1);
-    parent = genesisKernelHash;
+    parent = "0xa6c898ec725d242dfdfd2f60abbee221ab06be45d1e06bd0f16571d613f2b174";
     updatedValidators = [accounts[5]];
     updatedWeights = [new BN(5)];
-    auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
+    auxiliaryBlockHash = initialBlockHash;
     let kernelHash =
-      '0x5b3d144540d27a4b8911857650ebb039a99d7109dde88b4d74f6b18f82249ad3';
+      '0x486375afd17be0e67a4334d0e32b932f258178b645632c4a31244cd27defed20';
 
     await auxiliaryBlockStore.reportOpenKernel(
       height,

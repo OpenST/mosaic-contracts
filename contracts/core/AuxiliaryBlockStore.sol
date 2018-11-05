@@ -270,13 +270,12 @@ contract AuxiliaryBlockStore is BlockStore {
             "Kernel height must be equal to open kernel height plus 1."
         );
 
-        // TODO: add transition hash
         /*
          * Check if the parent of reported kernel is equal to the committed
          * meta-block hash
          */
         require(
-            _parent == activeKernelHash,
+            _parent == getMetaBlockHash(_auxiliaryBlockHash),
             "Parent hash must be equal to open kernel hash."
         );
 
@@ -379,6 +378,44 @@ contract AuxiliaryBlockStore is BlockStore {
         );
 
         valid_ = _transitionHash == expectedTransitionHash;
+    }
+
+    /**
+     * @notice Get the meta-block hash. For the given block hash get the
+     *         transition hash. meta-block is hash of active kernel hash
+     *         and transition hash
+     *
+     * @param _blockHash The auxiliary block hash
+     *
+     * @return metaBlockHash_ The meta-block hash
+     */
+    function getMetaBlockHash(
+        bytes32 _blockHash
+    )
+        internal
+        view
+        returns (bytes32 metaBlockHash_)
+    {
+        uint256 dynasty = checkpoints[_blockHash].dynasty;
+
+        //@dev Replace this with getTransitionHash
+        bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
+            coreIdentifier,
+            kernelHashes[dynasty],
+            dynasty,
+            _blockHash,
+            accumulatedGases[_blockHash],
+            originDynasties[_blockHash],
+            originBlockHashes[_blockHash],
+            accumulatedTransactionRoots[_blockHash]
+        );
+
+        metaBlockHash_ = keccak256(
+            abi.encode(
+                activeKernelHash,
+                transitionHash
+            )
+        );
     }
 
     /**
