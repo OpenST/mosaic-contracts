@@ -34,12 +34,6 @@ const ValidatorIndexEndHeight = 4;
 
 contract('PollingPlace.constructor()', async (accounts) => {
 
-    /*
-     * Make the first address the default meta-block gate to be able to
-     * call methods that change the set of validators from the default
-     * message caller address.
-     */
-    let kernelGateway = accounts[0];
     let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
     let originBlockStore;
     let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
@@ -102,18 +96,10 @@ contract('PollingPlace.constructor()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
             expectedWeights.values,
-        );
-
-        let storedKernelGateway = await pollingPlace.kernelGateway.call();
-        assert.strictEqual(
-            storedKernelGateway,
-            kernelGateway,
-            'The contract must store the correct meta-block gate.',
         );
 
         // Check for all individual weights to be recorded
@@ -151,29 +137,9 @@ contract('PollingPlace.constructor()', async (accounts) => {
         );
     });
 
-    it('should not accept a zero kernel gateway', async () => {
-        await Utils.expectRevert(
-            PollingPlace.new(
-                '0x0000000000000000000000000000000000000000',
-                originBlockStore.address,
-                auxiliaryBlockStore.address,
-                [
-                    '0x0000000000000000000000000000000000000001',
-                    '0x0000000000000000000000000000000000000002',
-                ],
-                [
-                    new BN('1'),
-                    new BN('2'),
-                ],
-            ),
-            'The address of the kernel gateway must not be zero.',
-        );
-    });
-
     it('should not accept a zero origin block store', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 '0x0000000000000000000000000000000000000000',
                 auxiliaryBlockStore.address,
                 [
@@ -192,7 +158,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept a zero auxiliary block store', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 '0x0000000000000000000000000000000000000000',
                 [
@@ -211,7 +176,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept an empty validator set', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [],
@@ -224,7 +188,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept two arrays of different length', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [
@@ -239,7 +202,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
 
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [
@@ -257,7 +219,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept a zero weight', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [
@@ -276,7 +237,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept a zero address', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [
@@ -295,7 +255,6 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept the same address more than once', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 [

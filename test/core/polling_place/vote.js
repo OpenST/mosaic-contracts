@@ -35,12 +35,6 @@ contract('PollingPlace.vote()', async (accounts) => {
 
     let pollingPlace;
 
-    /*
-     * Make the first address the default meta-block gate to be able to
-     * call methods that change the set of validators from the default
-     * message caller address.
-     */
-    let kernelGateway = accounts[0];
     let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
     let originBlockStore;
     let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
@@ -75,7 +69,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             [accounts[0]],
@@ -170,7 +163,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         await auxiliaryBlockStore.setVoteValid(false);
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             [accounts[0]],
@@ -244,7 +236,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -378,7 +369,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -475,7 +465,6 @@ contract('PollingPlace.vote()', async (accounts) => {
             };
 
             let pollingPlace = await PollingPlace.new(
-                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 expectedWeights.addresses,
@@ -615,7 +604,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -677,7 +665,6 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,

@@ -28,7 +28,6 @@ const zeroAddress = "0x0000000000000000000000000000000000000000";
 contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
 
   let pollingPlace;
-  let kernelGateway = accounts[0];
   let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
   let originBlockStore;
   let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
@@ -83,7 +82,6 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
     pollingPlace = await PollingPlace.new(
-      kernelGateway,
       originBlockStore.address,
       auxiliaryBlockStore.address,
       initialValidators,

@@ -211,9 +211,6 @@ contract PollingPlace is PollingPlaceInterface {
      *         address and a weight have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
-     * @param _kernelGateway The kernel gateway is the only address that is
-     *                       allowed to call methods that update the current
-     *                       height of the meta-block chain.
      * @param _originBlockStore The block store that stores the origin chain.
      * @param _auxiliaryBlockStore The block store that stores the auxiliary
      *                             chain.
@@ -223,7 +220,6 @@ contract PollingPlace is PollingPlaceInterface {
      *                 way as the _auxiliaryAddresses.
      */
     constructor (
-        address _kernelGateway,
         address _originBlockStore,
         address _auxiliaryBlockStore,
         address[] _auxiliaryAddresses,
@@ -231,10 +227,6 @@ contract PollingPlace is PollingPlaceInterface {
     )
         public
     {
-        require(
-            _kernelGateway != address(0),
-            "The address of the kernel gateway must not be zero."
-        );
         require(
             _originBlockStore != address(0),
             "The address of the origin block store must not be zero."
@@ -248,8 +240,6 @@ contract PollingPlace is PollingPlaceInterface {
             _auxiliaryAddresses.length > 0,
             "The count of initial validators must be at least one."
         );
-
-        kernelGateway = _kernelGateway;
 
         BlockStoreInterface originBlockStore = BlockStoreInterface(_originBlockStore);
         BlockStoreInterface auxiliaryBlockStore = BlockStoreInterface(_auxiliaryBlockStore);
