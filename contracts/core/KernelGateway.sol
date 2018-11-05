@@ -14,20 +14,32 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./KernelGatewayInterface.sol";
-import "../lib/MetaBlock.sol";
 import "../lib/RLP.sol";
 import "./BlockStoreInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 import "../lib/SafeMath.sol";
+import "./ReportOpenKernelInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
-contract KernelGateway is KernelGatewayInterface {
+contract KernelGateway {
+
+    /* Events */
+    event OpenKernelProven(
+        bytes20 _originCoreIdentifier,
+        bytes20 _auxiliaryCoreIdentifier,
+        uint256 _metaBlockHeight,
+        bytes32 _parent,
+        bytes32 _kernelHash,
+        uint256 _activationDynasty
+    );
 
     using SafeMath for uint256;
 
+    /** Index of kernel hash storage location in origin core */
     uint8 constant KERNEL_HASH_INDEX = 5;
+
+    /* Variables */
 
     /** Address of origin core */
     address public originCore;
@@ -43,12 +55,6 @@ contract KernelGateway is KernelGatewayInterface {
 
     /** Storage path. */
     bytes public storagePath;
-
-    /** Open kernel hash. */
-    bytes32 public openKernelHash;
-
-    /** Open kernel . */
-    MetaBlock.Kernel public openKernel;
 
     /* Constructor */
 
@@ -101,8 +107,6 @@ contract KernelGateway is KernelGatewayInterface {
         );
     }
 
-    /* External functions */
-
     /**
      * @notice Prove the opening of a new meta-block on origin. The method will
      *         check the proof against the state root from the OriginBlockStore
@@ -118,6 +122,8 @@ contract KernelGateway is KernelGatewayInterface {
      *                        updated validators. Updated validators at the
      *                        same index relate to the weight in this array.
      *                        Weights of existing validators can only decrease.
+     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
+     *                            closing the meta-block
      * @param _storageBranchRlp The trie branch of the state trie of origin
      *                            that proves that the opening took place on
      *                            origin.
@@ -134,6 +140,7 @@ contract KernelGateway is KernelGatewayInterface {
         bytes32 _parent,
         address[] _updatedValidators,
         uint256[] _updatedWeights,
+        bytes32 _auxiliaryBlockHash,
         bytes _storageBranchRlp,
         bytes _accountRlp,
         bytes _accountBranchRlp,
@@ -145,6 +152,11 @@ contract KernelGateway is KernelGatewayInterface {
         require(
             _parent != bytes32(0),
             "Parent hash must not be zero."
+        );
+
+        require(
+            _auxiliaryBlockHash != bytes32(0),
+            "Auxiliary block hash must not be zero."
         );
 
         require(
@@ -172,15 +184,14 @@ contract KernelGateway is KernelGatewayInterface {
             "The block containing the state root must be finalized."
         );
 
-        require(
-            _height == openKernel.height.add(1),
-            "Kernel height must be equal to open kernal height plus 1."
-        );
-
-        require(
-            _parent == openKernelHash,
-            "Parent hash must be equal to open kernel hash."
-        );
+        bytes32 kernelHash =
+            ReportOpenKernelInterface(auxiliaryBlockStore).reportOpenKernel(
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedWeights,
+                _auxiliaryBlockHash
+            );
 
         bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
 
@@ -197,13 +208,6 @@ contract KernelGateway is KernelGatewayInterface {
             stateRoot
         );
 
-        bytes32 kernelHash = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
         /**
          * Verify merkle proof for the existence of data
          */
@@ -217,17 +221,20 @@ contract KernelGateway is KernelGatewayInterface {
             "Storage proof must be verified."
         );
 
-        openNewKernel(
+        emit OpenKernelProven(
+            originBlockStore.getCoreIdentifier(),
+            auxiliaryBlockStore.getCoreIdentifier(),
             _height,
             _parent,
-            _updatedValidators,
-            _updatedWeights
+            kernelHash,
+            auxiliaryBlockStore.getCurrentDynasty().add(2)
         );
 
         success_ = true;
 
-
     }
+
+    /* Internal functions */
 
     /**
      * @notice Get storage root for the OriginCore contract.
@@ -283,22 +290,16 @@ contract KernelGateway is KernelGatewayInterface {
         return storageRoot_;
     }
 
-    function getValidators()
-        external
-        view
-        returns(address[] updatedValidators_)
-    {
-        updatedValidators_ = openKernel.updatedValidators;
-    }
-
-    function getValidatorWeights()
-        external
-        view
-        returns(uint256[] updatedWeights_)
-    {
-        updatedWeights_ = openKernel.updatedWeights;
-    }
-
+    /**
+     * @notice Perform the merkle proof.
+     *
+     * @param _value The terminating value in the trie.
+     * @param _encodedPath The path in the trie leading to value.
+     * @param _rlpParentNodes The rlp encoded stack of nodes.
+     * @param _root The root hash of the trie.
+     *
+     * @return success_ The boolean validity of the proof.
+     */
     function verify(
         bytes32 _value,
         bytes _encodedPath,
@@ -317,26 +318,4 @@ contract KernelGateway is KernelGatewayInterface {
         );
     }
 
-    function openNewKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights
-    )
-        private
-    {
-        openKernel = MetaBlock.Kernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        openKernelHash = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-    }
 }

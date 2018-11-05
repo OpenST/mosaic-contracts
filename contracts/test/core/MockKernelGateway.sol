@@ -58,27 +58,5 @@ contract MockKernelGateway is KernelGateway{
         );
     }
 
-    function setOpenKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights
-    )
-        external
-    {
-        openKernel = MetaBlock.Kernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        openKernelHash = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-    }
 
 }

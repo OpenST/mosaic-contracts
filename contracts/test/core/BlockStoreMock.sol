@@ -15,6 +15,7 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "../../core/BlockStoreInterface.sol";
+import "../../core/PollingPlaceInterface.sol";
 
 /**
  * @notice BlockStoreMock implements the BlockStoreInterface. It returns pre-
@@ -38,6 +39,9 @@ contract BlockStoreMock is BlockStoreInterface {
     uint256 public latestBlockHeight;
     bool public isVoteValid;
     bool public isBlockReported;
+    bytes32 public openKernelHash;
+    bool public isOpenKernelHashValid;
+    PollingPlaceInterface public pollingPlace;
 
     /* External Functions */
 
@@ -73,6 +77,18 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setIsBlockReported(bool _isReported) external {
         isBlockReported = _isReported;
+    }
+
+    function setOpenKernelHash(bytes32 _openKernelHash) external {
+        openKernelHash = _openKernelHash;
+    }
+
+    function setOpenKernelHashValid(bool _isValid) external {
+        isOpenKernelHashValid = _isValid;
+    }
+
+    function setPollingPlace(PollingPlaceInterface  _pollingPlace) external {
+        pollingPlace = _pollingPlace;
     }
 
     /* The methods of the interface, returning values from storage. */
@@ -147,4 +163,37 @@ contract BlockStoreMock is BlockStoreInterface {
     {
         reported_ = isBlockReported;
     }
+
+    function reportOpenKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes32 _auxiliaryBlockHash
+    )
+        external
+        returns(bytes32 openKernelHash_)
+    {
+        require(isOpenKernelHashValid == true);
+        return openKernelHash;
+    }
+
+
+    function updateMetaBlockHeight(
+        address[] _validators,
+        uint256[] _weights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
+    )
+        external
+        returns (bool success_)
+    {
+        success_ = PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
+            _validators,
+            _weights,
+            _originHeight,
+            _auxiliaryHeight
+        );
+    }
+
 }

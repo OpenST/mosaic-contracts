@@ -533,15 +533,13 @@ contract BlockStore is BlockStoreInterface {
         valid_ = _transitionHash == expectedHash;
     }
 
-    /* Private Functions */
-
     /**
      * @notice Finalises the checkpoint at the given block hash. Updates the
      *         current head and dynasty if it is above the old head.
      *
      * @param _blockHash The checkpoint that shall be finalised.
      */
-    function finalise(bytes32 _blockHash) private {
+    function finalise(bytes32 _blockHash) internal {
         checkpoints[_blockHash].finalised = true;
 
         if (reportedBlocks[_blockHash].height > reportedBlocks[head].height) {
@@ -551,6 +549,8 @@ contract BlockStore is BlockStoreInterface {
 
         emit BlockFinalised(_blockHash);
     }
+
+    /* Private Functions */
 
     /**
      * @notice Checks if a source block is valid. The same criteria apply for

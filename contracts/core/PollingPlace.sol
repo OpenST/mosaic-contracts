@@ -124,10 +124,10 @@ contract PollingPlace is PollingPlaceInterface {
     /* Public Variables */
 
     /**
-     * The meta-block gate is the only contract that is allowed to update the
+     * The kernel gateway is the only contract that is allowed to update the
      * meta-block height.
      */
-    address public metaBlockGate;
+    address public kernelGateway;
 
     /** The core identifier of the core that tracks origin. */
     bytes20 public originCoreIdentifier;
@@ -186,6 +186,22 @@ contract PollingPlace is PollingPlaceInterface {
      */
     mapping (uint256 => uint256) public totalWeights;
 
+    /* Modifiers */
+
+    /**
+     * @notice Functions with this modifier can only be called from the address
+     *         that is registered as the auxilixary block store.
+     */
+    modifier onlyAuxiliaryBlockStore() {
+        address auxiliaryBlockStore = blockStores[auxiliaryCoreIdentifier];
+        require(
+            auxiliaryBlockStore != address(0) &&
+                msg.sender == auxiliaryBlockStore,
+            "This method must be called from the registered auxiliary block store."
+        );
+
+        _;
+    }
     /* Constructor */
 
     /**
@@ -195,7 +211,7 @@ contract PollingPlace is PollingPlaceInterface {
      *         address and a weight have the same index in the provided arrays,
      *         they are regarded as belonging to the same validator.
      *
-     * @param _metaBlockGate The meta-block gate is the only address that is
+     * @param _kernelGateway The kernel gateway is the only address that is
      *                       allowed to call methods that update the current
      *                       height of the meta-block chain.
      * @param _originBlockStore The block store that stores the origin chain.
@@ -207,7 +223,7 @@ contract PollingPlace is PollingPlaceInterface {
      *                 way as the _auxiliaryAddresses.
      */
     constructor (
-        address _metaBlockGate,
+        address _kernelGateway,
         address _originBlockStore,
         address _auxiliaryBlockStore,
         address[] _auxiliaryAddresses,
@@ -216,8 +232,8 @@ contract PollingPlace is PollingPlaceInterface {
         public
     {
         require(
-            _metaBlockGate != address(0),
-            "The address of the meta-block gate must not be zero."
+            _kernelGateway != address(0),
+            "The address of the kernel gateway must not be zero."
         );
         require(
             _originBlockStore != address(0),
@@ -233,7 +249,7 @@ contract PollingPlace is PollingPlaceInterface {
             "The count of initial validators must be at least one."
         );
 
-        metaBlockGate = _metaBlockGate;
+        kernelGateway = _kernelGateway;
 
         BlockStoreInterface originBlockStore = BlockStoreInterface(_originBlockStore);
         BlockStoreInterface auxiliaryBlockStore = BlockStoreInterface(_auxiliaryBlockStore);
@@ -275,13 +291,9 @@ contract PollingPlace is PollingPlaceInterface {
         uint256 _auxiliaryHeight
     )
         external
+        onlyAuxiliaryBlockStore
         returns (bool success_)
     {
-        require(
-            msg.sender == metaBlockGate,
-            "meta-block updates must be done by the registered meta-block gate."
-        );
-
         currentMetaBlockHeight = currentMetaBlockHeight.add(1);
 
         /*

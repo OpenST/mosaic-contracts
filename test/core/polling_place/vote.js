@@ -40,7 +40,7 @@ contract('PollingPlace.vote()', async (accounts) => {
      * call methods that change the set of validators from the default
      * message caller address.
      */
-    let metaBlockGate = accounts[0];
+    let kernelGateway = accounts[0];
     let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
     let originBlockStore;
     let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
@@ -75,7 +75,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             [accounts[0]],
@@ -170,7 +170,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         await auxiliaryBlockStore.setVoteValid(false);
 
         let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             [accounts[0]],
@@ -244,7 +244,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -378,7 +378,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -475,7 +475,7 @@ contract('PollingPlace.vote()', async (accounts) => {
             };
 
             let pollingPlace = await PollingPlace.new(
-                metaBlockGate,
+                kernelGateway,
                 originBlockStore.address,
                 auxiliaryBlockStore.address,
                 expectedWeights.addresses,
@@ -615,7 +615,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -677,7 +677,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         };
 
         let pollingPlace = await PollingPlace.new(
-            metaBlockGate,
+            kernelGateway,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             expectedWeights.addresses,
@@ -724,7 +724,8 @@ contract('PollingPlace.vote()', async (accounts) => {
 
     it('should accept a vote for a target height greater than open meta-block', async () => {
 
-        await pollingPlace.updateMetaBlockHeight(
+        await auxiliaryBlockStore.setPollingPlace(pollingPlace.address);
+        await auxiliaryBlockStore.updateMetaBlockHeight(
             [],
             [],
             new BN('19850912'),
@@ -749,7 +750,8 @@ contract('PollingPlace.vote()', async (accounts) => {
 
     it('should not accept a vote for a target height less than open meta-block', async () => {
 
-        await pollingPlace.updateMetaBlockHeight(
+        await auxiliaryBlockStore.setPollingPlace(pollingPlace.address);
+        await auxiliaryBlockStore.updateMetaBlockHeight(
             [],
             [],
             new BN('19891109'),
