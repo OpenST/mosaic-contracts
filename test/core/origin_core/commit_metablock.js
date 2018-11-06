@@ -44,6 +44,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     let initialStakes;
     let maxAccumulateGasLimit = new BN(105000);
     let tokenDeployer;
+    let stakeAddress;
 
     beforeEach(async () => {
 
@@ -61,22 +62,22 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         kernelHash = await originCore.openKernelHash.call();
         let height = 1,
-             auxiliaryDynasty = 50,
-             auxiliaryBlockHash = web3.utils.sha3("1"),
-             gas = 1000,
-             originDynasty = 1,
-             originBlockHash = web3.utils.sha3("1");
+            auxiliaryDynasty = 50,
+            auxiliaryBlockHash = web3.utils.sha3("1"),
+            gas = 1000,
+            originDynasty = 1,
+            originBlockHash = web3.utils.sha3("1");
 
         let tx = await originCore.proposeBlock(
-             height,
-             auxiliaryCoreIdentifier,
-             kernelHash,
-             auxiliaryDynasty,
-             auxiliaryBlockHash,
-             gas,
-             originDynasty,
-             originBlockHash,
-             transactionRoot
+            height,
+            auxiliaryCoreIdentifier,
+            kernelHash,
+            auxiliaryDynasty,
+            auxiliaryBlockHash,
+            gas,
+            originDynasty,
+            originBlockHash,
+            transactionRoot,
         );
         let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
 
@@ -95,12 +96,12 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             sourceHeight: new BN('1'),
             targetHeight: new BN('2'),
         };
+
+        stakeAddress = await originCore.stake.call();
     });
 
-    it('should be able to commit meta-block if 2/3 super majority is' +
+    it('should commit a meta-block if 2/3 super majority is' +
          ' achieved.', async function () {
-
-        let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
             accounts[2],
@@ -167,10 +168,8 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         );
     });
 
-    it('should be not able to commit meta-block if 2/3 super majority is not' +
+    it('should not commit a meta-block if 2/3 super majority is not' +
          ' achieved.', async function () {
-
-        let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
             accounts[2],
@@ -216,9 +215,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         );
     });
 
-    it('should not be able to commit meta-block due to rounding error ', async function () {
-
-        let stakeAddress = await originCore.stake.call();
+    it('should not commit meta-block due to rounding error ', async function () {
 
         initialDepositors = [
             accounts[2],
@@ -266,7 +263,6 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     });
 
     it('should open new kernel on meta-block commit', async function () {
-        let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
             accounts[2],
@@ -343,7 +339,6 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let openKernelHash = await originCore.openKernelHash.call();
 
-
         let expectedKernelHash = "0xb94e25ddd9ce2be28e1a66c2e0b5ac998573f23d089880aa9c3b8c96ef36221c";
 
         assert.equal(
@@ -367,8 +362,6 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     });
 
     it('should update head to latest committed meta-block', async function () {
-
-        let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
             accounts[2],
@@ -436,7 +429,6 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHead = MetaBlockUtils.hashMetaBlock(kernelHash,vote.transitionHash);
 
-
         assert.equal(
           expectedHead,
           head,
@@ -445,7 +437,6 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     });
 
     it('should not commit already committed meta-block', async function () {
-        let stakeAddress = await originCore.stake.call();
 
         initialDepositors = [
             accounts[2],
@@ -531,6 +522,3 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     });
 
 });
-
-
-
