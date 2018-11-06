@@ -13,14 +13,14 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: ProtocolVersioned.js
+// Test: protocol_versioned.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 const Utils = require('../test_lib/utils.js');
-const ProtocolVersioned_utils = require('./ProtocolVersioned_utils.js');
+const ProtocolVersioned_utils = require('./protocol_versioned_utils.js');
 
 ///
 /// Test stories

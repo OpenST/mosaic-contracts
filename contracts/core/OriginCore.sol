@@ -55,6 +55,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint256 requiredWeight
     );
 
+    /** Emitted whenever a meta-block is committed after 2/3rd majority. */
+    event MetaBlockCommitted(
+        bytes32 indexed kernelHash,
+        bytes32 transitionHash,
+        bytes32 metaBlockHash,
+        uint256 height,
+        uint256 verifiedWeight,
+        uint256 requiredWeight
+    );
+
     /* Public Variables */
 
     OstInterface public Ost;
@@ -70,6 +80,16 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
     /** head is the block header hash of the latest committed block. */
     bytes32 public head;
+
+    /**
+     * This represents kernel hash of current open meta-block. This will be
+     * used by kernel gateway to prove kernel opening on auxiliary chain
+     * using merkel proof.
+     */
+    bytes32 public openKernelHash;
+
+    /** This represents kernel of current open meta-block. */
+    MetaBlock.Kernel public openKernel;
 
     /**
      * The maximum amount of gas that a meta-block could accumulate on an
@@ -325,15 +345,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _targetHeight
         );
 
-        uint256 height;
         address signer;
 
         /*
          * This check the validity of vote, on successful validation it returns
-         * address of validator, and height of current meta-block.
+         * address of validator.
          * This will revert transaction if vote validation fails.
          */
-        (height, signer) = isVoteValid(
+        signer = isVoteValid(
             _transitionHash,
             voteHash,
             _v,
@@ -341,7 +360,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _s
         );
 
-        uint256 verifiedWeight = saveVote(_transitionHash, signer, height);
+        uint256 verifiedWeight = saveVote(_transitionHash, signer);
+
+        /* Required weight for super-majority. */
+        uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(
+            stake.totalWeightAtHeight(openKernel.height)
+        );
 
         emit VoteVerified(
             _kernelHash,
@@ -352,10 +376,19 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _r,
             _s,
             verifiedWeight,
-            MetaBlock.requiredWeightForSuperMajority(
-                    stake.totalWeightAtHeight(height)
-            )
+            requiredWeight
         );
+
+
+        if(shouldCommitMetaBlock(_kernelHash, verifiedWeight, requiredWeight)){
+            commitMetaBlock(
+                _kernelHash,
+                _transitionHash,
+                verifiedWeight,
+                requiredWeight
+            );
+        }
+
     }
 
     /**
@@ -442,25 +475,26 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         bytes32 _initialTransactionRoot
     )
         private
-        returns (bytes32)
+        returns (bytes32 metaBlockHash_)
     {
-        address[] memory initialValidators;
-        uint256[] memory validatorsWeights;
-       /*
-        * Kernel for genesis block with height 0, no parent block and
-        * initial set of validators with their weights.
-        */
+        address[] memory emptyValidatorSet;
+        uint256[] memory emptyValidatorsWeights;
+
+        /*
+         * Kernel for genesis block with height 0, no parent block and
+         * initial set of validators with their weights.
+         */
         MetaBlock.Kernel memory genesisKernel = MetaBlock.Kernel(
             0,
             bytes32(0),
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
         bytes32 kernelHash = MetaBlock.hashKernel(
             0,
             bytes32(0),
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
 
         /*
@@ -478,9 +512,38 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _initialTransactionRoot
         );
 
-        reportedHeaders[kernelHash] = MetaBlock.Header(genesisKernel, genesisTransition);
+        bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
+            auxiliaryCoreIdentifier,
+            kernelHash,
+            0,
+            bytes32(0),
+            _initialAuxiliaryGas,
+            0,
+            bytes32(0),
+            _initialTransactionRoot
+        );
 
-        return kernelHash;
+        metaBlockHash_  = MetaBlock.hashMetaBlock(
+            kernelHash,
+            transitionHash
+        );
+
+        reportedHeaders[metaBlockHash_] = MetaBlock.Header(genesisKernel, genesisTransition);
+
+        /* Open Kernel for height 1. */
+        openKernel = MetaBlock.Kernel(
+            1,
+            metaBlockHash_,
+            emptyValidatorSet,
+            emptyValidatorsWeights
+        );
+
+        openKernelHash = MetaBlock.hashKernel(
+            1,
+            metaBlockHash_,
+            emptyValidatorSet,
+            emptyValidatorsWeights
+        );
     }
 
     /**
@@ -496,7 +559,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _r R of the signature.
      * @param _s S of the signature.
      *
-     * @return currentHeight_ Height of current meta-block.
      * @return signer_ Address of validator who has signed the vote.
      */
     function isVoteValid(
@@ -509,7 +571,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     )
         private
         view
-        returns (uint256 currentHeight_, address signer_)
+        returns ( address signer_)
     {
         // As per https://github.com/ethereum/go-ethereum/pull/2940
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -527,11 +589,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _s
         );
 
-        /* Header of last meta block. */
-        MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
-        /* Current meta-block height. */
-        currentHeight_ = latestMetaBlockHeader.kernel.height.add(1);
-        uint256 weight = stake.weight(currentHeight_, signer_);
+        uint256 weight = stake.weight(openKernel.height, signer_);
 
         require(
             weight > 0,
@@ -555,14 +613,12 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * @param _transitionHash The hash of the transition part of the meta-block
      *                    header at the source block.
      * @param _signer Address of validator who has signed vote object.
-     * @param _height Height of current meta-block.
      *
      * @return totalVoteWeight_ Total verified vote.
      */
     function saveVote(
         bytes32 _transitionHash,
-        address _signer,
-        uint256 _height
+        address _signer
     )
         private
         returns(uint256 totalVoteWeight_)
@@ -571,7 +627,9 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         seal.validators[_signer] = true;
 
-        totalVoteWeight_ = seal.totalVoteWeight.add(stake.weight(_height,_signer));
+        totalVoteWeight_ = seal.totalVoteWeight.add(
+            stake.weight(openKernel.height, _signer)
+        );
 
         seal.totalVoteWeight = totalVoteWeight_;
     }
@@ -599,4 +657,99 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         return transitionObject.kernelHash == _kernelHash;
     }
 
+    /**
+     * @notice Function to commit meta-block if 2/3rd majority is achieved.
+     *
+     * @param _kernelHash The hash of the current kernel.
+     * @param _transitionHash The hash of the transition object which is proposed
+     *                        with meta-block.
+     * @param _verifiedWeight Total verified weight.
+     * @param  _requiredWeight Total required weight for super-majority.
+     */
+    function commitMetaBlock(
+        bytes32  _kernelHash,
+        bytes32 _transitionHash,
+        uint256 _verifiedWeight,
+        uint256 _requiredWeight
+    )
+        private
+    {
+        uint256 height = openKernel.height;
+
+        bytes32 metaBlockHash = MetaBlock.hashMetaBlock(
+            _kernelHash,
+            _transitionHash
+        );
+
+        /* Report meta-block. */
+        reportedHeaders[metaBlockHash] = MetaBlock.Header(
+            openKernel,
+            proposedMetaBlock[_kernelHash][_transitionHash]
+        );
+
+        /* Update head */
+        head = metaBlockHash;
+        openNextKernel(height, metaBlockHash);
+
+        emit MetaBlockCommitted(
+            _kernelHash,
+            _transitionHash,
+            metaBlockHash,
+            height,
+            _verifiedWeight,
+            _requiredWeight
+        );
+    }
+    /**
+     * @notice Function to open next new Kernel by closing current meta-block.
+     *
+     * @param  _height Height of current meta-block.
+     * @param  _metaBlockHash Hash of closing meta-block.
+     */
+    function openNextKernel(uint256 _height, bytes32 _metaBlockHash)
+        private
+    {
+        address[] memory updatedValidators;
+        uint256[] memory updatedWeights;
+
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(_height);
+
+        uint256 nextMetaBlockHeight = _height.add(1);
+
+        openKernel = MetaBlock.Kernel(
+            nextMetaBlockHeight,
+            _metaBlockHash,
+            updatedValidators,
+            updatedWeights
+        );
+
+        openKernelHash = MetaBlock.hashKernel(
+            nextMetaBlockHeight,
+            _metaBlockHash,
+            updatedValidators,
+            updatedWeights
+        );
+    }
+
+    /**
+     * @notice Validates if meta-block should be committed. It checks if
+               meta-block is not already committed and super-majority is achieved.
+     *
+     * @param  _kernelHash Hash of current open-kernel.
+     * @param  _verifiedWeight Total verified vote for given meta-block.
+     * @param  _requiredWeight Total required weight for super-majority.
+     *
+     * @return bool `true` If meta-block should be committed.
+     */
+    function shouldCommitMetaBlock(
+        bytes32 _kernelHash,
+        uint256 _verifiedWeight,
+        uint256 _requiredWeight
+    )
+        private
+        view
+        returns(bool)
+    {
+        return _kernelHash == openKernelHash && _verifiedWeight >= _requiredWeight;
+    }
 }

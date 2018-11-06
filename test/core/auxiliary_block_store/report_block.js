@@ -40,6 +40,7 @@ contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
     let initialGas = TestData.initialBlock.gas;
     let initialTransactionRoot = TestData.initialBlock.transactionRoot;
     let initialHeight = TestData.initialBlock.height;
+    let initialKernelHash  = TestData.initialBlock.kernelHash;
 
     let blockStore;
 
@@ -56,6 +57,7 @@ contract('AuxiliaryBlockStore.reportBlock()', async (accounts) => {
             initialHeight,
             initialGas,
             initialTransactionRoot,
+            initialKernelHash,
         );
     });
 

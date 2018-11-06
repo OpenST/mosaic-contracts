@@ -60,11 +60,11 @@ contract TestStake {
 
     function testValidatorAtHeightPlusTwo() external {
         deposit(address(54), (25 * 10 ** 18));
-        assertNoValidatorUpdates(0);
+        assertNoValidatorUpdates(1);
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -80,13 +80,13 @@ contract TestStake {
 
     function testMultipleValidatorsAtDifferentHeights() external {
         deposit(address(54), 80);
-        assertNoValidatorUpdates(0);
+        assertNoValidatorUpdates(1);
 
         deposit(address(55), 100);
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -99,7 +99,7 @@ contract TestStake {
             "The correct weight should be returned for the validator at the new height."
         );
 
-        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(3);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -115,14 +115,14 @@ contract TestStake {
 
     function testMultipleValidatorsAtTheSameHeight() external {
         deposit(address(54), 80);
-        assertNoValidatorUpdates(0);
+        assertNoValidatorUpdates(1);
 
         deposit(address(55), 100);
         deposit(address(56), 300);
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
-        (updatedValidators, updatedWeights) = stake.closeMetaBlock(1);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
         assertValidatorUpdatesLength(1, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
@@ -135,7 +135,7 @@ contract TestStake {
             "The correct weight should be returned for the validator at the new height."
         );
 
-        (updatedValidators, updatedWeights) = stake.closeMetaBlock(2);
+        (updatedValidators, updatedWeights) = stake.closeMetaBlock(3);
         assertValidatorUpdatesLength(2, updatedValidators, updatedWeights);
         Assert.equal(
             updatedValidators[0],
