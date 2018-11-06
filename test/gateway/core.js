@@ -102,4 +102,3 @@ contract('Core', function (accounts) {
 
     });
 });
-
