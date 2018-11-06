@@ -58,7 +58,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
         );
     });
 
-    it('should return origin transition object at given block Hash if' +
+    it('should return auxiliary transition hash at given block Hash if' +
          ' checkpoint is defined', async () => {
 
         let originDynasty = await originBlockStore.getCurrentDynasty.call();
