@@ -1,10 +1,37 @@
 pragma solidity ^0.4.23;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
+/**
+ * @title MockProofResults
+ *
+ * @dev This contract can be used for mocking the results of merkle
+ *      patricia proof. As MockMerklePatriciaProof and MerklePatriciaProof are
+ *      the libraries, setting the mocking values is a challenge. So this
+ *      can be used to mock the result of verify function
+ */
 contract MockProofResults {
 
     /** A mapping of hashes to their results. */
     mapping (bytes32 => bool) results;
-
 
     function setResult (
         bytes32 _value,
@@ -51,7 +78,6 @@ contract MockProofResults {
         return results[resultHash];
     }
 
-
     function hash(
         bytes32 _value,
         bytes _encodedPath,
@@ -70,4 +96,5 @@ contract MockProofResults {
             )
         );
     }
+
 }

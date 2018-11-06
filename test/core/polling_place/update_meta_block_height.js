@@ -88,7 +88,6 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
       initialWeight,
     );
 
-    // @dev this should be removed.
     await auxiliaryBlockStore.setPollingPlace(pollingPlace.address);
 
   });

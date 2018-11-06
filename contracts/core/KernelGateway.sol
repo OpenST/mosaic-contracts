@@ -497,7 +497,6 @@ contract KernelGateway {
         );
     }
 
-
     /**
      * @notice Validate the new open kernel params.
      *
