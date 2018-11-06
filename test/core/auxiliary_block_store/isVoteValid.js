@@ -40,6 +40,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
     let initialTransactionRoot = TestData.initialBlock.transactionRoot;
     let initialHeight = TestData.initialBlock.height;
     let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
+    let initialKernelHash  = TestData.initialBlock.kernelHash;
 
     let blockStore;
 
@@ -56,6 +57,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             initialHeight,
             initialGas,
             initialTransactionRoot,
+            initialKernelHash
         );
 
         await AuxStoreUtils.reportBlocks(blockStore, testBlocks);

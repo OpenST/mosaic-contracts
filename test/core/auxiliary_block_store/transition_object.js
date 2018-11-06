@@ -17,8 +17,6 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-
-const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
@@ -38,6 +36,7 @@ contract('AuxiliaryBlockStore.transitionObjectAtBlock()', async (accounts) => {
     let initialGas = TestData.initialBlock.gas;
     let initialTransactionRoot = TestData.initialBlock.transactionRoot;
     let initialHeight = TestData.initialBlock.height;
+    let initialKernelHash  = TestData.initialBlock.kernelHash;
 
     let blockStore;
 
@@ -54,6 +53,7 @@ contract('AuxiliaryBlockStore.transitionObjectAtBlock()', async (accounts) => {
             initialHeight,
             initialGas,
             initialTransactionRoot,
+            initialKernelHash
         );
     });
 
@@ -68,6 +68,12 @@ contract('AuxiliaryBlockStore.transitionObjectAtBlock()', async (accounts) => {
              transitionObject.coreIdentifier_,
              coreIdentifier,
              `coreIdentifier of transition object is different from expected coreIdentifier.`
+        );
+
+        assert.equal(
+             transitionObject.kernelHash_,
+             initialKernelHash,
+             `Kernel Hash of transition object is different from expected KernelHash.`
         );
 
         assert(

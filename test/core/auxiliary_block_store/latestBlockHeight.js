@@ -37,6 +37,7 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
     let initialGas = TestData.blocks[3].accumulatedGas;
     let initialTransactionRoot = TestData.blocks[3].transactionRoot;
     let initialHeight = new BN('3');
+    let initialKernelHash  = TestData.initialBlock.kernelHash;
 
     let blockStore;
 
@@ -55,7 +56,8 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
             initialStateRoot,
             initialHeight,
             initialGas,
-            initialTransactionRoot
+            initialTransactionRoot,
+            initialKernelHash,
         );
 
         await AuxStoreUtils.reportBlocks(blockStore, testBlocks);

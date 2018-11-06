@@ -28,6 +28,9 @@ contract AuxiliaryBlockStore is BlockStore {
 
     /* Variables */
 
+    /** A mapping of block hashes to the kernel hash at checkpoints. */
+    mapping(bytes32 => bytes32) public kernelHashes;
+
     /** A mapping of block hashes to their respective accumulated gas. */
     mapping(bytes32 => uint256) public accumulatedGases;
 
@@ -81,6 +84,7 @@ contract AuxiliaryBlockStore is BlockStore {
      * @param _initialTransactionRoot The initial transaction root to start
      *                                tracking the accumulated transaction root
      *                                from.
+     * @param _initialKernelHash The initial open kernel hash.
      */
     constructor (
         bytes20 _coreIdentifier,
@@ -91,7 +95,8 @@ contract AuxiliaryBlockStore is BlockStore {
         bytes32 _initialStateRoot,
         uint256 _initialBlockHeight,
         uint256 _initialGas,
-        bytes32 _initialTransactionRoot
+        bytes32 _initialTransactionRoot,
+        bytes32 _initialKernelHash
     )
         BlockStore(
             _coreIdentifier,
@@ -107,10 +112,15 @@ contract AuxiliaryBlockStore is BlockStore {
             _originBlockStore != address(0),
             "The given origin block store address must not be zero."
         );
+        require(
+            _initialKernelHash != bytes32(0),
+            "Initial kernel hash must not be zero."
+        );
 
         originBlockStore = BlockStore(_originBlockStore);
         accumulatedGases[_initialBlockHash] = _initialGas;
         accumulatedTransactionRoots[_initialBlockHash] = _initialTransactionRoot;
+        kernelHashes[_initialBlockHash] = _initialKernelHash;
     }
 
     /* External Functions */
@@ -204,8 +214,7 @@ contract AuxiliaryBlockStore is BlockStore {
         );
 
         coreIdentifier_ = coreIdentifier;
-        //todo understand updation of kernel hash
-        kernelHash_ = kernelHash;
+        kernelHash_ = kernelHashes[_blockHash];
         auxiliaryDynasty_= checkpoints[_blockHash].dynasty;
         auxiliaryBlockHash_=checkpoints[_blockHash].blockHash;
         accumulatedGas_ = accumulatedGases[_blockHash];
