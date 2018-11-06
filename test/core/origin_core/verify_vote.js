@@ -91,32 +91,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              initialValidators
         );
 
-        let height = 1,
-             auxiliaryDynasty = 50,
-             auxiliaryBlockHash = web3.utils.sha3("1"),
-             gas = 1000,
-             originDynasty = 1,
-             originBlockHash = web3.utils.sha3("1");
-
-        let tx = await originCore.proposeBlock(
-             height,
-             auxiliaryCoreIdentifier,
-             kernelHash,
-             auxiliaryDynasty,
-             auxiliaryBlockHash,
-             gas,
-             originDynasty,
-             originBlockHash,
-             transactionRoot
-        );
-        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
-
-        assert.equal(
-             events.BlockProposed.height,
-             height,
-             `Meta-block should be proposed for height ${height}`
-        );
-        transitionHash = events.BlockProposed.transitionHash;
+        await proposeMetaBlock();
 
         vote = {
             coreIdentifier: auxiliaryCoreIdentifier,
@@ -351,32 +326,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         );
 
         kernelHash = await originCore.openKernelHash.call();
-        let height = 1,
-            auxiliaryDynasty = 50,
-            auxiliaryBlockHash = web3.utils.sha3("1"),
-            gas = 1000,
-            originDynasty = 1,
-            originBlockHash = web3.utils.sha3("1");
-
-        let tx = await originCore.proposeBlock(
-            height,
-            auxiliaryCoreIdentifier,
-            kernelHash,
-            auxiliaryDynasty,
-            auxiliaryBlockHash,
-            gas,
-            originDynasty,
-            originBlockHash,
-            transactionRoot,
-        );
-        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
-
-        assert.equal(
-            events.BlockProposed.height,
-            height,
-            `Meta-block should be proposed for height ${height}`
-        );
-        transitionHash = events.BlockProposed.transitionHash;
+        await proposeMetaBlock();
 
         vote = {
             coreIdentifier: auxiliaryCoreIdentifier,
@@ -812,6 +762,36 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     });
 
 });
+
+async function proposeMetaBlock() {
+    let height = 1,
+        auxiliaryDynasty = 50,
+        auxiliaryBlockHash = web3.utils.sha3("1"),
+        gas = 1000,
+        originDynasty = 1,
+        originBlockHash = web3.utils.sha3("1");
+
+    let tx = await originCore.proposeBlock(
+        height,
+        auxiliaryCoreIdentifier,
+        kernelHash,
+        auxiliaryDynasty,
+        auxiliaryBlockHash,
+        gas,
+        originDynasty,
+        originBlockHash,
+        transactionRoot,
+    );
+    let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+
+    assert.equal(
+        events.BlockProposed.height,
+        height,
+        `Meta-block should be proposed for height ${height}`
+    );
+    transitionHash = events.BlockProposed.transitionHash;
+}
+
 
 
 
