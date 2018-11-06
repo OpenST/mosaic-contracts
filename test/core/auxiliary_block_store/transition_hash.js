@@ -19,13 +19,14 @@
 // ----------------------------------------------------------------------------
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
+const MetaBlockUtils = require('../../test_lib/meta_block.js');
 
 const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
-contract('AuxiliaryBlockStore.auxiliaryTransitionObjectAtBlock()', async (accounts) => {
+contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts) => {
 
     let coreIdentifier = '0x0000000000000000000000000000000000000002';
     let epochLength = new BN('3');
@@ -57,55 +58,35 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionObjectAtBlock()', async (accoun
         );
     });
 
-    it('should return transition object at given block Hash if' +
+    it('should return origin transition object at given block Hash if' +
          ' checkpoint is defined', async () => {
-
-        let transitionObject = await  blockStore.auxiliaryTransitionObjectAtBlock.call(
-             initialBlockHash
-        );
-
-        assert.equal(
-             transitionObject.coreIdentifier_,
-             coreIdentifier,
-             `coreIdentifier of transition object is different from expected coreIdentifier.`
-        );
-
-        assert.equal(
-             transitionObject.kernelHash_,
-             initialKernelHash,
-             `Kernel Hash of transition object is different from expected KernelHash.`
-        );
-
-        assert(
-             transitionObject.auxiliaryDynasty_.eq(new BN(0)),
-             `Dynasty of transition object is different from expected dynasty.`
-        );
-
-        assert.equal(
-             transitionObject.auxiliaryBlockHash_,
-             initialBlockHash,
-             `Block hash of transition object is different from expected block hash.`
-        );
 
         let originDynasty = await originBlockStore.getCurrentDynasty.call();
         let originBlockHash = await originBlockStore.getHead.call();
 
-        assert(
-             transitionObject.originDynasty_.eq(originDynasty),
-             `Origin dynasty of transition object is different from expected origin dynasty.`
+        let auxiliaryTransitionObject = {
+            coreIdentifier:coreIdentifier,
+            kernelHash:initialKernelHash,
+            auxiliaryDynasty:0,
+            auxiliaryBlockHash:initialBlockHash,
+            gas:initialGas,
+            originDynasty:originDynasty,
+            originBlockHash:originBlockHash,
+            transactionRoot:initialTransactionRoot,
+        };
+
+        let expectedTransitionHash = MetaBlockUtils.hashAuxiliaryTransition(auxiliaryTransitionObject);
+
+        let transitionHash = await  blockStore.auxiliaryTransitionHashAtBlock.call(
+            initialBlockHash
         );
 
         assert.equal(
-             transitionObject.originBlockHash_,
-             originBlockHash,
-             `origin Block hash of transition object is different from expected block hash.`
+            transitionHash,
+            expectedTransitionHash,
+            `Transition hash is different from expected transition hash.`
         );
 
-        assert.equal(
-             transitionObject.transactionRoot_,
-             initialTransactionRoot,
-             `transaction root of transition object is different from expected transaction root.`
-        );
     });
 
 
@@ -114,7 +95,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionObjectAtBlock()', async (accoun
         let wrongBlockHash = web3.utils.sha3("wrong block hash");
 
         await Utils.expectRevert(
-             blockStore.auxiliaryTransitionObjectAtBlock.call(wrongBlockHash),
+             blockStore.auxiliaryTransitionHashAtBlock.call(wrongBlockHash),
              'Checkpoint not defined for given block hash.'
         );
 
