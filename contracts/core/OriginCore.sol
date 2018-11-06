@@ -477,23 +477,24 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         private
         returns (bytes32 metaBlockHash_)
     {
-        address[] memory initialValidators;
-        uint256[] memory validatorsWeights;
-       /*
-        * Kernel for genesis block with height 0, no parent block and
-        * initial set of validators with their weights.
-        */
+        address[] memory emptyValidatorSet;
+        uint256[] memory emptyValidatorsWeights;
+
+        /*
+         * Kernel for genesis block with height 0, no parent block and
+         * initial set of validators with their weights.
+         */
         MetaBlock.Kernel memory genesisKernel = MetaBlock.Kernel(
             0,
             bytes32(0),
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
         bytes32 kernelHash = MetaBlock.hashKernel(
             0,
             bytes32(0),
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
 
         /*
@@ -533,15 +534,15 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         openKernel = MetaBlock.Kernel(
             1,
             metaBlockHash_,
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
 
         openKernelHash = MetaBlock.hashKernel(
             1,
             metaBlockHash_,
-            initialValidators,
-            validatorsWeights
+            emptyValidatorSet,
+            emptyValidatorsWeights
         );
     }
 

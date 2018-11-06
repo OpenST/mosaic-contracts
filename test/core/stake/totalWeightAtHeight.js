@@ -94,6 +94,7 @@ contract('Stake.totalWeightAtHeight()', async (accounts) => {
             {height: 2, totalWeight: new BN('2')},
             {height: 3, totalWeight: new BN('5')},
             {height: 4, totalWeight: new BN('9')},
+            {height: 5, totalWeight: new BN('33')},
             {height: 6, totalWeight: new BN('33')},
             {height: 1000, totalWeight: new BN('33')},
         ];
