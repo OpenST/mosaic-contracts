@@ -73,3 +73,4 @@ module.exports.checkStateRootCommittedEvent = (event, _blockHeight, _stateRoot) 
     assert.equal(event["blockHeight"], _blockHeight);
     assert.equal(event["stateRoot"], _stateRoot);
 };
+
