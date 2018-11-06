@@ -460,6 +460,37 @@ contract BlockStore is BlockStoreInterface {
         blockHash_ = checkpoints[_blockHash].blockHash;
     }
 
+    /**
+     * @notice Returns transition hash at the checkpoint defined at the given
+     *         block hash.
+     *
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
+     *
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
+     *
+     * @return transitionHash_ Hash of the transition object at the checkpoint.
+     */
+    function transitionHashAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns(bytes32 transitionHash_)
+    {
+        require(
+            isCheckpoint(_blockHash),
+            "Checkpoint not defined for given block hash."
+        );
+
+        transitionHash_ = MetaBlock.hashOriginTransition(
+            checkpoints[_blockHash].dynasty,
+            _blockHash,
+            coreIdentifier
+        );
+    }
+
     /* Internal Functions */
 
     /**

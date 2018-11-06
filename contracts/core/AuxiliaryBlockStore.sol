@@ -224,6 +224,42 @@ contract AuxiliaryBlockStore is BlockStore {
         transactionRoot_ = accumulatedTransactionRoots[_blockHash];
     }
 
+    /**
+     * @notice Returns auxiliary transition hash at the checkpoint defined
+     *         at given block hash.
+     *
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
+     *
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
+     *
+     * @return transitionHash_ Hash of transition object at the checkpoint.
+     */
+    function  auxiliaryTransitionHashAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns(bytes32 transitionHash_)
+    {
+        require(
+            isCheckpoint(_blockHash),
+            "Checkpoint not defined for given block hash."
+        );
+
+        transitionHash_ = MetaBlock.hashAuxiliaryTransition(
+            coreIdentifier,
+            kernelHashes[_blockHash],
+            checkpoints[_blockHash].dynasty,
+            checkpoints[_blockHash].blockHash,
+            accumulatedGases[_blockHash],
+            originDynasties[_blockHash],
+            originBlockHashes[_blockHash],
+            accumulatedTransactionRoots[_blockHash]
+        );
+    }
+
     /* Internal Functions */
 
     /**
