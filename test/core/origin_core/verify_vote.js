@@ -29,24 +29,28 @@ const OriginCoreUtils = require('./helpers/utils');
 const OriginCore = artifacts.require('OriginCore');
 const MockToken = artifacts.require('MockToken');
 
+let originCore;
+let transitionHash;
+let vote;
+let minimumWeight = new BN('1');
+let erc20;
+let initialGas = 0;
+let transactionRoot = web3.utils.sha3("1");
+let auxiliaryCoreIdentifier;
+let kernelHash = web3.utils.sha3("1");
+let initialValidators;
+let initialDepositors;
+let initialStakes;
+let maxAccumulateGasLimit = new BN(105000);
+let requiredWeight;
+let stakeAddress;
+let tokenDeployer;
+
 contract('OriginCore.verifyVote()', async (accounts) => {
 
-    let originCore;
-    let transitionHash;
-    let vote;
-    let minimumWeight = new BN('1');
-    let ost;
-    let initialGas = 0;
-    let transactionRoot = web3.utils.sha3("1");
-    let auxiliaryCoreIdentifier = accounts[0]
-    let kernelHash = web3.utils.sha3("1");
-    let initialValidators;
-    let initialDepositors;
-    let initialStakes;
-    let maxAccumulateGasLimit = new BN(105000);
-    let requiredWeight;
-
     beforeEach(async () => {
+
+        auxiliaryCoreIdentifier = accounts[0];
 
         initialDepositors = [
             accounts[2],
@@ -66,11 +70,11 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         requiredWeight = new BN(21400);
 
         let tokenDeployer = accounts[0];
-        ost = await MockToken.new({from: tokenDeployer});
+        erc20 = await MockToken.new({from: tokenDeployer});
 
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
-             ost.address,
+             erc20.address,
              initialGas,
              transactionRoot,
              minimumWeight,
@@ -80,7 +84,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -331,24 +335,9 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
 contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
-    let originCore;
-    let transitionHash;
-    let vote;
-    let minimumWeight = new BN('1');
-    let erc20;
-    let initialGas = 0;
-    let transactionRoot = web3.utils.sha3("1");
-    let auxiliaryCoreIdentifier = accounts[0];
-    let kernelHash;
-    let initialValidators;
-    let initialDepositors;
-    let initialStakes;
-    let maxAccumulateGasLimit = new BN(105000);
-    let tokenDeployer;
-    let stakeAddress;
-
     beforeEach(async () => {
 
+        auxiliaryCoreIdentifier = accounts[0]
         tokenDeployer = accounts[0];
         erc20 = await MockToken.new({from: tokenDeployer});
 
