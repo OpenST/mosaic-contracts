@@ -58,4 +58,54 @@ interface KernelGatewayInterface {
     )
         public
         returns (bool success_);
+
+    /**
+     * @notice Get open kernel hash for the activation height
+     *
+     * @param _activationHeight The activation auxiliary dynasty height.
+     *
+     * @return bytes32 kernel hash
+     */
+    function getOpenKernelHash(uint256 _activationHeight)
+        external
+        returns (bytes32 kernelHash_);
+
+    /**
+     * @notice Update the active kernel. This can be called only by the
+     *         auxiliary block store when the activation dynasty height is
+     *         reached
+     *
+     * @param _kernelHash The kernel hash.
+     *
+     * @return bool `true` when the kernel hash is active.
+     */
+    function activateKernel(bytes32 _kernelHash)
+        external
+        returns (bool success_);
+
+    /**
+     * @notice Get the updated validator addresses and validator weights for
+     *         the given kernel hash
+     *
+     * @param _kernelHash The kernel hash.
+     *
+     * @return updatedValidators_ Updated validator addresses
+     * @return updatedWeights_ Updated validator weights
+     */
+    function getUpdatedValidators(bytes32 _kernelHash)
+        external
+        returns (
+            address[] updatedValidators_,
+            uint256[] updatedWeights_
+        );
+
+    /**
+     * @notice Get the active kernel hash.
+     *
+     * @return kernelHash_ Active kernel hash
+     */
+    function getActiveKernelHash()
+        external
+        returns (bytes32 kernelHash_);
+
 }

@@ -427,6 +427,29 @@ contract BlockStore is BlockStoreInterface {
         reported_ = isReported(_blockHash);
     }
 
+    /**
+     * @notice Get the transition hash for the given block hash.
+     *
+     * @dev The block hash should be for the checkpoints.
+     *
+     * @param _blockHash The block hash
+     *
+     * @return transitionHash_ The transition hash
+     */
+    function getTransitionHash(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bytes32 transitionHash_)
+    {
+        transitionHash_ = MetaBlock.hashOriginTransition(
+            checkpoints[_blockHash].dynasty,
+            _blockHash,
+            coreIdentifier
+        );
+    }
+
     /* Internal Functions */
 
     /**

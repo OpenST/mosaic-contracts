@@ -19,10 +19,12 @@ import "./BlockStoreInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 import "../lib/SafeMath.sol";
+import "../lib/MetaBlock.sol";
 import "./ReportOpenKernelInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
 contract KernelGateway {
+    using SafeMath for uint256;
 
     /* Events */
     event OpenKernelProven(
@@ -33,8 +35,6 @@ contract KernelGateway {
         bytes32 _kernelHash,
         uint256 _activationDynasty
     );
-
-    using SafeMath for uint256;
 
     /** Index of kernel hash storage location in origin core */
     uint8 constant KERNEL_HASH_INDEX = 5;
@@ -55,6 +55,32 @@ contract KernelGateway {
 
     /** Storage path. */
     bytes public storagePath;
+
+    /** A mapping of kernel hash to the kernel object. */
+    mapping(bytes32 => MetaBlock.Kernel) public kernels;
+
+    /** The hash of the currently active kernel. */
+    bytes32 private activeKernelHash;
+
+    /** The hash of the next open active kernel. */
+    bytes32 public nextKernelHash;
+
+    /** The auxiliary dynasty height at which the next kernel will be active. */
+    uint256 public nextKernelActivationHeight;
+
+    /* Modifiers */
+
+    /**
+     * @notice Functions with this modifier can only be called from the address
+     *         that is registered as the auxiliary block store.
+     */
+    modifier onlyAuxiliaryBlockStore() {
+        require(
+            msg.sender == address(auxiliaryBlockStore),
+            "This method must be called from the registered auxiliary block store."
+        );
+        _;
+    }
 
     /* Constructor */
 
@@ -149,6 +175,24 @@ contract KernelGateway {
         public
         returns (bool success_)
     {
+        // Check if a kernel is already opened and not yet consumed.
+        require(
+            nextKernelHash == bytes32(0),
+            "Existing open kernel is not activated."
+        );
+
+        // Check if its a genesis kernel
+        if(activeKernelHash == bytes32(0) &&
+        nextKernelHash == bytes32(0)){
+            return openGenesisKernel(
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedWeights,
+                _auxiliaryBlockHash
+            );
+        }
+
         require(
             _parent != bytes32(0),
             "Parent hash must not be zero."
@@ -184,14 +228,29 @@ contract KernelGateway {
             "The block containing the state root must be finalized."
         );
 
-        bytes32 kernelHash =
-            ReportOpenKernelInterface(auxiliaryBlockStore).reportOpenKernel(
-                _height,
-                _parent,
-                _updatedValidators,
-                _updatedWeights,
-                _auxiliaryBlockHash
-            );
+
+        bytes32 kernelHash = validateKernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights,
+            _auxiliaryBlockHash
+        );
+
+        // Store the new kernel object.
+        kernels[kernelHash] = MetaBlock.Kernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights
+        );
+
+        // Store the activation height for the reported kernel.
+        nextKernelActivationHeight =
+            auxiliaryBlockStore.getCurrentDynasty().add(2);
+
+        // Store the kernel hash for activation
+        nextKernelHash = kernelHash;
 
         bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
 
@@ -208,9 +267,7 @@ contract KernelGateway {
             stateRoot
         );
 
-        /**
-         * Verify merkle proof for the existence of data
-         */
+        /* Verify merkle proof for the existence of data */
         require(
             verify(
                 keccak256(abi.encodePacked(kernelHash)),
@@ -232,6 +289,85 @@ contract KernelGateway {
 
         success_ = true;
 
+    }
+
+    /**
+     * @notice Get open kernel hash for the activation height
+     *
+     * @param _activationHeight The activation auxiliary dynasty height.
+     *
+     * @return bytes32 kernel hash
+     */
+    function getOpenKernelHash(uint256 _activationHeight)
+        external
+        returns (bytes32 kernelHash_)
+    {
+        if(nextKernelActivationHeight == _activationHeight &&
+            nextKernelHash != bytes32(0)) {
+            kernelHash_ = nextKernelHash;
+        }
+    }
+
+    /**
+     * @notice Update the active kernel. This can be called only by the
+     *         auxiliary block store when the activation dynasty height is
+     *         reached
+     *
+     * @param _kernelHash The kernel hash.
+     *
+     * @return bool `true` when the kernel hash is active.
+     */
+    function activateKernel(bytes32 _kernelHash)
+        external
+        onlyAuxiliaryBlockStore
+        returns (bool success_)
+    {
+        if(_kernelHash == nextKernelHash) {
+
+            // delete the kernel object.
+            delete kernels[activeKernelHash];
+
+            // Update the active kernel hash.
+            activeKernelHash = nextKernelHash;
+
+            // delete the next kernel hash as its already activated.
+            nextKernelHash = bytes32(0);
+
+            success_ = true;
+        }
+    }
+
+    /**
+     * @notice Get the updated validator addresses and validator weights for
+     *         the given kernel hash
+     *
+     * @param _kernelHash The kernel hash.
+     *
+     * @return updatedValidators_ Updated validator addresses
+     * @return updatedWeights_ Updated validator weights
+     */
+    function getUpdatedValidators(bytes32 _kernelHash)
+        external
+        returns (
+            address[] updatedValidators_,
+            uint256[] updatedWeights_
+        )
+    {
+        MetaBlock.Kernel storage kernel = kernels[_kernelHash];
+        updatedValidators_ = kernel.updatedValidators;
+        updatedWeights_ = kernel.updatedWeights;
+    }
+
+    /**
+     * @notice Get the active kernel hash.
+     *
+     * @return kernelHash_ Active kernel hash
+     */
+    function getActiveKernelHash()
+        external
+        returns (bytes32 kernelHash_)
+    {
+        kernelHash_ = activeKernelHash;
     }
 
     /* Internal functions */
@@ -317,5 +453,161 @@ contract KernelGateway {
             _root
         );
     }
+
+    /**
+     * @notice Get the meta-block hash. For the given block hash get the
+     *         transition hash. meta-block is hash of active kernel hash
+     *         and auxiliary transition hash
+     *
+     * @param _blockHash The auxiliary block hash
+     *
+     * @return metaBlockHash_ The meta-block hash
+     */
+    function getMetaBlockHash(
+        bytes32 _blockHash
+    )
+        internal
+        view
+        returns (bytes32 metaBlockHash_)
+    {
+        //@dev Replace this with getTransitionHash
+        bytes32 transitionHash = auxiliaryBlockStore.getTransitionHash(
+            _blockHash
+        );
+
+        metaBlockHash_ = keccak256(
+            abi.encode(
+                activeKernelHash,
+                transitionHash
+            )
+        );
+    }
+
+
+    /**
+     * @notice Validate the new open kernel params.
+     *
+     * @param _height The height of this meta-block in the chain.
+     * @param _parent The hash of this meta-block's parent.
+     * @param _updatedValidators The array of addresses of the validators that
+     *                           are updated within this block. Updated weights
+     *                           at the same index relate to the address in
+     *                           this array.
+     * @param _updatedWeights The array of weights that corresponds to the
+     *                        updated validators. Updated validators at the
+     *                        same index relate to the weight in this array.
+     *                        Weights of existing validators can only decrease.
+     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
+     *                            closing the meta-block.
+     *
+     * @return kernelHash_ If validated it returns the kernel hash
+     */
+    function validateKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes32 _auxiliaryBlockHash
+    )
+        private
+        returns(bytes32 kernelHash_)
+    {
+        kernelHash_ = MetaBlock.hashKernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights
+        );
+
+        require(
+            kernels[kernelHash_].height == 0,
+            "Kernel must not exist."
+        );
+
+        // Get the active kernel object
+        MetaBlock.Kernel storage prevKernel = kernels[activeKernelHash];
+
+        /*
+         * Check if the height of the new reported kernel is plus 1 to height
+         * of active kernel
+         */
+        require(
+            _height == prevKernel.height.add(1),
+            "Kernel height must be equal to open kernel height plus 1."
+        );
+
+        /*
+         * Check if the parent of reported kernel is equal to the committed
+         * meta-block hash
+         */
+        require(
+            _parent == getMetaBlockHash(_auxiliaryBlockHash),
+            "Parent hash must be equal to previous meta-block hash."
+        );
+    }
+
+    /**
+     * @notice A genesis kernel is reported. This information is presented to
+     *         auxiliary block store. This function stores the kernel object.
+     *         The new kernel is activated after 2 blocks are finalized.
+     *
+     * @dev As this is the genesis kernel, no validation is required.
+     *
+     * @param _height The height of this meta-block in the chain.
+     * @param _parent The hash of this meta-block's parent.
+     * @param _updatedValidators The array of addresses of the validators that
+     *                           are updated within this block. Updated weights
+     *                           at the same index relate to the address in
+     *                           this array.
+     * @param _updatedWeights The array of weights that corresponds to the
+     *                        updated validators. Updated validators at the
+     *                        same index relate to the weight in this array.
+     *                        Weights of existing validators can only decrease.
+     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
+     *                            closing the meta-block.
+     *
+     * @return success_ `true` when successfully stores the kernel information
+     */
+    function openGenesisKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] _updatedValidators,
+        uint256[] _updatedWeights,
+        bytes32 _auxiliaryBlockHash
+    )
+        private
+        returns(bool success_)
+    {
+
+        require(
+            _height == uint256(1),
+            "Genesis kernel must be at height one."
+        );
+
+        require(
+            _auxiliaryBlockHash == bytes32(0),
+            "Auxiliary block hash for genesis kernel must be zero."
+        );
+
+        nextKernelHash = MetaBlock.hashKernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights
+        );
+
+        kernels[nextKernelHash] = MetaBlock.Kernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights
+        );
+
+        nextKernelActivationHeight =
+            auxiliaryBlockStore.getCurrentDynasty().add(2);
+
+        success_ = true;
+    }
+
 
 }

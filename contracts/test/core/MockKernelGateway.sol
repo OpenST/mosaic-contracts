@@ -1,7 +1,7 @@
+pragma solidity ^0.4.23;
+
 import "../../core/KernelGateway.sol";
 import "../MockProofResults.sol";
-
-pragma solidity ^0.4.23;
 
 contract MockKernelGateway is KernelGateway{
 

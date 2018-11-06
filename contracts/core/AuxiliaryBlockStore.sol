@@ -19,7 +19,7 @@ import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "./BlockStore.sol";
 import "./PollingPlaceInterface.sol";
-
+import "./KernelGatewayInterface.sol";
 /**
  * @title The auxiliary block store stores observations about the auxiliary
  *        chain.
@@ -50,20 +50,8 @@ contract AuxiliaryBlockStore is BlockStore {
      */
     mapping(bytes32 => bytes32) public originBlockHashes;
 
-    /** A mapping of auxiliary dynasty to the kernel hash */
-    mapping(uint256 => bytes32) public kernelHashes;
-
-    /** A mapping of kernel hash to the kernel object. */
-    mapping(bytes32 => MetaBlock.Kernel) public kernels;
-
-    /** The hash of the currently active kernel. */
-    bytes32 public activeKernelHash;
-
-    /** The hash of the next open active kernel. */
-    bytes32 public nextKernelHash;
-
-    /** The auxiliary dynasty height at which the next kernel will be active. */
-    uint256 public nextKernelActivationHeight;
+    /** A mapping of auxiliary block hash to the kernel hash */
+    mapping(bytes32 => bytes32) public kernelHashes;
 
     /** The corresponding origin block store that tracks the origin chain. */
     BlockStore public originBlockStore;
@@ -72,7 +60,7 @@ contract AuxiliaryBlockStore is BlockStore {
      * The meta-block gate kernel gateway is the only contract that is allowed
      * to inform opening of new kernel gateway.
      */
-    address public kernelGateway;
+    KernelGatewayInterface public kernelGateway;
 
     /* Modifiers */
 
@@ -82,7 +70,7 @@ contract AuxiliaryBlockStore is BlockStore {
      */
     modifier onlyKernelGateway() {
         require(
-            msg.sender == kernelGateway,
+            msg.sender == address(kernelGateway),
             "This method must be called from the registered kernel gateway."
         );
         _;
@@ -149,6 +137,22 @@ contract AuxiliaryBlockStore is BlockStore {
     /* External Functions */
 
     /**
+     * @notice Set kernel gateway
+     *
+     * @param _kernelGateway The kernel gateway address
+     */
+    function initializeKernelGateway(KernelGatewayInterface _kernelGateway)
+        external
+    {
+        require(
+            kernelGateway == address(0),
+            "Kernel gateway must not be already initialized."
+        );
+
+        kernelGateway = _kernelGateway;
+    }
+
+    /**
      * @notice Report a block. A reported block header is stored and can then
      *         be part of subsequent votes.
      *
@@ -193,121 +197,31 @@ contract AuxiliaryBlockStore is BlockStore {
     }
 
     /**
-     * @notice A new kernel is opened in the origin core. This information is
-     *         presented to auxiliary block store. This function validated the
-     *         new kernel object and stores it. The new kernel is activated
-     *         after 2 blocks are finalized
+     * @notice Get the transition hash for the given block hash.
      *
-     * @dev This function can be called only by the kernel gateway.
+     * @dev The block hash should be for the checkpoints.
      *
-     * @param _height The height of this meta-block in the chain.
-     * @param _parent The hash of this meta-block's parent.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
-     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
-     *                            closing the meta-block.
+     * @param _blockHash The auxiliary block hash
      *
-     * @return openKernelHash_ Kernel hash of the new kernel object.
+     * @return transitionHash_ The transition hash
      */
-    function reportOpenKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes32 _auxiliaryBlockHash
+    function getTransitionHash(
+        bytes32 _blockHash
     )
         external
-        onlyKernelGateway
-        returns(bytes32 openKernelHash_)
+        view
+        returns (bytes32 transitionHash_)
     {
-
-        // Check if its a genesis kernel
-        if(activeKernelHash == bytes32(0) &&
-            nextKernelHash == bytes32(0)){
-            return openGenesisKernel(
-                _height,
-                _parent,
-                _updatedValidators,
-                _updatedWeights,
-                _auxiliaryBlockHash
-            );
-        }
-
-        // Check if a kernel is already opened and not yet consumed.
-        require(
-            nextKernelHash == bytes32(0),
-            "Reported kernel is not activated."
+        transitionHash_ = MetaBlock.hashAuxiliaryTransition(
+            coreIdentifier,
+            kernelHashes[_blockHash],
+            checkpoints[_blockHash].dynasty,
+            _blockHash,
+            accumulatedGases[_blockHash],
+            originDynasties[_blockHash],
+            originBlockHashes[_blockHash],
+            accumulatedTransactionRoots[_blockHash]
         );
-
-        openKernelHash_ = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        // Check if the kernel is already reported.
-        require(
-            kernels[openKernelHash_].parent == bytes32(0),
-            "Kernel must not exist."
-        );
-
-        // Get the active kernel object
-        MetaBlock.Kernel storage prevKernel = kernels[activeKernelHash];
-
-        /*
-         * Check if the height of the new reported kernel is plus 1 to height
-         * of active kernel
-         */
-        require(
-            _height == prevKernel.height.add(1),
-            "Kernel height must be equal to open kernel height plus 1."
-        );
-
-        /*
-         * Check if the parent of reported kernel is equal to the committed
-         * meta-block hash
-         */
-        require(
-            _parent == getMetaBlockHash(_auxiliaryBlockHash),
-            "Parent hash must be equal to open kernel hash."
-        );
-
-        // Store the new kernel object.
-        kernels[openKernelHash_] = MetaBlock.Kernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        // Store the activation height for the reported kernel.
-        nextKernelActivationHeight = currentDynasty.add(2);
-
-        // Store the kernel hash for activation
-        nextKernelHash = openKernelHash_;
-
-    }
-
-    /**
-     * @notice Returns the kernel hash for the given auxiliary block hash.
-     *
-     * @param _blockHash Auxiliary block hash
-     *
-     * @return kernelHash_ Kernel hash for the block hash.
-     */
-    function getKernelHash(bytes32 _blockHash)
-        external
-        returns (bytes32 kernelHash_)
-    {
-        uint256 dynasty = checkpoints[_blockHash].dynasty;
-        kernelHash_ = kernelHashes[dynasty];
     }
 
     /* Internal Functions */
@@ -364,12 +278,10 @@ contract AuxiliaryBlockStore is BlockStore {
         view
         returns (bool valid_)
     {
-        uint256 dynasty = checkpoints[_blockHash].dynasty;
-
         bytes32 expectedTransitionHash = MetaBlock.hashAuxiliaryTransition(
             coreIdentifier,
-            kernelHashes[dynasty],
-            dynasty,
+            kernelHashes[_blockHash],
+            checkpoints[_blockHash].dynasty,
             _blockHash,
             accumulatedGases[_blockHash],
             originDynasties[_blockHash],
@@ -381,48 +293,10 @@ contract AuxiliaryBlockStore is BlockStore {
     }
 
     /**
-     * @notice Get the meta-block hash. For the given block hash get the
-     *         transition hash. meta-block is hash of active kernel hash
-     *         and transition hash
-     *
-     * @param _blockHash The auxiliary block hash
-     *
-     * @return metaBlockHash_ The meta-block hash
-     */
-    function getMetaBlockHash(
-        bytes32 _blockHash
-    )
-        internal
-        view
-        returns (bytes32 metaBlockHash_)
-    {
-        uint256 dynasty = checkpoints[_blockHash].dynasty;
-
-        //@dev Replace this with getTransitionHash
-        bytes32 transitionHash = MetaBlock.hashAuxiliaryTransition(
-            coreIdentifier,
-            kernelHashes[dynasty],
-            dynasty,
-            _blockHash,
-            accumulatedGases[_blockHash],
-            originDynasties[_blockHash],
-            originBlockHashes[_blockHash],
-            accumulatedTransactionRoots[_blockHash]
-        );
-
-        metaBlockHash_ = keccak256(
-            abi.encode(
-                activeKernelHash,
-                transitionHash
-            )
-        );
-    }
-
-    /**
      * @notice Finalises the checkpoint at the given block hash. Updates the
      *         current head and dynasty if it is above the old head.
      *
-     * @param _blockHash The checkpoint that shall be finalised.
+     * @param _blockHash The checkpoint that shall be finalized.
      */
     function finalise(bytes32 _blockHash) internal {
 
@@ -431,7 +305,7 @@ contract AuxiliaryBlockStore is BlockStore {
         super.finalise(_blockHash);
 
         if(currentDynasty == existingDynasty.add(1)){
-            updateKernel();
+            updateKernel(_blockHash);
         }
     }
 
@@ -489,110 +363,43 @@ contract AuxiliaryBlockStore is BlockStore {
     /**
      * @notice Stores the kernel observation for the dynasty number.
      *         It also activates already reported kernel
+     *
+     * @param _blockHash The checkpoint that shall be finalized.
      */
-    function updateKernel()
+    function updateKernel(bytes32 _blockHash)
         private
     {
-        // Check if any kernel is reported for activation.
-        if(nextKernelActivationHeight == currentDynasty &&
-            nextKernelHash != bytes32(0)) {
 
-            MetaBlock.Kernel storage kernel = kernels[nextKernelHash];
+        bytes32 openKernelHash =
+            kernelGateway.getOpenKernelHash(currentDynasty);
+
+        // Check if any kernel is reported for activation.
+        if(openKernelHash != bytes32(0)) {
+
+            address[] memory updatedValidators;
+            uint256[] memory updatedWeights;
+
+            (updatedValidators, updatedWeights) =
+                kernelGateway.getUpdatedValidators(openKernelHash);
 
             /*
              * Report polling place about new validators and new finalized
              * block heights.
              */
             PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
-                kernel.updatedValidators,
-                kernel.updatedWeights,
+                updatedValidators,
+                updatedWeights,
                 originBlockStore.getCurrentDynasty(),
                 currentDynasty
             );
 
             // Update the active kernel hash.
-            activeKernelHash = nextKernelHash;
-
-            // delete the next kernel hash as its already activated.
-            nextKernelHash = bytes32(0);
+            kernelGateway.activateKernel(openKernelHash);
         }
 
-        // Store the kernel observations for the dynasty number.
-        kernelHashes[currentDynasty] = activeKernelHash;
+        // Store the kernel observations for the block hash.
+        kernelHashes[_blockHash] = kernelGateway.getActiveKernelHash();
 
     }
 
-    /**
-     * @notice A genesis kernel is reported. This information is presented to
-     *         auxiliary block store. This function stores the kernel object.
-     *         The new kernel is activated after 2 blocks are finalized.
-     *
-     * @dev As this is the genesis kernel, no validation is required.
-     *
-     * @param _height The height of this meta-block in the chain.
-     * @param _parent The hash of this meta-block's parent.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
-     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
-     *                            closing the meta-block.
-     *
-     * @return openKernelHash_ Kernel hash of the new kernel object.
-     */
-    function openGenesisKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes32 _auxiliaryBlockHash
-    )
-        private
-        returns(bytes32 openKernelHash_)
-    {
-
-        require(
-            _height == uint256(0),
-            "Genesis kernel must be at height zero."
-        );
-
-        require(
-            _auxiliaryBlockHash == bytes32(0),
-            "Auxiliary block hash for genesis kernel must be zero."
-        );
-
-        openKernelHash_ = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        kernels[openKernelHash_] = MetaBlock.Kernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        nextKernelActivationHeight = currentDynasty.add(2);
-
-        nextKernelHash = openKernelHash_;
-    }
-
-
-    /**
-     * @notice Set kernel gateway
-     *
-     * @dev This is temp this should be removed.
-     *
-     * @param _kernelGateway The kernel gateway address
-     */
-    function setKernelGateway(address _kernelGateway) external {
-        kernelGateway = _kernelGateway;
-    }
 }

@@ -119,12 +119,6 @@ contract PollingPlace is PollingPlaceInterface {
 
     /* Public Variables */
 
-    /**
-     * The kernel gateway is the only contract that is allowed to update the
-     * meta-block height.
-     */
-    address public kernelGateway;
-
     /** The core identifier of the core that tracks origin. */
     bytes20 public originCoreIdentifier;
 
@@ -191,8 +185,7 @@ contract PollingPlace is PollingPlaceInterface {
     modifier onlyAuxiliaryBlockStore() {
         address auxiliaryBlockStore = blockStores[auxiliaryCoreIdentifier];
         require(
-            auxiliaryBlockStore != address(0) &&
-                msg.sender == auxiliaryBlockStore,
+            msg.sender == auxiliaryBlockStore,
             "This method must be called from the registered auxiliary block store."
         );
 
