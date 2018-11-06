@@ -479,7 +479,7 @@ contract BlockStore is BlockStoreInterface {
         returns(bytes32 transitionHash_)
     {
         require(
-            checkpoints[_blockHash].blockHash == _blockHash,
+            isCheckpoint(_blockHash),
             "Checkpoint not defined for given block hash."
         );
 
