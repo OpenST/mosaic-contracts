@@ -30,6 +30,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
   let auxiliaryBlockStore;
 
   beforeEach(async () => {
+    let initialKernelHash = web3.utils.sha3('kernelHash');
     auxiliaryBlockStore = await AuxiliaryBlockStore.new(
       '0x0000000000000000000000000000000000000001',
       10,
@@ -40,6 +41,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
       0,
       new BN('21000'),
       '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+      initialKernelHash,
     );
   });
 
@@ -47,7 +49,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
 
     await Utils.expectRevert(
       auxiliaryBlockStore.initializeKernelGateway.call(zeroAddress),
-      "Kernel gateway address must not be zero."
+      "Kernel gateway address must not be zero.",
     );
 
   });
@@ -61,7 +63,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
     assert.strictEqual(
       gatewayKernelAddress,
       accounts[2],
-      `Kernel gateway address must be ${accounts[2]}.`
+      `Kernel gateway address must be ${accounts[2]}.`,
     );
 
   });
@@ -72,7 +74,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
 
     await Utils.expectRevert(
       auxiliaryBlockStore.initializeKernelGateway.call(accounts[2]),
-      "Kernel gateway must not be already initialized."
+      "Kernel gateway must not be already initialized.",
     );
 
   });

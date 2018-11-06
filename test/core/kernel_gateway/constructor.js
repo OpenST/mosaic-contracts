@@ -19,19 +19,23 @@
 // ----------------------------------------------------------------------------
 
 const Utils = require('../../test_lib/utils.js');
+const web3 = require('../../test_lib/web3.js');
 
 const KernelGateway = artifacts.require('KernelGateway');
 
 contract('KernelGateway.constructor()', async (accounts) => {
 
   const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const zeroBytes =
+    "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  let originCore, originBlockStore, auxiliaryBlockStore;
+  let originCore, originBlockStore, auxiliaryBlockStore, kernelHash;
 
   beforeEach(async function() {
     originCore  = accounts[1];
     originBlockStore = accounts[2];
     auxiliaryBlockStore = accounts[3];
+    kernelHash = web3.utils.sha3('kernelHash');
   });
 
   it('should accept a valid construction', async () => {
@@ -39,21 +43,22 @@ contract('KernelGateway.constructor()', async (accounts) => {
     let kernelGateway = await KernelGateway.new(
       originCore,
       originBlockStore,
-      auxiliaryBlockStore
+      auxiliaryBlockStore,
+      kernelHash,
     );
 
     let originCoreAddress = await kernelGateway.originCore.call();
     assert.strictEqual(
       originCore,
       originCoreAddress,
-      'The contract did not store the correct origin core address.'
+      'The contract did not store the correct origin core address.',
     );
 
     let originBlockStoreAddress = await kernelGateway.originBlockStore.call();
     assert.strictEqual(
       originBlockStoreAddress,
       originBlockStore,
-      'The contract did not store the correct origin block store address.'
+      'The contract did not store the correct origin block store address.',
     );
 
     let auxiliaryBlockStoreAddress =
@@ -62,29 +67,15 @@ contract('KernelGateway.constructor()', async (accounts) => {
     assert.strictEqual(
       auxiliaryBlockStoreAddress,
       auxiliaryBlockStore,
-      'The contract did not store the correct auxiliary block store address.'
+      'The contract did not store the correct auxiliary block store address.',
     );
 
-
-
-    let storagePath = await kernelGateway.storagePath.call();
-    let encodedOriginCorePath = await kernelGateway.encodedOriginCorePath.call();
-    console.log("storagePath: ",storagePath);
-    console.log("encodedOriginCorePath: ",encodedOriginCorePath);
-
-
-    // assert.strictEqual(
-    //   storagePath,
-    //   auxiliaryBlockStore,
-    //   'The contract did not store the correct storage path.'
-    // );
-    //
-    //
-    // assert.strictEqual(
-    //   encodedOriginCorePath,
-    //   auxiliaryBlockStore,
-    //   'The contract did not store the correct storage path.'
-    // );
+    let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
+    assert.strictEqual(
+      activeKernelHash,
+      kernelHash,
+      'The contract did not store the correct kernel hash.',
+    );
 
 
   });
@@ -95,9 +86,10 @@ contract('KernelGateway.constructor()', async (accounts) => {
       KernelGateway.new(
         zeroAddress,
         originBlockStore,
-        auxiliaryBlockStore
+        auxiliaryBlockStore,
+        kernelHash,
       ),
-      "The address of the origin core must not be zero."
+      "The address of the origin core must not be zero.",
     );
 
   });
@@ -108,9 +100,10 @@ contract('KernelGateway.constructor()', async (accounts) => {
       KernelGateway.new(
         originCore,
         zeroAddress,
-        auxiliaryBlockStore
+        auxiliaryBlockStore,
+        kernelHash,
       ),
-      "The address of the origin block store must not be zero."
+      "The address of the origin block store must not be zero.",
     );
 
   });
@@ -121,9 +114,24 @@ contract('KernelGateway.constructor()', async (accounts) => {
       KernelGateway.new(
         originCore,
         originBlockStore,
-        zeroAddress
+        zeroAddress,
+        kernelHash,
       ),
-      "The address of the auxiliary block store must not be zero."
+      "The address of the auxiliary block store must not be zero.",
+    );
+
+  });
+
+  it('should fail when kernel hash is zero', async () => {
+
+    await Utils.expectRevert(
+      KernelGateway.new(
+        originCore,
+        originBlockStore,
+        auxiliaryBlockStore,
+        zeroBytes,
+      ),
+      "Kernel hash must not be zero.",
     );
 
   });

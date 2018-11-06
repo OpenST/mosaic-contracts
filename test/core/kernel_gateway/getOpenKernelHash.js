@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const KernelGateway = artifacts.require('MockKernelGateway');
 
@@ -26,16 +27,18 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
   const zeroBytes =
     "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  let kernelGateway, auxiliaryBlockStore;
+  let kernelGateway, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
 
     auxiliaryBlockStore = accounts[3];
+    initialKernelHash = web3.utils.sha3('kernelHash');
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
       accounts[2],
       auxiliaryBlockStore,
+      initialKernelHash,
     );
 
   });
@@ -48,7 +51,7 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
     assert.strictEqual(
       openKernelHash,
       zeroBytes,
-      `Open kernel hash must be zero.`
+      `Open kernel hash must be zero.`,
     );
 
   });
@@ -69,7 +72,7 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
     assert.strictEqual(
       openKernelHash,
       hash,
-      `Open kernel hash must be ${hash}.`
+      `Open kernel hash must be ${hash}.`,
     );
 
   });
@@ -90,7 +93,7 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
     assert.strictEqual(
       openKernelHash,
       hash,
-      `Open kernel hash must be ${hash}.`
+      `Open kernel hash must be ${hash}.`,
     );
 
     await kernelGateway.activateKernel(hash,{from: auxiliaryBlockStore});
@@ -100,7 +103,7 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
     assert.strictEqual(
       openKernelHash,
       zeroBytes,
-      `Open kernel hash must be zero.`
+      `Open kernel hash must be zero.`,
     );
 
   });

@@ -206,7 +206,7 @@ contract BlockStoreMock is BlockStoreInterface {
         );
     }
 
-    function getTransitionHash(
+    function transitionHashAtBlock(
         bytes32 _blockHash
     )
         external

@@ -25,6 +25,7 @@ const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
+const KernelGateway = artifacts.require('MockKernelGateway');
 
 contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
 
@@ -60,6 +61,14 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
             initialKernelHash,
         );
 
+        let kernelGateway = await KernelGateway.new(
+            accounts[10],
+            originBlockStore.address,
+            blockStore.address,
+            initialKernelHash,
+        );
+
+        await blockStore.initializeKernelGateway(kernelGateway.address);
         await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 

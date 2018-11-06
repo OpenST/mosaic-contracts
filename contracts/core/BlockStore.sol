@@ -260,33 +260,7 @@ contract BlockStore is BlockStoreInterface {
         external
         onlyPollingPlace()
     {
-        bool blockValid;
-        string memory reason;
-
-        (blockValid, reason) = isSourceValid(_sourceBlockHash);
-        require(blockValid, reason);
-
-        (blockValid, reason) = isTargetValid(
-            _sourceBlockHash,
-            _targetBlockHash
-        );
-        require(blockValid, reason);
-
-        // Finalise first as it may increase the dynasty number of target.
-        if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {
-            finalise(_sourceBlockHash);
-        }
-
-        Checkpoint memory checkpoint = Checkpoint(
-            _targetBlockHash,
-            _sourceBlockHash,
-            true,
-            false,
-            currentDynasty
-        );
-        checkpoints[_targetBlockHash] = checkpoint;
-
-        emit BlockJustified(_targetBlockHash);
+        justify_(_sourceBlockHash, _targetBlockHash);
     }
 
     /**
@@ -494,6 +468,50 @@ contract BlockStore is BlockStoreInterface {
     /* Internal Functions */
 
     /**
+     * @notice Marks a block in the block store as justified. The source and
+     *         the target are required to know when a block is finalised.
+     *         Only the polling place may call this method.
+     *
+     * @param _sourceBlockHash The block hash of the source of the super-
+     *                         majority link.
+     * @param _targetBlockHash The block hash of the block that is justified.
+     */
+    function justify_(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        internal
+    {
+        bool blockValid;
+        string memory reason;
+
+        (blockValid, reason) = isSourceValid(_sourceBlockHash);
+        require(blockValid, reason);
+
+        (blockValid, reason) = isTargetValid(
+            _sourceBlockHash,
+            _targetBlockHash
+        );
+        require(blockValid, reason);
+
+        // Finalise first as it may increase the dynasty number of target.
+        if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {
+            finalise(_sourceBlockHash);
+        }
+
+        Checkpoint memory checkpoint = Checkpoint(
+            _targetBlockHash,
+            _sourceBlockHash,
+            true,
+            false,
+            currentDynasty
+        );
+        checkpoints[_targetBlockHash] = checkpoint;
+
+        emit BlockJustified(_targetBlockHash);
+    }
+
+    /**
      * @notice Report a block. A reported block header is stored and can then
      *         be part of subsequent votes.
      *
@@ -622,7 +640,7 @@ contract BlockStore is BlockStoreInterface {
      *
      * @param _blockHash The checkpoint that shall be finalised.
      */
-    function finalise(bytes32 _blockHash) internal {
+    function finalise(bytes32 _blockHash) private {
         checkpoints[_blockHash].finalised = true;
 
         if (reportedBlocks[_blockHash].height > reportedBlocks[head].height) {

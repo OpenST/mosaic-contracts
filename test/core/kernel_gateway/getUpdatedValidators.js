@@ -19,16 +19,12 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
-const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
 
 const KernelGateway = artifacts.require('MockKernelGateway');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
-
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
 
   let hash =
     "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
@@ -38,16 +34,18 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
 
   let activationHeight = new BN(1234);
 
-  let kernelGateway, auxiliaryBlockStore;
+  let kernelGateway, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
 
+    initialKernelHash = web3.utils.sha3('kernelHash');
     auxiliaryBlockStore = await BlockStoreMock.new();
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
       accounts[2],
       auxiliaryBlockStore.address,
+      initialKernelHash,
     );
 
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
@@ -64,13 +62,13 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
     assert.strictEqual(
       result.updatedValidators_.length,
       0,
-      "Contract must return blank array for validator addresses"
+      "Contract must return blank array for validator addresses",
     );
 
     assert.strictEqual(
       result.updatedWeights_.length,
       0,
-      "Contract must return blank array for validator weights"
+      "Contract must return blank array for validator weights",
     );
 
   });
@@ -86,7 +84,7 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
       randomHash,
       validatorAddresses,
       validatorWeights,
-      hash1
+      hash1,
     );
 
     await kernelGateway.setOpenKernelHash(hash1);
@@ -97,13 +95,13 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
     assert.strictEqual(
       result.updatedValidators_.length,
       2,
-      "Contract must return an array with 2 validator address"
+      "Contract must return an array with 2 validator address",
     );
 
     assert.strictEqual(
       result.updatedWeights_.length,
       2,
-      "Contract must return an array with 2 validator weights"
+      "Contract must return an array with 2 validator weights",
     );
 
     for (let i = 0; i < result.length; i++) {
@@ -111,13 +109,13 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
       assert.strictEqual(
         result.updatedValidators_[i],
         validatorAddresses[i],
-        `Validator address from contract must be ${validatorAddresses[i]}`
+        `Validator address from contract must be ${validatorAddresses[i]}`,
       );
 
       assert.strictEqual(
         result.updatedWeights_[i],
         validatorWeights[i],
-        `Validator weights from contract must be ${validatorWeights[i]}`
+        `Validator weights from contract must be ${validatorWeights[i]}`,
       );
     }
 
@@ -137,7 +135,7 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
       randomHash,
       validatorAddresses,
       validatorWeights,
-      hash1
+      hash1,
     );
 
     await kernelGateway.setOpenKernelHash(hash1);
@@ -150,13 +148,13 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
       assert.strictEqual(
         result.updatedValidators_[i],
         validatorAddresses[i],
-        `Validator address from contract must be ${validatorAddresses[i]}`
+        `Validator address from contract must be ${validatorAddresses[i]}`,
       );
 
       assert.strictEqual(
         result.updatedWeights_[i],
         validatorWeights[i],
-        `Validator weights from contract must be ${validatorWeights[i]}`
+        `Validator weights from contract must be ${validatorWeights[i]}`,
       );
     }
 
@@ -168,13 +166,13 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
     assert.strictEqual(
       result.updatedValidators_.length,
       0,
-      "Contract must return blank array for validator addresses"
+      "Contract must return blank array for validator addresses",
     );
 
     assert.strictEqual(
       result.updatedWeights_.length,
       0,
-      "Contract must return blank array for validator weights"
+      "Contract must return blank array for validator weights",
     );
   });
 

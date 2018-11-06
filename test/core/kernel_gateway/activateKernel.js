@@ -38,16 +38,18 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
   let activationHeight = new BN(1234);
 
-  let kernelGateway, auxiliaryBlockStore;
+  let kernelGateway, auxiliaryBlockStore,initialKernelHash;
 
   beforeEach(async function() {
 
+    initialKernelHash = web3.utils.sha3('kernelHash');
     auxiliaryBlockStore = await BlockStoreMock.new();
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
       accounts[2],
       auxiliaryBlockStore.address,
+      initialKernelHash,
     );
 
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
@@ -63,7 +65,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
         hash,
         {from:accounts[1]}
       ),
-      "This method must be called from the registered auxiliary block store."
+      "This method must be called from the registered auxiliary block store.",
     );
 
   });
@@ -76,7 +78,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     assert.strictEqual(
       result,
       false,
-      `The contract must result false.`
+      `The contract must result false.`,
     );
 
   });
@@ -88,7 +90,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     assert.strictEqual(
       result,
       true,
-      `The contract must result true.`
+      `The contract must result true.`,
     );
 
   });
@@ -100,7 +102,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     assert.strictEqual(
       hash,
       openKernelHash,
-      `Initial open kernel hash must be equal to ${hash}`
+      `Initial open kernel hash must be equal to ${hash}`,
     );
 
     await auxiliaryBlockStore.activateKernel(hash);
@@ -110,7 +112,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     assert.strictEqual(
       openKernelHash,
       zeroBytes,
-      `Open kernel hash must be equal to ${zeroBytes}`
+      `Open kernel hash must be equal to ${zeroBytes}`,
     );
 
   });
@@ -125,7 +127,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
       randomHash,
       [],
       [],
-      hash1
+      hash1,
     );
 
     await kernelGateway.setKernel(
@@ -133,7 +135,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
       randomHash,
       [],
       [],
-      hash2
+      hash2,
     );
 
     await kernelGateway.setOpenKernelHash(hash1);
@@ -142,13 +144,13 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     let kernelObject = await kernelGateway.kernels.call(hash1);
     assert(
       kernelObject.height.eq(new BN(12)),
-      `Initial active kernel object must exists`
+      `Initial active kernel object must exists`,
     );
 
     kernelObject = await kernelGateway.kernels.call(hash2);
     assert(
       kernelObject.height.eq(new BN(13)),
-      `Initial open kernel object must exists`
+      `Initial open kernel object must exists`,
     );
 
     await kernelGateway.setOpenKernelHash(hash2);
@@ -158,14 +160,14 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
     assert(
       kernelObject.height.eq(new BN(0)),
-      `Initial open kernel object must exists`
+      `Initial open kernel object must exists`,
     );
 
     kernelObject = await kernelGateway.kernels.call(hash2);
 
     assert(
       kernelObject.height.eq(new BN(13)),
-      `Initial open kernel object must exists`
+      `Initial open kernel object must exists`,
     );
 
     await kernelGateway.setOpenKernelHash(randomHash);
@@ -175,7 +177,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
     assert(
       kernelObject.height.eq(new BN(0)),
-      `Initial open kernel object must exists`
+      `Initial open kernel object must exists`,
     );
 
   });

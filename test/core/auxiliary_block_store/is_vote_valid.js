@@ -26,6 +26,7 @@ const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
+const KernelGateway = artifacts.require('MockKernelGateway');
 
 contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
@@ -42,7 +43,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
     let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
     let initialKernelHash  = TestData.initialBlock.kernelHash;
 
-    let blockStore;
+    let blockStore, kernelGateway;
 
     beforeEach(async () => {
         originBlockStore = await BlockStoreMock.new();
@@ -59,6 +60,15 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             initialTransactionRoot,
             initialKernelHash
         );
+
+        kernelGateway = await KernelGateway.new(
+            accounts[10],
+            originBlockStore.address,
+            blockStore.address,
+            initialKernelHash,
+        );
+
+        await blockStore.initializeKernelGateway(kernelGateway.address);
 
         await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
@@ -97,6 +107,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                     accumulatedTransactionRoot: initialTransactionRoot,
                 },
             ],
+            initialKernelHash,
         );
 
         await blockStore.justify(
@@ -130,6 +141,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                     accumulatedTransactionRoot: testBlocks[3].accumulatedTransactionRoot,
                 },
             ],
+            initialKernelHash,
         );
 
         await blockStore.justify(
@@ -156,6 +168,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                     accumulatedTransactionRoot: testBlocks[6].accumulatedTransactionRoot,
                 },
             ],
+            initialKernelHash,
         );
     });
 
@@ -436,6 +449,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                     accumulatedTransactionRoot: initialTransactionRoot,
                 },
             ],
+            initialKernelHash,
         );
 
         /*

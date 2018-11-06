@@ -138,19 +138,20 @@ interface BlockStoreInterface {
         returns (bool reported_);
 
     /**
-     * @notice Get the transition hash for the given block hash.
+     * @notice Returns auxiliary transition hash at the checkpoint defined
+     *         at given block hash.
      *
-     * @dev The block hash should be for the checkpoints.
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
      *
-     * @param _blockHash The block hash
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
      *
-     * @return transitionHash_ The transition hash
+     * @return transitionHash_ Hash of transition object at the checkpoint.
      */
-    function getTransitionHash(
-        bytes32 _blockHash
-    )
+    function  transitionHashAtBlock(bytes32 _blockHash)
         external
         view
-        returns (bytes32 transitionHash_);
+        returns(bytes32 transitionHash_);
 
 }

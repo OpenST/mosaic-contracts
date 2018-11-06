@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const web3 = require('../../test_lib/web3.js');
 const KernelGateway = artifacts.require('MockKernelGateway');
 
 contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
@@ -25,28 +26,30 @@ contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
   const zeroBytes =
     "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  let kernelGateway, auxiliaryBlockStore;
+  let kernelGateway, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
 
+    initialKernelHash = web3.utils.sha3('kernelHash');
     auxiliaryBlockStore = accounts[3];
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
       accounts[2],
       auxiliaryBlockStore,
+      initialKernelHash,
     );
 
   });
 
-  it('should return zero hash', async () => {
+  it('should return initial kernel hash', async () => {
 
     let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
 
     assert.strictEqual(
       activeKernelHash,
-      zeroBytes,
-      'The contract did not return zero hash.'
+      initialKernelHash,
+      'The contract did not return initial kernel hash.'
     );
 
   });

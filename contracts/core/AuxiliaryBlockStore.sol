@@ -276,7 +276,7 @@ contract AuxiliaryBlockStore is BlockStore {
      *
      * @return transitionHash_ Hash of transition object at the checkpoint.
      */
-    function  auxiliaryTransitionHashAtBlock(
+    function transitionHashAtBlock(
         bytes32 _blockHash
     )
         external
@@ -369,22 +369,28 @@ contract AuxiliaryBlockStore is BlockStore {
     }
 
     /**
-     * @notice Finalises the checkpoint at the given block hash. Updates the
-     *         current head and dynasty if it is above the old head.
+     * @notice Marks a block in the block store as justified. The source and
+     *         the target are required to know when a block is finalised.
+     *         Only the polling place may call this method.
      *
-     * @param _blockHash The checkpoint that shall be finalized.
+     * @dev This is an external function which can be called by polling place.
+     *      This function call justify_ function which is internal defined in
+     *      super class
+     *
+     * @param _sourceBlockHash The block hash of the source of the super-
+     *                         majority link.
+     * @param _targetBlockHash The block hash of the block that is justified.
      */
-    function finalise(bytes32 _blockHash) internal {
-
-        uint256 existingDynasty = currentDynasty;
-
-        super.finalise(_blockHash);
-
-        if(currentDynasty == existingDynasty.add(1)){
-            updateKernel(_blockHash);
-        }
+    function justify(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        external
+        onlyPollingPlace()
+    {
+        super.justify_(_sourceBlockHash, _targetBlockHash);
+        updateKernel(_targetBlockHash);
     }
-
     /* Private Functions */
 
     /**

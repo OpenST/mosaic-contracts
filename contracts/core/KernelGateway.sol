@@ -91,11 +91,13 @@ contract KernelGateway {
      * @param _originBlockStore The block store that stores the origin chain.
      * @param _auxiliaryBlockStore The block store that stores the auxiliary
      *                             chain.
+     * @param _kernelHash Initial kernel hash.
      */
     constructor (
         address _originCore,
         BlockStoreInterface _originBlockStore,
-        BlockStoreInterface _auxiliaryBlockStore
+        BlockStoreInterface _auxiliaryBlockStore,
+        bytes32 _kernelHash
     )
         public
     {
@@ -114,10 +116,25 @@ contract KernelGateway {
             "The address of the auxiliary block store must not be zero."
         );
 
+        require(
+            _kernelHash != bytes32(0),
+            "Kernel hash must not be zero."
+        );
+
         originBlockStore = _originBlockStore;
         auxiliaryBlockStore = _auxiliaryBlockStore;
         originCore = _originCore;
+        activeKernelHash = _kernelHash;
 
+        address[] memory updatedValidators;
+        uint256[] memory updatedWeights;
+
+        kernels[activeKernelHash] = MetaBlock.Kernel(
+            1,
+            bytes32(0),
+            updatedValidators,
+            updatedWeights
+        );
 
         bytes memory indexBytes = BytesLib.leftPad(
             BytesLib.bytes32ToBytes(bytes32(KERNEL_HASH_INDEX))
@@ -205,6 +222,16 @@ contract KernelGateway {
             "The RLP encoded account node path must not be zero."
         );
 
+        require(
+            _parent != bytes32(0),
+            "Parent hash must not be zero."
+        );
+
+        require(
+            _auxiliaryBlockHash != bytes32(0),
+            "Auxiliary block hash must not be zero."
+        );
+
         bytes32 kernelHash = MetaBlock.hashKernel(
             _height,
             _parent,
@@ -212,40 +239,12 @@ contract KernelGateway {
             _updatedWeights
         );
 
-        // Check if its a genesis kernel
-        if(activeKernelHash == bytes32(0) &&
-            openKernelHash == bytes32(0)){
-
-            require(
-                _height == uint256(1),
-                "Genesis kernel must be at height one."
-            );
-
-            require(
-                _auxiliaryBlockHash == bytes32(0),
-                "Auxiliary block hash for genesis kernel must be zero."
-            );
-
-        } else {
-
-            require(
-                _parent != bytes32(0),
-                "Parent hash must not be zero."
-            );
-
-            require(
-                _auxiliaryBlockHash != bytes32(0),
-                "Auxiliary block hash must not be zero."
-            );
-
-            validateKernel(
-                _height,
-                _parent,
-                kernelHash,
-                _auxiliaryBlockHash
-            );
-
-        }
+        validateKernel(
+            _height,
+            _parent,
+            kernelHash,
+            _auxiliaryBlockHash
+        );
 
         require(
             kernels[kernelHash].height == 0,
@@ -486,7 +485,7 @@ contract KernelGateway {
         view
         returns (bytes32 metaBlockHash_)
     {
-        bytes32 transitionHash = auxiliaryBlockStore.getTransitionHash(
+        bytes32 transitionHash = auxiliaryBlockStore.transitionHashAtBlock(
             _blockHash
         );
 
