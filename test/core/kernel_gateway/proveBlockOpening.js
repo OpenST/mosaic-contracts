@@ -41,7 +41,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     accountRlp,
     accountBranchRlp,
     originBlockHeight,
-    kernelHash;
+    kernelHash,
+    transitionHash;
 
   async function setAccountProof(isValid) {
     accountRlp = "0xf8468206fb80a036ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460da05b7534dec07bb70fb401032a60cb5a9d67f2bd2f50dfad5f2656c3c2fe8f2675";
@@ -61,14 +62,38 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     );
   }
 
-  async function setStorageProof(isValid) {
+  async function setStorageProof(kernelHash, isValid) {
     await kernelGateway.setResult(
-      '0xbc42abc74c14835a578caf1394f82fecbb65ca5a37e37cc12897cb7be0612ca3',
+      web3.utils.soliditySha3({type: 'bytes32', value:kernelHash}),
       '0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0',
       storageBranchRlp,
       '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d',
       isValid
     );
+  }
+
+  async function activateGenesisKernel() {
+    let genesisHeight = new BN(1);
+    let genesisParent = web3.utils.sha3('parent');
+    let genesisUpdatedValidators = [accounts[3], accounts[4]];
+    let genesisUpdatedWeights = [new BN(3), new BN(4)];
+    let genesisAuxiliaryBlockHash = zeroBytes;
+    let genesisKernelHash =
+      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+    await setStorageProof(genesisKernelHash, true);
+
+    await kernelGateway.proveBlockOpening(
+      genesisHeight,
+      genesisParent,
+      genesisUpdatedValidators,
+      genesisUpdatedWeights,
+      genesisAuxiliaryBlockHash,
+      storageBranchRlp,
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
+    await auxiliaryBlockStore.activateKernel(genesisKernelHash);
   }
 
   beforeEach(async function () {
@@ -83,25 +108,210 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
       auxiliaryBlockStore.address,
     );
 
-    height = new BN(1);
-    parent = web3.utils.sha3('parent');
+    height = new BN(2);
+    parent = "0x6701c5d27fc833465e1d911bf1c634484d9446892efc7e421b683b21295c4a40";
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
     storageBranchRlp = web3.utils.sha3('storageBranchRlp');
     originBlockHeight = 2;
 
-    kernelHash = "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+    kernelHash = "0x0441c67a28e5596cce54b8aeaaac516fe475754c424c58ac7190a66545f1b0d6";
+    transitionHash = web3.utils.sha3('transitionHash');
 
     await setAccountProof(true);
-    await setStorageProof(true);
-    await auxiliaryBlockStore.setOpenKernelHash(kernelHash);
-    await auxiliaryBlockStore.setOpenKernelHashValid(true);
+    await setStorageProof(kernelHash, true);
+
+    await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
+    await auxiliaryBlockStore.setTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
 
   });
 
+  it('should fail when height is not one for genesis kernel', async () => {
+
+    height = new BN(0);
+    parent = web3.utils.sha3('parent');
+    updatedValidators = [accounts[3], accounts[4]];
+    updatedWeights = [new BN(3), new BN(4)];
+    auxiliaryBlockHash = zeroBytes;
+
+    await Utils.expectRevert(
+      kernelGateway.proveBlockOpening.call(
+        height,
+        parent,
+        updatedValidators,
+        updatedWeights,
+        auxiliaryBlockHash,
+        storageBranchRlp,
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      "Genesis kernel must be at height one."
+    );
+
+  });
+
+  it('should fail when auxiliary block hash is not zero for ' +
+    'genesis kernel', async () => {
+
+    height = new BN(1);
+    parent = web3.utils.sha3('parent');
+    updatedValidators = [accounts[3], accounts[4]];
+    updatedWeights = [new BN(3), new BN(4)];
+    auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
+
+    await Utils.expectRevert(
+      kernelGateway.proveBlockOpening.call(
+        height,
+        parent,
+        updatedValidators,
+        updatedWeights,
+        auxiliaryBlockHash,
+        storageBranchRlp,
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      "Auxiliary block hash for genesis kernel must be zero."
+    );
+
+  });
+
+  it('should pass when all parameters are valid for genesis ' +
+    'kernel', async () => {
+
+    height = new BN(1);
+    parent = web3.utils.sha3('parent');
+    updatedValidators = [accounts[3], accounts[4]];
+    updatedWeights = [new BN(3), new BN(4)];
+    auxiliaryBlockHash = zeroBytes;
+
+    let kernelHash =
+      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+
+    await setStorageProof(kernelHash, true);
+
+    let result = await kernelGateway.proveBlockOpening.call(
+      height,
+      parent,
+      updatedValidators,
+      updatedWeights,
+      auxiliaryBlockHash,
+      storageBranchRlp,
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
+
+    assert.strictEqual(
+      result,
+      true,
+      `The result from the contract should be true.`
+    );
+
+    await kernelGateway.proveBlockOpening(
+      height,
+      parent,
+      updatedValidators,
+      updatedWeights,
+      auxiliaryBlockHash,
+      storageBranchRlp,
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
+
+    let openKernelHash = await kernelGateway.openKernelHash.call();
+
+    assert.strictEqual(
+      openKernelHash,
+      kernelHash,
+      `Open kernel hash from contract should be ${kernelHash}.`
+    );
+
+    let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
+
+    assert.strictEqual(
+      activeKernelHash,
+      zeroBytes,
+      `Active kernel hash from contract should be ${zeroBytes}.`
+    );
+
+    let validatorsResult =
+      await kernelGateway.getUpdatedValidators.call(openKernelHash);
+
+    for (let i = 0; i < result.length; i++) {
+
+      assert.strictEqual(
+        validatorsResult.updatedValidators_[i],
+        updatedValidators[i],
+        `Validator address from contract must be ${updatedValidators[i]}`
+      );
+
+      assert.strictEqual(
+        validatorsResult.updatedWeights_[i],
+        updatedWeights[i],
+        `Validator weights from contract must be ${updatedWeights[i]}`
+      );
+    }
+
+  });
+
+  it('should fail when existing open kernel is present', async () => {
+
+    height = new BN(1);
+    parent = web3.utils.sha3('parent');
+    updatedValidators = [accounts[3], accounts[4]];
+    updatedWeights = [new BN(3), new BN(4)];
+    auxiliaryBlockHash = zeroBytes;
+
+    let kernelHash =
+      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+
+    await setStorageProof(kernelHash, true);
+
+    await kernelGateway.proveBlockOpening(
+      height,
+      parent,
+      updatedValidators,
+      updatedWeights,
+      auxiliaryBlockHash,
+      storageBranchRlp,
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
+
+    height = new BN(2);
+    parent = "0x6701c5d27fc833465e1d911bf1c634484d9446892efc7e421b683b21295c4a40";
+    updatedValidators = [accounts[3], accounts[4]];
+    updatedWeights = [new BN(3), new BN(4)];
+    auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
+    storageBranchRlp = web3.utils.sha3('storageBranchRlp');
+    originBlockHeight = 2;
+
+    await Utils.expectRevert(
+      kernelGateway.proveBlockOpening.call(
+        height,
+        parent,
+        updatedValidators,
+        updatedWeights,
+        auxiliaryBlockHash,
+        storageBranchRlp,
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      "Existing open kernel is not activated."
+    );
+
+  });
+
   it('should fail when parent hash is zero', async () => {
+
+    await activateGenesisKernel();
 
     parent = zeroBytes;
 
@@ -122,7 +332,55 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   });
 
+  it('should fail when parent hash do not match the meta-block hash', async () => {
+
+    await activateGenesisKernel();
+
+    parent = web3.utils.sha3('random');
+
+    await Utils.expectRevert(
+      kernelGateway.proveBlockOpening.call(
+        height,
+        parent,
+        updatedValidators,
+        updatedWeights,
+        auxiliaryBlockHash,
+        storageBranchRlp,
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      "Parent hash must be equal to previous meta-block hash."
+    );
+
+  });
+
+  it('should fail when height is not equal to +1', async () => {
+
+    await activateGenesisKernel();
+
+    height = new BN(5);
+
+    await Utils.expectRevert(
+      kernelGateway.proveBlockOpening.call(
+        height,
+        parent,
+        updatedValidators,
+        updatedWeights,
+        auxiliaryBlockHash,
+        storageBranchRlp,
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      "Kernel height must be equal to open kernel height plus 1."
+    );
+
+  });
+
   it('should fail when auxiliary block hash is zero', async () => {
+
+    await activateGenesisKernel();
 
     auxiliaryBlockHash = zeroBytes;
 
@@ -146,6 +404,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   it('should fail when validators count and validator weight count is' +
     ' not same', async () => {
 
+    await activateGenesisKernel();
+
     updatedValidators.push(accounts[5]);
 
     await Utils.expectRevert(
@@ -167,6 +427,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when rlp encoded storage branch is zero', async () => {
 
+    await activateGenesisKernel();
+
     storageBranchRlp = "0x";
 
     await Utils.expectRevert(
@@ -187,6 +449,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it('should fail when rlp encoded account is invalid (Not RLP data)', async () => {
+
+    await activateGenesisKernel();
 
     accountRlp = auxiliaryBlockHash;
     let hashedAccount = "0x589b8a2a740936d7fd4bfa15532ab33ad68a1083da31609e2a3bd9ebcbd04002";
@@ -223,6 +487,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when rlp encoded account is zero', async () => {
 
+    await activateGenesisKernel();
+
     accountRlp = "0x";
 
     await Utils.expectRevert(
@@ -243,6 +509,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it('should fail when rlp encoded account node path is zero', async () => {
+
+    await activateGenesisKernel();
 
     accountBranchRlp = "0x";
 
@@ -266,6 +534,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   it('should fail when block containing the state root is not ' +
     'finalized', async () => {
 
+    await activateGenesisKernel();
+
     originBlockHeight = 4;
 
     await Utils.expectRevert(
@@ -287,6 +557,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when state root is zero', async () => {
 
+    await activateGenesisKernel();
+
     await originBlockStore.setStateRoot(zeroBytes);
 
     await Utils.expectRevert(
@@ -307,7 +579,9 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when storage proof is invalid', async () => {
 
-    await setStorageProof(false);
+    await activateGenesisKernel();
+
+    await setStorageProof(kernelHash, false);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(
@@ -328,6 +602,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when account proof is invalid', async () => {
 
+    await activateGenesisKernel();
+
     await setAccountProof(false);
 
     await Utils.expectRevert(
@@ -347,9 +623,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   });
 
-  it('should fail when validation in auxiliary block store fails', async () => {
+  it('should fail when auxiliary block hash is not valid', async () => {
 
-    await auxiliaryBlockStore.setOpenKernelHashValid(false);
+    await activateGenesisKernel();
+
+    await auxiliaryBlockStore.setTransitionHash(zeroBytes);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(
@@ -363,11 +641,14 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         accountBranchRlp,
         originBlockHeight,
       ),
-      "Returned error: VM Exception while processing transaction: revert"
+      "Parent hash must be equal to previous meta-block hash."
     );
+
   });
 
   it('should pass for valid input data', async () => {
+
+    await activateGenesisKernel();
 
     let result = await kernelGateway.proveBlockOpening.call(
       height,
@@ -386,6 +667,9 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it('should emit event', async () => {
+
+    await activateGenesisKernel();
+
     await auxiliaryBlockStore.setCurrentDynasty(5);
 
     let tx = await kernelGateway.proveBlockOpening(

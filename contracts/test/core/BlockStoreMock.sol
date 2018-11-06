@@ -16,6 +16,7 @@ pragma solidity ^0.4.23;
 
 import "../../core/BlockStoreInterface.sol";
 import "../../core/PollingPlaceInterface.sol";
+import "../../core/KernelGatewayInterface.sol";
 
 /**
  * @notice BlockStoreMock implements the BlockStoreInterface. It returns pre-
@@ -42,6 +43,8 @@ contract BlockStoreMock is BlockStoreInterface {
     bytes32 public openKernelHash;
     bool public isOpenKernelHashValid;
     PollingPlaceInterface public pollingPlace;
+    bytes32 public transitionHash;
+    KernelGatewayInterface public kernelGateway;
 
     /* External Functions */
 
@@ -87,10 +90,17 @@ contract BlockStoreMock is BlockStoreInterface {
         isOpenKernelHashValid = _isValid;
     }
 
-    function setPollingPlace(PollingPlaceInterface  _pollingPlace) external {
+    function setPollingPlace(PollingPlaceInterface _pollingPlace) external {
         pollingPlace = _pollingPlace;
     }
 
+    function setTransitionHash(bytes32 _transitionHash) external {
+        transitionHash = _transitionHash;
+    }
+
+    function setKernelGateway(KernelGatewayInterface _kernelGateway) external {
+        kernelGateway = _kernelGateway;
+    }
     /* The methods of the interface, returning values from storage. */
 
     function getHead() external view returns (bytes32) {
@@ -196,4 +206,20 @@ contract BlockStoreMock is BlockStoreInterface {
         );
     }
 
+    function getTransitionHash(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return transitionHash;
+    }
+
+    function activateKernel(bytes32 _kernelHash)
+        external
+        returns (bool)
+    {
+        return kernelGateway.activateKernel(_kernelHash);
+    }
 }

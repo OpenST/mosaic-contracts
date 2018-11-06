@@ -141,15 +141,20 @@ contract AuxiliaryBlockStore is BlockStore {
      *
      * @param _kernelGateway The kernel gateway address
      */
-    function initializeKernelGateway(KernelGatewayInterface _kernelGateway)
+    function initializeKernelGateway(address _kernelGateway)
         external
     {
+        require(
+            _kernelGateway != address(0),
+            "Kernel gateway address must not be zero."
+        );
+
         require(
             kernelGateway == address(0),
             "Kernel gateway must not be already initialized."
         );
 
-        kernelGateway = _kernelGateway;
+        kernelGateway = KernelGatewayInterface(_kernelGateway);
     }
 
     /**

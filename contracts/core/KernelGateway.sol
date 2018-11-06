@@ -20,7 +20,6 @@ import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 import "../lib/SafeMath.sol";
 import "../lib/MetaBlock.sol";
-import "./ReportOpenKernelInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
 contract KernelGateway {
@@ -62,11 +61,11 @@ contract KernelGateway {
     /** The hash of the currently active kernel. */
     bytes32 private activeKernelHash;
 
-    /** The hash of the next open active kernel. */
-    bytes32 public nextKernelHash;
+    /** The hash of the open kernel. */
+    bytes32 public openKernelHash;
 
-    /** The auxiliary dynasty height at which the next kernel will be active. */
-    uint256 public nextKernelActivationHeight;
+    /** The auxiliary dynasty height at which the open kernel will be active. */
+    uint256 public openKernelActivationHeight;
 
     /* Modifiers */
 
@@ -177,35 +176,18 @@ contract KernelGateway {
     {
         // Check if a kernel is already opened and not yet consumed.
         require(
-            nextKernelHash == bytes32(0),
+            openKernelHash == bytes32(0),
             "Existing open kernel is not activated."
-        );
-
-        // Check if its a genesis kernel
-        if(activeKernelHash == bytes32(0) &&
-        nextKernelHash == bytes32(0)){
-            return openGenesisKernel(
-                _height,
-                _parent,
-                _updatedValidators,
-                _updatedWeights,
-                _auxiliaryBlockHash
-            );
-        }
-
-        require(
-            _parent != bytes32(0),
-            "Parent hash must not be zero."
-        );
-
-        require(
-            _auxiliaryBlockHash != bytes32(0),
-            "Auxiliary block hash must not be zero."
         );
 
         require(
             _updatedValidators.length == _updatedWeights.length,
             "The lengths of the addresses and weights arrays must be identical."
+        );
+
+        require(
+            originBlockStore.latestBlockHeight() >= _originBlockHeight,
+            "The block containing the state root must be finalized."
         );
 
         require(
@@ -223,34 +205,52 @@ contract KernelGateway {
             "The RLP encoded account node path must not be zero."
         );
 
-        require(
-            originBlockStore.latestBlockHeight() >= _originBlockHeight,
-            "The block containing the state root must be finalized."
-        );
-
-
-        bytes32 kernelHash = validateKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights,
-            _auxiliaryBlockHash
-        );
-
-        // Store the new kernel object.
-        kernels[kernelHash] = MetaBlock.Kernel(
+        bytes32 kernelHash = MetaBlock.hashKernel(
             _height,
             _parent,
             _updatedValidators,
             _updatedWeights
         );
 
-        // Store the activation height for the reported kernel.
-        nextKernelActivationHeight =
-            auxiliaryBlockStore.getCurrentDynasty().add(2);
+        // Check if its a genesis kernel
+        if(activeKernelHash == bytes32(0) &&
+            openKernelHash == bytes32(0)){
 
-        // Store the kernel hash for activation
-        nextKernelHash = kernelHash;
+            require(
+                _height == uint256(1),
+                "Genesis kernel must be at height one."
+            );
+
+            require(
+                _auxiliaryBlockHash == bytes32(0),
+                "Auxiliary block hash for genesis kernel must be zero."
+            );
+
+        } else {
+
+            require(
+                _parent != bytes32(0),
+                "Parent hash must not be zero."
+            );
+
+            require(
+                _auxiliaryBlockHash != bytes32(0),
+                "Auxiliary block hash must not be zero."
+            );
+
+            validateKernel(
+                _height,
+                _parent,
+                kernelHash,
+                _auxiliaryBlockHash
+            );
+
+        }
+
+        require(
+            kernels[kernelHash].height == 0,
+            "Kernel must not exist."
+        );
 
         bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
 
@@ -278,6 +278,21 @@ contract KernelGateway {
             "Storage proof must be verified."
         );
 
+        // Store the new kernel object.
+        kernels[kernelHash] = MetaBlock.Kernel(
+            _height,
+            _parent,
+            _updatedValidators,
+            _updatedWeights
+        );
+
+        // Store the activation height for the reported kernel.
+        openKernelActivationHeight =
+        auxiliaryBlockStore.getCurrentDynasty().add(2);
+
+        // Store the kernel hash for activation
+        openKernelHash = kernelHash;
+
         emit OpenKernelProven(
             originBlockStore.getCoreIdentifier(),
             auxiliaryBlockStore.getCoreIdentifier(),
@@ -302,9 +317,9 @@ contract KernelGateway {
         external
         returns (bytes32 kernelHash_)
     {
-        if(nextKernelActivationHeight == _activationHeight &&
-            nextKernelHash != bytes32(0)) {
-            kernelHash_ = nextKernelHash;
+        if(openKernelActivationHeight == _activationHeight &&
+            openKernelHash != bytes32(0)) {
+            kernelHash_ = openKernelHash;
         }
     }
 
@@ -322,16 +337,16 @@ contract KernelGateway {
         onlyAuxiliaryBlockStore
         returns (bool success_)
     {
-        if(_kernelHash == nextKernelHash) {
+        if(_kernelHash == openKernelHash) {
 
             // delete the kernel object.
             delete kernels[activeKernelHash];
 
             // Update the active kernel hash.
-            activeKernelHash = nextKernelHash;
+            activeKernelHash = openKernelHash;
 
-            // delete the next kernel hash as its already activated.
-            nextKernelHash = bytes32(0);
+            // delete the open kernel hash as its already activated.
+            openKernelHash = bytes32(0);
 
             success_ = true;
         }
@@ -365,6 +380,7 @@ contract KernelGateway {
      */
     function getActiveKernelHash()
         external
+        view
         returns (bytes32 kernelHash_)
     {
         kernelHash_ = activeKernelHash;
@@ -470,7 +486,6 @@ contract KernelGateway {
         view
         returns (bytes32 metaBlockHash_)
     {
-        //@dev Replace this with getTransitionHash
         bytes32 transitionHash = auxiliaryBlockStore.getTransitionHash(
             _blockHash
         );
@@ -489,41 +504,18 @@ contract KernelGateway {
      *
      * @param _height The height of this meta-block in the chain.
      * @param _parent The hash of this meta-block's parent.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
+     * @param _kernelHash The kernel hash.
      * @param _auxiliaryBlockHash The auxiliary block hash that was used for
      *                            closing the meta-block.
-     *
-     * @return kernelHash_ If validated it returns the kernel hash
      */
     function validateKernel(
         uint256 _height,
         bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
+        bytes32 _kernelHash,
         bytes32 _auxiliaryBlockHash
     )
         private
-        returns(bytes32 kernelHash_)
     {
-        kernelHash_ = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        require(
-            kernels[kernelHash_].height == 0,
-            "Kernel must not exist."
-        );
-
         // Get the active kernel object
         MetaBlock.Kernel storage prevKernel = kernels[activeKernelHash];
 
@@ -545,69 +537,5 @@ contract KernelGateway {
             "Parent hash must be equal to previous meta-block hash."
         );
     }
-
-    /**
-     * @notice A genesis kernel is reported. This information is presented to
-     *         auxiliary block store. This function stores the kernel object.
-     *         The new kernel is activated after 2 blocks are finalized.
-     *
-     * @dev As this is the genesis kernel, no validation is required.
-     *
-     * @param _height The height of this meta-block in the chain.
-     * @param _parent The hash of this meta-block's parent.
-     * @param _updatedValidators The array of addresses of the validators that
-     *                           are updated within this block. Updated weights
-     *                           at the same index relate to the address in
-     *                           this array.
-     * @param _updatedWeights The array of weights that corresponds to the
-     *                        updated validators. Updated validators at the
-     *                        same index relate to the weight in this array.
-     *                        Weights of existing validators can only decrease.
-     * @param _auxiliaryBlockHash The auxiliary block hash that was used for
-     *                            closing the meta-block.
-     *
-     * @return success_ `true` when successfully stores the kernel information
-     */
-    function openGenesisKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes32 _auxiliaryBlockHash
-    )
-        private
-        returns(bool success_)
-    {
-
-        require(
-            _height == uint256(1),
-            "Genesis kernel must be at height one."
-        );
-
-        require(
-            _auxiliaryBlockHash == bytes32(0),
-            "Auxiliary block hash for genesis kernel must be zero."
-        );
-
-        nextKernelHash = MetaBlock.hashKernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        kernels[nextKernelHash] = MetaBlock.Kernel(
-            _height,
-            _parent,
-            _updatedValidators,
-            _updatedWeights
-        );
-
-        nextKernelActivationHeight =
-            auxiliaryBlockStore.getCurrentDynasty().add(2);
-
-        success_ = true;
-    }
-
 
 }

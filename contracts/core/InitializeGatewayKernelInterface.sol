@@ -16,16 +16,14 @@ pragma solidity ^0.4.23;
 
 /** @title The interface for opening the new kernel on auxiliary. */
 
-interface ReportOpenKernelInterface {
+interface InitializeGatewayKernelInterface {
 
-    function reportOpenKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes32 _auxiliaryBlockHash
-    )
-        external
-        returns(bytes32 openKernelHash_);
+    /**
+     * @notice Set kernel gateway
+     *
+     * @param _kernelGateway The kernel gateway address
+     */
+    function initializeKernelGateway(address _kernelGateway)
+        external;
 
 }
