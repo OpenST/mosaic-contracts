@@ -589,9 +589,6 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             _s
         );
 
-        /* Header of last meta block. */
-        MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
-
         uint256 weight = stake.weight(openKernel.height, signer_);
 
         require(
@@ -750,6 +747,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         uint256 _requiredWeight
     )
         private
+        view
         returns(bool)
     {
         return _kernelHash == openKernelHash && _verifiedWeight >= _requiredWeight;
