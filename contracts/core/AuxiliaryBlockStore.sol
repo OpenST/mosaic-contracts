@@ -240,6 +240,7 @@ contract AuxiliaryBlockStore is BlockStore {
         bytes32 _blockHash
     )
         external
+        view
         returns(bytes32 transitionHash_)
     {
         require(

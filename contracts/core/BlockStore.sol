@@ -476,6 +476,7 @@ contract BlockStore is BlockStoreInterface {
         bytes32 _blockHash
     )
         external
+        view
         returns(bytes32 transitionHash_)
     {
         require(
