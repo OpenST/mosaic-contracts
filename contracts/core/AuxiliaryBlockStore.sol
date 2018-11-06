@@ -197,6 +197,7 @@ contract AuxiliaryBlockStore is BlockStore {
         bytes32 _blockHash
     )
         external
+        view
         returns(
             bytes20 coreIdentifier_,
             bytes32 kernelHash_,
@@ -209,7 +210,7 @@ contract AuxiliaryBlockStore is BlockStore {
         )
     {
         require(
-            checkpoints[_blockHash].blockHash == _blockHash,
+            isCheckpoint(_blockHash),
             "Checkpoint not defined for given block hash."
         );
 
