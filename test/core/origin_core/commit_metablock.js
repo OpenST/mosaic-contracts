@@ -34,7 +34,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     let transitionHash;
     let vote;
     let minimumWeight = new BN('1');
-    let ost;
+    let erc20;
     let initialGas = 0;
     let transactionRoot = web3.utils.sha3("1");
     let auxiliaryCoreIdentifier = accounts[0];
@@ -48,11 +48,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
     beforeEach(async () => {
 
         tokenDeployer = accounts[0];
-        ost = await MockToken.new({from: tokenDeployer});
+        erc20 = await MockToken.new({from: tokenDeployer});
 
         originCore = await OriginCore.new(
              auxiliaryCoreIdentifier,
-             ost.address,
+             erc20.address,
              initialGas,
              transactionRoot,
              minimumWeight,
@@ -120,7 +120,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -190,7 +190,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -238,7 +238,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -286,7 +286,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -388,7 +388,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
@@ -465,7 +465,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         await OriginCoreUtils.initializeStakeContract(
              stakeAddress,
-             ost,
+             erc20,
              tokenDeployer,
              initialDepositors,
              initialStakes,
