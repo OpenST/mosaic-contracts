@@ -68,7 +68,7 @@ contract('Stake.weight()', async (accounts) => {
             new BN('1337'),
         );
         
-        weight = await stake.weight(2, accounts[4]);
+        weight = await stake.weight(3, accounts[4]);
         assert.strictEqual(
             Number(weight),
             12091985,

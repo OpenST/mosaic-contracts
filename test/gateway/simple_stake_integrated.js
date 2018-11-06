@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: SimpleStake_integrated.js
+// Test: simple_stake_integrated.js
 //
 // http://www.simpletoken.org/
 //
@@ -24,7 +24,7 @@ const web3 = require('../test_lib/web3.js');
 const Assert = require('assert');
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
-const SimpleStakeUtils = require('./SimpleStake_utils.js')
+const SimpleStakeUtils = require('./simple_stake_utils.js')
 
 ///
 ///  Test stories

@@ -78,15 +78,17 @@ Utils.prototype = {
 
         assert(
              expectedVerifiedWeight.eq(new BN(events.VoteVerified.verifiedWeight)),
-             `expected total weight ${expectedVerifiedWeight.toString(10)}` +
+             `Expected total weight ${expectedVerifiedWeight.toString(10)}` +
              `and actual total weight ${events.VoteVerified.verifiedWeight.toString(10)}`
         );
 
         assert(
              requiredWeight.eq(new BN(events.VoteVerified.requiredWeight)),
-             `expected required weight ${requiredWeight.toString(10)}` +
-             `and actual required weight ${events.VoteVerified.requiredWeight.toString(10)}`
+             `Expected required weight ${requiredWeight.toString(10)}` +
+             ` and actual required weight ${events.VoteVerified.requiredWeight.toString(10)}`
         );
+
+        return events;
     },
 
     initializeStakeContract: async function ( stakeAddress, ost, tokenDeployer, initialDepositors, initialStakes, initialValidators) {
@@ -105,6 +107,62 @@ Utils.prototype = {
              initialValidators,
              initialStakes,
         );
+    },
+
+    assertCommitMetaBlock: function(
+        events,
+        height,
+        kernelHash,
+        transitionHash,
+        metaBlockHash,
+        requiredWeight,
+        verifiedWeight
+    ) {
+
+
+        assert(
+             events.MetaBlockCommitted !== undefined,
+             `Commit meta-block event not emitted`
+        );
+        assert.equal(
+             events.MetaBlockCommitted.height,
+             height,
+             `Committed meta-block height ${events.MetaBlockCommitted.height} `
+             + `is different from expected height ${1} `
+        );
+
+        assert.equal(
+             events.MetaBlockCommitted.kernelHash,
+             kernelHash,
+             `Committed meta-block kernel hash ${events.MetaBlockCommitted.kernelHash} `
+             + `is different from expected kernel hash ${kernelHash} `
+        );
+
+        assert.equal(
+             events.MetaBlockCommitted.transitionHash,
+             transitionHash,
+             `Committed meta-block transition hash ${events.MetaBlockCommitted.transitionHash} `
+             + `is different from expected transition hash ${transitionHash} `
+        );
+
+        assert.equal(
+             events.MetaBlockCommitted.metaBlockHash,
+             metaBlockHash,
+             `Committed meta-block metaBlockHash  ${events.MetaBlockCommitted.metaBlockHash} `
+             + `is different from expected metaBlockHash  ${metaBlockHash} `
+        );
+
+        assert(
+             requiredWeight.eq(new BN(events.MetaBlockCommitted.requiredWeight)),
+             `Expected required weight ${requiredWeight.toString(10)}` +
+             ` and actual required weight ${events.MetaBlockCommitted.requiredWeight.toString(10)}`
+        );
+
+        assert(
+             verifiedWeight.eq(new BN(events.MetaBlockCommitted.verifiedWeight)),
+             `Expected verified weight ${verifiedWeight.toString(10)}` +
+             ` and actual verified weight ${events.MetaBlockCommitted.verifiedWeight.toString(10)}`
+        )
     }
 };
 
