@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Core.js
+// Test: core.js
 //
 // http://www.simpletoken.org/
 //

@@ -57,7 +57,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionObjectAtBlock()', async (accoun
         );
     });
 
-    it('should return transition object at given block Hash if' +
+    it('should return auxiliary transition object at given block Hash if' +
          ' checkpoint is defined', async () => {
 
         let transitionObject = await  blockStore.auxiliaryTransitionObjectAtBlock.call(

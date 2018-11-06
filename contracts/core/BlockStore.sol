@@ -447,10 +447,11 @@ contract BlockStore is BlockStoreInterface {
         bytes32 _blockHash
     )
         external
+        view
         returns(bytes20 coreIdentifier_, uint256  dynasty_, bytes32 blockHash_)
     {
         require(
-            checkpoints[_blockHash].blockHash == _blockHash,
+            isCheckpoint(_blockHash),
             "Checkpoint not defined for given block hash."
         );
 
@@ -593,6 +594,25 @@ contract BlockStore is BlockStoreInterface {
         );
 
         valid_ = _transitionHash == expectedHash;
+    }
+
+    /**
+     * @notice Checks whether the given block hash represents a justified
+     *         checkpoint.
+     *
+     * @param _blockHash The block hash for which to check.
+     *
+     * @return isCheckpoint_ `true` if the block hash represents a justified
+     *                       checkpoint.
+     */
+    function isCheckpoint(
+        bytes32 _blockHash
+    )
+    internal
+    view
+    returns (bool isCheckpoint_)
+    {
+        isCheckpoint_ = checkpoints[_blockHash].blockHash == _blockHash;
     }
 
     /* Private Functions */
@@ -764,25 +784,6 @@ contract BlockStore is BlockStoreInterface {
         uint256 higherHeight = reportedBlocks[_higherBlockHash].height;
         uint256 blockDistance = higherHeight.sub(lowerHeight);
         epochDistance_ = blockDistance.div(epochLength);
-    }
-
-    /**
-     * @notice Checks whether the given block hash represents a justified
-     *         checkpoint.
-     *
-     * @param _blockHash The block hash for which to check.
-     *
-     * @return isCheckpoint_ `true` if the block hash represents a justified
-     *                       checkpoint.
-     */
-    function isCheckpoint(
-        bytes32 _blockHash
-    )
-        private
-        view
-        returns (bool isCheckpoint_)
-    {
-        isCheckpoint_ = checkpoints[_blockHash].blockHash == _blockHash;
     }
 
     /**

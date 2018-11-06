@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: MockToken.js
+// Test: mock_token.js
 //
 // http://www.simpletoken.org/
 //
@@ -24,7 +24,7 @@ const web3 = require('../test_lib/web3.js');
 const BN = require('bn.js');
 
 const Utils = require('../test_lib/utils.js');
-const EIP20Token_utils = require('./EIP20Token_utils.js')
+const EIP20Token_utils = require('./EIP20_token_utils.js')
 const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
 const MockToken = artifacts.require("./MockToken.sol")

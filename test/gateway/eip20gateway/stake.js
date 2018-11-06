@@ -26,7 +26,7 @@ const Gateway = artifacts.require("MockEIP20Gateway"),
 
 const utils = require("./../../test_lib/utils"),
   BN = require('bn.js'),
-  EIP20GatewayKlass = require("./helpers/eip20gateway"),
+  EIP20GatewayKlass = require("./helpers/eip20_gateway"),
   HelperKlass = require("./helpers/helper");
 
 const PENALTY_PERCENT = 1.5;
