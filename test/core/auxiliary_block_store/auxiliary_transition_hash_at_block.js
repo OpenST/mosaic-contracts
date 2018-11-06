@@ -81,7 +81,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
             initialBlockHash
         );
 
-        assert.equal(
+        assert.strictEqual(
             transitionHash,
             expectedTransitionHash,
             `Transition hash is different from expected transition hash.`

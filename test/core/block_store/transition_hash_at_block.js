@@ -70,7 +70,7 @@ contract('BlockStore.transitionHashAtBlock()', async (accounts) => {
 
         let transitionHash = await blockStore.transitionHashAtBlock.call(blockHashAtTen);
 
-        assert.equal(
+        assert.strictEqual(
             transitionHash,
             expectedTransitionHash,
             `Transition hash is different from expected transition hash.`
