@@ -82,4 +82,18 @@ contract TestMetaBlock {
             "The required weight is not equal the expected required weight"
         );
     }
+
+    function testHashMetaBlock() external {
+
+        bytes32 actualHash = MetaBlock.hashMetaBlock(
+            bytes32(hex"34739574832097584935602afcbdef65498750164935602afcbdef6549875013"),
+            bytes32(hex"44739574832097584935602afcbdef65498750164935602afcbdef6549875014")
+        );
+
+        Assert.equal(
+            actualHash,
+            hex"1ae038ff5c070693565e63b90f84038a6113a3ebaef23fd57985ea62126d1376",
+            "The meta-block hash did not equal the expected hash."
+        );
+    }
 }

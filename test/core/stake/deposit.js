@@ -161,19 +161,19 @@ contract('Stake.deposit()', async (accounts) => {
             {
                 address: accounts[1],
                 deposit: new BN('1'),
-                startingHeight: 2
+                startingHeight: 3
             }, {
                 address: accounts[2],
                 deposit: new BN('20'),
-                startingHeight: 2
+                startingHeight: 3
             }, {
                 address: accounts[3],
                 deposit: new BN('300'),
-                startingHeight: 2
+                startingHeight: 3
             }, {
                 address: accounts[4],
                 deposit: new BN('4000'),
-                startingHeight: 3
+                startingHeight: 4
             },
         ];
 
@@ -197,7 +197,7 @@ contract('Stake.deposit()', async (accounts) => {
         );
 
         await stake.closeMetaBlock(
-            new BN(0),
+            new BN(1),
             {from: originCoreAccount},
         );
 

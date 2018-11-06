@@ -40,6 +40,11 @@ library MetaBlock {
         "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedWeights)"
     );
 
+    /** To hash structs according to EIP-712, a type hash is required. */
+    bytes32 constant METABLOCK_TYPEHASH = keccak256(
+        "MetaBlock(bytes32 kernelHash,bytes32 transitionHash)"
+    );
+
     /* Structs */
 
     /** The header of a meta-block. */
@@ -303,6 +308,29 @@ library MetaBlock {
     }
 
     /**
+     * @notice Takes the parameters of a MetaBlock object and returns the
+     *         typed hash of it.
+     *
+     * @param _kernelHash The hash of kernel.
+     * @param _transitionHash The hash of transition object.
+     *
+     * @return hash_ The hash of meta-block.
+     */
+    function hashMetaBlock(bytes32 _kernelHash, bytes32 _transitionHash)
+        internal
+        pure
+        returns(bytes32 hash_)
+    {
+        hash_ = keccak256(
+            abi.encode(
+                METABLOCK_TYPEHASH,
+                _kernelHash,
+                _transitionHash
+            )
+        );
+    }
+
+    /**
      * @notice Function to calculated weight required for super majority
      *         i.e 2/3rd of total weight.
      *
@@ -327,5 +355,5 @@ library MetaBlock {
             requiredWeight_ = requiredWeight_.add(1);
         }
     }
-
 }
+

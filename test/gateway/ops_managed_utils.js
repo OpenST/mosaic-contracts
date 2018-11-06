@@ -13,25 +13,26 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Owned_utils.js
+// Test: ops_managed_utils.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-module.exports.checkOwnershipTransferInitiatedEventGroup = (result, _proposedOwner) => {
+module.exports.checkAdminAddressChangedEventGroup = (result, _newAddress) => {
    assert.equal(result.logs.length, 1)
 
    const event = result.logs[0]
 
-   assert.equal(event.event, "OwnershipTransferInitiated")
-   assert.equal(event.args._proposedOwner, _proposedOwner)
+   assert.equal(event.event, "AdminAddressChanged")
+   assert.equal(event.args._newAddress, _newAddress)
 }
 
-module.exports.checkOwnershipTransferCompletedEventGroup = (result) => {
+module.exports.checkOpsAddressChangedEventGroup = (result, _newAddress) => {
    assert.equal(result.logs.length, 1)
 
    const event = result.logs[0]
 
-   assert.equal(event.event, "OwnershipTransferCompleted")
+   assert.equal(event.event, "OpsAddressChanged")
+   assert.equal(event.args._newAddress, _newAddress)
 }

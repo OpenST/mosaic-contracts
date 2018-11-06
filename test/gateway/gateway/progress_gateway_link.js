@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: progressGatewayLink.js
+// Test: progress_gateway_link.js
 //
 // http://www.simpletoken.org/
 //

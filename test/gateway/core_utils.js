@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Core_utils.js
+// Test: core_utils.js
 //
 // http://www.simpletoken.org/
 //
@@ -73,3 +73,4 @@ module.exports.checkStateRootCommittedEvent = (event, _blockHeight, _stateRoot) 
     assert.equal(event["blockHeight"], _blockHeight);
     assert.equal(event["stateRoot"], _stateRoot);
 };
+
