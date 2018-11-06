@@ -13,14 +13,14 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Owned.js
+// Test: owned.js
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 const Utils = require('../test_lib/utils.js')
-const OwnedUtils = require('./Owned_utils.js')
+const OwnedUtils = require('./owned_utils.js')
 
 const Owned = artifacts.require("./Owned.sol")
 

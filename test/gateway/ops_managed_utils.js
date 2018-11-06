@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: OpsManaged_utils.js
+// Test: ops_managed_utils.js
 //
 // http://www.simpletoken.org/
 //

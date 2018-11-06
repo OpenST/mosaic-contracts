@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: Core.js
+// Test: core.js
 //
 // http://www.simpletoken.org/
 //
@@ -21,7 +21,7 @@
 
 const web3 = require('../test_lib/web3.js');
 
-const coreUtils = require('./Core_utils.js')
+const coreUtils = require('./core_utils.js')
     , utils = require('../test_lib/utils.js')
     , proof = require('../data/proof')
     , RLP = require('rlp')
