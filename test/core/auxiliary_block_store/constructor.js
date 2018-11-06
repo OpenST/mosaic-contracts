@@ -43,6 +43,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
             0,
             new BN('21000'),
             '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+            '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
         );
     });
 
@@ -57,6 +58,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
             0,
             new BN('21000'),
             '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+            '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c'
         );
 
         let coreId = await blockStore.getCoreIdentifier.call();
@@ -79,8 +81,27 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c'
             ),
             'Epoch length must be greater zero.'
+        );
+    });
+
+    it('should not accept a zero kernel hash', async () => {
+        await Utils.expectRevert(
+            AuxiliaryBlockStore.new(
+                 '0x0000000000000000000000000000000000000001',
+                 10,
+                 accounts[0],
+                 originBlockStore.address,
+                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
+                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
+                 0,
+                 new BN('21000'),
+                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                 '0x0000000000000000000000000000000000000000000000000000000000000000'
+            ),
+            'Initial kernel hash must not be zero.'
         );
     });
 
@@ -96,6 +117,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
             ),
             'Address of polling place must not be zero.'
         );
@@ -113,6 +135,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
             ),
             'The given origin block store address must not be zero.'
         );
@@ -130,6 +153,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
             ),
             'Initial block hash must not be zero.'
         );
@@ -147,6 +171,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
             ),
             'Initial state root must not be zero.'
         );
@@ -175,6 +200,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                     testDate.initialBlockHeight,
                     new BN('21000'),
                     '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+                    '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
                 ),
                 'The initial block height is incompatible to the epoch ' +
                 'length. Must be a multiple.'

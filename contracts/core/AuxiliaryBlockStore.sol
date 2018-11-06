@@ -28,6 +28,9 @@ contract AuxiliaryBlockStore is BlockStore {
 
     /* Variables */
 
+    /** A mapping of block hashes to the kernel hash at checkpoints. */
+    mapping(bytes32 => bytes32) public kernelHashes;
+
     /** A mapping of block hashes to their respective accumulated gas. */
     mapping(bytes32 => uint256) public accumulatedGases;
 
@@ -81,6 +84,7 @@ contract AuxiliaryBlockStore is BlockStore {
      * @param _initialTransactionRoot The initial transaction root to start
      *                                tracking the accumulated transaction root
      *                                from.
+     * @param _initialKernelHash The initial open kernel hash.
      */
     constructor (
         bytes20 _coreIdentifier,
@@ -91,7 +95,8 @@ contract AuxiliaryBlockStore is BlockStore {
         bytes32 _initialStateRoot,
         uint256 _initialBlockHeight,
         uint256 _initialGas,
-        bytes32 _initialTransactionRoot
+        bytes32 _initialTransactionRoot,
+        bytes32 _initialKernelHash
     )
         BlockStore(
             _coreIdentifier,
@@ -107,10 +112,15 @@ contract AuxiliaryBlockStore is BlockStore {
             _originBlockStore != address(0),
             "The given origin block store address must not be zero."
         );
+        require(
+            _initialKernelHash != bytes32(0),
+            "Initial kernel hash must not be zero."
+        );
 
         originBlockStore = BlockStore(_originBlockStore);
         accumulatedGases[_initialBlockHash] = _initialGas;
         accumulatedTransactionRoots[_initialBlockHash] = _initialTransactionRoot;
+        kernelHashes[_initialBlockHash] = _initialKernelHash;
     }
 
     /* External Functions */
@@ -157,6 +167,61 @@ contract AuxiliaryBlockStore is BlockStore {
             originDynasties[header.blockHash] = originBlockStore.getCurrentDynasty();
             originBlockHashes[header.blockHash] = originBlockStore.getHead();
         }
+    }
+
+    /**
+     * @notice Returns auxiliary transition object at the checkpoint defined
+     *         at given block hash.
+     *
+     * @dev It reverts transaction if checkpoint is not defined at given
+     *      block hash.
+     *
+     * @param _blockHash The hash of the block for which transition object
+     *                   is requested.
+     *
+     * @return coreIdentifier_ The core identifier identifies the chain that
+     *                         this block store is tracking.
+     * @return kernelHash_  The hash of the current open meta-block kernel.
+     * @return auxiliaryDynasty_ The dynasty number of auxiliary chain.
+     * @return auxiliaryBlockHash_ The block hash where the meta-block possibly
+                                   closes on the auxiliary chain.
+     * @return accumulatedGas_ The total consumed gas on auxiliary chain.
+     * @return originDynasty_ Dynasty of origin block within latest meta-block
+     *                        reported at auxiliary chain.
+     * @return originBlockHash_ Block hash of origin block within latest
+     *                          meta-block reported at auxiliary chain.
+     * @return transactionRoot_ The root of trie created by the auxiliary block
+                                store from the transaction roots of all blocks.
+     */
+    function  auxiliaryTransitionObjectAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns(
+            bytes20 coreIdentifier_,
+            bytes32 kernelHash_,
+            uint256 auxiliaryDynasty_,
+            bytes32 auxiliaryBlockHash_,
+            uint256 accumulatedGas_,
+            uint256 originDynasty_,
+            bytes32 originBlockHash_,
+            bytes32 transactionRoot_
+        )
+    {
+        require(
+            isCheckpoint(_blockHash),
+            "Checkpoint not defined for given block hash."
+        );
+
+        coreIdentifier_ = coreIdentifier;
+        kernelHash_ = kernelHashes[_blockHash];
+        auxiliaryDynasty_= checkpoints[_blockHash].dynasty;
+        auxiliaryBlockHash_=checkpoints[_blockHash].blockHash;
+        accumulatedGas_ = accumulatedGases[_blockHash];
+        originDynasty_ = originDynasties[_blockHash];
+        originBlockHash_ = originBlockHashes[_blockHash];
+        transactionRoot_ = accumulatedTransactionRoots[_blockHash];
     }
 
     /* Internal Functions */

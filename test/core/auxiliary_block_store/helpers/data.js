@@ -27,6 +27,7 @@ const initialBlock = {
         stateRoot: '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
         gas: new BN('2100'),
         transactionRoot: '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
+        kernelHash : '0xc5a48e5dc71e5e4a96b14f2564d0c95b1b37bad30f3abd12577b7da06ad01d37',
 };
 
 // Maps heights to block data at that height, including an RLP encoded header.
