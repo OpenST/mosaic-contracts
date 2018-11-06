@@ -154,11 +154,14 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
+        let head = await originCore.head.call();
+
         OriginCoreUtils.assertCommitMetaBlock(
              events,
              expectedHeight,
              kernelHash,
              vote.transitionHash,
+             head,
              expectedRequiredWeight,
              expectedVerifiedWeight
         );
@@ -317,16 +320,17 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
+        let head = await originCore.head.call();
+
         OriginCoreUtils.assertCommitMetaBlock(
              events,
              expectedHeight,
              kernelHash,
              vote.transitionHash,
+             head,
              expectedRequiredWeight,
              expectedVerifiedWeight
         );
-
-        let head = await originCore.head.call();
 
         let kernel = {
             height: 2,
@@ -418,17 +422,19 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
+        let head = await originCore.head.call();
+
         OriginCoreUtils.assertCommitMetaBlock(
              events,
              expectedHeight,
              kernelHash,
              vote.transitionHash,
+             head,
              expectedRequiredWeight,
              expectedVerifiedWeight
         );
 
         let expectedHead = MetaBlockUtils.hashMetaBlock(kernelHash,vote.transitionHash);
-        let head = await originCore.head.call();
 
 
         assert.equal(
@@ -493,11 +499,14 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
+        let head = await originCore.head.call();
+
         OriginCoreUtils.assertCommitMetaBlock(
              events,
              expectedHeight,
              kernelHash,
              vote.transitionHash,
+             head,
              expectedRequiredWeight,
              expectedVerifiedWeight
         );

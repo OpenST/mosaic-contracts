@@ -114,6 +114,7 @@ Utils.prototype = {
         height,
         kernelHash,
         transitionHash,
+        metaBlockHash,
         requiredWeight,
         verifiedWeight
     ) {
@@ -144,11 +145,18 @@ Utils.prototype = {
              + `is different from expected transition hash ${transitionHash} `
         );
 
+        assert.equal(
+             events.MetaBlockCommitted.metaBlockHash,
+             metaBlockHash,
+             `Committed meta-block metaBlockHash  ${events.MetaBlockCommitted.metaBlockHash} is `
+             + `is different from expected metaBlockHash  ${metaBlockHash} `
+        );
+
         assert(
              requiredWeight.eq(new BN(events.MetaBlockCommitted.requiredWeight)),
              `actual required weight ${requiredWeight.toString(10)}` +
              ` and expected required weight ${events.MetaBlockCommitted.requiredWeight.toString(10)}`
-        )
+        );
 
         assert(
              verifiedWeight.eq(new BN(events.MetaBlockCommitted.verifiedWeight)),
