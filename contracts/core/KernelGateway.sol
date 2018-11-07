@@ -489,11 +489,9 @@ contract KernelGateway {
             _blockHash
         );
 
-        metaBlockHash_ = keccak256(
-            abi.encode(
-                activeKernelHash,
-                transitionHash
-            )
+        metaBlockHash_ = MetaBlock.hashMetaBlock(
+            activeKernelHash,
+            transitionHash
         );
     }
 

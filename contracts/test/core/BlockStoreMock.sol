@@ -40,8 +40,6 @@ contract BlockStoreMock is BlockStoreInterface {
     uint256 public latestBlockHeight;
     bool public isVoteValid;
     bool public isBlockReported;
-    bytes32 public openKernelHash;
-    bool public isOpenKernelHashValid;
     PollingPlaceInterface public pollingPlace;
     bytes32 public transitionHash;
     KernelGatewayInterface public kernelGateway;
@@ -80,14 +78,6 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setIsBlockReported(bool _isReported) external {
         isBlockReported = _isReported;
-    }
-
-    function setOpenKernelHash(bytes32 _openKernelHash) external {
-        openKernelHash = _openKernelHash;
-    }
-
-    function setOpenKernelHashValid(bool _isValid) external {
-        isOpenKernelHashValid = _isValid;
     }
 
     function setPollingPlace(PollingPlaceInterface _pollingPlace) external {
@@ -173,21 +163,6 @@ contract BlockStoreMock is BlockStoreInterface {
     {
         reported_ = isBlockReported;
     }
-
-    function reportOpenKernel(
-        uint256 _height,
-        bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
-        bytes32 _auxiliaryBlockHash
-    )
-        external
-        returns(bytes32 openKernelHash_)
-    {
-        require(isOpenKernelHashValid == true);
-        return openKernelHash;
-    }
-
 
     function updateMetaBlockHeight(
         address[] _validators,

@@ -88,14 +88,14 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     );
 
     height = new BN(2);
-    parent = "0x6701c5d27fc833465e1d911bf1c634484d9446892efc7e421b683b21295c4a40";
+    parent = "0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4";
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
     storageBranchRlp = web3.utils.sha3('storageBranchRlp');
     originBlockHeight = 2;
 
-    kernelHash = "0x0441c67a28e5596cce54b8aeaaac516fe475754c424c58ac7190a66545f1b0d6";
+    kernelHash = "0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4";
     transitionHash = web3.utils.sha3('transitionHash');
 
     await setAccountProof(true);
@@ -112,7 +112,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     await kernelGateway.setOpenKernelHash(web3.utils.sha3('random'));
 
     height = new BN(2);
-    parent = "0x6701c5d27fc833465e1d911bf1c634484d9446892efc7e421b683b21295c4a40";
+    parent = "0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4";
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
