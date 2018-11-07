@@ -314,6 +314,7 @@ contract KernelGateway {
      */
     function getOpenKernelHash(uint256 _activationHeight)
         external
+        view
         returns (bytes32 kernelHash_)
     {
         if(openKernelActivationHeight == _activationHeight &&
@@ -362,6 +363,7 @@ contract KernelGateway {
      */
     function getUpdatedValidators(bytes32 _kernelHash)
         external
+        view
         returns (
             address[] updatedValidators_,
             uint256[] updatedWeights_
@@ -511,6 +513,7 @@ contract KernelGateway {
         bytes32 _auxiliaryBlockHash
     )
         private
+        view
     {
         // Get the active kernel object
         MetaBlock.Kernel storage prevKernel = kernels[activeKernelHash];

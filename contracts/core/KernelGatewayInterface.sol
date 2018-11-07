@@ -68,6 +68,7 @@ interface KernelGatewayInterface {
      */
     function getOpenKernelHash(uint256 _activationHeight)
         external
+        view
         returns (bytes32 kernelHash_);
 
     /**
@@ -94,6 +95,7 @@ interface KernelGatewayInterface {
      */
     function getUpdatedValidators(bytes32 _kernelHash)
         external
+        view
         returns (
             address[] updatedValidators_,
             uint256[] updatedWeights_

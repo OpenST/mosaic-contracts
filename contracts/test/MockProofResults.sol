@@ -85,6 +85,7 @@ contract MockProofResults {
         bytes32 _root
     )
         private
+        pure
         returns (bytes32 resultHash_)
     {
         resultHash_ =  keccak256(
