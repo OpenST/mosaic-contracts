@@ -71,7 +71,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 initialKernelHash,
             );
 
-            await blockStore.initializeKernelGateway(kernelGateway.address);
+            await blockStore.initialize(kernelGateway.address);
 
             await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
         });
@@ -532,7 +532,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 initialKernelHash,
             );
 
-            await blockStore.initializeKernelGateway(kernelGateway.address);
+            await blockStore.initialize(kernelGateway.address);
 
             await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
         });

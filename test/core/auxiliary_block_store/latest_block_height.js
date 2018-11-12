@@ -68,7 +68,7 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
             initialKernelHash,
         );
 
-        await blockStore.initializeKernelGateway(kernelGateway.address);
+        await blockStore.initialize(kernelGateway.address);
         await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
     });
 

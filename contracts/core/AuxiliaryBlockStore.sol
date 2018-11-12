@@ -145,11 +145,11 @@ contract AuxiliaryBlockStore is BlockStore {
     /* External Functions */
 
     /**
-     * @notice Set kernel gateway
+     * @notice Initialize the auxiliary block store with kernel gateway address.
      *
-     * @param _kernelGateway The kernel gateway address
+     * @param _kernelGateway The kernel gateway address.
      */
-    function initializeKernelGateway(address _kernelGateway)
+    function initialize(address _kernelGateway)
         external
     {
         require(

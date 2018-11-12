@@ -23,7 +23,7 @@ const Utils = require('../../test_lib/utils.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 
-contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
+contract('AuxiliaryBlockStore.initialize()', async (accounts) => {
 
   const zeroAddress = "0x0000000000000000000000000000000000000000";
 
@@ -48,7 +48,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
   it('should fail when gateway address is zero', async () => {
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.initializeKernelGateway.call(zeroAddress),
+      auxiliaryBlockStore.initialize.call(zeroAddress),
       "Kernel gateway address must not be zero.",
     );
 
@@ -56,7 +56,7 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
 
   it('should set kernel gateway address its not already set', async () => {
 
-    await auxiliaryBlockStore.initializeKernelGateway(accounts[2]);
+    await auxiliaryBlockStore.initialize(accounts[2]);
 
     let gatewayKernelAddress = await auxiliaryBlockStore.kernelGateway.call();
 
@@ -70,10 +70,10 @@ contract('AuxiliaryBlockStore.initializeKernelGateway()', async (accounts) => {
 
   it('should fail when gateway address is already initialized', async () => {
 
-    await auxiliaryBlockStore.initializeKernelGateway(accounts[2]);
+    await auxiliaryBlockStore.initialize(accounts[2]);
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.initializeKernelGateway.call(accounts[2]),
+      auxiliaryBlockStore.initialize.call(accounts[2]),
       "Kernel gateway must not be already initialized.",
     );
 

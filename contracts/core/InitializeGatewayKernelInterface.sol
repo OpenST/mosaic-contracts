@@ -23,7 +23,7 @@ interface InitializeGatewayKernelInterface {
      *
      * @param _kernelGateway The kernel gateway address
      */
-    function initializeKernelGateway(address _kernelGateway)
+    function initialize(address _kernelGateway)
         external;
 
 }
