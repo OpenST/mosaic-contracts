@@ -39,13 +39,13 @@ contract MockKernelGateway is KernelGateway{
         address _originCore,
         BlockStoreInterface _originBlockStore,
         BlockStoreInterface _auxiliaryBlockStore,
-        bytes32 _kernenlHash
+        bytes32 _kernelHash
     )
         KernelGateway(
             _originCore,
             _originBlockStore,
             _auxiliaryBlockStore,
-            _kernenlHash
+            _kernelHash
         )
         public
     {
