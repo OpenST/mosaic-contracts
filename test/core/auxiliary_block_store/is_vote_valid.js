@@ -30,50 +30,56 @@ const BlockStoreMock = artifacts.require('BlockStoreMock');
 const KernelGateway = artifacts.require('MockKernelGateway');
 const MockPollingPlace = artifacts.require('MockPollingPlace');
 
+let coreIdentifier = '0x0000000000000000000000000000000000000001';
+let epochLength = new BN('3');
+let pollingPlace;
+let pollingPlaceAddress;
+let originBlockStore;
+let testBlocks = TestData.blocks;
+let initialBlockHash = TestData.initialBlock.hash;
+let initialStateRoot = TestData.initialBlock.stateRoot;
+let initialGas = TestData.initialBlock.gas;
+let initialTransactionRoot = TestData.initialBlock.transactionRoot;
+let initialHeight = TestData.initialBlock.height;
+let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
+let initialKernelHash  = TestData.initialBlock.kernelHash;
+
+let blockStore, kernelGateway;
+
 contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
+    async function setUp(){
+      originBlockStore = await BlockStoreMock.new();
+
+      blockStore = await AuxiliaryBlockStore.new(
+        coreIdentifier,
+        epochLength,
+        pollingPlaceAddress,
+        originBlockStore.address,
+        initialBlockHash,
+        initialStateRoot,
+        initialHeight,
+        initialGas,
+        initialTransactionRoot,
+        initialKernelHash
+      );
+
+      kernelGateway = await KernelGateway.new(
+        accounts[10],
+        originBlockStore.address,
+        blockStore.address,
+        initialKernelHash,
+      );
+
+      await blockStore.initialize(kernelGateway.address);
+
+      await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
+    }
+
     describe('validate votes', async function () {
-        let coreIdentifier = '0x0000000000000000000000000000000000000001';
-        let epochLength = new BN('3');
-        let pollingPlaceAddress = accounts[0];
-        let originBlockStore;
-        let testBlocks = TestData.blocks;
-        let initialBlockHash = TestData.initialBlock.hash;
-        let initialStateRoot = TestData.initialBlock.stateRoot;
-        let initialGas = TestData.initialBlock.gas;
-        let initialTransactionRoot = TestData.initialBlock.transactionRoot;
-        let initialHeight = TestData.initialBlock.height;
-        let unknownBlockHash = '0x123456f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e0139654321';
-        let initialKernelHash  = TestData.initialBlock.kernelHash;
-
-        let blockStore, kernelGateway;
-
         beforeEach(async () => {
-            originBlockStore = await BlockStoreMock.new();
-
-            blockStore = await AuxiliaryBlockStore.new(
-                coreIdentifier,
-                epochLength,
-                pollingPlaceAddress,
-                originBlockStore.address,
-                initialBlockHash,
-                initialStateRoot,
-                initialHeight,
-                initialGas,
-                initialTransactionRoot,
-                initialKernelHash
-            );
-
-            kernelGateway = await KernelGateway.new(
-                accounts[10],
-                originBlockStore.address,
-                blockStore.address,
-                initialKernelHash,
-            );
-
-            await blockStore.initialize(kernelGateway.address);
-
-            await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
+            pollingPlaceAddress = accounts[0];
+            await setUp();
         });
 
         it('should return true for valid votes', async () => {
@@ -489,52 +495,15 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
     describe('validate kernel hashes', async function () {
 
-        let coreIdentifier = '0x0000000000000000000000000000000000000001';
-        let epochLength = new BN('2');
-        let pollingPlace;
-        let pollingPlaceAddress;
-        let originBlockStore;
-        let testBlocks = TestData.blocks;
-        let initialBlockHash = TestData.initialBlock.hash;
-        let initialStateRoot = TestData.initialBlock.stateRoot;
-        let initialGas = TestData.initialBlock.gas;
-        let initialTransactionRoot = TestData.initialBlock.transactionRoot;
-        let initialHeight = TestData.initialBlock.height;
-        let initialKernelHash  = TestData.initialBlock.kernelHash;
-
-        let blockStore, kernelGateway;
         beforeEach(async () => {
 
+            epochLength = new BN('2');
             pollingPlace = await MockPollingPlace.new();
             pollingPlaceAddress = pollingPlace.address;
 
-            originBlockStore = await BlockStoreMock.new();
-
-            blockStore = await AuxiliaryBlockStore.new(
-                coreIdentifier,
-                epochLength,
-                pollingPlaceAddress,
-                originBlockStore.address,
-                initialBlockHash,
-                initialStateRoot,
-                initialHeight,
-                initialGas,
-                initialTransactionRoot,
-                initialKernelHash
-            );
-
+            await setUp();
             await pollingPlace.setAuxiliaryBlockStore(blockStore.address);
 
-            kernelGateway = await KernelGateway.new(
-                accounts[10],
-                originBlockStore.address,
-                blockStore.address,
-                initialKernelHash,
-            );
-
-            await blockStore.initialize(kernelGateway.address);
-
-            await AuxStoreUtils.reportBlocks(blockStore, testBlocks);
         });
 
         it('should return true for valid votes', async () => {

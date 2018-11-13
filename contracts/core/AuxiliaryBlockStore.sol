@@ -20,6 +20,7 @@ import "../lib/SafeMath.sol";
 import "./BlockStore.sol";
 import "./PollingPlaceInterface.sol";
 import "./KernelGatewayInterface.sol";
+
 /**
  * @title The auxiliary block store stores observations about the auxiliary
  *        chain.

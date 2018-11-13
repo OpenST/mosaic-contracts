@@ -35,18 +35,25 @@ contract KernelGateway {
         uint256 _activationDynasty
     );
 
-    /** Index of kernel hash storage location in origin core */
+    event OpenKernelConfirmed(
+        bytes20 _originCoreIdentifier,
+        bytes20 _auxiliaryCoreIdentifier,
+        bytes32 _kernelHash,
+        uint256 _currentDynasty
+    );
+
+    /** Index of kernel hash storage location in origin core. */
     uint8 public constant KERNEL_HASH_INDEX = 5;
 
     /* Variables */
 
-    /** Address of origin core */
+    /** Address of origin core. */
     address public originCore;
 
-    /** Address of the origin block store */
+    /** Address of the origin block store. */
     BlockStoreInterface public originBlockStore;
 
-    /** Address of the auxiliary block store */
+    /** Address of the auxiliary block store. */
     BlockStoreInterface public auxiliaryBlockStore;
 
     /** path to prove merkle account proof for OriginCore contract. */
@@ -67,6 +74,12 @@ contract KernelGateway {
     /** The auxiliary dynasty height at which the open kernel will be active. */
     uint256 public openKernelActivationHeight;
 
+    /** The origin core identifier. */
+    bytes20 public originCoreIdentifier;
+
+    /** The auxiliary core identifier. */
+    bytes20 public auxiliaryCoreIdentifier;
+
     /* Modifiers */
 
     /**
@@ -85,7 +98,7 @@ contract KernelGateway {
 
     /**
      * @notice Initializes the contract with origin and auxiliary block store
-     *         addresses
+     *         addresses.
      *
      * @param _originCore The address of OriginCore contract.
      * @param _originBlockStore The block store that stores the origin chain.
@@ -125,6 +138,8 @@ contract KernelGateway {
         auxiliaryBlockStore = _auxiliaryBlockStore;
         originCore = _originCore;
         activeKernelHash = _kernelHash;
+        originCoreIdentifier = originBlockStore.getCoreIdentifier();
+        auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
         address[] memory updatedValidators;
         uint256[] memory updatedWeights;
@@ -294,8 +309,8 @@ contract KernelGateway {
         openKernelHash = kernelHash;
 
         emit OpenKernelProven(
-            originBlockStore.getCoreIdentifier(),
-            auxiliaryBlockStore.getCoreIdentifier(),
+            originCoreIdentifier,
+            auxiliaryCoreIdentifier,
             _height,
             _parent,
             kernelHash,
@@ -316,7 +331,7 @@ contract KernelGateway {
      * @param _activationHeight The dynasty number at which the kernel hash
      *                          will be confirmed.
      *
-     * @return bytes32 kernel hash
+     * @return bytes32 kernel hash.
      */
     function getOpenKernelHash(
         uint256 _activationHeight
@@ -334,7 +349,7 @@ contract KernelGateway {
     /**
      * @notice Confirm the proved open kernel hash. This can be called only
      *         by the auxiliary block store when the activation(confirm)
-     *         dynasty height is reached
+     *         dynasty height is reached.
      *
      * @param _kernelHash The kernel hash.
      *
@@ -363,16 +378,23 @@ contract KernelGateway {
 
         success_ = true;
 
+        emit OpenKernelConfirmed(
+            originCoreIdentifier,
+            auxiliaryCoreIdentifier,
+            _kernelHash,
+            openKernelActivationHeight
+        );
+
     }
 
     /**
      * @notice Get the updated validator addresses and validator weights for
-     *         the given kernel hash
+     *         the given kernel hash.
      *
      * @param _kernelHash The kernel hash.
      *
-     * @return updatedValidators_ Updated validator addresses
-     * @return updatedWeights_ Updated validator weights
+     * @return updatedValidators_ Updated validator addresses.
+     * @return updatedWeights_ Updated validator weights.
      */
     function getUpdatedValidators(
         bytes32 _kernelHash
@@ -392,7 +414,7 @@ contract KernelGateway {
     /**
      * @notice Get the active kernel hash.
      *
-     * @return kernelHash_ Active kernel hash
+     * @return kernelHash_ Active kernel hash.
      */
     function getActiveKernelHash()
         external
@@ -415,7 +437,7 @@ contract KernelGateway {
      * @param _encodedPath Encoded path to search account node in merkle tree.
      * @param _stateRoot State root for given block height.
      *
-     * @return bytes32 Storage path of the variable
+     * @return bytes32 Storage path of the variable.
      */
     function getStorageRoot(
         bytes _accountRlp,
@@ -427,23 +449,23 @@ contract KernelGateway {
         view
         returns (bytes32 storageRoot_)
     {
-        // Decode RLP encoded account value
+        // Decode RLP encoded account value.
         RLP.RLPItem memory accountItem = RLP.toRLPItem(_accountRlp);
 
-        // Convert to list
+        // Convert to list.
         RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
 
-        // Array 3rd position is storage root
+        // Array 3rd position is storage root.
         storageRoot_ = RLP.toBytes32(accountArray[2]);
 
-        // Hash the rlpEncodedValue value
+        // Hash the rlpEncodedValue value.
         bytes32 hashedAccount = keccak256(
             abi.encodePacked(_accountRlp)
         );
 
         /*
          * Verify the remote origin core contract against the committed state
-         * root with the state trie Merkle proof
+         * root with the state trie Merkle proof.
          */
         require(
             verify(
@@ -489,11 +511,11 @@ contract KernelGateway {
     /**
      * @notice Get the meta-block hash. For the given block hash get the
      *         transition hash. meta-block is hash of active kernel hash
-     *         and auxiliary transition hash
+     *         and auxiliary transition hash.
      *
-     * @param _blockHash The auxiliary block hash
+     * @param _blockHash The auxiliary block hash.
      *
-     * @return metaBlockHash_ The meta-block hash
+     * @return metaBlockHash_ The meta-block hash.
      */
     function getMetaBlockHash(
         bytes32 _blockHash
@@ -540,7 +562,7 @@ contract KernelGateway {
 
         /*
          * Check if the height of the new reported kernel is plus 1 to height
-         * of active kernel
+         * of active kernel.
          */
         require(
             _height == prevKernel.height.add(1),
@@ -549,7 +571,7 @@ contract KernelGateway {
 
         /*
          * Check if the parent of reported kernel is equal to the committed
-         * meta-block hash
+         * meta-block hash.
          */
         require(
             _parent == getMetaBlockHash(_auxiliaryBlockHash),

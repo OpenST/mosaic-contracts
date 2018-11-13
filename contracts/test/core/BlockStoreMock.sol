@@ -164,6 +164,27 @@ contract BlockStoreMock is BlockStoreInterface {
         reported_ = isBlockReported;
     }
 
+    /**
+     * @notice function `updateMetaBlockHeight` of polling place can only be
+     *         called by auxiliary block store. This function is used for
+     *         testing to call `updateMetaBlockHeight` of `PollingPlace`
+     *         contract
+     *
+     * @dev We cannot use dummy address for this testing. A mock
+     *      contract is needed, as in the constructor `getCoreIdentifier` is
+     *      called on the auxiliary block store contract.
+     *
+     * @param _validators The addresses of the new validators on the auxiliary
+     *                    chain.
+     * @param _weights The weights of the validators.
+     * @param _originHeight The height of the origin chain where the new
+     *                      meta-block opens.
+     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
+     *                         the last finalised checkpoint within the
+     *                         previous, closed meta-block.
+     *
+     * @return bool `true` if the update was successful.
+     */
     function updateMetaBlockHeight(
         address[] _validators,
         uint256[] _weights,
@@ -191,6 +212,19 @@ contract BlockStoreMock is BlockStoreInterface {
         return transitionHash;
     }
 
+    /**
+     * @notice function `activateKernel` of kernel gateway can only be called by
+     *         auxiliary block store. This function is used for testing to call
+     *         `activateKernel` of `KernelGateway` contract
+     *
+     * @dev We cannot use dummy address for activate kernel testing. A mock
+     *      contract is needed, as in the constructor `getCoreIdentifier` is
+     *      called on the auxiliary block store contract.
+     *
+     * @param _kernelHash kernel hash.
+     *
+     * @return bool `true` if success
+     */
     function activateKernel(bytes32 _kernelHash)
         external
         returns (bool)

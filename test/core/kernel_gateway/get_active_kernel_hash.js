@@ -20,23 +20,26 @@
 
 const web3 = require('../../test_lib/web3.js');
 const KernelGateway = artifacts.require('MockKernelGateway');
+const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
 
-  let kernelGateway, auxiliaryBlockStore, initialKernelHash;
+  let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
 
     initialKernelHash = web3.utils.sha3('kernelHash');
-    auxiliaryBlockStore = accounts[3];
+    originBlockStore = await BlockStoreMock.new();
+    auxiliaryBlockStore = await BlockStoreMock.new();
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
-      accounts[2],
-      auxiliaryBlockStore,
+      originBlockStore.address,
+      auxiliaryBlockStore.address,
       initialKernelHash,
     );
 
+    await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
   });
 
   it('should return initial kernel hash', async () => {
@@ -58,7 +61,7 @@ contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
 
     await kernelGateway.setOpenKernelHash(hash);
 
-    await kernelGateway.activateKernel(hash, {from: auxiliaryBlockStore});
+    await auxiliaryBlockStore.activateKernel(hash);
 
     let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
 

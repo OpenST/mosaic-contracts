@@ -34,16 +34,17 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
 
   let activationHeight = new BN(1234);
 
-  let kernelGateway, auxiliaryBlockStore, initialKernelHash;
+  let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
 
     initialKernelHash = web3.utils.sha3('kernelHash');
+    originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
-      accounts[2],
+      originBlockStore.address,
       auxiliaryBlockStore.address,
       initialKernelHash,
     );
