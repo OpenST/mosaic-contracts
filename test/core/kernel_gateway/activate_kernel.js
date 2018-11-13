@@ -38,21 +38,20 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
   let activationHeight = new BN(1234);
 
-  let kernelGateway, auxiliaryBlockStore,initialKernelHash;
+  let kernelGateway, auxiliaryBlockStoreAddress,initialKernelHash;
 
   beforeEach(async function() {
 
     initialKernelHash = web3.utils.sha3('kernelHash');
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    auxiliaryBlockStoreAddress = accounts[3];
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
       accounts[2],
-      auxiliaryBlockStore.address,
+        auxiliaryBlockStoreAddress,
       initialKernelHash,
     );
 
-    await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
     await kernelGateway.setOpenKernelHash(hash);
     await kernelGateway.setOpenKernelActivationHeight(activationHeight);
 
@@ -73,17 +72,22 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   it('should fail when kernel hash is not equal to the open kernel' +
     ' hash', async () => {
 
-      await Utils.expectRevert(
-          auxiliaryBlockStore.activateKernel.call(
-              randomHash
-          ),
-          "Kernel hash must be equal to open kernel hash",
-      );
+    await Utils.expectRevert(
+      kernelGateway.activateKernel.call(
+        randomHash,
+        {from:auxiliaryBlockStoreAddress}
+      ),
+      "Kernel hash must be equal to open kernel hash",
+    );
+
   });
 
   it('should return success for correct open kernel hash', async () => {
 
-    let result = await auxiliaryBlockStore.activateKernel.call(hash);
+    let result = await kernelGateway.activateKernel.call(
+      hash,
+      {from:auxiliaryBlockStoreAddress}
+    );
 
     assert.strictEqual(
       result,
@@ -103,7 +107,10 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
       `Initial open kernel hash must be equal to ${hash}`,
     );
 
-    await auxiliaryBlockStore.activateKernel(hash);
+    await kernelGateway.activateKernel(
+      hash,
+      {from:auxiliaryBlockStoreAddress}
+    );
 
     openKernelHash = await kernelGateway.openKernelHash.call();
 
@@ -137,7 +144,10 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     );
 
     await kernelGateway.setOpenKernelHash(hash1);
-    await auxiliaryBlockStore.activateKernel(hash1);
+    await kernelGateway.activateKernel(
+      hash1,
+      {from:auxiliaryBlockStoreAddress}
+    );
 
     let kernelObject = await kernelGateway.kernels.call(hash1);
     assert(
@@ -152,7 +162,10 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     );
 
     await kernelGateway.setOpenKernelHash(hash2);
-    await auxiliaryBlockStore.activateKernel(hash2);
+    await kernelGateway.activateKernel(
+      hash2,
+      {from:auxiliaryBlockStoreAddress}
+    );
 
     kernelObject = await kernelGateway.kernels.call(hash1);
 
@@ -169,7 +182,10 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     );
 
     await kernelGateway.setOpenKernelHash(randomHash);
-    await auxiliaryBlockStore.activateKernel(randomHash);
+    await kernelGateway.activateKernel(
+      randomHash,
+      {from:auxiliaryBlockStoreAddress}
+    );
 
     kernelObject = await kernelGateway.kernels.call(hash2);
 

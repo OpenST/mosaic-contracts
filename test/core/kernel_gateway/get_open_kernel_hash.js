@@ -77,8 +77,8 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
 
   });
 
-  it('should return zero hash when height is the activation ' +
-    'kernel hash but the open kernel hash is already activated', async () => {
+  it('should return zero hash for the activation height once the kernel ' +
+      'hash is activated', async () => {
 
     let hash =
       "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";

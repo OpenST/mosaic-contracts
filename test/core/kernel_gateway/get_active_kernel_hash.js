@@ -23,9 +23,6 @@ const KernelGateway = artifacts.require('MockKernelGateway');
 
 contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
 
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
-
   let kernelGateway, auxiliaryBlockStore, initialKernelHash;
 
   beforeEach(async function() {
