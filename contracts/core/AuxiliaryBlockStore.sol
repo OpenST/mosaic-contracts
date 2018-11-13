@@ -395,16 +395,44 @@ contract AuxiliaryBlockStore is BlockStore {
          */
         super.justify_(_sourceBlockHash, _targetBlockHash);
 
+        // If there is any revert in the super class this will not be called.
+
+        uint256 activationHeight;
+        bytes32 openKernelHash;
+        address[] memory updatedValidators;
+        uint256[] memory updatedWeights;
+
+        (activationHeight, openKernelHash, updatedValidators, updatedWeights) =
+            kernelGateway.getOpenKernel();
+
+        if(openKernelHash != bytes32(0) &&
+            activationHeight == currentDynasty) {
+
+            /*
+             * Report polling place about new validators and new finalized
+             * block heights.
+             */
+            PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
+                updatedValidators,
+                updatedWeights,
+                originBlockStore.getCurrentDynasty(),
+                currentDynasty
+            );
+
+            // Activate the proven kernel hash.
+            kernelGateway.activateKernel(openKernelHash);
+
+        }
+
         /*
-         * Call updateKernel function. If there is any revert in the super
-         * class this will not be called.
+         * Store the kernel hash for the checkpoint.
          *
-         * @dev function `updateKernel` is called with target block hash,
-         *      so that it updates the kernel hash for the justified
-         *      checkpoint. Next voting will use this justified block hash so
-         *      the kernel hash should be available.
+         * @dev kernel hash is stored for the target block hash. As the target
+         *      block hash is justified, next voting will use this justified
+         *      block hash so the kernel hash should be available.
          */
-        updateKernel(_targetBlockHash);
+        kernelHashes[_targetBlockHash] = kernelGateway.getActiveKernelHash();
+
     }
 
     /* Private Functions */
@@ -457,59 +485,5 @@ contract AuxiliaryBlockStore is BlockStore {
 
         isAncestor_ = currentCheckpoint.blockHash == _ancestor;
     }
-
-    /**
-     * @notice Check if there is any proven kernel that is pending to be
-     *         activated for the current dynasty number. If kernel activates
-     *         for the current dynasty then polling place is informed to update
-     *         the meta-block height, validator address and validator weights.
-     *
-     * @dev Calling polling place is adding cyclic dependencies.
-     *
-     * @param _blockHash The checkpoint that shall be justified.
-     */
-    function updateKernel(bytes32 _blockHash)
-        private
-    {
-
-        /*
-         * Get the latest proven kernel hash that should be activated for the
-         * current dynasty number.
-         */
-        bytes32 openKernelHash =
-            kernelGateway.getOpenKernelHash(currentDynasty);
-
-        /*
-         * If the kernel hash is available, then inform the polling place about
-         * latest validator address and validator weights.
-         */
-        if(openKernelHash != bytes32(0)) {
-
-            address[] memory updatedValidators;
-            uint256[] memory updatedWeights;
-
-            // Get the validators address and weights for the kernel hash
-            (updatedValidators, updatedWeights) =
-                kernelGateway.getUpdatedValidators(openKernelHash);
-
-            /*
-             * Report polling place about new validators and new finalized
-             * block heights.
-             */
-            PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
-                updatedValidators,
-                updatedWeights,
-                originBlockStore.getCurrentDynasty(),
-                currentDynasty
-            );
-
-            // Activate the proven kernel hash.
-            kernelGateway.activateKernel(openKernelHash);
-        }
-
-        // Store the kernel hash for the checkpoint.
-        kernelHashes[_blockHash] = kernelGateway.getActiveKernelHash();
-
-    }
-
+    
 }

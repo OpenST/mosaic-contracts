@@ -347,6 +347,37 @@ contract KernelGateway {
     }
 
     /**
+     * @notice Get a proven kernel hash, validator address and validator
+     *         weights that is not yet confirmed
+     *
+     * @dev Open kernel hash is the proven kernel hash which is not yet
+     *      confirmed.
+     *
+     * @return uint256 activation height.
+     * @return bytes32 kernel hash.
+     * @return address[] validator address.
+     * @return uint256[] validator weights.
+     */
+    function getOpenKernel()
+        external
+        view
+        returns (
+            uint256 activationHeight_,
+            bytes32 kernelHash_,
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
+        )
+    {
+        if(openKernelHash != bytes32(0)) {
+            kernelHash_ = openKernelHash;
+            activationHeight_ = openKernelActivationHeight;
+            MetaBlock.Kernel storage kernel = kernels[kernelHash_];
+            updatedValidators_ = kernel.updatedValidators;
+            updatedWeights_ = kernel.updatedWeights;
+        }
+    }
+
+    /**
      * @notice Confirm the proved open kernel hash. This can be called only
      *         by the auxiliary block store when the activation(confirm)
      *         dynasty height is reached.

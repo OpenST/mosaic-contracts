@@ -115,4 +115,26 @@ interface KernelGatewayInterface {
         external
         returns (bytes32 kernelHash_);
 
+    /**
+     * @notice Get a proven kernel hash, validator address and validator
+     *         weights that is not yet confirmed
+     *
+     * @dev Open kernel hash is the proven kernel hash which is not yet
+     *      confirmed.
+     *
+     * @return uint256 activation height.
+     * @return bytes32 kernel hash.
+     * @return address[] validator address.
+     * @return uint256[] validator weights.
+     */
+    function getOpenKernel()
+        external
+        view
+        returns (
+            uint256 activationHeight_,
+            bytes32 kernelHash_,
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
+        );
+
 }
