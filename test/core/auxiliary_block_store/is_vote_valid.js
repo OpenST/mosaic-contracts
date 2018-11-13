@@ -495,6 +495,16 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
     describe('validate kernel hashes', async function () {
 
+        let activeKernel;
+        let openKernel = initialKernelHash;
+
+        async function openNewKernel(activationHeight) {
+            activeKernel = openKernel;
+            openKernel = web3.utils.sha3(`openKernel${activationHeight}`);
+            await kernelGateway.setOpenKernelHash(openKernel);
+            await kernelGateway.setOpenKernelActivationHeight(activationHeight);
+        }
+
         beforeEach(async () => {
 
             epochLength = new BN('2');
@@ -508,10 +518,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
         it('should return true for valid votes', async () => {
 
-            let activeKernel = initialKernelHash;
-            let openKernel = web3.utils.sha3('openKernel1');
-            await kernelGateway.setOpenKernelHash(openKernel);
-            await kernelGateway.setOpenKernelActivationHeight(1);
+            await openNewKernel(1);
 
             await AuxStoreUtils.testValidVotes(
                 blockStore,
@@ -568,10 +575,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 testBlocks[2].hash,
             );
 
-            activeKernel = openKernel;
-            openKernel = web3.utils.sha3('openKernel3');
-            await kernelGateway.setOpenKernelHash(openKernel);
-            await kernelGateway.setOpenKernelActivationHeight(3);
+            await openNewKernel(3);
 
             await AuxStoreUtils.testValidVotes(
                 blockStore,
@@ -662,10 +666,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 testBlocks[6].hash,
             );
 
-            activeKernel = openKernel;
-            openKernel = web3.utils.sha3('openKernel4');
-            await kernelGateway.setOpenKernelHash(openKernel);
-            await kernelGateway.setOpenKernelActivationHeight(4);
+            await openNewKernel(4);
 
             await AuxStoreUtils.testValidVotes(
                 blockStore,
@@ -701,10 +702,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 testBlocks[8].hash,
             );
 
-            activeKernel = openKernel;
-            openKernel = web3.utils.sha3('openKernel5');
-            await kernelGateway.setOpenKernelHash(openKernel);
-            await kernelGateway.setOpenKernelActivationHeight(5);
+            await openNewKernel(5);
 
             await AuxStoreUtils.testValidVotes(
                 blockStore,
@@ -733,11 +731,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 testBlocks[10].hash,
             );
 
-            activeKernel = openKernel;
-            openKernel = web3.utils.sha3('openKernel6');
-            await kernelGateway.setOpenKernelHash(openKernel);
-            await kernelGateway.setOpenKernelActivationHeight(6);
-
+            await openNewKernel(6);
 
             await AuxStoreUtils.testValidVotes(
                 blockStore,
