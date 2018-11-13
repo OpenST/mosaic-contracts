@@ -33,6 +33,16 @@ contract MockProofResults {
     /** A mapping of hashes to their results. */
     mapping (bytes32 => bool) results;
 
+    /**
+     * @notice Set the mock result for the given set of inputs.
+     *
+     * @param _value The terminating value in the trie.
+     * @param _encodedPath The path in the trie leading to value.
+     * @param _rlpParentNodes The rlp encoded stack of nodes.
+     * @param _root The root hash of the trie.
+     * @param _result The value that is expected to return when `verify`
+     *                function is called with these set of input params
+     */
     function setResult (
         bytes32 _value,
         bytes _encodedPath,
@@ -57,6 +67,16 @@ contract MockProofResults {
 
     }
 
+    /**
+     * @notice Mocks the verify function of merkle patricia proof.
+     *
+     * @param _value The terminating value in the trie.
+     * @param _encodedPath The path in the trie leading to value.
+     * @param _rlpParentNodes The rlp encoded stack of nodes.
+     * @param _root The root hash of the trie.
+     *
+     * @return bool The mocked boolean result.
+     */
     function verify(
         bytes32 _value,
         bytes _encodedPath,
@@ -78,6 +98,16 @@ contract MockProofResults {
         return results[resultHash];
     }
 
+    /**
+     * @notice Generate a hash with the input params.
+     *
+     * @param _value The terminating value in the trie.
+     * @param _encodedPath The path in the trie leading to value.
+     * @param _rlpParentNodes The rlp encoded stack of nodes.
+     * @param _root The root hash of the trie.
+     *
+     * @return resultHash_ The generated hash.
+     */
     function hash(
         bytes32 _value,
         bytes _encodedPath,
