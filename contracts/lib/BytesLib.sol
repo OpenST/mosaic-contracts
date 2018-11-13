@@ -172,11 +172,11 @@ library BytesLib {
     }
 
     /**
-     *	@notice Convert bytes32 to bytes
+     * @notice Convert bytes32 to bytes
      *
-     *	@param _inBytes32 bytes32 value
+     * @param _inBytes32 bytes32 value
      *
-     *	@return bytes value
+     * @return bytes value
      */
     function bytes32ToBytes(bytes32 _inBytes32)
         internal

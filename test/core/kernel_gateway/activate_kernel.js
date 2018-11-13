@@ -73,14 +73,12 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   it('should fail when kernel hash is not equal to the open kernel' +
     ' hash', async () => {
 
-    let result = await auxiliaryBlockStore.activateKernel.call(randomHash);
-
-    assert.strictEqual(
-      result,
-      false,
-      `The contract must result false.`,
-    );
-
+      await Utils.expectRevert(
+          auxiliaryBlockStore.activateKernel.call(
+              randomHash
+          ),
+          "Kernel hash must be equal to open kernel hash",
+      );
   });
 
   it('should return success for correct open kernel hash', async () => {

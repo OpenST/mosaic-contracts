@@ -36,7 +36,7 @@ contract KernelGateway {
     );
 
     /** Index of kernel hash storage location in origin core */
-    uint8 constant KERNEL_HASH_INDEX = 5;
+    uint8 public constant KERNEL_HASH_INDEX = 5;
 
     /* Variables */
 
@@ -246,11 +246,6 @@ contract KernelGateway {
             _auxiliaryBlockHash
         );
 
-        require(
-            kernels[kernelHash].height == 0,
-            "Kernel must not exist."
-        );
-
         bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
 
         // State root should be present for the block height
@@ -264,6 +259,12 @@ contract KernelGateway {
             _accountBranchRlp,
             encodedOriginCorePath,
             stateRoot
+        );
+
+        // Storage root should be present.
+        require(
+            storageRoot != bytes32(0),
+            "The storage root must not be zero."
         );
 
         /* Verify merkle proof for the existence of data */
@@ -287,7 +288,7 @@ contract KernelGateway {
 
         // Store the activation height for the reported kernel.
         openKernelActivationHeight =
-        auxiliaryBlockStore.getCurrentDynasty().add(2);
+            auxiliaryBlockStore.getCurrentDynasty().add(2);
 
         // Store the kernel hash for activation
         openKernelHash = kernelHash;
@@ -306,13 +307,20 @@ contract KernelGateway {
     }
 
     /**
-     * @notice Get open kernel hash for the activation height
+     * @notice Get a proven kernel hash that should be confirmed at the given
+     *         dynasty number.
      *
-     * @param _activationHeight The activation auxiliary dynasty height.
+     * @dev Open kernel hash is the proven kernel hash which is not yet
+     *      confirmed.
+     *
+     * @param _activationHeight The dynasty number at which the kernel hash
+     *                          will be confirmed.
      *
      * @return bytes32 kernel hash
      */
-    function getOpenKernelHash(uint256 _activationHeight)
+    function getOpenKernelHash(
+        uint256 _activationHeight
+    )
         external
         view
         returns (bytes32 kernelHash_)
@@ -324,32 +332,37 @@ contract KernelGateway {
     }
 
     /**
-     * @notice Update the active kernel. This can be called only by the
-     *         auxiliary block store when the activation dynasty height is
-     *         reached
+     * @notice Confirm the proved open kernel hash. This can be called only
+     *         by the auxiliary block store when the activation(confirm)
+     *         dynasty height is reached
      *
      * @param _kernelHash The kernel hash.
      *
-     * @return bool `true` when the kernel hash is active.
+     * @return bool `true` when the kernel hash is confirmed.
      */
-    function activateKernel(bytes32 _kernelHash)
+    function activateKernel(
+        bytes32 _kernelHash
+    )
         external
         onlyAuxiliaryBlockStore
         returns (bool success_)
     {
-        if(_kernelHash == openKernelHash) {
+        require(
+            _kernelHash == openKernelHash,
+            "Kernel hash must be equal to open kernel hash"
+        );
 
-            // delete the kernel object.
-            delete kernels[activeKernelHash];
+        // delete the kernel object.
+        delete kernels[activeKernelHash];
 
-            // Update the active kernel hash.
-            activeKernelHash = openKernelHash;
+        // Update the active kernel hash.
+        activeKernelHash = openKernelHash;
 
-            // delete the open kernel hash as its already activated.
-            openKernelHash = bytes32(0);
+        // delete the open kernel hash as its already activated.
+        openKernelHash = bytes32(0);
 
-            success_ = true;
-        }
+        success_ = true;
+
     }
 
     /**
@@ -361,7 +374,9 @@ contract KernelGateway {
      * @return updatedValidators_ Updated validator addresses
      * @return updatedWeights_ Updated validator weights
      */
-    function getUpdatedValidators(bytes32 _kernelHash)
+    function getUpdatedValidators(
+        bytes32 _kernelHash
+    )
         external
         view
         returns (
@@ -515,6 +530,11 @@ contract KernelGateway {
         private
         view
     {
+        require(
+            kernels[_kernelHash].height == 0,
+            "Kernel must not exist."
+        );
+
         // Get the active kernel object
         MetaBlock.Kernel storage prevKernel = kernels[activeKernelHash];
 

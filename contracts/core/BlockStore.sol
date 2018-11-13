@@ -634,6 +634,8 @@ contract BlockStore is BlockStoreInterface {
         isCheckpoint_ = checkpoints[_blockHash].blockHash == _blockHash;
     }
 
+    /* Private Functions */
+
     /**
      * @notice Finalises the checkpoint at the given block hash. Updates the
      *         current head and dynasty if it is above the old head.
@@ -650,8 +652,6 @@ contract BlockStore is BlockStoreInterface {
 
         emit BlockFinalised(_blockHash);
     }
-
-    /* Private Functions */
 
     /**
      * @notice Checks if a source block is valid. The same criteria apply for

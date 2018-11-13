@@ -374,8 +374,8 @@ contract AuxiliaryBlockStore is BlockStore {
      *         Only the polling place may call this method.
      *
      * @dev This is an external function which can be called by polling place.
-     *      This function call justify_ function which is internal defined in
-     *      super class
+     *      This function calls the `justify_` function which is internally
+     *      defined in the super class.
      *
      * @param _sourceBlockHash The block hash of the source of the super-
      *                         majority link.
@@ -388,9 +388,24 @@ contract AuxiliaryBlockStore is BlockStore {
         external
         onlyPollingPlace()
     {
+        /*
+         * Call the `justify_` function of super class. In case of revert in
+         * super class it will return with revert.
+         */
         super.justify_(_sourceBlockHash, _targetBlockHash);
+
+        /*
+         * Call updateKernel function. If there is any revert in the super
+         * class this will not be called.
+         *
+         * @dev function `updateKernel` is called with target block hash,
+         *      so that it updates the kernel hash for the justified
+         *      checkpoint. Next voting will use this justified block hash so
+         *      the kernel hash should be available.
+         */
         updateKernel(_targetBlockHash);
     }
+
     /* Private Functions */
 
     /**
@@ -443,24 +458,36 @@ contract AuxiliaryBlockStore is BlockStore {
     }
 
     /**
-     * @notice Stores the kernel observation for the dynasty number.
-     *         It also activates already reported kernel
+     * @notice Check if there is any proven kernel that is pending to be
+     *         activated for the current dynasty number. If kernel activates
+     *         for the current dynasty then polling place is informed to update
+     *         the meta-block height, validator address and validator weights.
      *
-     * @param _blockHash The checkpoint that shall be finalized.
+     * @dev Calling polling place is adding cyclic dependencies.
+     *
+     * @param _blockHash The checkpoint that shall be justified.
      */
     function updateKernel(bytes32 _blockHash)
         private
     {
 
+        /*
+         * Get the latest proven kernel hash that should be activated for the
+         * current dynasty number.
+         */
         bytes32 openKernelHash =
             kernelGateway.getOpenKernelHash(currentDynasty);
 
-        // Check if any kernel is reported for activation.
+        /*
+         * If the kernel hash is available, then inform the polling place about
+         * latest validator address and validator weights.
+         */
         if(openKernelHash != bytes32(0)) {
 
             address[] memory updatedValidators;
             uint256[] memory updatedWeights;
 
+            // Get the validators address and weights for the kernel hash
             (updatedValidators, updatedWeights) =
                 kernelGateway.getUpdatedValidators(openKernelHash);
 
@@ -475,11 +502,11 @@ contract AuxiliaryBlockStore is BlockStore {
                 currentDynasty
             );
 
-            // Update the active kernel hash.
+            // Activate the proven kernel hash.
             kernelGateway.activateKernel(openKernelHash);
         }
 
-        // Store the kernel observations for the block hash.
+        // Store the kernel hash for the checkpoint.
         kernelHashes[_blockHash] = kernelGateway.getActiveKernelHash();
 
     }

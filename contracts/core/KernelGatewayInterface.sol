@@ -60,9 +60,14 @@ interface KernelGatewayInterface {
         returns (bool success_);
 
     /**
-     * @notice Get open kernel hash for the activation height
+     * @notice Get a proven kernel hash that should be confirmed at the given
+     *         dynasty number.
      *
-     * @param _activationHeight The activation auxiliary dynasty height.
+     * @dev Open kernel hash is the proven kernel hash which is not yet
+     *      confirmed.
+     *
+     * @param _activationHeight The dynasty number at which the kernel hash
+     *                          will be confirmed.
      *
      * @return bytes32 kernel hash
      */
@@ -72,13 +77,13 @@ interface KernelGatewayInterface {
         returns (bytes32 kernelHash_);
 
     /**
-     * @notice Update the active kernel. This can be called only by the
-     *         auxiliary block store when the activation dynasty height is
-     *         reached
+     * @notice Confirm the proved open kernel hash. This can be called only
+     *         by the auxiliary block store when the activation(confirm)
+     *         dynasty height is reached
      *
      * @param _kernelHash The kernel hash.
      *
-     * @return bool `true` when the kernel hash is active.
+     * @return bool `true` when the kernel hash is confirmed.
      */
     function activateKernel(bytes32 _kernelHash)
         external
