@@ -91,6 +91,7 @@ contract BlockStoreMock is BlockStoreInterface {
     function setKernelGateway(KernelGatewayInterface _kernelGateway) external {
         kernelGateway = _kernelGateway;
     }
+
     /* The methods of the interface, returning values from storage. */
 
     function getHead() external view returns (bytes32) {

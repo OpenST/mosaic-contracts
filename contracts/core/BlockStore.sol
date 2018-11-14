@@ -247,7 +247,6 @@ contract BlockStore is BlockStoreInterface {
     /**
      * @notice Marks a block in the block store as justified. The source and
      *         the target are required to know when a block is finalised.
-     *         Only the polling place may call this method.
      *
      * @param _sourceBlockHash The block hash of the source of the super-
      *                         majority link.
