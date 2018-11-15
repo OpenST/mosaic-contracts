@@ -77,9 +77,10 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
 
         let expectedTransitionHash = MetaBlockUtils.hashAuxiliaryTransition(auxiliaryTransitionObject);
 
-        let transitionHash = await  blockStore.auxiliaryTransitionHashAtBlock.call(
-            initialBlockHash
-        );
+        let transitionHash =
+            await blockStore.auxiliaryTransitionHashAtBlock.call(
+                initialBlockHash
+            );
 
         assert.strictEqual(
             transitionHash,

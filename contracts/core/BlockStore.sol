@@ -18,7 +18,7 @@ import "../lib/Block.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "./BlockStoreInterface.sol";
-
+import "./OriginTransitionObjectInterface.sol";
 /**
  * @title A block store stores blocks of a block chain.
  *
@@ -29,7 +29,7 @@ import "./BlockStoreInterface.sol";
  *         calls to the `justify()` method. Only the polling place can call
  *         that method.
  */
-contract BlockStore is BlockStoreInterface {
+contract BlockStore is BlockStoreInterface, OriginTransitionObjectInterface {
     using SafeMath for uint256;
 
     /* Events */
@@ -260,33 +260,7 @@ contract BlockStore is BlockStoreInterface {
         external
         onlyPollingPlace()
     {
-        bool blockValid;
-        string memory reason;
-
-        (blockValid, reason) = isSourceValid(_sourceBlockHash);
-        require(blockValid, reason);
-
-        (blockValid, reason) = isTargetValid(
-            _sourceBlockHash,
-            _targetBlockHash
-        );
-        require(blockValid, reason);
-
-        // Finalise first as it may increase the dynasty number of target.
-        if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {
-            finalise(_sourceBlockHash);
-        }
-
-        Checkpoint memory checkpoint = Checkpoint(
-            _targetBlockHash,
-            _sourceBlockHash,
-            true,
-            false,
-            currentDynasty
-        );
-        checkpoints[_targetBlockHash] = checkpoint;
-
-        emit BlockJustified(_targetBlockHash);
+        justify_(_sourceBlockHash, _targetBlockHash);
     }
 
     /**
@@ -492,6 +466,49 @@ contract BlockStore is BlockStoreInterface {
     }
 
     /* Internal Functions */
+
+    /**
+     * @notice Marks a block in the block store as justified. The source and
+     *         the target are required to know when a block is finalised.
+     *
+     * @param _sourceBlockHash The block hash of the source of the super-
+     *                         majority link.
+     * @param _targetBlockHash The block hash of the block that is justified.
+     */
+    function justify_(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        internal
+    {
+        bool blockValid;
+        string memory reason;
+
+        (blockValid, reason) = isSourceValid(_sourceBlockHash);
+        require(blockValid, reason);
+
+        (blockValid, reason) = isTargetValid(
+            _sourceBlockHash,
+            _targetBlockHash
+        );
+        require(blockValid, reason);
+
+        // Finalise first as it may increase the dynasty number of target.
+        if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {
+            finalise(_sourceBlockHash);
+        }
+
+        Checkpoint memory checkpoint = Checkpoint(
+            _targetBlockHash,
+            _sourceBlockHash,
+            true,
+            false,
+            currentDynasty
+        );
+        checkpoints[_targetBlockHash] = checkpoint;
+
+        emit BlockJustified(_targetBlockHash);
+    }
 
     /**
      * @notice Report a block. A reported block header is stored and can then

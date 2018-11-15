@@ -132,11 +132,7 @@ library GatewayLib {
         pure
         returns (bytes)
     {
-        bytes memory res = new bytes(32);
-        assembly {
-            mstore(add(32, res), _inBytes32)
-        }
-        return res;
+        return BytesLib.bytes32ToBytes(_inBytes32);
     }
 
     /**

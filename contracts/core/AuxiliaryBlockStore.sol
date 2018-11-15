@@ -18,12 +18,20 @@ import "../lib/Block.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "./BlockStore.sol";
+import "./PollingPlaceInterface.sol";
+import "./KernelGatewayInterface.sol";
+import "./AuxiliaryTransitionObjectInterface.sol";
+import "./InitializeGatewayKernelInterface.sol";
 
 /**
  * @title The auxiliary block store stores observations about the auxiliary
  *        chain.
  */
-contract AuxiliaryBlockStore is BlockStore {
+contract AuxiliaryBlockStore is
+    BlockStore,
+    AuxiliaryTransitionObjectInterface,
+    InitializeGatewayKernelInterface
+{
     using SafeMath for uint256;
 
     /* Variables */
@@ -52,11 +60,29 @@ contract AuxiliaryBlockStore is BlockStore {
      */
     mapping(bytes32 => bytes32) public originBlockHashes;
 
-    /** The hash of the currently active kernel. */
-    bytes32 public kernelHash;
 
     /** The corresponding origin block store that tracks the origin chain. */
     BlockStore public originBlockStore;
+
+    /**
+     * The meta-block gate kernel gateway is the only contract that is allowed
+     * to inform opening of new kernel gateway.
+     */
+    KernelGatewayInterface public kernelGateway;
+
+    /* Modifiers */
+
+    /**
+     * @notice Functions with this modifier can only be called from the address
+     *         that is registered as the kernel gateway.
+     */
+    modifier onlyKernelGateway() {
+        require(
+            msg.sender == address(kernelGateway),
+            "This method must be called from the registered kernel gateway."
+        );
+        _;
+    }
 
     /* Constructor */
 
@@ -126,6 +152,27 @@ contract AuxiliaryBlockStore is BlockStore {
     /* External Functions */
 
     /**
+     * @notice Initialize the auxiliary block store with kernel gateway address.
+     *
+     * @param _kernelGateway The kernel gateway address.
+     */
+    function initialize(address _kernelGateway)
+        external
+    {
+        require(
+            _kernelGateway != address(0),
+            "Kernel gateway address must not be zero."
+        );
+
+        require(
+            kernelGateway == address(0),
+            "Kernel gateway must not be already initialized."
+        );
+
+        kernelGateway = KernelGatewayInterface(_kernelGateway);
+    }
+
+    /**
      * @notice Report a block. A reported block header is stored and can then
      *         be part of subsequent votes.
      *
@@ -193,7 +240,7 @@ contract AuxiliaryBlockStore is BlockStore {
      * @return transactionRoot_ The root of trie created by the auxiliary block
                                 store from the transaction roots of all blocks.
      */
-    function  auxiliaryTransitionObjectAtBlock(
+    function auxiliaryTransitionObjectAtBlock(
         bytes32 _blockHash
     )
         external
@@ -236,7 +283,7 @@ contract AuxiliaryBlockStore is BlockStore {
      *
      * @return transitionHash_ Hash of transition object at the checkpoint.
      */
-    function  auxiliaryTransitionHashAtBlock(
+    function auxiliaryTransitionHashAtBlock(
         bytes32 _blockHash
     )
         external
@@ -316,7 +363,7 @@ contract AuxiliaryBlockStore is BlockStore {
     {
         bytes32 expectedTransitionHash = MetaBlock.hashAuxiliaryTransition(
             coreIdentifier,
-            kernelHash,
+            kernelHashes[_blockHash],
             checkpoints[_blockHash].dynasty,
             _blockHash,
             accumulatedGases[_blockHash],
@@ -326,6 +373,72 @@ contract AuxiliaryBlockStore is BlockStore {
         );
 
         valid_ = _transitionHash == expectedTransitionHash;
+    }
+
+    /**
+     * @notice Marks a block in the block store as justified. The source and
+     *         the target are required to know when a block is finalised.
+     *         Only the polling place may call this method.
+     *
+     * @dev This is an external function which can be called by polling place.
+     *      This function calls the `justify_` function which is internally
+     *      defined in the super class.
+     *
+     * @param _sourceBlockHash The block hash of the source of the super-
+     *                         majority link.
+     * @param _targetBlockHash The block hash of the block that is justified.
+     */
+    function justify(
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash
+    )
+        external
+        onlyPollingPlace()
+    {
+        /*
+         * Call the `justify_` function of super class. In case of revert in
+         * super class it will return with revert.
+         */
+        super.justify_(_sourceBlockHash, _targetBlockHash);
+
+        // If there is any revert in the super class this will not be called.
+
+        uint256 activationHeight;
+        bytes32 openKernelHash;
+        address[] memory updatedValidators;
+        uint256[] memory updatedWeights;
+
+        (activationHeight, openKernelHash, updatedValidators, updatedWeights) =
+            kernelGateway.getOpenKernel();
+
+        if(openKernelHash != bytes32(0) &&
+            activationHeight == currentDynasty) {
+
+            /*
+             * Report polling place about new validators and new finalized
+             * block heights.
+             */
+            PollingPlaceInterface(pollingPlace).updateMetaBlock(
+                updatedValidators,
+                updatedWeights,
+                originBlockStore.getCurrentDynasty(),
+                currentDynasty
+            );
+
+            // Activate the proven kernel hash.
+            kernelGateway.activateKernel(openKernelHash);
+
+        }
+
+        /*
+         * Store the kernel hash for the checkpoint.
+         *
+         * @dev kernel hash is stored for the target block hash. As the target
+         *      block hash is justified, next voting will use this justified
+         *      block hash so the kernel hash should be available.
+         */
+        kernelHashes[_targetBlockHash] = kernelGateway.getActiveKernelHash();
+
     }
 
     /* Private Functions */
@@ -378,4 +491,5 @@ contract AuxiliaryBlockStore is BlockStore {
 
         isAncestor_ = currentCheckpoint.blockHash == _ancestor;
     }
+    
 }
