@@ -109,10 +109,11 @@ interface KernelGatewayInterface {
     /**
      * @notice Get the active kernel hash.
      *
-     * @return kernelHash_ Active kernel hash
+     * @return kernelHash_ Active kernel hash.
      */
     function getActiveKernelHash()
         external
+        view
         returns (bytes32 kernelHash_);
 
     /**

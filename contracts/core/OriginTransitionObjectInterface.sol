@@ -21,9 +21,6 @@ interface OriginTransitionObjectInterface {
      * @notice Returns transition hash at the checkpoint defined at the given
      *         block hash.
      *
-     * @dev It reverts transaction if checkpoint is not defined at given
-     *      block hash.
-     *
      * @param _blockHash The hash of the block for which transition object
      *                   is requested.
      *
@@ -39,9 +36,6 @@ interface OriginTransitionObjectInterface {
     /**
      * @notice Returns transition object at the checkpoint defined at given
      *         block hash.
-     *
-     * @dev It reverts transaction if checkpoint is not defined at given
-     *      block hash.
      *
      * @param _blockHash The hash of the block for which transition object
      *                   is requested.

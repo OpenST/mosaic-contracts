@@ -18,7 +18,7 @@ import "../lib/Block.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "./BlockStoreInterface.sol";
-
+import "./OriginTransitionObjectInterface.sol";
 /**
  * @title A block store stores blocks of a block chain.
  *
@@ -29,7 +29,7 @@ import "./BlockStoreInterface.sol";
  *         calls to the `justify()` method. Only the polling place can call
  *         that method.
  */
-contract BlockStore is BlockStoreInterface {
+contract BlockStore is BlockStoreInterface, OriginTransitionObjectInterface {
     using SafeMath for uint256;
 
     /* Events */

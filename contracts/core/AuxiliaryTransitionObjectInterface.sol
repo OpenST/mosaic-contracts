@@ -21,9 +21,6 @@ interface AuxiliaryTransitionObjectInterface {
      * @notice Returns auxiliary transition hash at the checkpoint defined
      *         at given block hash.
      *
-     * @dev It reverts transaction if checkpoint is not defined at given
-     *      block hash.
-     *
      * @param _blockHash The hash of the block for which transition object
      *                   is requested.
      *
@@ -39,9 +36,6 @@ interface AuxiliaryTransitionObjectInterface {
     /**
      * @notice Returns auxiliary transition object at the checkpoint defined
      *         at given block hash.
-     *
-     * @dev It reverts transaction if checkpoint is not defined at given
-     *      block hash.
      *
      * @param _blockHash The hash of the block for which transition object
      *                   is requested.

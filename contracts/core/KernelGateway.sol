@@ -21,9 +21,10 @@ import "../lib/BytesLib.sol";
 import "../lib/SafeMath.sol";
 import "../lib/MetaBlock.sol";
 import "./AuxiliaryTransitionObjectInterface.sol";
+import "./KernelGatewayInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
-contract KernelGateway {
+contract KernelGateway is KernelGatewayInterface{
     using SafeMath for uint256;
 
     /* Events */

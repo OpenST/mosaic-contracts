@@ -20,12 +20,18 @@ import "../lib/SafeMath.sol";
 import "./BlockStore.sol";
 import "./PollingPlaceInterface.sol";
 import "./KernelGatewayInterface.sol";
+import "./AuxiliaryTransitionObjectInterface.sol";
+import "./InitializeGatewayKernelInterface.sol";
 
 /**
  * @title The auxiliary block store stores observations about the auxiliary
  *        chain.
  */
-contract AuxiliaryBlockStore is BlockStore {
+contract AuxiliaryBlockStore is
+    BlockStore,
+    AuxiliaryTransitionObjectInterface,
+    InitializeGatewayKernelInterface
+{
     using SafeMath for uint256;
 
     /* Variables */
