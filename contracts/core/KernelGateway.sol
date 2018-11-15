@@ -180,7 +180,7 @@ contract KernelGateway {
      *                        same index relate to the weight in this array.
      *                        Weights of existing validators can only decrease.
      * @param _auxiliaryBlockHash The auxiliary block hash that was used for
-     *                            closing the meta-block
+     *                            closing the previous meta-block.
      * @param _storageBranchRlp The trie branch of the state trie of origin
      *                            that proves that the opening took place on
      *                            origin.
@@ -540,15 +540,16 @@ contract KernelGateway {
     }
 
     /**
-     * @notice Get the meta-block hash. For the given block hash get the
-     *         transition hash. meta-block is hash of active kernel hash
+     * @notice Get current meta-block hash. For the given block hash get the
+     *         transition hash. meta-block hash is hash of active kernel hash
      *         and auxiliary transition hash.
      *
-     * @param _blockHash The auxiliary block hash.
+     * @param _blockHash The auxiliary block hash that was used for closing the
+     *                   previous meta-block.
      *
      * @return metaBlockHash_ The meta-block hash.
      */
-    function getMetaBlockHash(
+    function currentMetaBlockHash(
         bytes32 _blockHash
     )
         internal
@@ -605,7 +606,7 @@ contract KernelGateway {
          * meta-block hash.
          */
         require(
-            _parent == getMetaBlockHash(_auxiliaryBlockHash),
+            _parent == currentMetaBlockHash(_auxiliaryBlockHash),
             "Parent hash must be equal to previous meta-block hash."
         );
     }
