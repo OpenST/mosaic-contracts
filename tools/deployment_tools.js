@@ -1,5 +1,14 @@
 const web3 = require('web3');
 
+// A contract registry that allows for registering contracts, linkages between them.
+// It also handles multiple instantiation of the contracts (with constructor arguments).
+// As a output it can produce the "accounts" field of a parity chainspec.
+//
+// The main functions of interest for users are:
+//   - `.addContract()` / `.addTruffleContract()`
+//   - `.link()`
+//   - `.addInstance()`
+//   - `.toParityGenesisAccounts()`
 class ContractRegistry {
   constructor() {
     this.startAddress = '0x0000000000000000000000000000000000000100';
@@ -9,22 +18,24 @@ class ContractRegistry {
 
     this.addContract = this.addContract.bind(this);
     this.addInstance = this.addInstance.bind(this);
+    this.addTruffleContract = this.addTruffleContract.bind(this);
     this.checkFullyLinked = this.checkFullyLinked.bind(this);
     this.link = this.link.bind(this);
     this.linkBytecode = this.linkBytecode.bind(this);
     this.linkedBytecodeForContract = this.linkedBytecodeForContract.bind(this);
-    this.truffleDeployer = this.truffleDeployer.bind(this);
-    this.toParityGenesisAccounts = this.toParityGenesisAccounts.bind(this);
     this.takeNextAddress = this.takeNextAddress.bind(this);
+    this.toParityGenesisAccounts = this.toParityGenesisAccounts.bind(this);
+    this.truffleDeployer = this.truffleDeployer.bind(this);
   }
 
+  // Used for automatic address distribution (which we can do for a genesis deployment).
   takeNextAddress() {
     const addressHex = web3.utils.bytesToHex(this.nextAvailableAddress);
     this.nextAvailableAddress[this.nextAvailableAddress.length - 1] += 1;
     return addressHex;
   }
 
-  // Add a contract to the registry
+  // Add a contract to the registry.
   //
   // `options.deploy` determines if a contract should be designated for deployment or not.
   // It should be set to `true` for contracts where only a single instance is required without constructor arguments (e.g. libraries).
@@ -45,6 +56,10 @@ class ContractRegistry {
     );
   }
 
+  // Mark a library for linking into a contract.
+  //
+  // This doesn't actually perform the linking on the bytecode, which is done at a later point.
+  // This is done either during `.toParityGenesisAccounts()` for singleton contracts or when instantiating a contract via `.addInstance()`.
   link(libraryContractName, consumingContractName) {
     const libraryContractAddress = this.contracts[libraryContractName]
       .address;
@@ -64,6 +79,7 @@ class ContractRegistry {
     ]);
   }
 
+  // Performs all linking for a contract and returns the linked bytecode.
   linkedBytecodeForContract(contractName) {
     if (!this.contracts[contractName]) {
       throw new Error(`Unknown contract name ${contractName}`);
@@ -83,6 +99,9 @@ class ContractRegistry {
     return bytecode;
   }
 
+  // Instantiate a contract with the provided constructor arguments.
+  //
+  // This is useful when multiple instances of a contract are required, and currently also the only way to deploy a contract that expects constructor arguments.
   addInstance(contractName, instanceName, instanceArguments) {
     if (!this.contracts[contractName]) {
       throw new Error(`Unknown contract name ${contractName}`);
@@ -104,7 +123,7 @@ class ContractRegistry {
     });
   }
 
-  // replaces placeholder in bytecode with address
+  // Replaces linking placeholder in bytecode with address.
   linkBytecode(bytecode, libraryAddress, libraryName) {
     let pattern = '__' + libraryName + '______________________________________';
     pattern = pattern.slice(0, 40);
@@ -113,6 +132,7 @@ class ContractRegistry {
     return bytecode.replace(new RegExp(pattern, 'g'), address);
   }
 
+  // Checks if the provided bytecode is fully linked (= it containsn no linking placeholders).
   checkFullyLinked(bytecode) {
     if (!bytecode) {
       return false;
@@ -121,16 +141,18 @@ class ContractRegistry {
   }
 
 
+  // Generate the "accounts" object for a parity chainspec for all the contracts and instances that have been designated for deployment.
+  //
+  // For that it uses the { "0x...": { "constructor": "0x..." } } version of account intialization which is currently exclusive to parity.
   toParityGenesisAccounts() {
     let output = {
-      accounts: {},
     };
 
     Object.values(this.contracts)
       .filter(n => this.checkFullyLinked(n.bytecode))
       .filter(n => n.deploy)
       .forEach(contract => {
-        output.accounts[contract.address] = {
+        output[contract.address] = {
           balance: '0',
           constructor: contract.bytecode,
         };
@@ -149,7 +171,7 @@ class ContractRegistry {
           let encodedArguments = Web3.eth.abi.encodeParameters(instance.constructorAbi, instance.arguments).slice(2);
           constructorWithArguments = constructorWithArguments + encodedArguments;
         }
-        output.accounts[instance.address] = {
+        output[instance.address] = {
           balance: '0',
           constructor: constructorWithArguments,
         };
@@ -158,6 +180,7 @@ class ContractRegistry {
     return output;
   }
 
+  // Returns an object that has a similar interface to a truffle deployer, for creating a genesis file from a truffle migration script.
   truffleDeployer() {
     const deployer = {
       deploy: contract => {
@@ -172,6 +195,18 @@ class ContractRegistry {
     };
 
     return deployer;
+  }
+
+  // Helper for `.addContract` that allows for easier adding of object that follow the truffle-contract-schema.
+  //
+  // See: https://github.com/trufflesuite/truffle/tree/66e3b1cb10df881d80e2a22ddea68e9dcfbdcdb1/packages/truffle-contract-schema
+  addTruffleContract(truffleContract, options = {}) {
+    const inferredOptions = {};
+    const constructorAbi = truffleContract.abi.find(n => n.type === 'constructor');
+    if (constructorAbi) {
+      inferredOptions.constructorAbi = constructorAbi.inputs;
+    }
+    this.addContract(truffleContract.contractName, truffleContract.bytecode, Object.assign(inferredOptions, options));
   }
 }
 
