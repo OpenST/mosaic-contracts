@@ -25,7 +25,7 @@ const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
-const KernelGateway = artifacts.require('MockKernelGateway');
+const KernelGateway = artifacts.require('TestKernelGateway');
 
 contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
 

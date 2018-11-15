@@ -15,7 +15,7 @@ const	MessageBusWrapper = artifacts.require('./test/MessageBusWrapper');
 const	MockMerklePatriciaProof = artifacts.require('./test/MockMerklePatriciaProof');
 const	MerklePatriciaProofTest = artifacts.require('./MerklePatriciaProofTest');
 const	MerklePatriciaProof = artifacts.require('./MerklePatriciaProof');
-const	MockKernelGateway = artifacts.require('MockKernelGateway');
+const	TestKernelGateway = artifacts.require('TestKernelGateway');
 const	KernelGateway = artifacts.require('KernelGateway');
 
 module.exports = function(deployer) {
@@ -25,7 +25,7 @@ module.exports = function(deployer) {
 	deployer.link(MerklePatriciaProof, MessageBus);
 	deployer.deploy(MessageBus);
 
-	deployer.link(MerklePatriciaProof, [GatewayLib, KernelGateway, MockKernelGateway]);
+	deployer.link(MerklePatriciaProof, [GatewayLib, KernelGateway, TestKernelGateway]);
 	deployer.deploy(GatewayLib);
 	deployer.deploy(MockGatewayLib);
 	deployer.deploy(MetaBlock);

@@ -20,7 +20,7 @@
 
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
-const KernelGateway = artifacts.require('MockKernelGateway');
+const KernelGateway = artifacts.require('TestKernelGateway');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getOpenKernelHash()', async (accounts) => {

@@ -17,8 +17,8 @@ pragma solidity ^0.4.23;
 import "../../core/KernelGateway.sol";
 import "../MockProofResults.sol";
 
-/** @title The Mock kernel gateway on auxiliary. */
-contract MockKernelGateway is KernelGateway{
+/** @title The Test kernel gateway on auxiliary. */
+contract TestKernelGateway is KernelGateway{
 
     /** Used for mocking the results of merkle proof. */
     MockProofResults mockResult;
