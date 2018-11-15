@@ -263,7 +263,7 @@ contract PollingPlace is PollingPlaceInterface {
      *
      * @return `true` if the update was successful.
      */
-    function updateMetaBlockHeight(
+    function updateMetaBlock(
         address[] _validators,
         uint256[] _weights,
         uint256 _originHeight,

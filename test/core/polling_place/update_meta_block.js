@@ -25,7 +25,7 @@ const BlockStoreMock = artifacts.require('BlockStoreMock');
 const PollingPlace = artifacts.require('PollingPlace');
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
+contract('PollingPlace.updateMetaBlock()', async (accounts) => {
 
   let pollingPlace;
   let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
@@ -113,7 +113,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100), new BN(150)];
 
     //Call via Auxiliary block store.
-    let result = await auxiliaryBlockStore.updateMetaBlockHeight.call(
+    let result = await auxiliaryBlockStore.updateMetaBlock.call(
       newValidators,
       newWeights,
       new BN(1),
@@ -125,7 +125,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
       "Update meta block height must return success"
     );
 
-    await auxiliaryBlockStore.updateMetaBlockHeight(
+    await auxiliaryBlockStore.updateMetaBlock(
       newValidators,
       newWeights,
       new BN(1),
@@ -185,7 +185,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100), new BN(150)];
 
     await Utils.expectRevert(
-      pollingPlace.updateMetaBlockHeight.call(
+      pollingPlace.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -204,7 +204,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100)];
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -218,7 +218,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     newWeights = [new BN(100), new BN(150)];
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -236,7 +236,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100), new BN(0)];
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -254,7 +254,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100), new BN(150)];
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -272,7 +272,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100), new BN(150)];
 
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         newValidators,
         newWeights,
         new BN(1),
@@ -290,7 +290,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     let newWeights = [new BN(100)];
 
     // valid case
-    await auxiliaryBlockStore.updateMetaBlockHeight(
+    await auxiliaryBlockStore.updateMetaBlock(
       newValidators,
       newWeights,
       new BN(1),
@@ -298,7 +298,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     );
 
     // valid case
-    await auxiliaryBlockStore.updateMetaBlockHeight(
+    await auxiliaryBlockStore.updateMetaBlock(
       [],
       [],
       new BN(4),
@@ -306,7 +306,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
     );
 
     // valid case
-    await auxiliaryBlockStore.updateMetaBlockHeight(
+    await auxiliaryBlockStore.updateMetaBlock(
       [],
       [],
       new BN(5),
@@ -315,7 +315,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
 
     // invalid case
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         [],
         [],
         new BN(3),
@@ -326,7 +326,7 @@ contract('PollingPlace.updateMetaBlockHeight()', async (accounts) => {
 
     // invalid case
     await Utils.expectRevert(
-      auxiliaryBlockStore.updateMetaBlockHeight.call(
+      auxiliaryBlockStore.updateMetaBlock.call(
         [],
         [],
         new BN(200),

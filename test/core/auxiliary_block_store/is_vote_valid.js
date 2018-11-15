@@ -696,7 +696,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 ],
                 activeKernel,
             );
-            
+
         });
     });
 

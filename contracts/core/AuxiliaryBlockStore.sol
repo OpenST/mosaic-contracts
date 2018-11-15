@@ -412,7 +412,7 @@ contract AuxiliaryBlockStore is BlockStore {
              * Report polling place about new validators and new finalized
              * block heights.
              */
-            PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
+            PollingPlaceInterface(pollingPlace).updateMetaBlock(
                 updatedValidators,
                 updatedWeights,
                 originBlockStore.getCurrentDynasty(),

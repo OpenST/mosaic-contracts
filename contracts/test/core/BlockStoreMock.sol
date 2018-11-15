@@ -171,9 +171,9 @@ contract BlockStoreMock is BlockStoreInterface {
     }
 
     /**
-     * @notice function `updateMetaBlockHeight` of polling place can only be
+     * @notice function `updateMetaBlock` of polling place can only be
      *         called by auxiliary block store. This function is used for
-     *         testing to call `updateMetaBlockHeight` of `PollingPlace`
+     *         testing to call `updateMetaBlock` of `PollingPlace`
      *         contract
      *
      * @dev We cannot use dummy address for this testing. A mock
@@ -191,7 +191,7 @@ contract BlockStoreMock is BlockStoreInterface {
      *
      * @return bool `true` if the update was successful.
      */
-    function updateMetaBlockHeight(
+    function updateMetaBlock(
         address[] _validators,
         uint256[] _weights,
         uint256 _originHeight,
@@ -200,7 +200,7 @@ contract BlockStoreMock is BlockStoreInterface {
         external
         returns (bool success_)
     {
-        success_ = PollingPlaceInterface(pollingPlace).updateMetaBlockHeight(
+        success_ = PollingPlaceInterface(pollingPlace).updateMetaBlock(
             _validators,
             _weights,
             _originHeight,

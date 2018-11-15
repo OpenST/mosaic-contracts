@@ -34,7 +34,7 @@ contract MockPollingPlace {
     }
 
     /**
-     * @notice Mock the behaviour of `updateMetaBlockHeight` function
+     * @notice Mock the behaviour of `updateMetaBlock` function
      *
      * @param _validators The addresses of the new validators on the auxiliary
      *                    chain.
@@ -47,7 +47,7 @@ contract MockPollingPlace {
      *
      * @return `true` Mock result
      */
-    function updateMetaBlockHeight(
+    function updateMetaBlock(
         address[] _validators,
         uint256[] _weights,
         uint256 _originHeight,
@@ -64,7 +64,7 @@ contract MockPollingPlace {
      * @notice function `justify` in auxiliary block store can be called only
      *         by polling place. The auxiliary block store has to be a contract
      *         and cannot be a dummy address. This is because function
-     *         `updateMetaBlockHeight` is called from auxiliary block store
+     *         `updateMetaBlock` is called from auxiliary block store
      *         when justify is called. So this function is used to delegate the
      *         justify call from polling place.
      *

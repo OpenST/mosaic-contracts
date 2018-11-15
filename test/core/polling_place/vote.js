@@ -713,7 +713,7 @@ contract('PollingPlace.vote()', async (accounts) => {
     it('should accept a vote for a target height greater than open meta-block', async () => {
 
         await auxiliaryBlockStore.setPollingPlace(pollingPlace.address);
-        await auxiliaryBlockStore.updateMetaBlockHeight(
+        await auxiliaryBlockStore.updateMetaBlock(
             [],
             [],
             new BN('19850912'),
@@ -739,7 +739,7 @@ contract('PollingPlace.vote()', async (accounts) => {
     it('should not accept a vote for a target height less than open meta-block', async () => {
 
         await auxiliaryBlockStore.setPollingPlace(pollingPlace.address);
-        await auxiliaryBlockStore.updateMetaBlockHeight(
+        await auxiliaryBlockStore.updateMetaBlock(
             [],
             [],
             new BN('19891109'),
