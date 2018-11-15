@@ -12,7 +12,7 @@ const web3 = require('web3');
 class ContractRegistry {
   constructor() {
     this.startAddress = '0x0000000000000000000000000000000000000100';
-    this.nextAvailableAddress = web3.utils.hexToBytes(this.startAddress);
+    this.nextAvailableAddress = this.startAddress;
     this.contracts = {};
     this.instances = [];
 
@@ -30,8 +30,9 @@ class ContractRegistry {
 
   // Used for automatic address distribution (which we can do for a genesis deployment).
   takeNextAddress() {
-    const addressHex = web3.utils.bytesToHex(this.nextAvailableAddress);
-    this.nextAvailableAddress[this.nextAvailableAddress.length - 1] += 1;
+    const addressHex = this.nextAvailableAddress;
+    const nextAddressBN = web3.utils.toBN(addressHex).add(web3.utils.toBN('1'));
+    this.nextAvailableAddress = '0x' + web3.utils.padLeft(nextAddressBN, 40);
     return addressHex;
   }
 
