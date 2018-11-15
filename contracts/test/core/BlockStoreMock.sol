@@ -42,6 +42,7 @@ contract BlockStoreMock is BlockStoreInterface {
     bool public isBlockReported;
     PollingPlaceInterface public pollingPlace;
     bytes32 public transitionHash;
+    bytes32 public auxiliaryTransitionHash;
     KernelGatewayInterface public kernelGateway;
 
     /* External Functions */
@@ -86,6 +87,10 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setTransitionHash(bytes32 _transitionHash) external {
         transitionHash = _transitionHash;
+    }
+
+    function setAuxiliaryTransitionHash(bytes32 _transitionHash) external {
+        auxiliaryTransitionHash = _transitionHash;
     }
 
     function setKernelGateway(KernelGatewayInterface _kernelGateway) external {
@@ -211,6 +216,16 @@ contract BlockStoreMock is BlockStoreInterface {
         returns (bytes32)
     {
         return transitionHash;
+    }
+
+    function auxiliaryTransitionHashAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return auxiliaryTransitionHash;
     }
 
     /**

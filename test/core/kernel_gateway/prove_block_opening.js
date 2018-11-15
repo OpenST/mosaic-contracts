@@ -102,7 +102,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     await setStorageProof(kernelHash, true);
 
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
-    await auxiliaryBlockStore.setTransitionHash(transitionHash);
+    await auxiliaryBlockStore.setAuxiliaryTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
 
   });
@@ -426,7 +426,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when auxiliary block hash is not valid', async () => {
 
-    await auxiliaryBlockStore.setTransitionHash(zeroBytes);
+    await auxiliaryBlockStore.setAuxiliaryTransitionHash(zeroBytes);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(

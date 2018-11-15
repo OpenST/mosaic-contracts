@@ -234,7 +234,7 @@ contract AuxiliaryBlockStore is BlockStore {
      * @return transactionRoot_ The root of trie created by the auxiliary block
                                 store from the transaction roots of all blocks.
      */
-    function  auxiliaryTransitionObjectAtBlock(
+    function auxiliaryTransitionObjectAtBlock(
         bytes32 _blockHash
     )
         external
@@ -277,7 +277,7 @@ contract AuxiliaryBlockStore is BlockStore {
      *
      * @return transitionHash_ Hash of transition object at the checkpoint.
      */
-    function transitionHashAtBlock(
+    function auxiliaryTransitionHashAtBlock(
         bytes32 _blockHash
     )
         external

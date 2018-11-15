@@ -77,9 +77,10 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
 
         let expectedTransitionHash = MetaBlockUtils.hashAuxiliaryTransition(auxiliaryTransitionObject);
 
-        let transitionHash = await  blockStore.transitionHashAtBlock.call(
-            initialBlockHash
-        );
+        let transitionHash =
+            await blockStore.auxiliaryTransitionHashAtBlock.call(
+                initialBlockHash
+            );
 
         assert.strictEqual(
             transitionHash,
@@ -95,7 +96,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
         let wrongBlockHash = web3.utils.sha3("wrong block hash");
 
         await Utils.expectRevert(
-             blockStore.transitionHashAtBlock.call(wrongBlockHash),
+             blockStore.auxiliaryTransitionHashAtBlock.call(wrongBlockHash),
              'Checkpoint not defined for given block hash.'
         );
 

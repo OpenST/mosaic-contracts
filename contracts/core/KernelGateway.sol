@@ -20,6 +20,7 @@ import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 import "../lib/SafeMath.sol";
 import "../lib/MetaBlock.sol";
+import "./AuxiliaryTransitionObjectInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
 contract KernelGateway {
@@ -556,9 +557,10 @@ contract KernelGateway {
         view
         returns (bytes32 metaBlockHash_)
     {
-        bytes32 transitionHash = auxiliaryBlockStore.transitionHashAtBlock(
-            _blockHash
-        );
+        bytes32 transitionHash =
+            AuxiliaryTransitionObjectInterface(auxiliaryBlockStore).auxiliaryTransitionHashAtBlock(
+                _blockHash
+            );
 
         metaBlockHash_ = MetaBlock.hashMetaBlock(
             activeKernelHash,
