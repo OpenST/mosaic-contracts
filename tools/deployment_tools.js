@@ -175,6 +175,13 @@ class ContractRegistry {
   }
 }
 
+const loadTruffleContract = (contractName) => {
+  const fs = require('fs');
+  const contents = fs.readFileSync(`${__dirname}/../build/contracts/${contractName}.json`);
+  return JSON.parse(contents);
+}
+
 module.exports = {
-  ContractRegistry
+  ContractRegistry,
+  loadTruffleContract,
 };
