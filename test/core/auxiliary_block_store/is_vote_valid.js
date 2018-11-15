@@ -696,58 +696,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 ],
                 activeKernel,
             );
-
-            await pollingPlace.justify(
-                testBlocks[6].hash,
-                testBlocks[8].hash,
-            );
-
-            await openNewKernel(5);
-
-            await AuxStoreUtils.testValidVotes(
-                blockStore,
-                coreIdentifier,
-                [
-                    {
-                        dynasty: new BN('4'),
-                        source: testBlocks[8].hash,
-                        target: testBlocks[10].hash,
-                        accumulatedGas: testBlocks[8].accumulatedGas,
-                        accumulatedTransactionRoot: testBlocks[8].accumulatedTransactionRoot,
-                    },
-                    {
-                        dynasty: new BN('4'),
-                        source: testBlocks[8].hash,
-                        target: testBlocks[12].hash,
-                        accumulatedGas: testBlocks[8].accumulatedGas,
-                        accumulatedTransactionRoot: testBlocks[8].accumulatedTransactionRoot,
-                    },
-                ],
-                activeKernel,
-            );
-
-            await pollingPlace.justify(
-                testBlocks[8].hash,
-                testBlocks[10].hash,
-            );
-
-            await openNewKernel(6);
-
-            await AuxStoreUtils.testValidVotes(
-                blockStore,
-                coreIdentifier,
-                [
-                    {
-                        dynasty: new BN('5'),
-                        source: testBlocks[10].hash,
-                        target: testBlocks[12].hash,
-                        accumulatedGas: testBlocks[10].accumulatedGas,
-                        accumulatedTransactionRoot: testBlocks[10].accumulatedTransactionRoot,
-                    },
-                ],
-                activeKernel,
-            );
-
+            
         });
     });
 
