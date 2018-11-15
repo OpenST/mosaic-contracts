@@ -6,6 +6,8 @@ const registry = new ContractRegistry();
 
 const EIP20Token = loadTruffleContract('EIP20Token');
 registry.addTruffleContract(EIP20Token);
-registry.addInstance(EIP20Token.contractName, 'MyEIP20', ['MYT', 'MyToken', 18]);
+registry.addInstance(EIP20Token.contractName, 'MyEIP20', ['MYT', 'MyToken', 18], {
+  address: '0x0000000000444440000000000000000000000100'
+});
 
 console.log(JSON.stringify(registry.toParityGenesisAccounts(), null, 4));

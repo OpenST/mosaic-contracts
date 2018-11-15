@@ -38,18 +38,19 @@ class ContractRegistry {
 
   // Add a contract to the registry.
   //
-  // `options.deploy` determines if a contract should be designated for deployment or not.
-  // It should be set to `true` for contracts where only a single instance is required without constructor arguments (e.g. libraries).
-  // For contracts with possibly multiple instances, it should be set to `false` (default) and then intantiated via `.instantiate()`
+  // Options:
+  // - `deploy` determines if a contract should be designated for deployment or not.
+  //   It should be set to `true` for contracts where only a single instance is required without constructor arguments (e.g. libraries).
+  //   For contracts with possibly multiple instances, it should be set to `false` (default) and then intantiated via `.instantiate()`
+  // - `address` allows you to specify a address where the contract should be deployed.
   addContract(contractName, contractBytecode, options = { deploy: false }) {
-    const addressHex = this.takeNextAddress();
     this.contracts[contractName] = Object.assign(
       {
         linkReplacements: [],
       },
       this.contracts[contractName], // We might have set linkReplacements before
       {
-        address: addressHex,
+        address: options.address || this.takeNextAddress(),
         bytecode: contractBytecode,
         deploy: options.deploy,
         constructorAbi: options.constructorAbi
@@ -103,7 +104,10 @@ class ContractRegistry {
   // Instantiate a contract with the provided constructor arguments.
   //
   // This is useful when multiple instances of a contract are required, and currently also the only way to deploy a contract that expects constructor arguments.
-  addInstance(contractName, instanceName, instanceArguments) {
+  //
+  // Options:
+  // - `address` allows you to specify a address where the contract should be deployed.
+  addInstance(contractName, instanceName, instanceArguments, options = {}) {
     if (!this.contracts[contractName]) {
       throw new Error(`Unknown contract name ${contractName}`);
     }
@@ -120,7 +124,7 @@ class ContractRegistry {
       name: instanceName,
       arguments: instanceArguments,
       constructorAbi: contract.constructorAbi,
-      address: this.takeNextAddress(),
+      address: options.address || this.takeNextAddress(),
     });
   }
 
