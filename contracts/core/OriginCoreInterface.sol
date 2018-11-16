@@ -118,20 +118,6 @@ interface OriginCoreInterface {
         returns (uint256);
 
     /**
-     * @notice Get the state root of a meta-block.
-     *
-     * @param _blockHeight For which block height to get the state root.
-     *
-     * @return The state root of the meta-block.
-     */
-    function getStateRoot(
-        uint256 _blockHeight
-    )
-        external
-        view
-        returns (bytes32 stateRoot_);
-
-    /**
      * @notice Get accumulated gas target for next meta-block.
      *
      * @return Accumulated gas target.

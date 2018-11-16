@@ -31,10 +31,6 @@ contract CoreInterface {
 	/** Public functions */
 
 	function chainIdRemote() public view returns (uint256 /** chainIdRemote */);
-	/** get highest state root block height for which state root is committed. */
-	function getLatestStateRootBlockHeight() public view returns (uint256 /** latest state root block height */);
-	function getStateRoot(uint256 _blockHeight) public view returns (bytes32 /** state root */);
-
 
 	/** External functions */
 
