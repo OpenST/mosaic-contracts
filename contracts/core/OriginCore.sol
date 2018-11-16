@@ -119,13 +119,13 @@ contract OriginCore is
      */
     mapping(bytes32 => MetaBlock.Seal) public seals;
 
-    /* private variables. */
+    /* internal variables. */
 
     /** Latest block height of block for which state root was committed. */
-    uint256 private latestStateRootBlockHeight;
+    uint256 internal latestStateRootBlockHeight;
 
     /** Mapping of block height to the state roots. */
-    mapping (uint256 => bytes32) private stateRoots;
+    mapping (uint256 => bytes32) internal stateRoots;
 
     /* Constructor */
 
