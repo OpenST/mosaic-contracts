@@ -674,7 +674,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     )
         private
     {
-        uint256 height = openKernel.height;
+        uint256 openKernelHeight = openKernel.height;
 
         bytes32 metaBlockHash = MetaBlock.hashMetaBlock(
             _kernelHash,
@@ -689,13 +689,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
 
         /* Update head */
         head = metaBlockHash;
-        openNextKernel(height, metaBlockHash);
+        openNextKernel(openKernelHeight, metaBlockHash);
 
         emit MetaBlockCommitted(
             _kernelHash,
             _transitionHash,
             metaBlockHash,
-            height,
+            openKernelHeight,
             _verifiedWeight,
             _requiredWeight
         );
