@@ -208,8 +208,15 @@ contract BlockStoreMock is BlockStoreInterface {
         );
     }
 
+    /**
+     * @notice Returns mocked transition hash.
+     *
+     * @dev Only for testing.
+     *
+     * @return Mocked transition hash.
+     */
     function transitionHashAtBlock(
-        bytes32 _blockHash
+        bytes32
     )
         external
         view
@@ -218,8 +225,15 @@ contract BlockStoreMock is BlockStoreInterface {
         return transitionHash;
     }
 
+    /**
+     * @notice Returns mocked value of auxiliary transition hash.
+     *
+     * @dev Only for testing.
+     *
+     * @return Mocked Hash of transition object.
+     */
     function auxiliaryTransitionHashAtBlock(
-        bytes32 _blockHash
+        bytes32
     )
         external
         view
@@ -231,7 +245,7 @@ contract BlockStoreMock is BlockStoreInterface {
     /**
      * @notice function `activateKernel` of kernel gateway can only be called by
      *         auxiliary block store. This function is used for testing to call
-     *         `activateKernel` of `KernelGateway` contract
+     *         `activateKernel` of `KernelGateway` contract.
      *
      * @dev We cannot use dummy address for activate kernel testing. A mock
      *      contract is needed, as in the constructor `getCoreIdentifier` is
@@ -239,7 +253,7 @@ contract BlockStoreMock is BlockStoreInterface {
      *
      * @param _kernelHash kernel hash.
      *
-     * @return bool `true` if success
+     * @return bool `true` if success.
      */
     function activateKernel(bytes32 _kernelHash)
         external

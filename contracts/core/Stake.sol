@@ -324,6 +324,13 @@ contract Stake is StakeInterface {
         external
         returns (bool success_)
     {
+        /*
+         * @dev below lines are to silence the compiler warnings. Once this
+         *      function is implemented this will be removed.
+         */
+        _validatorIndex;
+        success_;
+
         revert("This method is not implemented.");
     }
 
@@ -344,6 +351,13 @@ contract Stake is StakeInterface {
         external
         returns (bool success_)
     {
+        /*
+         * @dev below lines are to silence the compiler warnings. Once this
+         *      function is implemented this will be removed.
+         */
+        _validatorIndex;
+        success_;
+
         revert("This method is not implemented.");
     }
 
@@ -363,6 +377,14 @@ contract Stake is StakeInterface {
         external
         returns (bool slashed_)
     {
+        /*
+         * @dev below lines are to silence the compiler warnings. Once this
+         *      function is implemented this will be removed.
+         */
+        _firstVoteMessage;
+        _secondVoteMessage;
+        slashed_;
+
         revert("This method is not implemented.");
     }
 

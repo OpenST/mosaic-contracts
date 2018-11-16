@@ -389,6 +389,7 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
             );
         }
 
+        success_ = true;
     }
 
     /**
@@ -439,6 +440,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         view
         returns (bytes32 stateRoot_)
     {
+        /*
+         * @dev below lines are to silence the compiler warnings. Once this
+         *      function is implemented this will be removed.
+         */
+        _blockHeight;
+        stateRoot_;
+
         revert("Method not implemented.");
     }
 

@@ -40,17 +40,17 @@ contract MockCore is Core {
 	{}
 	
 	/**
-	  * @notice get storage root for a given block height
+	  * @notice Get the mocked storage root for a given block height.
 	  *
-	  * @dev this is for testing only so the data is mocked here
+	  * @dev This is for testing only so the data is mocked here.
 	  *
-	  * @param _blockHeight block height for which storage root is needed
+	  * @param _blockHeight Block height for which storage root is needed.
 	  *
-	  * @return bytes32 storage root
+	  * @return bytes32 Mocked value of storage root.
 	  */
 	function getStorageRoot(uint256 _blockHeight)
 		public
-		view
+		pure
 		returns (bytes32)
 	{
 		return keccak256(abi.encodePacked(_blockHeight));
