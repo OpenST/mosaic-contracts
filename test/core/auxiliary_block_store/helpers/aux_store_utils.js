@@ -72,8 +72,9 @@ AuxStoreUtils.prototype = {
      * @param {BlockStore} blockStore Where to validate the votes.
      * @param {string} coreIdentifier The core identifier of the votes.
      * @param {object} votes An array of valid vote objects.
+     * @param {string} kernel hash.
      */
-    testValidVotes: async (blockStore, coreIdentifier, votes) => {
+    testValidVotes: async (blockStore, coreIdentifier, votes, kernelHash) => {
         let count = votes.length;
 
         for (let i = 0; i < count; i++) {
@@ -81,7 +82,7 @@ AuxStoreUtils.prototype = {
 
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: kernelHash,
                 auxiliaryDynasty: vote.dynasty,
                 auxiliaryBlockHash: vote.source,
                 gas: vote.accumulatedGas,

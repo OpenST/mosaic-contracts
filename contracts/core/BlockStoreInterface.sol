@@ -136,4 +136,5 @@ interface BlockStoreInterface {
         external
         view
         returns (bool reported_);
+
 }

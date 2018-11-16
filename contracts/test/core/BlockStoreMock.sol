@@ -15,6 +15,8 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "../../core/BlockStoreInterface.sol";
+import "../../core/PollingPlaceInterface.sol";
+import "../../core/KernelGatewayInterface.sol";
 
 /**
  * @notice BlockStoreMock implements the BlockStoreInterface. It returns pre-
@@ -38,6 +40,10 @@ contract BlockStoreMock is BlockStoreInterface {
     uint256 public latestBlockHeight;
     bool public isVoteValid;
     bool public isBlockReported;
+    PollingPlaceInterface public pollingPlace;
+    bytes32 public transitionHash;
+    bytes32 public auxiliaryTransitionHash;
+    KernelGatewayInterface public kernelGateway;
 
     /* External Functions */
 
@@ -73,6 +79,22 @@ contract BlockStoreMock is BlockStoreInterface {
 
     function setIsBlockReported(bool _isReported) external {
         isBlockReported = _isReported;
+    }
+
+    function setPollingPlace(PollingPlaceInterface _pollingPlace) external {
+        pollingPlace = _pollingPlace;
+    }
+
+    function setTransitionHash(bytes32 _transitionHash) external {
+        transitionHash = _transitionHash;
+    }
+
+    function setAuxiliaryTransitionHash(bytes32 _transitionHash) external {
+        auxiliaryTransitionHash = _transitionHash;
+    }
+
+    function setKernelGateway(KernelGatewayInterface _kernelGateway) external {
+        kernelGateway = _kernelGateway;
     }
 
     /* The methods of the interface, returning values from storage. */
@@ -146,5 +168,83 @@ contract BlockStoreMock is BlockStoreInterface {
         returns (bool reported_)
     {
         reported_ = isBlockReported;
+    }
+
+    /**
+     * @notice function `updateMetaBlock` of polling place can only be
+     *         called by auxiliary block store. This function is used for
+     *         testing to call `updateMetaBlock` of `PollingPlace`
+     *         contract
+     *
+     * @dev We cannot use dummy address for this testing. A mock
+     *      contract is needed, as in the constructor `getCoreIdentifier` is
+     *      called on the auxiliary block store contract.
+     *
+     * @param _validators The addresses of the new validators on the auxiliary
+     *                    chain.
+     * @param _weights The weights of the validators.
+     * @param _originHeight The height of the origin chain where the new
+     *                      meta-block opens.
+     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
+     *                         the last finalised checkpoint within the
+     *                         previous, closed meta-block.
+     *
+     * @return bool `true` if the update was successful.
+     */
+    function updateMetaBlock(
+        address[] _validators,
+        uint256[] _weights,
+        uint256 _originHeight,
+        uint256 _auxiliaryHeight
+    )
+        external
+        returns (bool success_)
+    {
+        success_ = PollingPlaceInterface(pollingPlace).updateMetaBlock(
+            _validators,
+            _weights,
+            _originHeight,
+            _auxiliaryHeight
+        );
+    }
+
+    function transitionHashAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return transitionHash;
+    }
+
+    function auxiliaryTransitionHashAtBlock(
+        bytes32 _blockHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return auxiliaryTransitionHash;
+    }
+
+    /**
+     * @notice function `activateKernel` of kernel gateway can only be called by
+     *         auxiliary block store. This function is used for testing to call
+     *         `activateKernel` of `KernelGateway` contract
+     *
+     * @dev We cannot use dummy address for activate kernel testing. A mock
+     *      contract is needed, as in the constructor `getCoreIdentifier` is
+     *      called on the auxiliary block store contract.
+     *
+     * @param _kernelHash kernel hash.
+     *
+     * @return bool `true` if success
+     */
+    function activateKernel(bytes32 _kernelHash)
+        external
+        returns (bool)
+    {
+        return kernelGateway.activateKernel(_kernelHash);
     }
 }
