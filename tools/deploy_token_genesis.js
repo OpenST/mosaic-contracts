@@ -1,4 +1,4 @@
-// This script is expected to be called via truffle exec
+// Demonstrates a genesis deployment of a EIP20Token
 const ContractRegistry = require('./deployment_tools.js').ContractRegistry;
 const loadTruffleContract = require('./deployment_tools.js').loadTruffleContract;
 
