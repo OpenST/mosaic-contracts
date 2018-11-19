@@ -393,14 +393,15 @@ contract EIP20Gateway is Gateway {
             "Message hash must not be zero"
         );
 
+        // Get the message object
+        MessageBus.Message storage message = messages[_messageHash];
+
         (staker_, stakeAmount_) = progressStakingInternal(
             _messageHash,
+            message,
             _unlockSecret,
             false
         );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
 
         // Progress outbox
         MessageBus.progressOutbox(
@@ -458,14 +459,15 @@ contract EIP20Gateway is Gateway {
             "Storage root must not be zero"
         );
 
+        // Get the message object
+        MessageBus.Message storage message = messages[_messageHash];
+
         (staker_, stakeAmount_) = progressStakingInternal(
             _messageHash,
+            message,
             bytes32(0),
             true
         );
-
-        // Get the message object
-        MessageBus.Message storage message = messages[_messageHash];
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -1008,6 +1010,7 @@ contract EIP20Gateway is Gateway {
      * @notice Internal function contains logic for process staking.
      *
      * @param _messageHash Message hash.
+     * @param _message Message object.
      * @param _unlockSecret For process with hash lock, proofProgress event
      *                      param is set to false otherwise set to true.
      *
@@ -1016,6 +1019,7 @@ contract EIP20Gateway is Gateway {
      */
     function progressStakingInternal(
         bytes32 _messageHash,
+        MessageBus.Message storage _message,
         bytes32 _unlockSecret,
         bool _proofProgress
     )
@@ -1026,10 +1030,8 @@ contract EIP20Gateway is Gateway {
         )
     {
 
-        MessageBus.Message storage message = messages[_messageHash];
-
         // Get the staker address
-        staker_ = message.sender;
+        staker_ = _message.sender;
 
         //Get the stake amount
         stakeAmount_ = stakes[_messageHash].amount;
@@ -1045,7 +1047,7 @@ contract EIP20Gateway is Gateway {
         emit ProgressedStake(
             _messageHash,
             staker_,
-            message.nonce,
+            _message.nonce,
             stakeAmount_,
             _proofProgress,
             _unlockSecret
