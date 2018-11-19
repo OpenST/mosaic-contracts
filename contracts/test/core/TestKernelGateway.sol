@@ -158,4 +158,19 @@ contract TestKernelGateway is KernelGateway{
         );
     }
 
+    /**
+     * @notice Set the mock storage root data.
+     *
+     * @param _storageRoot The mocked storage root value.
+     * @param _parent The hash of this meta-block's parent.
+     * @param _blockHeight The block height for storage root.
+     */
+    function setStorageRoot(
+        bytes32 _storageRoot,
+        uint256 _blockHeight
+    )
+        external
+    {
+        storageRoots[_blockHeight] = _storageRoot;
+    }
 }

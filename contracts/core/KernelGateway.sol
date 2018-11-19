@@ -28,6 +28,8 @@ contract KernelGateway is KernelGatewayInterface{
     using SafeMath for uint256;
 
     /* Events */
+
+    /** Emit event when open kernel in origin core is proven. */
     event OpenKernelProven(
         bytes20 _originCoreIdentifier,
         bytes20 _auxiliaryCoreIdentifier,
@@ -37,11 +39,20 @@ contract KernelGateway is KernelGatewayInterface{
         uint256 _activationDynasty
     );
 
+    /** Emit event when proven open kernel is confirmed in auxiliary. */
     event OpenKernelConfirmed(
         bytes20 _originCoreIdentifier,
         bytes20 _auxiliaryCoreIdentifier,
         bytes32 _kernelHash,
         uint256 _currentDynasty
+    );
+
+    /** Emit event origin core account is proven. */
+    event OriginCoreProven(
+        address _originCore,
+        uint256 _blockHeight,
+        bytes32 _storageRoot,
+        bool _wasAlreadyProved
     );
 
     /** Index of kernel hash storage location in origin core. */
@@ -66,6 +77,9 @@ contract KernelGateway is KernelGatewayInterface{
 
     /** A mapping of kernel hash to the kernel object. */
     mapping(bytes32 => MetaBlock.Kernel) public kernels;
+
+    /** A mapping of origin block height to the storage root of origin core. */
+    mapping(uint256 => bytes32) public storageRoots;
 
     /** The hash of the currently active kernel. */
     bytes32 private activeKernelHash;
@@ -167,6 +181,84 @@ contract KernelGateway is KernelGatewayInterface{
     }
 
     /**
+     * @notice Prove origin core account and update the latest storage root of
+     *         origin core. This function will validate the proof against the
+     *         state root from the OriginBlockStore
+     *
+     * @param _accountRlp RLP encoded account data.
+     * @param _accountBranchRlp RLP encoded path from root node to leaf node to
+     *                          prove account in merkle tree.
+     * @param _originBlockHeight The block height on origin where the opening
+     *                           took place. Must be a height that is finalised
+     *                           in the OriginBlockStore.
+     *
+     * @return success_ `true` if the proof is successful.
+     */
+    function proveOriginCore(
+        bytes _accountRlp,
+        bytes _accountBranchRlp,
+        uint256 _originBlockHeight
+    )
+        external
+        returns (bool success_)
+    {
+
+        require(
+            _accountRlp.length > 0,
+            "The RLP encoded account must not be zero."
+        );
+
+        require(
+            _accountBranchRlp.length > 0,
+            "The RLP encoded account node path must not be zero."
+        );
+
+        bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
+
+        // State root should be present for the block height
+        require(
+            stateRoot != bytes32(0),
+            "The State root must not be zero."
+        );
+
+        // If account already proven for block height
+        bytes32 storageRoot = storageRoots[_originBlockHeight];
+
+        bool isAlreadyProven = false;
+
+        if (storageRoot != bytes32(0)) {
+
+            isAlreadyProven = true;
+
+        } else {
+
+            storageRoot = getStorageRoot(
+                _accountRlp,
+                _accountBranchRlp,
+                encodedOriginCorePath,
+                stateRoot
+            );
+
+            require(
+                storageRoot != bytes32(0),
+                "The storage root must not be zero."
+            );
+
+            storageRoots[_originBlockHeight] = storageRoot;
+        }
+
+        emit OriginCoreProven(
+            originCore,
+            _originBlockHeight,
+            storageRoot,
+            isAlreadyProven
+        );
+
+        success_ = true;
+
+    }
+
+    /**
      * @notice Prove the opening of a new meta-block on origin. The method will
      *         check the proof against the state root from the OriginBlockStore
      *         given the state trie branch.
@@ -186,8 +278,6 @@ contract KernelGateway is KernelGatewayInterface{
      * @param _storageBranchRlp The trie branch of the state trie of origin
      *                            that proves that the opening took place on
      *                            origin.
-     * @param _accountBranchRlp RLP encoded path from root node to leaf node to
-     *                          prove account in merkle tree.
      * @param _originBlockHeight The block height on origin where the opening
      *                           took place. Must be a height that is finalised
      *                           in the OriginBlockStore.
@@ -201,11 +291,9 @@ contract KernelGateway is KernelGatewayInterface{
         uint256[] _updatedWeights,
         bytes32 _auxiliaryBlockHash,
         bytes _storageBranchRlp,
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
         uint256 _originBlockHeight
     )
-        public
+        external
         returns (bool success_)
     {
         // Check if a kernel is already opened and not yet consumed.
@@ -227,16 +315,6 @@ contract KernelGateway is KernelGatewayInterface{
         require(
             _storageBranchRlp.length > 0,
             "The storage branch rlp must not be zero."
-        );
-
-        require(
-            _accountRlp.length > 0,
-            "The RLP encoded account must not be zero."
-        );
-
-        require(
-            _accountBranchRlp.length > 0,
-            "The RLP encoded account node path must not be zero."
         );
 
         require(
@@ -263,20 +341,7 @@ contract KernelGateway is KernelGatewayInterface{
             _auxiliaryBlockHash
         );
 
-        bytes32 stateRoot = originBlockStore.stateRoot(_originBlockHeight);
-
-        // State root should be present for the block height
-        require(
-            stateRoot != bytes32(0),
-            "The State root must not be zero."
-        );
-
-        bytes32 storageRoot = getStorageRoot(
-            _accountRlp,
-            _accountBranchRlp,
-            encodedOriginCorePath,
-            stateRoot
-        );
+        bytes32 storageRoot = storageRoots[_originBlockHeight];
 
         // Storage root should be present.
         require(
