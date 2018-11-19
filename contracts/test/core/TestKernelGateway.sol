@@ -15,13 +15,9 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "../../core/KernelGateway.sol";
-import "../MockProofResults.sol";
 
 /** @title The Test kernel gateway on auxiliary. */
 contract TestKernelGateway is KernelGateway{
-
-    /** Used for mocking the results of merkle proof. */
-    MockProofResults mockResult;
 
     /* Constructor */
 
@@ -49,63 +45,25 @@ contract TestKernelGateway is KernelGateway{
         )
         public
     {
-        mockResult = new MockProofResults();
+
     }
 
     /**
-     * @notice Set the mock result for the given set of inputs.
-     *
-     * @param _value The terminating value in the trie.
-     * @param _encodedPath The path in the trie leading to value.
-     * @param _rlpParentNodes The rlp encoded stack of nodes.
-     * @param _root The root hash of the trie.
-     * @param _result The value that is expected to return when `verify`
-     *                function is called with these set of input params
-     */
-    function setResult (
-        bytes32 _value,
-        bytes _encodedPath,
-        bytes _rlpParentNodes,
-        bytes32 _root,
-        bool _result
-    )
-        external
-    {
-        mockResult.setResult(
-            _value,
-            _encodedPath,
-            _rlpParentNodes,
-            _root,
-            _result
-        );
-    }
-
-    /**
-     * @notice Mocks the verify function of merkle patricia proof.
-     *
-     * @param _value The terminating value in the trie.
-     * @param _encodedPath The path in the trie leading to value.
-     * @param _rlpParentNodes The rlp encoded stack of nodes.
-     * @param _root The root hash of the trie.
-     *
-     * @return success_ The mocked boolean result
-     */
+    * @notice Mocks the verify function of merkle patricia proof.
+    *
+    * @return success_ `true` to mock the failing scenario.
+    */
     function verify(
-        bytes32 _value,
-        bytes _encodedPath,
-        bytes _rlpParentNodes,
-        bytes32 _root
+        bytes32,
+        bytes,
+        bytes,
+        bytes32
     )
         internal
-        view
+        pure
         returns (bool success_)
     {
-        success_ =  mockResult.verify(
-            _value,
-            _encodedPath,
-            _rlpParentNodes,
-            _root
-        );
+        success_ = true;
     }
 
     /**

@@ -21,6 +21,7 @@
 const web3 = require('../../test_lib/web3.js');
 const testData = require('../../data/proof');
 const KernelGateway = artifacts.require('TestKernelGateway');
+const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const BlockStore = artifacts.require('BlockStoreMock');
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -33,25 +34,13 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
     let originCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
 
     let accountRlp = testData.account.rlpEncodedAccount;
-    let hashedAccount = testData.account.sha3EncodedAccount;
     let accountBranchRlp = testData.account.rlpParentNodes;
     let stateRoot = testData.account.stateRoot;
     let originBlockHeight = new BN(100);
 
     let encodedPath;
 
-    async function setAccountProof(isValid) {
-        await kernelGateway.setResult(
-            hashedAccount,
-            encodedPath,
-            accountBranchRlp,
-            stateRoot,
-            isValid
-        );
-    }
-
-    beforeEach(async function () {
-
+    async function deploy(KernelGateway) {
         // deploy the kernel gateway
         originCore = accounts[1];
         originBlockStore = await BlockStore.new();
@@ -66,8 +55,10 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
         encodedPath = await kernelGateway.encodedOriginCorePath();
         await originBlockStore.setStateRoot(stateRoot);
+    }
 
-        setAccountProof(true);
+    beforeEach(async function () {
+        await deploy(KernelGateway);
     });
 
     it('should fail when rlp account is zero', async () => {
@@ -110,7 +101,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
     it('should fail when merkle proof fails', async () => {
 
-        setAccountProof(false);
+        await deploy(KernelGatewayFail);
 
         await Utils.expectRevert(
             kernelGateway.proveOriginCore.call(

@@ -24,6 +24,7 @@ const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const testData = require('../../data/proof');
 const KernelGateway = artifacts.require('TestKernelGateway');
+const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const BlockStore = artifacts.require('BlockStoreMock');
 
 
@@ -43,29 +44,19 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     transitionHash;
 
   let storageRoot = '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
-  async function setStorageProof(kernelHash, isValid) {
-    await kernelGateway.setResult(
-      web3.utils.soliditySha3({type: 'bytes32', value:kernelHash}),
-      '0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0',
-      storageBranchRlp,
-      storageRoot,
-      isValid
-    );
-  }
 
-  beforeEach(async function () {
-
+  async function deploy(KernelGateway) {
     // deploy the kernel gateway
     originCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
     genesisKernelHash =
-      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+        "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
     kernelGateway = await KernelGateway.new(
-      originCore,
-      originBlockStore.address,
-      auxiliaryBlockStore.address,
-      genesisKernelHash,
+        originCore,
+        originBlockStore.address,
+        auxiliaryBlockStore.address,
+        genesisKernelHash,
     );
 
     height = new BN(2);
@@ -79,12 +70,15 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     kernelHash = "0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4";
     transitionHash = web3.utils.sha3('transitionHash');
 
-    await setStorageProof(kernelHash, true);
     await kernelGateway.setStorageRoot(storageRoot,originBlockHeight);
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
     await auxiliaryBlockStore.setAuxiliaryTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
 
+  }
+
+  beforeEach(async function () {
+    await deploy(KernelGateway);
   });
 
   it('should fail when existing open kernel is present', async () => {
@@ -269,7 +263,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it('should fail when storage proof is invalid', async () => {
 
-    await setStorageProof(kernelHash, false);
+    await await deploy(KernelGatewayFail);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(
