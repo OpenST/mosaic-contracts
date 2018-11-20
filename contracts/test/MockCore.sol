@@ -48,7 +48,9 @@ contract MockCore is Core {
 	  *
 	  * @return bytes32 storage root
 	  */
-	function getStorageRoot(uint256 _blockHeight)
+	function getStorageRoot(
+		uint256 _blockHeight
+	)
 		public
 		view
 		returns (bytes32)
@@ -57,16 +59,18 @@ contract MockCore is Core {
 	}
 
 	/**
-	  * @notice get state root for a given block height
-	  *
-	  * @dev this is for testing only so the data is mocked here
-	  *
-	  * @param _blockHeight block height for which state root is needed
-	  *
-	  * @return bytes32 state root
-	  */
-	function getStateRoot(uint256 _blockHeight)
-		public
+     * @notice Get the state root for the given block height.
+     *
+     * @dev this is for testing only so the data is mocked here
+     *
+     * @param _blockHeight The block height for which the state root is fetched.
+     *
+     * @return bytes32 State root at the given height.
+     */
+	function getStateRoot(
+		uint256 _blockHeight
+	)
+		external
 		view
 		returns (bytes32)
 	{
