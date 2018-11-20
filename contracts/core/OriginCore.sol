@@ -20,11 +20,15 @@ import "./OriginCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
+import "../StateRootInterface.sol";
 
 /**
  * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
  */
-contract OriginCore is OriginCoreInterface, OriginCoreConfig {
+contract OriginCore is
+    OriginCoreInterface,
+    OriginCoreConfig,
+    StateRootInterface {
     using SafeMath for uint256;
 
     /* Events */
@@ -114,6 +118,14 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
      * meta-block with seal i.e. votes by validators.
      */
     mapping(bytes32 => MetaBlock.Seal) public seals;
+
+    /* internal variables. */
+
+    /** Latest block height of block for which state root was committed. */
+    uint256 internal latestStateRootBlockHeight;
+
+    /** Mapping of block height to the state roots. */
+    mapping (uint256 => bytes32) internal stateRoots;
 
     /* Constructor */
 
@@ -427,11 +439,13 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
     }
 
     /**
-     * @notice Get the state root of a meta-block.
+     * @notice Get the state root for the given block height.
      *
-     * @param _blockHeight For which blockheight to get the state root.
+     * @dev State root are from the auxiliary chain.
      *
-     * @return The state root of the meta-block.
+     * @param _blockHeight The block height for which the state root is fetched.
+     *
+     * @return bytes32 State root at the given height.
      */
     function getStateRoot(
         uint256 _blockHeight
@@ -440,14 +454,23 @@ contract OriginCore is OriginCoreInterface, OriginCoreConfig {
         view
         returns (bytes32 stateRoot_)
     {
-        /*
-         * @dev below lines are to silence the compiler warnings. Once this
-         *      function is implemented this will be removed.
-         */
-        _blockHeight;
-        stateRoot_;
+        stateRoot_ = stateRoots[_blockHeight];
+    }
 
-        revert("Method not implemented.");
+    /**
+     * @notice Gets the block number of latest committed state root.
+     *
+     * @dev This is the auxiliary chain block height for which the state root
+     *      needs to be fetched.
+     *
+     * @return uint256 Block height of the latest committed state root.
+     */
+    function getLatestStateRootBlockHeight()
+        external
+        view
+        returns (uint256 height_)
+    {
+        height_ = latestStateRootBlockHeight;
     }
 
     /**

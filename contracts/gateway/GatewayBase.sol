@@ -4,6 +4,7 @@ import "../lib/GatewayLib.sol";
 import "./CoreInterface.sol";
 import "../lib/SafeMath.sol";
 import "./MessageBus.sol";
+import "../StateRootInterface.sol";
 
 /**
  *  @title GatewayBase contract.
@@ -246,7 +247,7 @@ contract GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = core.getStateRoot(_blockHeight);
+        bytes32 stateRoot = StateRootInterface(core).getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(

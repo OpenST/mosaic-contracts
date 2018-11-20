@@ -26,6 +26,7 @@ import "../lib/MerklePatriciaProof.sol";
 import "./WorkersInterface.sol";
 import "../lib//RLP.sol";
 import "../lib/SafeMath.sol";
+import "../StateRootInterface.sol";
 
 /**
  *  @title Core contract which implements CoreInterface.
@@ -33,7 +34,7 @@ import "../lib/SafeMath.sol";
  *  @notice Core is a minimal stub that will become the anchoring and consensus point for
  *          the utility chain to validate itself against.
  */
-contract Core is CoreInterface {
+contract Core is CoreInterface, StateRootInterface {
 	using SafeMath for uint256;
 
 	/** Events */
@@ -138,32 +139,31 @@ contract Core is CoreInterface {
 
 
 	/**
-	 *  @notice Public view function getStateRoot.
-	 *
-	 *  @param _blockHeight Block height for which state root is needed.
-	 *
-	 *  @return bytes32 State root.
-	 */
+     * @notice Get the state root for the given block height.
+     *
+     * @param _blockHeight The block height for which the state root is needed.
+     *
+     * @return bytes32 State root of the given height.
+     */
 	function getStateRoot(
 		uint256 _blockHeight
 	)
-	public
-	view
-	returns (bytes32 /* state root */)
+		external
+		view
+		returns (bytes32 stateRoot_)
 	{
 		return stateRoots[_blockHeight];
 	}
 
-
 	/**
-	 *  @notice Public function getLatestStateRootBlockHeight.
-	 *
-	 *  @return uint256 Latest state root block height.
-	 */
+     * @notice Gets the block height of latest committed state root.
+     *
+     * @return uint256 Block height of the latest committed state root.
+     */
 	function getLatestStateRootBlockHeight()
-	public
-	view
-	returns (uint256 /* block height */)
+		external
+		view
+		returns (uint256 height_)
 	{
 		return latestStateRootBlockHeight;
 	}
