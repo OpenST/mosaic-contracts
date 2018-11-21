@@ -40,17 +40,21 @@ contract MockCore is Core {
 	{}
 
 	/**
-	  * @notice Get mocked state root.
+	  * @notice Get the mocked state root.
 	  *
-	  * @dev this is for testing only so the data is mocked here
+	  * @dev This is for testing only so the data is mocked here. Also please
+	  *      note the Core contract has defined this function as view,
+	  *      so to keep this overridden function as view, reading a storage
+	  *      variable.
 	  *
-	  * @return bytes32 mocked value of state root
+	  * @return bytes32 Mocked state root.
 	  */
 	function getStateRoot(uint256)
-		public
+		external
 		view
 		returns (bytes32)
 	{
-		return super.getStateRoot(getLatestStateRootBlockHeight());
+		// hashing dummy data
+		return keccak256(abi.encodePacked(coreChainIdOrigin));
 	}
 }
