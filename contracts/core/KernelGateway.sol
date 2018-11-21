@@ -232,19 +232,13 @@ contract KernelGateway is KernelGatewayInterface{
 
         } else {
 
-            storageRoot = getStorageRoot(
+            storageRoot = updateStorageRoot(
                 _accountRlp,
                 _accountBranchRlp,
                 encodedOriginCorePath,
-                stateRoot
+                stateRoot,
+                _originBlockHeight
             );
-
-            require(
-                storageRoot != bytes32(0),
-                "The storage root must not be zero."
-            );
-
-            storageRoots[_originBlockHeight] = storageRoot;
         }
 
         emit OriginCoreProven(
@@ -576,6 +570,47 @@ contract KernelGateway is KernelGatewayInterface{
         );
 
         return storageRoot_;
+    }
+
+    /**
+     * @notice Prove the account and update the storage root for the given
+     *         block height.
+     *
+     * @dev The existence of storage root is proved with merkle proof.
+     *
+     * @param _accountRlp rlp encoded data of account.
+     * @param _accountBranchRlp RLP encoded path from root node to leaf node
+     *                           to prove account in merkle tree.
+     * @param _encodedPath Encoded path to search account node in merkle tree.
+     * @param _stateRoot State root for given block height.
+     * @param _blockHeight Block height for which the storage roots needs to
+     *                     be updated.
+     *
+     * @return bytes32 Storage path of the variable.
+     */
+    function updateStorageRoot(
+        bytes _accountRlp,
+        bytes _accountBranchRlp,
+        bytes _encodedPath,
+        bytes32 _stateRoot,
+        uint256 _blockHeight
+    )
+        internal
+        returns (bytes32 storageRoot_)
+    {
+        storageRoot_ = getStorageRoot(
+            _accountRlp,
+            _accountBranchRlp,
+            _encodedPath,
+            _stateRoot
+        );
+
+        require(
+            storageRoot_ != bytes32(0),
+            "The storage root must not be zero."
+        );
+
+        storageRoots[_blockHeight] = storageRoot_;
     }
 
     /**
