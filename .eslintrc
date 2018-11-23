@@ -1,0 +1,20 @@
+{
+    "extends": [
+        "airbnb-base"
+    ],
+    "rules": {
+        "indent": ["error", 4],
+        "no-console": "off",
+        "no-underscore-dangle": "off"
+    },
+    "env": {
+        "mocha": true,
+        "node": true,
+        "es6": true
+    },
+    "globals": {
+        "artifacts": false,
+        "contract": false,
+        "assert": false
+    }
+}
