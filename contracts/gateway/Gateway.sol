@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -104,11 +104,11 @@ contract Gateway is  GatewayBase {
     {
 
         require(
-            _token != address(0),
+            address(_token) != address(0),
             "Token contract address must not be zero"
         );
         require(
-            _baseToken != address(0),
+            address(_baseToken) != address(0),
             "Base token contract address for bounty must not be zero"
         );
         token = _token;
@@ -142,7 +142,7 @@ contract Gateway is  GatewayBase {
         uint256 _nonce,
         address _sender,
         bytes32 _hashLock,
-        bytes _signature
+        bytes calldata _signature
     )
         external
         returns (bytes32 messageHash_)
@@ -180,7 +180,8 @@ contract Gateway is  GatewayBase {
             token.symbol(),
             token.decimals(),
             _nonce,
-            token);
+            address(token)
+        );
 
         // Ensure that the _intentHash matches the calculated intentHash
         require(
@@ -238,7 +239,7 @@ contract Gateway is  GatewayBase {
             messageHash_,
             address(this),
             _coGateway,
-            token
+            address(token)
         );
 
     }
@@ -287,7 +288,7 @@ contract Gateway is  GatewayBase {
             _messageHash,
             address(this),
             remoteGateway,
-            token,
+            address(token),
             _unlockSecret
         );
 

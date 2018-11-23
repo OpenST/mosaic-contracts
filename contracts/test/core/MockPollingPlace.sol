@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -39,8 +39,8 @@ contract MockPollingPlace {
      * @return `true` Mock result.
      */
     function updateMetaBlock(
-        address[],
-        uint256[],
+        address[] calldata,
+        uint256[] calldata,
         uint256,
         uint256
     )

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -156,20 +156,20 @@ contract AuxiliaryBlockStore is
      *
      * @param _kernelGateway The kernel gateway address.
      */
-    function initialize(address _kernelGateway)
+    function initialize(KernelGatewayInterface _kernelGateway)
         external
     {
         require(
-            _kernelGateway != address(0),
+            address(_kernelGateway) != address(0),
             "Kernel gateway address must not be zero."
         );
 
         require(
-            kernelGateway == address(0),
+            address(kernelGateway) == address(0),
             "Kernel gateway must not be already initialized."
         );
 
-        kernelGateway = KernelGatewayInterface(_kernelGateway);
+        kernelGateway = _kernelGateway;
     }
 
     /**
@@ -179,7 +179,7 @@ contract AuxiliaryBlockStore is
      * @param _blockHeaderRlp The header of the reported block, RLP encoded.
      */
     function reportBlock(
-        bytes _blockHeaderRlp
+        bytes calldata _blockHeaderRlp
     )
         external
         returns (bool success_)
@@ -328,7 +328,7 @@ contract AuxiliaryBlockStore is
     )
         internal
         view
-        returns (bool valid_, string reason_)
+        returns (bool valid_, string memory reason_)
     {
         (valid_, reason_) = super.isTargetValid(
             _sourceBlockHash,

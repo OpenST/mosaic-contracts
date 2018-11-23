@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -32,8 +32,8 @@ interface KernelGatewayInterface {
      * @return success_ `true` if the proof is successful.
      */
     function proveOriginCore(
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
+        bytes calldata _accountRlp,
+        bytes calldata _accountBranchRlp,
         uint256 _originBlockHeight
     )
         external
@@ -68,10 +68,10 @@ interface KernelGatewayInterface {
     function proveBlockOpening(
         uint256 _height,
         bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
+        address[] calldata _updatedValidators,
+        uint256[] calldata _updatedWeights,
         bytes32 _auxiliaryBlockHash,
-        bytes _storageBranchRlp,
+        bytes calldata _storageBranchRlp,
         uint256 _originBlockHeight
     )
         external
@@ -120,8 +120,8 @@ interface KernelGatewayInterface {
         external
         view
         returns (
-            address[] updatedValidators_,
-            uint256[] updatedWeights_
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
         );
 
     /**

@@ -132,8 +132,9 @@ Utils.prototype = {
         const outOfGas = error.message.search('out of gas') > -1;
         // Latest TestRPC has trouble with require
         const revertInstead = error.message.search('revert') > -1;
+        const invalidAddress = error.message.search('invalid address') > -1;
 
-        assert(invalidOpcode || outOfGas || revertInstead, `Expected throw, but got ${error} instead`);
+        assert(invalidOpcode || outOfGas || revertInstead || invalidAddress, `Expected throw, but got ${error} instead`);
       }
 
       return;

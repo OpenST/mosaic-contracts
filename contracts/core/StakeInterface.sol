@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -85,8 +85,8 @@ interface StakeInterface {
      * @return `true` if the validator has been slashed.
      */
     function slash(
-        bytes _firstVoteMessage,
-        bytes _secondVoteMessage
+        bytes calldata _firstVoteMessage,
+        bytes calldata _secondVoteMessage
     )
         external
         returns (bool slashed_);
@@ -110,9 +110,19 @@ interface StakeInterface {
     )
         external
         returns (
-            address[] updatedValidators_,
-            uint256[] updatedWeights_
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
         );
+
+    /**
+     * @notice Returns all registered validator addresses.
+     *
+     * @return An array of validator addresses. Includes evicted validators.
+     */
+    function getValidatorAddresses()
+        external
+        view
+        returns (address[] memory validatorAddresses_);
 
     /**
      * @notice Returns the total weight of all validators at a given height.

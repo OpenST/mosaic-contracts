@@ -48,7 +48,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     auxiliaryBlockStore,
     initialKernelHash;
 
-  beforeEach(async function() {
+  beforeEach(async function () {
 
     initialKernelHash = web3.utils.sha3('kernelHash');
     originBlockStore = await BlockStoreMock.new();
@@ -76,7 +76,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     await Utils.expectRevert(
       kernelGateway.activateKernel.call(
         hash,
-        {from:accounts[1]}
+        { from: accounts[1] }
       ),
       "This method must be called from the registered auxiliary block store.",
     );
@@ -86,12 +86,12 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   it('should fail when kernel hash is not equal to the open kernel' +
     ' hash', async () => {
 
-    await Utils.expectRevert(
-      auxiliaryBlockStore.activateKernel.call(randomHash),
-      "Kernel hash must be equal to open kernel hash",
-    );
+      await Utils.expectRevert(
+        auxiliaryBlockStore.activateKernel.call(randomHash),
+        "Kernel hash must be equal to open kernel hash",
+      );
 
-  });
+    });
 
   it('should return success for correct open kernel hash', async () => {
 

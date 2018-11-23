@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -28,7 +28,7 @@ contract CoGatewayUtilityTokenInterface {
      *
      * @return address of utility token.
      */
-	function utilityToken()
+        function utilityToken()
         public
         returns (address);
 }

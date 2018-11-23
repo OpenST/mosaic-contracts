@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -98,10 +98,10 @@ interface OriginCoreInterface {
      *
      * @return The identifier of auxiliary core.
      */
-    function auxiliaryCoreIdentifier()
+    function getAuxiliaryCoreIdentifier()
         external
         view
-        returns (bytes32);
+        returns (bytes20);
 
     /**
      * @notice Returns the block height of the latest meta-block that has been

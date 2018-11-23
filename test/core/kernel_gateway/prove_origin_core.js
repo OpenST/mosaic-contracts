@@ -156,9 +156,8 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
             `Origin core address from event must be equal to ${originCore}`,
         );
 
-        assert.equal(
-            eventData._blockHeight,
-            originBlockHeight,
+        assert(
+            eventData._blockHeight.eq(originBlockHeight),
             `Block height from event must be equal to ${originBlockHeight}`,
         );
 
@@ -187,52 +186,51 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
     it('should pass when the account is already proved for a given block ' +
         'height', async () => {
 
-        let originBlockHeight = new BN(100);
+            let originBlockHeight = new BN(100);
 
-        await kernelGateway.proveOriginCore(
-            accountRlp,
-            accountBranchRlp,
-            originBlockHeight,
-        );
+            await kernelGateway.proveOriginCore(
+                accountRlp,
+                accountBranchRlp,
+                originBlockHeight,
+            );
 
-        let tx = await kernelGateway.proveOriginCore(
-            accountRlp,
-            accountBranchRlp,
-            originBlockHeight,
-        );
+            let tx = await kernelGateway.proveOriginCore(
+                accountRlp,
+                accountBranchRlp,
+                originBlockHeight,
+            );
 
-        let event = EventDecoder.getEvents(tx, kernelGateway);
+            let event = EventDecoder.getEvents(tx, kernelGateway);
 
-        assert(
-            event.OriginCoreProven !== undefined,
-            "Event `OriginCoreProven` must be emitted.",
-        );
+            assert(
+                event.OriginCoreProven !== undefined,
+                "Event `OriginCoreProven` must be emitted.",
+            );
 
-        let eventData = event.OriginCoreProven;
+            let eventData = event.OriginCoreProven;
 
-        assert.strictEqual(
-            web3.utils.toChecksumAddress(eventData._originCore),
-            originCore,
-            `Origin core address from event must be equal to ${originCore}`,
-        );
+            assert.strictEqual(
+                web3.utils.toChecksumAddress(eventData._originCore),
+                originCore,
+                `Origin core address from event must be equal to ${originCore}`,
+            );
 
-        assert.equal(
-            eventData._blockHeight,
-            originBlockHeight,
-            `Block height from event must be equal to ${originBlockHeight}`,
-        );
+            assert(
+                eventData._blockHeight.eq(originBlockHeight),
+                `Block height from event must be equal to ${originBlockHeight}`,
+            );
 
-        assert.strictEqual(
-            eventData._storageRoot,
-            testData.account.storageRoot,
-            `Storage root from event must be equal to ${testData.account.storageRoot}`,
-        );
+            assert.strictEqual(
+                eventData._storageRoot,
+                testData.account.storageRoot,
+                `Storage root from event must be equal to ${testData.account.storageRoot}`,
+            );
 
-        assert.strictEqual(
-            eventData._wasAlreadyProved,
-            true,
-            `Storage root from event must be false`,
-        );
-    });
+            assert.strictEqual(
+                eventData._wasAlreadyProved,
+                true,
+                `Storage root from event must be false`,
+            );
+        });
 
 });

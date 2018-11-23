@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "../gateway/GatewayBase.sol";
 import "./MockGatewayLib.sol";
@@ -38,7 +38,7 @@ contract MockGatewayBase is GatewayBase {
      *       proveGateway bytes _rlpParentNodes variable is not validated. In
      *       this case input storage root derived from merkle proof account
      *       nodes is verified with stored storage root of given blockHeight.
-     *		 GatewayProven event has parameter wasAlreadyProved to
+     *       GatewayProven event has parameter wasAlreadyProved to
      *       differentiate between first call and replay calls.
      *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
@@ -50,8 +50,8 @@ contract MockGatewayBase is GatewayBase {
      */
     function proveGateway(
         uint256 _blockHeight,
-        bytes _rlpEncodedAccount,
-        bytes _rlpParentNodes
+        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpParentNodes
     )
         external
         returns (bool)
@@ -68,7 +68,7 @@ contract MockGatewayBase is GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(core).getStateRoot(_blockHeight);
+        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
 
         //State root should be present for the block height
         require(

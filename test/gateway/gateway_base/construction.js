@@ -26,7 +26,7 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
 
-      assert.equal(core,await gatewayBaseInstance.core.call());
+      assert.equal(core, await gatewayBaseInstance.core.call());
       assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
@@ -56,21 +56,21 @@ contract('GatewayBase.sol', function (accounts) {
     it('should fail if core address is not passed', async function () {
 
       core = 0;
-      Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
 
     });
 
     it('should fail if message address is not passed', async function () {
 
       messageBus = 0;
-      Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
 
     });
 
     it('should fail if organisation address is not passed', async function () {
 
       organisation = 0;
-      Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
 
     });
   });

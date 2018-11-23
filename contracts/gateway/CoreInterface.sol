@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -28,12 +28,12 @@ pragma solidity ^0.4.23;
  */
 contract CoreInterface {
 
-	/** Public functions */
+    /* Public functions */
 
-	function chainIdRemote() public view returns (uint256 /** chainIdRemote */);
+    function chainIdRemote() public view returns (uint256 /** chainIdRemote */);
 
-	/** External functions */
+    /* External functions */
 
-	/** commitStateRoot external function to be called by game process */
-	function commitStateRoot(uint256 _blockHeight, bytes32 _stateRoot) external returns (bytes32 /** stateRoot */);
+    /** commitStateRoot external function to be called by game process */
+    function commitStateRoot(uint256 _blockHeight, bytes32 _stateRoot) external returns (bytes32 /** stateRoot */);
 }

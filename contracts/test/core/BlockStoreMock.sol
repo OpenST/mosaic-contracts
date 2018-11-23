@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -35,11 +35,11 @@ contract BlockStoreMock is BlockStoreInterface {
     bytes32 public head;
     uint256 public currentDynasty;
     bool public reportBlockSuccess;
-    bytes32 public stateRoot;
+    bytes32 public stateRoot_;
     bytes20 public coreIdentifier;
-    uint256 public latestBlockHeight;
-    bool public isVoteValid;
-    bool public isBlockReported;
+    uint256 public latestBlockHeight_;
+    bool public isVoteValid_;
+    bool public isBlockReported_;
     PollingPlaceInterface public pollingPlace;
     bytes32 public transitionHash;
     bytes32 public auxiliaryTransitionHash;
@@ -62,7 +62,7 @@ contract BlockStoreMock is BlockStoreInterface {
     }
 
     function setStateRoot(bytes32 _stateRoot) external {
-        stateRoot = _stateRoot;
+        stateRoot_ = _stateRoot;
     }
 
     function setCoreIdentifier(bytes20 _coreIdentifier) external {
@@ -70,15 +70,15 @@ contract BlockStoreMock is BlockStoreInterface {
     }
 
     function setLatestBlockHeight(uint256 _height) external {
-        latestBlockHeight = _height;
+        latestBlockHeight_ = _height;
     }
 
     function setVoteValid(bool _isValid) external {
-        isVoteValid = _isValid;
+        isVoteValid_ = _isValid;
     }
 
     function setIsBlockReported(bool _isReported) external {
-        isBlockReported = _isReported;
+        isBlockReported_ = _isReported;
     }
 
     function setPollingPlace(PollingPlaceInterface _pollingPlace) external {
@@ -108,7 +108,7 @@ contract BlockStoreMock is BlockStoreInterface {
     }
 
     function reportBlock(
-        bytes
+        bytes calldata
     )
         external
         returns (bool success_)
@@ -126,26 +126,16 @@ contract BlockStoreMock is BlockStoreInterface {
         emit Justified(_source, _target);
     }
 
-    function stateRoot(
-        uint256
-    )
-        external
-        view
-        returns (bytes32 stateRoot_)
-    {
-        stateRoot_ = stateRoot;
+    function stateRoot(uint256) external view returns (bytes32) {
+        return stateRoot_;
     }
 
     function getCoreIdentifier() external view returns (bytes20 coreIdentifier_) {
         coreIdentifier_ = coreIdentifier;
     }
 
-    function latestBlockHeight()
-        external
-        view
-        returns (uint256 height_)
-    {
-        height_ = latestBlockHeight;
+    function latestBlockHeight() external view returns (uint256) {
+        return latestBlockHeight_;
     }
 
     function isVoteValid(
@@ -155,19 +145,13 @@ contract BlockStoreMock is BlockStoreInterface {
     )
         external
         view
-        returns (bool valid_)
+        returns (bool)
     {
-        valid_ = isVoteValid;
+        return isVoteValid_;
     }
 
-    function isBlockReported(
-        bytes32
-    )
-        external
-        view
-        returns (bool reported_)
-    {
-        reported_ = isBlockReported;
+    function isBlockReported(bytes32) external view returns (bool) {
+        return isBlockReported_;
     }
 
     /**
@@ -192,8 +176,8 @@ contract BlockStoreMock is BlockStoreInterface {
      * @return bool `true` if the update was successful.
      */
     function updateMetaBlock(
-        address[] _validators,
-        uint256[] _weights,
+        address[] calldata _validators,
+        uint256[] calldata _weights,
         uint256 _originHeight,
         uint256 _auxiliaryHeight
     )

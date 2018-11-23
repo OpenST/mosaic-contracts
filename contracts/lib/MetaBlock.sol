@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -289,8 +289,8 @@ library MetaBlock {
     function hashKernel(
         uint256 _height,
         bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedWeights
     )
         internal
         pure

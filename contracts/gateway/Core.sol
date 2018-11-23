@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -35,169 +35,172 @@ import "../StateRootInterface.sol";
  *          the utility chain to validate itself against.
  */
 contract Core is CoreInterface, StateRootInterface {
-	using SafeMath for uint256;
+    using SafeMath for uint256;
 
-	/** Events */
+    /** Events */
 
-	event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
+    event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
 
-	/** Storage */
+    /** Storage */
 
-	mapping (uint256 /* block height */ => bytes32) private stateRoots;
+    mapping (uint256 /* block height */ => bytes32) private stateRoots;
 
-	/** chainIdOrigin is the origin chain id where core contract is deployed.  */
-	uint256 public coreChainIdOrigin;
-	/** chainIdRemote is the remote chain id where core contract is deployed. */
-	uint256 private coreChainIdRemote;
-	/** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
-	address private coreOpenSTRemote;
-	/** Latest block height of block for which state root was committed. */
-	uint256 private latestStateRootBlockHeight;
+    /** chainIdOrigin is the origin chain id where core contract is deployed.  */
+    uint256 public coreChainIdOrigin;
+    /** chainIdRemote is the remote chain id where core contract is deployed. */
+    uint256 private coreChainIdRemote;
+    /** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
+    address private coreOpenSTRemote;
+    /** Latest block height of block for which state root was committed. */
+    uint256 private latestStateRootBlockHeight;
 
-	/** Workers contract address. */
-	WorkersInterface public workers;
+    /** Workers contract address. */
+    WorkersInterface public workers;
 
-	/** Address of the core on the auxiliary chain. Can be zero. */
-	address public coCore;
+    /** Address of the core on the auxiliary chain. Can be zero. */
+    address public coCore;
 
-	/** Modifiers */
+    /** Modifiers */
 
-	/**
-	 *  @notice Modifier onlyWorker.
-	 *
-	 *  @dev Checks if msg.sender is whitelisted worker address to proceed.
-	 */
-	modifier onlyWorker() {
-		// msg.sender should be worker only
-		require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
-		_;
-	}
+    /**
+     *  @notice Modifier onlyWorker.
+     *
+     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
+     */
+    modifier onlyWorker() {
+        // msg.sender should be worker only
+        require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
+        _;
+    }
 
-	/*  Public functions */
+    /*  Public functions */
 
-	/**
-	 *  @notice Contract constructor.
-	 *
-	 *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
-	 *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
-	 *  @param _blockHeight Block height at which _stateRoot needs to store.
-	 *  @param _stateRoot State root hash of given _blockHeight.
-	 *  @param _workers Workers contract address.
-	 */
-	constructor(
-		uint256 _chainIdOrigin,
-		uint256 _chainIdRemote,
-		uint256 _blockHeight,
-		bytes32 _stateRoot,
-		WorkersInterface _workers)
-		public
-	{
-		require(_chainIdOrigin != 0, "Origin chain Id is 0");
-		require(_chainIdRemote != 0, "Remote chain Id is 0");
-		require(_workers != address(0), "Workers contract address is 0");
+    /**
+     *  @notice Contract constructor.
+     *
+     *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
+     *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+     *  @param _blockHeight Block height at which _stateRoot needs to store.
+     *  @param _stateRoot State root hash of given _blockHeight.
+     *  @param _workers Workers contract address.
+     */
+    constructor(
+        uint256 _chainIdOrigin,
+        uint256 _chainIdRemote,
+        uint256 _blockHeight,
+        bytes32 _stateRoot,
+        WorkersInterface _workers)
+        public
+    {
+        require(_chainIdOrigin != 0, "Origin chain Id is 0");
+        require(_chainIdRemote != 0, "Remote chain Id is 0");
+        require(
+            address(_workers) != address(0),
+            "Workers contract address is 0"
+        );
 
-		coreChainIdOrigin = _chainIdOrigin;
-		coreChainIdRemote = _chainIdRemote;
-		workers = _workers;
+        coreChainIdOrigin = _chainIdOrigin;
+        coreChainIdRemote = _chainIdRemote;
+        workers = _workers;
 
-		latestStateRootBlockHeight = _blockHeight;
-		stateRoots[latestStateRootBlockHeight] = _stateRoot;
-	}
+        latestStateRootBlockHeight = _blockHeight;
+        stateRoots[latestStateRootBlockHeight] = _stateRoot;
+    }
 
-	/** External functions */
+    /* External functions */
 
-	//TODO: This is added for demo purpose.
-	/**
-	 *  @notice The Co-Core address is the address of the core that is
-	 *          deployed on the auxiliary chain. Should only be set if this
-	 *          contract is deployed on the origin chain.
-	 *
-	 *  @param _coCore Address of the Co-Core on auxiliary.
-	 */
-	function setCoCoreAddress(address _coCore)
-	external
-	onlyWorker
-	returns (bool /*success*/)
-	{
-		require(_coCore != address(0), "Co-Core address is 0");
-		coCore = _coCore;
-		return true;
-	}
+    //TODO: This is added for demo purpose.
+    /**
+     *  @notice The Co-Core address is the address of the core that is
+     *          deployed on the auxiliary chain. Should only be set if this
+     *          contract is deployed on the origin chain.
+     *
+     *  @param _coCore Address of the Co-Core on auxiliary.
+     */
+    function setCoCoreAddress(address _coCore)
+    external
+    onlyWorker
+    returns (bool /*success*/)
+    {
+        require(_coCore != address(0), "Co-Core address is 0");
+        coCore = _coCore;
+        return true;
+    }
 
-	/**
-	 *  @notice Public view function chainIdRemote.
-	 *
-	 *  @return uint256 coreChainIdRemote.
-	 */
-	function chainIdRemote()
-	public
-	view
-	returns (uint256 /* chainIdRemote */)
-	{
-		return coreChainIdRemote;
-	}
+    /**
+     *  @notice Public view function chainIdRemote.
+     *
+     *  @return uint256 coreChainIdRemote.
+     */
+    function chainIdRemote()
+    public
+    view
+    returns (uint256 /* chainIdRemote */)
+    {
+        return coreChainIdRemote;
+    }
 
 
-	/**
+    /**
      * @notice Get the state root for the given block height.
      *
      * @param _blockHeight The block height for which the state root is needed.
      *
      * @return bytes32 State root of the given height.
      */
-	function getStateRoot(
-		uint256 _blockHeight
-	)
-		external
-		view
-		returns (bytes32 stateRoot_)
-	{
-		return stateRoots[_blockHeight];
-	}
+    function getStateRoot(
+        uint256 _blockHeight
+    )
+        external
+        view
+        returns (bytes32 stateRoot_)
+    {
+        return stateRoots[_blockHeight];
+    }
 
-	/**
+    /**
      * @notice Gets the block height of latest committed state root.
      *
      * @return uint256 Block height of the latest committed state root.
      */
-	function getLatestStateRootBlockHeight()
-		external
-		view
-		returns (uint256 height_)
-	{
-		return latestStateRootBlockHeight;
-	}
+    function getLatestStateRootBlockHeight()
+        external
+        view
+        returns (uint256 height_)
+    {
+        return latestStateRootBlockHeight;
+    }
 
-	/** External functions */
+    /* External functions */
 
-	/**
-	 *  @notice External function commitStateRoot.
-	 *
-	 *  @dev commitStateRoot Called from game process.
-	 *       Commit new state root for a block height.
-	 *
-	 *  @param _blockHeight Block height for which stateRoots mapping needs to update.
-	 *  @param _stateRoot State root of input block height.
-	 *
-	 *  @return bytes32 stateRoot
-	 */
-	function commitStateRoot(
-		uint256 _blockHeight,
-		bytes32 _stateRoot)
-	external
-	onlyWorker
-	returns (bytes32 /* stateRoot */)
-	{
-		// State root should be valid
-		require(_stateRoot != bytes32(0), "State root is 0");
-		// Input block height should be valid
-		require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
+    /**
+     *  @notice External function commitStateRoot.
+     *
+     *  @dev commitStateRoot Called from game process.
+     *       Commit new state root for a block height.
+     *
+     *  @param _blockHeight Block height for which stateRoots mapping needs to update.
+     *  @param _stateRoot State root of input block height.
+     *
+     *  @return bytes32 stateRoot
+     */
+    function commitStateRoot(
+        uint256 _blockHeight,
+        bytes32 _stateRoot)
+    external
+    onlyWorker
+    returns (bytes32 /* stateRoot */)
+    {
+        // State root should be valid
+        require(_stateRoot != bytes32(0), "State root is 0");
+        // Input block height should be valid
+        require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
 
-		stateRoots[_blockHeight] = _stateRoot;
-		latestStateRootBlockHeight = _blockHeight;
+        stateRoots[_blockHeight] = _stateRoot;
+        latestStateRootBlockHeight = _blockHeight;
 
-		emit StateRootCommitted(_blockHeight, _stateRoot);
+        emit StateRootCommitted(_blockHeight, _stateRoot);
 
-		return _stateRoot;
-	}
+        return _stateRoot;
+    }
 }
