@@ -34,30 +34,21 @@ contract MockPollingPlace {
     }
 
     /**
-     * @notice Mock the behaviour of `updateMetaBlock` function
+     * @notice Mock the behaviour of `updateMetaBlock` function.
      *
-     * @param _validators The addresses of the new validators on the auxiliary
-     *                    chain.
-     * @param _weights The weights of the validators.
-     * @param _originHeight The height of the origin chain where the new
-     *                      meta-block opens.
-     * @param _auxiliaryHeight The height of the auxiliary checkpoint that is
-     *                         the last finalised checkpoint within the
-     *                         previous, closed meta-block.
-     *
-     * @return `true` Mock result
+     * @return `true` Mock result.
      */
     function updateMetaBlock(
-        address[] _validators,
-        uint256[] _weights,
-        uint256 _originHeight,
-        uint256 _auxiliaryHeight
+        address[],
+        uint256[],
+        uint256,
+        uint256
     )
         external
         pure
-        returns (bool success_)
+        returns (bool)
     {
-        success_ = true;
+        return true;
     }
 
     /**

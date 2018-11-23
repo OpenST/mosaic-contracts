@@ -392,14 +392,17 @@ contract EIP20Gateway is Gateway {
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
-        // Get the message object
-        MessageBus.Message storage message;
 
-        (staker_, stakeAmount_, message) = progressStakingInternal(
+        // Get the message object
+        MessageBus.Message storage message = messages[_messageHash];
+
+        (staker_, stakeAmount_) = progressStakingInternal(
             _messageHash,
+            message,
             _unlockSecret,
             false
         );
+
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
@@ -455,10 +458,13 @@ contract EIP20Gateway is Gateway {
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
-        MessageBus.Message storage message;
 
-        (staker_, stakeAmount_, message) = progressStakingInternal(
+        // Get the message object
+        MessageBus.Message storage message = messages[_messageHash];
+
+        (staker_, stakeAmount_) = progressStakingInternal(
             _messageHash,
+            message,
             bytes32(0),
             true
         );
@@ -1004,29 +1010,28 @@ contract EIP20Gateway is Gateway {
      * @notice Internal function contains logic for process staking.
      *
      * @param _messageHash Message hash.
+     * @param _message Message object.
      * @param _unlockSecret For process with hash lock, proofProgress event
      *                      param is set to false otherwise set to true.
      *
      * @return staker_ Staker address
      * @return stakeAmount_ Stake amount
-     * @return message_ Message Bus message
      */
     function progressStakingInternal(
         bytes32 _messageHash,
+        MessageBus.Message storage _message,
         bytes32 _unlockSecret,
         bool _proofProgress
     )
         private
         returns (
             address staker_,
-            uint256 stakeAmount_,
-            MessageBus.Message storage message_
+            uint256 stakeAmount_
         )
     {
 
-        message_ = messages[_messageHash];
         // Get the staker address
-        staker_ = message_.sender;
+        staker_ = _message.sender;
 
         //Get the stake amount
         stakeAmount_ = stakes[_messageHash].amount;
@@ -1042,7 +1047,7 @@ contract EIP20Gateway is Gateway {
         emit ProgressedStake(
             _messageHash,
             staker_,
-            message_.nonce,
+            _message.nonce,
             stakeAmount_,
             _proofProgress,
             _unlockSecret

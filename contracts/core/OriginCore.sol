@@ -401,6 +401,7 @@ contract OriginCore is
             );
         }
 
+        success_ = true;
     }
 
     /**
@@ -704,7 +705,7 @@ contract OriginCore is
     )
         private
     {
-        uint256 height = openKernel.height;
+        uint256 openKernelHeight = openKernel.height;
 
         bytes32 metaBlockHash = MetaBlock.hashMetaBlock(
             _kernelHash,
@@ -719,13 +720,13 @@ contract OriginCore is
 
         /* Update head */
         head = metaBlockHash;
-        openNextKernel(height, metaBlockHash);
+        openNextKernel(openKernelHeight, metaBlockHash);
 
         emit MetaBlockCommitted(
             _kernelHash,
             _transitionHash,
             metaBlockHash,
-            height,
+            openKernelHeight,
             _verifiedWeight,
             _requiredWeight
         );

@@ -28,19 +28,17 @@ pragma solidity ^0.4.23;
  */
 
 library MockMerklePatriciaProof {
+
     /**
      * @dev Mock for merkle patricia proof verifier.
-     * @param value The terminating value in the trie.
-     * @param encodedPath The path in the trie leading to value.
-     * @param rlpParentNodes The rlp encoded stack of nodes.
-     * @param root The root hash of the trie.
-     * @return The boolean validity of the proof.
+     *
+     * @return Mocked value for validity of the proof.
      */
     function verify(
-        bytes32 value,
-        bytes encodedPath,
-        bytes rlpParentNodes,
-        bytes32 root
+        bytes32,
+        bytes,
+        bytes,
+        bytes32
     )
         external
         pure

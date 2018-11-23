@@ -38,42 +38,23 @@ contract MockCore is Core {
 		)
 		public
 	{}
-	
-	/**
-	  * @notice get storage root for a given block height
-	  *
-	  * @dev this is for testing only so the data is mocked here
-	  *
-	  * @param _blockHeight block height for which storage root is needed
-	  *
-	  * @return bytes32 storage root
-	  */
-	function getStorageRoot(
-		uint256 _blockHeight
-	)
-		public
-		view
-		returns (bytes32)
-	{
-		return keccak256(abi.encodePacked(_blockHeight));
-	}
 
 	/**
-     * @notice Get the state root for the given block height.
-     *
-     * @dev this is for testing only so the data is mocked here
-     *
-     * @param _blockHeight The block height for which the state root is fetched.
-     *
-     * @return bytes32 State root at the given height.
-     */
-	function getStateRoot(
-		uint256 _blockHeight
-	)
+	  * @notice Get the mocked state root.
+	  *
+	  * @dev This is for testing only so the data is mocked here. Also please
+	  *      note the Core contract has defined this function as view,
+	  *      so to keep this overridden function as view, reading a storage
+	  *      variable.
+	  *
+	  * @return bytes32 Mocked state root.
+	  */
+	function getStateRoot(uint256)
 		external
 		view
 		returns (bytes32)
 	{
-		return keccak256(abi.encodePacked(_blockHeight));
+		// hashing dummy data
+		return keccak256(abi.encodePacked(coreChainIdOrigin));
 	}
 }
