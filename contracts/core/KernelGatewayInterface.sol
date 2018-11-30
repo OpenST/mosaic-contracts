@@ -18,6 +18,28 @@ pragma solidity ^0.4.23;
 interface KernelGatewayInterface {
 
     /**
+     * @notice Prove origin core account and update the latest storage root of
+     *         origin core. This function will validate the proof against the
+     *         state root from the OriginBlockStore
+     *
+     * @param _accountRlp RLP encoded account data.
+     * @param _accountBranchRlp RLP encoded path from root node to leaf node to
+     *                          prove account in merkle tree.
+     * @param _originBlockHeight The block height on origin where the opening
+     *                           took place. Must be a height that is finalised
+     *                           in the OriginBlockStore.
+     *
+     * @return success_ `true` if the proof is successful.
+     */
+    function proveOriginCore(
+        bytes _accountRlp,
+        bytes _accountBranchRlp,
+        uint256 _originBlockHeight
+    )
+        external
+        returns (bool success_);
+
+    /**
      * @notice Prove the opening of a new meta-block on origin. The method will
      *         check the proof against the state root from the OriginBlockStore
      *         given the state trie branch.
@@ -37,8 +59,6 @@ interface KernelGatewayInterface {
      * @param _storageBranchRlp The trie branch of the state trie of origin
      *                            that proves that the opening took place on
      *                            origin.
-     * @param _accountBranchRlp RLP encoded path from root node to leaf node to
-     *                          prove account in merkle tree.
      * @param _originBlockHeight The block height on origin where the opening
      *                           took place. Must be a height that is finalised
      *                           in the OriginBlockStore.
@@ -52,11 +72,9 @@ interface KernelGatewayInterface {
         uint256[] _updatedWeights,
         bytes32 _auxiliaryBlockHash,
         bytes _storageBranchRlp,
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
         uint256 _originBlockHeight
     )
-        public
+        external
         returns (bool success_);
 
     /**
