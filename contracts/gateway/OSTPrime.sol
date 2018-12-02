@@ -121,7 +121,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *
      * @return `true` if claim was successfully progressed
      */
-    function claim(
+    function unwrap(
         uint256 _amount
     )
         public
@@ -150,7 +150,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *
      * @return `true` if claim was successfully progressed
      */
-    function redeem(uint256 _amount)
+    function wrap(uint256 _amount)
         public
         onlyInitialized
         payable
