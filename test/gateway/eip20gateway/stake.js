@@ -95,7 +95,7 @@ async function _setup (accounts){
 async function _prepareData(){
   let typeHash = await helper.stakeTypeHash();
 
-  let intentHash = await helper.hashStakingIntent(
+  let intentHash = await helper.hashStakeIntent(
     stakeAmount,
     beneficiary,
     stakerAddress,
@@ -133,7 +133,7 @@ async function _stake (resultType) {
   let expectedResult = {
     returns: {messageHash: messageHash},
     events: {
-      StakingIntentDeclared: {
+      StakeIntentDeclared: {
         _messageHash: messageHash,
         _staker: stakerAddress,
         _stakerNonce: nonce,
@@ -202,7 +202,7 @@ contract('EIP20Gateway ',  function(accounts) {
       await _prepareData();
       let typeHash = await helper.stakeTypeHash();
 
-      let intentHash = await helper.hashStakingIntent(
+      let intentHash = await helper.hashStakeIntent(
         stakeAmount,
         beneficiary,
         stakerAddress,
@@ -306,8 +306,8 @@ contract('EIP20Gateway ',  function(accounts) {
       // approving gateway for penalty amount
       await baseToken.approve(gateway.address, penalty, {from: stakerAddress});
 
-      //revertStaking
-      await gateway.revertStaking(messageHash,{from: stakerAddress});
+      //revertStake
+      await gateway.revertStake(messageHash,{from: stakerAddress});
 
       await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
       await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});

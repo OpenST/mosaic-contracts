@@ -96,7 +96,7 @@ contract SimpleStake is ProtocolVersioned {
 	/**
 	 *  @notice Public view function getTotalStake.
 	 *
-	 *  @dev Total stake is the balance of the staking contract
+	 *  @dev Total stake is the balance of the stake contract
 	 *       accidental transfers directly to SimpleStake bypassing
 	 *       the OpenST protocol will not mint new utility tokens,
 	 *       but will add to the total stake,

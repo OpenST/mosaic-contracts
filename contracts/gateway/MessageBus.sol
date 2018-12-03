@@ -62,7 +62,7 @@ library MessageBus {
     struct Message {
 
         /**
-         * intent hash, this can be staking intent hash, redemption intent
+         * intent hash, this can be stake intent hash, redeem intent
          * hash, gateway linking hash
          */
         bytes32 intentHash;

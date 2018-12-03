@@ -177,7 +177,7 @@ contract('Stake.initialize()', async (accounts) => {
         );
     });
 
-    it('should reject a zero staking amount', async () => {
+    it('should reject a zero stake amount', async () => {
         initialStakes[2] = new BN('0');
         await Utils.expectRevert(
             stake.initialize(

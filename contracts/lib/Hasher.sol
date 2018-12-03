@@ -71,17 +71,17 @@ contract Hasher {
 	 *  @notice Public pure function.
 	 *
 	 *  @param _uuid UUID of the token.
-	 *  @param _account Address of the staking account.
-	 *  @param _accountNonce Nonce of the staking account.
+	 *  @param _account Staker address.
+	 *  @param _accountNonce Nonce of the staker.
 	 *  @param _beneficiary Address of the beneficiary on utility chain.
 	 *  @param _amountST Amount of ST staked.
 	 *  @param _amountUT Amount of UT to mint.
 	 *  @param _unlockHeight Block height upto which staking is locked.
 	 *  @param _hashLock Hash lock for the stake request. 
 	 *
-	 *  @return bytes32 Keccak256 staking intent hash.
+	 *  @return bytes32 Keccak256 stake intent hash.
 	 */
-	function hashStakingIntent(
+	function hashStakeIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
@@ -115,11 +115,11 @@ contract Hasher {
 	 *  @param _beneficiary Address of the beneficiary on value chain.
 	 *  @param _amountUT Amount of UT to redeem.
 	 *  @param _unlockHeight Block height up to which redeeming is locked.
-	 *  @param _hashLock Hash lock for the redemption request. 
+	 *  @param _hashLock Hash lock for the redeem request.
 	 *
-	 *  @return bytes32 Keccak256 redemption intent hash.
+	 *  @return bytes32 Keccak256 redeem intent hash.
 	 */
-	function hashRedemptionIntent(
+	function hashRedeemIntent(
 		bytes32 _uuid,
 		address _account,
 		uint256 _accountNonce,
