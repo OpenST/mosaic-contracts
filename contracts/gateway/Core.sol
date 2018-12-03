@@ -89,7 +89,8 @@ contract Core is CoreInterface, StateRootInterface {
         uint256 _chainIdRemote,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        WorkersInterface _workers)
+        WorkersInterface _workers
+    )
         public
     {
         require(_chainIdOrigin != 0, "Origin chain Id is 0");
