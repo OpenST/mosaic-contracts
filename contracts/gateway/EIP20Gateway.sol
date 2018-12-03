@@ -60,8 +60,8 @@ import "./Gateway.sol";
  * @title EIP20Gateway Contract
  *
  * @notice EIP20Gateway act as medium to send messages from origin chain to
- *         auxiliary chain. Currently gateway supports stake and mint , revert
- *         stake message & linking of EIP20Gateway and EIP20CoGateway.
+ *         auxiliary chain. Currently gateway supports stake and mint and revert
+ *         stake message.
  */
 contract EIP20Gateway is Gateway {
 
@@ -212,16 +212,14 @@ contract EIP20Gateway is Gateway {
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
-        address _messageBus
+        address _organisation
     )
         Gateway(
             _token,
             _baseToken,
             _core,
             _bounty,
-            _organisation,
-            _messageBus
+            _organisation
         )
         public
     {

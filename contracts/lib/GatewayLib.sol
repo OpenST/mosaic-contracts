@@ -136,48 +136,6 @@ library GatewayLib {
     }
 
     /**
-     * @notice  function to calculate gateway link intent hash.
-     *
-     * @param _gateway address of gateway.
-     * @param _coGateway address of co-gateway.
-     * @param _messageBus address of message bus.
-     * @param _tokenName  name of branded token.
-     * @param _tokenSymbol symbol of branded token.
-     * @param _tokenDecimal token decimal of branded token.
-     * @param _nonce message nonce.
-     * @param _token EIP20 token address.
-     *
-     * @return bytes32 gateway link intent hash.
-     */
-    function hashLinkGateway(
-        address _gateway,
-        address _coGateway,
-        address _messageBus,
-        string calldata _tokenName,
-        string calldata _tokenSymbol,
-        uint8 _tokenDecimal,
-        uint256 _nonce,
-        address _token
-    )
-        external
-        view
-        returns (bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-                _gateway,
-                _coGateway,
-                libraryCodeHash(_messageBus),
-                _tokenName,
-                _tokenSymbol,
-                _tokenDecimal,
-                _nonce,
-                _token
-            )
-        );
-    }
-
-    /**
      * @notice  function to calculate staking intent hash.
      *
      * @param _amount staking amount.

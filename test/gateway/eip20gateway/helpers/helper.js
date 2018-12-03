@@ -1,18 +1,15 @@
 'use strict';
 
 const web3 = require('../../../test_lib/web3.js');
-const GatewayHelper = require('../../gateway/helpers/helper');
+
 
 const EIP20GatewayHelper = function(gateway) {
   //Call Super.
-  GatewayHelper.apply(this, arguments);
   this.gateway = gateway;
 };
 
-EIP20GatewayHelper.prototype = Object.create(GatewayHelper.prototype);
 
-let proto = {
-  constructor: EIP20GatewayHelper,
+EIP20GatewayHelper.prototype = {
 
   /**
    * Generate the stake type hash. This is as per EIP-712
@@ -59,10 +56,12 @@ let proto = {
       { t: 'uint256', v: gasLimit },
       { t: 'address', v: token }
     );
-  }
+  },
+    getNonce: async function (address) {
+        const oThis = this;
+        return await oThis.gateway.getNonce.call(address);
+    }
 
 };
-
-Object.assign(EIP20GatewayHelper.prototype, proto);
 
 module.exports = EIP20GatewayHelper;

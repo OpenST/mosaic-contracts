@@ -35,7 +35,7 @@ module.exports = function (deployer) {
     deployer.deploy(MockGatewayLib);
     deployer.deploy(MetaBlock);
     deployer.link(GatewayLib, [GatewayBase, Gateway, MockEIP20Gateway]);
-    deployer.link(MessageBus, [Gateway, MockEIP20Gateway]);
+    deployer.link(MessageBus, [MockEIP20Gateway, Gateway]);
     deployer.link(MockGatewayLib, [MockGatewayBase, MockEIP20Gateway]);
     deployer.link(MetaBlock, [BlockStore, AuxiliaryBlockStore]);
 

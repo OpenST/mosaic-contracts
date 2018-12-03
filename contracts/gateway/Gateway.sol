@@ -34,7 +34,7 @@ progressGatewayLink  --->   progressGatewayLink
 -------------------------------------------------------------------------------
 */
 
-import './MessageBus.sol';
+import "./MessageBus.sol";
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
 
@@ -44,23 +44,6 @@ import "./GatewayBase.sol";
  *  @notice Gateway contains functions for initial setup of EIP20-gateway.
  */
 contract Gateway is  GatewayBase {
-
-    /** Emitted whenever a gateway and coGateway linking is initiated. */
-    event GatewayLinkInitiated(
-        bytes32 indexed _messageHash,
-        address _gateway,
-        address _cogateway,
-        address _token
-    );
-
-    /** Emitted whenever a gateway and coGateway linking is completed. */
-    event GatewayLinkProgressed(
-        bytes32 indexed _messageHash,
-        address _gateway,
-        address _cogateway,
-        address _token,
-        bytes32 _unlockSecret
-    );
 
     /** address of ERC20 token. */
     EIP20Interface public token;
@@ -91,12 +74,10 @@ contract Gateway is  GatewayBase {
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
-        address _messageBus
+        address _organisation
     )
         GatewayBase(
             _core,
-            _messageBus,
             _bounty,
             _organisation
         )
@@ -113,188 +94,5 @@ contract Gateway is  GatewayBase {
         );
         token = _token;
         baseToken = _baseToken;
-
-
     }
-
-    /* External functions */
-
-    /**
-     * @notice Initiate the Gateway and CoGateway contracts linking.
-     *
-     * @param _coGateway CoGateway contract address.
-     * @param _intentHash Gateway and CoGateway linking intent hash.
-     *                    This is a sha3 of gateway address, cogateway address,
-     *                    bounty, token name, token symbol, token decimals,
-     *                    _nonce, token.
-     * @param _nonce Nonce of the sender. Here in this case its organisation
-     *               address
-     * @param _sender The address that signs the message hash. In this case it
-     *                has to be organisation address
-     * @param _hashLock Hash lock, set by the facilitator.
-     * @param _signature Signed data.
-     *
-     * @return messageHash_ Message hash
-     */
-    function initiateGatewayLink(
-        address _coGateway,
-        bytes32 _intentHash,
-        uint256 _nonce,
-        address _sender,
-        bytes32 _hashLock,
-        bytes calldata _signature
-    )
-        external
-        returns (bytes32 messageHash_)
-    {
-        require(
-            linked == false,
-            "Gateway contract must not be already linked"
-        );
-        require(
-            deactivated == false,
-            "Gateway contract must not be deactivated"
-        );
-        require(
-            _coGateway != address(0),
-            "CoGateway address must not be zero"
-        );
-        require(
-            _sender == organisation,
-            "Sender must be organisation address"
-        );
-        require(
-            gatewayLinkHash == bytes32(0),
-            "Linking is already initiated"
-        );
-        require(
-            _signature.length == 65,
-            "Signature must be of length 65"
-        );
-
-        bytes32 intentHash = GatewayLib.hashLinkGateway(
-            address(this),
-            _coGateway,
-            messageBus,
-            token.name(),
-            token.symbol(),
-            token.decimals(),
-            _nonce,
-            address(token)
-        );
-
-        // Ensure that the _intentHash matches the calculated intentHash
-        require(
-            intentHash == _intentHash,
-            "Incorrect intent hash"
-        );
-
-        // Get the message hash
-        messageHash_ = MessageBus.messageDigest(
-            GATEWAY_LINK_TYPEHASH,
-            intentHash,
-            _nonce,
-            0,
-            0
-        );
-
-        // create Message object
-        messages[messageHash_] = getMessage(
-            _sender,
-            _nonce,
-            0,
-            0,
-            _intentHash,
-            _hashLock
-        );
-
-        // initiate new new outbox process
-        registerOutboxProcess(
-            _sender,
-            _nonce,
-            messageHash_
-        );
-
-        // Declare message in outbox
-        MessageBus.declareMessage(
-            messageBox,
-            GATEWAY_LINK_TYPEHASH,
-            messages[messageHash_],
-            _signature
-        );
-
-        // update the coGateway address
-        remoteGateway = _coGateway;
-
-        // update gateway link hash
-        gatewayLinkHash = messageHash_;
-
-        // update the encodedGatewayPath
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
-            keccak256(abi.encodePacked(_coGateway))
-        );
-
-        // emit GatewayLinkInitiated event
-        emit GatewayLinkInitiated(
-            messageHash_,
-            address(this),
-            _coGateway,
-            address(token)
-        );
-
-    }
-
-    /**
-     * @notice Complete the Gateway and CoGateway contracts linking. This will
-     *         set the variable linked to true, and thus it will activate the
-     *         Gateway contract for stake and mint.
-     *
-     * @param _messageHash Message hash
-     * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the Gateway/CoGateway
-     *                      linking
-     *
-     * @return `true` if gateway linking was successfully progressed
-     */
-    function progressGatewayLink(
-        bytes32 _messageHash,
-        bytes32 _unlockSecret
-    )
-        external
-        returns (bool)
-    {
-        require(
-            _messageHash != bytes32(0),
-            "Message hash must not be zero"
-        );
-        require(
-            gatewayLinkHash == _messageHash,
-            "Invalid message hash"
-        );
-
-        // Progress the outbox.
-        MessageBus.progressOutbox(
-            messageBox,
-            GATEWAY_LINK_TYPEHASH,
-            messages[_messageHash],
-            _unlockSecret
-        );
-
-        // Update to specify the Gateway/CoGateway is linked
-        linked = true;
-
-        // Emit GatewayLinkProgressed event
-        emit GatewayLinkProgressed(
-            _messageHash,
-            address(this),
-            remoteGateway,
-            address(token),
-            _unlockSecret
-        );
-
-        return true;
-    }
-
-    /** internal methods*/
-
 }

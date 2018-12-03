@@ -49,11 +49,6 @@ contract GatewayBase {
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 constant GATEWAY_LINK_TYPEHASH = keccak256(
-        abi.encode(
-            "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-        )
-    );
 
     /* constants */
 
@@ -68,9 +63,6 @@ contract GatewayBase {
     //todo identify how to get block time for both chains
     /** Unlock period for change bounty in block height */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
-
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
 
     /**
      * Message box.
@@ -97,9 +89,6 @@ contract GatewayBase {
      */
     address public remoteGateway;
 
-    /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-    
     /** amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
@@ -136,9 +125,6 @@ contract GatewayBase {
      */
     mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
-    /** address of message bus used to fetch codehash during gateway linking */
-    address public messageBus;
-
     /* modifiers */
 
     /** checks that only organisation can call a particular function. */
@@ -150,10 +136,10 @@ contract GatewayBase {
         _;
     }
 
-    /** checks that contract is linked and is not deactivated */
+    /** checks that contract is not deactivated */
     modifier isActive() {
         require(
-            deactivated == false && linked == true,
+            deactivated == false,
             "Contract is restricted to use"
         );
         _;
@@ -165,14 +151,12 @@ contract GatewayBase {
      * @notice Initialise the contract and set default values.
      *
      * @param _core Core contract address.
-     * @param _messageBus Message bus contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _organisation Organisation address.
      */
     constructor(
         CoreInterface _core,
-        address _messageBus,
         uint256 _bounty,
         address _organisation
     )
@@ -186,16 +170,8 @@ contract GatewayBase {
             _organisation != address(0),
             "Organisation address must not be zero"
         );
-        require(
-            _messageBus != address(0),
-            "MessageBus address must not be zero"
-        );
 
         core = _core;
-        messageBus = _messageBus;
-
-        //gateway and cogateway is not linked yet so it is initialized as false
-        linked = false;
 
         // gateway is active
         deactivated = false;

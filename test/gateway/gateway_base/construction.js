@@ -7,13 +7,12 @@ contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
 
-    let core, messageBus, bounty, organisation;
+    let core, bounty, organisation;
 
     before(function () {
 
       organisation = accounts[2]
         , core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
     });
 
@@ -21,16 +20,13 @@ contract('GatewayBase.sol', function (accounts) {
 
       let gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );
 
-      assert.equal(core, await gatewayBaseInstance.core.call());
-      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
+      assert.equal(core,await gatewayBaseInstance.core.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.linked.call()));
       assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
@@ -40,37 +36,27 @@ contract('GatewayBase.sol', function (accounts) {
 
       let gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );
 
       assert.equal(core, await gatewayBaseInstance.core.call());
-      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.linked.call()));
       assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should fail if core address is not passed', async function () {
 
       core = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
-
-    });
-
-    it('should fail if message address is not passed', async function () {
-
-      messageBus = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      Utils.expectThrow(GatewayBase.new(core, bounty, organisation));
 
     });
 
     it('should fail if organisation address is not passed', async function () {
 
       organisation = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      Utils.expectThrow(GatewayBase.new(core,  bounty, organisation));
 
     });
   });

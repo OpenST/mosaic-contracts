@@ -61,10 +61,6 @@ library MessageBus {
     /** Message */
     struct Message {
 
-        /**
-         * intent hash, this can be staking intent hash, redemption intent
-         * hash, gateway linking hash
-         */
         bytes32 intentHash;
 
         /** nonce of the sender */

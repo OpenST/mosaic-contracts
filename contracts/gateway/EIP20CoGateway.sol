@@ -60,8 +60,7 @@ import "./CoGateway.sol";
  *
  * @notice EIP20CoGateway act as medium to send messages from auxiliary
  *         chain to origin chain. Currently CoGateway supports redeem and
- *         unstake, redeem and unstake, revert redeem message & linking of
- *         gateway and cogateway.
+ *         unstake, redeem and unstake and revert redeem message
  */
 contract EIP20CoGateway is CoGateway {
 
@@ -200,7 +199,6 @@ contract EIP20CoGateway is CoGateway {
      *                staking process.
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
-     * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,
@@ -208,8 +206,7 @@ contract EIP20CoGateway is CoGateway {
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _gateway,
-        address _messageBus
+        address _gateway
     )
         CoGateway(
             _valueToken,
@@ -217,8 +214,7 @@ contract EIP20CoGateway is CoGateway {
             _core,
             _bounty,
             _organisation,
-            _gateway,
-            _messageBus
+            _gateway
         )
         public
     {
