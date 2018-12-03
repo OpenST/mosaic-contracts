@@ -129,7 +129,8 @@ contract ProtocolVersioned {
      *  @return bool True if protocol tranfer is successfully inititated, false otherwise.
      */
     function initiateProtocolTransfer(
-        address _proposedProtocol)
+        address _proposedProtocol
+    )
         public
         onlyProtocol
         notNull(_proposedProtocol)

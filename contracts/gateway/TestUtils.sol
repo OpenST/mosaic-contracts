@@ -40,7 +40,8 @@ library TestUtils {
      */
     function getStoragePath(
         bytes32 _mappingKey,
-        uint256 _indexPosition)
+        uint256 _indexPosition
+    )
         internal
         pure
         returns (bytes32)

@@ -110,7 +110,6 @@ contract Core is CoreInterface, StateRootInterface {
 
     /* External functions */
 
-    //TODO: This is added for demo purpose.
     /**
      *  @notice The Co-Core address is the address of the core that is
      *          deployed on the auxiliary chain. Should only be set if this
@@ -119,9 +118,9 @@ contract Core is CoreInterface, StateRootInterface {
      *  @param _coCore Address of the Co-Core on auxiliary.
      */
     function setCoCoreAddress(address _coCore)
-    external
-    onlyWorker
-    returns (bool /*success*/)
+        external
+        onlyWorker
+        returns (bool /*success*/)
     {
         require(_coCore != address(0), "Co-Core address is 0");
         coCore = _coCore;
@@ -134,9 +133,9 @@ contract Core is CoreInterface, StateRootInterface {
      *  @return uint256 coreChainIdRemote.
      */
     function chainIdRemote()
-    public
-    view
-    returns (uint256 /* chainIdRemote */)
+        public
+        view
+        returns (uint256 /* chainIdRemote */)
     {
         return coreChainIdRemote;
     }
@@ -187,10 +186,11 @@ contract Core is CoreInterface, StateRootInterface {
      */
     function commitStateRoot(
         uint256 _blockHeight,
-        bytes32 _stateRoot)
-    external
-    onlyWorker
-    returns (bytes32 /* stateRoot */)
+        bytes32 _stateRoot
+    )
+        external
+        onlyWorker
+        returns (bytes32 /* stateRoot */)
     {
         // State root should be valid
         require(_stateRoot != bytes32(0), "State root is 0");

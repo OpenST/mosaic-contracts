@@ -28,7 +28,7 @@ contract CoGatewayUtilityTokenInterface {
      *
      * @return address of utility token.
      */
-        function utilityToken()
+    function utilityToken()
         public
         returns (address);
 }
