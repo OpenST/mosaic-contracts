@@ -351,7 +351,7 @@ MessageBusUtils.prototype = {
     }
   },
   
-  progressOutboxWithProof: async function(params, changeState){
+  progressOutboxWithProof: async function(params, changeState, message){
     
     let messageTypeHash = params.messageTypeHash,
       intentHash = params.intentHash,
@@ -361,21 +361,22 @@ MessageBusUtils.prototype = {
       rlpEncodedParentNodes = params.rlpEncodedParentNodes,
       storageRoot = params.storageRoot,
       hashLock = params.hashLock,
-      messageBoxOffset = params.messageBoxOffset;;
+      messageBoxOffset = params.messageBoxOffset;
     
     if (changeState === false) {
       
       await utils.expectThrow(messageBus.progressOutboxWithProof.call(
-        messageTypeHash,
-        intentHash,
-        nonce,
-        sender,
-        rlpEncodedParentNodes,
-        storageRoot,
-        messageStatus,
-        hashLock,
-        messageBoxOffset
-      ));
+          messageTypeHash,
+          intentHash,
+          nonce,
+          sender,
+          rlpEncodedParentNodes,
+          storageRoot,
+          messageStatus,
+          hashLock,
+          messageBoxOffset
+        ),
+          message);
     }
     else
     {

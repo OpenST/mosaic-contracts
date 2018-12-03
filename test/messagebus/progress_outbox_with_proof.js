@@ -101,18 +101,26 @@ contract('MessageBus',  async (accounts) => {
       ' status at source is undeclared', async () => {
       
       params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxWithProof(params, false);
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
       
     });
     
-    it('should fail when message status at target is revoked and message status at source is declared', async () => {
+    it('should fail when message status at target is revoked and message ' +
+        'status at source is declared', async () => {
       
       await messageBusUtils.declareMessage(params,true);
       
       params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
     it('should fail when message status at target is revoked and message' +
@@ -123,22 +131,31 @@ contract('MessageBus',  async (accounts) => {
       await messageBusUtils.progressOutboxWithProof(params, true);
       
       params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
-    it('should fail when message status at target is revoked and message status at source is declared revocation', async () => {
+    it('should fail when message status at target is revoked and message ' +
+        'status at source is declared revocation', async () => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
       
       params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
-    it('should fail when message status at target  is revoked and message status at source is' +
-      ' revoked', async () => {
+    it('should fail when message status at target is revoked and message ' +
+        'status at source is revoked', async () => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
@@ -146,30 +163,44 @@ contract('MessageBus',  async (accounts) => {
       await messageBusUtils.progressOutboxRevocation(params, true);
       
       params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
     
-    it('should fail when message status at target is empty and message status at source is undeclared', async () => {
+    it('should fail when message status at target is empty and message status ' +
+        'at source is undeclared', async () => {
       
       params.messageStatus = '';
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
-    it('should fail when message status at target  is empty and message status is' +
-      'at source  progressed', async () => {
+    it('should fail when message status at target is empty and message status ' +
+        'is at source  progressed', async () => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.progressOutboxWithProof(params, true);
       
       params.messageStatus = '';
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
     });
     
-    it('should fail when message status at target is empty and message status at source is revoked', async () => {
+    it('should fail when message status at target is empty and message status ' +
+        'at source is revoked', async () => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
@@ -177,8 +208,28 @@ contract('MessageBus',  async (accounts) => {
       await messageBusUtils.progressOutboxRevocation(params, true);
       
       params.messageStatus = '';
-      await messageBusUtils.progressOutboxWithProof(params, false);
-      
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Inbox message status must be Declared or Progressed"
+      );
+
+    });
+
+    it('should fail when message status at target is declared and message ' +
+        'status at source is declare revocation', async () => {
+
+      await messageBusUtils.declareMessage(params, true);
+      await messageBusUtils.declareRevocationMessage(params, true);
+
+      params.messageStatus = MessageStatusEnum.Declared;
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Outbox message status must not be DeclaredRevocation when inbox " +
+          "message status is Declared"
+        );
+
     });
   });
 });
