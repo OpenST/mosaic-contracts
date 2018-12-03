@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -14,8 +14,9 @@ pragma solidity ^0.4.23;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title The interface for opening the new kernel on auxiliary. */
+import "./KernelGatewayInterface.sol";
 
+/** @title The interface for opening the new kernel on auxiliary. */
 interface InitializeGatewayKernelInterface {
 
     /**
@@ -23,7 +24,7 @@ interface InitializeGatewayKernelInterface {
      *
      * @param _kernelGateway The kernel gateway address
      */
-    function initialize(address _kernelGateway)
+    function initialize(KernelGatewayInterface _kernelGateway)
         external;
 
 }

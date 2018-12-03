@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -37,8 +37,8 @@ interface PollingPlaceInterface {
      * @return `true` if the update was successful.
      */
     function updateMetaBlock(
-        address[] _validators,
-        uint256[] _weights,
+        address[] calldata _validators,
+        uint256[] calldata _weights,
         uint256 _originHeight,
         uint256 _auxiliaryHeight
     )

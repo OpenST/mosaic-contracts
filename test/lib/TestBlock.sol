@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -30,7 +30,7 @@ contract BlockProxy {
      * @param _rlpData The data that will be passed to the library method.
      */
     function decodeHeader(
-        bytes _rlpData
+        bytes calldata _rlpData
     )
         external
         pure
@@ -162,6 +162,9 @@ contract TestBlock {
         returns (bool success_)
     {
         BlockProxy blockProxy = new BlockProxy();
-        success_ = address(blockProxy).call(bytes4(keccak256("decodeHeader(bytes)")), _rlpData);
+        bytes memory data;
+        (success_, data) = address(blockProxy).call(
+            abi.encodeWithSignature("decodeHeader(bytes)", _rlpData)
+        );
     }
 }

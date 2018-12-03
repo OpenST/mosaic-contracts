@@ -1,23 +1,28 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 library BytesLib {
-    function concat(bytes memory _preBytes, bytes memory _postBytes) internal pure returns (bytes) {
-        bytes memory tempBytes;
-
+    function concat(
+        bytes memory _preBytes,
+        bytes memory _postBytes
+    )
+        internal
+        pure returns (bytes memory bytes_)
+    {
+        /* solium-disable-next-line */
         assembly {
-            // Get a location of some free memory and store it in tempBytes as
+            // Get a location of some free memory and store it in bytes_ as
             // Solidity does for memory variables.
-            tempBytes := mload(0x40)
+            bytes_ := mload(0x40)
 
             // Store the length of the first bytes array at the beginning of
-            // the memory for tempBytes.
+            // the memory for bytes_.
             let length := mload(_preBytes)
-            mstore(tempBytes, length)
+            mstore(bytes_, length)
 
             // Maintain a memory counter for the current write location in the
             // temp bytes array by adding the 32 bytes for the array length to
             // the starting location.
-            let mc := add(tempBytes, 0x20)
+            let mc := add(bytes_, 0x20)
             // Stop copying when the memory counter reaches the length of the
             // first bytes array.
             let end := add(mc, length)
@@ -31,16 +36,16 @@ library BytesLib {
                 mc := add(mc, 0x20)
                 cc := add(cc, 0x20)
             } {
-                // Write the _preBytes data into the tempBytes memory 32 bytes
+                // Write the _preBytes data into the bytes_ memory 32 bytes
                 // at a time.
                 mstore(mc, mload(cc))
             }
 
-            // Add the length of _postBytes to the current length of tempBytes
+            // Add the length of _postBytes to the current length of bytes_
             // and store it as the new length in the first 32 bytes of the
-            // tempBytes memory.
+            // bytes_ memory.
             length := mload(_postBytes)
-            mstore(tempBytes, add(length, mload(tempBytes)))
+            mstore(bytes_, add(length, mload(bytes_)))
 
             // Move the memory counter back from a multiple of 0x20 to the
             // actual end of the _preBytes data.
@@ -59,7 +64,7 @@ library BytesLib {
             }
 
             // Update the free-memory pointer by padding our last write location
-            // to 32 bytes: add 31 bytes to the end of tempBytes to move to the
+            // to 32 bytes: add 31 bytes to the end of bytes_ to move to the
             // next 32 byte block, then round down to the nearest multiple of
             // 32. If the sum of the length of the two arrays is zero then add
             // one before rounding down to leave a blank 32 bytes (the length block with 0).
@@ -68,21 +73,29 @@ library BytesLib {
               not(31) // Round down to the nearest 32 bytes.
             ))
         }
-
-        return tempBytes;
     }
 
-    function slice(bytes _bytes, uint _start, uint _length) internal  pure returns (bytes) {
-        require(_bytes.length >= (_start + _length));
+    function slice(
+        bytes memory _bytes,
+        uint _start,
+        uint _length
+    )
+        internal
+        pure
+        returns (bytes memory bytes_)
+    {
+        require(
+            _bytes.length >= (_start + _length),
+            "Attempting to slice outside of bounds!"
+        );
 
-        bytes memory tempBytes;
-
+        /* solium-disable-next-line */
         assembly {
             switch iszero(_length)
             case 0 {
-                // Get a location of some free memory and store it in tempBytes as
+                // Get a location of some free memory and store it in bytes_ as
                 // Solidity does for memory variables.
-                tempBytes := mload(0x40)
+                bytes_ := mload(0x40)
 
                 // The first word of the slice result is potentially a partial
                 // word read from the original array. To read it, we calculate
@@ -98,7 +111,7 @@ library BytesLib {
                 // because when slicing multiples of 32 bytes (lengthmod == 0)
                 // the following copy loop was copying the origin's length
                 // and then ending prematurely not copying everything it should.
-                let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))
+                let mc := add(add(bytes_, lengthmod), mul(0x20, iszero(lengthmod)))
                 let end := add(mc, _length)
 
                 for {
@@ -112,7 +125,7 @@ library BytesLib {
                     mstore(mc, mload(cc))
                 }
 
-                mstore(tempBytes, _length)
+                mstore(bytes_, _length)
 
                 //update free-memory pointer
                 //allocating the array padded to 32 bytes like the compiler does now
@@ -120,55 +133,81 @@ library BytesLib {
             }
             //if we want a zero-length slice let's just return a zero-length array
             default {
-                tempBytes := mload(0x40)
+                bytes_ := mload(0x40)
 
-                mstore(0x40, add(tempBytes, 0x20))
+                mstore(0x40, add(bytes_, 0x20))
             }
         }
 
-        return tempBytes;
+        return bytes_;
     }
 
     // Pad a bytes array to 32 bytes
-    function leftPad(bytes _bytes) internal pure returns (bytes) {
-      bytes memory newBytes = new bytes(32 - _bytes.length);
-      return concat(newBytes, _bytes);
+    function leftPad(
+        bytes memory _bytes
+    )
+        internal
+        pure
+        returns (bytes memory padded_)
+    {
+        bytes memory padding = new bytes(32 - _bytes.length);
+        padded_ = concat(padding, _bytes);
     }
 
-    function toBytes32(bytes b) internal pure returns (bytes32) {
-      bytes32 out;
-      for (uint i = 0; i < 32; i++) {
-        out |= bytes32(b[i] & 0xFF) >> (i * 8);
-      }
-      return out;
-    }
-
-    function fromBytes32(bytes32 x) internal pure returns (bytes) {
-      bytes memory b = new bytes(32);
-      for (uint i = 0; i < 32; i++) {
-        b[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
-      }
-      return b;
-    }
-
-    function toUint(bytes _bytes, uint _start) internal pure returns (uint256) {
-      require(_bytes.length >= (_start + 32));
-      uint256 tempUint;
-      assembly {
-        tempUint := mload(add(add(_bytes, 0x20), _start))
-      }
-      return tempUint;
-    }
-
-    function toAddress(bytes _bytes, uint _start) internal  pure returns (address) {
-        require(_bytes.length >= (_start + 20));
-        address tempAddress;
-
-        assembly {
-            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
+    function toBytes32(
+        bytes memory b
+    )
+        internal
+        pure
+        returns (bytes32 out_)
+    {
+        for (uint i = 0; i < 32; i++) {
+            out_ |= bytes32(b[i] & 0xFF) >> (i * 8);
         }
+    }
 
-        return tempAddress;
+    function fromBytes32(bytes32 x) internal pure returns (bytes memory bytes_) {
+        bytes_ = new bytes(32);
+        for (uint i = 0; i < 32; i++) {
+            bytes_[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
+        }
+    }
+
+    function toUint(
+        bytes memory _bytes,
+        uint _start
+    )
+        internal
+        pure returns (uint256 uint_)
+    {
+        require(
+            _bytes.length >= (_start + 32),
+            "Out of bounds when converting to uint!"
+        );
+
+        /* solium-disable-next-line */
+        assembly {
+            uint_ := mload(add(add(_bytes, 0x20), _start))
+        }
+    }
+
+    function toAddress(
+        bytes memory _bytes,
+        uint _start
+    )
+        internal
+        pure
+        returns (address address_)
+    {
+        require(
+            _bytes.length >= (_start + 20),
+            "Out of bounds when converting to address!"
+        );
+
+        /* solium-disable-next-line */
+        assembly {
+            address_ := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
+        }
     }
 
     /**
@@ -181,13 +220,14 @@ library BytesLib {
     function bytes32ToBytes(bytes32 _inBytes32)
         internal
         pure
-        returns (bytes)
+        returns (bytes memory bytes_)
     {
-        bytes memory res = new bytes(32);
+        bytes_ = new bytes(32);
+
+        /* solium-disable-next-line */
         assembly {
-            mstore(add(32, res), _inBytes32)
+            mstore(add(32, bytes_), _inBytes32)
         }
-        return res;
     }
 
 }

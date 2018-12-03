@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -36,8 +36,8 @@ library MockMerklePatriciaProof {
      */
     function verify(
         bytes32,
-        bytes,
-        bytes,
+        bytes calldata,
+        bytes calldata,
         bytes32
     )
         external

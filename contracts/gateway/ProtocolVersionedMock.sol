@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -31,7 +31,7 @@ import "./ProtocolVersioned.sol";
 contract ProtocolVersionedMock is ProtocolVersioned {
     uint256 private constant PROTOCOL_TRANSFER_BLOCKS_TO_WAIT = 3;
 
-    /**  Public functions */
+    /*  Public functions */
     
     constructor(address _protocol)
         ProtocolVersioned(_protocol)

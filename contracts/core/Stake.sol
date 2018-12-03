@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -230,9 +230,9 @@ contract Stake is StakeInterface {
      *                       the validators.
      */
     function initialize(
-        address[] _initialDepositors,
-        address[] _initialValidators,
-        uint256[] _initialStakes
+        address[] calldata _initialDepositors,
+        address[] calldata _initialValidators,
+        uint256[] calldata _initialStakes
     )
         external
     {
@@ -371,8 +371,8 @@ contract Stake is StakeInterface {
      * @return `true` if the validator has been slashed.
      */
     function slash(
-        bytes _firstVoteMessage,
-        bytes _secondVoteMessage
+        bytes calldata _firstVoteMessage,
+        bytes calldata _secondVoteMessage
     )
         external
         returns (bool slashed_)
@@ -408,8 +408,8 @@ contract Stake is StakeInterface {
         onlyOriginCore()
         aboveMinimumWeight()
         returns (
-            address[] updatedValidators_,
-            uint256[] updatedWeights_
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
         )
     {
         assert(_closingHeight == height);
@@ -474,8 +474,11 @@ contract Stake is StakeInterface {
      *
      * @return An array of validator addresses. Includes evicted validators.
      */
-    function validatorAddresses() external view returns (address[]) {
-        return validatorAddresses;
+    function getValidatorAddresses()
+        external
+        view returns(address[] memory validatorAddresses_)
+    {
+        validatorAddresses_ = validatorAddresses;
     }
 
     /* Private Functions */

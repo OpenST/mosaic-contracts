@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -28,25 +28,26 @@ pragma solidity ^0.4.23;
  */
 library TestUtils {
 
-	/** Internal functions */
+    /* Internal functions */
 
-	/**
-	 *  @notice Internal pure function getStoragePath.
-	 *
-	 *  @param _mappingKey Key of the mapping value.
-	 *  @param _indexPosition Index position of the mapping in contract storage.
-	 *
-	 *  @return bytes32 Path to the mapping value in contract storage.
-	 */
-	function getStoragePath(
-		bytes32 _mappingKey,
-		uint256 _indexPosition)
-		internal
-		pure
-		returns (bytes32)
-	{
-		return keccak256(abi.encode(
-			_mappingKey,
-			_indexPosition));
-	}
+    /**
+     *  @notice Internal pure function getStoragePath.
+     *
+     *  @param _mappingKey Key of the mapping value.
+     *  @param _indexPosition Index position of the mapping in contract storage.
+     *
+     *  @return bytes32 Path to the mapping value in contract storage.
+     */
+    function getStoragePath(
+        bytes32 _mappingKey,
+        uint256 _indexPosition
+    )
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(
+            _mappingKey,
+            _indexPosition));
+    }
 }
