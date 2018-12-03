@@ -1,3 +1,32 @@
+# Mosaic Contracts Change Log
+
+## Version 0.10.0
+
+[**Release v0.10.0, (date goes here)**](Link to release goes here)
+
+### Notable Changes
+
+* Contracts are now separated into "Gateway" and "Core" contracts ([#221](https://github.com/OpenSTFoundation/mosaic-contracts/pull/221)).
+* Core contracts implement an initial version of the Mosaic protocol (various PRs).
+  * Report block headers of both chains to the respective block stores.
+  * Vote on checkpoints (Casper FFG style).
+  * Propose meta-blocks to origin.
+  * Verify a seal on a proposal on origin.
+  * Transfer the new kernel to auxiliary.
+* Significantly improved test coverage (various PRs).
+* Message-based gateway ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
+* Ported repository to Truffle v5 ([#334](https://github.com/OpenSTFoundation/mosaic-contracts/pull/334)).
+* Ported repository to solidity 0.5.0 ([#480](https://github.com/OpenSTFoundation/mosaic-contracts/pull/480)).
+* Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399)).
+* Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
+
+### Known Issues
+
+* Circular dependencies between mosaic contracts on auxiliary.
+* Validators can not yet join an existing set of validators.
+* Validator rewards are not handled yet.
+
+
 ## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.2) March 27 2018
 
 OpenST v0.9.2 improves usability to facilitate application by the [OpenST-Platform](https://github.com/OpenSTFoundation/openst-platform) and other services. Additionally, this release increases test coverage, with additional unit and integration tests, and adds continuous integration with Travis CI.
