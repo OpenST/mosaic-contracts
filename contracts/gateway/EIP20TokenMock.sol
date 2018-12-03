@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -23,8 +23,6 @@ pragma solidity ^0.4.23;
 
 import "./EIP20Token.sol";
 
-
-
 /**
  *  @title EIP20TokenMock contract.
  *
@@ -33,7 +31,7 @@ import "./EIP20Token.sol";
  */
 contract EIP20TokenMock is EIP20Token {
 
-    /** Public functions */
+    /* Public functions */
 
     /**
      *  @notice Contract constructor.
@@ -42,9 +40,14 @@ contract EIP20TokenMock is EIP20Token {
      *  @param _name Name of the token.
      *  @param _decimals Decimal places of the token.
      */
-    constructor(string _symbol, string _name, uint8 _decimals)
-            EIP20Token(_symbol, _name, _decimals)
-            public { }
+    constructor(
+        string memory _symbol,
+        string memory _name,
+        uint8 _decimals
+    )
+        EIP20Token(_symbol, _name, _decimals)
+        public
+    {}
 
     /**
      *  @notice Public view function totalSupply.

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -183,7 +183,7 @@ contract PollingPlace is PollingPlaceInterface {
      *         that is registered as the auxilixary block store.
      */
     modifier onlyAuxiliaryBlockStore() {
-        address auxiliaryBlockStore = blockStores[auxiliaryCoreIdentifier];
+        address auxiliaryBlockStore = address(blockStores[auxiliaryCoreIdentifier]);
         require(
             msg.sender == auxiliaryBlockStore,
             "This method must be called from the registered auxiliary block store."
@@ -211,8 +211,8 @@ contract PollingPlace is PollingPlaceInterface {
     constructor (
         address _originBlockStore,
         address _auxiliaryBlockStore,
-        address[] _auxiliaryAddresses,
-        uint256[] _weights
+        address[] memory _auxiliaryAddresses,
+        uint256[] memory _weights
     )
         public
     {
@@ -264,8 +264,8 @@ contract PollingPlace is PollingPlaceInterface {
      * @return `true` if the update was successful.
      */
     function updateMetaBlock(
-        address[] _validators,
-        uint256[] _weights,
+        address[] calldata _validators,
+        uint256[] calldata _weights,
         uint256 _originHeight,
         uint256 _auxiliaryHeight
     )
@@ -390,8 +390,8 @@ contract PollingPlace is PollingPlaceInterface {
      * @param _weights The weights of the validators on origin.
      */
     function addValidators(
-        address[] _auxiliaryAddresses,
-        uint256[] _weights
+        address[] memory _auxiliaryAddresses,
+        uint256[] memory _weights
     )
         private
     {

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -15,7 +15,6 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 
 import "truffle/Assert.sol";
-import "truffle/DeployedAddresses.sol";
 import "../../contracts/test/test_lib/KeyValueStoreStub.sol";
 
 /**
@@ -26,8 +25,8 @@ contract TestMessageBus is KeyValueStoreStub{
     constructor()
         public
         KeyValueStoreStub()
-    {
-    }
+    {}
+
     /* External Functions */
 
     /**

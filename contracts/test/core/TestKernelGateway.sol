@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -55,8 +55,8 @@ contract TestKernelGateway is KernelGateway{
     */
     function verify(
         bytes32,
-        bytes,
-        bytes,
+        bytes memory,
+        bytes memory,
         bytes32
     )
         internal
@@ -102,8 +102,8 @@ contract TestKernelGateway is KernelGateway{
     function setKernel(
         uint256 _height,
         bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
+        address[] calldata _updatedValidators,
+        uint256[] calldata _updatedWeights,
         bytes32 _kernelHash
     )
         external

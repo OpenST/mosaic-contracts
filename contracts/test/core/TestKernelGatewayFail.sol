@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -56,8 +56,8 @@ contract TestKernelGatewayFail is TestKernelGateway{
      */
     function verify(
         bytes32,
-        bytes,
-        bytes,
+        bytes memory,
+        bytes memory,
         bytes32
     )
         internal

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -260,7 +260,7 @@ contract EIP20Gateway is Gateway {
         uint256 _gasLimit,
         uint256 _nonce,
         bytes32 _hashLock,
-        bytes _signature
+        bytes memory _signature
     )
         public
         isActive
@@ -299,7 +299,7 @@ contract EIP20Gateway is Gateway {
             _nonce,
             _gasPrice,
             _gasLimit,
-            token
+            address(token)
         );
 
         // Get the messageHash
@@ -433,7 +433,7 @@ contract EIP20Gateway is Gateway {
      */
     function progressStakeWithProof(
         bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -566,7 +566,7 @@ contract EIP20Gateway is Gateway {
     function progressRevertStake(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
+        bytes calldata _rlpEncodedParentNodes
     )
         external
         returns (
@@ -835,7 +835,7 @@ contract EIP20Gateway is Gateway {
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -900,7 +900,7 @@ contract EIP20Gateway is Gateway {
     function confirmRevertRedeemIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
+        bytes calldata _rlpEncodedParentNodes
     )
     external
     returns (
@@ -964,7 +964,7 @@ contract EIP20Gateway is Gateway {
         message.gasConsumed = initialGas.sub(gasleft());
     }
 
-    /* private functions */
+    /* Private functions */
 
     /**
      * @notice private function to execute confirm redeem intent.
@@ -981,7 +981,7 @@ contract EIP20Gateway is Gateway {
     function executeConfirmRedeemIntent(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
-        bytes _rlpParentNodes
+        bytes memory _rlpParentNodes
     )
         private
         returns (bool)
@@ -1037,7 +1037,7 @@ contract EIP20Gateway is Gateway {
         stakeAmount_ = stakes[_messageHash].amount;
 
         // Transfer the staked amount to stakeVault.
-        token.transfer(stakeVault, stakeAmount_);
+        token.transfer(address(stakeVault), stakeAmount_);
 
         baseToken.transfer(msg.sender, stakes[_messageHash].bounty);
 
@@ -1159,7 +1159,7 @@ contract EIP20Gateway is Gateway {
             _redeemerNonce,
             _gasPrice,
             _gasLimit,
-            token
+            address(token)
         );
     }
 

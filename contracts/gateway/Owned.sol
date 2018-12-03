@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -59,7 +59,7 @@ contract Owned {
         _;
     }
 
-    /** Internal Functions */
+    /* Internal Functions */
 
     /**
      *  @notice Internal view function isOwner.
@@ -72,7 +72,7 @@ contract Owned {
         return (_address == owner);
     }
 
-    /** Public Functions */
+    /* Public Functions */
 
     /**
      *  @notice Public function initiateOwnershipTransfer.

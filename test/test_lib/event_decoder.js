@@ -7,19 +7,21 @@ web3EventsDecoder.prototype = {
   getFormattedEvents: function (eventsData) {
     var formattedEvents = {};
 
-    var eventDataValues = {};
-
     for (var i = 0; i < eventsData.length; i++) {
       var currEvent = eventsData[i]
-        , currEventName = currEvent.name
+        , currEventName = currEvent.name ? currEvent.name : currEvent.event
         , currEventAddr = currEvent.address
-        , currEventParams = currEvent.events;
+        , currEventParams = currEvent.events ? currEvent.events : currEvent.args;
 
       formattedEvents[currEventName] = { address: currEventAddr };
 
-      for (var j = 0; j < currEventParams.length; j++) {
-        var p = currEventParams[j];
-        formattedEvents[currEventName][p.name] = p.value;
+      if (Array.isArray(currEventParams)) {
+        for (var j = 0; j < currEventParams.length; j++) {
+          var p = currEventParams[j];
+          formattedEvents[currEventName][p.name] = p.value;
+        }
+      } else {
+        formattedEvents[currEventName] = currEventParams;
       }
 
     }
@@ -36,15 +38,12 @@ web3EventsDecoder.prototype = {
    *
    * @returns {Object} The events, if any.
    */
-  getEvents: function(transaction, contract) {
+  getEvents: function (transaction, contract) {
     return this.perform(transaction.receipt, contract.address, contract.abi);
   },
 
   // decode logs from a transaction receipt
   perform: function (txReceipt, contractAddr, contractAbi) {
-    //console.log(txReceipt);
-    //console.log(contractAddr);
-    //console.log(contractAbi);
     var decodedEvents = [];
 
     // Transaction receipt not found
@@ -61,40 +60,55 @@ web3EventsDecoder.prototype = {
 
     const toAddr = txReceipt.to;
 
-    // if the address is a known address
-    if (txReceipt.logs.length > 0) {
+    let logs = [];
 
+    // Backwards compatibility:
+    if (txReceipt.logs.length > 0) {
+      logs = txReceipt.logs;
+    } else if (txReceipt.rawLogs.length > 0) {
+      logs = txReceipt.rawLogs;
+    }
+
+    if (logs.length > 0) {
       var abiDecoder = require('abi-decoder')
         , relevantLogs = [];
 
-      for (var i = 0; i < txReceipt.logs.length; i++) {
+      for (var i = 0; i < logs.length; i++) {
 
-        var currContractAddrFromReciept = txReceipt.logs[i].address;
+        var log = logs[i];
+        var currContractAddrFromReceipt = log.address;
 
-        console.debug('**** contract address: ' + txReceipt.logs[i].address + ' at log index(' + i + ') in TxHash: ' + txReceipt.transactionHash + '');
-
-        if (!currContractAddrFromReciept) {
-          console.error('**** No contract found for contract address: ' + txReceipt.logs[i].address + ' at log index(' + i + ') in TxHash: ' + txReceipt.transactionHash + '');
+        if (!currContractAddrFromReceipt) {
+          // No contract found for contract address.
           continue;
         }
 
-        if (currContractAddrFromReciept != contractAddr) {
-          console.debug('**** Skipping event of contract that is not under inspection: ' + txReceipt.logs[i].address + ' at log index(' + i + ') in TxHash: ' + txReceipt.transactionHash + '');
+        if (currContractAddrFromReceipt != contractAddr) {
+          // Skipping event of contract that is not under inspection.
           continue;
         }
 
-        // ABI not found
+        if (log.topics === undefined || log.topics.length === 0) {
+          // Logs that have an event already don't need to be encoded.
+          if (log.event !== undefined) {
+            decodedEvents.push(log)
+          }
+          continue;
+        }
+
         if (!contractAbi) {
-          console.error("ABI not found for contract: " + contractAddr);
+          // ABI not found for contract.
           return;
         }
 
-        relevantLogs.push(txReceipt.logs[i]);
+        relevantLogs.push(log);
         abiDecoder.addABI(contractAbi);
       }
 
       if (relevantLogs.length > 0) {
-        decodedEvents = abiDecoder.decodeLogs(relevantLogs);
+        decodedEvents = decodedEvents.concat(
+          abiDecoder.decodeLogs(relevantLogs)
+        );
       }
 
     }

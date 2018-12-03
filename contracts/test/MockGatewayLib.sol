@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 /**
  * @title MockGatewayLib contract
@@ -8,21 +8,21 @@ pragma solidity ^0.4.23;
 library MockGatewayLib {
 
     /**
-     *	@notice Mock Merkle proof verification of account.
+     * @notice Mock Merkle proof verification of account.
      *
-     *	@return bytes32 Mocked value of storage path of the variable.
+     * @return bytes32 Mocked value of storage path of the variable.
      */
     function proveAccount(
-        bytes,
-        bytes,
-        bytes,
+        bytes calldata,
+        bytes calldata,
+        bytes calldata,
         bytes32
     )
         external
         pure
         returns (bytes32 storageRoot_)
     {
-       return bytes32(0x8c0ee0843488170879578464b1cadcdb7377efa787372405ff373e4cec6a56db);
+        return bytes32(0x8c0ee0843488170879578464b1cadcdb7377efa787372405ff373e4cec6a56db);
     }
 
 }

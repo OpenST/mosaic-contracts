@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -97,7 +97,7 @@ contract RevertProxy {
      * @notice The fallback function stores the call data so that a call to the
      *         execute function will use the correct call data.
      */
-    function() public {
+    function() external {
         data = msg.data;
     }
 
@@ -108,7 +108,7 @@ contract RevertProxy {
      * @return `true` if the call was successful and did not revert, `false` if
      *         it reverted.
      */
-    function execute() external returns (bool) {
+    function execute() external returns (bool, bytes memory) {
         return target.call(data);
     }
 }

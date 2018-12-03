@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -112,7 +112,7 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes _signature
+        bytes calldata _signature
     )
         external
         returns (bytes32 messageHash_)
@@ -154,9 +154,9 @@ library MessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
      *
      * @return messageHash_ Message hash
      */
@@ -164,7 +164,7 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
@@ -219,7 +219,7 @@ library MessageBus {
      * @param _message Message object
      * @param _unlockSecret unlock secret for the hash lock provided while
      *                      declaration
-	 *
+     *
      * @return messageHash_ Message hash
      */
     function progressOutbox(
@@ -269,19 +269,19 @@ library MessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
+     *                               messageBox inbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxWithProof(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
@@ -397,19 +397,19 @@ library MessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the outbox of
-	 *                       source chain
-	 *
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the outbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
     function progressInboxWithProof(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
@@ -517,9 +517,9 @@ library MessageBus {
      * @param _messageTypeHash Message type hash
      * @param _message Message object
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox outbox.
-	 * @param _messageBoxOffset position of the messageBox.
-	 * @param _storageRoot storage root for proof
+     *                               messageBox outbox.
+     * @param _messageBoxOffset position of the messageBox.
+     * @param _storageRoot storage root for proof
      *
      * @return messageHash_ Message hash
      */
@@ -527,7 +527,7 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
@@ -585,12 +585,12 @@ library MessageBus {
      * @param _message Message object
      * @param _messageTypeHash Message type hash
      * @param _messageBoxOffset position of the messageBox.
-	 * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-	 *                               messageBox inbox.
-	 * @param _storageRoot storage root for proof
-	 * @param _messageStatus Message status of message hash in the inbox of
-	 *                       source chain
-	 *
+     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
+     *                               messageBox inbox.
+     * @param _storageRoot storage root for proof
+     * @param _messageStatus Message status of message hash in the inbox of
+     *                       source chain
+     *
      * @return messageHash_ Message hash
      */
     function progressOutboxRevocation(
@@ -598,7 +598,7 @@ library MessageBus {
         Message storage _message,
         bytes32 _messageTypeHash,
         uint8 _messageBoxOffset,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
@@ -655,18 +655,18 @@ library MessageBus {
     }
 
     /**
-	 * @notice Change inbox state to the next possible state
-	 *
-	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
-	 *      Undeclared -> Declared, Declared -> Progressed,
-	 *      DeclaredRevocation -> Revoked
-	 *
-	 * @param _messageBox Message box.
-	 * @param _messageHash Message hash
-	 *
-	 * @return isChanged_ `true` if the state is changed
-	 * @return nextState_ Next state to which its changed
-	 */
+     * @notice Change inbox state to the next possible state
+     *
+     * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+     *      Undeclared -> Declared, Declared -> Progressed,
+     *      DeclaredRevocation -> Revoked
+     *
+     * @param _messageBox Message box.
+     * @param _messageHash Message hash
+     *
+     * @return isChanged_ `true` if the state is changed
+     * @return nextState_ Next state to which its changed
+     */
     function changeInboxState(
         MessageBox storage _messageBox,
         bytes32 _messageHash
@@ -697,18 +697,18 @@ library MessageBus {
     }
 
     /**
-	 * @notice Change outbox state to the next possible state
-	 *
-	 * @dev State will change only for Undeclared, Declared, DeclaredRevocation
-	 *      Undeclared -> Declared, Declared -> Progressed,
-	 *      DeclaredRevocation -> Revoked
-	 *
-	 * @param _messageBox Message box.
-	 * @param _messageHash Message hash
-	 *
-	 * @return isChanged_ `true` if the state is changed
-	 * @return nextState_ Next state to which its changed
-	 */
+     * @notice Change outbox state to the next possible state
+     *
+     * @dev State will change only for Undeclared, Declared, DeclaredRevocation
+     *      Undeclared -> Declared, Declared -> Progressed,
+     *      DeclaredRevocation -> Revoked
+     *
+     * @param _messageBox Message box.
+     * @param _messageHash Message hash
+     *
+     * @return isChanged_ `true` if the state is changed
+     * @return nextState_ Next state to which its changed
+     */
     function changeOutboxState(
         MessageBox storage _messageBox,
         bytes32 _messageHash
@@ -809,7 +809,7 @@ library MessageBus {
      */
     function verifySignature(
         bytes32 _message,
-        bytes _signature,
+        bytes memory _signature,
         address _signer
     )
         private
@@ -861,8 +861,11 @@ library MessageBus {
         pure
         returns(bytes32 /* storage path */)
     {
-        bytes memory indexBytes = BytesLib.leftPad(bytes32ToBytes(
-                bytes32(_structPosition)));
+        bytes memory indexBytes = BytesLib.leftPad(
+            bytes32ToBytes(
+                bytes32(uint256(_structPosition))
+            )
+        );
         bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
         bytes32 structPath = keccak256(abi.encodePacked(keccak256(
@@ -879,22 +882,21 @@ library MessageBus {
     }
 
     /**
-     *	@notice Convert bytes32 to bytes
+     * @notice Convert bytes32 to bytes
      *
-     *	@param _inBytes32 bytes32 value
+     * @param _inBytes32 bytes32 value
      *
-     *	@return bytes value
+     * @return bytes value
      */
     function bytes32ToBytes(bytes32 _inBytes32)
         private
         pure
-        returns (bytes)
+        returns (bytes memory bytes_)
     {
-        bytes memory res = new bytes(32);
+        bytes_ = new bytes(32);
         assembly {
-            mstore(add(32,res), _inBytes32)
+            mstore(add(32, bytes_), _inBytes32)
         }
-        return res;
     }
 }
 

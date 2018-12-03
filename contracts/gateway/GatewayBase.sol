@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "../lib/GatewayLib.sol";
 import "./CoreInterface.sol";
@@ -179,7 +179,7 @@ contract GatewayBase {
     public
     {
         require(
-            _core != address(0),
+            address(_core) != address(0),
             "Core contract address must not be zero"
         );
         require(
@@ -217,7 +217,7 @@ contract GatewayBase {
      *       proveGateway bytes _rlpParentNodes variable is not validated. In
      *       this case input storage root derived from merkle proof account
      *       nodes is verified with stored storage root of given blockHeight.
-     *		 GatewayProven event has parameter wasAlreadyProved to
+     *       GatewayProven event has parameter wasAlreadyProved to
      *       differentiate between first call and replay calls.
      *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
@@ -229,8 +229,8 @@ contract GatewayBase {
      */
     function proveGateway(
         uint256 _blockHeight,
-        bytes _rlpEncodedAccount,
-        bytes _rlpParentNodes
+        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpParentNodes
     )
         external
         returns (bool /* success */)
@@ -247,7 +247,7 @@ contract GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(core).getStateRoot(_blockHeight);
+        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(
@@ -265,7 +265,7 @@ contract GatewayBase {
             emit GatewayProven(
                 remoteGateway,
                 _blockHeight,
-                storageRoot,
+                provenStorageRoot,
                 true
             );
 
@@ -431,10 +431,9 @@ contract GatewayBase {
     )
         internal
         pure
-        returns (MessageBus.Message)
+        returns (MessageBus.Message memory)
     {
-        return MessageBus.Message(
-            {
+        return MessageBus.Message({
             intentHash : _intentHash,
             nonce : _accountNonce,
             gasPrice : _gasPrice,
@@ -442,8 +441,7 @@ contract GatewayBase {
             sender : _account,
             hashLock : _hashLock,
             gasConsumed : 0
-            }
-        );
+        });
     }
 
     /**

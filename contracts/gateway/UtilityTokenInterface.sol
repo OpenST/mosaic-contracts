@@ -1,5 +1,5 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -47,7 +47,7 @@ contract UtilityTokenInterface {
         address _utilityToken
     );
 
-    /** Public Functions */
+    /* Public Functions */
 
     /**
      * @notice Mints the utility token

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2017 OpenST Ltd.
 //
@@ -39,7 +39,7 @@ contract SafeMathMock {
   
   uint256 public result;
 
-  /** Public functions */
+  /* Public functions */
 
   /**
    *  @notice Public function multiply.

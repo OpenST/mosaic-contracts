@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -88,7 +88,7 @@ contract OriginCore is
     /**
      * This represents kernel hash of current open meta-block. This will be
      * used by kernel gateway to prove kernel opening on auxiliary chain
-     * using merkel proof.
+     * using Merkle proof.
      */
     bytes32 public openKernelHash;
 
@@ -105,7 +105,8 @@ contract OriginCore is
      * Mapping of block hashes to block headers that were reported with the
      * respective hash.
      */
-    mapping (bytes32 => MetaBlock.Header) public reportedHeaders;
+    mapping (bytes32 => MetaBlock.Kernel) public reportedKernels;
+    mapping (bytes32 => MetaBlock.AuxiliaryTransition) public reportedTransitions;
 
     /**
      * Mapping of kernel hash to transition object map,
@@ -251,21 +252,20 @@ contract OriginCore is
             "CoreIdentifier should be same as auxiliary core identifier."
         );
 
-        /* header of last meta block */
-        MetaBlock.Header storage latestMetaBlockHeader = reportedHeaders[head];
-
+        MetaBlock.Kernel storage latestKernel = reportedKernels[head];
         require(
-            latestMetaBlockHeader.kernel.height.add(1) == _height,
+            latestKernel.height.add(1) == _height,
             "Height should be one more than last meta-block."
         );
 
+        MetaBlock.AuxiliaryTransition storage latestTransition = reportedTransitions[head];
         require(
-            _auxiliaryDynasty > latestMetaBlockHeader.transition.auxiliaryDynasty,
+            _auxiliaryDynasty > latestTransition.auxiliaryDynasty,
             "Auxiliary dynasty should be greater than last meta-block auxiliary dynasty."
         );
 
         require(
-            _accumulatedGas > latestMetaBlockHeader.transition.accumulatedGas,
+            _accumulatedGas > latestTransition.accumulatedGas,
             "Gas consumed should be greater than last meta-block gas."
         );
 
@@ -409,11 +409,7 @@ contract OriginCore is
      *
      * @return The identifier of auxiliary core.
      */
-    function auxiliaryCoreIdentifier()
-        external
-        view
-        returns (bytes32)
-    {
+    function getAuxiliaryCoreIdentifier() external view returns (bytes20) {
         return auxiliaryCoreIdentifier;
     }
 
@@ -483,8 +479,8 @@ contract OriginCore is
         view
         returns (uint256 accumulateGasTarget_)
     {
-        MetaBlock.Header storage lastCommittedMetaBlock = reportedHeaders[head];
-        accumulateGasTarget_ = lastCommittedMetaBlock.transition.accumulatedGas.add(
+        MetaBlock.AuxiliaryTransition storage lastTransition = reportedTransitions[head];
+        accumulateGasTarget_ = lastTransition.accumulatedGas.add(
             maxAccumulateGasLimit
         );
     }
@@ -554,12 +550,13 @@ contract OriginCore is
             _initialTransactionRoot
         );
 
-        metaBlockHash_  = MetaBlock.hashMetaBlock(
+        metaBlockHash_ = MetaBlock.hashMetaBlock(
             kernelHash,
             transitionHash
         );
 
-        reportedHeaders[metaBlockHash_] = MetaBlock.Header(genesisKernel, genesisTransition);
+        reportedKernels[metaBlockHash_] = genesisKernel;
+        reportedTransitions[metaBlockHash_] = genesisTransition;
 
         /* Open Kernel for height 1. */
         openKernel = MetaBlock.Kernel(
@@ -602,11 +599,11 @@ contract OriginCore is
     )
         private
         view
-        returns ( address signer_)
+        returns (address signer_)
     {
         // As per https://github.com/ethereum/go-ethereum/pull/2940
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        _voteHash = keccak256(
+        bytes32 expandedVoteHash = keccak256(
             abi.encodePacked(
                 prefix,
                 _voteHash
@@ -614,7 +611,7 @@ contract OriginCore is
         );
 
         signer_ = ecrecover(
-            _voteHash,
+            expandedVoteHash,
             _v,
             _r,
             _s
@@ -713,10 +710,8 @@ contract OriginCore is
         );
 
         /* Report meta-block. */
-        reportedHeaders[metaBlockHash] = MetaBlock.Header(
-            openKernel,
-            proposedMetaBlock[_kernelHash][_transitionHash]
-        );
+        reportedKernels[metaBlockHash] = openKernel;
+        reportedTransitions[metaBlockHash] = proposedMetaBlock[_kernelHash][_transitionHash];
 
         /* Update head */
         head = metaBlockHash;

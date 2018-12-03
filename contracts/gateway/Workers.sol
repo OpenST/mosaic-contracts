@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -59,7 +59,7 @@ contract Workers is WorkersInterface, OpsManaged {
         OpsManaged()
     {}
 
-    /** External Functions */
+    /* External Functions */
     
     /**
      *  @notice External function setWorker.
