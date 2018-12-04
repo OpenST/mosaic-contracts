@@ -1,5 +1,9 @@
 #!/bin/bash
-node_modules/.bin/ganache-cli \
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+cd $DIR
+
+../node_modules/.bin/ganache-cli \
     --account="0x8fbbbaceff30d4eea3e2ffa2dfedc3c053f78c1f53103e4ddc31309e6b1d5ea0,10000000000000000000000000000000" \
     --account="0x8fbbbaceff30d4eea3e2ffa2dfedc3c053f78c1f53103e4ddc31309e6b1d5ea1,10000000000000000000000000000000" \
     --account="0x8fbbbaceff30d4eea3e2ffa2dfedc3c053f78c1f53103e4ddc31309e6b1d5ea2,10000000000000000000000000000000" \
