@@ -180,6 +180,9 @@ contract EIP20Gateway is GatewayBase {
 
     /* public variables */
 
+    /** Specifies if the Gateway is activated for any new process. */
+    bool public activated;
+
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
@@ -197,6 +200,17 @@ contract EIP20Gateway is GatewayBase {
 
     /** Maps messageHash to the Unstake object. */
     mapping(bytes32 /*messageHash*/ => Unstake) unstakes;
+
+    /* modifiers */
+
+    /** checks that contract is activated */
+    modifier isActive() {
+        require(
+            activated == true,
+            "Contract is restricted to use"
+        );
+        _;
+    }
 
     /* Constructor */
 

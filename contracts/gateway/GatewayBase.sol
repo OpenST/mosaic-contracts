@@ -73,9 +73,6 @@ contract GatewayBase {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
-
     /** Organisation address. */
     address public organisation;
 
@@ -134,15 +131,6 @@ contract GatewayBase {
         require(
             msg.sender == organisation,
             "Only organisation can call the function"
-        );
-        _;
-    }
-
-    /** checks that contract is activated */
-    modifier isActive() {
-        require(
-            activated == true,
-            "Contract is restricted to use"
         );
         _;
     }
