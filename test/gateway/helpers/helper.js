@@ -2,8 +2,6 @@
 
 const web3 = require('../../test_lib/web3.js');
 
-const GatewayLib = artifacts.require("GatewayLib");
-
 const GatewayHelper = function(gateway) {
     const oThis = this;
     oThis.gateway = gateway;

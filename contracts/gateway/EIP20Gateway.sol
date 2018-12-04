@@ -54,7 +54,7 @@ pragma solidity ^0.5.0;
 */
 
 import "./SimpleStake.sol";
-import "./Gateway.sol";
+import "./GatewayBase.sol";
 
 /**
  * @title EIP20Gateway Contract
@@ -63,7 +63,7 @@ import "./Gateway.sol";
  *         auxiliary chain. Currently gateway supports stake and mint and revert
  *         stake message.
  */
-contract EIP20Gateway is Gateway {
+contract EIP20Gateway is GatewayBase {
 
     /* Events */
 
@@ -183,6 +183,14 @@ contract EIP20Gateway is Gateway {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
+    /** address of ERC20 token. */
+    EIP20Interface public token;
+
+    /**
+     * address of ERC20 token in which
+     * the facilitator will stake(bounty) for a process
+     */
+    EIP20Interface public baseToken;
 
     /** Maps messageHash to the Stake object. */
     mapping(bytes32 /*messageHash*/ => Stake) stakes;
@@ -214,15 +222,25 @@ contract EIP20Gateway is Gateway {
         uint256 _bounty,
         address _organisation
     )
-        Gateway(
-            _token,
-            _baseToken,
+        GatewayBase(
             _core,
             _bounty,
             _organisation
         )
         public
     {
+        require(
+            address(_token) != address(0),
+            "Token contract address must not be zero"
+        );
+        require(
+            address(_baseToken) != address(0),
+            "Base token contract address for bounty must not be zero"
+        );
+        token = _token;
+        baseToken = _baseToken;
+        // gateway is in-active initially.
+        activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
         stakeVault = new SimpleStake(_token, address(this));
     }
@@ -962,7 +980,56 @@ contract EIP20Gateway is Gateway {
         message.gasConsumed = initialGas.sub(gasleft());
     }
 
-    /* Private functions */
+    /**
+    * @notice Activate Gateway contract. Can be set only by the
+    *         Organisation address only once by passing co-gateway address.
+    *
+    * @param _coGatewayAddress Address of cogateway.
+    *
+    * @return `true` if value is set
+    */
+    function activateGateway(address _coGatewayAddress)
+        external
+        onlyOrganisation
+        returns (bool)
+    {
+
+        require(
+            remoteGateway == address(0),
+            'Gateway was already activated once.'
+        );
+
+        remoteGateway = _coGatewayAddress;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
+        activated = true;
+        return true;
+    }
+
+    /**
+    * @notice Deactivate Gateway contract. Can be set only by the
+    *         Organisation address
+    *
+    * @return `true` if value is set
+    */
+    function deactivateGateway()
+        external
+        onlyOrganisation
+        returns (bool)
+    {
+        require(
+            activated == true,
+            "Gateway is already deactivated"
+        );
+        activated = false;
+        return true;
+    }
+
+
+/* Private functions */
 
     /**
      * @notice private function to execute confirm redemption intent.

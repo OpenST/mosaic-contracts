@@ -5,6 +5,8 @@ import "./CoreInterface.sol";
 import "../lib/SafeMath.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
+import "./EIP20Interface.sol";
+
 
 /**
  *  @title GatewayBase contract.
@@ -71,8 +73,8 @@ contract GatewayBase {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is deactivated for any new process. */
-    bool public deactivated;
+    /** Specifies if the Gateway is activated for any new process. */
+    bool public activated;
 
     /** Organisation address. */
     address public organisation;
@@ -136,10 +138,10 @@ contract GatewayBase {
         _;
     }
 
-    /** checks that contract is not deactivated */
+    /** checks that contract is activated */
     modifier isActive() {
         require(
-            deactivated == false,
+            activated == true,
             "Contract is restricted to use"
         );
         _;
@@ -173,8 +175,6 @@ contract GatewayBase {
 
         core = _core;
 
-        // gateway is active
-        deactivated = false;
         bounty = _bounty;
         organisation = _organisation;
 
@@ -267,44 +267,6 @@ contract GatewayBase {
             false
         );
 
-        return true;
-    }
-
-    /**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactivated"
-        );
-        deactivated = true;
         return true;
     }
 

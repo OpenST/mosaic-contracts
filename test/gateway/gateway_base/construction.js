@@ -27,7 +27,6 @@ contract('GatewayBase.sol', function (accounts) {
       assert.equal(core,await gatewayBaseInstance.core.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should pass with right set of parameters and zero bounty', async function () {
@@ -43,7 +42,6 @@ contract('GatewayBase.sol', function (accounts) {
       assert.equal(core, await gatewayBaseInstance.core.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should fail if core address is not passed', async function () {

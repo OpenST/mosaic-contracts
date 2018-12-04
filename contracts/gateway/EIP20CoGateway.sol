@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "./GatewayBase.sol";
+
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,9 +54,7 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
         progressUnstakeWithProof  <---   progressRedemptionWithProof
 -------------------------------------------------------------------------------
 */
-
-import "./CoGateway.sol";
-
+import "./UtilityTokenInterface.sol";
 /**
  * @title EIP20CoGateway Contract
  *
@@ -62,7 +62,7 @@ import "./CoGateway.sol";
  *         chain to origin chain. Currently CoGateway supports redeem and
  *         unstake, redeem and unstake and revert redeem message
  */
-contract EIP20CoGateway is CoGateway {
+contract EIP20CoGateway is GatewayBase {
 
     /* Events */
 
@@ -178,6 +178,12 @@ contract EIP20CoGateway is CoGateway {
 
     /* public variables */
 
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -208,17 +214,34 @@ contract EIP20CoGateway is CoGateway {
         address _organisation,
         address _gateway
     )
-        CoGateway(
-            _valueToken,
-            _utilityToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organisation,
-            _gateway
+            _organisation
         )
         public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero"
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero"
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero"
+        );
 
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        remoteGateway = _gateway;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
     }
 
     /* External functions */
@@ -716,44 +739,6 @@ contract EIP20CoGateway is CoGateway {
             message.nonce,
             redeemProcess.amount
         );
-    }
-
-    /**
-     * @notice Activate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
     }
 
     /* Public functions */

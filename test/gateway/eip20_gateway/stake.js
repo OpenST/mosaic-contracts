@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("MockEIP20Gateway"),
+const Gateway = artifacts.require("TestEIP20Gateway"),
   MockToken = artifacts.require("MockToken"),
   MessageBus = artifacts.require("MessageBus"),
   GatewayLib = artifacts.require("GatewayLib");

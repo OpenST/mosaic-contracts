@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "../gateway/EIP20Gateway.sol";
 import "../gateway/MessageBus.sol";
 
-contract MockEIP20Gateway is EIP20Gateway {
+contract TestEIP20Gateway is EIP20Gateway {
 
     MessageBus messageBus;
     constructor(
@@ -22,6 +22,6 @@ contract MockEIP20Gateway is EIP20Gateway {
         )
         public
     {
-
+        activated = true;
     }
 }
