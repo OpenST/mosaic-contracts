@@ -8,7 +8,6 @@ contract GatewayRedeemInterface {
     function redeem(
         uint256 _amount,
         address _beneficiary,
-        address _facilitator,
         uint256 _gasPrice,
         uint256 _nonce,
         bytes32 _hashLock

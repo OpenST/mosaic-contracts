@@ -158,8 +158,6 @@ contract EIP20CoGateway is CoGateway {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the staking process. */
-        address facilitator;  //todo need to discuss revocation process
         /** bounty amount kept by facilitator for transferring redeem messages*/
         uint256 bounty;
     }
@@ -899,7 +897,6 @@ contract EIP20CoGateway is CoGateway {
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
      *                  redemption process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay
@@ -911,7 +908,6 @@ contract EIP20CoGateway is CoGateway {
     function redeem(
         uint256 _amount,
         address _beneficiary,
-        address _facilitator,
         uint256 _gasPrice,
         uint256 _gasLimit,
         uint256 _nonce,
@@ -929,11 +925,6 @@ contract EIP20CoGateway is CoGateway {
         require(
             _amount > uint256(0),
             "Redeem amount must not be zero"
-        );
-
-        require(
-            _facilitator != address(0),
-            "Facilitator address must not be zero"
         );
         require(
             _gasPrice != 0,
@@ -977,7 +968,6 @@ contract EIP20CoGateway is CoGateway {
         redeems[messageHash_] = Redeem({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : _facilitator,
             bounty : bounty
             });
 
