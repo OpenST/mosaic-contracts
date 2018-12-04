@@ -398,7 +398,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "RevertRedeem intent hash must not be zero"
+            "Stake intent hash must not be zero"
         );
 
         // Get the storage root
@@ -669,7 +669,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "StakeIntentHash must not be zero"
+            "RedeemIntentHash must not be zero"
         );
 
         // Get the storageRoot for the given block height
@@ -865,7 +865,7 @@ contract EIP20CoGateway is CoGateway {
 
         // execute the confirm stake intent. This is done in separate
         // function to avoid stack too deep error
-        executeConfirmStakeIntent(
+        confirmStakeIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpParentNodes
@@ -1030,7 +1030,7 @@ contract EIP20CoGateway is CoGateway {
      *
      * @return `true` if executed successfully
      */
-    function executeConfirmStakeIntent(
+    function confirmStakeIntentInternal(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
@@ -1097,7 +1097,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice This is internal method for process meeting contains common logic.
+     * @notice This is internal method for process minting contains common logic.
      *
      * @param _messageHash Message hash.
      * @param _initialGas initial gas during progress process.

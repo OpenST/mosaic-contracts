@@ -166,7 +166,7 @@ contract EIP20Gateway is Gateway {
     }
 
     /**
-     * Unstake stores the unstake / redeem information
+     * Unstake stores the unstake/redeem information
      * like unstake/redeem amount, beneficiary address, message data.
      */
     struct Unstake {
@@ -238,7 +238,7 @@ contract EIP20Gateway is Gateway {
      *      stake amount. Staked amount is transferred from staker address to
      *      Gateway contract.
      *
-     * @param _amount Stake amount that will be transferred form staker
+     * @param _amount Stake amount that will be transferred form the staker
      *                account.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
@@ -738,7 +738,7 @@ contract EIP20Gateway is Gateway {
             _hashLock
         );
 
-        executeConfirmRedeemIntent(
+        confirmRedeemIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpEncodedParentNodes
@@ -978,7 +978,7 @@ contract EIP20Gateway is Gateway {
      *
      * @return `true` if executed successfully
      */
-    function executeConfirmRedeemIntent(
+    function confirmRedeemIntentInternal(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
