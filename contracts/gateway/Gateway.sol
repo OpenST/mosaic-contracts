@@ -34,16 +34,17 @@ progressGatewayLink  --->   progressGatewayLink
 -------------------------------------------------------------------------------
 */
 
-import './MessageBus.sol';
+import "./MessageBus.sol";
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
+import "../lib/IsWorkerInterface.sol";
 
 /**
  *  @title Gateway contract.
  *
  *  @notice Gateway contains functions for initial setup of EIP20-gateway.
  */
-contract Gateway is  GatewayBase {
+contract Gateway is GatewayBase {
 
     /** Emitted whenever a gateway and coGateway linking is initiated. */
     event GatewayLinkInitiated(
@@ -84,21 +85,21 @@ contract Gateway is  GatewayBase {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _organisation Organisation address.
+     * @param _workerManager Address of a contract that manages workers.
      */
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
+        IsWorkerInterface _workerManager,
         address _messageBus
     )
         GatewayBase(
             _core,
             _messageBus,
             _bounty,
-            _organisation
+            _workerManager
         )
         public
     {
@@ -127,10 +128,10 @@ contract Gateway is  GatewayBase {
      *                    This is a sha3 of gateway address, cogateway address,
      *                    bounty, token name, token symbol, token decimals,
      *                    _nonce, token.
-     * @param _nonce Nonce of the sender. Here in this case its organisation
+     * @param _nonce Nonce of the sender. Here in this case its organization
      *               address
      * @param _sender The address that signs the message hash. In this case it
-     *                has to be organisation address
+     *                has to be organization address
      * @param _hashLock Hash lock, set by the facilitator.
      * @param _signature Signed data.
      *
@@ -158,10 +159,6 @@ contract Gateway is  GatewayBase {
         require(
             _coGateway != address(0),
             "CoGateway address must not be zero"
-        );
-        require(
-            _sender == organisation,
-            "Sender must be organisation address"
         );
         require(
             gatewayLinkHash == bytes32(0),

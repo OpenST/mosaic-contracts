@@ -54,6 +54,7 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
 */
 
 import "./CoGateway.sol";
+import "../lib/IsWorkerInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
@@ -198,7 +199,7 @@ contract EIP20CoGateway is CoGateway {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _organisation Organisation address.
+     * @param _workerManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
      * @param _messageBus Message bus contract address.
      */
@@ -207,7 +208,7 @@ contract EIP20CoGateway is CoGateway {
         address _utilityToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
+        IsWorkerInterface _workerManager,
         address _gateway,
         address _messageBus
     )
@@ -216,7 +217,7 @@ contract EIP20CoGateway is CoGateway {
             _utilityToken,
             _core,
             _bounty,
-            _organisation,
+            _workerManager,
             _gateway,
             _messageBus
         )
@@ -724,13 +725,13 @@ contract EIP20CoGateway is CoGateway {
 
     /**
      * @notice Activate CoGateway contract. Can be set only by the
-     *         Organisation address
+     *         Organization address
      *
      * @return `true` if value is set
      */
     function activateCoGateway()
         external
-        onlyOrganisation
+        onlyWorker
         returns (bool)
     {
         require(
@@ -743,13 +744,13 @@ contract EIP20CoGateway is CoGateway {
 
     /**
      * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organisation address
+     *         Organization address
      *
      * @return `true` if value is set
      */
     function deactivateCoGateway()
         external
-        onlyOrganisation
+        onlyWorker
         returns (bool)
     {
         require(

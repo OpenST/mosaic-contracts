@@ -81,12 +81,6 @@ GatewayUtils.prototype = {
                 "Invalid bounty amount from contract"
             );
 
-            let orgAdd = await this.gateway.organisation.call();
-            assert.equal(
-                orgAdd,
-                organisationAddress,
-                "Invalid organisationAddress address from contract"
-            );
         }
 
         return this.gateway;

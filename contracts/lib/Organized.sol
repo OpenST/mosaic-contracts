@@ -27,19 +27,20 @@ contract Organized {
     /* Storage */
 
     /**
-     * IsWorkerInterface of organization contract which holds all the
+     * IsWorkerInterface of worker manager contract which holds all the
      * keys needed to administer the economy.
      */
-    IsWorkerInterface public organization;
+    IsWorkerInterface public workerManager;
 
     /* Modifiers */
 
     modifier onlyWorker()
     {
         require(
-            organization.isWorker(msg.sender),
+            workerManager.isWorker(msg.sender),
             "Only whitelisted workers are allowed to call this method."
         );
+
         _;
     }
 
@@ -48,16 +49,15 @@ contract Organized {
     /**
      * @notice Sets the address of the organization contract.
      *
-     * @param _organization Organization contract address containing
-     *                      different administration keys.
+     * @param _workerManager A contract that manages worker keys.
      */
-    constructor(IsWorkerInterface _organization) public {
+    constructor(IsWorkerInterface _workerManager) public {
         require(
-            address(_organization) != address(0),
+            address(_workerManager) != address(0),
             "Organization contract address must not be address(0)."
         );
 
-        organization = _organization;
+        workerManager = _workerManager;
     }
 
 }

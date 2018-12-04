@@ -34,13 +34,14 @@ progressGatewayLink  --->   progressGatewayLink
 -------------------------------------------------------------------------------
 */
 
-import "./MessageBus.sol";
-import "./EIP20Interface.sol";
-import "../lib/SafeMath.sol";
-import "./GatewayBase.sol";
 import "./CoreInterface.sol";
+import "./EIP20Interface.sol";
+import "./GatewayBase.sol";
+import "./MessageBus.sol";
 import "./UtilityTokenInterface.sol";
 import "../lib/GatewayLib.sol";
+import "../lib/IsWorkerInterface.sol";
+import "../lib/SafeMath.sol";
 
 /**
  *  @title CoGateway contract.
@@ -48,7 +49,6 @@ import "../lib/GatewayLib.sol";
  *  @notice CoGateway contains functions for initial setup of EIP20CoGateway.
  */
 contract CoGateway is GatewayBase {
-
     using SafeMath for uint256;
 
     /** Emitted whenever a gateway and coGateway linking is confirmed. */
@@ -81,7 +81,7 @@ contract CoGateway is GatewayBase {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         minting and redeeming.
      *
@@ -91,7 +91,7 @@ contract CoGateway is GatewayBase {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _organisation Organisation address.
+     * @param _workerManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
      * @param _messageBus Message bus address.
      */
@@ -100,7 +100,7 @@ contract CoGateway is GatewayBase {
         address _utilityToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
+        IsWorkerInterface _workerManager,
         address _gateway,
         address _messageBus
     )
@@ -108,7 +108,7 @@ contract CoGateway is GatewayBase {
             _core,
             _messageBus,
             _bounty,
-            _organisation
+            _workerManager
         )
         public
     {
@@ -145,10 +145,10 @@ contract CoGateway is GatewayBase {
      *                    This is a sha3 of gateway address, cogateway address,
      *                    bounty, token name, token symbol, token decimals,
      *                    _nonce, token.
-     * @param _nonce Nonce of the sender. Here in this case its organisation
+     * @param _nonce Nonce of the sender. Here in this case its organization
      *               address of Gateway
      * @param _sender The address that signs the message hash. In this case it
-     *                has to be organisation address of Gateway
+     *                has to be organization address of Gateway
      * @param _hashLock Hash lock, set by the facilitator.
      * @param _blockHeight Block number for which the proof is valid
      * @param _rlpParentNodes RLP encoded parent node data to prove in
