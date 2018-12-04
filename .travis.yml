@@ -22,7 +22,7 @@ install:
   - npm install
 before_script:
   - ./tools/runGanacheCli.sh </dev/null &
-  - sleep 20s
+  - sleep 30s
 script:
   - npm run test
 after_script:
