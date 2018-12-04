@@ -231,7 +231,7 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             address(_token) != address(0),
-            "Token contract address must not be zero"
+            "Token contract address must not be zero."
         );
         require(
             address(_baseToken) != address(0),

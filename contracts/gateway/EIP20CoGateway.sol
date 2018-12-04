@@ -223,15 +223,15 @@ contract EIP20CoGateway is GatewayBase {
     {
         require(
             _valueToken != address(0),
-            "Value token address must not be zero"
+            "Value token address must not be zero."
         );
         require(
             _utilityToken != address(0),
-            "Utility token address must not be zero"
+            "Utility token address must not be zero."
         );
         require(
             _gateway != address(0),
-            "Gateway address must not be zero"
+            "Gateway address must not be zero."
         );
 
         valueToken = _valueToken;

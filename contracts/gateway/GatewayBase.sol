@@ -166,11 +166,11 @@ contract GatewayBase {
     {
         require(
             address(_core) != address(0),
-            "Core contract address must not be zero"
+            "Core contract address must not be zero."
         );
         require(
             _organisation != address(0),
-            "Organisation address must not be zero"
+            "Organisation address must not be zero."
         );
 
         core = _core;

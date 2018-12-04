@@ -3,13 +3,14 @@ const GatewayBase = artifacts.require("./GatewayBase.sol")
 
 const Utils = require('../../../test/test_lib/utils');
 
+const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
 
     let core, bounty, organisation;
 
-    before(function () {
+    beforeEach(function () {
 
       organisation = accounts[2]
         , core = accounts[0]
@@ -46,15 +47,21 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should fail if core address is not passed', async function () {
 
-      core = 0;
-      Utils.expectThrow(GatewayBase.new(core, bounty, organisation));
+      core = NullAddress;
+     await Utils.expectRevert(
+         GatewayBase.new(core, bounty, organisation),
+         "Core contract address must not be zero."
+     );
 
     });
 
     it('should fail if organisation address is not passed', async function () {
 
-      organisation = 0;
-      Utils.expectThrow(GatewayBase.new(core,  bounty, organisation));
+      organisation = NullAddress;
+      await Utils.expectRevert(
+          GatewayBase.new(core,  bounty, organisation),
+          "Organisation address must not be zero."
+      );
 
     });
   });

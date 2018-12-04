@@ -91,6 +91,21 @@ contract('EIP20Gateway ', function (accounts) {
             );
         });
 
+        it('should not deploy contract if token is passed as zero.', async function () {
+            let mockToken = NullAddress;
+
+            await Utils.expectRevert(
+                Gateway.new(
+                    mockToken,
+                    baseToken.address,
+                    coreAddress,
+                    bountyAmount,
+                    organisation
+                ),
+                "Token contract address must not be zero."
+            );
+        });
+
         it('should not deploy contract if base token is passed as zero.', async function () {
             let baseTokenAddress = NullAddress;
 
@@ -101,7 +116,8 @@ contract('EIP20Gateway ', function (accounts) {
                     coreAddress,
                     bountyAmount,
                     organisation
-                )
+                ),
+                "Base token contract address for bounty must not be zero."
             );
         });
 
@@ -115,7 +131,8 @@ contract('EIP20Gateway ', function (accounts) {
                     coreAddress,
                     bountyAmount,
                     organisation
-                )
+                ),
+                "Core contract address must not be zero."
             );
 
         });
@@ -131,7 +148,8 @@ contract('EIP20Gateway ', function (accounts) {
                     coreAddress,
                     bountyAmount,
                     organisation
-                )
+                ),
+                "Organisation address must not be zero."
             );
         });
 
