@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -24,7 +24,7 @@ import "./AuxiliaryTransitionObjectInterface.sol";
 import "./KernelGatewayInterface.sol";
 
 /** @title The kernel gateway on auxiliary. */
-contract KernelGateway is KernelGatewayInterface{
+contract KernelGateway is KernelGatewayInterface {
     using SafeMath for uint256;
 
     /* Events */
@@ -136,12 +136,12 @@ contract KernelGateway is KernelGatewayInterface{
         );
 
         require(
-            _originBlockStore != address(0),
+            address(_originBlockStore) != address(0),
             "The address of the origin block store must not be zero."
         );
 
         require(
-            _auxiliaryBlockStore != address(0),
+            address(_auxiliaryBlockStore) != address(0),
             "The address of the auxiliary block store must not be zero."
         );
 
@@ -168,7 +168,7 @@ contract KernelGateway is KernelGatewayInterface{
         );
 
         bytes memory indexBytes = BytesLib.leftPad(
-            BytesLib.bytes32ToBytes(bytes32(KERNEL_HASH_INDEX))
+            BytesLib.bytes32ToBytes(bytes32(uint256(KERNEL_HASH_INDEX)))
         );
 
         storagePath = BytesLib.bytes32ToBytes(
@@ -195,8 +195,8 @@ contract KernelGateway is KernelGatewayInterface{
      * @return success_ `true` if the proof is successful.
      */
     function proveOriginCore(
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
+        bytes calldata _accountRlp,
+        bytes calldata _accountBranchRlp,
         uint256 _originBlockHeight
     )
         external
@@ -281,10 +281,10 @@ contract KernelGateway is KernelGatewayInterface{
     function proveBlockOpening(
         uint256 _height,
         bytes32 _parent,
-        address[] _updatedValidators,
-        uint256[] _updatedWeights,
+        address[] calldata _updatedValidators,
+        uint256[] calldata _updatedWeights,
         bytes32 _auxiliaryBlockHash,
-        bytes _storageBranchRlp,
+        bytes calldata _storageBranchRlp,
         uint256 _originBlockHeight
     )
         external
@@ -494,8 +494,8 @@ contract KernelGateway is KernelGatewayInterface{
         external
         view
         returns (
-            address[] updatedValidators_,
-            uint256[] updatedWeights_
+            address[] memory updatedValidators_,
+            uint256[] memory updatedWeights_
         )
     {
         MetaBlock.Kernel storage kernel = kernels[_kernelHash];
@@ -532,9 +532,9 @@ contract KernelGateway is KernelGatewayInterface{
      * @return bytes32 Storage path of the variable.
      */
     function getStorageRoot(
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
-        bytes _encodedPath,
+        bytes memory _accountRlp,
+        bytes memory _accountBranchRlp,
+        bytes storage _encodedPath,
         bytes32 _stateRoot
     )
         internal
@@ -589,9 +589,9 @@ contract KernelGateway is KernelGatewayInterface{
      * @return bytes32 Storage path of the variable.
      */
     function updateStorageRoot(
-        bytes _accountRlp,
-        bytes _accountBranchRlp,
-        bytes _encodedPath,
+        bytes memory _accountRlp,
+        bytes memory _accountBranchRlp,
+        bytes storage _encodedPath,
         bytes32 _stateRoot,
         uint256 _blockHeight
     )
@@ -625,8 +625,8 @@ contract KernelGateway is KernelGatewayInterface{
      */
     function verify(
         bytes32 _value,
-        bytes _encodedPath,
-        bytes _rlpParentNodes,
+        bytes memory _encodedPath,
+        bytes memory _rlpParentNodes,
         bytes32 _root
     )
         internal
@@ -659,9 +659,8 @@ contract KernelGateway is KernelGatewayInterface{
         returns (bytes32 metaBlockHash_)
     {
         bytes32 transitionHash =
-            AuxiliaryTransitionObjectInterface(auxiliaryBlockStore).auxiliaryTransitionHashAtBlock(
-                _blockHash
-            );
+            AuxiliaryTransitionObjectInterface(address(auxiliaryBlockStore))
+                .auxiliaryTransitionHashAtBlock(_blockHash);
 
         metaBlockHash_ = MetaBlock.hashMetaBlock(
             activeKernelHash,

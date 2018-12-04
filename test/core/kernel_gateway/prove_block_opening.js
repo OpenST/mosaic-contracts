@@ -50,12 +50,12 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
     genesisKernelHash =
-        "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
+      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
     kernelGateway = await KernelGateway.new(
-        originCore,
-        originBlockStore.address,
-        auxiliaryBlockStore.address,
-        genesisKernelHash,
+      originCore,
+      originBlockStore.address,
+      auxiliaryBlockStore.address,
+      genesisKernelHash,
     );
 
     height = new BN(2);
@@ -69,7 +69,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     kernelHash = "0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4";
     transitionHash = web3.utils.sha3('transitionHash');
 
-    await kernelGateway.setStorageRoot(storageRoot,originBlockHeight);
+    await kernelGateway.setStorageRoot(storageRoot, originBlockHeight);
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
     await auxiliaryBlockStore.setAuxiliaryTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
@@ -186,22 +186,22 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   it('should fail when validators count and validator weight count is' +
     ' not same', async () => {
 
-    updatedValidators.push(accounts[5]);
+      updatedValidators.push(accounts[5]);
 
-    await Utils.expectRevert(
-      kernelGateway.proveBlockOpening.call(
-        height,
-        parent,
-        updatedValidators,
-        updatedWeights,
-        auxiliaryBlockHash,
-        storageBranchRlp,
-        originBlockHeight,
-      ),
-      "The lengths of the addresses and weights arrays must be identical.",
-    );
+      await Utils.expectRevert(
+        kernelGateway.proveBlockOpening.call(
+          height,
+          parent,
+          updatedValidators,
+          updatedWeights,
+          auxiliaryBlockHash,
+          storageBranchRlp,
+          originBlockHeight,
+        ),
+        "The lengths of the addresses and weights arrays must be identical.",
+      );
 
-  });
+    });
 
   it('should fail when rlp encoded storage branch is zero', async () => {
 
@@ -225,22 +225,22 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   it('should fail when block containing the state root is not ' +
     'finalized', async () => {
 
-    originBlockHeight = 4;
+      originBlockHeight = 4;
 
-    await Utils.expectRevert(
-      kernelGateway.proveBlockOpening.call(
-        height,
-        parent,
-        updatedValidators,
-        updatedWeights,
-        auxiliaryBlockHash,
-        storageBranchRlp,
-        originBlockHeight,
-      ),
-      "The block containing the state root must be finalized.",
-    );
+      await Utils.expectRevert(
+        kernelGateway.proveBlockOpening.call(
+          height,
+          parent,
+          updatedValidators,
+          updatedWeights,
+          auxiliaryBlockHash,
+          storageBranchRlp,
+          originBlockHeight,
+        ),
+        "The block containing the state root must be finalized.",
+      );
 
-  });
+    });
 
   it('should fail when storage root is zero', async () => {
 
@@ -337,12 +337,6 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
     let eventData = event.OpenKernelProven;
 
-    assert.strictEqual(
-      eventData.address,
-      kernelGateway.address,
-      `Address from event must be equal to ${kernelGateway.address}`,
-    );
-
     let originCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
     assert.strictEqual(
       eventData._originCoreIdentifier,
@@ -357,9 +351,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
       `Auxiliary block store core identifier must be equal ${auxiliaryCoreIdentifier}`,
     );
 
-    assert.equal(
-      eventData._metaBlockHeight,
-      height,
+    assert(
+      eventData._metaBlockHeight.eq(height),
       `Meta-block height from event must be equal to ${height}`,
     );
 
@@ -375,9 +368,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
       `Kernel hash from event must be equal to ${kernelHash}`,
     );
 
-    assert.equal(
-      eventData._activationDynasty,
-      7,
+    assert(
+      eventData._activationDynasty.eqn(7),
       "Activation dynasty must be equal to 7",
     );
 

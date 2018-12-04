@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -228,130 +228,6 @@ contract EIP20CoGateway is CoGateway {
     /* External functions */
 
     /**
-     * @notice Confirms the initiation of the stake process.
-     *
-     * @param _staker Staker address.
-     * @param _stakerNonce Nonce of the staker address.
-     * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
-     * @param _amount Amount of utility token will be minted.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done
-     * @param _gasLimit Gas limit that staker is ready to pay
-     * @param _hashLock Hash Lock provided by the facilitator.
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpParentNodes RLP encoded parent node data to prove in
-     *                        messageBox outbox of Gateway
-     *
-     * @return messageHash_ which is unique for each request.
-     */
-    function confirmStakingIntent(
-        address _staker,
-        uint256 _stakerNonce,
-        address _beneficiary,
-        uint256 _amount,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        bytes32 _hashLock,
-        uint256 _blockHeight,
-        bytes memory _rlpParentNodes
-    )
-        public
-        returns (bytes32 messageHash_)
-    {
-        // Get the initial gas amount
-        uint256 initialGas = gasleft();
-
-        require(
-            _staker != address(0),
-            "Staker address must not be zero"
-        );
-        require(
-            _beneficiary != address(0),
-            "Beneficiary address must not be zero"
-        );
-        require(
-            _amount != 0,
-            "Mint amount must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-        require(
-            _rlpParentNodes.length != 0,
-            "RLP parent nodes must not be zero"
-        );
-
-        // Get the staking intent hash
-        bytes32 intentHash = hashStakingIntent(
-            _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        // Get the messageHash
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
-            intentHash,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-         registerInboxProcess(
-            _staker,
-            _stakerNonce,
-            messageHash_
-        );
-
-        // Create new mint object
-        mints[messageHash_] = Mint({
-            amount : _amount,
-            beneficiary : _beneficiary
-            });
-
-        // create new message object
-        messages[messageHash_] = getMessage(
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock);
-
-
-        // execute the confirm staking intent. This is done in separate
-        // function to avoid stack too deep error
-        executeConfirmStakingIntent(
-            messages[messageHash_],
-            _blockHeight,
-            _rlpParentNodes
-        );
-
-        // Emit StakingIntentConfirmed event
-        emit StakingIntentConfirmed(
-            messageHash_,
-            _staker,
-            _stakerNonce,
-            _beneficiary,
-            _amount,
-            _blockHeight,
-            _hashLock
-        );
-
-        // Update the gas consumed for this function.
-        messages[messageHash_].gasConsumed = initialGas.sub(gasleft());
-    }
-
-    /**
      * @notice Complete minting process by minting the utility tokens
      *
      * @param _messageHash Message hash.
@@ -431,7 +307,7 @@ contract EIP20CoGateway is CoGateway {
      */
     function progressMintingWithProof(
         bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -498,7 +374,7 @@ contract EIP20CoGateway is CoGateway {
     function confirmRevertStakingIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
+        bytes calldata _rlpEncodedParentNodes
     )
         external
         returns (
@@ -560,136 +436,6 @@ contract EIP20CoGateway is CoGateway {
         );
         // Update the gas consumed for this function.
         message.gasConsumed = initialGas.sub(gasleft());
-    }
-
-    /**
-     * @notice Initiates the redemption process.
-     *
-     * @dev In order to redeem the redeemer needs to approve CoGateway contract
-     *      for redeem amount. Redeem amount is transferred from redeemer
-     *      address to CoGateway contract.
-     *      This is a payable function. The bounty is transferred in base token
-     *      Redeemer is always msg.sender
-     *
-     * @param _amount Redeem amount that will be transferred form redeemer
-     *                account.
-     * @param _beneficiary The address in the origin chain where the value
-     *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
-     * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redemption process done.
-     * @param _gasLimit Gas limit that redeemer is ready to pay
-     * @param _nonce Nonce of the redeemer address.
-     * @param _hashLock Hash Lock provided by the facilitator.
-     *
-     * @return messageHash_ which is unique for each request.
-     */
-    function redeem(
-        uint256 _amount,
-        address _beneficiary,
-        address _facilitator,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        uint256 _nonce,
-        bytes32 _hashLock
-    )
-        public
-        payable
-        isActive
-        returns (bytes32 messageHash_)
-    {
-        require(
-            msg.value == bounty,
-            "msg.value must match the bounty amount"
-        );
-        require(
-            _amount > uint256(0),
-            "Redeem amount must not be zero"
-        );
-
-        require(
-            _facilitator != address(0),
-            "Facilitator address must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-
-        // Get the redemption intent hash
-        bytes32 intentHash = GatewayLib.hashRedemptionIntent(
-            _amount,
-            _beneficiary,
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
-        );
-
-        // Get the messageHash
-        messageHash_ = MessageBus.messageDigest(
-            REDEEM_TYPEHASH,
-            intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerOutboxProcess(
-            msg.sender,
-            _nonce,
-            messageHash_
-        );
-
-        // Delete the previous progressed/revoked redeem data
-        delete redeems[previousMessageHash];
-
-        redeems[messageHash_] = Redeem({
-            amount : _amount,
-            beneficiary : _beneficiary,
-            facilitator : _facilitator,
-            bounty : bounty
-            });
-
-        // create message object
-        messages[messageHash_] = getMessage(
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock
-        );
-
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
-        );
-        // Update the message outbox status to declared.
-        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
-
-        //transfer redeem amount to Co-Gateway
-        EIP20Interface(utilityToken).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
-
-        // Emit RedemptionIntentDeclared event
-        emit RedemptionIntentDeclared(
-            messageHash_,
-            msg.sender,
-            _nonce,
-            _beneficiary,
-            _amount
-        );
     }
 
     /**
@@ -761,7 +507,7 @@ contract EIP20CoGateway is CoGateway {
      */
     function progressRedemptionWithProof(
         bytes32 _messageHash,
-        bytes _rlpEncodedParentNodes,
+        bytes calldata _rlpEncodedParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -901,7 +647,7 @@ contract EIP20CoGateway is CoGateway {
     function progressRevertRedemption(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes _rlpEncodedParentNodes
+        bytes calldata _rlpEncodedParentNodes
     )
         external
         returns (
@@ -1014,7 +760,263 @@ contract EIP20CoGateway is CoGateway {
         return true;
     }
 
-    /* private methods */
+    /* Public functions */
+
+    /**
+     * @notice Confirms the initiation of the stake process.
+     *
+     * @param _staker Staker address.
+     * @param _stakerNonce Nonce of the staker address.
+     * @param _beneficiary The address in the auxiliary chain where the utility
+     *                     tokens will be minted.
+     * @param _amount Amount of utility token will be minted.
+     * @param _gasPrice Gas price that staker is ready to pay to get the stake
+     *                  and mint process done
+     * @param _gasLimit Gas limit that staker is ready to pay
+     * @param _hashLock Hash Lock provided by the facilitator.
+     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox of Gateway
+     *
+     * @return messageHash_ which is unique for each request.
+     */
+    function confirmStakingIntent(
+        address _staker,
+        uint256 _stakerNonce,
+        address _beneficiary,
+        uint256 _amount,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _hashLock,
+        uint256 _blockHeight,
+        bytes memory _rlpParentNodes
+    )
+        public
+        returns (bytes32 messageHash_)
+    {
+        // Get the initial gas amount
+        uint256 initialGas = gasleft();
+
+        require(
+            _staker != address(0),
+            "Staker address must not be zero"
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be zero"
+        );
+        require(
+            _amount != 0,
+            "Mint amount must not be zero"
+        );
+        require(
+            _gasPrice != 0,
+            "Gas price must not be zero"
+        );
+        require(
+            _gasLimit != 0,
+            "Gas limit must not be zero"
+        );
+        require(
+            _rlpParentNodes.length != 0,
+            "RLP parent nodes must not be zero"
+        );
+
+        // Get the staking intent hash
+        bytes32 intentHash = hashStakingIntent(
+            _amount,
+            _beneficiary,
+            _staker,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit
+        );
+
+        // Get the messageHash
+        messageHash_ = MessageBus.messageDigest(
+            STAKE_TYPEHASH,
+            intentHash,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit
+        );
+
+        registerInboxProcess(
+            _staker,
+            _stakerNonce,
+            messageHash_
+        );
+
+        // Create new mint object
+        mints[messageHash_] = Mint({
+            amount : _amount,
+            beneficiary : _beneficiary
+            });
+
+        // create new message object
+        messages[messageHash_] = getMessage(
+            _staker,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit,
+            intentHash,
+            _hashLock);
+
+
+        // execute the confirm staking intent. This is done in separate
+        // function to avoid stack too deep error
+        executeConfirmStakingIntent(
+            messages[messageHash_],
+            _blockHeight,
+            _rlpParentNodes
+        );
+
+        // Emit StakingIntentConfirmed event
+        emit StakingIntentConfirmed(
+            messageHash_,
+            _staker,
+            _stakerNonce,
+            _beneficiary,
+            _amount,
+            _blockHeight,
+            _hashLock
+        );
+
+        // Update the gas consumed for this function.
+        messages[messageHash_].gasConsumed = initialGas.sub(gasleft());
+    }
+
+    /**
+     * @notice Initiates the redemption process.
+     *
+     * @dev In order to redeem the redeemer needs to approve CoGateway contract
+     *      for redeem amount. Redeem amount is transferred from redeemer
+     *      address to CoGateway contract.
+     *      This is a payable function. The bounty is transferred in base token
+     *      Redeemer is always msg.sender
+     *
+     * @param _amount Redeem amount that will be transferred form redeemer
+     *                account.
+     * @param _beneficiary The address in the origin chain where the value
+     *                     tok ens will be released.
+     * @param _facilitator Facilitator address.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the
+     *                  redemption process done.
+     * @param _gasLimit Gas limit that redeemer is ready to pay
+     * @param _nonce Nonce of the redeemer address.
+     * @param _hashLock Hash Lock provided by the facilitator.
+     *
+     * @return messageHash_ which is unique for each request.
+     */
+    function redeem(
+        uint256 _amount,
+        address _beneficiary,
+        address _facilitator,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        uint256 _nonce,
+        bytes32 _hashLock
+    )
+        public
+        payable
+        isActive
+        returns (bytes32 messageHash_)
+    {
+        require(
+            msg.value == bounty,
+            "msg.value must match the bounty amount"
+        );
+        require(
+            _amount > uint256(0),
+            "Redeem amount must not be zero"
+        );
+
+        require(
+            _facilitator != address(0),
+            "Facilitator address must not be zero"
+        );
+        require(
+            _gasPrice != 0,
+            "Gas price must not be zero"
+        );
+        require(
+            _gasLimit != 0,
+            "Gas limit must not be zero"
+        );
+
+        // Get the redemption intent hash
+        bytes32 intentHash = GatewayLib.hashRedemptionIntent(
+            _amount,
+            _beneficiary,
+            msg.sender,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            valueToken
+        );
+
+        // Get the messageHash
+        messageHash_ = MessageBus.messageDigest(
+            REDEEM_TYPEHASH,
+            intentHash,
+            _nonce,
+            _gasPrice,
+            _gasLimit
+        );
+
+        // Get previousMessageHash
+        bytes32 previousMessageHash = registerOutboxProcess(
+            msg.sender,
+            _nonce,
+            messageHash_
+        );
+
+        // Delete the previous progressed/revoked redeem data
+        delete redeems[previousMessageHash];
+
+        redeems[messageHash_] = Redeem({
+            amount : _amount,
+            beneficiary : _beneficiary,
+            facilitator : _facilitator,
+            bounty : bounty
+            });
+
+        // create message object
+        messages[messageHash_] = getMessage(
+            msg.sender,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            intentHash,
+            _hashLock
+        );
+
+        require(
+            messageBox.outbox[messageHash_] ==
+            MessageBus.MessageStatus.Undeclared,
+            "Message status must be Undeclared"
+        );
+        // Update the message outbox status to declared.
+        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
+
+        //transfer redeem amount to Co-Gateway
+        EIP20Interface(utilityToken).transferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
+
+        // Emit RedemptionIntentDeclared event
+        emit RedemptionIntentDeclared(
+            messageHash_,
+            msg.sender,
+            _nonce,
+            _beneficiary,
+            _amount
+        );
+    }
+
+    /* Private functions */
 
     /**
      * @notice private function to execute confirm staking intent.
@@ -1031,7 +1033,7 @@ contract EIP20CoGateway is CoGateway {
     function executeConfirmStakingIntent(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
-        bytes _rlpParentNodes
+        bytes memory _rlpParentNodes
     )
         private
         returns (bool)

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -55,7 +55,7 @@ contract TestMetaBlock {
         );
     }
 
-    function testRequiredWeightForSuperMajority() external{
+    function testRequiredWeightForSuperMajority() external {
         uint256 totalWeight = 3;
 
         uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(
@@ -69,7 +69,7 @@ contract TestMetaBlock {
         );
     }
 
-    function testRequiredWeightForSuperMajorityWithRoundUp() external{
+    function testRequiredWeightForSuperMajorityWithRoundUp() external {
         uint256 totalWeight = 4;
 
         uint256 requiredWeight = MetaBlock.requiredWeightForSuperMajority(

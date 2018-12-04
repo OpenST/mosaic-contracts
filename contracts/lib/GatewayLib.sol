@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 
 
@@ -26,57 +26,6 @@ library GatewayLib {
     using SafeMath for uint256;
 
     /**
-     * @notice Returns the codehash of external library by trimming first
-     *         21 bytes. From 21 bytes first bytes is jump opcode and rest
-     *         20 bytes is address of library.
-     *
-     * @param _libraryAddress Address of library contract.
-     *
-     * @return codeHash_ return code hash of library
-     */
-    function libraryCodeHash(address _libraryAddress)
-        view
-        public
-        returns (bytes32)
-    {
-        bytes memory code = getCode(_libraryAddress);
-        /** trim the first 21 bytes in library code.
-         *  first byte is 0x73 opcode which means load next 20 bytes in to the
-         *  stack and next 20 bytes are library address
-         */
-        bytes memory trimmedCode = BytesLib.slice(code, 21, code.length - 21);
-        return keccak256(abi.encodePacked(trimmedCode));
-
-    }
-
-    /**
-     * @notice Returns the codehash of the contract
-     *
-     * @param _contractAddress Address of  contract.
-     *
-     * @return codehash_ return code hash of contract
-     */
-    function getCode(address _contractAddress)
-        view
-        public
-        returns (bytes codeHash_)
-    {
-        assembly {
-        // retrieve the size of the code, this needs assembly
-            let size := extcodesize(_contractAddress)
-        // allocate output byte array - this could also be done without assembly
-        // by using o_code = new bytes(size)
-            codeHash_ := mload(0x40)
-        // new "memory end" including padding
-            mstore(0x40, add(codeHash_, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-        // store length in memory
-            mstore(codeHash_, size)
-        // actually retrieve the code, this needs assembly
-            extcodecopy(_contractAddress, add(codeHash_, 0x20), 0, size)
-        }
-    }
-
-    /**
      * @notice Calculate the fee amount which is rewarded to facilitator for
      *         performing message transfers.
      *
@@ -96,8 +45,8 @@ library GatewayLib {
         uint256 _initialGas,
         uint256 _estimatedAdditionalGasUsage
     )
-        view
         external
+        view
         returns (
             uint256 fee_,
             uint256 totalGasConsumed_
@@ -119,29 +68,13 @@ library GatewayLib {
         }
     }
 
-
     /**
-     *	@notice Convert bytes32 to bytes
+     * @notice Get the storage path of the variable
      *
-     *	@param _inBytes32 bytes32 value
+     * @param _index Index of variable
+     * @param _key Key of variable incase of mapping
      *
-     *	@return bytes value
-     */
-    function bytes32ToBytes(bytes32 _inBytes32)
-        public
-        pure
-        returns (bytes)
-    {
-        return BytesLib.bytes32ToBytes(_inBytes32);
-    }
-
-    /**
-     *	@notice Get the storage path of the variable
-     *
-     *	@param _index Index of variable
-     *	@param _key Key of variable incase of mapping
-     *
-     *	@return bytes32 Storage path of the variable
+     * @return bytes32 Storage path of the variable
      */
     function storageVariablePath(
         uint8 _index,
@@ -152,7 +85,9 @@ library GatewayLib {
         returns (bytes32 /* storage path */)
     {
         bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(bytes32(_index))
+            bytes32ToBytes(
+                bytes32(uint256(_index))
+            )
         );
         bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
@@ -160,19 +95,19 @@ library GatewayLib {
     }
 
     /**
-     *	@notice Merkle proof verification of account.
+     * @notice Merkle proof verification of account.
      *
-     *	@param _rlpEncodedAccount rlp encoded data of account.
-     *	@param _rlpParentNodes path from root node to leaf in merkle tree.
-     *	@param _encodedPath encoded path to search account node in merkle tree.
-     *	@param _stateRoot state root for given block height.
+     * @param _rlpEncodedAccount rlp encoded data of account.
+     * @param _rlpParentNodes path from root node to leaf in merkle tree.
+     * @param _encodedPath encoded path to search account node in merkle tree.
+     * @param _stateRoot state root for given block height.
      *
-     *	@return bytes32 Storage path of the variable
+     * @return bytes32 Storage path of the variable
      */
     function proveAccount(
-        bytes _rlpEncodedAccount,
-        bytes _rlpParentNodes,
-        bytes _encodedPath,
+        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpParentNodes,
+        bytes calldata _encodedPath,
         bytes32 _stateRoot
     )
         external
@@ -218,8 +153,8 @@ library GatewayLib {
         address _gateway,
         address _coGateway,
         address _messageBus,
-        string _tokenName,
-        string _tokenSymbol,
+        string calldata _tokenName,
+        string calldata _tokenSymbol,
         uint8 _tokenDecimal,
         uint256 _nonce,
         address _token
@@ -320,5 +255,72 @@ library GatewayLib {
         );
     }
 
+    /**
+     * @notice Returns the codehash of external library by trimming first
+     *         21 bytes. From 21 bytes first bytes is jump opcode and rest
+     *         20 bytes is address of library.
+     *
+     * @param _libraryAddress Address of library contract.
+     *
+     * @return codeHash_ return code hash of library
+     */
+    function libraryCodeHash(
+        address _libraryAddress
+    )
+        public
+        view
+        returns (bytes32)
+    {
+        bytes memory code = getCode(_libraryAddress);
+        /** trim the first 21 bytes in library code.
+         *  first byte is 0x73 opcode which means load next 20 bytes in to the
+         *  stack and next 20 bytes are library address
+         */
+        bytes memory trimmedCode = BytesLib.slice(code, 21, code.length - 21);
+        return keccak256(abi.encodePacked(trimmedCode));
 
+    }
+
+    /**
+     * @notice Returns the codehash of the contract
+     *
+     * @param _contractAddress Address of  contract.
+     *
+     * @return codehash_ return code hash of contract
+     */
+    function getCode(address _contractAddress)
+        public
+        view
+        returns (bytes memory codeHash_)
+    {
+        /* solium-disable-next-line */
+        assembly {
+            // retrieve the size of the code, this needs assembly
+            let size := extcodesize(_contractAddress)
+            // allocate output byte array - this could also be done without assembly
+            // by using o_code = new bytes(size)
+            codeHash_ := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(codeHash_, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            // store length in memory
+            mstore(codeHash_, size)
+            // actually retrieve the code, this needs assembly
+            extcodecopy(_contractAddress, add(codeHash_, 0x20), 0, size)
+        }
+    }
+
+    /**
+     * @notice Convert bytes32 to bytes
+     *
+     * @param _inBytes32 bytes32 value
+     *
+     * @return bytes value
+     */
+    function bytes32ToBytes(bytes32 _inBytes32)
+        public
+        pure
+        returns (bytes memory)
+    {
+        return BytesLib.bytes32ToBytes(_inBytes32);
+    }
 }

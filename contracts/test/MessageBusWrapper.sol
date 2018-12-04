@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -56,7 +56,7 @@ contract MessageBusWrapper {
         address _sender,
         bytes32 _hashLock,
         uint256 _gasConsumed,
-        bytes _signature
+        bytes memory _signature
     )
         public
         returns(bytes32 messageHash_)
@@ -208,7 +208,7 @@ contract MessageBusWrapper {
         uint256 _nonce,
         address _sender,
         uint8 _messageBoxOffset,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock
@@ -263,7 +263,7 @@ contract MessageBusWrapper {
         uint256 _nonce,
         address _sender,
         uint8 _messageBoxOffset,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         bytes32 _hashLock
     )
@@ -313,7 +313,7 @@ contract MessageBusWrapper {
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         uint8 _messageBoxOffset,
         bytes32 _hashLock
@@ -418,7 +418,7 @@ contract MessageBusWrapper {
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock,
@@ -467,7 +467,7 @@ contract MessageBusWrapper {
      * @param _storageRoot storage root for proof
      * @param _messageStatus Message status of message hash in the outbox of
      *                       source chain
-	 *
+     *
      * @return messageHash_ Message hash
      */
     function progressInboxWithProof(
@@ -475,7 +475,7 @@ contract MessageBusWrapper {
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes _rlpEncodedParentNodes,
+        bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock,

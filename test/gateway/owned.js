@@ -78,8 +78,18 @@ contract('OpsManaged', (accounts) => {
       })
 
       it("to 0", async () => {
-         assert.equal(await instance.initiateOwnershipTransfer.call(0), true)
-         OwnedUtils.checkOwnershipTransferInitiatedEventGroup(await instance.initiateOwnershipTransfer(0), 0)
+         assert.equal(
+            await instance.initiateOwnershipTransfer.call(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            true,
+         )
+         OwnedUtils.checkOwnershipTransferInitiatedEventGroup(
+            await instance.initiateOwnershipTransfer(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            0,
+         )
       })
 
       it("to this", async () => {

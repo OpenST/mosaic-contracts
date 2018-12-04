@@ -86,33 +86,46 @@ contract('OpsManaged', (accounts) => {
 
 
       it("to the owner", async () => {
-          const owner = await instance.owner.call()
-          await Utils.expectThrow(instance.setAdminAddress.call(owner))
+         const owner = await instance.owner.call()
+         await Utils.expectThrow(instance.setAdminAddress.call(owner))
       })
 
       it("to 'this'", async () => {
-          await Utils.expectThrow(instance.setAdminAddress.call(instance.address))
+         await Utils.expectThrow(instance.setAdminAddress.call(instance.address))
       })
 
       it("to ops address", async () => {
-          assert.equal(await instance.setOpsAddress.call(accounts[2]), true)
-          await instance.setOpsAddress(accounts[2])
+         assert.equal(await instance.setOpsAddress.call(accounts[2]), true)
+         await instance.setOpsAddress(accounts[2])
 
-          await Utils.expectThrow(instance.setAdminAddress.call(accounts[2]))
+         await Utils.expectThrow(instance.setAdminAddress.call(accounts[2]))
       })
 
       it("to accounts[1]", async () => {
-          assert.equal(await instance.adminAddress.call(), 0)
-          assert.equal(await instance.setAdminAddress.call(accounts[1]), true)
-          OpsManagedUtils.checkAdminAddressChangedEventGroup(await instance.setAdminAddress(accounts[1]), accounts[1])
-          assert.equal(await instance.adminAddress.call(), accounts[1])
+         assert.equal(await instance.adminAddress.call(), 0)
+         assert.equal(await instance.setAdminAddress.call(accounts[1]), true)
+         OpsManagedUtils.checkAdminAddressChangedEventGroup(await instance.setAdminAddress(accounts[1]), accounts[1])
+         assert.equal(await instance.adminAddress.call(), accounts[1])
       })
 
       it("to 0", async () => {
-          assert.equal(await instance.adminAddress.call(), accounts[1])
-          assert.equal(await instance.setAdminAddress.call(0), true)
-          OpsManagedUtils.checkAdminAddressChangedEventGroup(await instance.setAdminAddress(0), 0)
-          assert.equal(await instance.adminAddress.call(), 0)
+         assert.equal(await instance.adminAddress.call(), accounts[1]);
+         assert.equal(
+            await instance.setAdminAddress.call(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            true,
+         );
+         OpsManagedUtils.checkAdminAddressChangedEventGroup(
+            await instance.setAdminAddress(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            0,
+         )
+         assert.equal(
+            await instance.adminAddress.call(),
+            "0x0000000000000000000000000000000000000000",
+         )
       })
    })
 
@@ -127,33 +140,46 @@ contract('OpsManaged', (accounts) => {
 
 
       it("to the owner", async () => {
-          const owner = await instance.owner.call()
-          await Utils.expectThrow(instance.setOpsAddress.call(owner))
+         const owner = await instance.owner.call()
+         await Utils.expectThrow(instance.setOpsAddress.call(owner))
       })
 
       it("to 'this'", async () => {
-          await Utils.expectThrow(instance.setOpsAddress.call(instance.address))
+         await Utils.expectThrow(instance.setOpsAddress.call(instance.address))
       })
 
       it("to ops address", async () => {
-          assert.equal(await instance.setAdminAddress.call(accounts[3]), true)
-          await instance.setAdminAddress(accounts[3])
+         assert.equal(await instance.setAdminAddress.call(accounts[3]), true)
+         await instance.setAdminAddress(accounts[3])
 
-          await Utils.expectThrow(instance.setOpsAddress.call(accounts[3]))
+         await Utils.expectThrow(instance.setOpsAddress.call(accounts[3]))
       })
 
       it("to accounts[1]", async () => {
-          assert.equal(await instance.opsAddress.call(), 0)
-          assert.equal(await instance.setOpsAddress.call(accounts[1]), true)
-          OpsManagedUtils.checkOpsAddressChangedEventGroup(await instance.setOpsAddress(accounts[1]), accounts[1])
-          assert.equal(await instance.opsAddress.call(), accounts[1])
+         assert.equal(await instance.opsAddress.call(), 0)
+         assert.equal(await instance.setOpsAddress.call(accounts[1]), true)
+         OpsManagedUtils.checkOpsAddressChangedEventGroup(await instance.setOpsAddress(accounts[1]), accounts[1])
+         assert.equal(await instance.opsAddress.call(), accounts[1])
       })
 
       it("to 0", async () => {
-          assert.equal(await instance.opsAddress.call(), accounts[1])
-          assert.equal(await instance.setAdminAddress.call(0), true)
-          OpsManagedUtils.checkOpsAddressChangedEventGroup(await instance.setOpsAddress(0), 0)
-          assert.equal(await instance.opsAddress.call(), 0)
+         assert.equal(await instance.opsAddress.call(), accounts[1]);
+         assert.equal(
+            await instance.setOpsAddress.call(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            true,
+         );
+         OpsManagedUtils.checkOpsAddressChangedEventGroup(
+            await instance.setOpsAddress(
+               "0x0000000000000000000000000000000000000000"
+            ),
+            0,
+         )
+         assert.equal(
+            await instance.opsAddress.call(),
+            "0x0000000000000000000000000000000000000000",
+         )
       })
    })
 })

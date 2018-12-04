@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -235,7 +235,7 @@ contract BlockStore is BlockStoreInterface, OriginTransitionObjectInterface {
      * @param _blockHeaderRlp The header of the reported block, RLP encoded.
      */
     function reportBlock(
-        bytes _blockHeaderRlp
+        bytes calldata _blockHeaderRlp
     )
         external
         returns (bool success_)
@@ -563,7 +563,7 @@ contract BlockStore is BlockStoreInterface, OriginTransitionObjectInterface {
     )
         internal
         view
-        returns (bool valid_, string reason_)
+        returns (bool valid_, string memory reason_)
     {
         if (!isReported(_targetBlockHash)) {
             valid_ = false;
@@ -666,7 +666,7 @@ contract BlockStore is BlockStoreInterface, OriginTransitionObjectInterface {
     )
         private
         view
-        returns (bool valid_, string reason_)
+        returns (bool valid_, string memory reason_)
     {
         if(!isReported(_sourceBlockHash)) {
             valid_ = false;

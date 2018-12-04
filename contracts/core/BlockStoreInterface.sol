@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
 //
@@ -40,7 +40,7 @@ interface BlockStoreInterface {
      * @return `true` if the report succeeded.
      */
     function reportBlock(
-        bytes _blockHeaderRlp
+        bytes calldata _blockHeaderRlp
     )
         external
         returns (bool success_);

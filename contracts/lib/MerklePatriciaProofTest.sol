@@ -1,11 +1,11 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "./MerklePatriciaProof.sol";
 
 /**
- *	@title This contract is a test contract for testing MerklePatriciaProof library contract
+ * @title This contract is a test contract for testing MerklePatriciaProof library contract
  *
- *	@notice It routes the parameters to MerklePatriciaProof.sol which it receives from test cases
+ * @notice It routes the parameters to MerklePatriciaProof.sol which it receives from test cases
  *
  */
 contract MerklePatriciaProofTest {
@@ -23,8 +23,8 @@ contract MerklePatriciaProofTest {
      */
     function verifyAccount(
         bytes32 value,
-        bytes encodedPath,
-        bytes rlpParentNodes,
+        bytes calldata encodedPath,
+        bytes calldata rlpParentNodes,
         bytes32 root)
         external
         pure
@@ -45,8 +45,8 @@ contract MerklePatriciaProofTest {
      */
     function verifyStorage(
         bytes32 value,
-        bytes encodedPath,
-        bytes rlpParentNodes,
+        bytes calldata encodedPath,
+        bytes calldata rlpParentNodes,
         bytes32 root)
         external
         pure
