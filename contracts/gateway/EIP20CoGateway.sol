@@ -79,7 +79,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever a utility tokens are minted. */
-    event ProgressedMint(
+    event MintProgressed(
         bytes32 indexed _messageHash,
         address _staker,
         address _beneficiary,
@@ -116,7 +116,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever redeem is completed. */
-    event ProgressedRedeem(
+    event RedeemProgressed(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -144,8 +144,8 @@ contract EIP20CoGateway is CoGateway {
     /* Struct */
 
     /**
-     * Redeem stores the redeem information,
-     * beneficiary address, message data and facilitator address.
+     * Redeem stores the redeem information, beneficiary address, message data
+     * and facilitator address.
      */
     struct Redeem {
 
@@ -226,7 +226,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /* External functions */
-    
+
     /**
      * @notice Complete mint process by minting the utility tokens
      *
@@ -427,7 +427,6 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit RevertStakeIntentConfirmed event
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
@@ -944,16 +943,16 @@ contract EIP20CoGateway is CoGateway {
             "Gas limit must not be zero"
         );
 
-            // Get the redeem intent hash
-            bytes32 intentHash = GatewayLib.hashRedeemIntent(
-                _amount,
-                _beneficiary,
-                msg.sender,
-                _nonce,
-                _gasPrice,
-                _gasLimit,
-                valueToken
-            );
+        // Get the redeem intent hash
+        bytes32 intentHash = GatewayLib.hashRedeemIntent(
+            _amount,
+            _beneficiary,
+            msg.sender,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            valueToken
+        );
 
         // Get the messageHash
         messageHash_ = MessageBus.messageDigest(
@@ -1157,8 +1156,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit ProgressedMint event
-        emit ProgressedMint(
+        // Emit MintProgressed event
+        emit MintProgressed(
             _messageHash,
             message.sender,
             mint.beneficiary,
@@ -1207,8 +1206,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit ProgressedRedeem event.
-        emit ProgressedRedeem(
+        // Emit RedeemProgressed event.
+        emit RedeemProgressed(
             _messageHash,
             redeemer_,
             message.nonce,

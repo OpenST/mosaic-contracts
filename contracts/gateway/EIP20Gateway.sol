@@ -77,7 +77,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a stake is completed. */
-    event ProgressedStake(
+    event StakeProgressed(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
@@ -114,7 +114,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a unstake process is complete. */
-    event ProgressedUnstake(
+    event UnstakeProgressed(
         bytes32 indexed _messageHash,
         address _redeemer,
         address _beneficiary,
@@ -530,14 +530,13 @@ contract EIP20Gateway is Gateway {
         stakerNonce_ = message.nonce;
         amount_ = stakes[_messageHash].amount;
 
-        // penalty charged to staker for revert stake.
+        // Penalty charged to staker for revert stake.
         uint256 penalty = stakes[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+            .mul(REVOCATION_PENALTY)
+            .div(100);
 
         // transfer the penalty amount
         require(baseToken.transferFrom(msg.sender, address(this), penalty));
-
 
         // Emit RevertStakeIntentDeclared event.
         emit RevertStakeIntentDeclared(
@@ -1044,7 +1043,7 @@ contract EIP20Gateway is Gateway {
         // delete the stake data
         delete stakes[_messageHash];
 
-        emit ProgressedStake(
+        emit StakeProgressed(
             _messageHash,
             staker_,
             _message.nonce,
@@ -1113,7 +1112,7 @@ contract EIP20Gateway is Gateway {
         // delete the unstake data
         delete unstakes[_messageHash];
 
-        emit ProgressedUnstake(
+        emit UnstakeProgressed(
             _messageHash,
             message.sender,
             unStake.beneficiary,
