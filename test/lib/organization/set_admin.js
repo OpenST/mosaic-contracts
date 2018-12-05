@@ -57,7 +57,11 @@ contract('Organization.setAdmin()', async (accounts) => {
       { from: owner },
     );
 
-    assert.strictEqual(await organization.admin.call(), admin);
+    assert.strictEqual(
+      await organization.admin.call(),
+      admin,
+      'The organization should now have the right admin set.',
+    );
   });
 
   it('should pass when valid admin is passed by admin', async () => {
@@ -71,7 +75,11 @@ contract('Organization.setAdmin()', async (accounts) => {
       { from: admin },
     );
 
-    assert.strictEqual(await organization.admin.call(), newAdmin);
+    assert.strictEqual(
+      await organization.admin.call(),
+      newAdmin,
+      'The admin should now be the newly set admin.',
+    );
   });
 
   it('should pass when admin address is 0x', async () => {

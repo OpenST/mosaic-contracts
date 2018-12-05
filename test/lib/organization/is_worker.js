@@ -51,7 +51,7 @@ contract('Organization.isWorker()', async (accounts) => {
   });
 
   it('Checks for added worker, isWorker returns true.', async () => {
-    let deltaExpirationHeight = 10;
+    let deltaExpirationHeight = 15;
     let blockNumber = await web3.eth.getBlockNumber();
     // `+ 1` as we are now one block further then what getBlockNumber returned.
     let expirationHeight = blockNumber + deltaExpirationHeight + 1;
@@ -62,8 +62,19 @@ contract('Organization.isWorker()', async (accounts) => {
      * less than current block height.
      */
     for (let i = 0; i < (deltaExpirationHeight - 1); i++) {
-      assert.strictEqual(await organization.isWorker.call(worker), true);
+      assert.strictEqual(
+        await organization.isWorker.call(worker),
+        true,
+        'The worker should be active at this height.',
+      );
+      Utils.advanceBlock();
     }
+
+    assert.strictEqual(
+      await organization.isWorker.call(worker),
+      false,
+      'The worker should now be expired.',
+    );
   });
 
 });

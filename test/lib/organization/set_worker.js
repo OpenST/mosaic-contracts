@@ -71,7 +71,8 @@ contract('Organization.setWorker()', async (accounts) => {
     // Checking that worker key has expired.
     assert.strictEqual(
       (await organization.isWorker.call(worker)),
-      false
+      false,
+      'The worker was expected to be expired.',
     );
     await Utils.expectRevert(
       organization.setWorker(

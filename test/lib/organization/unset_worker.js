@@ -85,8 +85,16 @@ contract('Organization.unsetWorker()', async (accounts) => {
       organization,
     );
 
-    assert.strictEqual(events.WorkerUnset.worker, worker);
-    assert.strictEqual(events.WorkerUnset.wasSet, true);
+    assert.strictEqual(
+      events.WorkerUnset.worker,
+      worker,
+      'The event should list the worker that was unset.',
+    );
+    assert.strictEqual(
+      events.WorkerUnset.wasSet,
+      true,
+      'The event should list the worker as previously set.',
+    );
 
   });
 
@@ -101,8 +109,16 @@ contract('Organization.unsetWorker()', async (accounts) => {
       organization,
     );
 
-    assert.strictEqual(events.WorkerUnset.worker, nonSetWorker);
-    assert.strictEqual(events.WorkerUnset.wasSet, false);
+    assert.strictEqual(
+      events.WorkerUnset.worker,
+      nonSetWorker,
+      'The event should list the worker that was unset.',
+    );
+    assert.strictEqual(
+      events.WorkerUnset.wasSet,
+      false,
+      'The event should not list the worker as previously set.',
+    );
 
   });
 

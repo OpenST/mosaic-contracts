@@ -52,7 +52,11 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
       proposedOwner,
       { from: owner },
     );
-    assert.strictEqual(response, true);
+    assert.strictEqual(
+      response,
+      true,
+      'The ownership initiation should return true.',
+    );
 
     await organization.initiateOwnershipTransfer(
       proposedOwner,

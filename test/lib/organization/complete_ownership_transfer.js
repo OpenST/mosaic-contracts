@@ -42,7 +42,11 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
     let response = await organization.completeOwnershipTransfer.call(
       { from: proposedOwner }
     );
-    assert.strictEqual(response, true);
+    assert.strictEqual(
+      response,
+      true,
+      'The ownership completion should return true.',
+    );
 
     await organization.completeOwnershipTransfer({ from: proposedOwner });
 
