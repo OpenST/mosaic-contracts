@@ -893,7 +893,7 @@ contract EIP20CoGateway is CoGateway {
      *      This is a payable function. The bounty is transferred in base token
      *      Redeemer is always msg.sender
      *
-     * @param _amount Redeem amount that will be transferred form redeemer
+     * @param _amount Redeem amount that will be transferred from redeemer
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
