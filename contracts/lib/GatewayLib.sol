@@ -136,48 +136,6 @@ library GatewayLib {
     }
 
     /**
-     * @notice  function to calculate gateway link intent hash.
-     *
-     * @param _gateway address of gateway.
-     * @param _coGateway address of co-gateway.
-     * @param _messageBus address of message bus.
-     * @param _tokenName  name of branded token.
-     * @param _tokenSymbol symbol of branded token.
-     * @param _tokenDecimal token decimal of branded token.
-     * @param _nonce message nonce.
-     * @param _token EIP20 token address.
-     *
-     * @return bytes32 gateway link intent hash.
-     */
-    function hashLinkGateway(
-        address _gateway,
-        address _coGateway,
-        address _messageBus,
-        string calldata _tokenName,
-        string calldata _tokenSymbol,
-        uint8 _tokenDecimal,
-        uint256 _nonce,
-        address _token
-    )
-        external
-        view
-        returns (bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-                _gateway,
-                _coGateway,
-                libraryCodeHash(_messageBus),
-                _tokenName,
-                _tokenSymbol,
-                _tokenDecimal,
-                _nonce,
-                _token
-            )
-        );
-    }
-
-    /**
      * @notice  function to calculate stake intent hash.
      *
      * @param _amount stake amount.
@@ -253,60 +211,6 @@ library GatewayLib {
                 _token
             )
         );
-    }
-
-    /**
-     * @notice Returns the codehash of external library by trimming first
-     *         21 bytes. From 21 bytes first bytes is jump opcode and rest
-     *         20 bytes is address of library.
-     *
-     * @param _libraryAddress Address of library contract.
-     *
-     * @return codeHash_ return code hash of library
-     */
-    function libraryCodeHash(
-        address _libraryAddress
-    )
-        public
-        view
-        returns (bytes32)
-    {
-        bytes memory code = getCode(_libraryAddress);
-        /** trim the first 21 bytes in library code.
-         *  first byte is 0x73 opcode which means load next 20 bytes in to the
-         *  stack and next 20 bytes are library address
-         */
-        bytes memory trimmedCode = BytesLib.slice(code, 21, code.length - 21);
-        return keccak256(abi.encodePacked(trimmedCode));
-
-    }
-
-    /**
-     * @notice Returns the codehash of the contract
-     *
-     * @param _contractAddress Address of  contract.
-     *
-     * @return codehash_ return code hash of contract
-     */
-    function getCode(address _contractAddress)
-        public
-        view
-        returns (bytes memory codeHash_)
-    {
-        /* solium-disable-next-line */
-        assembly {
-            // retrieve the size of the code, this needs assembly
-            let size := extcodesize(_contractAddress)
-            // allocate output byte array - this could also be done without assembly
-            // by using o_code = new bytes(size)
-            codeHash_ := mload(0x40)
-            // new "memory end" including padding
-            mstore(0x40, add(codeHash_, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-            // store length in memory
-            mstore(codeHash_, size)
-            // actually retrieve the code, this needs assembly
-            extcodecopy(_contractAddress, add(codeHash_, 0x20), 0, size)
-        }
     }
 
     /**
