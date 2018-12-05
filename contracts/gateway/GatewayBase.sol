@@ -5,6 +5,8 @@ import "./CoreInterface.sol";
 import "../lib/SafeMath.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
+import "./EIP20Interface.sol";
+
 
 /**
  *  @title GatewayBase contract.
@@ -49,11 +51,6 @@ contract GatewayBase {
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 constant GATEWAY_LINK_TYPEHASH = keccak256(
-        abi.encode(
-            "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-        )
-    );
 
     /* constants */
 
@@ -69,9 +66,6 @@ contract GatewayBase {
     /** Unlock period for change bounty in block height */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
-
     /**
      * Message box.
      * @dev keep this is at location 1, in case this is changed then update
@@ -79,8 +73,8 @@ contract GatewayBase {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is deactivated for any new process. */
-    bool public deactivated;
+    /** Specifies if the Gateway is activated for any new process. */
+    bool public activated;
 
     /** Organisation address. */
     address public organisation;
@@ -97,9 +91,6 @@ contract GatewayBase {
      */
     address public remoteGateway;
 
-    /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-    
     /** amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
@@ -136,9 +127,6 @@ contract GatewayBase {
      */
     mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
 
-    /** address of message bus used to fetch codehash during gateway linking */
-    address public messageBus;
-
     /* modifiers */
 
     /** checks that only organisation can call a particular function. */
@@ -150,11 +138,11 @@ contract GatewayBase {
         _;
     }
 
-    /** checks that contract is linked and is not deactivated */
+    /** checks that contract is activated */
     modifier isActive() {
         require(
-            deactivated == false && linked == true,
-            "Contract is restricted to use"
+            activated == true,
+            "Gateway is not activated."
         );
         _;
     }
@@ -165,14 +153,12 @@ contract GatewayBase {
      * @notice Initialise the contract and set default values.
      *
      * @param _core Core contract address.
-     * @param _messageBus Message bus contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _organisation Organisation address.
      */
     constructor(
         CoreInterface _core,
-        address _messageBus,
         uint256 _bounty,
         address _organisation
     )
@@ -180,25 +166,15 @@ contract GatewayBase {
     {
         require(
             address(_core) != address(0),
-            "Core contract address must not be zero"
+            "Core contract address must not be zero."
         );
         require(
             _organisation != address(0),
-            "Organisation address must not be zero"
-        );
-        require(
-            _messageBus != address(0),
-            "MessageBus address must not be zero"
+            "Organisation address must not be zero."
         );
 
         core = _core;
-        messageBus = _messageBus;
 
-        //gateway and cogateway is not linked yet so it is initialized as false
-        linked = false;
-
-        // gateway is active
-        deactivated = false;
         bounty = _bounty;
         organisation = _organisation;
 
@@ -291,44 +267,6 @@ contract GatewayBase {
             false
         );
 
-        return true;
-    }
-
-    /**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactivated"
-        );
-        deactivated = true;
         return true;
     }
 

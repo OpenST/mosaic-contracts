@@ -12,14 +12,12 @@ contract MockGatewayBase is GatewayBase {
 
     constructor(
         CoreInterface _core,
-        address _messageBus,
         uint256 _bounty,
         address _organisation
     )
         public
         GatewayBase(
             _core,
-            _messageBus,
             _bounty,
             _organisation
         )
