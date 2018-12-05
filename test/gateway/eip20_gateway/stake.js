@@ -52,19 +52,7 @@ let mockToken,
     errorMessage;
 
 
-async function _setup(accounts) {
-
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
-
-    bountyAmount = new BN(100);
-    gateway = await Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        accounts[3], //core address
-        bountyAmount,
-        accounts[4] // organisation address
-    );
+async function _setup(accounts, gateway) {
 
     helper = new HelperKlass(gateway);
     gatewayTest = new EIP20GatewayKlass(gateway, mockToken, baseToken);
@@ -155,167 +143,202 @@ async function _stake(resultType) {
     );
 }
 
-contract('EIP20Gateway.stake() ', function (accounts) {
+contract('EIP20Gateway ', function (accounts) {
 
+    describe('stake', async function () {
 
-    beforeEach(async function () {
-        await _setup(accounts);
+        beforeEach(async function () {
+
+            mockToken = await MockToken.new();
+            baseToken = await MockToken.new();
+
+            bountyAmount = new BN(100);
+            gateway = await Gateway.new(
+                mockToken.address,
+                baseToken.address,
+                accounts[1], //core address
+                bountyAmount,
+                accounts[2] // organisation address
+            );
+
+            await _setup(accounts, gateway);
+        });
+
+        it('should fail to stake when stake amount is 0', async function () {
+            stakeAmount = new BN(0);
+            errorMessage = "Stake amount must not be zero";
+            await _prepareData();
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when beneficiary address is 0', async function () {
+            beneficiary = "0x0000000000000000000000000000000000000000";
+            errorMessage = "Beneficiary address must not be zero";
+            await _prepareData();
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when gas price is 0', async function () {
+            gasPrice = new BN(0);
+            errorMessage = "Gas price must not be zero";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when gas limit is 0', async function () {
+            gasLimit = new BN(0);
+            errorMessage = "Gas limit must not be zero";
+            await _prepareData();
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when signature is not of length 65 (invalid bytes)', async function () {
+            await _prepareData();
+            signature = accounts[9];
+            errorMessage = "Signature must be of length 65";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when signature is invalid (not signed by staker)', async function () {
+            await _prepareData();
+            let typeHash = await helper.stakeTypeHash();
+
+            let intentHash = await helper.hashStakingIntent(
+                stakeAmount,
+                beneficiary,
+                stakerAddress,
+                nonce,
+                gasPrice,
+                gasLimit,
+                mockToken.address
+            );
+
+            let signData = await utils.signHash(
+                typeHash,
+                intentHash,
+                nonce,
+                gasPrice,
+                gasLimit,
+                accounts[9]);
+
+            signature = signData.signature;
+            errorMessage = "Invalid signature";
+
+            await _stake(utils.ResultType.FAIL);
+
+        });
+
+        it('should fail to stake when staker has balance less than the stake amount', async function () {
+            stakeAmount = new BN(200000000000);
+            await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+            await _prepareData();
+            errorMessage = "revert";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when facilitator has balance less than the bounty amount', async function () {
+            await baseToken.transfer(accounts[0], new BN(50), {from: facilitator});
+            await _prepareData();
+            errorMessage = "revert";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when gateway is not approved by the staker', async function () {
+            stakerAddress = accounts[5];
+            await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+            await _prepareData();
+            errorMessage = "revert";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when gateway is not approved by the facilitator', async function () {
+            facilitator = accounts[6];
+            await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+            await _prepareData();
+            errorMessage = "revert";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should successfully stake', async function () {
+            await _prepareData();
+            await _stake(utils.ResultType.SUCCESS);
+        });
+
+        it('should fail when its already staked with same data (replay attack)', async function () {
+
+            await _prepareData();
+            await _stake(utils.ResultType.SUCCESS);
+
+            await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+            await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+            await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+            await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+
+            errorMessage = "Invalid nonce";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail to stake when previous stake for same address is not progressed', async function () {
+
+            await _prepareData();
+            await _stake(utils.ResultType.SUCCESS);
+
+            await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+            await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+            await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+            await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+
+            nonce = new BN(2);
+            await _prepareData();
+            errorMessage = "Previous process is not completed";
+            await _stake(utils.ResultType.FAIL);
+
+        });
+
+        it('should fail when previous stake for same address is in revocation', async function () {
+
+            await _prepareData();
+            await _stake(utils.ResultType.SUCCESS);
+
+            let penalty = new BN(bountyAmount * PENALTY_PERCENT);
+
+            // funding staker for penalty amount
+            await baseToken.transfer(stakerAddress, penalty, {from: accounts[0]});
+            // approving gateway for penalty amount
+            await baseToken.approve(gateway.address, penalty, {from: stakerAddress});
+
+            //revertStaking
+            await gateway.revertStaking(messageHash, {from: stakerAddress});
+
+            await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+            await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+            await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+            await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+
+            nonce = new BN(2);
+            await _prepareData();
+            errorMessage = "Previous process is not completed";
+            await _stake(utils.ResultType.FAIL);
+        });
+
+        it('should fail stake if gateway is not activated.', async function () {
+
+            let mockToken = await MockToken.new();
+            let baseToken = await MockToken.new();
+            let bountyAmount = new BN(100);
+
+            gateway = await Gateway.new(
+                mockToken.address,
+                baseToken.address,
+                accounts[1], //core address
+                bountyAmount,
+                accounts[2] // organisation address
+            );
+
+            await _setup(accounts, gateway);
+            await _prepareData();
+            await _stake(utils.ResultType.FAIL);
+        });
+
     });
 
-    it('should fail to stake when stake amount is 0', async function () {
-        stakeAmount = new BN(0);
-        errorMessage = "Stake amount must not be zero";
-        await _prepareData();
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when beneficiary address is 0', async function () {
-        beneficiary = "0x0000000000000000000000000000000000000000";
-        errorMessage = "Beneficiary address must not be zero";
-        await _prepareData();
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when gas price is 0', async function () {
-        gasPrice = new BN(0);
-        errorMessage = "Gas price must not be zero";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when gas limit is 0', async function () {
-        gasLimit = new BN(0);
-        errorMessage = "Gas limit must not be zero";
-        await _prepareData();
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when signature is not of length 65 (invalid bytes)', async function () {
-        await _prepareData();
-        signature = accounts[9];
-        errorMessage = "Signature must be of length 65";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when signature is invalid (not signed by staker)', async function () {
-        await _prepareData();
-        let typeHash = await helper.stakeTypeHash();
-
-        let intentHash = await helper.hashStakingIntent(
-            stakeAmount,
-            beneficiary,
-            stakerAddress,
-            nonce,
-            gasPrice,
-            gasLimit,
-            mockToken.address
-        );
-
-        let signData = await utils.signHash(
-            typeHash,
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            accounts[9]);
-
-        signature = signData.signature;
-        errorMessage = "Invalid signature";
-
-        await _stake(utils.ResultType.FAIL);
-
-    });
-
-    it('should fail to stake when staker has balance less than the stake amount', async function () {
-        stakeAmount = new BN(200000000000);
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await _prepareData();
-        errorMessage = "revert";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when facilitator has balance less than the bounty amount', async function () {
-        await baseToken.transfer(accounts[0], new BN(50), {from: facilitator});
-        await _prepareData();
-        errorMessage = "revert";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when gateway is not approved by the staker', async function () {
-        stakerAddress = accounts[5];
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await _prepareData();
-        errorMessage = "revert";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when gateway is not approved by the facilitator', async function () {
-        facilitator = accounts[6];
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await _prepareData();
-        errorMessage = "revert";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should successfully stake', async function () {
-        await _prepareData();
-        await _stake(utils.ResultType.SUCCESS);
-    });
-
-    it('should fail when its already staked with same data (replay attack)', async function () {
-
-        await _prepareData();
-        await _stake(utils.ResultType.SUCCESS);
-
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
-
-        errorMessage = "Invalid nonce";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when previous stake for same address is not progressed', async function () {
-
-        await _prepareData();
-        await _stake(utils.ResultType.SUCCESS);
-
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
-
-        nonce = new BN(2);
-        await _prepareData();
-        errorMessage = "Previous process is not completed";
-        await _stake(utils.ResultType.FAIL);
-
-    });
-
-    it('should fail when previous stake for same address is in revocation', async function () {
-
-        await _prepareData();
-        await _stake(utils.ResultType.SUCCESS);
-
-        let penalty = new BN(bountyAmount * PENALTY_PERCENT);
-
-        // funding staker for penalty amount
-        await baseToken.transfer(stakerAddress, penalty, {from: accounts[0]});
-        // approving gateway for penalty amount
-        await baseToken.approve(gateway.address, penalty, {from: stakerAddress});
-
-        //revertStaking
-        await gateway.revertStaking(messageHash, {from: stakerAddress});
-
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
-
-        nonce = new BN(2);
-        await _prepareData();
-        errorMessage = "Previous process is not completed";
-        await _stake(utils.ResultType.FAIL);
-    });
 });
-
