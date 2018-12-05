@@ -60,8 +60,7 @@ import "./GatewayBase.sol";
  * @title EIP20Gateway Contract
  *
  * @notice EIP20Gateway act as medium to send messages from origin chain to
- *         auxiliary chain. Currently gateway supports stake and mint and revert
- *         stake message.
+ *         auxiliary chain. Currently gateway supports stake and revert stake message.
  */
 contract EIP20Gateway is GatewayBase {
 
@@ -183,7 +182,7 @@ contract EIP20Gateway is GatewayBase {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
-    /** address of ERC20 token. */
+    /** address of EIP20 token. */
     EIP20Interface public token;
 
     /**
@@ -963,13 +962,13 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-    * @notice Activate Gateway contract. Can be set only by the
-    *         Organisation address only once by passing co-gateway address.
-    *
-    * @param _coGatewayAddress Address of cogateway.
-    *
-    * @return `true` if value is set
-    */
+     * @notice Activate Gateway contract. Can be set only by the
+     *         Organization address only once by passing co-gateway address.
+     *
+     * @param _coGatewayAddress Address of cogateway.
+     *
+     * @return success_ `true` if value is set
+     */
     function activateGateway(
         address _coGatewayAddress
     )
@@ -994,11 +993,11 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-    * @notice Deactivate Gateway contract. Can be set only by the
-    *         Organisation address
-    *
-    * @return `true` if value is set
-    */
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         organization address
+     *
+     * @return success_  `true` if value is set
+     */
     function deactivateGateway()
         external
         onlyOrganisation
@@ -1013,7 +1012,7 @@ contract EIP20Gateway is GatewayBase {
     }
 
 
-/* Private functions */
+    /* Private functions */
 
     /**
      * @notice private function to execute confirm redeem intent.

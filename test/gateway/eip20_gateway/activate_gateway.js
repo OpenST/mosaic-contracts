@@ -33,6 +33,11 @@ contract('GatewayBase.sol', function (accounts) {
         it('should deactivate if activated', async function () {
 
             assert((await gateway.deactivateGateway.call({from: organisation})));
+            await gateway.deactivateGateway({from: organisation});
+            assert(
+                !(await gateway.activated.call()),
+                'Activation flag is true but expected as false.'
+            );
         });
 
         it('should not deactivate if already deactivated', async function () {
@@ -74,6 +79,12 @@ contract('GatewayBase.sol', function (accounts) {
                 (await gateway.activateGateway.call(coGateway, {from: organisation})),
                 "Gateway activation failed, activateGateway returned false.",
             );
+
+            await gateway.activateGateway(coGateway, {from: organisation});
+            assert(
+                (await gateway.activated.call()),
+                'Activation flag is false but expected as true.'
+                );
         });
 
         it('should not activate if already activated', async function () {
