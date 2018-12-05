@@ -19,6 +19,13 @@ const TestKernelGateway = artifacts.require('TestKernelGateway');
 const TestKernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const KernelGateway = artifacts.require('KernelGateway');
 
+
+const MockMessageBusFail = artifacts.require("MockMessageBusFail");
+const MessageBusWrapperFail = artifacts.require("MessageBusWrapperFail");
+const MockMerklePatriciaProofFail = artifacts.require("MockMerklePatriciaProofFail");
+
+
+
 module.exports = function (deployer) {
 
     deployer.deploy(MerklePatriciaProof);
@@ -45,6 +52,12 @@ module.exports = function (deployer) {
     deployer.link(MockMessageBus, MessageBusWrapper);
 
     deployer.link(MerklePatriciaProof, MerklePatriciaProofTest);
+
+
+    deployer.deploy(MockMerklePatriciaProofFail);
+    deployer.link(MockMerklePatriciaProofFail, [MockMessageBusFail]);
+    deployer.deploy(MockMessageBusFail);
+    deployer.link(MockMessageBusFail, MessageBusWrapperFail);
 
 };
 

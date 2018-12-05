@@ -21,12 +21,12 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 /**
- * @title MockMerklePatriciaProof
+ * @title MockMerklePatriciaProofFail
  *
- * @dev Library for mocking merkle patricia proofs.
+ * @dev Library for mocking merkle patricia proofs for the fail case.
  */
 
-library MockMerklePatriciaProof {
+library MockMerklePatriciaProofFail {
 
     /**
      * @dev Mock for merkle patricia proof verifier.
@@ -43,7 +43,7 @@ library MockMerklePatriciaProof {
         pure
         returns (bool)
     {
-        return true;
+        return false;
     }
 
 }

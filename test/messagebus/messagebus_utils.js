@@ -1,18 +1,28 @@
 'use strict';
 
-const MessageBus = artifacts.require('MessageBusWrapper'),
+const MessageBusWrapper = artifacts.require('MessageBusWrapper'),
   utils = require('../test_lib/utils');
 
-let messageBus;
+let messageBusSuccess,messageBusFail, messageBus;
 
 const MessageBusUtils = function() {};
 MessageBusUtils.prototype = {
   
   deployedMessageBus: async function(){
-    
-    messageBus = await MessageBus.new();
-    return messageBus;
-    
+
+    messageBusSuccess = await MessageBusWrapper.new();
+    messageBusFail = await MessageBusWrapperFail.new();
+
+    // by default
+    this.shouldPassProof(true);
+  },
+  
+  shouldPassProof: function(shouldPass) {
+    if (shouldPass === true) {
+      messageBus = messageBusSuccess;
+    } else {
+      messageBus = messageBusFail;
+    }
   },
   
   declareMessage: async function(params, changeState){
@@ -376,7 +386,8 @@ MessageBusUtils.prototype = {
           hashLock,
           messageBoxOffset
         ),
-          message);
+        message
+      );
     }
     else
     {

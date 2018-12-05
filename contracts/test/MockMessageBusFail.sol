@@ -22,11 +22,11 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 
-import "../test/MockMerklePatriciaProof.sol";
+import "./MockMerklePatriciaProofFail.sol";
 import "../lib/SafeMath.sol";
 import "../lib/BytesLib.sol";
 
-library MockMessageBus {
+library MockMessageBusFail {
 
     using SafeMath for uint256;
 
@@ -199,7 +199,7 @@ library MockMessageBus {
 
         // Perform the merkle proof
         require(
-            MockMerklePatriciaProof.verify(
+            MockMerklePatriciaProofFail.verify(
                 keccak256(abi.encodePacked(MessageStatus.Declared)),
                 path,
                 _rlpEncodedParentNodes,
@@ -335,7 +335,7 @@ library MockMessageBus {
 
         // Perform the merkle proof
         require(
-            MockMerklePatriciaProof.verify(
+            MockMerklePatriciaProofFail.verify(
                 keccak256(abi.encodePacked(_inboxMessageStatus)),
                     path,
                     _rlpEncodedParentNodes,
@@ -463,7 +463,7 @@ library MockMessageBus {
 
         // Perform the merkle proof
         require(
-            MockMerklePatriciaProof.verify(
+            MockMerklePatriciaProofFail.verify(
                 keccak256(abi.encodePacked(_messageStatus)),
                 path,
                 _rlpEncodedParentNodes,
@@ -647,7 +647,7 @@ library MockMessageBus {
         );
 
         // Perform the merkle proof
-        require(MockMerklePatriciaProof.verify(
+        require(MockMerklePatriciaProofFail.verify(
                 keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
                 path,
                 _rlpEncodedParentNodes,
@@ -729,7 +729,7 @@ library MockMessageBus {
 
         // Perform the merkle proof
         require(
-            MockMerklePatriciaProof.verify(
+            MockMerklePatriciaProofFail.verify(
                 keccak256(abi.encodePacked(_messageStatus)),
                 path,
                 _rlpEncodedParentNodes,
@@ -761,7 +761,7 @@ library MockMessageBus {
         external
         returns (
             bool isChanged_,
-            MockMessageBus.MessageStatus nextState_
+            MessageStatus nextState_
         )
     {
         MessageStatus status = _messageBox.inbox[_messageHash];
@@ -803,7 +803,7 @@ library MockMessageBus {
         external
         returns (
             bool isChanged_,
-            MockMessageBus.MessageStatus nextState_
+            MessageStatus nextState_
         )
     {
         MessageStatus status = _messageBox.outbox[_messageHash];

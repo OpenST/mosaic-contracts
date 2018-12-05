@@ -320,9 +320,17 @@ contract('MessageBus',  async (accounts) => {
 
     });
 
-    // it('should fail when merkle proof validation fails', async () => {
-    //
-    // });
+    it('should fail when merkle proof validation fails', async () => {
+      messageBusUtils.shouldPassProof(false);
+      await messageBusUtils.declareMessage(params, true);
+
+      params.messageStatus = MessageStatusEnum.Declared;
+      await messageBusUtils.progressOutboxWithProof(
+        params,
+        false,
+        "Outbox message status must be either Declared or DeclaredRevocation"
+      );
+    });
 
   });
 });

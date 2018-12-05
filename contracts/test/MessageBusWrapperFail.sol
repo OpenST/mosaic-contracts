@@ -21,15 +21,15 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./MockMessageBus.sol";
+import "./MockMessageBusFail.sol";
 
 /**
  * @title Tests the MessageBus library.
  */
-contract MessageBusWrapper {
+contract MessageBusWrapperFail {
 
-    MockMessageBus.MessageBox messageBox;
-    MockMessageBus.Message message;
+    MockMessageBusFail.MessageBox messageBox;
+    MockMessageBusFail.Message message;
 
     /**
      * @notice Declare a new message. This will update the outbox status to
@@ -62,7 +62,7 @@ contract MessageBusWrapper {
         returns(bytes32 messageHash_)
     {
 
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -72,7 +72,7 @@ contract MessageBusWrapper {
             gasConsumed: _gasConsumed
         });
 
-        messageHash_ = MockMessageBus.declareMessage(
+        messageHash_ = MockMessageBusFail.declareMessage(
             messageBox,
             _messageTypeHash,
             message,
@@ -112,7 +112,7 @@ contract MessageBusWrapper {
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -122,7 +122,7 @@ contract MessageBusWrapper {
             gasConsumed: _gasConsumed
         });
 
-        messageHash_ = MockMessageBus.progressOutbox(
+        messageHash_ = MockMessageBusFail.progressOutbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -161,7 +161,7 @@ contract MessageBusWrapper {
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -171,7 +171,7 @@ contract MessageBusWrapper {
             gasConsumed: _gasConsumed
         });
 
-        messageHash_ = MockMessageBus.progressInbox(
+        messageHash_ = MockMessageBusFail.progressInbox(
             messageBox,
             _messageTypeHash,
             message,
@@ -210,13 +210,13 @@ contract MessageBusWrapper {
         uint8 _messageBoxOffset,
         bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
+        MockMessageBusFail.MessageStatus _messageStatus,
         bytes32 _hashLock
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
@@ -226,7 +226,7 @@ contract MessageBusWrapper {
             gasConsumed: 0
         });
 
-        messageHash_ = MockMessageBus.progressOutboxRevocation(
+        messageHash_ = MockMessageBusFail.progressOutboxRevocation(
             messageBox,
             message,
             _messageTypeHash,
@@ -270,7 +270,7 @@ contract MessageBusWrapper {
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
@@ -280,7 +280,7 @@ contract MessageBusWrapper {
             gasConsumed: 0
         });
 
-        messageHash_ = MockMessageBus.confirmRevocation(
+        messageHash_ = MockMessageBusFail.confirmRevocation(
             messageBox,
             _messageTypeHash,
             message,
@@ -321,7 +321,7 @@ contract MessageBusWrapper {
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
@@ -331,7 +331,7 @@ contract MessageBusWrapper {
             gasConsumed: 0
         });
 
-        messageHash_ = MockMessageBus.confirmMessage(
+        messageHash_ = MockMessageBusFail.confirmMessage(
             messageBox,
             _messageTypeHash,
             message,
@@ -373,7 +373,7 @@ contract MessageBusWrapper {
         returns(bytes32 messageHash_)
     {
 
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : _gasPrice,
@@ -383,7 +383,7 @@ contract MessageBusWrapper {
             gasConsumed: _gasConsumed
             });
 
-        messageHash_= MockMessageBus.declareRevocationMessage(
+        messageHash_= MockMessageBusFail.declareRevocationMessage(
             messageBox,
             _messageTypeHash,
             message
@@ -420,14 +420,14 @@ contract MessageBusWrapper {
         address _sender,
         bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
+        MockMessageBusFail.MessageStatus _messageStatus,
         bytes32 _hashLock,
         uint8 _messageBoxOffset
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
@@ -437,7 +437,7 @@ contract MessageBusWrapper {
             gasConsumed: 0
         });
 
-        messageHash_ = MockMessageBus.progressOutboxWithProof(
+        messageHash_ = MockMessageBusFail.progressOutboxWithProof(
             messageBox,
             _messageTypeHash,
             message,
@@ -477,14 +477,14 @@ contract MessageBusWrapper {
         address _sender,
         bytes memory _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MockMessageBus.MessageStatus _messageStatus,
+        MockMessageBusFail.MessageStatus _messageStatus,
         bytes32 _hashLock,
         uint8 _messageBoxOffset
     )
         public
         returns(bytes32 messageHash_)
     {
-        message = MockMessageBus.Message({
+        message = MockMessageBusFail.Message({
             intentHash : _intentHash,
             nonce : _nonce,
             gasPrice : uint256(0x12A05F200),
@@ -494,7 +494,7 @@ contract MessageBusWrapper {
             gasConsumed: 0
         });
 
-        messageHash_ = MockMessageBus.progressInboxWithProof(
+        messageHash_ = MockMessageBusFail.progressInboxWithProof(
             messageBox,
             _messageTypeHash,
             message,
