@@ -61,7 +61,7 @@ import "./GatewayBase.sol";
  *
  * @notice EIP20CoGateway act as medium to send messages from auxiliary
  *         chain to origin chain. Currently CoGateway supports redeem and
- *         unstake, redeem and unstake and revert redeem message
+ *         unstake and revert redeem message
  */
 contract EIP20CoGateway is GatewayBase {
 

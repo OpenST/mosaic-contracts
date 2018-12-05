@@ -71,21 +71,21 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
 
         let valueTokenAddress = await coGateway.valueToken.call();
 
-        assert.equal(
+        assert.strictEqual(
             valueTokenAddress,
             valueToken.address,
             'Invalid valueTokenAddress address from contract.'
         );
 
         let utilityTokenAddress = await coGateway.utilityToken.call();
-        assert.equal(
+        assert.strictEqual(
             utilityTokenAddress,
             utilityToken.address,
             'Invalid bounty token address from contract.'
         );
 
         let coreAdd = await coGateway.core.call();
-        assert.equal(
+        assert.strictEqual(
             coreAdd,
             coreAddress,
             'Invalid core address from contract.'
@@ -98,7 +98,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
         );
 
         let orgAdd = await coGateway.organisation.call();
-        assert.equal(
+        assert.strictEqual(
             orgAdd,
             organisation,
             'Invalid organisationAddress address from contract.'

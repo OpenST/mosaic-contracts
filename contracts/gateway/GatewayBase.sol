@@ -162,7 +162,7 @@ contract GatewayBase {
         uint256 _bounty,
         address _organisation
     )
-    public
+        public
     {
         require(
             address(_core) != address(0),
