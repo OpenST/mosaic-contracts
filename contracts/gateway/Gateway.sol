@@ -73,8 +73,8 @@ contract Gateway is  GatewayBase {
 
     /**
      * @notice Initialise the contract by providing the ERC20 token address
-     *         for which the gateway will enable facilitation of staking and
-     *         minting.
+     *         for which the gateway will enable facilitation of stake and
+     *         mint.
      *
      * @param _token The ERC20 token contract address that will be
      *               staked and corresponding utility tokens will be minted
@@ -83,7 +83,7 @@ contract Gateway is  GatewayBase {
      *                     staking bounty from the facilitators.
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
+     *                stake process.
      * @param _organisation Organisation address.
      */
     constructor(

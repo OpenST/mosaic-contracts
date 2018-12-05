@@ -29,7 +29,7 @@ let proto = {
   },
 
   /**
-   * Generate the staking intent hash
+   * Generate the stake intent hash
    *
    * @param {object} amount Staking amount.
    * @param {string} beneficiary Beneficiary address.
@@ -39,9 +39,9 @@ let proto = {
    * @param {object} gasLimit Gas limit (Big Number).
    * @param {string} token EIP20 token address.
    *
-   * @return {string} staking intent hash.
+   * @return {string} stake intent hash.
    */
-  hashStakingIntent: async function (
+  hashStakeIntent: async function (
     amount,
     beneficiary,
     staker,

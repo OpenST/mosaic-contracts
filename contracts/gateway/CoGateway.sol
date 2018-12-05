@@ -83,14 +83,14 @@ contract CoGateway is GatewayBase {
     /**
      * @notice Initialise the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
-     *         minting and redeeming.
+     *         mint and redeem.
      *
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
+     *                stake process.
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
      * @param _messageBus Message bus address.
