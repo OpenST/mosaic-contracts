@@ -158,9 +158,6 @@ contract EIP20Gateway is GatewayBase {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the staking process. */
-        address facilitator;
-
         /** Bounty kept by facilitator for stake message transfer*/
         uint256 bounty;
     }
@@ -355,7 +352,6 @@ contract EIP20Gateway is GatewayBase {
         stakes[messageHash_] = Stake({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : msg.sender,
             bounty : bounty
             });
 
