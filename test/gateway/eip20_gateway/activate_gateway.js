@@ -30,7 +30,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             "Gateway activation failed, activateGateway returned false.",
         );
 
-        await gateway.activateGateway.call(coGateway, {from: organisation});
+        await gateway.activateGateway(coGateway, {from: organisation});
 
         assert(
             (await gateway.activated.call()),

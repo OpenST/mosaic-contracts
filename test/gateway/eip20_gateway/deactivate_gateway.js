@@ -33,7 +33,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
         assert((await gateway.deactivateGateway.call({from: organisation})));
 
-        await gateway.deactivateGateway.call({from: organisation});
+        await gateway.deactivateGateway({from: organisation});
 
         assert(
             !(await gateway.activated.call()),
