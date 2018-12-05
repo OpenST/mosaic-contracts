@@ -48,6 +48,12 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when valid proposed owner is passed', async () => {
+    let response = await organization.initiateOwnershipTransfer.call(
+      proposedOwner,
+      { from: owner },
+    );
+    assert.strictEqual(response, true);
+
     await organization.initiateOwnershipTransfer(
       proposedOwner,
       { from: owner },
