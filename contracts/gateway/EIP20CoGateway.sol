@@ -1,7 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "./GatewayBase.sol";
-
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +52,10 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
         progressUnstakeWithProof  <---   progressRedemptionWithProof
 -------------------------------------------------------------------------------
 */
+
 import "./UtilityTokenInterface.sol";
+import "./GatewayBase.sol";
+
 /**
  * @title EIP20CoGateway Contract
  *

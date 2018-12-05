@@ -142,7 +142,7 @@ contract GatewayBase {
     modifier isActive() {
         require(
             activated == true,
-            "Contract is restricted to use"
+            "Gateway is not activated."
         );
         _;
     }

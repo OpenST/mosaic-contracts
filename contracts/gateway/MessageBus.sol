@@ -61,6 +61,7 @@ library MessageBus {
     /** Message */
     struct Message {
 
+        /** Intent hash of different kinds of messages. */
         bytes32 intentHash;
 
         /** nonce of the sender */

@@ -988,15 +988,17 @@ contract EIP20Gateway is GatewayBase {
     *
     * @return `true` if value is set
     */
-    function activateGateway(address _coGatewayAddress)
+    function activateGateway(
+        address _coGatewayAddress
+    )
         external
         onlyOrganisation
-        returns (bool)
+        returns (bool success_)
     {
 
         require(
             remoteGateway == address(0),
-            'Gateway was already activated once.'
+            "Gateway was already activated once."
         );
 
         remoteGateway = _coGatewayAddress;
@@ -1006,7 +1008,7 @@ contract EIP20Gateway is GatewayBase {
             keccak256(abi.encodePacked(remoteGateway))
         );
         activated = true;
-        return true;
+        success_ = true;
     }
 
     /**
@@ -1018,14 +1020,14 @@ contract EIP20Gateway is GatewayBase {
     function deactivateGateway()
         external
         onlyOrganisation
-        returns (bool)
+        returns (bool success_)
     {
         require(
             activated == true,
             "Gateway is already deactivated"
         );
         activated = false;
-        return true;
+        success_ = true;
     }
 
 
