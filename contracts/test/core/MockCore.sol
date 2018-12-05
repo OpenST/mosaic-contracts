@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../gateway/WorkersInterface.sol";
+import "../../lib/OrganizationInterface.sol";
 import "../../gateway/Core.sol";
 
 /**
@@ -16,25 +16,23 @@ contract MockCore is Core {
     /**
      * @notice Contract constructor
      *
-     * @param _chainIdOrigin chain id where current core contract is deployed since core contract can be deployed on remote chain also
-     * @param _chainIdRemote if current chain is value then _chainIdRemote is chain id of utility chain
-     * @param _blockHeight block height at which _stateRoot needs to store
-     * @param _stateRoot state root hash of given _blockHeight
-     * @param _workers Workers contract address
+     * @param _chainIdRemote if current chain is value then _chainIdRemote is
+     *                       chain id of utility chain.
+     * @param _blockHeight block height at which _stateRoot needs to store.
+     * @param _stateRoot state root hash of given _blockHeight.
+     * @param _organization Address of an organization contract.
      */
     constructor(
-        uint256 _chainIdOrigin,
         uint256 _chainIdRemote,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        WorkersInterface _workers
+        OrganizationInterface _organization
     )
         Core(
-            _chainIdOrigin,
             _chainIdRemote,
             _blockHeight,
             _stateRoot,
-            _workers
+            _organization
         )
         public
     {}
@@ -54,7 +52,7 @@ contract MockCore is Core {
         view
         returns (bytes32)
     {
-        // hashing dummy data
-        return keccak256(abi.encodePacked(coreChainIdOrigin));
+        // Hashing dummy data.
+        return keccak256(abi.encodePacked("dummy data"));
     }
 }

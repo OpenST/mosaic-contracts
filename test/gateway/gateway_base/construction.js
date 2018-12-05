@@ -1,7 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const MockWorkerManager = artifacts.require('MockWorkerManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
 contract('GatewayBase.sol', function (accounts) {
@@ -12,7 +12,8 @@ contract('GatewayBase.sol', function (accounts) {
 
     before(function () {
 
-      worker = accounts[2]
+      organizationOwner = accounts[2]
+        , worker = accounts[3]
         , core = accounts[0]
         , messageBus = accounts[1]
         , bounty = new BN(100);
@@ -20,13 +21,13 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should pass with right set of parameters', async function () {
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let organization = await MockOrganization.new(organizationOwner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
         bounty,
-        workerManager.address
+        organization.address
       );
 
       assert.equal(core, await gatewayBaseInstance.core.call());
@@ -40,13 +41,13 @@ contract('GatewayBase.sol', function (accounts) {
 
       bounty = new BN(0);
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let organization = await MockOrganization.new(organizationOwner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
         bounty,
-        workerManager.address
+        organization.address
       );
 
       assert.equal(core, await gatewayBaseInstance.core.call());

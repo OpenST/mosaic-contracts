@@ -16,8 +16,6 @@ pragma solidity ^0.5.0;
 
 import "./SafeMath.sol";
 import "./OrganizationInterface.sol";
-import "./IsWorkerInterface.sol";
-
 
 /**
  * @title Organization contract.
@@ -26,7 +24,7 @@ import "./IsWorkerInterface.sol";
  *         economy and therefore the Organization.sol contract holds all
  *         the keys required to administer the economy.
  */
-contract Organization is OrganizationInterface, IsWorkerInterface {
+contract Organization is OrganizationInterface {
     using SafeMath for uint256;
 
     /* Storage */
@@ -230,6 +228,24 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
     }
 
     /**
+     * @notice Checks if an address is the owner of the organization.
+     *
+     * @param _owner Address to check.
+     *
+     * @return isOwner_ True if the given address is the current owner of the
+     *                  organization. Returns false otherwise.
+     */
+    function isOwner(
+        address _owner
+    )
+        external
+        view
+        returns (bool isOwner_)
+    {
+        isOwner_ = owner == _owner;
+    }
+
+    /**
      * @notice Checks if an address is currently registered as an active worker.
      *
      * @param _worker Address to check.
@@ -238,8 +254,7 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
      *                   height is more than or equal to current block number.
      *                   Returns false otherwise.
      */
-    function isWorker(address _worker) external view returns (bool isWorker_)
-    {
+    function isWorker(address _worker) external view returns (bool isWorker_) {
         isWorker_ = workers[_worker] >= block.number;
     }
 

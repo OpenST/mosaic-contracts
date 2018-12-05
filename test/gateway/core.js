@@ -19,15 +19,12 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../test_lib/web3.js');
-
 const coreUtils = require('./core_utils.js')
     , utils = require('../test_lib/utils.js')
     , proof = require('../data/proof')
-    , RLP = require('rlp')
     , BN = require('bn.js')
     , web3EventsDecoder = require('../test_lib/event_decoder.js')
-;
+    ;
 
 contract('Core', function (accounts) {
 
@@ -37,30 +34,64 @@ contract('Core', function (accounts) {
             blockHeight = new BN(5);
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;
-            workersContract = contractsData.workersContract;
             worker = contractsData.worker;
             registrar = contractsData.registrar;
             chainIdRemote = contractsData.chainIdRemote;
-            chainIdOrigin = contractsData.chainIdOrigin;
         });
 
         it('has coreChainIdRemote', async () => {
             assert.equal(await core.chainIdRemote.call(), chainIdRemote);
         });
-
-        it('has coreChainIdOrigin', async () => {
-            assert.equal(await core.coreChainIdOrigin.call(), chainIdOrigin);
-        });
-
-        it('has workers', async () => {
-            assert.equal(await core.workers.call(), workersContract.address);
-            let latestStateRootBlockHeight = await core.getLatestStateRootBlockHeight.call();
-        });
     });
 
+    describe('setCoCoreAddress', async () => {
+        beforeEach(async () => {
+            contractsData = await coreUtils.deployCore(artifacts, accounts);
+            core = contractsData.core;
+            owner = contractsData.owner;
+            worker = contractsData.worker;
+
+            coCoreAddress = accounts[8];
+        });
+
+        it('should allow the organization to set the address', async () => {
+            await core.setCoCoreAddress(coCoreAddress, { from: owner });
+        });
+
+        it('should not allow to set a zero address', async () => {
+            await utils.expectRevert(
+                core.setCoCoreAddress(
+                    '0x0000000000000000000000000000000000000000',
+                    { from: owner },
+                ),
+                'Co-Core address must not be 0.',
+            );
+        });
+
+        it('should not allow a worker to set the address', async () => {
+            await utils.expectRevert(
+                core.setCoCoreAddress(
+                    coCoreAddress,
+                    { from: worker },
+                ),
+                'Only the organization is allowed to call this method.',
+            );
+        });
+
+        it('should not allow a random address to set the address', async () => {
+            await utils.expectRevert(
+                core.setCoCoreAddress(
+                    coCoreAddress,
+                    { from: accounts[2] },
+                ),
+                'Only the organization is allowed to call this method.',
+            );
+        });
+
+    });
 
     describe('commitStateRoot', async () => {
-        // Before All
+        // Before all.
         before(async () => {
             blockHeight = 5;
             contractsData = await coreUtils.deployCore(artifacts, accounts);
@@ -70,12 +101,12 @@ contract('Core', function (accounts) {
         });
 
         it('should be able to commit state root and getStateRoot for given block height', async () => {
-            let response = await core.commitStateRoot(blockHeight, stateRoot, {from: worker})
-            ;
+            let response = await core.commitStateRoot(blockHeight, stateRoot, { from: worker })
+                ;
 
             let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
-            let event = formattedDecodedEvents['StateRootCommitted'];
-            await coreUtils.checkStateRootCommittedEvent(event, blockHeight, stateRoot);
+            let event = formattedDecodedEvents['StateRootAvailable'];
+            await coreUtils.checkStateRootAvailableEvent(event, blockHeight, stateRoot);
             assert.equal(await core.getStateRoot(blockHeight), stateRoot);
         });
 
@@ -85,19 +116,19 @@ contract('Core', function (accounts) {
         });
 
         it('should not be able to commit state root of block height which is equal to latest block height', async () => {
-            await utils.expectThrow(core.commitStateRoot(blockHeight, stateRoot, {from: worker}));
+            await utils.expectThrow(core.commitStateRoot(blockHeight, stateRoot, { from: worker }));
         });
 
         it('should not be able to commit state root of block height which is less than latest block height', async () => {
-            await utils.expectThrow(core.commitStateRoot(3, stateRoot, {from: worker}));
+            await utils.expectThrow(core.commitStateRoot(3, stateRoot, { from: worker }));
         });
 
         it('should not be able to commit state root of block height if non worker commits root', async () => {
-            await utils.expectThrow(core.commitStateRoot(6, stateRoot, {from: accounts[0]}));
+            await utils.expectThrow(core.commitStateRoot(6, stateRoot, { from: accounts[0] }));
         });
 
         it('should not be able to commit state root when state root is empty', async () => {
-            await utils.expectThrow(core.commitStateRoot(6, '0x', {from: worker}));
+            await utils.expectThrow(core.commitStateRoot(6, '0x', { from: worker }));
         });
 
     });

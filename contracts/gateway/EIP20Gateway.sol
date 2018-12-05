@@ -55,7 +55,8 @@ pragma solidity ^0.5.0;
 
 import "./SimpleStake.sol";
 import "./Gateway.sol";
-import "../lib/IsWorkerInterface.sol";
+import "../StateRootInterface.sol";
+import "../lib/OrganizationInterface.sol";
 
 /**
  * @title EIP20Gateway Contract
@@ -194,7 +195,7 @@ contract EIP20Gateway is Gateway {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the ERC20 token address
+     * @notice Initialize the contract by providing the ERC20 token address
      *         for which the gateway will enable facilitation of staking and
      *         minting.
      *
@@ -206,14 +207,14 @@ contract EIP20Gateway is Gateway {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _workerManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      */
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
-        IsWorkerInterface _workerManager,
+        OrganizationInterface _organization,
         address _messageBus
     )
         Gateway(
@@ -221,7 +222,7 @@ contract EIP20Gateway is Gateway {
             _baseToken,
             _core,
             _bounty,
-            _workerManager,
+            _organization,
             _messageBus
         )
         public

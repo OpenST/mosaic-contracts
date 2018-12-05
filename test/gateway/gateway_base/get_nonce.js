@@ -1,7 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const MockWorkerManager = artifacts.require('MockWorkerManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 contract('GatewayBase.sol', function (accounts) {
 
@@ -11,18 +11,19 @@ contract('GatewayBase.sol', function (accounts) {
 
     beforeEach(async function () {
 
-      let worker = accounts[2]
+      let organizationOwner = accounts[2]
+        , worker = accounts[3]
         , core = accounts[0]
         , messageBus = accounts[1]
         , bounty = new BN(100);
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let organization = await MockOrganization.new(organizationOwner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
         bounty,
-        workerManager.address
+        organization.address
       );
 
     });

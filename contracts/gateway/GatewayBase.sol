@@ -1,10 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./CoreInterface.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
-import "../lib/IsWorkerInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
 
@@ -85,7 +84,7 @@ contract GatewayBase is Organized {
     bool public deactivated;
 
     /** Address of core contract. */
-    CoreInterface public core;
+    StateRootInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
     bytes internal encodedGatewayPath;
@@ -159,15 +158,15 @@ contract GatewayBase is Organized {
      * @param _messageBus Message bus contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _workerManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      */
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         address _messageBus,
         uint256 _bounty,
-        IsWorkerInterface _workerManager
+        OrganizationInterface _organization
     )
-        Organized(_workerManager)
+        Organized(_organization)
         public
     {
         require(
@@ -231,7 +230,7 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(
@@ -286,7 +285,7 @@ contract GatewayBase is Organized {
      */
     function activateGateway()
         external
-        onlyWorker
+        onlyOrganization
         returns (bool)
     {
         require(
@@ -305,7 +304,7 @@ contract GatewayBase is Organized {
      */
     function deactivateGateway()
         external
-        onlyWorker
+        onlyOrganization
         returns (bool)
     {
         require(

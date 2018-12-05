@@ -21,88 +21,62 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./CoreInterface.sol";
-import "../lib/MerklePatriciaProof.sol";
+
 import "./WorkersInterface.sol";
+import "../StateRootInterface.sol";
+import "../lib/OrganizationInterface.sol";
+import "../lib/MerklePatriciaProof.sol";
+import "../lib/Organized.sol";
 import "../lib//RLP.sol";
 import "../lib/SafeMath.sol";
-import "../StateRootInterface.sol";
 
 /**
- *  @title Core contract which implements CoreInterface.
+ *  @title Core contract which implements StateRootInterface.
  *
  *  @notice Core is a minimal stub that will become the anchoring and consensus point for
  *          the utility chain to validate itself against.
  */
-contract Core is CoreInterface, StateRootInterface {
+contract Core is StateRootInterface, Organized {
     using SafeMath for uint256;
 
     /** Events */
 
-    event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
+    event StateRootAvailable(uint256 blockHeight, bytes32 stateRoot);
 
     /** Storage */
 
     mapping (uint256 /* block height */ => bytes32) private stateRoots;
 
-    /** chainIdOrigin is the origin chain id where core contract is deployed.  */
-    uint256 public coreChainIdOrigin;
     /** chainIdRemote is the remote chain id where core contract is deployed. */
     uint256 private coreChainIdRemote;
-    /** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
-    address private coreOpenSTRemote;
     /** Latest block height of block for which state root was committed. */
     uint256 private latestStateRootBlockHeight;
 
-    /** Workers contract address. */
-    WorkersInterface public workers;
-
     /** Address of the core on the auxiliary chain. Can be zero. */
     address public coCore;
-
-    /** Modifiers */
-
-    /**
-     *  @notice Modifier onlyWorker.
-     *
-     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
-     */
-    modifier onlyWorker() {
-        // msg.sender should be worker only
-        require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
-        _;
-    }
 
     /*  Public functions */
 
     /**
      *  @notice Contract constructor.
      *
-     *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
      *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
-     *  @param _workers Workers contract address.
+     *  @param _organization Address of an organization contract.
      */
     constructor(
-        uint256 _chainIdOrigin,
         uint256 _chainIdRemote,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        WorkersInterface _workers
+        OrganizationInterface _organization
     )
+        Organized(_organization)
         public
     {
-        require(_chainIdOrigin != 0, "Origin chain Id is 0");
         require(_chainIdRemote != 0, "Remote chain Id is 0");
-        require(
-            address(_workers) != address(0),
-            "Workers contract address is 0"
-        );
 
-        coreChainIdOrigin = _chainIdOrigin;
         coreChainIdRemote = _chainIdRemote;
-        workers = _workers;
 
         latestStateRootBlockHeight = _blockHeight;
         stateRoots[latestStateRootBlockHeight] = _stateRoot;
@@ -119,10 +93,14 @@ contract Core is CoreInterface, StateRootInterface {
      */
     function setCoCoreAddress(address _coCore)
         external
-        onlyWorker
+        onlyOrganization
         returns (bool /*success*/)
     {
-        require(_coCore != address(0), "Co-Core address is 0");
+        require(
+            _coCore != address(0),
+            "Co-Core address must not be 0."
+        );
+
         coCore = _coCore;
         return true;
     }
@@ -200,7 +178,7 @@ contract Core is CoreInterface, StateRootInterface {
         stateRoots[_blockHeight] = _stateRoot;
         latestStateRootBlockHeight = _blockHeight;
 
-        emit StateRootCommitted(_blockHeight, _stateRoot);
+        emit StateRootAvailable(_blockHeight, _stateRoot);
 
         return _stateRoot;
     }

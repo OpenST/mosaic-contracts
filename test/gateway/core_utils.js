@@ -19,45 +19,29 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../test_lib/web3.js');
-
 const Core = artifacts.require("./Core.sol")
-    , MockToken = artifacts.require("./MockToken.sol")
-    , Workers = artifacts.require("./Workers.sol")
+    , Organization = artifacts.require("MockOrganization.sol")
     , proof = require('../data/proof');
-;
-
-const BN = require('bn.js')
-;
-const rootPrefix = "../.."
-    , constants = require(rootPrefix + '/test/test_lib/constants')
 ;
 
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
     const registrar = accounts[1]
-        , admin = accounts[2]
-        , ops = accounts[3]
-        , chainIdOrigin = 3
         , chainIdRemote = 1410
-        , deactivationHeight = web3.utils.toWei(new BN('100000000'), "ether")
-        , worker1 = accounts[7]
-    ;
+        , organizationOwner = accounts[7]
+        , worker = accounts[8]
+        ;
 
 
     // Deploy worker contract
-    const workers = await Workers.new();
-    await workers.setAdminAddress(admin);
-    await workers.setOpsAddress(ops);
-    await workers.setWorker(worker1, deactivationHeight, {from: ops});
-    const core = await Core.new(chainIdOrigin, chainIdRemote, 0, proof.account.stateRoot, workers.address, {from: accounts[0]});
+    const organization = await Organization.new(organizationOwner, worker);
+    const core = await Core.new(chainIdRemote, 0, proof.account.stateRoot, organization.address, { from: accounts[0] });
     return {
         core: core,
-        workersContract: workers,
-        worker: worker1,
+        owner: organizationOwner,
+        worker: worker,
         registrar: registrar,
         chainIdRemote: chainIdRemote,
-        chainIdOrigin: chainIdOrigin
     };
 };
 
@@ -68,7 +52,7 @@ module.exports.checkOpenSTProvenEvent = (event, _blockHeight, _storageRoot, wasA
     assert.equal(event["wasAlreadyProved"], wasAlreadyProved);
 };
 
-module.exports.checkStateRootCommittedEvent = (event, _blockHeight, _stateRoot) => {
+module.exports.checkStateRootAvailableEvent = (event, _blockHeight, _stateRoot) => {
     assert.equal(event !== null, true);
     assert.equal(event["blockHeight"], _blockHeight);
     assert.equal(event["stateRoot"], _stateRoot);

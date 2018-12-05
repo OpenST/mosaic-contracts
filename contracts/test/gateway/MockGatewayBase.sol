@@ -1,8 +1,9 @@
 pragma solidity ^0.5.0;
 
 import "../lib/MockGatewayLib.sol";
+import "../../StateRootInterface.sol";
 import "../../gateway/GatewayBase.sol";
-import "../../lib/IsWorkerInterface.sol";
+import "../../lib/OrganizationInterface.sol";
 
 /**
  * @title MockGatewayBase contract
@@ -12,17 +13,17 @@ import "../../lib/IsWorkerInterface.sol";
 contract MockGatewayBase is GatewayBase {
 
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         address _messageBus,
         uint256 _bounty,
-        IsWorkerInterface _workerManager
+        OrganizationInterface _organization
     )
         public
         GatewayBase(
             _core,
             _messageBus,
             _bounty,
-            _workerManager
+            _organization
         )
     {}
 
@@ -69,7 +70,7 @@ contract MockGatewayBase is GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         //State root should be present for the block height
         require(

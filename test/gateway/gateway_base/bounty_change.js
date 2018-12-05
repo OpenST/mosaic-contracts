@@ -1,7 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const MockWorkerManager = artifacts.require('MockWorkerManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
 let unlockTimeInBlocks = 100;
@@ -40,7 +40,8 @@ contract('GatewayBase.sol', function (accounts) {
   describe('Initiate change bounty', async () => {
 
     let gatewayBaseInstance;
-    let worker = accounts[2];
+    let organizationOwner = accounts[2];
+    let worker = accounts[3];
 
     beforeEach(async function () {
 
@@ -48,13 +49,13 @@ contract('GatewayBase.sol', function (accounts) {
         , messageBus = accounts[1]
         , bounty = new BN(100);
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let organization = await MockOrganization.new(organizationOwner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
         bounty,
-        workerManager.address
+        organization.address
       );
 
     });
@@ -95,7 +96,8 @@ contract('GatewayBase.sol', function (accounts) {
   describe('Confirm Bounty change', async () => {
 
     let gatewayBaseInstance;
-    let worker = accounts[2];
+    let organizationOwner = accounts[2];
+    let worker = accounts[3];
     let unlockHeight;
     let currentBlock;
     let proposedBounty = new BN(50);
@@ -107,13 +109,14 @@ contract('GatewayBase.sol', function (accounts) {
         , messageBus = accounts[1]
         , bounty = new BN(100);
 
-      let workerManager = await MockWorkerManager.new(worker);
+
+      let organization = await MockOrganization.new(organizationOwner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         messageBus,
         bounty,
-        workerManager.address
+        organization.address
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
       currentBlock = unlockHeight - unlockTimeInBlocks;

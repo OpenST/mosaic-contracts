@@ -34,13 +34,13 @@ progressGatewayLink  --->   progressGatewayLink
 -------------------------------------------------------------------------------
 */
 
-import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./GatewayBase.sol";
 import "./MessageBus.sol";
 import "./UtilityTokenInterface.sol";
+import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
-import "../lib/IsWorkerInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/SafeMath.sol";
 
 /**
@@ -91,16 +91,16 @@ contract CoGateway is GatewayBase {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _workerManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _messageBus Message bus address.
      */
     constructor(
         address _valueToken,
         address _utilityToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
-        IsWorkerInterface _workerManager,
+        OrganizationInterface _organization,
         address _gateway,
         address _messageBus
     )
@@ -108,7 +108,7 @@ contract CoGateway is GatewayBase {
             _core,
             _messageBus,
             _bounty,
-            _workerManager
+            _organization
         )
         public
     {

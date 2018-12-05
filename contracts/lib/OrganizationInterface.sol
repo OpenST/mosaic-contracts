@@ -94,4 +94,30 @@ interface OrganizationInterface {
      * @return isUnset_ True if the worker existed else returns false.
      */
     function unsetWorker(address _worker) external returns (bool isUnset_);
+
+    /**
+     * @notice Checks if an address is the owner of the organization.
+     *
+     * @param _owner Address to check.
+     *
+     * @return isOwner_ True if the given address is the current owner of the
+     *                  organization. Returns false otherwise.
+     */
+    function isOwner(
+        address _owner
+    )
+        external
+        view
+        returns (bool isOwner_);
+
+    /**
+     * @notice Checks if an address is currently registered as an active worker.
+     *
+     * @param _worker Address to check.
+     *
+     * @return isWorker_ True if the worker is already added and expiration
+     *                   height is more than or equal to current block number.
+     *                   Returns false otherwise.
+     */
+    function isWorker(address _worker) external view returns (bool isWorker_);
 }

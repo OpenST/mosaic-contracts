@@ -54,7 +54,8 @@ RevertRedemptionIntentConfirmed   --->   revertRedemption
 */
 
 import "./CoGateway.sol";
-import "../lib/IsWorkerInterface.sol";
+import "../StateRootInterface.sol";
+import "../lib/OrganizationInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
@@ -189,7 +190,7 @@ contract EIP20CoGateway is CoGateway {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         minting and redeeming.
      *
@@ -199,16 +200,16 @@ contract EIP20CoGateway is CoGateway {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _workerManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,
         address _utilityToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
-        IsWorkerInterface _workerManager,
+        OrganizationInterface _organization,
         address _gateway,
         address _messageBus
     )
@@ -217,7 +218,7 @@ contract EIP20CoGateway is CoGateway {
             _utilityToken,
             _core,
             _bounty,
-            _workerManager,
+            _organization,
             _gateway,
             _messageBus
         )
@@ -731,7 +732,7 @@ contract EIP20CoGateway is CoGateway {
      */
     function activateCoGateway()
         external
-        onlyWorker
+        onlyOrganization
         returns (bool)
     {
         require(
@@ -750,7 +751,7 @@ contract EIP20CoGateway is CoGateway {
      */
     function deactivateCoGateway()
         external
-        onlyWorker
+        onlyOrganization
         returns (bool)
     {
         require(
