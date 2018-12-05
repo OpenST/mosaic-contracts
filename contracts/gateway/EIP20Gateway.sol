@@ -295,14 +295,6 @@ contract EIP20Gateway is GatewayBase {
             "Staker address must not be zero"
         );
         require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-        require(
             _signature.length == 65,
             "Signature must be of length 65"
         );
@@ -699,14 +691,6 @@ contract EIP20Gateway is GatewayBase {
         require(
             _amount != 0,
             "Redeem amount must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
         );
         require(
             _rlpEncodedParentNodes.length > 0,
