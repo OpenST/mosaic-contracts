@@ -23,8 +23,8 @@ import "./IsWorkerInterface.sol";
  * @title Organization contract.
  *
  * @notice The organization represents an entity that manages the
- *         economy and therefore the Organization.sol contract holds all
- *         the keys required to administer the economy.
+ *         mosaic ecosystem and therefore the Organization.sol contract holds
+ *         all the keys required to administer the mosaic contracts.
  */
 contract Organization is OrganizationInterface, IsWorkerInterface {
     using SafeMath for uint256;
