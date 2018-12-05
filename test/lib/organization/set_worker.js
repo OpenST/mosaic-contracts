@@ -99,23 +99,6 @@ contract('Organization.setWorker()', async (accounts) => {
 
   });
 
-  it('should add a worker with the current block height as expiration height', async () => {
-    let nextBlockNumber = (await web3.eth.getBlockNumber()) + 1;
-
-    assert.ok(
-      await organization.setWorker(
-        worker,
-        nextBlockNumber,
-        { from: owner },
-      )
-    );
-    assert(
-      (await organization.workers.call(worker)).eqn(nextBlockNumber),
-      'The recorded expiration height should equal the given one.',
-    );
-
-  });
-
   it('should pass when admin adds a worker with valid expiration height', async () => {
     assert.ok(
       await organization.setWorker(

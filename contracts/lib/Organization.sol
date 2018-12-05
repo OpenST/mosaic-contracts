@@ -198,8 +198,8 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
         );
 
         require(
-            _expirationHeight >= block.number,
-            "Expiration height must not be in the past."
+            _expirationHeight > block.number,
+            "Expiration height must be in the future."
         );
 
         workers[_worker] = _expirationHeight;
@@ -240,7 +240,7 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
      */
     function isWorker(address _worker) external view returns (bool isWorker_)
     {
-        isWorker_ = workers[_worker] >= block.number;
+        isWorker_ = workers[_worker] > block.number;
     }
 
 }
