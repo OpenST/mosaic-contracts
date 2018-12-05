@@ -58,7 +58,7 @@ contract GatewayBase {
     uint8 constant MESSAGE_BOX_OFFSET = 1;
 
     /**
-     * Penalty in bounty amount percentage charged to staker on revert staking
+     * Penalty in bounty amount percentage charged to staker on revert stake
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
@@ -154,7 +154,7 @@ contract GatewayBase {
      *
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
+     *                stake process.
      * @param _organisation Organisation address.
      */
     constructor(
