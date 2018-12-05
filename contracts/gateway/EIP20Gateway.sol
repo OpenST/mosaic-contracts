@@ -207,7 +207,7 @@ contract EIP20Gateway is GatewayBase {
     modifier isActive() {
         require(
             activated == true,
-            "Contract is restricted to use"
+            "Gateway is not activated."
         );
         _;
     }
@@ -1036,7 +1036,7 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             activated == true,
-            "Gateway is already deactivated"
+            "Gateway is already deactivated."
         );
         activated = false;
         return true;

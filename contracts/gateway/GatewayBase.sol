@@ -130,7 +130,7 @@ contract GatewayBase {
     modifier onlyOrganisation() {
         require(
             msg.sender == organisation,
-            "Only organisation can call the function"
+            "Only organisation can call the function."
         );
         _;
     }
