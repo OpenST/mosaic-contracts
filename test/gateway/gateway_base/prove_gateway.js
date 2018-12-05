@@ -18,12 +18,10 @@ contract('GatewayBase.sol', function (accounts) {
 
       let core = await Core.new(1, 2, 0, stateRoot, accounts[1])
         , organisation = accounts[2]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
 
       gatewayBaseInstance = await GatewayBase.new(
         core.address,
-        messageBus,
         bounty,
         organisation
       );
