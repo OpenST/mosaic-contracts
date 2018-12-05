@@ -17,7 +17,7 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 
 const Organization = artifacts.require('Organization');
 
-contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
+contract('Organization.completeOwnershipTransfer()', async (accounts) => {
 
   let owner = accounts[0];
   let proposedOwner = accounts[1];

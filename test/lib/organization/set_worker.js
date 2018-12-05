@@ -14,8 +14,6 @@
 
 const web3 = require('../../test_lib/web3.js');
 
-const BN = require('bn.js');
-
 const Utils = require('../../test_lib/utils.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 
@@ -66,7 +64,7 @@ contract('Organization.setWorker()', async (accounts) => {
 
     const blockNumber = await web3.eth.getBlockNumber();
     const expirationHeight = blockNumber + expirationHeightDelta;
-    for (let i = 0; i < expirationHeightDelta; i += 1) {
+    for (let i = 0; i < expirationHeightDelta; i++) {
       await Utils.advanceBlock();
     }
 
@@ -94,9 +92,26 @@ contract('Organization.setWorker()', async (accounts) => {
         { from: owner },
       )
     );
-    assert.equal(
-      (await organization.workers.call(worker)).toString(10),
-      new BN(expirationHeight).toString(10)
+    assert(
+      (await organization.workers.call(worker)).eqn(expirationHeight),
+      'The recorded expiration height should equal the given one.',
+    );
+
+  });
+
+  it('should add a worker with the current block height as expiration height', async () => {
+    let nextBlockNumber = (await web3.eth.getBlockNumber()) + 1;
+
+    assert.ok(
+      await organization.setWorker(
+        worker,
+        nextBlockNumber,
+        { from: owner },
+      )
+    );
+    assert(
+      (await organization.workers.call(worker)).eqn(nextBlockNumber),
+      'The recorded expiration height should equal the given one.',
     );
 
   });
@@ -109,9 +124,9 @@ contract('Organization.setWorker()', async (accounts) => {
         { from: admin },
       )
     );
-    assert.equal(
-      (await organization.workers.call(worker)).toString(10),
-      new BN(expirationHeight).toString(10)
+    assert(
+      (await organization.workers.call(worker)).eqn(expirationHeight),
+      'The recorded expiration height should equal the given one.',
     );
 
   });

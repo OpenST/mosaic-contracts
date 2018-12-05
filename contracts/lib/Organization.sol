@@ -173,7 +173,7 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
     }
 
     /**
-     * @notice Sets worker and its expiration block eight.
+     * @notice Sets worker and its expiration block height.
      *         Admin/Owner has the flexibility to extend/reduce worker
      *         expiration height. This way, a worker activation/deactivation
      *         can be controlled without adding/removing worker keys.
