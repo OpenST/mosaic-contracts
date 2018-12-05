@@ -69,7 +69,7 @@ contract('Organization.setWorker()', async (accounts) => {
     }
 
     // Checking that worker key has expired.
-    assert.equal(
+    assert.strictEqual(
       (await organization.isWorker.call(worker)),
       false
     );
@@ -79,18 +79,17 @@ contract('Organization.setWorker()', async (accounts) => {
         expirationHeight,
         { from: owner },
       ),
-      'Expiration height must not be in the past.',
+      'Expiration height must be in the future.',
     );
 
   });
 
   it('should pass when owner adds a worker with valid expiration height', async () => {
-    assert.ok(
-      await organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: owner },
-      )
+
+    await organization.setWorker(
+      worker,
+      expirationHeight,
+      { from: owner },
     );
     assert(
       (await organization.workers.call(worker)).eqn(expirationHeight),
@@ -100,12 +99,10 @@ contract('Organization.setWorker()', async (accounts) => {
   });
 
   it('should pass when admin adds a worker with valid expiration height', async () => {
-    assert.ok(
-      await organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: admin },
-      )
+    await organization.setWorker(
+      worker,
+      expirationHeight,
+      { from: admin },
     );
     assert(
       (await organization.workers.call(worker)).eqn(expirationHeight),

@@ -52,40 +52,32 @@ contract('Organization.setAdmin()', async (accounts) => {
 
   it('should pass when valid admin is passed by owner', async () => {
     const admin = accounts[2];
-    assert.ok(
-      await organization.setAdmin(
-        admin,
-        { from: owner },
-      )
+    await organization.setAdmin(
+      admin,
+      { from: owner },
     );
 
     assert.strictEqual(await organization.admin.call(), admin);
   });
 
   it('should pass when valid admin is passed by admin', async () => {
-    assert.ok(
-      await organization.setAdmin(
-        admin,
-        { from: owner },
-      )
+    await organization.setAdmin(
+      admin,
+      { from: owner },
     );
     let newAdmin = accounts[3];
-    assert.ok(
-      await organization.setAdmin(
-        newAdmin,
-        { from: admin },
-      )
+    await organization.setAdmin(
+      newAdmin,
+      { from: admin },
     );
 
     assert.strictEqual(await organization.admin.call(), newAdmin);
   });
 
   it('should pass when admin address is 0x', async () => {
-    assert.ok(
-      await organization.setAdmin(
-        '0x0000000000000000000000000000000000000000',
-        { from: owner },
-      )
+    await organization.setAdmin(
+      '0x0000000000000000000000000000000000000000',
+      { from: owner },
     );
 
     assert.strictEqual(

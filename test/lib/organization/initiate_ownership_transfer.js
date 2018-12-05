@@ -48,11 +48,9 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when valid proposed owner is passed', async () => {
-    assert.ok(
-      await organization.initiateOwnershipTransfer(
-        proposedOwner,
-        { from: owner },
-      )
+    await organization.initiateOwnershipTransfer(
+      proposedOwner,
+      { from: owner },
     );
 
     assert.strictEqual(
@@ -63,11 +61,9 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when proposed address is 0', async () => {
-    assert.ok(
-      await organization.initiateOwnershipTransfer(
-        '0x0000000000000000000000000000000000000000',
-        { from: owner },
-      )
+    await organization.initiateOwnershipTransfer(
+      '0x0000000000000000000000000000000000000000',
+      { from: owner },
     );
     assert.strictEqual(
       await organization.proposedOwner.call(),

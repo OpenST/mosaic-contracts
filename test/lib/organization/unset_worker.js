@@ -46,12 +46,9 @@ contract('Organization.unsetWorker()', async (accounts) => {
   });
 
   it('should pass when owner unsets/deactivates a worker', async () => {
-
-    assert.ok(
-      await organization.unsetWorker(
-        worker,
-        { from: owner },
-      )
+    await organization.unsetWorker(
+      worker,
+      { from: owner },
     );
 
     let returnedWorker = await organization.workers.call(worker);
@@ -64,11 +61,9 @@ contract('Organization.unsetWorker()', async (accounts) => {
 
   it('should pass when admin unsets/deactivates a worker', async () => {
     await organization.setAdmin(admin, { from: owner });
-    assert.ok(
-      await organization.unsetWorker(
-        worker,
-        { from: admin },
-      )
+    await organization.unsetWorker(
+      worker,
+      { from: admin },
     );
 
     let returnedWorker = await organization.workers.call(worker);

@@ -39,11 +39,7 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when caller is proposed owner', async () => {
-    assert.ok(
-      await organization.completeOwnershipTransfer(
-        { from: proposedOwner },
-      )
-    );
+    await organization.completeOwnershipTransfer({ from: proposedOwner });
 
     assert.strictEqual(
       await organization.owner.call(),
