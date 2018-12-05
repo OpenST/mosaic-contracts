@@ -7,7 +7,7 @@ contract MockEIP20Gateway is EIP20Gateway {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         address _organisation,
         address _messageBus

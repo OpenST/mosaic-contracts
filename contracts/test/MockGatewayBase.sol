@@ -11,7 +11,7 @@ import "./MockGatewayLib.sol";
 contract MockGatewayBase is GatewayBase {
 
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         address _messageBus,
         uint256 _bounty,
         address _organisation

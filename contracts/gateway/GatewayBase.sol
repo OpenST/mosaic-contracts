@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "../lib/GatewayLib.sol";
-import "./CoreInterface.sol";
 import "../lib/SafeMath.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
@@ -86,7 +85,7 @@ contract GatewayBase {
     address public organisation;
 
     /** address of core contract. */
-    CoreInterface public core;
+    StateRootInterface public core;
 
     /** path to prove merkle account proof for Gateway/CoGateway contract. */
     bytes internal encodedGatewayPath;
@@ -171,7 +170,7 @@ contract GatewayBase {
      * @param _organisation Organisation address.
      */
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         address _messageBus,
         uint256 _bounty,
         address _organisation
@@ -247,7 +246,7 @@ contract GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(

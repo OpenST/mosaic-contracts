@@ -98,7 +98,7 @@ contract CoGateway is GatewayBase {
     constructor(
         address _valueToken,
         address _utilityToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         address _organisation,
         address _gateway,
