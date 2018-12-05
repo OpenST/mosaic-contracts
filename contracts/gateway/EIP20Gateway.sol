@@ -95,7 +95,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a stake is reverted. */
-    event RevertedStake(
+    event StakeReverted(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
@@ -238,7 +238,7 @@ contract EIP20Gateway is Gateway {
      *      stake amount. Staked amount is transferred from staker address to
      *      Gateway contract.
      *
-     * @param _amount Stake amount that will be transferred form the staker
+     * @param _amount Stake amount that will be transferred from the staker
      *                account.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
@@ -628,8 +628,7 @@ contract EIP20Gateway is Gateway {
         // delete the stake data
         delete stakes[_messageHash];
 
-        // Emit RevertedStake event
-        emit RevertedStake(
+        emit StakeReverted(
             _messageHash,
             staker_,
             stakerNonce_,

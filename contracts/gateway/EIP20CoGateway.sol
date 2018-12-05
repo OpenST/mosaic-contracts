@@ -38,7 +38,7 @@ pragma solidity ^0.5.0;
 
             confirmRedeemIntent   <---   redeem
                                             |
-          redeemIntentConfirmed   --->   revertRedeem
+      confirmRevertRedeemIntent   <---   revertRedeem
             |
         progressRevertRedeem      --->   progressRevertRedeem
 -------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever revert redeem is complete. */
-    event RevertedRedeem(
+    event RedeemReverted(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -712,8 +712,7 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit RevertedRedeem event
-        emit RevertedRedeem(
+        emit RedeemReverted(
             _messageHash,
             message.sender,
             message.nonce,
