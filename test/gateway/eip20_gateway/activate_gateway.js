@@ -29,6 +29,13 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             (await gateway.activateGateway.call(coGateway, {from: organisation})),
             "Gateway activation failed, activateGateway returned false.",
         );
+
+        await gateway.activateGateway.call(coGateway, {from: organisation});
+
+        assert(
+            (await gateway.activated.call()),
+            'Activation flag is false but expected as true.'
+        );
     });
 
     it('should not activate if already activated', async function () {
