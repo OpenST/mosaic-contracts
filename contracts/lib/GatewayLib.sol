@@ -178,19 +178,19 @@ library GatewayLib {
     }
 
     /**
-     * @notice  function to calculate staking intent hash.
+     * @notice  function to calculate stake intent hash.
      *
-     * @param _amount staking amount.
-     * @param _beneficiary minting account.
-     * @param _staker staking account.
+     * @param _amount stake amount.
+     * @param _beneficiary mint account.
+     * @param _staker staker address.
      * @param _stakerNonce nounce of staker.
      * @param _gasPrice price used for reward calculation.
      * @param _gasLimit max limit for reward calculation.
-     * @param _token EIP20 token address used for staking.
+     * @param _token EIP20 token address used for stake.
      *
-     * @return bytes32 staking intent hash
+     * @return bytes32 stake intent hash
      */
-    function hashStakingIntent(
+    function hashStakeIntent(
         uint256 _amount,
         address _beneficiary,
         address _staker,
@@ -217,9 +217,9 @@ library GatewayLib {
     }
 
     /**
-     * @notice function to calculate redemption intent hash.
+     * @notice function to calculate redeem intent hash.
      *
-     * @param _amount redemption amount
+     * @param _amount redeem amount
      * @param _beneficiary unstake account
      * @param _redeemer redeemer account
      * @param _redeemerNonce nonce of staker
@@ -227,9 +227,9 @@ library GatewayLib {
      * @param _gasLimit max limit for reward calculation
      * @param _token utility token address
      *
-     * @return bytes32 redemption intent hash
+     * @return bytes32 redeem intent hash
      */
-    function hashRedemptionIntent(
+    function hashRedeemIntent(
         uint256 _amount,
         address _beneficiary,
         address _redeemer,
