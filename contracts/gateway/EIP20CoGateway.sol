@@ -53,17 +53,17 @@ pragma solidity ^0.5.0;
 -------------------------------------------------------------------------------
 */
 
-import "./CoGateway.sol";
+import "./UtilityTokenInterface.sol";
+import "./GatewayBase.sol";
 
 /**
  * @title EIP20CoGateway Contract
  *
  * @notice EIP20CoGateway act as medium to send messages from auxiliary
  *         chain to origin chain. Currently CoGateway supports redeem and
- *         unstake, redeem and unstake, revert redeem message & linking of
- *         gateway and cogateway.
+ *         unstake and revert redeem message
  */
-contract EIP20CoGateway is CoGateway {
+contract EIP20CoGateway is GatewayBase {
 
     /* Events */
 
@@ -179,6 +179,12 @@ contract EIP20CoGateway is CoGateway {
 
     /* public variables */
 
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -200,7 +206,6 @@ contract EIP20CoGateway is CoGateway {
      *                stake process.
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
-     * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,
@@ -208,21 +213,36 @@ contract EIP20CoGateway is CoGateway {
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _gateway,
-        address _messageBus
+        address _gateway
     )
-        CoGateway(
-            _valueToken,
-            _utilityToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organisation,
-            _gateway,
-            _messageBus
+            _organisation
         )
         public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero."
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero."
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero."
+        );
 
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        remoteGateway = _gateway;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
     }
 
     /* External functions */
@@ -718,44 +738,6 @@ contract EIP20CoGateway is CoGateway {
             message.nonce,
             redeemProcess.amount
         );
-    }
-
-    /**
-     * @notice Activate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
     }
 
     /* Public functions */

@@ -54,16 +54,15 @@ pragma solidity ^0.5.0;
 */
 
 import "./SimpleStake.sol";
-import "./Gateway.sol";
+import "./GatewayBase.sol";
 
 /**
  * @title EIP20Gateway Contract
  *
  * @notice EIP20Gateway act as medium to send messages from origin chain to
- *         auxiliary chain. Currently gateway supports stake and mint , revert
- *         stake message & linking of EIP20Gateway and EIP20CoGateway.
+ *         auxiliary chain. Currently gateway supports stake and revert stake message.
  */
-contract EIP20Gateway is Gateway {
+contract EIP20Gateway is GatewayBase {
 
     /* Events */
 
@@ -183,6 +182,14 @@ contract EIP20Gateway is Gateway {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
+    /** address of EIP20 token. */
+    EIP20Interface public token;
+
+    /**
+     * address of ERC20 token in which
+     * the facilitator will stake(bounty) for a process
+     */
+    EIP20Interface public baseToken;
 
     /** Maps messageHash to the Stake object. */
     mapping(bytes32 /*messageHash*/ => Stake) stakes;
@@ -212,19 +219,27 @@ contract EIP20Gateway is Gateway {
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
-        address _messageBus
+        address _organisation
     )
-        Gateway(
-            _token,
-            _baseToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organisation,
-            _messageBus
+            _organisation
         )
         public
     {
+        require(
+            address(_token) != address(0),
+            "Token contract address must not be zero."
+        );
+        require(
+            address(_baseToken) != address(0),
+            "Base token contract address for bounty must not be zero"
+        );
+        token = _token;
+        baseToken = _baseToken;
+        // gateway is in-active initially.
+        activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
         stakeVault = new SimpleStake(_token, address(this));
     }
@@ -961,6 +976,57 @@ contract EIP20Gateway is Gateway {
         // Update the gas consumed for this function.
         message.gasConsumed = initialGas.sub(gasleft());
     }
+
+    /**
+     * @notice Activate Gateway contract. Can be set only by the
+     *         Organization address only once by passing co-gateway address.
+     *
+     * @param _coGatewayAddress Address of cogateway.
+     *
+     * @return success_ `true` if value is set
+     */
+    function activateGateway(
+        address _coGatewayAddress
+    )
+        external
+        onlyOrganisation
+        returns (bool success_)
+    {
+
+        require(
+            remoteGateway == address(0),
+            "Gateway was already activated once."
+        );
+
+        remoteGateway = _coGatewayAddress;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
+        activated = true;
+        success_ = true;
+    }
+
+    /**
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         organization address
+     *
+     * @return success_  `true` if value is set
+     */
+    function deactivateGateway()
+        external
+        onlyOrganisation
+        returns (bool success_)
+    {
+        require(
+            activated == true,
+            "Gateway is already deactivated"
+        );
+        activated = false;
+        success_ = true;
+    }
+
 
     /* Private functions */
 
