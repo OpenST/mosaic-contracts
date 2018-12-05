@@ -30,26 +30,26 @@ pragma solidity ^0.5.0;
 
 1. Redeem and Unstake: Normal flow
 
-        confirmRedemptionIntent  <---   redeem
+            confirmRedeemIntent  <---   redeem
                                            |
-        progressUnstake (HL)     --->   progressRedemption (HL)
+        progressUnstake (HL)     --->   progressRedeem (HL)
 -------------------------------------------------------------------------------
 2. Redeem and Unstake (Revert): Normal flow
 
-        confirmRedemptionIntent   <---   redeem
+            confirmRedeemIntent   <---   redeem
                                             |
-RevertRedemptionIntentConfirmed   --->   revertRedemption
+      confirmRevertRedeemIntent   <---   revertRedeem
             |
-    progressRevertRedemption      --->   progressRevertRedemption
+        progressRevertRedeem      --->   progressRevertRedeem
 -------------------------------------------------------------------------------
 3.  Redeem and Unstake: Incase the facilitator is not able to progress
 
-        confirmRedemptionIntent   <---   redeem
-        (by facilitator)                 (by facilitator)
+             confirmRedeemIntent   <---   redeem
+             (by facilitator)             (by facilitator)
                                     |
                             facilitator (offline)
                                             |
-        progressUnstakeWithProof  <---   progressRedemptionWithProof
+        progressUnstakeWithProof  <---   progressRedeemWithProof
 -------------------------------------------------------------------------------
 */
 
@@ -69,8 +69,8 @@ contract EIP20CoGateway is CoGateway {
 
     /* Events */
 
-    /** Emitted whenever a staking intent is confirmed. */
-    event StakingIntentConfirmed(
+    /** Emitted whenever a stake intent is confirmed. */
+    event StakeIntentConfirmed(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
@@ -81,7 +81,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever a utility tokens are minted. */
-    event ProgressedMint(
+    event MintProgressed(
         bytes32 indexed _messageHash,
         address _staker,
         address _beneficiary,
@@ -92,15 +92,15 @@ contract EIP20CoGateway is CoGateway {
         bytes32 _unlockSecret
     );
 
-    /** Emitted whenever revert staking intent is confirmed. */
-    event RevertStakingIntentConfirmed(
+    /** Emitted whenever revert stake intent is confirmed. */
+    event RevertStakeIntentConfirmed(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
         uint256 _amount
     );
 
-    /** Emitted whenever a staking intent is reverted. */
+    /** Emitted whenever a stake intent is reverted. */
     event RevertStakeProgressed(
         bytes32 indexed _messageHash,
         address _staker,
@@ -108,8 +108,8 @@ contract EIP20CoGateway is CoGateway {
         uint256 _amount
     );
 
-    /** Emitted whenever redemption is initiated. */
-    event RedemptionIntentDeclared(
+    /** Emitted whenever redeem is initiated. */
+    event RedeemIntentDeclared(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -117,8 +117,8 @@ contract EIP20CoGateway is CoGateway {
         uint256 _amount
     );
 
-    /** Emitted whenever redemption is completed. */
-    event ProgressedRedemption(
+    /** Emitted whenever redeem is completed. */
+    event RedeemProgressed(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -127,16 +127,16 @@ contract EIP20CoGateway is CoGateway {
         bytes32 _unlockSecret
     );
 
-    /** Emitted whenever revert redemption is initiated. */
-    event RevertRedemptionDeclared(
+    /** Emitted whenever revert redeem is initiated. */
+    event RevertRedeemDeclared(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
         uint256 _amount
     );
 
-    /** Emitted whenever revert redemption is complete. */
-    event RevertedRedemption(
+    /** Emitted whenever revert redeem is complete. */
+    event RedeemReverted(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -146,8 +146,8 @@ contract EIP20CoGateway is CoGateway {
     /* Struct */
 
     /**
-     * Redeem stores the redemption information about the redeem amount,
-     * beneficiary address, message data and facilitator address.
+     * Redeem stores the redeem information, beneficiary address, message data
+     * and facilitator address.
      */
     struct Redeem {
 
@@ -160,7 +160,7 @@ contract EIP20CoGateway is CoGateway {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the staking process. */
+        /** Address of the facilitator that initiates the stake process. */
         address facilitator;  //todo need to discuss revocation process
         /** bounty amount kept by facilitator for transferring redeem messages*/
         uint256 bounty;
@@ -192,7 +192,7 @@ contract EIP20CoGateway is CoGateway {
     /**
      * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
-     *         minting and redeeming.
+     *         mint and redeem.
      *
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
@@ -230,7 +230,7 @@ contract EIP20CoGateway is CoGateway {
     /* External functions */
 
     /**
-     * @notice Complete minting process by minting the utility tokens
+     * @notice Complete mint process by minting the utility tokens
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
@@ -238,14 +238,14 @@ contract EIP20CoGateway is CoGateway {
      *
      * @return beneficiary_ Address to which the utility tokens will be
      *                      transferred after minting
-     * @return stakeAmount_ Total amount for which the staking was
+     * @return stakeAmount_ Total amount for which the stake was
      *                      initiated. The reward amount is deducted from the
      *                      this amount and is given to the facilitator.
      * @return mintedAmount_ Actual minted amount, after deducting the reward
      *                       from the total (stake) amount.
      * @return rewardAmount_ Reward amount that is transferred to facilitator
      */
-    function progressMinting(
+    function progressMint(
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
@@ -279,13 +279,13 @@ contract EIP20CoGateway is CoGateway {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintingInternal(_messageHash, initialGas, true, bytes32(0));
+        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
     }
 
     /**
-     * @notice Completes the minting process by providing the merkle proof
+     * @notice Completes the mint process by providing the merkle proof
      *         instead of unlockSecret. In case the facilitator process is not
-     *         able to complete the stake and minting process then this is an
+     *         able to complete the stake and mint process then this is an
      *         alternative approach to complete the process
      *
      * @dev This can be called to prove that the outbox status of messageBox on
@@ -307,7 +307,7 @@ contract EIP20CoGateway is CoGateway {
      *                        from the total amount.
      * @return rewardAmount_ Reward amount that is transferred to facilitator
      */
-    function progressMintingWithProof(
+    function progressMintWithProof(
         bytes32 _messageHash,
         bytes memory _rlpEncodedParentNodes,
         uint256 _blockHeight,
@@ -356,11 +356,11 @@ contract EIP20CoGateway is CoGateway {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintingInternal(_messageHash, initialGas, true, bytes32(0));
+        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
     }
 
     /**
-     * @notice Declare staking revert intent. This will set message status to
+     * @notice Declare stake revert intent. This will set message status to
      *         revoked. This method will also clear mint mapping storage.
      *
      * @param _messageHash Message hash.
@@ -373,7 +373,7 @@ contract EIP20CoGateway is CoGateway {
      * @return stakerNonce_ Staker nonce
      * @return amount_ Redeem amount
      */
-    function confirmRevertStakingIntent(
+    function confirmRevertStakeIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
         bytes calldata _rlpEncodedParentNodes
@@ -400,7 +400,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "RevertRedemption intent hash must not be zero"
+            "Stake intent hash must not be zero"
         );
 
         // Get the storage root
@@ -429,8 +429,7 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit RevertStakingIntentConfirmed event
-        emit RevertStakingIntentConfirmed(
+        emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
@@ -441,7 +440,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Completes the redemption process.
+     * @notice Completes the redeem process.
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
@@ -450,7 +449,7 @@ contract EIP20CoGateway is CoGateway {
      * @return redeemer_ Redeemer address
      * @return redeemAmount_ Redeem amount
      */
-    function progressRedemption(
+    function progressRedeem(
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
@@ -483,13 +482,13 @@ contract EIP20CoGateway is CoGateway {
         );
 
         (redeemer_,
-        redeemAmount_)
-        = progressRedemptionInternal(_messageHash, false, _unlockSecret);
+        redeemAmount_) =
+            progressRedeemInternal(_messageHash, false, _unlockSecret);
 
     }
 
     /**
-     * @notice Completes the redemption process by providing the merkle proof
+     * @notice Completes the redeem process by providing the merkle proof
      *         instead of unlockSecret. In case the facilitator process is not
      *         able to complete the redeem and unstake process then this is an
      *         alternative approach to complete the process
@@ -507,7 +506,7 @@ contract EIP20CoGateway is CoGateway {
      * @return redeemer_ Redeemer address
      * @return redeemAmount_ Redeem amount
      */
-    function progressRedemptionWithProof(
+    function progressRedeemWithProof(
         bytes32 _messageHash,
         bytes calldata _rlpEncodedParentNodes,
         uint256 _blockHeight,
@@ -551,14 +550,14 @@ contract EIP20CoGateway is CoGateway {
         );
 
         (redeemer_,
-        redeemAmount_)
-        = progressRedemptionInternal(_messageHash, true, bytes32(0));
+        redeemAmount_) =
+            progressRedeemInternal(_messageHash, true, bytes32(0));
 
     }
 
     /**
-     * @notice Revert redemption to stop the redeem process. Only redeemer can
-     *         revert redemption by providing penalty i.e. 1.5 times of
+     * @notice Revert the redeem process. Only redeemer can
+     *         revert redeem by providing penalty i.e. 1.5 times of
      *         bounty amount. On revert process, penalty and facilitator
      *         bounty will be burned.
      *
@@ -568,7 +567,7 @@ contract EIP20CoGateway is CoGateway {
      * @return redeemerNonce_ Redeemer nonce
      * @return amount_ Redeem amount
      */
-    function revertRedemption(
+    function revertRedeem(
         bytes32 _messageHash
     )
         payable
@@ -592,12 +591,12 @@ contract EIP20CoGateway is CoGateway {
 
         require(
             message.intentHash != bytes32(0),
-            "RedemptionIntentHash must not be zero"
+            "RedeemIntentHash must not be zero"
         );
 
         require(
             message.sender == msg.sender,
-            "Only redeemer can revert redemption."
+            "Only redeemer can revert redeem."
         );
 
         //penalty charged to redeemer
@@ -623,8 +622,8 @@ contract EIP20CoGateway is CoGateway {
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
-        // Emit RevertRedemptionDeclared event.
-        emit RevertRedemptionDeclared(
+        // Emit RevertRedeemDeclared event.
+        emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,
             redeemerNonce_,
@@ -633,7 +632,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Complete revert redemption by providing the merkle proof.
+     * @notice Complete revert redeem by providing the merkle proof.
      *         It will burn facilitator bounty and redeemer penalty.
      *
      * @param _messageHash Message hash.
@@ -646,7 +645,7 @@ contract EIP20CoGateway is CoGateway {
      * @return redeemerNonce_ Redeemer nonce
      * @return amount_ Redeem amount
      */
-    function progressRevertRedemption(
+    function progressRevertRedeem(
         bytes32 _messageHash,
         uint256 _blockHeight,
         bytes calldata _rlpEncodedParentNodes
@@ -671,7 +670,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "StakingIntentHash must not be zero"
+            "RedeemIntentHash must not be zero"
         );
 
         // Get the storageRoot for the given block height
@@ -715,8 +714,7 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit RevertedRedemption event
-        emit RevertedRedemption(
+        emit RedeemReverted(
             _messageHash,
             message.sender,
             message.nonce,
@@ -782,7 +780,7 @@ contract EIP20CoGateway is CoGateway {
      *
      * @return messageHash_ which is unique for each request.
      */
-    function confirmStakingIntent(
+    function confirmStakeIntent(
         address _staker,
         uint256 _stakerNonce,
         address _beneficiary,
@@ -824,8 +822,8 @@ contract EIP20CoGateway is CoGateway {
             "RLP parent nodes must not be zero"
         );
 
-        // Get the staking intent hash
-        bytes32 intentHash = hashStakingIntent(
+        // Get the stake intent hash
+        bytes32 intentHash = hashStakeIntent(
             _amount,
             _beneficiary,
             _staker,
@@ -865,16 +863,16 @@ contract EIP20CoGateway is CoGateway {
             _hashLock);
 
 
-        // execute the confirm staking intent. This is done in separate
+        // execute the confirm stake intent. This is done in separate
         // function to avoid stack too deep error
-        executeConfirmStakingIntent(
+        confirmStakeIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpParentNodes
         );
 
-        // Emit StakingIntentConfirmed event
-        emit StakingIntentConfirmed(
+        // Emit StakeIntentConfirmed event
+        emit StakeIntentConfirmed(
             messageHash_,
             _staker,
             _stakerNonce,
@@ -889,7 +887,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Initiates the redemption process.
+     * @notice Initiates the redeem process.
      *
      * @dev In order to redeem the redeemer needs to approve CoGateway contract
      *      for redeem amount. Redeem amount is transferred from redeemer
@@ -897,13 +895,13 @@ contract EIP20CoGateway is CoGateway {
      *      This is a payable function. The bounty is transferred in base token
      *      Redeemer is always msg.sender
      *
-     * @param _amount Redeem amount that will be transferred form redeemer
+     * @param _amount Redeem amount that will be transferred from redeemer
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
      * @param _facilitator Facilitator address.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redemption process done.
+     *                  redeem process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay
      * @param _nonce Nonce of the redeemer address.
      * @param _hashLock Hash Lock provided by the facilitator.
@@ -946,8 +944,8 @@ contract EIP20CoGateway is CoGateway {
             "Gas limit must not be zero"
         );
 
-        // Get the redemption intent hash
-        bytes32 intentHash = GatewayLib.hashRedemptionIntent(
+        // Get the redeem intent hash
+        bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
             msg.sender,
@@ -1008,8 +1006,8 @@ contract EIP20CoGateway is CoGateway {
             _amount
         );
 
-        // Emit RedemptionIntentDeclared event
-        emit RedemptionIntentDeclared(
+        // Emit RedeemIntentDeclared event
+        emit RedeemIntentDeclared(
             messageHash_,
             msg.sender,
             _nonce,
@@ -1021,10 +1019,10 @@ contract EIP20CoGateway is CoGateway {
     /* Private functions */
 
     /**
-     * @notice private function to execute confirm staking intent.
+     * @notice private function to execute confirm stake intent.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmStakingIntent function
+     *      confirmStakeIntent function
      *
      * @param _message message object
      * @param _blockHeight Block number for which the proof is valid
@@ -1032,7 +1030,7 @@ contract EIP20CoGateway is CoGateway {
      *
      * @return `true` if executed successfully
      */
-    function executeConfirmStakingIntent(
+    function confirmStakeIntentInternal(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
@@ -1061,21 +1059,21 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice private function to calculate staking intent hash.
+     * @notice private function to calculate stake intent hash.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmStakingIntent function
+     *      confirmStakeIntent function
      *
-     * @param _amount staking amount
+     * @param _amount stake amount
      * @param _beneficiary minting account
-     * @param _staker staking account
-     * @param _stakerNonce nounce of staker
+     * @param _staker stake account
+     * @param _stakerNonce nonce of staker
      * @param _gasPrice price used for reward calculation
      * @param _gasLimit max limit for reward calculation
      *
-     * @return bytes32 staking intent hash
+     * @return bytes32 stake intent hash
      */
-    function hashStakingIntent(
+    function hashStakeIntent(
         uint256 _amount,
         address _beneficiary,
         address _staker,
@@ -1087,7 +1085,7 @@ contract EIP20CoGateway is CoGateway {
         view
         returns(bytes32)
     {
-        return GatewayLib.hashStakingIntent(
+        return GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
             _staker,
@@ -1099,7 +1097,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice This is internal method for process meeting contains common logic.
+     * @notice This is internal method for process minting contains common logic.
      *
      * @param _messageHash Message hash.
      * @param _initialGas initial gas during progress process.
@@ -1119,7 +1117,7 @@ contract EIP20CoGateway is CoGateway {
      * @return rewardAmount_ Reward amount that is transferred to facilitator
      */
 
-    function progressMintingInternal(
+    function progressMintInternal(
         bytes32 _messageHash,
         uint256 _initialGas,
         bool _proofProgress,
@@ -1159,8 +1157,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit ProgressedMint event
-        emit ProgressedMint(
+        // Emit MintProgressed event
+        emit MintProgressed(
             _messageHash,
             message.sender,
             mint.beneficiary,
@@ -1174,7 +1172,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice Internal method to progressRedemptionInternal.
+     * @notice Internal method to progressRedeemInternal.
      *
      * @param _messageHash Message hash.
      * @param _proofProgress true if progress with proof, false if progress
@@ -1185,7 +1183,7 @@ contract EIP20CoGateway is CoGateway {
      * @return redeemer_ Redeemer address
      * @return redeemAmount_ Redeem amount
      */
-    function progressRedemptionInternal(
+    function progressRedeemInternal(
         bytes32 _messageHash,
         bool _proofProgress,
         bytes32 _unlockSecret
@@ -1209,8 +1207,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit ProgressedRedemption event.
-        emit ProgressedRedemption(
+        // Emit RedeemProgressed event.
+        emit RedeemProgressed(
             _messageHash,
             redeemer_,
             message.nonce,

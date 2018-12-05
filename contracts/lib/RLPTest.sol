@@ -56,12 +56,13 @@ contract RLPTest  {
         }
     }
 
-    /** @notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
-      *
-      * @param rlpEncodedData The RLPItem encoded bytes.
-      *
-      * @return toBytes decoded value in the form of bytes.
-      */
+    /**
+     *@notice Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
+     *
+     * @param rlpEncodedData The RLPItem encoded bytes.
+     *
+     * @return toBytes decoded value in the from of bytes.
+     */
     function toBytes(
         bytes memory rlpEncodedData
     )
