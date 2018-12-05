@@ -165,9 +165,14 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
             "Admin address can't be the same as the owner address."
         );
 
-        admin = _admin;
-
-        emit AdminAddressChanged(admin);
+        /*
+         * If the address does not change, the call is considered a success,
+         * but we don't need to emit an event as it did not actually change.
+         */
+        if (admin != _admin) {
+            admin = _admin;
+            emit AdminAddressChanged(admin);
+        }
 
         success_ = true;
     }

@@ -109,7 +109,32 @@ contract('Organization.setAdmin()', async (accounts) => {
     assert.strictEqual(
       events.AdminAddressChanged.newAdmin,
       admin,
-      'The event should emit the correct admin address'
+      'The event should emit the correct admin address.'
+    );
+
+  });
+
+  it('Should not emit an event when the address did not change', async () => {
+    await organization.setAdmin(admin, { from: owner });
+
+    /*
+     * The address was already set before. This should pass, but not emit an
+     * event.
+     */
+    const transaction = await organization.setAdmin(
+      admin,
+      { from: owner },
+    );
+
+    const events = EventsDecoder.getEvents(
+      transaction,
+      organization,
+    );
+
+    assert.strictEqual(
+      events.AdminAddressChanged,
+      undefined,
+      'The event should not be emitted when the address does not change.'
     );
 
   });
