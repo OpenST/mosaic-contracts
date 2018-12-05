@@ -28,21 +28,21 @@ pragma solidity ^0.5.0;
 contract GatewayRedeemInterface {
 
 	/**
-	 * @notice Get the current bounty amount from CoGateway
+	 * @notice Get the current bounty amount.
 	 *
 	 * @return bounty_ Bounty amount.
 	 */
 	function bounty() external returns (uint256 bounty_);
 
 	/**
-	 * @notice Get the proposed bounty amount from CoGateway
+	 * @notice Get the proposed bounty amount.
 	 *
 	 * @return proposedBounty_ Proposed bounty amount.
 	 */
 	function proposedBounty() external returns (uint256 proposedBounty_);
 
 	/**
-	 * @notice Get the proposed bounty unlock height from CoGateway
+	 * @notice Get the proposed bounty unlock height.
 	 *
 	 * @return proposedBountyUnlockHeight_ Proposed bounty activation height.
 	 */
@@ -81,10 +81,7 @@ contract GatewayRedeemInterface {
 
 
 	/**
-	 * @notice Revert the redeem process. Only redeemer can
-	 *         revert redeem by providing penalty i.e. 1.5 times of
-	 *         bounty amount. On revert process, penalty and facilitator
-	 *         bounty will be burned.
+	 * @notice Revert the redeem process.
 	 *
 	 * @param _messageHash Message hash.
 	 *
