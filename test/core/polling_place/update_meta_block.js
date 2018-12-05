@@ -28,7 +28,7 @@ const zeroAddress = "0x0000000000000000000000000000000000000000";
 contract('PollingPlace.updateMetaBlock()', async (accounts) => {
 
   let pollingPlace;
-  let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
+  let mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
   let originBlockStore;
   let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
   let auxiliaryBlockStore;
@@ -78,7 +78,7 @@ contract('PollingPlace.updateMetaBlock()', async (accounts) => {
     originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
 
-    await originBlockStore.setCoreIdentifier(originCoreIdentifier);
+    await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
     pollingPlace = await PollingPlace.new(

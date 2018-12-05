@@ -36,7 +36,7 @@ contract('PollingPlace.vote()', async (accounts) => {
 
     let pollingPlace;
 
-    let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
+    let mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
     let originBlockStore;
     let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
     let auxiliaryBlockStore;
@@ -49,7 +49,7 @@ contract('PollingPlace.vote()', async (accounts) => {
 
         await originBlockStore.setVoteValid(true);
         await auxiliaryBlockStore.setVoteValid(true);
-        await originBlockStore.setCoreIdentifier(originCoreIdentifier);
+        await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
         await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
         /*
@@ -61,7 +61,7 @@ contract('PollingPlace.vote()', async (accounts) => {
          * be done in the unit tests of the BlockStore.
          */
         vote = {
-            coreIdentifier: originCoreIdentifier,
+            coreIdentifier: mosaicCoreIdentifier,
             transitionHash: web3.utils.sha3('transition'),
             source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
             target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
@@ -171,7 +171,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         );
 
         // Origin block store should pass.
-        vote.coreIdentifier = originCoreIdentifier;
+        vote.coreIdentifier = mosaicCoreIdentifier;
         let signature = await MetaBlockUtils.signVote(accounts[0], vote);
         await pollingPlace.vote(
             vote.coreIdentifier,
@@ -381,7 +381,7 @@ contract('PollingPlace.vote()', async (accounts) => {
          * block stores, a >=2/3 majority should not be reached on either.
          */
         let coreIdentifiers = [
-            originCoreIdentifier,
+            mosaicCoreIdentifier,
             auxiliaryCoreIdentifier,
         ];
         for (var i = 0; i < 10; i++) {

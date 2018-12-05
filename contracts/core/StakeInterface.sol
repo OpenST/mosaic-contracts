@@ -94,7 +94,7 @@ interface StakeInterface {
     /**
      * @notice Notifies the contract about a closing meta-block in order to
      *         handle any changes in the set of validators.
-     *         Can only be called from OriginCore.
+     *         Can only be called from MosaicCore.
      *
      * @dev The height is given to `assert` that the call is in sync with the
      *      contract.
@@ -145,7 +145,7 @@ interface StakeInterface {
      * @notice Returns the weight of a validator at a specific meta-block
      *         height, based on the auxiliary address of the validator.
      *
-     * @dev The OriginCore can use this method to track the verified weight by
+     * @dev The MosaicCore can use this method to track the verified weight by
      *      the verified votes and notice when a supermajority has been
      *      reached, therefore committing the meta-block.
      *      The height is given to `assert` that the call is in sync with the

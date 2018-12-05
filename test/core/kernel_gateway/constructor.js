@@ -29,15 +29,15 @@ contract('KernelGateway.constructor()', async (accounts) => {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const zeroBytes =
     "0x0000000000000000000000000000000000000000000000000000000000000000";
-  const originCoreIdentifier = '0x0000000000000000000000000000000000000001';
+  const mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
   const auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
   const kernelHashIndex = 5;
 
-  let originCore,
+  let mosaicCore,
     originBlockStore,
     auxiliaryBlockStore,
     kernelHash,
-    encodedOriginCorePath,
+    encodedMosaicCorePath,
     storagePath;
 
   beforeEach(async function() {
@@ -45,12 +45,12 @@ contract('KernelGateway.constructor()', async (accounts) => {
     originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
 
-    await originBlockStore.setCoreIdentifier(originCoreIdentifier);
+    await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
-    originCore  = accounts[1];
+    mosaicCore  = accounts[1];
     kernelHash = web3.utils.sha3('kernelHash');
-    encodedOriginCorePath = web3.utils.sha3(originCore);
+    encodedMosaicCorePath = web3.utils.sha3(mosaicCore);
     storagePath = web3.utils.sha3(
       '0x0000000000000000000000000000000000000000000000000000000000000005'
     );
@@ -60,24 +60,24 @@ contract('KernelGateway.constructor()', async (accounts) => {
   it('should accept a valid construction', async () => {
 
     let kernelGateway = await KernelGateway.new(
-      originCore,
+      mosaicCore,
       originBlockStore.address,
       auxiliaryBlockStore.address,
       kernelHash,
     );
 
-    let originCoreAddress = await kernelGateway.originCore.call();
+    let mosaicCoreAddress = await kernelGateway.mosaicCore.call();
     assert.strictEqual(
-      originCore,
-      originCoreAddress,
-      'The contract did not store the correct origin core address.',
+      mosaicCore,
+      mosaicCoreAddress,
+      'The contract did not store the correct mosaic core address.',
     );
 
     let originBlockStoreAddress = await kernelGateway.originBlockStore.call();
     assert.strictEqual(
       originBlockStore.address,
       originBlockStoreAddress,
-      'The contract did not store the correct origin block store address.',
+      'The contract did not store the correct mosaic block store address.',
     );
 
     let auxiliaryBlockStoreAddress =
@@ -96,11 +96,11 @@ contract('KernelGateway.constructor()', async (accounts) => {
       'The contract did not store the correct kernel hash.',
     );
 
-    let originIdentifier = await kernelGateway.originCoreIdentifier.call();
+    let originIdentifier = await kernelGateway.mosaicCoreIdentifier.call();
     assert.strictEqual(
       originIdentifier,
-      originCoreIdentifier,
-      'The contract did not store the correct origin core identifier.',
+      mosaicCoreIdentifier,
+      'The contract did not store the correct mosaic core identifier.',
     );
 
     let auxiliaryIdentifier = await kernelGateway.auxiliaryCoreIdentifier.call();
@@ -117,11 +117,11 @@ contract('KernelGateway.constructor()', async (accounts) => {
       'The contract did not return correct kernel hash index 5.',
     );
 
-    let cEncodedOriginCorePath = await kernelGateway.encodedOriginCorePath.call();
+    let cEncodedMosaicCorePath = await kernelGateway.encodedMosaicCorePath.call();
     assert.strictEqual(
-      encodedOriginCorePath,
-      cEncodedOriginCorePath,
-      'The contract did not return correct encoded origin core path.',
+      encodedMosaicCorePath,
+      cEncodedMosaicCorePath,
+      'The contract did not return correct encoded mosaic core path.',
     );
 
 
@@ -134,7 +134,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
 
   });
 
-  it('should fail when origin core address is zero', async () => {
+  it('should fail when mosaic core address is zero', async () => {
 
     await Utils.expectRevert(
       KernelGateway.new(
@@ -143,7 +143,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
         auxiliaryBlockStore.address,
         kernelHash,
       ),
-      "The address of the origin core must not be zero.",
+      "The address of the mosaic core must not be zero.",
     );
 
   });
@@ -152,7 +152,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
 
     await Utils.expectRevert(
       KernelGateway.new(
-        originCore,
+        mosaicCore,
         zeroAddress,
         auxiliaryBlockStore.address,
         kernelHash,
@@ -166,7 +166,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
 
     await Utils.expectRevert(
       KernelGateway.new(
-        originCore,
+        mosaicCore,
         originBlockStore.address,
         zeroAddress,
         kernelHash,
@@ -180,7 +180,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
 
     await Utils.expectRevert(
       KernelGateway.new(
-        originCore,
+        mosaicCore,
         originBlockStore.address,
         auxiliaryBlockStore.address,
         zeroBytes,

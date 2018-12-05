@@ -27,11 +27,11 @@ const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
-contract('KernelGateway.proveOriginCore()', async (accounts) => {
+contract('KernelGateway.proveMosaicCore()', async (accounts) => {
 
     const zeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-    let originCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
+    let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
 
     let accountRlp = testData.account.rlpEncodedAccount;
     let accountBranchRlp = testData.account.rlpParentNodes;
@@ -42,18 +42,18 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
     async function deploy(KernelGateway) {
         // deploy the kernel gateway
-        originCore = accounts[1];
+        mosaicCore = accounts[1];
         originBlockStore = await BlockStore.new();
         auxiliaryBlockStore = await BlockStore.new();
 
         kernelGateway = await KernelGateway.new(
-            originCore,
+            mosaicCore,
             originBlockStore.address,
             auxiliaryBlockStore.address,
             web3.utils.sha3('genesisKernelHash'),
         );
 
-        encodedPath = await kernelGateway.encodedOriginCorePath();
+        encodedPath = await kernelGateway.encodedMosaicCorePath();
         await originBlockStore.setStateRoot(stateRoot);
     }
 
@@ -64,7 +64,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
     it('should fail when rlp account is zero', async () => {
 
         await Utils.expectRevert(
-            kernelGateway.proveOriginCore.call(
+            kernelGateway.proveMosaicCore.call(
                 "0x",
                 accountBranchRlp,
                 originBlockHeight,
@@ -76,7 +76,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
     it('should fail when rlp account branch nodes is zero', async () => {
 
         await Utils.expectRevert(
-            kernelGateway.proveOriginCore.call(
+            kernelGateway.proveMosaicCore.call(
                 accountRlp,
                 "0x",
                 originBlockHeight,
@@ -90,7 +90,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
         await originBlockStore.setStateRoot(zeroBytes);
 
         await Utils.expectRevert(
-            kernelGateway.proveOriginCore.call(
+            kernelGateway.proveMosaicCore.call(
                 accountRlp,
                 accountBranchRlp,
                 originBlockHeight,
@@ -104,7 +104,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
         await deploy(KernelGatewayFail);
 
         await Utils.expectRevert(
-            kernelGateway.proveOriginCore.call(
+            kernelGateway.proveMosaicCore.call(
                 accountRlp,
                 accountBranchRlp,
                 originBlockHeight,
@@ -116,7 +116,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
     it('should fail when account RLP is not valid RLP encoded data', async () => {
 
         await Utils.expectRevert(
-            kernelGateway.proveOriginCore.call(
+            kernelGateway.proveMosaicCore.call(
                 web3.utils.sha3('random'),
                 accountBranchRlp,
                 originBlockHeight,
@@ -127,7 +127,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
     it('should pass with valid data', async () => {
 
-        let result = await kernelGateway.proveOriginCore.call(
+        let result = await kernelGateway.proveMosaicCore.call(
             accountRlp,
             accountBranchRlp,
             originBlockHeight,
@@ -135,7 +135,7 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
         assert(result, "Account proof must pass for valid data");
 
-        let tx = await kernelGateway.proveOriginCore(
+        let tx = await kernelGateway.proveMosaicCore(
             accountRlp,
             accountBranchRlp,
             originBlockHeight,
@@ -144,16 +144,16 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
         let event = EventDecoder.getEvents(tx, kernelGateway);
 
         assert(
-            event.OriginCoreProven !== undefined,
-            "Event `OriginCoreProven` must be emitted.",
+            event.MosaicCoreProven !== undefined,
+            "Event `MosaicCoreProven` must be emitted.",
         );
 
-        let eventData = event.OriginCoreProven;
+        let eventData = event.MosaicCoreProven;
 
         assert.strictEqual(
-            web3.utils.toChecksumAddress(eventData._originCore),
-            originCore,
-            `Origin core address from event must be equal to ${originCore}`,
+            web3.utils.toChecksumAddress(eventData._mosaicCore),
+            mosaicCore,
+            `Mosaic core address from event must be equal to ${mosaicCore}`,
         );
 
         assert(
@@ -188,13 +188,13 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
             let originBlockHeight = new BN(100);
 
-            await kernelGateway.proveOriginCore(
+            await kernelGateway.proveMosaicCore(
                 accountRlp,
                 accountBranchRlp,
                 originBlockHeight,
             );
 
-            let tx = await kernelGateway.proveOriginCore(
+            let tx = await kernelGateway.proveMosaicCore(
                 accountRlp,
                 accountBranchRlp,
                 originBlockHeight,
@@ -203,16 +203,16 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
             let event = EventDecoder.getEvents(tx, kernelGateway);
 
             assert(
-                event.OriginCoreProven !== undefined,
-                "Event `OriginCoreProven` must be emitted.",
+                event.MosaicCoreProven !== undefined,
+                "Event `MosaicCoreProven` must be emitted.",
             );
 
-            let eventData = event.OriginCoreProven;
+            let eventData = event.MosaicCoreProven;
 
             assert.strictEqual(
-                web3.utils.toChecksumAddress(eventData._originCore),
-                originCore,
-                `Origin core address from event must be equal to ${originCore}`,
+                web3.utils.toChecksumAddress(eventData._mosaicCore),
+                mosaicCore,
+                `Mosaic core address from event must be equal to ${mosaicCore}`,
             );
 
             assert(

@@ -37,7 +37,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   let randomHash =
     "0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67";
 
-  let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
+  let mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
 
   let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
 
@@ -54,7 +54,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
 
-    await originBlockStore.setCoreIdentifier(originCoreIdentifier);
+    await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
     kernelGateway = await KernelGateway.new(
@@ -141,9 +141,9 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     let eventData = event.OpenKernelConfirmed;
 
     assert.strictEqual(
-      eventData._originCoreIdentifier,
-      originCoreIdentifier,
-      `Origin core identifier from event must be equal to ${originCoreIdentifier}`,
+      eventData._mosaicCoreIdentifier,
+      mosaicCoreIdentifier,
+      `Mosaic core identifier from event must be equal to ${mosaicCoreIdentifier}`,
     );
 
     assert.strictEqual(

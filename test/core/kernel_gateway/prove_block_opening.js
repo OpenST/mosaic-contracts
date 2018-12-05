@@ -30,7 +30,7 @@ const BlockStore = artifacts.require('BlockStoreMock');
 contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   const zeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
-  let originCore, kernelGateway, originBlockStore, auxiliaryBlockStore, genesisKernelHash;
+  let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore, genesisKernelHash;
 
   let height,
     parent,
@@ -46,13 +46,13 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   async function deploy(KernelGateway) {
     // deploy the kernel gateway
-    originCore = accounts[1];
+    mosaicCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
     genesisKernelHash =
       "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
     kernelGateway = await KernelGateway.new(
-      originCore,
+      mosaicCore,
       originBlockStore.address,
       auxiliaryBlockStore.address,
       genesisKernelHash,
@@ -337,11 +337,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
     let eventData = event.OpenKernelProven;
 
-    let originCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
+    let mosaicCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
     assert.strictEqual(
-      eventData._originCoreIdentifier,
-      originCoreIdentifier,
-      `Origin block store core identifier must be equal to ${originCoreIdentifier}`,
+      eventData._mosaicCoreIdentifier,
+      mosaicCoreIdentifier,
+      `Origin block store core identifier must be equal to ${mosaicCoreIdentifier}`,
     );
 
     let auxiliaryCoreIdentifier = await auxiliaryBlockStore.getCoreIdentifier.call();

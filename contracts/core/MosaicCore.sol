@@ -15,19 +15,19 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "../OstInterface.sol";
-import "./OriginCoreConfig.sol";
-import "./OriginCoreInterface.sol";
+import "./MosaicCoreConfig.sol";
+import "./MosaicCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/SafeMath.sol";
 import "../StateRootInterface.sol";
 
 /**
- * @title OriginCore is a meta-blockchain with staked validators on Ethereum.
+ * @title MosaicCore is a meta-blockchain with staked validators on Ethereum.
  */
-contract OriginCore is
-    OriginCoreInterface,
-    OriginCoreConfig,
+contract MosaicCore is
+MosaicCoreInterface,
+MosaicCoreConfig,
     StateRootInterface {
     using SafeMath for uint256;
 
@@ -131,7 +131,7 @@ contract OriginCore is
     /* Constructor */
 
     /**
-     * The OriginCore constructor initializes the OriginCore and deploys an
+     * The MosaicCore constructor initializes the MosaicCore and deploys an
      * instance of the Stake contract.
      *
      * @param _auxiliaryCoreIdentifier The core identifier of the auxiliary
