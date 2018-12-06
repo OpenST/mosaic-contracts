@@ -176,19 +176,6 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         await _stake(utils.ResultType.FAIL);
     });
 
-    it('should fail to stake when gas price is 0', async function () {
-        gasPrice = new BN(0);
-        errorMessage = "Gas price must not be zero";
-        await _stake(utils.ResultType.FAIL);
-    });
-
-    it('should fail to stake when gas limit is 0', async function () {
-        gasLimit = new BN(0);
-        errorMessage = "Gas limit must not be zero";
-        await _prepareData();
-        await _stake(utils.ResultType.FAIL);
-    });
-
     it('should fail to stake when signature is not of length 65 (invalid bytes)', async function () {
         await _prepareData();
         signature = accounts[9];

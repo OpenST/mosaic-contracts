@@ -790,14 +790,6 @@ contract EIP20CoGateway is GatewayBase {
             "Mint amount must not be zero"
         );
         require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-        require(
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero"
         );
@@ -915,15 +907,6 @@ contract EIP20CoGateway is GatewayBase {
             _facilitator != address(0),
             "Facilitator address must not be zero"
         );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-
         // Get the redeem intent hash
         bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,
