@@ -21,51 +21,51 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title GatewayRedeemInterface interface.
+ * @title GatewayRedeemInterface interface.
  *
- *  @notice An interface to call CoGateway redeem functions.
+ * @notice An interface to call CoGateway redeem functions.
  */
 contract GatewayRedeemInterface {
 
 	/**
-     * @notice Get the current bounty amount from CoGateway
-     *
-     * @return bounty_ Bounty amount.
-     */
+	 * @notice Get the current bounty amount.
+	 *
+	 * @return bounty_ Bounty amount.
+	 */
 	function bounty() external returns (uint256 bounty_);
 
 	/**
-     * @notice Get the proposed bounty amount from CoGateway
-     *
-     * @return proposedBounty_ Proposed bounty amount.
-     */
+	 * @notice Get the proposed bounty amount.
+	 *
+	 * @return proposedBounty_ Proposed bounty amount.
+	 */
 	function proposedBounty() external returns (uint256 proposedBounty_);
 
 	/**
-     * @notice Get the proposed bounty unlock height from CoGateway
-     *
-     * @return proposedBountyUnlockHeight_ Proposed bounty activation height.
-     */
+	 * @notice Get the proposed bounty unlock height.
+	 *
+	 * @return proposedBountyUnlockHeight_ Proposed bounty activation height.
+	 */
 	function proposedBountyUnlockHeight()
 		external
 		returns (uint256 proposedBountyUnlockHeight_);
 
 	/**
-     * @notice Initiates the redeem process.
-     *
-     * @param _amount Redeem amount that will be transferred form redeemer
-     *                account.
-     * @param _beneficiary The address in the origin chain where the value
-     *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
-     * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redeem process done.
-     * @param _gasLimit Gas limit that redeemer is ready to pay
-     * @param _nonce Nonce of the redeemer address.
-     * @param _hashLock Hash Lock provided by the facilitator.
-     *
-     * @return messageHash_ which is unique for each request.
-     */
+	 * @notice Initiates the redeem process.
+	 *
+	 * @param _amount Redeem amount that will be transferred from redeemer
+	 *                account.
+	 * @param _beneficiary The address in the origin chain where the value
+	 *                     tok ens will be released.
+	 * @param _facilitator Facilitator address.
+	 * @param _gasPrice Gas price that redeemer is ready to pay to get the
+	 *                  redeem process done.
+	 * @param _gasLimit Gas limit that redeemer is ready to pay
+	 * @param _nonce Nonce of the redeemer address.
+	 * @param _hashLock Hash Lock provided by the facilitator.
+	 *
+	 * @return messageHash_ which is unique for each request.
+	 */
 	function redeem(
 		uint256 _amount,
 		address _beneficiary,
@@ -81,10 +81,7 @@ contract GatewayRedeemInterface {
 
 
 	/**
-	 * @notice Revert the redeem process. Only redeemer can
-	 *         revert redeem by providing penalty i.e. 1.5 times of
-	 *         bounty amount. On revert process, penalty and facilitator
-	 *         bounty will be burned.
+	 * @notice Revert the redeem process.
 	 *
 	 * @param _messageHash Message hash.
 	 *

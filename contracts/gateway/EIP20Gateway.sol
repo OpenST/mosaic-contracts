@@ -54,16 +54,15 @@ pragma solidity ^0.5.0;
 */
 
 import "./SimpleStake.sol";
-import "./Gateway.sol";
+import "./GatewayBase.sol";
 
 /**
  * @title EIP20Gateway Contract
  *
  * @notice EIP20Gateway act as medium to send messages from origin chain to
- *         auxiliary chain. Currently gateway supports stake and mint , revert
- *         stake message & linking of EIP20Gateway and EIP20CoGateway.
+ *         auxiliary chain. Currently gateway supports stake and revert stake message.
  */
-contract EIP20Gateway is Gateway {
+contract EIP20Gateway is GatewayBase {
 
     /* Events */
 
@@ -77,7 +76,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a stake is completed. */
-    event ProgressedStake(
+    event StakeProgressed(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
@@ -95,7 +94,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a stake is reverted. */
-    event RevertedStake(
+    event StakeReverted(
         bytes32 indexed _messageHash,
         address _staker,
         uint256 _stakerNonce,
@@ -114,7 +113,7 @@ contract EIP20Gateway is Gateway {
     );
 
     /** Emitted whenever a unstake process is complete. */
-    event ProgressedUnstake(
+    event UnstakeProgressed(
         bytes32 indexed _messageHash,
         address _redeemer,
         address _beneficiary,
@@ -166,7 +165,7 @@ contract EIP20Gateway is Gateway {
     }
 
     /**
-     * Unstake stores the unstake / redeem information
+     * Unstake stores the unstake/redeem information
      * like unstake/redeem amount, beneficiary address, message data.
      */
     struct Unstake {
@@ -183,6 +182,14 @@ contract EIP20Gateway is Gateway {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
+    /** address of EIP20 token. */
+    EIP20Interface public token;
+
+    /**
+     * address of ERC20 token in which
+     * the facilitator will stake(bounty) for a process
+     */
+    EIP20Interface public baseToken;
 
     /** Maps messageHash to the Stake object. */
     mapping(bytes32 /*messageHash*/ => Stake) stakes;
@@ -212,19 +219,27 @@ contract EIP20Gateway is Gateway {
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
-        address _messageBus
+        address _organisation
     )
-        Gateway(
-            _token,
-            _baseToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organisation,
-            _messageBus
+            _organisation
         )
         public
     {
+        require(
+            address(_token) != address(0),
+            "Token contract address must not be zero."
+        );
+        require(
+            address(_baseToken) != address(0),
+            "Base token contract address for bounty must not be zero"
+        );
+        token = _token;
+        baseToken = _baseToken;
+        // gateway is in-active initially.
+        activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
         stakeVault = new SimpleStake(_token, address(this));
     }
@@ -238,7 +253,7 @@ contract EIP20Gateway is Gateway {
      *      stake amount. Staked amount is transferred from staker address to
      *      Gateway contract.
      *
-     * @param _amount Stake amount that will be transferred form staker
+     * @param _amount Stake amount that will be transferred from the staker
      *                account.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
@@ -530,14 +545,13 @@ contract EIP20Gateway is Gateway {
         stakerNonce_ = message.nonce;
         amount_ = stakes[_messageHash].amount;
 
-        // penalty charged to staker for revert stake.
+        // Penalty charged to staker for revert stake.
         uint256 penalty = stakes[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+            .mul(REVOCATION_PENALTY)
+            .div(100);
 
         // transfer the penalty amount
         require(baseToken.transferFrom(msg.sender, address(this), penalty));
-
 
         // Emit RevertStakeIntentDeclared event.
         emit RevertStakeIntentDeclared(
@@ -629,8 +643,7 @@ contract EIP20Gateway is Gateway {
         // delete the stake data
         delete stakes[_messageHash];
 
-        // Emit RevertedStake event
-        emit RevertedStake(
+        emit StakeReverted(
             _messageHash,
             staker_,
             stakerNonce_,
@@ -738,7 +751,7 @@ contract EIP20Gateway is Gateway {
             _hashLock
         );
 
-        executeConfirmRedeemIntent(
+        confirmRedeemIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpEncodedParentNodes
@@ -964,6 +977,57 @@ contract EIP20Gateway is Gateway {
         message.gasConsumed = initialGas.sub(gasleft());
     }
 
+    /**
+     * @notice Activate Gateway contract. Can be set only by the
+     *         Organization address only once by passing co-gateway address.
+     *
+     * @param _coGatewayAddress Address of cogateway.
+     *
+     * @return success_ `true` if value is set
+     */
+    function activateGateway(
+        address _coGatewayAddress
+    )
+        external
+        onlyOrganisation
+        returns (bool success_)
+    {
+
+        require(
+            remoteGateway == address(0),
+            "Gateway was already activated once."
+        );
+
+        remoteGateway = _coGatewayAddress;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
+        activated = true;
+        success_ = true;
+    }
+
+    /**
+     * @notice Deactivate Gateway contract. Can be set only by the
+     *         organization address
+     *
+     * @return success_  `true` if value is set
+     */
+    function deactivateGateway()
+        external
+        onlyOrganisation
+        returns (bool success_)
+    {
+        require(
+            activated == true,
+            "Gateway is already deactivated"
+        );
+        activated = false;
+        success_ = true;
+    }
+
+
     /* Private functions */
 
     /**
@@ -978,7 +1042,7 @@ contract EIP20Gateway is Gateway {
      *
      * @return `true` if executed successfully
      */
-    function executeConfirmRedeemIntent(
+    function confirmRedeemIntentInternal(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
@@ -1044,7 +1108,7 @@ contract EIP20Gateway is Gateway {
         // delete the stake data
         delete stakes[_messageHash];
 
-        emit ProgressedStake(
+        emit StakeProgressed(
             _messageHash,
             staker_,
             _message.nonce,
@@ -1113,7 +1177,7 @@ contract EIP20Gateway is Gateway {
         // delete the unstake data
         delete unstakes[_messageHash];
 
-        emit ProgressedUnstake(
+        emit UnstakeProgressed(
             _messageHash,
             message.sender,
             unStake.beneficiary,

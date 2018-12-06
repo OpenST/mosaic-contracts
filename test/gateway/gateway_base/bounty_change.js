@@ -44,12 +44,10 @@ contract('GatewayBase.sol', function (accounts) {
     beforeEach(async function () {
 
       let core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );
@@ -101,12 +99,10 @@ contract('GatewayBase.sol', function (accounts) {
     beforeEach(async function () {
 
       let core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );

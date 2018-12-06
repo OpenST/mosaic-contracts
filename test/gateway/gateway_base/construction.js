@@ -3,17 +3,17 @@ const GatewayBase = artifacts.require("./GatewayBase.sol")
 
 const Utils = require('../../../test/test_lib/utils');
 
+const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
 
-    let core, messageBus, bounty, organisation;
+    let core, bounty, organisation;
 
-    before(function () {
+    beforeEach(function () {
 
       organisation = accounts[2]
         , core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
     });
 
@@ -21,17 +21,21 @@ contract('GatewayBase.sol', function (accounts) {
 
       let gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );
 
-      assert.equal(core, await gatewayBaseInstance.core.call());
-      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
-      assert.equal(organisation, await gatewayBaseInstance.organisation.call());
+      assert.strictEqual(
+          core,
+          await gatewayBaseInstance.core.call(),
+          "Core contract address doesn't match."
+      );
+      assert.strictEqual(
+          organisation,
+          await gatewayBaseInstance.organisation.call(),
+          "Organization address doesn't match."
+      );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.linked.call()));
-      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should pass with right set of parameters and zero bounty', async function () {
@@ -40,37 +44,32 @@ contract('GatewayBase.sol', function (accounts) {
 
       let gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
         organisation
       );
 
       assert.equal(core, await gatewayBaseInstance.core.call());
-      assert.equal(messageBus, await gatewayBaseInstance.messageBus.call());
       assert.equal(organisation, await gatewayBaseInstance.organisation.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
-      assert(!(await gatewayBaseInstance.linked.call()));
-      assert(!(await gatewayBaseInstance.deactivated.call()));
     });
 
     it('should fail if core address is not passed', async function () {
 
-      core = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
-
-    });
-
-    it('should fail if message address is not passed', async function () {
-
-      messageBus = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      core = NullAddress;
+     await Utils.expectRevert(
+         GatewayBase.new(core, bounty, organisation),
+         "Core contract address must not be zero."
+     );
 
     });
 
     it('should fail if organisation address is not passed', async function () {
 
-      organisation = 0;
-      await Utils.expectThrow(GatewayBase.new(core, messageBus, bounty, organisation));
+      organisation = NullAddress;
+      await Utils.expectRevert(
+          GatewayBase.new(core,  bounty, organisation),
+          "Organisation address must not be zero."
+      );
 
     });
   });

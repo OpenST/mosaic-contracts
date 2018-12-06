@@ -38,7 +38,7 @@ pragma solidity ^0.5.0;
 
             confirmRedeemIntent   <---   redeem
                                             |
-          redeemIntentConfirmed   --->   revertRedeem
+      confirmRevertRedeemIntent   <---   revertRedeem
             |
         progressRevertRedeem      --->   progressRevertRedeem
 -------------------------------------------------------------------------------
@@ -53,17 +53,17 @@ pragma solidity ^0.5.0;
 -------------------------------------------------------------------------------
 */
 
-import "./CoGateway.sol";
+import "./UtilityTokenInterface.sol";
+import "./GatewayBase.sol";
 
 /**
  * @title EIP20CoGateway Contract
  *
  * @notice EIP20CoGateway act as medium to send messages from auxiliary
  *         chain to origin chain. Currently CoGateway supports redeem and
- *         unstake, redeem and unstake, revert redeem message & linking of
- *         gateway and cogateway.
+ *         unstake and revert redeem message
  */
-contract EIP20CoGateway is CoGateway {
+contract EIP20CoGateway is GatewayBase {
 
     /* Events */
 
@@ -79,7 +79,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever a utility tokens are minted. */
-    event ProgressedMint(
+    event MintProgressed(
         bytes32 indexed _messageHash,
         address _staker,
         address _beneficiary,
@@ -116,7 +116,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever redeem is completed. */
-    event ProgressedRedeem(
+    event RedeemProgressed(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -134,7 +134,7 @@ contract EIP20CoGateway is CoGateway {
     );
 
     /** Emitted whenever revert redeem is complete. */
-    event RevertedRedeem(
+    event RedeemReverted(
         bytes32 indexed _messageHash,
         address _redeemer,
         uint256 _redeemerNonce,
@@ -144,8 +144,8 @@ contract EIP20CoGateway is CoGateway {
     /* Struct */
 
     /**
-     * Redeem stores the redeem information,
-     * beneficiary address, message data and facilitator address.
+     * Redeem stores the redeem information, beneficiary address, message data
+     * and facilitator address.
      */
     struct Redeem {
 
@@ -179,6 +179,12 @@ contract EIP20CoGateway is CoGateway {
 
     /* public variables */
 
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -200,7 +206,6 @@ contract EIP20CoGateway is CoGateway {
      *                stake process.
      * @param _organisation Organisation address.
      * @param _gateway Gateway contract address.
-     * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,
@@ -208,25 +213,40 @@ contract EIP20CoGateway is CoGateway {
         CoreInterface _core,
         uint256 _bounty,
         address _organisation,
-        address _gateway,
-        address _messageBus
+        address _gateway
     )
-        CoGateway(
-            _valueToken,
-            _utilityToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organisation,
-            _gateway,
-            _messageBus
+            _organisation
         )
         public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero."
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero."
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero."
+        );
 
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        remoteGateway = _gateway;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
     }
 
     /* External functions */
-    
+
     /**
      * @notice Complete mint process by minting the utility tokens
      *
@@ -398,7 +418,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "RevertRedeem intent hash must not be zero"
+            "Stake intent hash must not be zero"
         );
 
         // Get the storage root
@@ -427,7 +447,6 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit RevertStakeIntentConfirmed event
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
@@ -669,7 +688,7 @@ contract EIP20CoGateway is CoGateway {
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "StakeIntentHash must not be zero"
+            "RedeemIntentHash must not be zero"
         );
 
         // Get the storageRoot for the given block height
@@ -713,51 +732,12 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit RevertedRedeem event
-        emit RevertedRedeem(
+        emit RedeemReverted(
             _messageHash,
             message.sender,
             message.nonce,
             redeemProcess.amount
         );
-    }
-
-    /**
-     * @notice Activate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateCoGateway()
-        external
-        onlyOrganisation
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
     }
 
     /* Public functions */
@@ -865,7 +845,7 @@ contract EIP20CoGateway is CoGateway {
 
         // execute the confirm stake intent. This is done in separate
         // function to avoid stack too deep error
-        executeConfirmStakeIntent(
+        confirmStakeIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpParentNodes
@@ -895,7 +875,7 @@ contract EIP20CoGateway is CoGateway {
      *      This is a payable function. The bounty is transferred in base token
      *      Redeemer is always msg.sender
      *
-     * @param _amount Redeem amount that will be transferred form redeemer
+     * @param _amount Redeem amount that will be transferred from redeemer
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
@@ -944,16 +924,16 @@ contract EIP20CoGateway is CoGateway {
             "Gas limit must not be zero"
         );
 
-            // Get the redeem intent hash
-            bytes32 intentHash = GatewayLib.hashRedeemIntent(
-                _amount,
-                _beneficiary,
-                msg.sender,
-                _nonce,
-                _gasPrice,
-                _gasLimit,
-                valueToken
-            );
+        // Get the redeem intent hash
+        bytes32 intentHash = GatewayLib.hashRedeemIntent(
+            _amount,
+            _beneficiary,
+            msg.sender,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            valueToken
+        );
 
         // Get the messageHash
         messageHash_ = MessageBus.messageDigest(
@@ -1030,7 +1010,7 @@ contract EIP20CoGateway is CoGateway {
      *
      * @return `true` if executed successfully
      */
-    function executeConfirmStakeIntent(
+    function confirmStakeIntentInternal(
         MessageBus.Message storage _message,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
@@ -1097,7 +1077,7 @@ contract EIP20CoGateway is CoGateway {
     }
 
     /**
-     * @notice This is internal method for process meeting contains common logic.
+     * @notice This is internal method for process minting contains common logic.
      *
      * @param _messageHash Message hash.
      * @param _initialGas initial gas during progress process.
@@ -1157,8 +1137,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the mint data
         delete mints[_messageHash];
 
-        // Emit ProgressedMint event
-        emit ProgressedMint(
+        // Emit MintProgressed event
+        emit MintProgressed(
             _messageHash,
             message.sender,
             mint.beneficiary,
@@ -1207,8 +1187,8 @@ contract EIP20CoGateway is CoGateway {
         // delete the redeem data
         delete redeems[_messageHash];
 
-        // Emit ProgressedRedeem event.
-        emit ProgressedRedeem(
+        // Emit RedeemProgressed event.
+        emit RedeemProgressed(
             _messageHash,
             redeemer_,
             message.nonce,
