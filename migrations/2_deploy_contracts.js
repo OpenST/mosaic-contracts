@@ -21,9 +21,9 @@ const TestKernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const KernelGateway = artifacts.require('KernelGateway');
 
 
+const MockMerklePatriciaProofFail = artifacts.require("MockMerklePatriciaProofFail");
 const MockMessageBusFail = artifacts.require("MockMessageBusFail");
 const MessageBusWrapperFail = artifacts.require("MessageBusWrapperFail");
-const MockMerklePatriciaProofFail = artifacts.require("MockMerklePatriciaProofFail");
 
 
 
