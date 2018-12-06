@@ -242,6 +242,16 @@ Utils.prototype = {
     });
   },
 
+  advanceBlock: async () => {
+    await web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_mine',
+      id: new Date().getTime(),
+    }, (err) => {
+      assert.strictEqual(err, null);
+    });
+  },
+
   //Get latest hash
   generateHashLock: () => {
     return hashLock.getHashLock();

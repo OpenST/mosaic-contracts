@@ -65,7 +65,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
 
     /**
      * set when OST' has received TOKENS_MAX tokens;
-     * when uninitialised minting is not allowed
+     * when uninitialised mint is not allowed
      */
     bool private initialized;
 

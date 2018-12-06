@@ -25,8 +25,16 @@ contract('GatewayBase.sol', function (accounts) {
         organisation
       );
 
-      assert.equal(core,await gatewayBaseInstance.core.call());
-      assert.equal(organisation, await gatewayBaseInstance.organisation.call());
+      assert.strictEqual(
+          core,
+          await gatewayBaseInstance.core.call(),
+          "Core contract address doesn't match."
+      );
+      assert.strictEqual(
+          organisation,
+          await gatewayBaseInstance.organisation.call(),
+          "Organization address doesn't match."
+      );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
 
