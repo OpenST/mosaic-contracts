@@ -24,6 +24,7 @@ import "./IsWorkerInterface.sol";
  */
 contract Organized {
 
+
     /* Storage */
 
     /**
@@ -31,6 +32,7 @@ contract Organized {
      * keys needed to administer the economy.
      */
     IsWorkerInterface public organization;
+
 
     /* Modifiers */
 
@@ -42,6 +44,7 @@ contract Organized {
         );
         _;
     }
+
 
     /* Constructor */
 
