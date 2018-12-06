@@ -57,7 +57,6 @@ contract GatewayRedeemInterface {
 	 *                account.
 	 * @param _beneficiary The address in the origin chain where the value
 	 *                     tok ens will be released.
-	 * @param _facilitator Facilitator address.
 	 * @param _gasPrice Gas price that redeemer is ready to pay to get the
 	 *                  redeem process done.
 	 * @param _gasLimit Gas limit that redeemer is ready to pay
@@ -69,7 +68,6 @@ contract GatewayRedeemInterface {
 	function redeem(
 		uint256 _amount,
 		address _beneficiary,
-		address _facilitator,
 		uint256 _gasPrice,
 		uint256 _gasLimit,
 		uint256 _nonce,

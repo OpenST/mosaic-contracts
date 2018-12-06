@@ -158,8 +158,6 @@ contract EIP20CoGateway is GatewayBase {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the stake process. */
-        address facilitator;  //todo need to discuss revocation process
         /** bounty amount kept by facilitator for transferring redeem messages*/
         uint256 bounty;
     }
@@ -879,7 +877,6 @@ contract EIP20CoGateway is GatewayBase {
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
      *                  redeem process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay
@@ -891,7 +888,6 @@ contract EIP20CoGateway is GatewayBase {
     function redeem(
         uint256 _amount,
         address _beneficiary,
-        address _facilitator,
         uint256 _gasPrice,
         uint256 _gasLimit,
         uint256 _nonce,
@@ -899,7 +895,6 @@ contract EIP20CoGateway is GatewayBase {
     )
         public
         payable
-        isActive
         returns (bytes32 messageHash_)
     {
         require(
@@ -909,11 +904,6 @@ contract EIP20CoGateway is GatewayBase {
         require(
             _amount > uint256(0),
             "Redeem amount must not be zero"
-        );
-
-        require(
-            _facilitator != address(0),
-            "Facilitator address must not be zero"
         );
         require(
             _gasPrice != 0,
@@ -957,7 +947,6 @@ contract EIP20CoGateway is GatewayBase {
         redeems[messageHash_] = Redeem({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : _facilitator,
             bounty : bounty
             });
 
@@ -1179,7 +1168,7 @@ contract EIP20CoGateway is GatewayBase {
         redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
         // Burn the redeem amount.
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+        UtilityTokenInterface(utilityToken).burn(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
         msg.sender.transfer(redeems[_messageHash].bounty);

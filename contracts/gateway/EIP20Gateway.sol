@@ -1021,7 +1021,7 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             activated == true,
-            "Gateway is already deactivated"
+            "Gateway is already deactivated."
         );
         activated = false;
         success_ = true;
