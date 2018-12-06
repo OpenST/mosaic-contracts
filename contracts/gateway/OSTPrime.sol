@@ -48,7 +48,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     using SafeMath for uint256;
 
     /** Emitted whenever OSTPrime base token is claimed. */
-    event Claim(
+    event Unwrap(
         address indexed _beneficiary,
         uint256 _amount,
         uint256 _totalSupply,
@@ -56,7 +56,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     );
 
     /** Emitted whenever basetoken is converted to OSTPrime */
-    event Redeem(
+    event Wrap(
         address indexed _redeemer,
         uint256 _amount,
         uint256 _totalSupply,
@@ -138,7 +138,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         transfer(address(this),_amount);
         msg.sender.transfer(_amount);
 
-        emit Claim(msg.sender, _amount, totalTokenSupply, address(this));
+        emit Unwrap(msg.sender, _amount, totalTokenSupply, address(this));
 
         return true;
     }
@@ -162,7 +162,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         allowed[address(this)][msg.sender] = _amount;
         transferFrom(address(this), msg.sender, _amount);
 
-        emit Redeem(msg.sender, _amount, totalTokenSupply, address(this));
+        emit Wrap(msg.sender, _amount, totalTokenSupply, address(this));
 
     }
 }
