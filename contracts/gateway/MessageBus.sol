@@ -293,7 +293,7 @@ library MessageBus {
         // `Declared` or `Progressed`
         require(
             _inboxMessageStatus == MessageStatus.Declared ||
-            _inboxMessageStatus == MessageStatus.Progressed,
+                _inboxMessageStatus == MessageStatus.Progressed,
             "Inbox message status must be Declared or Progressed"
         );
 
@@ -318,8 +318,8 @@ library MessageBus {
         // `DeclaredRevocation`.
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
-            _messageBox.outbox[messageHash_] ==
-            MessageStatus.DeclaredRevocation,
+                _messageBox.outbox[messageHash_] ==
+                MessageStatus.DeclaredRevocation,
             "Outbox message status must be either Declared or DeclaredRevocation"
         );
 

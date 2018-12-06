@@ -321,6 +321,11 @@ contract('MessageBus',  async (accounts) => {
     });
 
     it('should fail when merkle proof validation fails', async () => {
+
+      /*
+       * To mock the merkle proof failing case, we can set shouldPassProof to
+       * false.
+       */
       messageBusUtils.shouldPassProof(false);
       await messageBusUtils.declareMessage(params, true);
 
@@ -328,7 +333,7 @@ contract('MessageBus',  async (accounts) => {
       await messageBusUtils.progressOutboxWithProof(
         params,
         false,
-        "Outbox message status must be either Declared or DeclaredRevocation"
+        "Merkle proof verification failed"
       );
     });
 
