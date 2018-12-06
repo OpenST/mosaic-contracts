@@ -56,3 +56,4 @@ contract MockEIP20CoGateway is EIP20CoGateway {
     }
 
 }
+
