@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Origin Chain: MessageBusWrapper
 //
 // http://www.simpletoken.org/
 //
@@ -24,7 +23,21 @@ pragma solidity ^0.5.0;
 import "./MockMessageBus.sol";
 
 /**
- * @title Tests the MessageBus library.
+ * @title This is a wrapper contract to test the MessageBus library.
+ *
+ * @dev MessageBus is an external library contract. MessageBus is also linked
+ *      with an another external library `MerkelPatriciaProof`. So its very
+ *      difficult to do unit test for the message bus due library dependencies.
+ *
+ *      MockMerklePatriciaProof: This library is used to mock the verify
+ *                               function of merkle proof and always returns
+ *                               true.
+ *      MockMessageBus: This library is exact copy of `MessageBus` except that
+ *                      it is linked with `MockMerklePatriciaProof` so as to
+ *                      mock the proof.
+ *      This contract is linked with `MockMessageBus`.
+ *      Keep this contract file in consistent with MessageBusWrapperFail.
+ *
  */
 contract MessageBusWrapper {
 
@@ -505,23 +518,39 @@ contract MessageBusWrapper {
         );
     }
 
+    /**
+     * @notice Get the outbox message status of message bus for the given
+     *         message hash.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return status_ Status of the message hash.
+     */
     function getOutboxStatus(bytes32 _messageHash)
         public
         view
-        returns(uint256)
+        returns(uint256 status_)
     {
 
-        return uint256(messageBox.outbox[_messageHash]);
+        status_= uint256(messageBox.outbox[_messageHash]);
 
     }
 
+    /**
+     * @notice Get the inbox message status of message bus for the given
+     *         message hash.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return status_ Inbox status of the message hash.
+     */
     function getInboxStatus(bytes32 _messageHash)
         public
         view
-        returns(uint256)
+        returns(uint256 status_)
     {
 
-        return uint256(messageBox.inbox[_messageHash]);
+        status_ = uint256(messageBox.inbox[_messageHash]);
 
     }
 

@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Mocked MessageBus Library
 //
 // http://www.simpletoken.org/
 //
@@ -26,9 +25,25 @@ import "./MockMerklePatriciaProofFail.sol";
 import "../lib/SafeMath.sol";
 import "../lib/BytesLib.sol";
 
+/**
+ * @title Mocks MessageBus library for unit testing.
+ *
+ * @dev MessageBus is an external library contract. MessageBus is linked
+ *      with an another external library `MerkelPatriciaProof`. So its very
+ *      difficult to do unit test for the message bus due library dependencies.
+ *
+ *      MockMerklePatriciaProofFail: This library is used to mock the verify
+ *                               function of merkle proof and always returns
+ *                               true.
+ *      MockMessageBusFail: This library is exact copy of `MessageBus` except that
+ *                      it is linked with `MockMerklePatriciaProof` so as to
+ *                      mock the proof.
+ *      Keep this contract file in consistent with MessageBus.
+ */
 library MockMessageBusFail {
 
     using SafeMath for uint256;
+
 
     /* Enum */
 
@@ -46,6 +61,7 @@ library MockMessageBusFail {
         Outbox,
         Inbox
     }
+
 
     /* Struct */
 
@@ -89,6 +105,7 @@ library MockMessageBusFail {
          */
         uint256 gasConsumed;
     }
+
 
     /* constants */
 
@@ -410,7 +427,7 @@ library MockMessageBusFail {
      *                               messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
      * @param _storageRoot storage root for proof
-     * @param _messageStatus Message status of message hash in the outbox of
+     * @param _outboxMessageStatus Message status of message hash in the outbox of
      *                       source chain
      *
      * @return messageHash_ Message hash
@@ -423,7 +440,7 @@ library MockMessageBusFail {
         bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _outboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
@@ -431,9 +448,9 @@ library MockMessageBusFail {
         // the message status for the message hash in the outbox must be either
         // `Declared` or `Progressed`
         require(
-            _messageStatus == MessageStatus.Declared ||
-            _messageStatus == MessageStatus.Progressed,
-            "Message status must be Declared or Progressed"
+            _outboxMessageStatus == MessageStatus.Declared ||
+                _outboxMessageStatus == MessageStatus.Progressed,
+            "Outbox message status must be Declared or Progressed"
         );
 
         // Get the message hash
@@ -464,7 +481,7 @@ library MockMessageBusFail {
         // Perform the merkle proof
         require(
             MockMerklePatriciaProofFail.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_outboxMessageStatus)),
                 path,
                 _rlpEncodedParentNodes,
                 _storageRoot),
@@ -675,7 +692,7 @@ library MockMessageBusFail {
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
      *                               messageBox inbox.
      * @param _storageRoot storage root for proof
-     * @param _messageStatus Message status of message hash in the inbox of
+     * @param _inboxMessageStatus Message status of message hash in the inbox of
      *                       source chain
      *
      * @return messageHash_ Message hash
@@ -687,7 +704,7 @@ library MockMessageBusFail {
         uint8 _messageBoxOffset,
         bytes calldata _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _inboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
@@ -696,9 +713,9 @@ library MockMessageBusFail {
         // the message status for the message hash in the inbox must be either
         // `DeclaredRevocation` or `Revoked`
         require(
-            _messageStatus == MessageStatus.DeclaredRevocation ||
-            _messageStatus == MessageStatus.Revoked,
-            "Message status must be DeclaredRevocation or Revoked"
+            _inboxMessageStatus == MessageStatus.DeclaredRevocation ||
+                _inboxMessageStatus == MessageStatus.Revoked,
+            "Inbox message status must be DeclaredRevocation or Revoked"
         );
 
         // Get the message hash
@@ -730,7 +747,7 @@ library MockMessageBusFail {
         // Perform the merkle proof
         require(
             MockMerklePatriciaProofFail.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_inboxMessageStatus)),
                 path,
                 _rlpEncodedParentNodes,
                 _storageRoot),

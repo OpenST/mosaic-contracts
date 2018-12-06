@@ -405,7 +405,7 @@ library MessageBus {
      *                               messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
      * @param _storageRoot storage root for proof
-     * @param _messageStatus Message status of message hash in the outbox of
+     * @param _outboxMessageStatus Message status of message hash in the outbox of
      *                       source chain
      *
      * @return messageHash_ Message hash
@@ -417,7 +417,7 @@ library MessageBus {
         bytes calldata _rlpEncodedParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _outboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
@@ -425,9 +425,9 @@ library MessageBus {
         // the message status for the message hash in the outbox must be either
         // `Declared` or `Progressed`
         require(
-            _messageStatus == MessageStatus.Declared ||
-            _messageStatus == MessageStatus.Progressed,
-            "Message status must be Declared or Progressed"
+            _outboxMessageStatus == MessageStatus.Declared ||
+                _outboxMessageStatus == MessageStatus.Progressed,
+            "Out message status must be Declared or Progressed"
         );
 
         // Get the message hash
@@ -458,7 +458,7 @@ library MessageBus {
         // Perform the merkle proof
         require(
             MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_outboxMessageStatus)),
                 path,
                 _rlpEncodedParentNodes,
                 _storageRoot),
@@ -593,7 +593,7 @@ library MessageBus {
      * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
      *                               messageBox inbox.
      * @param _storageRoot storage root for proof
-     * @param _messageStatus Message status of message hash in the inbox of
+     * @param _inboxMessageStatus Message status of message hash in the inbox of
      *                       source chain
      *
      * @return messageHash_ Message hash
@@ -605,7 +605,7 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes calldata _rlpEncodedParentNodes,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _inboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
@@ -614,9 +614,9 @@ library MessageBus {
         // the message status for the message hash in the inbox must be either
         // `DeclaredRevocation` or `Revoked`
         require(
-            _messageStatus == MessageStatus.DeclaredRevocation ||
-            _messageStatus == MessageStatus.Revoked,
-            "Message status must be DeclaredRevocation or Revoked"
+            _inboxMessageStatus == MessageStatus.DeclaredRevocation ||
+                _inboxMessageStatus == MessageStatus.Revoked,
+            "Inbox message status must be DeclaredRevocation or Revoked"
         );
 
         // Get the message hash
@@ -648,7 +648,7 @@ library MessageBus {
         // Perform the merkle proof
         require(
             MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_inboxMessageStatus)),
                 path,
                 _rlpEncodedParentNodes,
                 _storageRoot),

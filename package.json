@@ -19,8 +19,5 @@
     "test": "truffle test"
   },
   "author": "OpenST Foundation Ltd.",
-  "license": "Apache v2.0",
-  "dependencies": {
-    "npm": "^6.4.1"
-  }
+  "license": "Apache v2.0"
 }

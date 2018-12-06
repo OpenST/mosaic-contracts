@@ -11,14 +11,26 @@ MessageBusUtils.prototype = {
   
   deployedMessageBus: async function(){
 
+    /* `MessageBusWrapper` is linked with `MockMessageBus` library that always
+     * pass the merkle proof verification.
+     * `MessageBusWrapperFail` is linked with `MockMessageBusFail` library that
+     * always fail the merkle proof verification.
+     */
     messageBusSuccess = await MessageBusWrapper.new();
     messageBusFail = await MessageBusWrapperFail.new();
 
-    // by default
+    /*
+     * by default all the utility functions will be called on
+     * `MessageBusWrapper` object
+     */
     this.shouldPassProof(true);
   },
-  
+
   shouldPassProof: function(shouldPass) {
+    /*
+     * This function allows the ability to switch between the
+     * `MessageBusWrapper` and `MessageBusWrapperFail` objects
+     */
     if (shouldPass === true) {
       messageBus = messageBusSuccess;
     } else {
