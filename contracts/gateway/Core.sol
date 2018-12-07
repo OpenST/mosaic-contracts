@@ -39,9 +39,11 @@ import "../lib/SafeMath.sol";
 contract Core is StateRootInterface, Organized {
     using SafeMath for uint256;
 
+
     /** Events */
 
     event StateRootAvailable(uint256 blockHeight, bytes32 stateRoot);
+
 
     /** Storage */
 
@@ -55,7 +57,8 @@ contract Core is StateRootInterface, Organized {
     /** Address of the core on the auxiliary chain. Can be zero. */
     address public coCore;
 
-    /*  Public functions */
+
+    /*  Constructor */
 
     /**
      *  @notice Contract constructor.
@@ -82,6 +85,7 @@ contract Core is StateRootInterface, Organized {
         stateRoots[latestStateRootBlockHeight] = _stateRoot;
     }
 
+
     /* External functions */
 
     /**
@@ -94,30 +98,22 @@ contract Core is StateRootInterface, Organized {
     function setCoCoreAddress(address _coCore)
         external
         onlyOrganization
-        returns (bool /*success*/)
+        returns (bool success_)
     {
+        require(
+            coCore == address(0),
+            "Co-Core has already been set and cannot be updated."
+        );
+
         require(
             _coCore != address(0),
             "Co-Core address must not be 0."
         );
 
         coCore = _coCore;
-        return true;
-    }
 
-    /**
-     *  @notice Public view function chainIdRemote.
-     *
-     *  @return uint256 coreChainIdRemote.
-     */
-    function chainIdRemote()
-        public
-        view
-        returns (uint256 /* chainIdRemote */)
-    {
-        return coreChainIdRemote;
+        success_ = true;
     }
-
 
     /**
      * @notice Get the state root for the given block height.
@@ -149,8 +145,6 @@ contract Core is StateRootInterface, Organized {
         return latestStateRootBlockHeight;
     }
 
-    /* External functions */
-
     /**
      *  @notice External function commitStateRoot.
      *
@@ -181,5 +175,21 @@ contract Core is StateRootInterface, Organized {
         emit StateRootAvailable(_blockHeight, _stateRoot);
 
         return _stateRoot;
+    }
+
+
+    /* Public functions */
+
+    /**
+     *  @notice Public view function chainIdRemote.
+     *
+     *  @return uint256 coreChainIdRemote.
+     */
+    function chainIdRemote()
+        public
+        view
+        returns (uint256 /* chainIdRemote */)
+    {
+        return coreChainIdRemote;
     }
 }

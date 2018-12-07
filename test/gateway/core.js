@@ -88,6 +88,14 @@ contract('Core', function (accounts) {
             );
         });
 
+        it('should not allow to update the address after it was set', async () => {
+            await core.setCoCoreAddress(coCoreAddress, { from: owner });
+            await utils.expectRevert(
+                core.setCoCoreAddress(coCoreAddress, { from: owner }),
+                'Co-Core has already been set and cannot be updated.',
+            );
+        });
+
     });
 
     describe('commitStateRoot', async () => {
