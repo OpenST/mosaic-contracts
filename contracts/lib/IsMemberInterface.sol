@@ -15,10 +15,20 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 /**
- *  @title IsWorkerInterface provides a method to check if an address is
+ *  @title IsMemberInterface provides a method to check if an address is
  *         currently registered as an active worker.
  */
-interface IsWorkerInterface {
+interface IsMemberInterface {
+
+    /**
+     * @notice Checks if an address is currently registered as the owner.
+     *
+     * @param _owner Address to check.
+     *
+     * @return isOwner_ True if the given address is the owner of the
+     *                  organization. Returns false otherwise.
+     */
+    function isOwner(address _owner) external view returns (bool isOwner_);
 
     /**
      * @notice Checks if an address is currently registered as an active worker.
