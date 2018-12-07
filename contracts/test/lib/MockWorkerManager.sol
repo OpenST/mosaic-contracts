@@ -14,33 +14,52 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../lib/IsWorkerInterface.sol";
+import "../../lib/IsMemberInterface.sol";
 
 /**
- * @title Mocks a worker manager interface implementation.
+ * @title Mocks a member manager interface implementation.
  *
- * @notice The only valid registered worker is given at construction and cannot
- *         be removed.
+ * @notice The only valid registered owner and worker are given at
+ *         construction and cannot be changed or removed.
  */
-contract MockWorkerManager is IsWorkerInterface {
+contract MockMembersManager is IsMemberInterface {
+
 
     /* Storage */
+
+    /** The address of the registered owner. */
+    address owner;
 
     /** The address of the registered worker. */
     address worker;
 
+
     /* Constructor */
 
     /**
-     * @notice Sets the address of the worker.
+     * @notice Sets the address of the owner and the worker.
      *
+     * @param _owner Address that should be used as a registered owner.
      * @param _worker Address that should be used as a registered worker.
      */
-    constructor(address _worker) public {
+    constructor(address _owner, address _worker) public {
+        owner = _owner;
         worker = _worker;
     }
 
+
     /* External functions */
+
+    /**
+     * @notice Checks if an address is currently registered as the owner.
+     *
+     * @param _owner Address to check.
+     *
+     * @return isOwner_ True if the given address is the registered owner.
+     */
+    function isOwner(address _owner) external view returns (bool isOwner_) {
+        isOwner_ = owner == _owner;
+    }
 
     /**
      * @notice Checks if an address is currently registered as an active worker.

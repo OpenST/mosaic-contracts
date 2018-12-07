@@ -33,16 +33,17 @@ contract('Organized.constructor()', async (accounts) => {
                 { from: owner },
             ),
             // Escaping as a regular expression is expected.
-            'Organization contract address must not be address\\(0\\)\\.',
+            'MembersManager contract address must not be address\\(0\\)\\.',
         );
 
     });
 
     it('checks that valid organization address is set', async () => {
         organized = await Organized.new(organization.address, { from: owner });
-        assert.equal(
-            await organized.workerManager.call(),
-            organization.address
+        assert.strictEqual(
+            await organized.membersManager.call(),
+            organization.address,
+            'The organized contract should store the given organization.',
         );
     });
 

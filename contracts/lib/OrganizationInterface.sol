@@ -26,7 +26,7 @@ interface OrganizationInterface {
     event OwnershipTransferInitiated(address indexed proposedOwner);
 
     /** Emitted when a new owner accepts the ownership transfer. */
-    event OwnershipTransferCompleted(address indexed newOwner);
+    event OwnershipTransferCompleted(address newOwner);
 
     /** Emitted whenever an owner or admin changes the address of the admin. */
     event AdminAddressChanged(address indexed newAdmin);
@@ -39,7 +39,7 @@ interface OrganizationInterface {
     );
 
     /** Emitted when a worker address is deleted from the contract. */
-    event WorkerUnset(address indexed worker, bool wasSet);
+    event WorkerUnset(address worker, bool wasSet);
 
 
     /* External Functions */

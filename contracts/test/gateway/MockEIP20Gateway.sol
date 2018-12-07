@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "../../gateway/EIP20Gateway.sol";
-import "../../lib/IsWorkerInterface.sol";
+import "../../lib/IsMemberInterface.sol";
 
 contract MockEIP20Gateway is EIP20Gateway {
 
@@ -10,19 +10,15 @@ contract MockEIP20Gateway is EIP20Gateway {
         EIP20Interface _baseToken,
         CoreInterface _core,
         uint256 _bounty,
-        IsWorkerInterface _workerManager,
-        address _messageBus
+        IsMemberInterface _membersManager
     )
         EIP20Gateway(
             _token,
             _baseToken,
             _core,
             _bounty,
-            _workerManager,
-            _messageBus
+            _membersManager
         )
         public
-    {
-        linked = true;
-    }
+    {}
 }

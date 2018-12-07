@@ -14,7 +14,7 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./IsWorkerInterface.sol";
+import "./IsMemberInterface.sol";
 
 /**
  * @title Organized contract.
@@ -27,17 +27,27 @@ contract Organized {
     /* Storage */
 
     /**
-     * IsWorkerInterface of worker manager contract which holds all the
+     * IsMemberInterface of worker manager contract which holds all the
      * keys needed to administer the economy.
      */
-    IsWorkerInterface public workerManager;
+    IsMemberInterface public membersManager;
 
     /* Modifiers */
+
+    modifier onlyOrganization()
+    {
+        require(
+            membersManager.isOwner(msg.sender),
+            "Only the organization is allowed to call this method."
+        );
+
+        _;
+    }
 
     modifier onlyWorker()
     {
         require(
-            workerManager.isWorker(msg.sender),
+            membersManager.isWorker(msg.sender),
             "Only whitelisted workers are allowed to call this method."
         );
 
@@ -49,15 +59,15 @@ contract Organized {
     /**
      * @notice Sets the address of the organization contract.
      *
-     * @param _workerManager A contract that manages worker keys.
+     * @param _membersManager A contract that manages worker keys.
      */
-    constructor(IsWorkerInterface _workerManager) public {
+    constructor(IsMemberInterface _membersManager) public {
         require(
-            address(_workerManager) != address(0),
-            "Organization contract address must not be address(0)."
+            address(_membersManager) != address(0),
+            "MembersManager contract address must not be address(0)."
         );
 
-        workerManager = _workerManager;
+        membersManager = _membersManager;
     }
 
 }

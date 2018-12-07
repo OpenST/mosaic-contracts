@@ -1,12 +1,14 @@
 pragma solidity ^0.5.0;
 
 import "./CoreInterface.sol";
+import "./EIP20Interface.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
-import "../lib/IsWorkerInterface.sol";
+import "../lib/IsMemberInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
+
 
 /**
  *  @title GatewayBase contract.
@@ -51,11 +53,6 @@ contract GatewayBase is Organized {
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 constant GATEWAY_LINK_TYPEHASH = keccak256(
-        abi.encode(
-            "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-        )
-    );
 
     /* constants */
 
@@ -63,16 +60,13 @@ contract GatewayBase is Organized {
     uint8 constant MESSAGE_BOX_OFFSET = 1;
 
     /**
-     * Penalty in bounty amount percentage charged to staker on revert staking.
+     * Penalty in bounty amount percentage charged to staker on revert stake.
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
     /** Unlock period for change bounty in block height. */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
-
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
 
     /**
      * Message box.
@@ -81,8 +75,8 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is deactivated for any new process. */
-    bool public deactivated;
+    /** Specifies if the Gateway is activated for any new process. */
+    bool public activated;
 
     /** Address of core contract. */
     CoreInterface public core;
@@ -96,9 +90,6 @@ contract GatewayBase is Organized {
      */
     address public remoteGateway;
 
-    /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-    
     /** Amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
@@ -136,16 +127,14 @@ contract GatewayBase is Organized {
      */
     mapping(address => bytes32) outboxActiveProcess;
 
-    /** Address of message bus used to fetch code hash during gateway linking, */
-    address public messageBus;
 
     /* Modifiers */
 
-    /** checks that contract is linked and is not deactivated */
+    /** checks that contract is activated */
     modifier isActive() {
         require(
-            deactivated == false && linked == true,
-            "Contract is restricted to use"
+            activated == true,
+            "Gateway is not activated."
         );
         _;
     }
@@ -156,37 +145,25 @@ contract GatewayBase is Organized {
      * @notice Initialize the contract and set default values.
      *
      * @param _core Core contract address.
-     * @param _messageBus Message bus contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
-     * @param _workerManager Address of a contract that manages workers.
+     *                stake process.
+     * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
         CoreInterface _core,
-        address _messageBus,
         uint256 _bounty,
-        IsWorkerInterface _workerManager
+        IsMemberInterface _membersManager
     )
-        Organized(_workerManager)
+        Organized(_membersManager)
         public
     {
         require(
             address(_core) != address(0),
-            "Core contract address must not be zero"
-        );
-        require(
-            _messageBus != address(0),
-            "MessageBus address must not be zero"
+            "Core contract address must not be zero."
         );
 
         core = _core;
-        messageBus = _messageBus;
 
-        // Gateway and cogateway is not linked yet so it is initialized as false.
-        linked = false;
-
-        // Gateway is active.
-        deactivated = false;
         bounty = _bounty;
     }
 
@@ -275,44 +252,6 @@ contract GatewayBase is Organized {
             false
         );
 
-        return true;
-    }
-
-    /**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateGateway()
-        external
-        onlyWorker
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateGateway()
-        external
-        onlyWorker
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactivated"
-        );
-        deactivated = true;
         return true;
     }
 

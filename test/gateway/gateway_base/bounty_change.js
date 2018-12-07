@@ -1,7 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const MockWorkerManager = artifacts.require('MockWorkerManager.sol');
+const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const Utils = require('../../../test/test_lib/utils');
 
 let unlockTimeInBlocks = 100;
@@ -40,21 +40,20 @@ contract('GatewayBase.sol', function (accounts) {
   describe('Initiate change bounty', async () => {
 
     let gatewayBaseInstance;
-    let worker = accounts[2];
+    let owner = accounts[2];
+    let worker = accounts[3];
 
     beforeEach(async function () {
 
       let core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
-        workerManager.address
+        membersManager.address
       );
 
     });
@@ -95,7 +94,8 @@ contract('GatewayBase.sol', function (accounts) {
   describe('Confirm Bounty change', async () => {
 
     let gatewayBaseInstance;
-    let worker = accounts[2];
+    let owner = accounts[2];
+    let worker = accounts[3];
     let unlockHeight;
     let currentBlock;
     let proposedBounty = new BN(50);
@@ -104,16 +104,14 @@ contract('GatewayBase.sol', function (accounts) {
     beforeEach(async function () {
 
       let core = accounts[0]
-        , messageBus = accounts[1]
         , bounty = new BN(100);
 
-      let workerManager = await MockWorkerManager.new(worker);
+      let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
-        messageBus,
         bounty,
-        workerManager.address
+        membersManager.address
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
       currentBlock = unlockHeight - unlockTimeInBlocks;
