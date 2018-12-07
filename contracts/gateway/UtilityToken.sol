@@ -31,7 +31,7 @@ import "./CoGatewayUtilityTokenInterface.sol";
  *  @title UtilityToken is an EIP20Token and implements UtilityTokenInterface.
  *
  *  @notice This contract has mint and burn functions and can be called only
- *          by CoGateway. TODO: Add organisation details.
+ *          by CoGateway. TODO: Add organization details.
  *
  */
 contract UtilityToken is
@@ -58,7 +58,7 @@ contract UtilityToken is
 
     /* Modifiers */
 
-    /** checks that only organisation can call a particular function. */
+    /** checks that only organization can call a particular function. */
     modifier onlyCoGateway() {
         require(
             msg.sender == coGateway,
@@ -72,7 +72,7 @@ contract UtilityToken is
     /**
      * @notice Contract constructor.
      *
-     * @dev TODO: Sets Organisation with msg.sender address.
+     * @dev TODO: Sets Organization with msg.sender address.
      *
      * @param _symbol Symbol of token
      * @param _name Name of token
@@ -87,7 +87,7 @@ contract UtilityToken is
     )
         public
         EIP20Token(_symbol, _name, _decimals)
-        //TODO: add organisation
+        //TODO: add organization
     {
         require(
             _valueToken != address(0),
@@ -102,7 +102,7 @@ contract UtilityToken is
     /**
      * @notice Sets the CoGateway contract address.
      *
-     * @dev This will be set with zero gas. Can be called only by Organisation
+     * @dev This will be set with zero gas. Can be called only by Organization
      *
      * @param _coGatewayAddress CoGateway contract address
      *
@@ -110,7 +110,7 @@ contract UtilityToken is
      */
     function setCoGateway(address _coGatewayAddress)
         external
-        //TODO: add organisation
+        //TODO: add organization
         returns (bool)
     {
         require(

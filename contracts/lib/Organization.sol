@@ -16,7 +16,7 @@ pragma solidity ^0.5.0;
 
 import "./SafeMath.sol";
 import "./OrganizationInterface.sol";
-import "./IsWorkerInterface.sol";
+import "./IsMemberInterface.sol";
 
 
 /**
@@ -26,7 +26,7 @@ import "./IsWorkerInterface.sol";
  *         mosaic ecosystem and therefore the Organization.sol contract holds
  *         all the keys required to administer the mosaic contracts.
  */
-contract Organization is OrganizationInterface, IsWorkerInterface {
+contract Organization is OrganizationInterface, IsMemberInterface {
     using SafeMath for uint256;
 
     /* Storage */
@@ -232,6 +232,18 @@ contract Organization is OrganizationInterface, IsWorkerInterface {
         delete workers[_worker];
 
         emit WorkerUnset(_worker, isUnset_);
+    }
+
+    /**
+     * @notice Checks if an address is currently registered as the owner.
+     *
+     * @param _owner Address to check.
+     *
+     * @return isOwner_ True if the given address is the owner of the
+     *                  organization. Returns false otherwise.
+     */
+    function isOwner(address _owner) external view returns (bool isOwner_) {
+        isOwner_ = _owner == owner;
     }
 
     /**

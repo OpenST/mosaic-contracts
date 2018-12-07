@@ -20,17 +20,18 @@
 
 const CoGateway = artifacts.require("EIP20CoGateway");
 const MockToken = artifacts.require("MockToken");
+const MockMembersManager = artifacts.require('MockMembersManager.sol');
 
 const Utils = require("./../../test_lib/utils"),
     BN = require('bn.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
-contract('EIP20CoGateway,constructor() ', function (accounts) {
+contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
-    let valueToken, utilityToken, bountyAmount, coreAddress, organisation,
-        coGateway, gatewayAddress = accounts[6];
+    let valueToken, utilityToken, bountyAmount, coreAddress, owner, worker,
+        membersManager, coGateway, gatewayAddress = accounts[6];
 
     beforeEach(async function () {
 
@@ -38,7 +39,10 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
         utilityToken = await MockToken.new();
         coreAddress = accounts[1];
         bountyAmount = new BN(100);
-        organisation = accounts[2];
+
+        owner = accounts[2];
+        worker = accounts[3];
+        membersManager = await MockMembersManager.new(owner, worker);
     });
 
     it('should able to deploy contract with correct parameters.', async function () {
@@ -48,7 +52,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             );
 
@@ -65,7 +69,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             );
 
@@ -97,12 +101,6 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
             'Invalid bounty amount from contract'
         );
 
-        let orgAdd = await coGateway.organisation.call();
-        assert.strictEqual(
-            orgAdd,
-            organisation,
-            'Invalid organisationAddress address from contract.'
-        );
     });
 
     it('should not deploy contract if value token is passed as zero.', async function () {
@@ -114,7 +112,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             ),
             'Value token address must not be zero.'
@@ -130,7 +128,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityTokenAddress,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             ),
             'Utility token address must not be zero.'
@@ -146,29 +144,12 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             ),
             'Core contract address must not be zero.'
         );
 
-    });
-
-    it('should not deploy contract if organisation address is passed as' +
-        ' zero.', async function () {
-        let organisation = NullAddress;
-
-        await Utils.expectRevert(
-            CoGateway.new(
-                valueToken.address,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                organisation,
-                gatewayAddress
-            ),
-            'Organisation address must not be zero.'
-        );
     });
 
     it('should able to deploy contract with zero bounty.', async function () {
@@ -180,7 +161,7 @@ contract('EIP20CoGateway,constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                organisation,
+                membersManager.address,
                 gatewayAddress
             );
 
