@@ -53,19 +53,18 @@ pragma solidity ^0.5.0;
 -------------------------------------------------------------------------------
 */
 
-import "./CoGateway.sol";
-import "../StateRootInterface.sol";
-import "../lib/OrganizationInterface.sol";
+import "./UtilityTokenInterface.sol";
+import "./GatewayBase.sol";
+import "../lib/IsMemberInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
  *
  * @notice EIP20CoGateway act as medium to send messages from auxiliary
  *         chain to origin chain. Currently CoGateway supports redeem and
- *         unstake, redeem and unstake, revert redeem message & linking of
- *         gateway and cogateway.
+ *         unstake and revert redeem message
  */
-contract EIP20CoGateway is CoGateway {
+contract EIP20CoGateway is GatewayBase {
 
     /* Events */
 
@@ -181,6 +180,12 @@ contract EIP20CoGateway is CoGateway {
 
     /* public variables */
 
+    /** address of utility token. */
+    address public utilityToken;
+
+    /** address of value token. */
+    address public valueToken;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -198,33 +203,47 @@ contract EIP20CoGateway is CoGateway {
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
      * @param _core Core contract address.
-     * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
-     * @param _organization Address of an organization contract.
+     * @param _bounty The amount that facilitator stakes to initiate the stake
+     *                process.
+     * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
-     * @param _messageBus Message bus contract address.
      */
     constructor(
         address _valueToken,
         address _utilityToken,
         StateRootInterface _core,
         uint256 _bounty,
-        OrganizationInterface _organization,
-        address _gateway,
-        address _messageBus
+        IsMemberInterface _membersManager,
+        address _gateway
     )
-        CoGateway(
-            _valueToken,
-            _utilityToken,
+        GatewayBase(
             _core,
             _bounty,
-            _organization,
-            _gateway,
-            _messageBus
+            _membersManager
         )
         public
     {
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero."
+        );
+        require(
+            _utilityToken != address(0),
+            "Utility token address must not be zero."
+        );
+        require(
+            _gateway != address(0),
+            "Gateway address must not be zero."
+        );
 
+        valueToken = _valueToken;
+        utilityToken = _utilityToken;
+        remoteGateway = _gateway;
+
+        // update the encodedGatewayPath
+        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(remoteGateway))
+        );
     }
 
     /* External functions */
@@ -722,44 +741,6 @@ contract EIP20CoGateway is CoGateway {
         );
     }
 
-    /**
-     * @notice Activate CoGateway contract. Can be set only by the
-     *         Organization address
-     *
-     * @return `true` if value is set
-     */
-    function activateCoGateway()
-        external
-        onlyOrganization
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate CoGateway contract. Can be set only by the
-     *         Organization address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateCoGateway()
-        external
-        onlyOrganization
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactive"
-        );
-        deactivated = true;
-        return true;
-    }
-
     /* Public functions */
 
     /**
@@ -808,14 +789,6 @@ contract EIP20CoGateway is CoGateway {
         require(
             _amount != 0,
             "Mint amount must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
         );
         require(
             _rlpParentNodes.length != 0,
@@ -935,15 +908,6 @@ contract EIP20CoGateway is CoGateway {
             _facilitator != address(0),
             "Facilitator address must not be zero"
         );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-
         // Get the redeem intent hash
         bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,

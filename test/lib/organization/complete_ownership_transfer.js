@@ -17,7 +17,7 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 
 const Organization = artifacts.require('Organization');
 
-contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
+contract('Organization.completeOwnershipTransfer()', async (accounts) => {
 
   let owner = accounts[0];
   let proposedOwner = accounts[1];
@@ -39,16 +39,21 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when caller is proposed owner', async () => {
-    assert.ok(
-      await organization.completeOwnershipTransfer(
-        { from: proposedOwner },
-      )
+    let response = await organization.completeOwnershipTransfer.call(
+      { from: proposedOwner }
     );
+    assert.strictEqual(
+      response,
+      true,
+      'The ownership completion should return true.',
+    );
+
+    await organization.completeOwnershipTransfer({ from: proposedOwner });
 
     assert.strictEqual(
       await organization.owner.call(),
       proposedOwner,
-      'The proposed owner must now be the owner.',
+      'The owner must now be the proposed owner.',
     );
     assert.strictEqual(
       await organization.proposedOwner.call(),

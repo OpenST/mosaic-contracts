@@ -1,11 +1,13 @@
 pragma solidity ^0.5.0;
 
+import "./EIP20Interface.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
-import "../lib/OrganizationInterface.sol";
+import "../lib/IsMemberInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
+
 
 /**
  *  @title GatewayBase contract.
@@ -50,11 +52,6 @@ contract GatewayBase is Organized {
             "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
         )
     );
-    bytes32 constant GATEWAY_LINK_TYPEHASH = keccak256(
-        abi.encode(
-            "GatewayLink(bytes32 messageHash,MessageBus.Message message)"
-        )
-    );
 
     /* constants */
 
@@ -70,9 +67,6 @@ contract GatewayBase is Organized {
     /** Unlock period for change bounty in block height. */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
-    /** Specifies if the Gateway and CoGateway contracts are linked. */
-    bool public linked;
-
     /**
      * Message box.
      * @dev Keep this is at location 1, in case this is changed then update
@@ -80,8 +74,8 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is deactivated for any new process. */
-    bool public deactivated;
+    /** Specifies if the Gateway is activated for any new process. */
+    bool public activated;
 
     /** Address of core contract. */
     StateRootInterface public core;
@@ -95,9 +89,6 @@ contract GatewayBase is Organized {
      */
     address public remoteGateway;
 
-    /** Gateway link message hash. */
-    bytes32 public gatewayLinkHash;
-    
     /** Amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
@@ -135,16 +126,14 @@ contract GatewayBase is Organized {
      */
     mapping(address => bytes32) outboxActiveProcess;
 
-    /** Address of message bus used to fetch code hash during gateway linking, */
-    address public messageBus;
 
     /* Modifiers */
 
-    /** checks that contract is linked and is not deactivated */
+    /** checks that contract is activated */
     modifier isActive() {
         require(
-            deactivated == false && linked == true,
-            "Contract is restricted to use"
+            activated == true,
+            "Gateway is not activated."
         );
         _;
     }
@@ -155,37 +144,25 @@ contract GatewayBase is Organized {
      * @notice Initialize the contract and set default values.
      *
      * @param _core Core contract address.
-     * @param _messageBus Message bus contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
-     * @param _organization Address of an organization contract.
+     *                stake process.
+     * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
         StateRootInterface _core,
-        address _messageBus,
         uint256 _bounty,
-        OrganizationInterface _organization
+        IsMemberInterface _membersManager
     )
-        Organized(_organization)
+        Organized(_membersManager)
         public
     {
         require(
             address(_core) != address(0),
-            "Core contract address must not be zero"
-        );
-        require(
-            _messageBus != address(0),
-            "MessageBus address must not be zero"
+            "Core contract address must not be zero."
         );
 
         core = _core;
-        messageBus = _messageBus;
 
-        // Gateway and cogateway is not linked yet so it is initialized as false.
-        linked = false;
-
-        // Gateway is active.
-        deactivated = false;
         bounty = _bounty;
     }
 
@@ -278,44 +255,6 @@ contract GatewayBase is Organized {
     }
 
     /**
-     * @notice Activate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function activateGateway()
-        external
-        onlyOrganization
-        returns (bool)
-    {
-        require(
-            deactivated == true,
-            "Gateway is already active"
-        );
-        deactivated = false;
-        return true;
-    }
-
-    /**
-     * @notice Deactivate Gateway contract. Can be set only by the
-     *         Organisation address
-     *
-     * @return `true` if value is set
-     */
-    function deactivateGateway()
-        external
-        onlyOrganization
-        returns (bool)
-    {
-        require(
-            deactivated == false,
-            "Gateway is already deactivated"
-        );
-        deactivated = true;
-        return true;
-    }
-
-    /**
      * @notice Get the nonce for the given account address
      *
      * @param _account Account address for which the nonce is to fetched
@@ -340,7 +279,7 @@ contract GatewayBase is Organized {
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         external
-        onlyWorker
+        onlyOrganization
         returns(uint256)
     {
         proposedBounty = _proposedBounty;
@@ -364,7 +303,7 @@ contract GatewayBase is Organized {
      */
     function confirmBountyAmountChange()
         external
-        onlyWorker
+        onlyOrganization
         returns (
             uint256 changedBountyAmount_,
             uint256 previousBountyAmount_

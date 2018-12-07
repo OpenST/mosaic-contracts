@@ -46,12 +46,9 @@ contract('Organization.unsetWorker()', async (accounts) => {
   });
 
   it('should pass when owner unsets/deactivates a worker', async () => {
-
-    assert.ok(
-      await organization.unsetWorker(
-        worker,
-        { from: owner },
-      )
+    await organization.unsetWorker(
+      worker,
+      { from: owner },
     );
 
     let returnedWorker = await organization.workers.call(worker);
@@ -64,11 +61,9 @@ contract('Organization.unsetWorker()', async (accounts) => {
 
   it('should pass when admin unsets/deactivates a worker', async () => {
     await organization.setAdmin(admin, { from: owner });
-    assert.ok(
-      await organization.unsetWorker(
-        worker,
-        { from: admin },
-      )
+    await organization.unsetWorker(
+      worker,
+      { from: admin },
     );
 
     let returnedWorker = await organization.workers.call(worker);
@@ -90,8 +85,16 @@ contract('Organization.unsetWorker()', async (accounts) => {
       organization,
     );
 
-    assert.strictEqual(events.WorkerUnset.worker, worker);
-    assert.strictEqual(events.WorkerUnset.wasSet, true);
+    assert.strictEqual(
+      events.WorkerUnset.worker,
+      worker,
+      'The event should list the worker that was unset.',
+    );
+    assert.strictEqual(
+      events.WorkerUnset.wasSet,
+      true,
+      'The event should list the worker as previously set.',
+    );
 
   });
 
@@ -106,8 +109,16 @@ contract('Organization.unsetWorker()', async (accounts) => {
       organization,
     );
 
-    assert.strictEqual(events.WorkerUnset.worker, nonSetWorker);
-    assert.strictEqual(events.WorkerUnset.wasSet, false);
+    assert.strictEqual(
+      events.WorkerUnset.worker,
+      nonSetWorker,
+      'The event should list the worker that was unset.',
+    );
+    assert.strictEqual(
+      events.WorkerUnset.wasSet,
+      false,
+      'The event should not list the worker as previously set.',
+    );
 
   });
 

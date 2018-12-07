@@ -16,15 +16,17 @@ pragma solidity ^0.5.0;
 
 import "./SafeMath.sol";
 import "./OrganizationInterface.sol";
+import "./IsMemberInterface.sol";
+
 
 /**
  * @title Organization contract.
  *
  * @notice The organization represents an entity that manages the
- *         economy and therefore the Organization.sol contract holds all
- *         the keys required to administer the economy.
+ *         mosaic ecosystem and therefore the Organization.sol contract holds
+ *         all the keys required to administer the mosaic contracts.
  */
-contract Organization is OrganizationInterface {
+contract Organization is OrganizationInterface, IsMemberInterface {
     using SafeMath for uint256;
 
     /* Storage */
@@ -163,15 +165,20 @@ contract Organization is OrganizationInterface {
             "Admin address can't be the same as the owner address."
         );
 
-        admin = _admin;
-
-        emit AdminAddressChanged(admin);
+        /*
+         * If the address does not change, the call is considered a success,
+         * but we don't need to emit an event as it did not actually change.
+         */
+        if (admin != _admin) {
+            admin = _admin;
+            emit AdminAddressChanged(admin);
+        }
 
         success_ = true;
     }
 
     /**
-     * @notice Sets worker and its expiration block eight.
+     * @notice Sets worker and its expiration block height.
      *         Admin/Owner has the flexibility to extend/reduce worker
      *         expiration height. This way, a worker activation/deactivation
      *         can be controlled without adding/removing worker keys.
@@ -196,8 +203,8 @@ contract Organization is OrganizationInterface {
         );
 
         require(
-            _expirationHeight >= block.number,
-            "Expiration height must not be in the past."
+            _expirationHeight > block.number,
+            "Expiration height must be in the future."
         );
 
         workers[_worker] = _expirationHeight;
@@ -228,21 +235,15 @@ contract Organization is OrganizationInterface {
     }
 
     /**
-     * @notice Checks if an address is the owner of the organization.
+     * @notice Checks if an address is currently registered as the owner.
      *
      * @param _owner Address to check.
      *
-     * @return isOwner_ True if the given address is the current owner of the
+     * @return isOwner_ True if the given address is the owner of the
      *                  organization. Returns false otherwise.
      */
-    function isOwner(
-        address _owner
-    )
-        external
-        view
-        returns (bool isOwner_)
-    {
-        isOwner_ = owner == _owner;
+    function isOwner(address _owner) external view returns (bool isOwner_) {
+        isOwner_ = _owner == owner;
     }
 
     /**
@@ -254,8 +255,9 @@ contract Organization is OrganizationInterface {
      *                   height is more than or equal to current block number.
      *                   Returns false otherwise.
      */
-    function isWorker(address _worker) external view returns (bool isWorker_) {
-        isWorker_ = workers[_worker] >= block.number;
+    function isWorker(address _worker) external view returns (bool isWorker_)
+    {
+        isWorker_ = workers[_worker] > block.number;
     }
 
 }

@@ -24,7 +24,7 @@ pragma solidity ^0.5.0;
 
 import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
-import "../lib/OrganizationInterface.sol";
+import "../lib/IsMemberInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/Organized.sol";
 import "../lib//RLP.sol";
@@ -63,15 +63,15 @@ contract Core is StateRootInterface, Organized {
      *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
-     *  @param _organization Address of an organization contract.
+     *  @param _membersManager Address of a members manager contract.
      */
     constructor(
         uint256 _chainIdRemote,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        OrganizationInterface _organization
+        IsMemberInterface _membersManager
     )
-        Organized(_organization)
+        Organized(_membersManager)
         public
     {
         require(_chainIdRemote != 0, "Remote chain Id is 0");

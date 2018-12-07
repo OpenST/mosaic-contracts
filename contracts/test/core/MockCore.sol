@@ -20,19 +20,19 @@ contract MockCore is Core {
      *                       chain id of utility chain.
      * @param _blockHeight block height at which _stateRoot needs to store.
      * @param _stateRoot state root hash of given _blockHeight.
-     * @param _organization Address of an organization contract.
+     *  @param _membersManager Address of a members manager contract.
      */
     constructor(
         uint256 _chainIdRemote,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        OrganizationInterface _organization
+        IsMemberInterface _membersManager
     )
         Core(
             _chainIdRemote,
             _blockHeight,
             _stateRoot,
-            _organization
+            _membersManager
         )
         public
     {}

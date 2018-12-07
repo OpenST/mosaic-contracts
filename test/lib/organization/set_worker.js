@@ -14,8 +14,6 @@
 
 const web3 = require('../../test_lib/web3.js');
 
-const BN = require('bn.js');
-
 const Utils = require('../../test_lib/utils.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 
@@ -66,14 +64,15 @@ contract('Organization.setWorker()', async (accounts) => {
 
     const blockNumber = await web3.eth.getBlockNumber();
     const expirationHeight = blockNumber + expirationHeightDelta;
-    for (let i = 0; i < expirationHeightDelta; i += 1) {
+    for (let i = 0; i < expirationHeightDelta; i++) {
       await Utils.advanceBlock();
     }
 
     // Checking that worker key has expired.
-    assert.equal(
+    assert.strictEqual(
       (await organization.isWorker.call(worker)),
-      false
+      false,
+      'The worker was expected to be expired.',
     );
     await Utils.expectRevert(
       organization.setWorker(
@@ -81,37 +80,34 @@ contract('Organization.setWorker()', async (accounts) => {
         expirationHeight,
         { from: owner },
       ),
-      'Expiration height must not be in the past.',
+      'Expiration height must be in the future.',
     );
 
   });
 
   it('should pass when owner adds a worker with valid expiration height', async () => {
-    assert.ok(
-      await organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: owner },
-      )
+
+    await organization.setWorker(
+      worker,
+      expirationHeight,
+      { from: owner },
     );
-    assert.equal(
-      (await organization.workers.call(worker)).toString(10),
-      new BN(expirationHeight).toString(10)
+    assert(
+      (await organization.workers.call(worker)).eqn(expirationHeight),
+      'The recorded expiration height should equal the given one.',
     );
 
   });
 
   it('should pass when admin adds a worker with valid expiration height', async () => {
-    assert.ok(
-      await organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: admin },
-      )
+    await organization.setWorker(
+      worker,
+      expirationHeight,
+      { from: admin },
     );
-    assert.equal(
-      (await organization.workers.call(worker)).toString(10),
-      new BN(expirationHeight).toString(10)
+    assert(
+      (await organization.workers.call(worker)).eqn(expirationHeight),
+      'The recorded expiration height should equal the given one.',
     );
 
   });

@@ -14,7 +14,7 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./OrganizationInterface.sol";
+import "./IsMemberInterface.sol";
 
 /**
  * @title Organized contract.
@@ -24,50 +24,53 @@ import "./OrganizationInterface.sol";
  */
 contract Organized {
 
+
     /* Storage */
 
     /**
-     * OrganizationInterface of worker manager contract which holds all the
+     * IsMemberInterface of worker manager contract which holds all the
      * keys needed to administer the economy.
      */
-    OrganizationInterface public organization;
+    IsMemberInterface public membersManager;
+
 
     /* Modifiers */
 
-    /** Requires that `msg.sender` is an active worker. */
-    modifier onlyWorker() {
+    modifier onlyOrganization()
+    {
         require(
-            organization.isWorker(msg.sender),
-            "Only whitelisted workers are allowed to call this method."
-        );
-
-        _;
-    }
-
-    /** Requires that `msg.sender` is the organization owner. */
-    modifier onlyOrganization() {
-        require(
-            organization.isOwner(msg.sender),
+            membersManager.isOwner(msg.sender),
             "Only the organization is allowed to call this method."
         );
 
         _;
     }
 
+    modifier onlyWorker()
+    {
+        require(
+            membersManager.isWorker(msg.sender),
+            "Only whitelisted workers are allowed to call this method."
+        );
+
+        _;
+    }
+
+
     /* Constructor */
 
     /**
      * @notice Sets the address of the organization contract.
      *
-     * @param _organization A contract that manages worker keys.
+     * @param _membersManager A contract that manages worker keys.
      */
-    constructor(OrganizationInterface _organization) public {
+    constructor(IsMemberInterface _membersManager) public {
         require(
-            address(_organization) != address(0),
-            "Organization contract address must not be address(0)."
+            address(_membersManager) != address(0),
+            "MembersManager contract address must not be address(0)."
         );
 
-        organization = _organization;
+        membersManager = _membersManager;
     }
 
 }

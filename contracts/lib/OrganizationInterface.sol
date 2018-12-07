@@ -26,7 +26,7 @@ interface OrganizationInterface {
     event OwnershipTransferInitiated(address indexed proposedOwner);
 
     /** Emitted when a new owner accepts the ownership transfer. */
-    event OwnershipTransferCompleted(address indexed newOwner);
+    event OwnershipTransferCompleted(address newOwner);
 
     /** Emitted whenever an owner or admin changes the address of the admin. */
     event AdminAddressChanged(address indexed newAdmin);
@@ -39,7 +39,7 @@ interface OrganizationInterface {
     );
 
     /** Emitted when a worker address is deleted from the contract. */
-    event WorkerUnset(address indexed worker, bool wasSet);
+    event WorkerUnset(address worker, bool wasSet);
 
 
     /* External Functions */
@@ -94,30 +94,4 @@ interface OrganizationInterface {
      * @return isUnset_ True if the worker existed else returns false.
      */
     function unsetWorker(address _worker) external returns (bool isUnset_);
-
-    /**
-     * @notice Checks if an address is the owner of the organization.
-     *
-     * @param _owner Address to check.
-     *
-     * @return isOwner_ True if the given address is the current owner of the
-     *                  organization. Returns false otherwise.
-     */
-    function isOwner(
-        address _owner
-    )
-        external
-        view
-        returns (bool isOwner_);
-
-    /**
-     * @notice Checks if an address is currently registered as an active worker.
-     *
-     * @param _worker Address to check.
-     *
-     * @return isWorker_ True if the worker is already added and expiration
-     *                   height is more than or equal to current block number.
-     *                   Returns false otherwise.
-     */
-    function isWorker(address _worker) external view returns (bool isWorker_);
 }
