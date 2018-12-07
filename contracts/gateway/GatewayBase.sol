@@ -280,7 +280,7 @@ contract GatewayBase is Organized {
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
         external
-        onlyWorker
+        onlyOrganization
         returns(uint256)
     {
         proposedBounty = _proposedBounty;
@@ -304,7 +304,7 @@ contract GatewayBase is Organized {
      */
     function confirmBountyAmountChange()
         external
-        onlyWorker
+        onlyOrganization
         returns (
             uint256 changedBountyAmount_,
             uint256 previousBountyAmount_
