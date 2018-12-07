@@ -195,7 +195,7 @@ contract EIP20CoGateway is GatewayBase {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         mint and redeem.
      *
@@ -203,8 +203,8 @@ contract EIP20CoGateway is GatewayBase {
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
      * @param _core Core contract address.
-     * @param _bounty The amount that facilitator will stakes to initiate the
-     *                stake process.
+     * @param _bounty The amount that facilitator stakes to initiate the stake
+     *                process.
      * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
      */
