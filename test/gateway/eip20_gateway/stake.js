@@ -52,19 +52,7 @@ let mockToken,
     errorMessage;
 
 
-async function _setup(accounts) {
-
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
-
-    bountyAmount = new BN(100);
-    gateway = await Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        accounts[3], //core address
-        bountyAmount,
-        accounts[4] // organisation address
-    );
+async function _setup(accounts, gateway) {
 
     helper = new HelperKlass(gateway);
     gatewayTest = new EIP20GatewayKlass(gateway, mockToken, baseToken);
@@ -159,7 +147,20 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
 
     beforeEach(async function () {
-        await _setup(accounts);
+
+        mockToken = await MockToken.new();
+        baseToken = await MockToken.new();
+
+        bountyAmount = new BN(100);
+        gateway = await Gateway.new(
+            mockToken.address,
+            baseToken.address,
+            accounts[1], //core address
+            bountyAmount,
+            accounts[2] // organisation address
+        );
+
+        await _setup(accounts, gateway);
     });
 
     it('should fail to stake when stake amount is 0', async function () {
@@ -317,5 +318,24 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         errorMessage = "Previous process is not completed";
         await _stake(utils.ResultType.FAIL);
     });
-});
 
+    it('should fail stake if gateway is not activated.', async function () {
+
+        let mockToken = await MockToken.new();
+        let baseToken = await MockToken.new();
+        let bountyAmount = new BN(100);
+
+        gateway = await Gateway.new(
+            mockToken.address,
+            baseToken.address,
+            accounts[1], //core address
+            bountyAmount,
+            accounts[2] // organisation address
+        );
+
+        await _setup(accounts, gateway);
+        await _prepareData();
+        await _stake(utils.ResultType.FAIL);
+    });
+
+});
