@@ -896,6 +896,22 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
+     *
+     *
+     */
+    function getPenaltyAmount(bytes32 _messageHash)
+        public
+        view
+        returns(uint256)
+    {
+        require(_messageHash == bytes32(0),"Input message hash is empty.");
+        return stakes[_messageHash].bounty.mul(REVOCATION_PENALTY).div(100);
+    }
+
+
+    /** External methods */
+
+    /**
      * @notice Declare redeem revert intent.
      *         This will set message status to revoked. This method will also
      *         clear unstakes mapping storage.
