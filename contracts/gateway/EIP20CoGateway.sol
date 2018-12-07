@@ -55,6 +55,7 @@ pragma solidity ^0.5.0;
 
 import "./UtilityTokenInterface.sol";
 import "./GatewayBase.sol";
+import "../lib/IsMemberInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
@@ -194,7 +195,7 @@ contract EIP20CoGateway is GatewayBase {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         mint and redeem.
      *
@@ -202,9 +203,9 @@ contract EIP20CoGateway is GatewayBase {
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
      * @param _core Core contract address.
-     * @param _bounty The amount that facilitator will stake to initiate the
-     *                stake process.
-     * @param _organisation Organisation address.
+     * @param _bounty The amount that facilitator stakes to initiate the stake
+     *                process.
+     * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
      */
     constructor(
@@ -212,13 +213,13 @@ contract EIP20CoGateway is GatewayBase {
         address _utilityToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
+        IsMemberInterface _membersManager,
         address _gateway
     )
         GatewayBase(
             _core,
             _bounty,
-            _organisation
+            _membersManager
         )
         public
     {

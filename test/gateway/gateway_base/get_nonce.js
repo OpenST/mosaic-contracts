@@ -1,8 +1,7 @@
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const Utils = require('../../../test/test_lib/utils');
-
+const MockMembersManager = artifacts.require('MockMembersManager.sol');
 
 contract('GatewayBase.sol', function (accounts) {
 
@@ -12,14 +11,17 @@ contract('GatewayBase.sol', function (accounts) {
 
     beforeEach(async function () {
 
-      let organisation = accounts[2]
+      let owner = accounts[2]
+        , worker = accounts[3]
         , core = accounts[0]
         , bounty = new BN(100);
+
+      let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         bounty,
-        organisation
+        membersManager.address
       );
 
     });
@@ -34,7 +36,7 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should return nonce incremented by 1 if stake process is initiated', async function () {
 
-     //todo implement this when stake unit tests are done
+      //todo implement this when stake unit tests are done
     });
 
     it('should return nonce incremented by 1 if linking process is initiated', async function () {

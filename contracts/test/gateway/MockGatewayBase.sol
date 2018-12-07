@@ -1,7 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "../gateway/GatewayBase.sol";
-import "./MockGatewayLib.sol";
+import "../lib/MockGatewayLib.sol";
+import "../../gateway/GatewayBase.sol";
+import "../../lib/IsMemberInterface.sol";
 
 /**
  * @title MockGatewayBase contract
@@ -13,13 +14,13 @@ contract MockGatewayBase is GatewayBase {
     constructor(
         CoreInterface _core,
         uint256 _bounty,
-        address _organization
+        IsMemberInterface _membersManager
     )
         public
         GatewayBase(
             _core,
             _bounty,
-            _organization
+            _membersManager
         )
     {}
 
