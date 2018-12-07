@@ -63,7 +63,7 @@ contract('GatewayBase.sol', function (accounts) {
       let proposedBounty = new BN(50);
       let currentBounty = new BN(100);
 
-      await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
+      await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
 
     });
 
@@ -72,12 +72,12 @@ contract('GatewayBase.sol', function (accounts) {
       let proposedBounty = new BN(50);
       let currentBounty = new BN(100);
 
-      await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
+      await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
 
       proposedBounty = new BN(150);
       currentBounty = new BN(100);
 
-      await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
+      await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
     });
 
     it('should accept propose bounty change from organization only', async function () {
@@ -113,17 +113,17 @@ contract('GatewayBase.sol', function (accounts) {
         bounty,
         membersManager.address
       );
-      unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, worker, currentBounty);
+      unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
       currentBlock = unlockHeight - unlockTimeInBlocks;
     });
 
     it('should be able to confirm bounty change after unlockHeight', async function () {
 
       while (currentBlock < unlockHeight) {
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: worker }));
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: owner }));
         currentBlock++;
       }
-      let response = await gatewayBaseInstance.confirmBountyAmountChange({ from: worker })
+      let response = await gatewayBaseInstance.confirmBountyAmountChange({ from: owner })
 
       let expectedEvent = {
         BountyChangeConfirmed: {
@@ -145,7 +145,7 @@ contract('GatewayBase.sol', function (accounts) {
     it('should not be able to confirm bounty change before unlockHeight', async function () {
 
       while (currentBlock < unlockHeight) {
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: worker }));
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: owner }));
         currentBlock++;
       }
     });
@@ -153,7 +153,7 @@ contract('GatewayBase.sol', function (accounts) {
     it('should not accept a bounty change from another address than the organization', async function () {
 
       while (currentBlock < unlockHeight) {
-        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: worker }));
+        await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: owner }));
         currentBlock++;
       }
       await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: accounts[5] }));
