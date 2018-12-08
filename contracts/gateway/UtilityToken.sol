@@ -91,7 +91,7 @@ contract UtilityToken is
     {
         require(
             _valueToken != address(0),
-            "ERC20 token should not be zero"
+            "ERC20 token should not be zero."
         );
 
         valueToken = _valueToken;

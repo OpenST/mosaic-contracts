@@ -16,15 +16,14 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary chain: OSTPrime
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 /// Simple Token Prime [OST'] is equivalently staked for with Simple Token
-/// on the value chain and is the base token that pays for gas on the utility
-/// chain. The gasprice on utility chains is set in [ST'-Wei/gas] (like
+/// on the value chain and is the base token that pays for gas on the auxiliary
+/// chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
 /// Ether pays for gas on Ethereum mainnet) when sending a transaction on
 /// the auxiliary chain.
 
@@ -34,11 +33,11 @@ import "./OSTPrimeConfig.sol";
 
 
 /**
- *  @title OSTPrime contract which implements UtilityToken and
+ *  @title OSTPrime contract implements UtilityToken and
  *         OSTPrimeConfig.
  *
- *  @notice A freely tradable equivalent representation of Simple Token [ST]
- *          on Ethereum mainnet on the utility chain.
+ *  @notice A freely tradable equivalent representation of Simple Token [OST]
+ *          on Ethereum mainnet on the auxiliary chain.
  *
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
@@ -47,27 +46,24 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
 
     using SafeMath for uint256;
 
-    /** Emitted whenever OSTPrime base token is claimed. */
-    event Claim(
-        address indexed _beneficiary,
-        uint256 _amount,
-        uint256 _totalSupply,
-        address _utilityToken
+    /** Emitted whenever OST` EIP20 token is converted to OST` base token. */
+    event TokenUnwrapped(
+        address indexed _account,
+        uint256 _amount
     );
 
-    /** Emitted whenever basetoken is converted to OSTPrime */
-    event Redeem(
-        address indexed _redeemer,
-        uint256 _amount,
-        uint256 _totalSupply,
-        address _utilityToken
+    /** Emitted whenever OST` base token is converted to OST` EIP20 token. */
+    event TokenWrapped(
+        address indexed _account,
+        uint256 _amount
     );
 
     /**
      * set when OST' has received TOKENS_MAX tokens;
      * when uninitialised mint is not allowed
      */
-    bool private initialized;
+    bool public initialized;
+
 
     /**  Modifiers */
 
@@ -77,11 +73,15 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *  @dev Checks if initialized is set to True to proceed.
      */
     modifier onlyInitialized() {
-        require(initialized);
+        require(
+            initialized == true,
+            "Contract is not initialized."
+        );
         _;
     }
 
-    /* Public functions */
+
+    /* Constructor */
 
     /**
      * @notice Contract constructor.
@@ -92,10 +92,17 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      */
     constructor(address _valueToken)
         public
-        UtilityToken(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, _valueToken)
+        UtilityToken(
+            TOKEN_SYMBOL,
+            TOKEN_NAME,
+            TOKEN_DECIMALS,
+            _valueToken)
     {
 
     }
+
+
+    /* Public functions. */
 
     /**
      * @notice Public function initialize.
@@ -105,64 +112,99 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *      On setup of the auxiliary chain the base tokens need to be
      *      transferred in full to OSTPrime for the base tokens to be
      *      minted as OST'
+     *
+     * @return success_ `true` if initialize was successful.
      */    
     function initialize()
         public
         payable
+        returns (bool success_)
     {
-        require(msg.value == TOKENS_MAX);
+        require(
+            initialized != true,
+            "Contract is already initialized."
+        );
+
+        require(
+            msg.value == TOKENS_MAX,
+            "Payable amount must be equal to total supply of token."
+        );
+
         initialized = true;
+
+        success_ = true;
     }
 
     /**
-     * @notice convert the OST utility token to base token
+     * @notice convert the OST' EIP-20 token to OST` base token.
      *
-     * @param _amount Amount of basetoken
+     * @param _amount Amount of EIP-20 to convert to base token.
      *
-     * @return `true` if claim was successfully progressed
+     * @return success_ `true` if unwrap was successful.
      */
-    function claim(
+    function unwrap(
         uint256 _amount
     )
         public
         onlyInitialized
-        returns (bool /* success */)
+        returns (bool success_)
     {
         require(
+            _amount > 0,
+            "Amount should not be zero."
+        );
+
+        require(
             _amount <= balances[msg.sender],
-            "Insufficient balance"
+            "Insufficient balance."
         );
 
         assert(address(this).balance >= _amount);
 
-        transfer(address(this),_amount);
+
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        balances[address(this)] = balances[address(this)].add(_amount);
         msg.sender.transfer(_amount);
 
-        emit Claim(msg.sender, _amount, totalTokenSupply, address(this));
+        emit Transfer(msg.sender, address(this), _amount);
+        emit TokenUnwrapped(msg.sender, _amount);
 
-        return true;
+        success_ = true;
     }
 
     /**
-     * @notice convert the base token to OST utility token
+     * @notice convert OST` base token to OST EIP-20 token.
      *
-     * @param _amount Amount of utility token
-     *
-     * @return `true` if claim was successfully progressed
+     * @return success_ `true` if claim was successfully progressed
      */
-    function redeem(uint256 _amount)
+    function wrap()
         public
         onlyInitialized
         payable
-        returns (bool /** success */)
+        returns (bool success_)
     {
-        require(msg.value == _amount);
-        assert(address(this).balance >= _amount);
+        require(
+            msg.value > 0,
+            "Payable amount should not be zero."
+        );
 
-        allowed[address(this)][msg.sender] = _amount;
-        transferFrom(address(this), msg.sender, _amount);
+        require(
+            address(msg.sender).balance >= msg.value,
+            "Available balance is less than payable amount."
+        );
 
-        emit Redeem(msg.sender, _amount, totalTokenSupply, address(this));
+        require(
+            balances[address(this)] >= msg.value,
+            "Insufficient EIP-20 token balance."
+        );
 
+        balances[address(this)] = balances[address(this)].sub(msg.value);
+        balances[msg.sender] = balances[msg.sender].add(msg.value);
+
+        emit Transfer(address(this), msg.sender, msg.value);
+        emit TokenWrapped(msg.sender, msg.value);
+
+        success_ = true;
     }
+
 }
