@@ -147,21 +147,21 @@ library MessageBus {
      *         status in source chains outbox. This will update the inbox
      *         status to `Declared` for the given message hash.
      *
-     * @param _messageBox Message Box
-     * @param _messageTypeHash Message type hash
-     * @param _message Message object
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
+     * @param _messageBox Message Box.
+     * @param _messageTypeHash Message type hash.
+     * @param _message Message object.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
-     * @param _storageRoot storage root for proof
+     * @param _storageRoot Storage root for proof.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function confirmMessage(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
@@ -198,7 +198,7 @@ library MessageBus {
             MerklePatriciaProof.verify(
                 keccak256(abi.encodePacked(MessageStatus.Declared)),
                 path,
-                _rlpEncodedParentNodes,
+                _rlpParentNodes,
                 _storageRoot),
             "Merkle proof verification failed"
         );
@@ -262,23 +262,23 @@ library MessageBus {
      *      either `Declared` or `Progresses`. Either of this status will be
      *      verified in the merkle proof
      *
-     * @param _messageBox Message Box
-     * @param _messageTypeHash Message type hash
-     * @param _message Message object
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox.
+     * @param _messageBox Message Box.
+     * @param _messageTypeHash Message type hash.
+     * @param _message Message object.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox inbox.
      * @param _messageBoxOffset position of the messageBox.
-     * @param _storageRoot storage root for proof
+     * @param _storageRoot storage root for proof.
      * @param _messageStatus Message status of message hash in the inbox of
-     *                       source chain
+     *                       source chain.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressOutboxWithProof(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
@@ -326,7 +326,7 @@ library MessageBus {
             MerklePatriciaProof.verify(
                 keccak256(abi.encodePacked(_messageStatus)),
                 path,
-                _rlpEncodedParentNodes,
+                _rlpParentNodes,
                 _storageRoot),
             "Merkle proof verification failed"
         );
@@ -390,23 +390,23 @@ library MessageBus {
      *      either `Declared` or `Progresses`. Either of this status will be
      *      verified in the merkle proof
      *
-     * @param _messageBox Message Box
-     * @param _messageTypeHash Message type hash
-     * @param _message Message object
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
+     * @param _messageBox Message Box.
+     * @param _messageTypeHash Message type hash.
+     * @param _message Message object.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
-     * @param _storageRoot storage root for proof
+     * @param _storageRoot storage root for proof.
      * @param _messageStatus Message status of message hash in the outbox of
-     *                       source chain
+     *                       source chain.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressInboxWithProof(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
@@ -452,8 +452,9 @@ library MessageBus {
             MerklePatriciaProof.verify(
                 keccak256(abi.encodePacked(_messageStatus)),
                 path,
-                _rlpEncodedParentNodes,
-                _storageRoot),
+                _rlpParentNodes,
+                _storageRoot
+            ),
             "Merkle proof verification failed"
         );
 
@@ -513,8 +514,8 @@ library MessageBus {
      * @param _messageBox Message Box
      * @param _messageTypeHash Message type hash
      * @param _message Message object
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
      * @param _storageRoot storage root for proof
      *
@@ -524,7 +525,7 @@ library MessageBus {
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
         Message storage _message,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot
     )
@@ -557,11 +558,13 @@ library MessageBus {
         );
 
         // Perform the merkle proof
-        require(MerklePatriciaProof.verify(
+        require(
+            MerklePatriciaProof.verify(
                 keccak256(abi.encodePacked(MessageStatus.DeclaredRevocation)),
                 path,
-                _rlpEncodedParentNodes,
-                _storageRoot),
+                _rlpParentNodes,
+                _storageRoot
+            ),
             "Merkle proof verification failed"
         );
 
@@ -576,26 +579,26 @@ library MessageBus {
      *
      * @dev The messsage status in the inbox should be
      *      either `DeclaredRevocation` or `Revoked`. Either of this status
-     *      will be verified in the merkle proof
+     *      will be verified in the merkle proof.
      *
-     * @param _messageBox Message Box
-     * @param _message Message object
-     * @param _messageTypeHash Message type hash
+     * @param _messageBox Message Box.
+     * @param _message Message object.
+     * @param _messageTypeHash Message type hash.
      * @param _messageBoxOffset position of the messageBox.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox.
-     * @param _storageRoot storage root for proof
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox inbox.
+     * @param _storageRoot storage root for proof.
      * @param _messageStatus Message status of message hash in the inbox of
-     *                       source chain
+     *                       source chain.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressOutboxRevocation(
         MessageBox storage _messageBox,
         Message storage _message,
         bytes32 _messageTypeHash,
         uint8 _messageBoxOffset,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         bytes32 _storageRoot,
         MessageStatus _messageStatus
     )
@@ -642,8 +645,9 @@ library MessageBus {
             MerklePatriciaProof.verify(
                 keccak256(abi.encodePacked(_messageStatus)),
                 path,
-                _rlpEncodedParentNodes,
-                _storageRoot),
+                _rlpParentNodes,
+                _storageRoot
+            ),
             "Merkle proof verification failed"
         );
 
