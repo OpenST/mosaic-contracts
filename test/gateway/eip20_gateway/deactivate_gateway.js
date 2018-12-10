@@ -36,12 +36,20 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
     it('should deactivate if activated', async function () {
 
-        assert((await gateway.deactivateGateway.call({from: owner})));
+        let isSuccess = await gateway.deactivateGateway.call({from: owner});
+
+        assert.strictEqual(
+            isSuccess,
+            true,
+            "Gateway deactivation failed, deactivateGateway returned false.",
+        );
 
         await gateway.deactivateGateway({from: owner});
+        let isActivated = await gateway.activated.call();
 
-        assert(
-            !(await gateway.activated.call()),
+        assert.strictEqual(
+            isActivated,
+            false,
             'Activation flag is true but expected as false.'
         );
     });

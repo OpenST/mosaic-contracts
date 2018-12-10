@@ -79,7 +79,7 @@ contract GatewayBase is Organized {
     StateRootInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
-    bytes internal encodedGatewayPath;
+    bytes public encodedGatewayPath;
 
     /**
      * Remote gateway contract address. If this is a gateway contract, then the
