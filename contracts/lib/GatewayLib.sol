@@ -97,7 +97,7 @@ library GatewayLib {
     /**
      * @notice Merkle proof verification of account.
      *
-     * @param _rlpEncodedAccount rlp encoded data of account.
+     * @param _rlpAccount rlp encoded data of account.
      * @param _rlpParentNodes path from root node to leaf in merkle tree.
      * @param _encodedPath encoded path to search account node in merkle tree.
      * @param _stateRoot state root for given block height.
@@ -105,7 +105,7 @@ library GatewayLib {
      * @return bytes32 Storage path of the variable
      */
     function proveAccount(
-        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes,
         bytes calldata _encodedPath,
         bytes32 _stateRoot
@@ -115,14 +115,14 @@ library GatewayLib {
         returns (bytes32 storageRoot_)
     {
         // Decode RLP encoded account value
-        RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpEncodedAccount);
+        RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpAccount);
         // Convert to list
         RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
         // Array 3rd position is storage root
         storageRoot_ = RLP.toBytes32(accountArray[2]);
-        // Hash the rlpEncodedValue value
+        // Hash the rlpValue value
         bytes32 hashedAccount = keccak256(
-            abi.encodePacked(_rlpEncodedAccount)
+            abi.encodePacked(_rlpAccount)
         );
 
         /**

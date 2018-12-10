@@ -190,7 +190,7 @@ MessageBusUtils.prototype = {
       nonce = params.nonce,
       sender = params.sender,
       messageStatus = params.messageStatus,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       messageBoxOffset = params.messageBoxOffset,
       storageRoot = params.storageRoot,
       hashLock = params.hashLock;
@@ -203,7 +203,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock
@@ -217,7 +217,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock
@@ -233,7 +233,7 @@ MessageBusUtils.prototype = {
       nonce = params.nonce,
       sender = params.sender,
       messageStatus = params.messageStatus,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       messageBoxOffset = params.messageBoxOffset,
       storageRoot = params.storageRoot,
       hashLock = params.hashLock;
@@ -246,7 +246,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock
@@ -261,7 +261,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock
@@ -274,7 +274,7 @@ MessageBusUtils.prototype = {
     let messageTypeHash = params.messageTypeHash,
       intentHash = params.intentHash,
       nonce = params.nonce,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       messageBoxOffset = params.messageBoxOffset,
       storageRoot = params.storageRoot,
       sender = params.sender,
@@ -288,7 +288,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         hashLock
       ));
@@ -302,7 +302,7 @@ MessageBusUtils.prototype = {
         nonce,
         sender,
         messageBoxOffset,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         hashLock
       );
@@ -316,7 +316,7 @@ MessageBusUtils.prototype = {
       intentHash = params.intentHash,
       nonce = params.nonce,
       sender = params.sender,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       storageRoot = params.storageRoot,
       messageBoxOffset = params.messageBoxOffset,
       hashLock = params.hashLock;
@@ -329,7 +329,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageBoxOffset,
         hashLock
@@ -343,7 +343,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageBoxOffset,
         hashLock
@@ -358,7 +358,7 @@ MessageBusUtils.prototype = {
       nonce = params.nonce,
       sender = params.sender,
       messageStatus = params.messageStatus,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       storageRoot = params.storageRoot,
       hashLock = params.hashLock,
       messageBoxOffset = params.messageBoxOffset;;
@@ -370,7 +370,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock,
@@ -385,7 +385,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock,
@@ -402,7 +402,7 @@ MessageBusUtils.prototype = {
       nonce = params.nonce,
       sender = params.sender,
       messageStatus = params.messageStatus,
-      rlpEncodedParentNodes = params.rlpEncodedParentNodes,
+      rlpParentNodes = params.rlpParentNodes,
       storageRoot = params.storageRoot,
       hashLock = params.hashLock,
       messageBoxOffset = params.messageBoxOffset;
@@ -413,7 +413,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock,
@@ -428,7 +428,7 @@ MessageBusUtils.prototype = {
         intentHash,
         nonce,
         sender,
-        rlpEncodedParentNodes,
+        rlpParentNodes,
         storageRoot,
         messageStatus,
         hashLock,
