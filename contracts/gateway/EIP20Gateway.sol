@@ -915,7 +915,7 @@ contract EIP20Gateway is GatewayBase {
     function confirmRevertRedeemIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
-   `     bytes calldata _rlpEncodedParentNodes
+        bytes calldata _rlpEncodedParentNodes
     )
         external
         returns (
