@@ -21,8 +21,8 @@ contract('OSTPrime.initialize()', function (accounts) {
 
     let balance = await Utils.getBalance(ostPrime.address);
     assert.strictEqual(
-      new BN(0).eq(new BN(balance)),
-      true,
+      balance,
+      '0',
       `The balance of contract must be zero.`,
     );
 
@@ -61,9 +61,9 @@ contract('OSTPrime.initialize()', function (accounts) {
       {from: accounts[2], value: TOKENS_MAX}
     );
 
-    let balance = await Utils.getBalance(ostPrime.address);
+    let balance = new BN(await Utils.getBalance(ostPrime.address));
     assert.strictEqual(
-      TOKENS_MAX.eq(new BN(balance)),
+      TOKENS_MAX.eq(balance),
       true,
       `The balance of contract must be ${TOKENS_MAX}.`,
     );
