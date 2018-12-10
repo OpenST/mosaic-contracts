@@ -42,29 +42,29 @@ contract MockGatewayBase is GatewayBase {
      *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
      *                      proven.
-     *  @param _rlpEncodedAccount RLP encoded account node object.
+     *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
      *
      *  @return `true` if Gateway account is proved
      */
     function proveGateway(
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
     )
         external
         returns (bool)
     {
-        // _rlpEncodedAccount should be valid
+        // _rlpAccount should be valid
         require(
-            _rlpEncodedAccount.length != 0,
-            "Length of RLP encoded account is 0"
+            _rlpAccount.length != 0,
+            "Length of RLP account must not be 0."
         );
 
         // _rlpParentNodes should be valid
         require(
             _rlpParentNodes.length != 0,
-            "Length of RLP parent nodes is 0"
+            "Length of RLP parent nodes must not be 0."
         );
 
         bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
@@ -96,7 +96,7 @@ contract MockGatewayBase is GatewayBase {
         // On successful proof verification storage root is returned other wise
         // transaction is reverted. 
         bytes32 storageRoot = MockGatewayLib.proveAccount(
-            _rlpEncodedAccount,
+            _rlpAccount,
             _rlpParentNodes,
             encodedGatewayPath,
             stateRoot
