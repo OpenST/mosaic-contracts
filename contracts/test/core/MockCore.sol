@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "../gateway/WorkersInterface.sol";
-import "../gateway/Core.sol";
+import "../../gateway/WorkersInterface.sol";
+import "../../gateway/Core.sol";
 
 /**
  * @title CoreMock contract
