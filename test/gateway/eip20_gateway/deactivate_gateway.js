@@ -1,5 +1,6 @@
 const Gateway = artifacts.require("./EIP20Gateway.sol")
     , BN = require('bn.js');
+const MockMembersManager = artifacts.require('MockMembersManager.sol');
 
 const Utils = require('../../../test/test_lib/utils');
 
@@ -7,7 +8,10 @@ const Utils = require('../../../test/test_lib/utils');
 contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
     let gateway;
-    let organisation = accounts[2];
+    let owner = accounts[2];
+    let worker = accounts[3];
+    let coGateway = accounts[5];
+    let membersManager;
 
     beforeEach(async function () {
 
@@ -16,36 +20,45 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
             coreAddress = accounts[2],
             bountyAmount = new BN(100);
 
+        membersManager = await MockMembersManager.new(owner, worker);
+
         gateway = await Gateway.new(
             mockToken,
             baseToken,
             coreAddress,
             bountyAmount,
-            organisation
+            membersManager.address
         );
 
-        let coGateway = accounts[5];
-        await  gateway.activateGateway(coGateway, {from: organisation});
+        await  gateway.activateGateway(coGateway, {from: owner});
 
     });
 
     it('should deactivate if activated', async function () {
 
-        assert((await gateway.deactivateGateway.call({from: organisation})));
+        let isSuccess = await gateway.deactivateGateway.call({from: owner});
 
-        await gateway.deactivateGateway({from: organisation});
+        assert.strictEqual(
+            isSuccess,
+            true,
+            "Gateway deactivation failed, deactivateGateway returned false.",
+        );
 
-        assert(
-            !(await gateway.activated.call()),
+        await gateway.deactivateGateway({from: owner});
+        let isActivated = await gateway.activated.call();
+
+        assert.strictEqual(
+            isActivated,
+            false,
             'Activation flag is true but expected as false.'
         );
     });
 
     it('should not deactivate if already deactivated', async function () {
 
-        await gateway.deactivateGateway({from: organisation});
+        await gateway.deactivateGateway({from: owner});
         await Utils.expectRevert(
-            gateway.deactivateGateway.call({from: organisation}),
+            gateway.deactivateGateway.call({from: owner}),
             'Gateway is already deactivated.'
         );
     });
@@ -54,7 +67,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
         await Utils.expectRevert(
             gateway.deactivateGateway.call({from: accounts[0]}),
-            'Only organisation can call the function.'
+            'Only the organization is allowed to call this method.'
         );
     });
 

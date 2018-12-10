@@ -2,7 +2,7 @@
 
 const web3 = require('../../test_lib/web3.js');
 
-const GatewayHelper = function(gateway) {
+const GatewayHelper = function (gateway) {
     const oThis = this;
     oThis.gateway = gateway;
 };
@@ -21,7 +21,7 @@ GatewayHelper.prototype = {
             bountyToken = params.bountyToken,
             coreAddress = params.core,
             bountyAmount = params.bounty,
-            organisationAddress = params.organisation;
+            organizationAddress = params.organization;
 
         if (resultType === utils.ResultType.FAIL) {
             await utils.expectThrow(Gateway.new(
@@ -29,7 +29,7 @@ GatewayHelper.prototype = {
                 bountyToken,
                 coreAddress,
                 bountyAmount,
-                organisationAddress
+                organizationAddress
             ));
         } else {
             this.gateway = await Gateway.new(
@@ -37,7 +37,7 @@ GatewayHelper.prototype = {
                 bountyToken,
                 coreAddress,
                 bountyAmount,
-                organisationAddress
+                organizationAddress
             );
 
             let addressValidationResult = await this.isAddress(
@@ -78,11 +78,11 @@ GatewayHelper.prototype = {
                 "Invalid bounty amount from contract"
             );
 
-            let orgAdd = await this.gateway.organisation.call();
+            let orgAdd = await this.gateway.organization.call();
             assert.equal(
                 orgAdd,
-                organisationAddress,
-                "Invalid organisationAddress address from contract"
+                organizationAddress,
+                "Invalid organizationAddress address from contract"
             );
         }
 
