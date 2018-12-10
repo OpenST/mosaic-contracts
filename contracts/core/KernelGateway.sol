@@ -550,7 +550,6 @@ contract KernelGateway is KernelGatewayInterface {
         // Array 3rd position is storage root.
         storageRoot_ = RLP.toBytes32(accountArray[2]);
 
-        // Hash the rlpEncodedValue value.
         bytes32 hashedAccount = keccak256(
             abi.encodePacked(_accountRlp)
         );
