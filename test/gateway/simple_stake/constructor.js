@@ -2,11 +2,10 @@ const SimpleStake = artifacts.require("./SimpleStake.sol");
 const MockToken = artifacts.require("./MockToken.sol");
 
 const web3 = require('../../../test/test_lib/web3.js');
-
-const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils.js');
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
+
 contract('SimpleStake.constructor()', function (accounts) {
 
     const gateway = accounts[4];

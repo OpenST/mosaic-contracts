@@ -93,7 +93,8 @@ contract SimpleStake {
      *  @notice This allows gateway to release staked amount to provided address.
      *
      *  @dev Only gateway contract can call this method which defines set of rules
-     *       on how the stake can be released and to who.
+     *       on how the stake can be released and to who. Beneficiary address
+     *       can be zero address in order to burn tokens.
      *
      *  @param _to Beneficiary of the amount of the stake.
      *  @param _amount Amount of stake to release to beneficiary.
@@ -108,10 +109,6 @@ contract SimpleStake {
         onlyGateway
         returns (bool success_)
     {
-        require(
-            _to != address(0),
-            "Beneficiary address must not be zero."
-        );
         require(
             _amount != 0,
             "Amount must not be zero."
