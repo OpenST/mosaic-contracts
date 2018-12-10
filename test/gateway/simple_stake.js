@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: simple_stake.js
 //
 // http://www.simpletoken.org/
 //
@@ -25,20 +24,7 @@ const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const SimpleStake_utils = require('./simple_stake_utils.js');
 
-///
-/// Test stories
-/// 
-/// Properties 
-/// 	has eip20Token
-/// 	has uuid
-/// 
-/// ReleaseTo
-///		fails to release by non-openSTProtocol
-///		fails to release by openSTProtocol with null to
-///		successfully releases to
-///
-
-contract('SimpleStake', function(accounts) {
+contract('SimpleStake.', function(accounts) {
 	const gateway = accounts[4];
 	const to = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 	const ST1 = web3.utils.toWei(new BN('1'), "ether");
