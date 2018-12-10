@@ -893,7 +893,6 @@ contract EIP20CoGateway is GatewayBase {
     )
         public
         payable
-        isActive
         returns (bytes32 messageHash_)
     {
         require(
