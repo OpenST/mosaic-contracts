@@ -89,6 +89,8 @@ contract('OSTPrime.unwrap()', function (accounts) {
       await Utils.getBalance(callerAddress)
     );
 
+    amount = new BN(400);
+
     let result = await ostPrime.unwrap.call(amount, { from: callerAddress });
     assert.strictEqual(
       result,
@@ -101,7 +103,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
     let callerEIP20Tokenbalance = await ostPrime.balanceOf.call(callerAddress);
     assert.strictEqual(
-      callerEIP20Tokenbalance.eq(new BN(0)),
+      callerEIP20Tokenbalance.eqn(100),
       true,
       `The balance of ${callerAddress} should be zero.`
     );
