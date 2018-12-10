@@ -82,13 +82,13 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   });
 
-  it('should fail when EIP-20 balance is insufficient', async function () {
+  it('should fail when OST Prime balance is insufficient', async function () {
 
     await initialize();
 
     await Utils.expectRevert(
       ostPrime.wrap({from: callerAddress, value: new BN(1000) }),
-      'Insufficient EIP-20 token balance.',
+      'Insufficient OST Prime token balance.',
     );
 
   });
