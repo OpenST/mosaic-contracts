@@ -31,38 +31,15 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
         );
     });
 
-    it('should deactivate if activated', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        assert((await gateway.deactivateGateway.call({ from: owner })));
-        await gateway.deactivateGateway({ from: owner });
-        assert(
-            !(await gateway.activated.call()),
-            'Activation flag is true but expected as false.'
-        );
-    });
-
-    it('should not deactivate if already deactivated', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        await gateway.deactivateGateway({ from: owner });
-        await Utils.expectThrow(gateway.deactivateGateway.call({ from: owner }));
-    });
-
-    it('should deactivated by organization only', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        await Utils.expectThrow(gateway.deactivateGateway.call({ from: accounts[0] }));
-    });
-
     it('should activate if deActivated', async function () {
 
         assert(
-            (await gateway.activateGateway.call(coGateway, { from: owner })),
+            (await gateway.activateGateway.call(coGateway, {from: owner})),
             "Gateway activation failed, activateGateway returned false.",
         );
 
-        await gateway.activateGateway(coGateway, { from: owner });
+        await gateway.activateGateway(coGateway, {from: owner});
+
         assert(
             (await gateway.activated.call()),
             'Activation flag is false but expected as true.'
@@ -71,14 +48,19 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
 
     it('should not activate if already activated', async function () {
 
-        await gateway.activateGateway(coGateway, { from: owner });
-        await Utils.expectThrow(gateway.activateGateway.call(coGateway, { from: owner }));
+        await gateway.activateGateway(coGateway, {from: owner});
+        await Utils.expectRevert(
+            gateway.activateGateway.call(coGateway, {from: owner}),
+            'Gateway was already activated once.'
+        );
     });
 
     it('should be activated by organization only', async function () {
 
-        await Utils.expectThrow(gateway.activateGateway.call(coGateway, { from: accounts[0] }));
+        await Utils.expectRevert(
+            gateway.activateGateway.call(coGateway, {from: accounts[0]}),
+            'Only the organization is allowed to call this method.'
+        );
     });
-
 });
 

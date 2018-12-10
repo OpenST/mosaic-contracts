@@ -203,7 +203,7 @@ contract EIP20Gateway is GatewayBase {
 
     /* modifiers */
 
-    /** checks that contract is activated */
+    /** Checks that contract is active. */
     modifier isActive() {
         require(
             activated == true,

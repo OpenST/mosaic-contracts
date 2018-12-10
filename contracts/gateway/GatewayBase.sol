@@ -77,8 +77,6 @@ contract GatewayBase is Organized {
 
     /** Address of core contract. */
     StateRootInterface public core;
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
     bytes internal encodedGatewayPath;
