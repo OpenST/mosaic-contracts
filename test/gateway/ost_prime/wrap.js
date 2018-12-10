@@ -1,6 +1,7 @@
 const OSTPrime = artifacts.require("TestOSTPrime")
   , BN = require('bn.js');
 
+const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
@@ -57,9 +58,26 @@ contract('OSTPrime.wrap()', function (accounts) {
 
     await initialize();
 
+    /*
+     * Create a new account for this testing. This will just contain the
+     * sufficient amount of gas that is required for this testing. We are not
+     * using the existing account as it is used by other test cases. There will
+     * an overhead to manage the gas for the account if used.
+     */
+    let newAccount = await web3.eth.personal.newAccount("password");
+    await web3.eth.personal.unlockAccount(newAccount,"password",15000);
+
+    /*
+     * transfer just sufficient gas balance to this address.
+     * this is 12000000 as gaslimit + 500 for this test to execute.
+     */
+    await web3.eth.sendTransaction(
+        {to:newAccount, from:accounts[0], value:12000500}
+      );
+
     // @dev this test with .call does not revert as expected.
     await Utils.expectRevert(
-      ostPrime.wrap({from: accounts[9], value: amount }),
+      ostPrime.wrap({from: newAccount, value: amount }),
       "Available balance is less than payable amount.",
     );
 
