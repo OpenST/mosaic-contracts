@@ -1145,7 +1145,7 @@ contract EIP20CoGateway is GatewayBase {
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
 
-        if(rewardAmount_ != 0) {
+        if(rewardAmount_ > 0) {
             // Reward beneficiary with the reward amount.
             UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
         }
