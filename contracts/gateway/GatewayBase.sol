@@ -75,14 +75,11 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
-
-    /** Address of core contract. */
+    /** address of core contract. */
     CoreInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
-    bytes internal encodedGatewayPath;
+    bytes public encodedGatewayPath;
 
     /**
      * Remote gateway contract address. If this is a gateway contract, then the
@@ -126,18 +123,6 @@ contract GatewayBase is Organized {
      * nonce of the particular address. Refer getNonce for the details.
      */
     mapping(address => bytes32) outboxActiveProcess;
-
-
-    /* Modifiers */
-
-    /** checks that contract is activated */
-    modifier isActive() {
-        require(
-            activated == true,
-            "Gateway is not activated."
-        );
-        _;
-    }
 
     /* Constructor */
 
