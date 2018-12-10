@@ -81,7 +81,7 @@ contract GatewayBase is Organized {
     StateRootInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
-    bytes internal encodedGatewayPath;
+    bytes public encodedGatewayPath;
 
     /**
      * Remote gateway contract address. If this is a gateway contract, then the
@@ -125,18 +125,6 @@ contract GatewayBase is Organized {
      * nonce of the particular address. Refer getNonce for the details.
      */
     mapping(address => bytes32) outboxActiveProcess;
-
-
-    /* Modifiers */
-
-    /** checks that contract is activated */
-    modifier isActive() {
-        require(
-            activated == true,
-            "Gateway is not activated."
-        );
-        _;
-    }
 
     /* Constructor */
 
