@@ -193,8 +193,8 @@ contract MessageBusWrapper {
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
      * @param _messageBoxOffset position of the messageBox.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox inbox.
      * @param _storageRoot storage root for proof
      * @param _messageStatus Message status of message hash in the inbox of
      *                       source chain
@@ -208,7 +208,7 @@ contract MessageBusWrapper {
         uint256 _nonce,
         address _sender,
         uint8 _messageBoxOffset,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock
@@ -231,7 +231,7 @@ contract MessageBusWrapper {
             message,
             _messageTypeHash,
             _messageBoxOffset,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             _storageRoot,
             _messageStatus
         );
@@ -249,8 +249,8 @@ contract MessageBusWrapper {
      * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
      * @param _storageRoot storage root for proof.
      * @param _hashLock Hash lock.
@@ -263,7 +263,7 @@ contract MessageBusWrapper {
         uint256 _nonce,
         address _sender,
         uint8 _messageBoxOffset,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         bytes32 _storageRoot,
         bytes32 _hashLock
     )
@@ -284,7 +284,7 @@ contract MessageBusWrapper {
             messageBox,
             _messageTypeHash,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             _messageBoxOffset,
             _storageRoot
         );
@@ -300,8 +300,8 @@ contract MessageBusWrapper {
      * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
      * @param _messageBoxOffset position of the messageBox.
      * @param _storageRoot storage root for proof.
      * @param _hashLock Hash lock.
@@ -313,7 +313,7 @@ contract MessageBusWrapper {
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         bytes32 _storageRoot,
         uint8 _messageBoxOffset,
         bytes32 _hashLock
@@ -335,7 +335,7 @@ contract MessageBusWrapper {
             messageBox,
             _messageTypeHash,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             _messageBoxOffset,
             _storageRoot
         );
@@ -383,7 +383,7 @@ contract MessageBusWrapper {
             gasConsumed: _gasConsumed
             });
 
-        messageHash_= MockMessageBus.declareRevocationMessage(
+        messageHash_ = MockMessageBus.declareRevocationMessage(
             messageBox,
             _messageTypeHash,
             message
@@ -404,8 +404,8 @@ contract MessageBusWrapper {
      * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox inbox.
      * @param _storageRoot storage root for proof
      * @param _messageStatus Message status of message hash in the inbox of
      *                       source chain
@@ -418,7 +418,7 @@ contract MessageBusWrapper {
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock,
@@ -441,7 +441,7 @@ contract MessageBusWrapper {
             messageBox,
             _messageTypeHash,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             _messageBoxOffset,
             _storageRoot,
             _messageStatus
@@ -456,26 +456,26 @@ contract MessageBusWrapper {
      *
      * @dev The messsage status for the message hash in the outbox should be
      *      either `Declared` or `Progresses`. Either of this status will be
-     *      verified in the merkle proof
+     *      verified in the merkle proof.
      *
-     * @param _messageTypeHash Message type hash
+     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _sender signer of the signature.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox.
-     * @param _storageRoot storage root for proof
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox.
+     * @param _storageRoot storage root for proof.
      * @param _messageStatus Message status of message hash in the outbox of
-     *                       source chain
+     *                       source chain.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressInboxWithProof(
         bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         bytes32 _storageRoot,
         MockMessageBus.MessageStatus _messageStatus,
         bytes32 _hashLock,
@@ -498,7 +498,7 @@ contract MessageBusWrapper {
             messageBox,
             _messageTypeHash,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             _messageBoxOffset,
             _storageRoot,
             _messageStatus
