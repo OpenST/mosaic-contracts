@@ -337,11 +337,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
     let eventData = event.OpenKernelProven;
 
-    let mosaicCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
+    let originCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
     assert.strictEqual(
-      eventData._mosaicCoreIdentifier,
-      mosaicCoreIdentifier,
-      `Origin block store core identifier must be equal to ${mosaicCoreIdentifier}`,
+      eventData._originCoreIdentifier,
+      originCoreIdentifier,
+      `Origin block store core identifier must be equal to ${originCoreIdentifier}`,
     );
 
     let auxiliaryCoreIdentifier = await auxiliaryBlockStore.getCoreIdentifier.call();

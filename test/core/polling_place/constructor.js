@@ -34,7 +34,7 @@ const ValidatorIndexEndHeight = 4;
 
 contract('PollingPlace.constructor()', async (accounts) => {
 
-    let mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
+    let originCoreIdentifier = '0x0000000000000000000000000000000000000001';
     let originBlockStore;
     let auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
     let auxiliaryBlockStore;
@@ -45,7 +45,7 @@ contract('PollingPlace.constructor()', async (accounts) => {
 
         await originBlockStore.setVoteValid(true);
         await auxiliaryBlockStore.setVoteValid(true);
-        await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
+        await originBlockStore.setCoreIdentifier(originCoreIdentifier);
         await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
     });
 

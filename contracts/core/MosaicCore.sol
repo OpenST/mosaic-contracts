@@ -26,9 +26,10 @@ import "../StateRootInterface.sol";
  * @title MosaicCore is a meta-blockchain with staked validators on Ethereum.
  */
 contract MosaicCore is
-MosaicCoreInterface,
-MosaicCoreConfig,
-    StateRootInterface {
+    MosaicCoreInterface,
+    MosaicCoreConfig,
+    StateRootInterface
+{
     using SafeMath for uint256;
 
     /* Events */

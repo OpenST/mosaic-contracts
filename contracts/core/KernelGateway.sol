@@ -31,7 +31,7 @@ contract KernelGateway is KernelGatewayInterface {
 
     /** Emit event when open kernel in mosaic core is proven. */
     event OpenKernelProven(
-        bytes20 _mosaicCoreIdentifier,
+        bytes20 _originCoreIdentifier,
         bytes20 _auxiliaryCoreIdentifier,
         uint256 _metaBlockHeight,
         bytes32 _parent,
@@ -41,7 +41,7 @@ contract KernelGateway is KernelGatewayInterface {
 
     /** Emit event when proven open kernel is confirmed in auxiliary. */
     event OpenKernelConfirmed(
-        bytes20 _mosaicCoreIdentifier,
+        bytes20 _originCoreIdentifier,
         bytes20 _auxiliaryCoreIdentifier,
         bytes32 _kernelHash,
         uint256 _currentDynasty
@@ -91,7 +91,7 @@ contract KernelGateway is KernelGatewayInterface {
     uint256 public openKernelActivationHeight;
 
     /** The mosaic core identifier. */
-    bytes20 public mosaicCoreIdentifier;
+    bytes20 public originCoreIdentifier;
 
     /** The auxiliary core identifier. */
     bytes20 public auxiliaryCoreIdentifier;
@@ -154,7 +154,7 @@ contract KernelGateway is KernelGatewayInterface {
         auxiliaryBlockStore = _auxiliaryBlockStore;
         mosaicCore = _mosaicCore;
         activeKernelHash = _kernelHash;
-        mosaicCoreIdentifier = originBlockStore.getCoreIdentifier();
+        originCoreIdentifier = originBlockStore.getCoreIdentifier();
         auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
         address[] memory updatedValidators;
@@ -370,7 +370,7 @@ contract KernelGateway is KernelGatewayInterface {
         openKernelHash = kernelHash;
 
         emit OpenKernelProven(
-            mosaicCoreIdentifier,
+            originCoreIdentifier,
             auxiliaryCoreIdentifier,
             _height,
             _parent,
@@ -471,7 +471,7 @@ contract KernelGateway is KernelGatewayInterface {
         success_ = true;
 
         emit OpenKernelConfirmed(
-            mosaicCoreIdentifier,
+            originCoreIdentifier,
             auxiliaryCoreIdentifier,
             _kernelHash,
             openKernelActivationHeight

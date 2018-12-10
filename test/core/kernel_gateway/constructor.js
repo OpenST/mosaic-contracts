@@ -29,7 +29,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const zeroBytes =
     "0x0000000000000000000000000000000000000000000000000000000000000000";
-  const mosaicCoreIdentifier = '0x0000000000000000000000000000000000000001';
+  const originCoreIdentifier = '0x0000000000000000000000000000000000000001';
   const auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
   const kernelHashIndex = 5;
 
@@ -45,7 +45,7 @@ contract('KernelGateway.constructor()', async (accounts) => {
     originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
 
-    await originBlockStore.setCoreIdentifier(mosaicCoreIdentifier);
+    await originBlockStore.setCoreIdentifier(originCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
 
     mosaicCore  = accounts[1];
@@ -96,11 +96,11 @@ contract('KernelGateway.constructor()', async (accounts) => {
       'The contract did not store the correct kernel hash.',
     );
 
-    let originIdentifier = await kernelGateway.mosaicCoreIdentifier.call();
+    let originIdentifier = await kernelGateway.originCoreIdentifier.call();
     assert.strictEqual(
       originIdentifier,
-      mosaicCoreIdentifier,
-      'The contract did not store the correct mosaic core identifier.',
+      originCoreIdentifier,
+      'The contract did not store the correct origin core identifier.',
     );
 
     let auxiliaryIdentifier = await kernelGateway.auxiliaryCoreIdentifier.call();

@@ -120,7 +120,7 @@ contract PollingPlace is PollingPlaceInterface {
     /* Public Variables */
 
     /** The core identifier of the core that tracks origin. */
-    bytes20 public mosaicCoreIdentifier;
+    bytes20 public originCoreIdentifier;
 
     /** The core identifier of the core that tracks this auxiliary chain. */
     bytes20 public auxiliaryCoreIdentifier;
@@ -233,10 +233,10 @@ contract PollingPlace is PollingPlaceInterface {
         BlockStoreInterface originBlockStore = BlockStoreInterface(_originBlockStore);
         BlockStoreInterface auxiliaryBlockStore = BlockStoreInterface(_auxiliaryBlockStore);
 
-        mosaicCoreIdentifier = originBlockStore.getCoreIdentifier();
+        originCoreIdentifier = originBlockStore.getCoreIdentifier();
         auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
-        blockStores[mosaicCoreIdentifier] = originBlockStore;
+        blockStores[originCoreIdentifier] = originBlockStore;
         blockStores[auxiliaryCoreIdentifier] = auxiliaryBlockStore;
 
         addValidators(_auxiliaryAddresses, _weights);
@@ -448,7 +448,7 @@ contract PollingPlace is PollingPlaceInterface {
         private
     {
         require(
-            _originHeight > coreHeights[mosaicCoreIdentifier],
+            _originHeight > coreHeights[originCoreIdentifier],
             "The height of origin must increase with a meta-block opening."
         );
         require(
@@ -456,7 +456,7 @@ contract PollingPlace is PollingPlaceInterface {
             "The height of auxiliary must increase with a meta-block opening."
         );
 
-        coreHeights[mosaicCoreIdentifier] = _originHeight;
+        coreHeights[originCoreIdentifier] = _originHeight;
         coreHeights[auxiliaryCoreIdentifier] = _auxiliaryHeight;
     }
 
