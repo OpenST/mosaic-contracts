@@ -21,12 +21,12 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-/// Simple Token Prime [OST'] is equivalently staked for with Simple Token
-/// on the value chain and is the base token that pays for gas on the auxiliary
-/// chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
-/// Ether pays for gas on Ethereum mainnet) when sending a transaction on
-/// the auxiliary chain.
-
+/* Simple Token Prime [OST'] is equivalently staked for with Simple Token
+ * on the value chain and is the base token that pays for gas on the auxiliary
+ * chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
+ * Ether pays for gas on Ethereum mainnet) when sending a transaction on
+ * the auxiliary chain.
+ */
 import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
@@ -46,20 +46,20 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
 
     using SafeMath for uint256;
 
-    /** Emitted whenever OST` EIP20 token is converted to OST` base token. */
+    /** Emitted whenever OST Prime token is converted to OST Prime base token. */
     event TokenUnwrapped(
         address indexed _account,
         uint256 _amount
     );
 
-    /** Emitted whenever OST` base token is converted to OST` EIP20 token. */
+    /** Emitted whenever OST Prime base token is converted to OST Prime token. */
     event TokenWrapped(
         address indexed _account,
         uint256 _amount
     );
 
     /**
-     * set when OST' has received TOKENS_MAX tokens;
+     * set when OST Prime has received TOKENS_MAX tokens;
      * when uninitialised mint is not allowed.
      */
     bool public initialized;
@@ -96,10 +96,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             TOKEN_SYMBOL,
             TOKEN_NAME,
             TOKEN_DECIMALS,
-            _valueToken)
-    {
-
-    }
+            _valueToken
+        )
+    {}
 
 
     /* Public functions. */
@@ -111,7 +110,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *      so that all base tokens are held by OSTPrime.
      *      On setup of the auxiliary chain the base tokens need to be
      *      transferred in full to OSTPrime for the base tokens to be
-     *      minted as OST'.
+     *      minted as OST Prime.
      *
      * @return success_ `true` if initialize was successful.
      */    
@@ -135,17 +134,20 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         success_ = true;
     }
 
+
+    /* External functions. */
+
     /**
-     * @notice convert the OST' EIP-20 token to OST` base token.
+     * @notice convert the OST Prime token to OST Prime base token.
      *
-     * @param _amount Amount of EIP-20 to convert to base token.
+     * @param _amount Amount of OST Prime token to convert to base token.
      *
      * @return success_ `true` if unwrap was successful.
      */
     function unwrap(
         uint256 _amount
     )
-        public
+        external
         onlyInitialized
         returns (bool success_)
     {
@@ -159,7 +161,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             "Insufficient balance."
         );
 
-        assert(address(this).balance >= _amount);
+        require(
+            address(this).balance >= _amount,
+            "Contact balance should not be less than the unwrap amount."
+        );
 
 
         balances[msg.sender] = balances[msg.sender].sub(_amount);
@@ -173,36 +178,39 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     }
 
     /**
-     * @notice convert OST` base token to OST EIP-20 token.
+     * @notice convert OST Prime base token to OST Prime token.
      *
      * @return success_ `true` if claim was successfully progressed.
      */
     function wrap()
-        public
+        external
         onlyInitialized
         payable
         returns (bool success_)
     {
+        uint256 amount = msg.value;
+        address account = msg.sender;
+
         require(
-            msg.value > 0,
+            amount > 0,
             "Payable amount should not be zero."
         );
 
         require(
-            address(msg.sender).balance >= msg.value,
+            address(account).balance >= amount,
             "Available balance is less than payable amount."
         );
 
         require(
-            balances[address(this)] >= msg.value,
-            "Insufficient EIP-20 token balance."
+            balances[address(this)] >= amount,
+            "Insufficient OST Prime token balance."
         );
 
-        balances[address(this)] = balances[address(this)].sub(msg.value);
-        balances[msg.sender] = balances[msg.sender].add(msg.value);
+        balances[address(this)] = balances[address(this)].sub(amount);
+        balances[account] = balances[account].add(amount);
 
-        emit Transfer(address(this), msg.sender, msg.value);
-        emit TokenWrapped(msg.sender, msg.value);
+        emit Transfer(address(this), account, amount);
+        emit TokenWrapped(account, amount);
 
         success_ = true;
     }

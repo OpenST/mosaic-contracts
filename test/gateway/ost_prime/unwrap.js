@@ -31,40 +31,54 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
   });
 
-  it('Should fail when the amount is zero', async function () {
+  it('should fail when the amount is zero', async function () {
     await initialize();
 
     let amount = 0;
     await Utils.expectRevert(
-      ostPrime.unwrap.call(amount, { from: callerAddress }),
-      "Amount should not be zero."
+      ostPrime.unwrap(amount, { from: callerAddress }),
+      'Amount should not be zero.'
     );
 
   });
 
-  it('Should fail when contract is not initialized', async function () {
+  it('should fail when contract is not initialized', async function () {
 
     await Utils.expectRevert(
-      ostPrime.unwrap.call(amount, { from: callerAddress }),
-      "Contract is not initialized."
+      ostPrime.unwrap(amount, { from: callerAddress }),
+      'Contract is not initialized.'
     );
 
   });
 
-  it('Should fail when amount is greater than the account balance',
+  it('should fail when amount is greater than the account balance',
     async function () {
 
       await initialize();
 
       let amount = new BN(501);
       await Utils.expectRevert(
-        ostPrime.unwrap.call(amount, { from: callerAddress }),
-        "Insufficient balance."
+        ostPrime.unwrap(amount, { from: callerAddress }),
+        'Insufficient balance.'
       );
 
     });
 
-  it('Should pass with correct parameters', async function () {
+  it('should fail when the amount is greater than the contract\'s base ' +
+    'token balance', async function () {
+
+    await initialize();
+
+    let amount = new BN(1).add(TOKENS_MAX);
+    await ostPrime.setTokenBalance(callerAddress, amount);
+    await Utils.expectRevert(
+      ostPrime.unwrap(amount, { from: callerAddress }),
+      'Contact balance should not be less than the unwrap amount.'
+    );
+
+  });
+
+  it('should pass with correct parameters', async function () {
     await initialize();
 
     let initialContractBalance = new BN(
@@ -121,7 +135,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
   });
 
-  it('Should emit transfer event', async function () {
+  it('should emit transfer event', async function () {
     await initialize();
 
     let tx = await ostPrime.unwrap(amount, { from: callerAddress });
@@ -130,7 +144,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
     assert.isDefined(
       event.Transfer,
-      "Event `Transfer` must be emitted.",
+      'Event `Transfer` must be emitted.',
     );
 
     let eventData = event.Transfer;
@@ -155,7 +169,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
   });
 
-  it('Should emit token unwrapped event', async function () {
+  it('should emit token unwrapped event', async function () {
     await initialize();
 
     let tx = await ostPrime.unwrap(amount, { from: callerAddress });
@@ -164,7 +178,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
     assert.isDefined(
       event.TokenUnwrapped,
-      "Event `TokenUnwrapped` must be emitted.",
+      'Event `TokenUnwrapped` must be emitted.',
     );
 
     let eventData = event.TokenUnwrapped;

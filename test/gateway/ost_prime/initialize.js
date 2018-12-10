@@ -28,27 +28,27 @@ contract('OSTPrime.initialize()', function (accounts) {
 
   });
 
-  it('should fail if the initialize is called with payable amount not equal ' +
-    'to 800M ost prime base token', async function () {
+  it('should fail if initialize is called with payable amount not equal ' +
+    'to TOKENS_MAX ost prime base token', async function () {
 
     let tokenAmount = new BN(1);
 
     let result = ostPrime.initialize.call(
-      {from: accounts[2], value:tokenAmount}
+      {from: accounts[2], value: tokenAmount}
     );
 
     await Utils.expectRevert(
       result,
-      "Payable amount must be equal to total supply of token.",
+      'Payable amount must be equal to total supply of token.',
     );
 
   });
 
-  it('should pass if the initialize is called with value equal than 800M ' +
-    'ost prime base token', async function () {
+  it('should pass if initialize is called with value equal to ' +
+    'TOKENS_MAX ost prime base token', async function () {
 
     let result = await ostPrime.initialize.call(
-      {from: accounts[2], value:TOKENS_MAX}
+      {from: accounts[2], value: TOKENS_MAX}
     );
 
     assert.strictEqual(
@@ -58,7 +58,7 @@ contract('OSTPrime.initialize()', function (accounts) {
     );
 
     await ostPrime.initialize(
-      {from: accounts[2], value:TOKENS_MAX}
+      {from: accounts[2], value: TOKENS_MAX}
     );
 
     let balance = await Utils.getBalance(ostPrime.address);
@@ -80,14 +80,14 @@ contract('OSTPrime.initialize()', function (accounts) {
   it('should fail if already initialized', async function () {
 
     await ostPrime.initialize(
-      {from: accounts[2], value:TOKENS_MAX}
+      {from: accounts[2], value: TOKENS_MAX}
     );
 
     await Utils.expectRevert(
-      ostPrime.initialize.call(
-        {from: accounts[3], value:TOKENS_MAX}
+      ostPrime.initialize(
+        {from: accounts[3], value: TOKENS_MAX}
       ),
-      "Contract is already initialized.",
+      'Contract is already initialized.',
     );
 
   });

@@ -24,7 +24,7 @@ contract('OSTPrime.constructor()', function (accounts) {
     assert.strictEqual(
       web3.utils.isAddress(ostPrime.address),
       true,
-      "OSTPrime contract address must not be zero.",
+      'OSTPrime contract address must not be zero.',
     );
 
     let tokenAddress = await ostPrime.valueToken.call();
@@ -64,12 +64,12 @@ contract('OSTPrime.constructor()', function (accounts) {
 
   });
 
-  it('should fail if branded token address is not zero', async function () {
+  it('should fail if branded token address is zero', async function () {
 
     brandedTokenAddress = NullAddress;
     await Utils.expectRevert(
       OSTPrime.new(brandedTokenAddress),
-      "ERC20 token should not be zero.",
+      'ERC20 token should not be zero.',
     );
 
   });

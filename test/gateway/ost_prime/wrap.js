@@ -16,7 +16,7 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   async function initialize(){
     await ostPrime.initialize(
-      {from: accounts[5], value:TOKENS_MAX}
+      {from: accounts[5], value: TOKENS_MAX}
     );
   };
 
@@ -32,28 +32,28 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   });
 
-  it('Should fail when the payable amount is zero', async function () {
+  it('should fail when the payable amount is zero', async function () {
 
     await initialize();
 
     let amount = 0;
     await Utils.expectRevert(
-      ostPrime.wrap.call({from: callerAddress, value: amount }),
-      "Payable amount should not be zero.",
+      ostPrime.wrap({from: callerAddress, value: amount }),
+      'Payable amount should not be zero.',
     );
 
   });
 
-  it('Should fail when the contract is not initialized', async function () {
+  it('should fail when the contract is not initialized', async function () {
 
     await Utils.expectRevert(
-      ostPrime.wrap.call({from: callerAddress, value: amount }),
-      "Contract is not initialized.",
+      ostPrime.wrap({from: callerAddress, value: amount }),
+      'Contract is not initialized.',
     );
 
   });
 
-  it('Should fail when the payable amount sent is less than the available ' +
+  it('should fail when the payable amount sent is less than the available ' +
     'balance', async function () {
 
     await initialize();
@@ -65,37 +65,35 @@ contract('OSTPrime.wrap()', function (accounts) {
      * an overhead to manage the gas for the account if used.
      */
     let newAccount = await web3.eth.personal.newAccount("password");
-    await web3.eth.personal.unlockAccount(newAccount,"password",15000);
+    await web3.eth.personal.unlockAccount(newAccount, "password",15000);
 
     /*
      * transfer just sufficient gas balance to this address.
      * this is 12000000 as gaslimit + 500 for this test to execute.
      */
     await web3.eth.sendTransaction(
-        {to:newAccount, from:accounts[0], value:12000500}
+        {to:newAccount, from:accounts[0], value: 12000500}
       );
 
-    // @dev this test with .call does not revert as expected.
     await Utils.expectRevert(
       ostPrime.wrap({from: newAccount, value: amount }),
-      "Available balance is less than payable amount.",
+      'Available balance is less than payable amount.',
     );
 
   });
 
-  it('Should fail when EIP-20 balance is insufficient', async function () {
+  it('should fail when EIP-20 balance is insufficient', async function () {
 
     await initialize();
 
-    // @dev this test with .call does not revert as expected.
     await Utils.expectRevert(
-      ostPrime.wrap.call({from: callerAddress, value: new BN(1000) }),
-      "Insufficient EIP-20 token balance.",
+      ostPrime.wrap({from: callerAddress, value: new BN(1000) }),
+      'Insufficient EIP-20 token balance.',
     );
 
   });
 
-  it('Should pass with correct parameters ', async function () {
+  it('should pass with correct parameters ', async function () {
 
     await initialize();
 
@@ -156,7 +154,7 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   });
 
-  it('Should emit transfer event', async function () {
+  it('should emit transfer event', async function () {
     await initialize();
 
     let tx = await ostPrime.wrap({from: callerAddress, value: amount});
@@ -165,7 +163,7 @@ contract('OSTPrime.wrap()', function (accounts) {
 
     assert.isDefined(
       event.Transfer,
-      "Event `Transfer` must be emitted.",
+      'Event `Transfer` must be emitted.',
     );
 
     let eventData = event.Transfer;
@@ -190,7 +188,7 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   });
 
-  it('Should emit token unwrapped event', async function () {
+  it('should emit token wrapped event', async function () {
     await initialize();
 
     let tx = await ostPrime.wrap({from: callerAddress, value: amount});

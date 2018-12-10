@@ -21,17 +21,10 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-/// Simple Token Prime [OST'] is equivalently staked for with Simple Token
-/// on the value chain and is the base token that pays for gas on the auxiliary
-/// chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
-/// Ether pays for gas on Ethereum mainnet) when sending a transaction on
-/// the auxiliary chain.
-
+// TestOSTPrime is used to test the OSTPrime contract.
 import "../../gateway/OSTPrime.sol";
 
-/**
- *  @title Test OST prime contract.
- */
+/** @title Test OST prime contract. */
 contract TestOSTPrime is OSTPrime {
 
 
@@ -47,15 +40,13 @@ contract TestOSTPrime is OSTPrime {
     constructor(address _valueToken)
         public
         OSTPrime(_valueToken)
-    {
-
-    }
+    {}
 
 
     /* Public functions. */
 
     /**
-     * @notice Set the EIP-20 token balance for the given account address.
+     * @notice Set the OST Prime token balance for the given account address.
      *
      * @dev This is used only for testing.
      *
