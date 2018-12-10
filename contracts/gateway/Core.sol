@@ -31,10 +31,13 @@ import "../lib//RLP.sol";
 import "../lib/SafeMath.sol";
 
 /**
- *  @title Core contract which implements StateRootInterface.
+ * @title SafeCore contract which implements StateRootInterface.
  *
- *  @notice Core is a minimal stub that will become the anchoring and consensus point for
- *          the utility chain to validate itself against.
+ * @notice SafeCore stores another chain's state roots. It stores the address of
+ *         the co-core, which will be the safe core on the other chain. State
+ *         roots are exchanged bidirectionally between the core and the co-core
+ *         by the workers that are registered as part of the `Organized`
+ *         interface.
  */
 contract Core is StateRootInterface, Organized {
     using SafeMath for uint256;
@@ -42,15 +45,17 @@ contract Core is StateRootInterface, Organized {
 
     /** Events */
 
-    event StateRootAvailable(uint256 blockHeight, bytes32 stateRoot);
+    event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
 
 
     /** Storage */
 
-    mapping (uint256 /* block height */ => bytes32) private stateRoots;
+    /** Maps block heights to their respective state root. */
+    mapping (uint256 => bytes32) private stateRoots;
 
     /** chainIdRemote is the remote chain id where core contract is deployed. */
     uint256 private coreChainIdRemote;
+
     /** Latest block height of block for which state root was committed. */
     uint256 private latestStateRootBlockHeight;
 
@@ -63,7 +68,8 @@ contract Core is StateRootInterface, Organized {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+     *  @param _chainIdRemote _chainIdRemote is the chain id of the auxiliary
+     *                        chain.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
@@ -129,7 +135,7 @@ contract Core is StateRootInterface, Organized {
         view
         returns (bytes32 stateRoot_)
     {
-        return stateRoots[_blockHeight];
+        stateRoot_ = stateRoots[_blockHeight];
     }
 
     /**
@@ -142,7 +148,7 @@ contract Core is StateRootInterface, Organized {
         view
         returns (uint256 height_)
     {
-        return latestStateRootBlockHeight;
+        height_ = latestStateRootBlockHeight;
     }
 
     /**
@@ -151,7 +157,8 @@ contract Core is StateRootInterface, Organized {
      *  @dev commitStateRoot Called from game process.
      *       Commit new state root for a block height.
      *
-     *  @param _blockHeight Block height for which stateRoots mapping needs to update.
+     *  @param _blockHeight Block height for which stateRoots mapping needs to
+     *                      update.
      *  @param _stateRoot State root of input block height.
      *
      *  @return bytes32 stateRoot
@@ -162,19 +169,23 @@ contract Core is StateRootInterface, Organized {
     )
         external
         onlyWorker
-        returns (bytes32 /* stateRoot */)
+        returns (bool success_)
     {
         // State root should be valid
         require(_stateRoot != bytes32(0), "State root is 0");
+
         // Input block height should be valid
-        require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
+        require(
+            _blockHeight > latestStateRootBlockHeight,
+            "Given block height is lower or equal to highest committed state root block height."
+        );
 
         stateRoots[_blockHeight] = _stateRoot;
         latestStateRootBlockHeight = _blockHeight;
 
         emit StateRootAvailable(_blockHeight, _stateRoot);
 
-        return _stateRoot;
+        success_ = true;
     }
 
 
@@ -188,8 +199,8 @@ contract Core is StateRootInterface, Organized {
     function chainIdRemote()
         public
         view
-        returns (uint256 /* chainIdRemote */)
+        returns (uint256 chainIdRemote_)
     {
-        return coreChainIdRemote;
+        chainIdRemote_ = coreChainIdRemote;
     }
 }

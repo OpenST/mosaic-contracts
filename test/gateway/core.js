@@ -35,7 +35,6 @@ contract('Core', function (accounts) {
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;
             worker = contractsData.worker;
-            registrar = contractsData.registrar;
             chainIdRemote = contractsData.chainIdRemote;
         });
 
@@ -56,6 +55,13 @@ contract('Core', function (accounts) {
 
         it('should allow the organization to set the address', async () => {
             await core.setCoCoreAddress(coCoreAddress, { from: owner });
+
+            let setAddress = await core.coCore.call();
+            assert.strictEqual(
+                coCoreAddress,
+                setAddress,
+                'The co-core address was not set as expected.',
+            );
         });
 
         it('should not allow to set a zero address', async () => {
@@ -109,12 +115,34 @@ contract('Core', function (accounts) {
         });
 
         it('should be able to commit state root and getStateRoot for given block height', async () => {
-            let response = await core.commitStateRoot(blockHeight, stateRoot, { from: worker })
-                ;
+            let response = await core.commitStateRoot.call(
+                blockHeight,
+                stateRoot,
+                { from: worker },
+            );
+            assert.strictEqual(
+                response,
+                true,
+                'Committing a state root should return `true`.',
+            );
 
-            let formattedDecodedEvents = web3EventsDecoder.perform(response.receipt, core.address, core.abi);
+            let transaction = await core.commitStateRoot(
+                blockHeight,
+                stateRoot,
+                { from: worker },
+            );
+
+            let formattedDecodedEvents = web3EventsDecoder.perform(
+                transaction.receipt,
+                core.address,
+                core.abi,
+            );
             let event = formattedDecodedEvents['StateRootAvailable'];
-            await coreUtils.checkStateRootAvailableEvent(event, blockHeight, stateRoot);
+            await coreUtils.checkStateRootAvailableEvent(
+                event,
+                blockHeight,
+                stateRoot,
+            );
             assert.equal(await core.getStateRoot(blockHeight), stateRoot);
         });
 
@@ -124,19 +152,27 @@ contract('Core', function (accounts) {
         });
 
         it('should not be able to commit state root of block height which is equal to latest block height', async () => {
-            await utils.expectThrow(core.commitStateRoot(blockHeight, stateRoot, { from: worker }));
+            await utils.expectThrow(
+                core.commitStateRoot(blockHeight, stateRoot, { from: worker }),
+            );
         });
 
         it('should not be able to commit state root of block height which is less than latest block height', async () => {
-            await utils.expectThrow(core.commitStateRoot(3, stateRoot, { from: worker }));
+            await utils.expectThrow(
+                core.commitStateRoot(3, stateRoot, { from: worker })
+            );
         });
 
         it('should not be able to commit state root of block height if non worker commits root', async () => {
-            await utils.expectThrow(core.commitStateRoot(6, stateRoot, { from: accounts[0] }));
+            await utils.expectThrow(
+                core.commitStateRoot(6, stateRoot, { from: accounts[0] })
+            );
         });
 
         it('should not be able to commit state root when state root is empty', async () => {
-            await utils.expectThrow(core.commitStateRoot(6, '0x', { from: worker }));
+            await utils.expectThrow(
+                core.commitStateRoot(6, '0x', { from: worker })
+            );
         });
 
     });

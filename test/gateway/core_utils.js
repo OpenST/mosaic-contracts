@@ -26,35 +26,30 @@ const Core = artifacts.require("./Core.sol")
 
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
-    const registrar = accounts[1]
-        , chainIdRemote = 1410
-        , organizationOwner = accounts[7]
-        , worker = accounts[8]
-        ;
-
+    const chainIdRemote = 1410;
+    const organizationOwner = accounts[7];
+    const worker = accounts[8];
 
     // Deploy worker contract
     const organization = await Organization.new(organizationOwner, worker);
-    const core = await Core.new(chainIdRemote, 0, proof.account.stateRoot, organization.address, { from: accounts[0] });
+    const core = await Core.new(
+        chainIdRemote,
+        0,
+        proof.account.stateRoot,
+        organization.address,
+        { from: accounts[0] },
+    );
     return {
         core: core,
         owner: organizationOwner,
         worker: worker,
-        registrar: registrar,
         chainIdRemote: chainIdRemote,
     };
 };
 
-module.exports.checkOpenSTProvenEvent = (event, _blockHeight, _storageRoot, wasAlreadyProved) => {
-    assert.equal(event !== null, true);
-    assert.equal(event["blockHeight"], _blockHeight);
-    assert.equal(event["storageRoot"], _storageRoot);
-    assert.equal(event["wasAlreadyProved"], wasAlreadyProved);
-};
-
 module.exports.checkStateRootAvailableEvent = (event, _blockHeight, _stateRoot) => {
     assert.equal(event !== null, true);
-    assert.equal(event["blockHeight"], _blockHeight);
-    assert.equal(event["stateRoot"], _stateRoot);
+    assert.equal(event["_blockHeight"], _blockHeight);
+    assert.equal(event["_stateRoot"], _stateRoot);
 };
 
