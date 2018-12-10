@@ -897,19 +897,6 @@ contract EIP20Gateway is GatewayBase {
         progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
 
-    /**
-     *
-     *
-     */
-    function getPenaltyAmount(bytes32 _messageHash)
-        public
-        view
-        returns(uint256)
-    {
-        require(_messageHash == bytes32(0),"Input message hash is empty.");
-        return stakes[_messageHash].bounty.mul(REVOCATION_PENALTY).div(100);
-    }
-
 
     /** External methods */
 
