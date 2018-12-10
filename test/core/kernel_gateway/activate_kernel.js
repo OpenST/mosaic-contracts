@@ -142,7 +142,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
     assert.strictEqual(
       eventData._originCoreIdentifier,
-        originCoreIdentifier,
+      originCoreIdentifier,
       `Origin core identifier from event must be equal to ${originCoreIdentifier}`,
     );
 

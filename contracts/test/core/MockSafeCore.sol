@@ -4,11 +4,11 @@ import "../../gateway/WorkersInterface.sol";
 import "../../gateway/SafeCore.sol";
 
 /**
- * @title CoreMock contract
+ * @title MockSafeCore contract
  *
  * @notice Used for test only
  */
-contract MockCore is SafeCore {
+contract MockSafeCore is SafeCore {
 
 
     /*  Public functions */
