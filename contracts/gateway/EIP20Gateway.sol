@@ -201,7 +201,8 @@ contract EIP20Gateway is GatewayBase {
     /** Maps messageHash to the Unstake object. */
     mapping(bytes32 /*messageHash*/ => Unstake) unstakes;
 
-    /* modifiers */
+
+    /* Modifiers */
 
     /** Checks that contract is active. */
     modifier isActive() {
@@ -211,6 +212,7 @@ contract EIP20Gateway is GatewayBase {
         );
         _;
     }
+
 
     /* Constructor */
 
@@ -258,6 +260,7 @@ contract EIP20Gateway is GatewayBase {
         // deploy simpleStake contract that will keep the staked amounts.
         stakeVault = new SimpleStake(_token, address(this));
     }
+
 
     /* External functions */
 
@@ -792,12 +795,12 @@ contract EIP20Gateway is GatewayBase {
         bytes32 _messageHash,
         bytes32 _unlockSecret
     )
-    external
-    returns (
-        uint256 redeemAmount_,
-        uint256 unstakeAmount_,
-        uint256 rewardAmount_
-    )
+        external
+        returns (
+            uint256 redeemAmount_,
+            uint256 unstakeAmount_,
+            uint256 rewardAmount_
+        )
     {
         // Get the inital gas
         uint256 initialGas = gasleft();
@@ -851,12 +854,12 @@ contract EIP20Gateway is GatewayBase {
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-    public
-    returns (
-        uint256 redeemAmount_,
-        uint256 unstakeAmount_,
-        uint256 rewardAmount_
-    )
+        public
+        returns (
+            uint256 redeemAmount_,
+            uint256 unstakeAmount_,
+            uint256 rewardAmount_
+        )
     {
         // Get the inital gas
         uint256 initialGas = gasleft();
@@ -912,14 +915,14 @@ contract EIP20Gateway is GatewayBase {
     function confirmRevertRedeemIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedParentNodes
+   `     bytes calldata _rlpEncodedParentNodes
     )
-    external
-    returns (
-        address redeemer_,
-        uint256 redeemerNonce_,
-        uint256 amount_
-    )
+        external
+        returns (
+            address redeemer_,
+            uint256 redeemerNonce_,
+            uint256 amount_
+        )
     {
         // Get the initial gas value
         uint256 initialGas = gasleft();
@@ -985,13 +988,17 @@ contract EIP20Gateway is GatewayBase {
      * @return success_ `true` if value is set
      */
     function activateGateway(
-        address _coGatewayAddress
+            address _coGatewayAddress
     )
         external
         onlyOrganization
         returns (bool success_)
     {
 
+        require(
+            _coGatewayAddress != address(0),
+            "Co-gateway address must not be zero."
+        );
         require(
             remoteGateway == address(0),
             "Gateway was already activated once."
@@ -1116,6 +1123,7 @@ contract EIP20Gateway is GatewayBase {
             _unlockSecret
         );
     }
+
     /**
      * @notice This is internal method for process unstake called from external
      *         methods which processUnstake(with hashlock) and
