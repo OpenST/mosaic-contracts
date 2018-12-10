@@ -5,7 +5,7 @@ const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 
 
-contract('EIP20Gateway.(de)activateGateway()', function (accounts) {
+contract('EIP20Gateway.activateGateway()', function (accounts) {
 
     let gateway;
     let coGateway = accounts[5];
@@ -29,30 +29,6 @@ contract('EIP20Gateway.(de)activateGateway()', function (accounts) {
             bountyAmount,
             membersManager.address
         );
-    });
-
-    it('should deactivate if activated', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        assert((await gateway.deactivateGateway.call({ from: owner })));
-        await gateway.deactivateGateway({ from: owner });
-        assert(
-            !(await gateway.activated.call()),
-            'Activation flag is true but expected as false.'
-        );
-    });
-
-    it('should not deactivate if already deactivated', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        await gateway.deactivateGateway({ from: owner });
-        await Utils.expectThrow(gateway.deactivateGateway.call({ from: owner }));
-    });
-
-    it('should deactivated by organization only', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-        await Utils.expectThrow(gateway.deactivateGateway.call({ from: accounts[0] }));
     });
 
     it('should activate if deActivated', async function () {
@@ -83,7 +59,7 @@ contract('EIP20Gateway.(de)activateGateway()', function (accounts) {
 
         await Utils.expectRevert(
             gateway.activateGateway.call(coGateway, {from: accounts[0]}),
-            'Only organisation can call the function.'
+            'Only the organization is allowed to call this method.'
         );
     });
 });
