@@ -22,7 +22,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _organisation Organisation address.
+     * @param _membersManager Organisation address.
      * @param _gateway Gateway contract address.
      */
     constructor(
@@ -30,7 +30,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         address _utilityToken,
         CoreInterface _core,
         uint256 _bounty,
-        address _organisation,
+        IsMemberInterface _membersManager,
         address _gateway
     )
     EIP20CoGateway(
@@ -38,7 +38,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         _utilityToken,
         _core,
         _bounty,
-        _organisation,
+        _membersManager,
         _gateway
     )
     public

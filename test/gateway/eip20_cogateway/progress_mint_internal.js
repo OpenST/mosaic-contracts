@@ -39,7 +39,8 @@ let eip20CoGateway,
     bountyAmount,
     owner,
     staker,
-    stakerBalance;
+    stakerBalance,
+    rewardAmount;
 
 async function _setup(accounts) {
     
@@ -51,7 +52,8 @@ async function _setup(accounts) {
     utilityToken = await MockUtilityToken.new();
     bountyAmount = new BN(100);
     staker = accounts[7];
-    stakerBalance = new BN(1000000);
+    stakerBalance = new BN(1000000),
+    rewardAmount = new BN(100);
     
     eip20CoGateway = await EIP20CoGateway.new(
         valueToken,
@@ -120,7 +122,18 @@ contract('EIP20CoGateway.progressMintInternal() ', function (accounts) {
             unlockSecret,
             {from : facilitator},
         );
-        assert.strictEqual((await utilityToken.beneficiary()), facilitator);
+        
+        assert.strictEqual(
+            (await utilityToken.beneficiary()),
+            facilitator,
+            "Facilitator address is incorrect",
+        );
+    
+        assert.strictEqual(
+            (await utilityToken.amount()).eq(rewardAmount),
+            true,
+            "Facilitator address is incorrect",
+        );
         
     });
     
@@ -154,7 +167,11 @@ contract('EIP20CoGateway.progressMintInternal() ', function (accounts) {
             {from : facilitator},
         );
         
-        assert.notStrictEqual((await utilityToken.beneficiary()), facilitator);
+        assert.notStrictEqual(
+            (await utilityToken.beneficiary()),
+            facilitator,
+            "Facilitator address is not correct",
+        );
         
     });
     
