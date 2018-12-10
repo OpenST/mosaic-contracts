@@ -89,6 +89,9 @@ contract SimpleStake {
         gateway = _gateway;
     }
 
+
+    /* External functions */
+
     /**
      *  @notice This allows gateway to release staked amount to provided address.
      *
@@ -123,9 +126,6 @@ contract SimpleStake {
         success_= true;
     }
 
-
-    /* Public functions */
-
     /**
      *  @notice This function returns total staked amount.
      *
@@ -138,7 +138,7 @@ contract SimpleStake {
      *  @return stakedAmount_ Total staked amount.
      */
     function getTotalStake()
-        public
+        external
         view
         returns (uint256 stakedAmount_)
         {

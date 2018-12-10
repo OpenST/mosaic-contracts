@@ -17,7 +17,7 @@ contract('SimpleStake.getTotalStake()', function (accounts) {
 
     });
 
-    it('should return zero total staked amount initially.', async function () {
+    it('should return zero total staked amount after deployment.', async function () {
         let expectedTotalStakedAmount = new BN(0);
 
         let totalStakedAmount = await simpleStake.getTotalStake.call();
@@ -42,7 +42,7 @@ contract('SimpleStake.getTotalStake()', function (accounts) {
         );
     });
 
-    it('should return correct total staked amount for multiple stake' +
+    it('should return correct total staked amount on multiple stake' +
         ' requests', async function () {
         let expectedTotalStakedAmount = new BN(0);
 
