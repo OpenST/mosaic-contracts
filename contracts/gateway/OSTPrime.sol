@@ -86,9 +86,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /**
      * @notice Contract constructor.
      *
-     * @dev this contract should be deployed with zero gas
+     * @dev this contract should be deployed with zero gas.
      *
-     * @param _valueToken ERC20 token address in origin chain
+     * @param _valueToken ERC20 token address in origin chain.
      */
     constructor(address _valueToken)
         public
@@ -111,7 +111,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *      so that all base tokens are held by OSTPrime.
      *      On setup of the auxiliary chain the base tokens need to be
      *      transferred in full to OSTPrime for the base tokens to be
-     *      minted as OST'
+     *      minted as OST'.
      *
      * @return success_ `true` if initialize was successful.
      */    
@@ -121,7 +121,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         returns (bool success_)
     {
         require(
-            initialized != true,
+            initialized == false,
             "Contract is already initialized."
         );
 
@@ -175,7 +175,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /**
      * @notice convert OST` base token to OST EIP-20 token.
      *
-     * @return success_ `true` if claim was successfully progressed
+     * @return success_ `true` if claim was successfully progressed.
      */
     function wrap()
         public
