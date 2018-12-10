@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 
-import "../test/MockMerklePatriciaProof.sol";
+import "../test/lib/MockMerklePatriciaProof.sol";
 import "../lib/SafeMath.sol";
 import "../lib/BytesLib.sol";
 

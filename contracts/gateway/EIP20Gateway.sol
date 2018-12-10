@@ -55,6 +55,7 @@ pragma solidity ^0.5.0;
 
 import "./SimpleStake.sol";
 import "./GatewayBase.sol";
+import "../lib/IsMemberInterface.sol";
 
 /**
  * @title EIP20Gateway Contract
@@ -226,19 +227,19 @@ contract EIP20Gateway is GatewayBase {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
-     * @param _organisation Organisation address.
+     * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
         StateRootInterface _core,
         uint256 _bounty,
-        address _organisation
+        IsMemberInterface _membersManager
     )
         GatewayBase(
             _core,
             _bounty,
-            _organisation
+            _membersManager
         )
         public
     {
@@ -306,14 +307,6 @@ contract EIP20Gateway is GatewayBase {
         require(
             _staker != address(0),
             "Staker address must not be zero"
-        );
-        require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
         );
         require(
             _signature.length == 65,
@@ -714,14 +707,6 @@ contract EIP20Gateway is GatewayBase {
             "Redeem amount must not be zero"
         );
         require(
-            _gasPrice != 0,
-            "Gas price must not be zero"
-        );
-        require(
-            _gasLimit != 0,
-            "Gas limit must not be zero"
-        );
-        require(
             _rlpEncodedParentNodes.length > 0,
             "RLP encoded parent nodes must not be zero"
         );
@@ -1003,7 +988,7 @@ contract EIP20Gateway is GatewayBase {
         address _coGatewayAddress
     )
         external
-        onlyOrganisation
+        onlyOrganization
         returns (bool success_)
     {
 
@@ -1030,7 +1015,7 @@ contract EIP20Gateway is GatewayBase {
      */
     function deactivateGateway()
         external
-        onlyOrganisation
+        onlyOrganization
         returns (bool success_)
     {
         require(

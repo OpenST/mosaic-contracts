@@ -37,7 +37,7 @@ Object.freeze(ResultType);
  * Asserts that an error message contains a string given as message. Always
  * passes if the message is `undefined`.
  *
- * @param {string} message The message that the error should contain.
+ * @param {string} message A regular expression that the error should contain.
  * @param {Object} error The error.
  */
 function assertExpectedMessage(message, error) {
@@ -239,6 +239,16 @@ Utils.prototype = {
           }
         }
       }
+    });
+  },
+
+  advanceBlock: async () => {
+    await web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_mine',
+      id: new Date().getTime(),
+    }, (err) => {
+      assert.strictEqual(err, null);
     });
   },
 
