@@ -28,7 +28,7 @@ const Stake = artifacts.require('Stake');
 
 contract('Stake.deposit()', async (accounts) => {
 
-    let originCoreAccount = accounts[4];
+    let mosaicCoreAccount = accounts[4];
     let minimumWeight = new BN('1');
     let token;
     let stake;
@@ -37,7 +37,7 @@ contract('Stake.deposit()', async (accounts) => {
         token = await MockToken.new();
         stake = await Stake.new(
             token.address,
-            originCoreAccount,
+            mosaicCoreAccount,
             minimumWeight,
         );
         await StakeUtils.initializeStake(
@@ -198,7 +198,7 @@ contract('Stake.deposit()', async (accounts) => {
 
         await stake.closeMetaBlock(
             new BN(1),
-            {from: originCoreAccount},
+            {from: mosaicCoreAccount},
         );
 
         await StakeUtils.deposit(

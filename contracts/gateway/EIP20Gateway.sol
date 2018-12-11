@@ -234,7 +234,7 @@ contract EIP20Gateway is GatewayBase {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )

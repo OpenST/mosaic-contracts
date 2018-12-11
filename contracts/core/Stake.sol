@@ -91,8 +91,8 @@ contract Stake is StakeInterface {
     /** The token that is used as staking currency. */
     EIP20Interface public stakingToken;
 
-    /** Address of the origin core. */
-    address public originCore;
+    /** Address of the mosaic core. */
+    address public mosaicCore;
 
     /**
      * The minimum weight that is required for this meta-blockchain to function.
@@ -135,12 +135,12 @@ contract Stake is StakeInterface {
     /* Modifiers */
 
     /**
-     * Verifies that the message was sent by the origin core.
+     * Verifies that the message was sent by the mosaic core.
      */
-    modifier onlyOriginCore() {
+    modifier onlyMosaicCore() {
         require(
-            msg.sender == originCore,
-            "Caller must be the registered Origin Core."
+            msg.sender == mosaicCore,
+            "Caller must be the registered mosaic Core."
         );
 
         _;
@@ -172,13 +172,13 @@ contract Stake is StakeInterface {
      *         before it becomes functional, the initial set of validators must
      *         be set by calling `initialize()`.
      *         !!! You probably don't want to deploy the Stake contract
-     *         !!! yourself. Instead, it should be deployed from the OriginCore
+     *         !!! yourself. Instead, it should be deployed from the MosaicCore
      *         !!! constructor.
      *
      * @param _stakingToken The address of the ERC-20 token that is used to
      *                      deposit stakes.
-     * @param _originCore Address of the origin core. Some methods may only be
-     *                    called from the origin core.
+     * @param _mosaicCore Address of the mosaic core. Some methods may only be
+     *                    called from the mosaic core.
      * @param _minimumWeight The minimum total weight that all active validators
      *                       must have so that the meta-blockchain is not
      *                       considered halted. See also the modifier
@@ -186,7 +186,7 @@ contract Stake is StakeInterface {
      */
     constructor(
         address _stakingToken,
-        address _originCore,
+        address _mosaicCore,
         uint256 _minimumWeight
     )
         public
@@ -196,8 +196,8 @@ contract Stake is StakeInterface {
             "The address of the staking token must not be zero."
         );
         require(
-            _originCore != address(0),
-            "The address of the origin core must not be zero."
+            _mosaicCore != address(0),
+            "The address of the mosaic core must not be zero."
         );
         require(
             _minimumWeight > 0,
@@ -205,7 +205,7 @@ contract Stake is StakeInterface {
         );
 
         stakingToken = EIP20Interface(_stakingToken);
-        originCore = _originCore;
+        mosaicCore = _mosaicCore;
         minimumWeight = _minimumWeight;
 
         /*
@@ -391,7 +391,7 @@ contract Stake is StakeInterface {
     /**
      * @notice Notifies the contract about a closing meta-block in order to
      *         handle any changes in the set of validators.
-     *         Can only be called from OriginCore.
+     *         Can only be called from MosaicCore.
      *
      * @dev The height is given to `assert` that the call is in sync with the
      *      contract.
@@ -405,7 +405,7 @@ contract Stake is StakeInterface {
         uint256 _closingHeight
     )
         external
-        onlyOriginCore()
+        onlyMosaicCore()
         aboveMinimumWeight()
         returns (
             address[] memory updatedValidators_,
@@ -446,7 +446,7 @@ contract Stake is StakeInterface {
      * @notice Returns the weight of a validator at a specific meta-block height,
      *         based on the auxiliary address of the validator.
      *
-     * @dev The OriginCore can use this method to track the verified weight by
+     * @dev The MosaicCore can use this method to track the verified weight by
      *      the verified votes and notice when a supermajority has been
      *      reached, therefore committing the meta-block.
      *      The height is given to `assert` that the call is in sync with the

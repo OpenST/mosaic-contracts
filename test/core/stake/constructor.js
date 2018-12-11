@@ -26,13 +26,13 @@ const Stake = artifacts.require('Stake');
 contract('Stake.constructor()', async (accounts) => {
 
     let tokenAddress = accounts[3];
-    let originCoreAddress = accounts[4];
+    let mosaicCoreAddress = accounts[4];
     let zeroAddress = '0x0000000000000000000000000000000000000000';
 
     it('should accept a correct construction', async () => {
         await Stake.new(
             tokenAddress,
-            originCoreAddress,
+            mosaicCoreAddress,
             new BN('1000'),
         );
     });
@@ -41,21 +41,21 @@ contract('Stake.constructor()', async (accounts) => {
         await Utils.expectRevert(
             Stake.new(
                 zeroAddress,
-                originCoreAddress,
+                mosaicCoreAddress,
                 new BN('10'),
             ),
             'The address of the staking token must not be zero.'
         );
     });
 
-    it('should reject a zero origin core address', async () => {
+    it('should reject a zero mosaic core address', async () => {
         await Utils.expectRevert(
             Stake.new(
                 tokenAddress,
                 zeroAddress,
                 new BN('10'),
             ),
-            'The address of the origin core must not be zero.'
+            'The address of the mosaic core must not be zero.'
         );
     });
 
@@ -63,7 +63,7 @@ contract('Stake.constructor()', async (accounts) => {
         await Utils.expectRevert(
             Stake.new(
                 tokenAddress,
-                originCoreAddress,
+                mosaicCoreAddress,
                 new BN('0'),
             ),
             'Minimum weight must be greater than zero.'
