@@ -28,7 +28,7 @@ const Stake = artifacts.require('Stake');
 contract('Stake.initialize()', async (accounts) => {
 
     let tokenDeployer = accounts[0];
-    let originCoreAccount = accounts[1];
+    let mosaicCoreAccount = accounts[1];
     let minimumWeight = new BN('32000');
     let token;
     let stake;
@@ -41,7 +41,7 @@ contract('Stake.initialize()', async (accounts) => {
         token = await MockToken.new({ from: tokenDeployer });
         stake = await Stake.new(
             token.address,
-            originCoreAccount,
+            mosaicCoreAccount,
             minimumWeight,
         );
 
