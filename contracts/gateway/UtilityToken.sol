@@ -186,7 +186,9 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      *
      * @return success_ `true` if decrease supply is successful, false otherwise.
      */
-    function decreaseSupply(uint256 _amount)
+    function decreaseSupply(
+        uint256 _amount
+    )
         external
         onlyCoGateway
         returns (bool success_)
@@ -202,6 +204,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
             balances[sender] >= _amount,
             "Insufficient balance."
         );
+
         // Decrease the balance of the msg.sender account.
         balances[sender] = balances[sender].sub(_amount);
         totalTokenSupply = totalTokenSupply.sub(_amount);
