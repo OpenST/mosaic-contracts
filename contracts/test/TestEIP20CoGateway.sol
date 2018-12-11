@@ -5,7 +5,7 @@ import "../gateway/EIP20CoGateway.sol";
 /**
  * @title TestEIP20CoGateway contract.
  *
- * @notice Used for test only.
+ * @notice This is used for testing purpose.
  */
 contract TestEIP20CoGateway is EIP20CoGateway {
 
@@ -14,7 +14,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /**
      * @notice Initialise the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
-     *         minting and redeeming.
+     *         minting and redeeming.This is used for testing purpose.
      *
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
@@ -33,14 +33,14 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         IsMemberInterface _membersManager,
         address _gateway
     )
-    EIP20CoGateway(
-        _valueToken,
-        _utilityToken,
-        _core,
-        _bounty,
-        _membersManager,
-        _gateway
-    )
+        EIP20CoGateway(
+            _valueToken,
+            _utilityToken,
+            _core,
+            _bounty,
+            _membersManager,
+            _gateway
+        )
     public
     {
 
@@ -50,9 +50,9 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /* Public Functions */
 
     /**
-     * @notice It is used to set the messagehash.
+     * @notice It is used to set the message.
      *
-     * @dev It is for test purposes only.
+     * @dev This is used for testing purpose.
      *
      * @param _intentHash Intent hash.
      * @param _stakerNonce Nonce of the staker address.
@@ -64,7 +64,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *
      * @return messageHash_ Hash unique for every request.
      */
-    function setMessage(
+    function setStakeMessage(
         bytes32 _intentHash,
         uint256 _stakerNonce,
         uint256 _gasPrice,
@@ -100,7 +100,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /**
      * @notice It sets the mints mapping with respect to the messageHash.
      *
-     * @dev It is for test purposes only.
+     * @dev This is used for testing purpose.
      *
      * @param _messageHash Hash for which mints mapping is updated.
      * @param _beneficiary Beneficiary  Address to which the utility tokens
@@ -123,15 +123,20 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     }
 
     /**
-     * @notice It sets the status of inbox to Declared.
+     * @notice It sets the status of inbox to declared.
      *
-     * @dev It is for test purposes only.
+     * @dev This is used for testing purpose.
      *
-     * @param _messageHash Hash for which status is set to Declared.
+     * @param _messageHash It sets the status of the inbox to declared status.
      */
-    function setInboxStatus(bytes32 _messageHash) public {
+    function setInboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus status
+    )
+        public
+    {
 
-        messageBox.inbox[_messageHash] = MessageBus.MessageStatus.Declared;
+        messageBox.inbox[_messageHash] = status;
 
     }
 

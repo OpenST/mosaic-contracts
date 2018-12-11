@@ -21,7 +21,21 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-contract MockUtilityToken {
+
+import "../gateway/UtilityToken.sol";
+
+/**
+ *  @title MockUtilityToken contract.
+ *
+ *  @notice This is for testing purpose.
+ *
+ */
+contract MockUtilityToken is UtilityToken {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Storage */
 
@@ -34,10 +48,40 @@ contract MockUtilityToken {
     uint256 public amount;
 
 
+    /* Constructor */
+
+    /**
+     * @notice Contract constructor.
+     *
+     * @dev This is for testing purpose.
+     *
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
+     * @param _valueToken Address of value branded token.
+     */
+    constructor(
+        string memory _symbol,
+        string memory _name,
+        uint8 _decimals,
+        address _valueToken
+    )
+        public
+        UtilityToken(_symbol, _name, _decimals, _valueToken)
+    {
+        require(
+            _valueToken != address(0),
+            "ERC20 token should not be zero"
+        );
+
+        valueToken = _valueToken;
+    }
+
+
     /* External functions */
 
     /**
-     * @notice Mints the utility token
+     * @notice Mints the utility token. This is for testing purpose.
      *
      * @dev Adds _amount tokens to beneficiary balance and increases the
      *      totalTokenSupply. Can be called only by CoGateway.
@@ -52,10 +96,12 @@ contract MockUtilityToken {
         uint256 _amount
     )
         external
-        returns (bool /* success */)
+        returns (bool)
     {
         beneficiary = _beneficiary;
         amount = _amount;
         return true;
     }
+
 }
+
