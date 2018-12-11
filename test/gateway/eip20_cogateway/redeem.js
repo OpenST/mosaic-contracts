@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: redeem.js
 //
 // http://www.simpletoken.org/
 //
@@ -38,8 +37,8 @@ let eip20CoGateway,
     utilityToken,
     bountyAmount,
     owner,
-    staker,
-    stakerBalance;
+    redeemer,
+    redeemerBalance;
 
 async function _setup(accounts) {
     
@@ -50,8 +49,8 @@ async function _setup(accounts) {
     owner = accounts[8];
     utilityToken = await MockToken.new({from: owner});
     bountyAmount = new BN(100);
-    staker = accounts[7];
-    stakerBalance = new BN(1000000);
+    redeemer = accounts[7];
+    redeemerBalance = new BN(1000);
 
     eip20CoGateway = await EIP20CoGateway.new(
         valueToken,
@@ -62,12 +61,12 @@ async function _setup(accounts) {
         gateway,
     );
     
-    await utilityToken.transfer(staker, stakerBalance,{from: owner});
+    await utilityToken.transfer(redeemer, redeemerBalance,{from: owner});
     
     await utilityToken.approve(
         eip20CoGateway.address,
         new BN(1000),
-        {from: staker},
+        {from: redeemer},
     );
     
 }
@@ -99,13 +98,13 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: staker, value: bounty },
+            { from: redeemer, value: bounty },
             ),
-            'msg.value must match the bounty amount',
+            'Payable amount should be equal to the bounty amount.',
         );
     });
     
-    it('should fail when amount is 0', async function () {
+    it('should fail when amount is zero', async function () {
 
         amount = 0;
         await Utils.expectRevert(eip20CoGateway.redeem(
@@ -115,9 +114,9 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: staker, value: bountyAmount },
+            { from: redeemer, value: bountyAmount },
             ),
-            'Redeem amount must not be zero',
+            'Redeem amount must not be zero.',
         );
     });
     
@@ -130,7 +129,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: staker, value: bountyAmount },
+            { from: redeemer, value: bountyAmount },
         );
         
         await Utils.expectRevert(eip20CoGateway.redeem(
@@ -140,16 +139,93 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: staker, value: bountyAmount },
+            { from: redeemer, value: bountyAmount },
             ),
             'Invalid nonce',
         );
         
     });
     
+    it('should fail when cogateway is not approved', async function () {
+    
+        let eip20CoGateway2 = await EIP20CoGateway.new(
+            valueToken,
+            utilityToken.address,
+            core.address,
+            bountyAmount,
+            organization,
+            gateway,
+        );
+        
+        await Utils.expectRevert(eip20CoGateway2.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            { from: redeemer, value: bountyAmount },
+            ),
+            "Underflow when subtracting."
+        );
+        
+    });
+    
+    it('should fail when the redeemer has balance less than the bounty amount', async function () {
+        
+        let redeemer = accounts[2],
+            redeemerBalance = new BN(20);
+        
+        await utilityToken.transfer(redeemer, redeemerBalance,{from: owner});
+        
+        await Utils.expectRevert(eip20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            { from: redeemer, value: bountyAmount },
+            ),
+            "Underflow when subtracting."
+        )
+    });
+    
+    it('should fail when the redeemer balance is less than the redeem amount', async function () {
+        
+        let amount = new BN(10000);
+        await Utils.expectRevert(eip20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            { from: redeemer, value: bountyAmount },
+            ),
+            "Underflow when subtracting."
+        )
+    });
+    
     it('should successfully redeem', async function () {
     
         let messageHash = "0x193fa194eef3c001da102ee129c23b1e13a723cb9335edefe9100e85132c77d8";
+    
+        let hashFromContract = await eip20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            { from: redeemer, value: bountyAmount },
+        );
+        
+        assert.strictEqual(
+            hashFromContract,
+            messageHash,
+            "Incorrect messagehash from contract",
+        );
         
         let response = await eip20CoGateway.redeem(
             amount,
@@ -158,28 +234,39 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: staker, value: bountyAmount },
+            { from: redeemer, value: bountyAmount },
         );
-
+    
+        let eip20CoGatewayBaseBalance = new BN(await web3.eth.getBalance(
+            eip20CoGateway.address)
+        );
+     
+        assert.strictEqual(
+            bountyAmount.eq(eip20CoGatewayBaseBalance),
+            true,
+            "Bounty is not transferred to CoGateway",
+        );
+        
         let eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
         
-        assert.strictEqual(eip20CoGatewayBalance.eq(amount),
+        assert.strictEqual(
+            eip20CoGatewayBalance.eq(amount),
             true,
-            "EIP20CoGateway was not redeemed",
+            "EIP20CoGateway address did not receive redeemed amount",
         );
+        
+        let expectedBalance = new BN(redeemerBalance - amount);
         
         assert.strictEqual(
-            (await utilityToken.balanceOf(staker)).eq(new BN(stakerBalance - amount)),
+            (await utilityToken.balanceOf(redeemer)).eq(expectedBalance),
             true,
-            "Staker balance is incorrect",
+            "Redeemer balance from contract should be equal to ${expectedBalance}",
         );
-        
-        let events = Event.getEvents(response, eip20CoGateway);
         
         let expectedEvent = {
             RedeemIntentDeclared: {
                 _messageHash: messageHash,
-                _redeemer: staker,
+                _redeemer: redeemer,
                 _redeemerNonce: nonce,
                 _beneficiary: beneficiary,
                 _amount: amount
@@ -198,3 +285,4 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     });
     
 });
+
