@@ -24,6 +24,7 @@ import "./IsMemberInterface.sol";
  */
 contract Organized {
 
+
     /* Storage */
 
     /**
@@ -31,6 +32,7 @@ contract Organized {
      * keys needed to administer the economy.
      */
     IsMemberInterface public membersManager;
+
 
     /* Modifiers */
 
@@ -53,6 +55,7 @@ contract Organized {
 
         _;
     }
+
 
     /* Constructor */
 
