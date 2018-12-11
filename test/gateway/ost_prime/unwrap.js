@@ -37,7 +37,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
     let amount = 0;
     await Utils.expectRevert(
       ostPrime.unwrap(amount, { from: callerAddress }),
-      'Amount should not be zero.'
+      'Amount must not be zero.'
     );
 
   });
@@ -72,7 +72,8 @@ contract('OSTPrime.unwrap()', function (accounts) {
     let amount = new BN(1).add(TOKENS_MAX);
     await ostPrime.setTokenBalance(callerAddress, amount);
     await Utils.expectFailedAssert(
-      ostPrime.unwrap(amount, { from: callerAddress })
+      ostPrime.unwrap(amount, { from: callerAddress }),
+      'invalid opcode',
     );
 
   });

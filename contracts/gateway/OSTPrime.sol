@@ -161,7 +161,11 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             "Insufficient balance."
         );
 
-        // If the above conditions are valid then this should never happen.
+        /*
+         * The OST Prime base token balance of contract should always be
+         * greater than the amount if the above conditions are satisfied
+         * received payable amount.
+         */
         assert(address(this).balance >= _amount);
 
         transferBalance(msg.sender, address(this), _amount);
@@ -192,15 +196,11 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             "Payable amount should not be zero."
         );
 
-        require(
-            address(account).balance >= amount,
-            "Available balance is less than payable amount."
-        );
-
-        require(
-            balances[address(this)] >= amount,
-            "Insufficient OST Prime token balance."
-        );
+        /*
+         * The OST Prime balance of contract should always be greater than the
+         * received payable amount.
+         */
+        assert(balances[address(this)] >= amount);
 
         transferBalance(address(this), account, amount);
 

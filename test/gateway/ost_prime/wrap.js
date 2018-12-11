@@ -67,17 +67,13 @@ contract('OSTPrime.wrap()', function (accounts) {
     let newAccount = await web3.eth.personal.newAccount("password");
     await web3.eth.personal.unlockAccount(newAccount, "password",15000);
 
-    /*
-     * transfer just sufficient gas balance to this address.
-     * this is 12000000 as gaslimit + 500 for this test to execute.
-     */
     await web3.eth.sendTransaction(
-        {to:newAccount, from:accounts[0], value: 12000500}
+        {to:newAccount, from:accounts[0], value: new BN(12000000)}
       );
 
-    await Utils.expectRevert(
-      ostPrime.wrap({from: newAccount, value: amount }),
-      'Available balance is less than payable amount.',
+    await Utils.expectFailedAssert(
+      ostPrime.wrap({from: newAccount, value: new BN(120005000) }),
+      'sender doesn\'t have enough funds to send tx',
     );
 
   });
@@ -86,9 +82,9 @@ contract('OSTPrime.wrap()', function (accounts) {
 
     await initialize();
 
-    await Utils.expectRevert(
+    await Utils.expectFailedAssert(
       ostPrime.wrap({from: callerAddress, value: new BN(1000) }),
-      'Insufficient OST Prime token balance.',
+      "invalid opcode",
     );
 
   });
