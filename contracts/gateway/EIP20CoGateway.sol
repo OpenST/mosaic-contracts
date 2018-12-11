@@ -1062,6 +1062,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /**
      * @notice This is internal method for process minting contains common logic.
+     *         It doesn't mint reward if reward is 0.
      *
      * @param _messageHash Message hash.
      * @param _initialGas Initial gas during progress process.
