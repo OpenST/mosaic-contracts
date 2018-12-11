@@ -75,8 +75,8 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** address of core contract. */
-    CoreInterface public core;
+    /** Address of core contract. */
+    StateRootInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
     bytes public encodedGatewayPath;
@@ -135,7 +135,7 @@ contract GatewayBase is Organized {
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
@@ -193,7 +193,7 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(
