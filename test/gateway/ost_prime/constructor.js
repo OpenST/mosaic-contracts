@@ -21,12 +21,6 @@ contract('OSTPrime.constructor()', function (accounts) {
 
     ostPrime = await OSTPrime.new(brandedTokenAddress);
 
-    assert.strictEqual(
-      web3.utils.isAddress(ostPrime.address),
-      true,
-      'OSTPrime contract address must not be zero.',
-    );
-
     let tokenAddress = await ostPrime.valueToken.call();
     assert.strictEqual(
       tokenAddress,
