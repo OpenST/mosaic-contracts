@@ -15,19 +15,32 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
+// Auxiliary Chain: MockMerklePatriciaProof
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-contract CoGatewayUtilityTokenInterface {
+import "../../gateway/CoGatewayUtilityTokenInterface.sol";
 
+contract MockEIP20CoGateway is CoGatewayUtilityTokenInterface {
+
+    address utilityTokenAddress;
+
+    function setUtilityToken(address _utilityToken)
+        external
+    {
+        utilityTokenAddress = _utilityToken;
+    }
     /**
-     * @notice Get the utility token address.
+     * @notice This is mock function for testing.
      *
      * @return address of utility token.
      */
     function utilityToken()
         public
-        returns (address utilityToken_);
+        returns (address utilityToken_)
+    {
+        utilityToken_ = utilityTokenAddress;
+    }
 }

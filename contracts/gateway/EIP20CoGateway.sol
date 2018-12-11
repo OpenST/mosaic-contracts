@@ -1113,10 +1113,10 @@ contract EIP20CoGateway is GatewayBase {
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
+        UtilityTokenInterface(utilityToken).increaseSupply(beneficiary_, mintedAmount_);
 
         //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).mint(msg.sender, rewardAmount_);
+        UtilityTokenInterface(utilityToken).increaseSupply(msg.sender, rewardAmount_);
 
         // delete the mint data
         delete mints[_messageHash];
@@ -1163,7 +1163,7 @@ contract EIP20CoGateway is GatewayBase {
         redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
         // Burn the redeem amount.
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+        UtilityTokenInterface(utilityToken).decreaseSupply(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
         msg.sender.transfer(redeems[_messageHash].bounty);

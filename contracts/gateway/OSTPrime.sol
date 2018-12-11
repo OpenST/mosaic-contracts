@@ -92,7 +92,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      */
     constructor(address _valueToken)
         public
-        UtilityToken(TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, _valueToken)
+        //UtilityToken(_valueToken, TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, address(0))
     {
 
     }
