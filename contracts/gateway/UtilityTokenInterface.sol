@@ -60,4 +60,5 @@ contract UtilityTokenInterface {
      * @return success_ `true` if decrease supply is successful, false otherwise.
      */
     function decreaseSupply(uint256 _amount) external returns (bool success_);
+
 }
