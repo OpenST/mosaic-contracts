@@ -71,9 +71,8 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
     let amount = new BN(1).add(TOKENS_MAX);
     await ostPrime.setTokenBalance(callerAddress, amount);
-    await Utils.expectRevert(
-      ostPrime.unwrap(amount, { from: callerAddress }),
-      'Contact balance should not be less than the unwrap amount.'
+    await Utils.expectFailedAssert(
+      ostPrime.unwrap(amount, { from: callerAddress })
     );
 
   });

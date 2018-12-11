@@ -59,18 +59,18 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     );
 
     /**
-     * set when OST Prime has received TOKENS_MAX tokens;
-     * when uninitialised mint is not allowed.
+     * Set when OST Prime has received TOKENS_MAX tokens;
+     * when uninitialized wrap and unwrap is not allowed.
      */
     bool public initialized;
 
 
-    /**  Modifiers */
+    /*  Modifiers */
 
     /**
      *  @notice Modifier onlyInitialized.
      *
-     *  @dev Checks if initialized is set to True to proceed.
+     *  @dev Checks if initialized is set to `true` to proceed.
      */
     modifier onlyInitialized() {
         require(
@@ -86,7 +86,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /**
      * @notice Contract constructor.
      *
-     * @dev this contract should be deployed with zero gas.
+     * @dev This contract should be deployed with zero gas.
      *
      * @param _valueToken ERC20 token address in origin chain.
      */
@@ -106,7 +106,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /**
      * @notice Public function initialize.
      *
-     * @dev it must verify that the genesis exactly specified TOKENS_MAX
+     * @dev It must verify that the genesis exactly specified TOKENS_MAX
      *      so that all base tokens are held by OSTPrime.
      *      On setup of the auxiliary chain the base tokens need to be
      *      transferred in full to OSTPrime for the base tokens to be
@@ -115,7 +115,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      * @return success_ `true` if initialize was successful.
      */    
     function initialize()
-        public
+        external
         payable
         returns (bool success_)
     {
@@ -138,7 +138,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     /* External functions. */
 
     /**
-     * @notice convert the OST Prime token to OST Prime base token.
+     * @notice Convert the OST Prime token to OST Prime base token.
      *
      * @param _amount Amount of OST Prime token to convert to base token.
      *
@@ -153,7 +153,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     {
         require(
             _amount > 0,
-            "Amount should not be zero."
+            "Amount must not be zero."
         );
 
         require(
@@ -161,24 +161,20 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             "Insufficient balance."
         );
 
-        require(
-            address(this).balance >= _amount,
-            "Contact balance should not be less than the unwrap amount."
-        );
+        // If the above conditions are valid then this should never happen.
+        assert(address(this).balance >= _amount);
 
+        transferBalance(msg.sender, address(this), _amount);
 
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
-        balances[address(this)] = balances[address(this)].add(_amount);
         msg.sender.transfer(_amount);
 
-        emit Transfer(msg.sender, address(this), _amount);
         emit TokenUnwrapped(msg.sender, _amount);
 
         success_ = true;
     }
 
     /**
-     * @notice convert OST Prime base token to OST Prime token.
+     * @notice Convert OST Prime base token to OST Prime token.
      *
      * @return success_ `true` if claim was successfully progressed.
      */
@@ -206,10 +202,8 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
             "Insufficient OST Prime token balance."
         );
 
-        balances[address(this)] = balances[address(this)].sub(amount);
-        balances[account] = balances[account].add(amount);
+        transferBalance(address(this), account, amount);
 
-        emit Transfer(address(this), account, amount);
         emit TokenWrapped(account, amount);
 
         success_ = true;
