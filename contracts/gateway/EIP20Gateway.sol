@@ -217,7 +217,7 @@ contract EIP20Gateway is GatewayBase {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the ERC20 token address
+     * @notice Initialize the contract by providing the ERC20 token address
      *         for which the gateway will enable facilitation of stake and
      *         mint.
      *
