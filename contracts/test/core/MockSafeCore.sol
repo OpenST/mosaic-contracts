@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "../../lib/OrganizationInterface.sol";
 import "../../gateway/SafeCore.sol";
 
 /**
@@ -16,20 +15,20 @@ contract MockSafeCore is SafeCore {
     /**
      * @notice Contract constructor
      *
-     * @param _chainIdRemote if current chain is value then _chainIdRemote is
-     *                       chain id of utility chain.
+     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
+     *                        this core tracks.
      * @param _blockHeight block height at which _stateRoot needs to store.
      * @param _stateRoot state root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
      */
     constructor(
-        uint256 _chainIdRemote,
+        uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
         IsMemberInterface _membersManager
     )
         SafeCore(
-            _chainIdRemote,
+            _remoteChainId,
             _blockHeight,
             _stateRoot,
             _membersManager

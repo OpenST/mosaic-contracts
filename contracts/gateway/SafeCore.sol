@@ -70,8 +70,8 @@ contract SafeCore is StateRootInterface, Organized {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _remoteChainId _remoteChainId is the chain id of the auxiliary
-     *                        chain.
+     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
+     *                        this core tracks.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
@@ -101,8 +101,7 @@ contract SafeCore is StateRootInterface, Organized {
 
     /**
      *  @notice The Co-Core address is the address of the core that is
-     *          deployed on the auxiliary chain. Should only be set if this
-     *          contract is deployed on the origin chain.
+     *          deployed on the other (origin/auxiliary) chain.
      *
      *  @param _coCore Address of the Co-Core on auxiliary.
      */
