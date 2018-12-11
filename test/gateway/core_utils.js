@@ -21,7 +21,7 @@
 
 const web3 = require('../test_lib/web3.js');
 
-const Core = artifacts.require("./Core.sol")
+const Core = artifacts.require("./SafeCore.sol")
     , MockToken = artifacts.require("./MockToken.sol")
     , Workers = artifacts.require("./Workers.sol")
     , proof = require('../data/proof');
