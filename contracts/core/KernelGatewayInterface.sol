@@ -18,8 +18,8 @@ pragma solidity ^0.5.0;
 interface KernelGatewayInterface {
 
     /**
-     * @notice Prove origin core account and update the latest storage root of
-     *         origin core. This function will validate the proof against the
+     * @notice Prove mosaic core account and update the latest storage root of
+     *         mosaic core. This function will validate the proof against the
      *         state root from the OriginBlockStore
      *
      * @param _accountRlp RLP encoded account data.
@@ -31,7 +31,7 @@ interface KernelGatewayInterface {
      *
      * @return success_ `true` if the proof is successful.
      */
-    function proveOriginCore(
+    function proveMosaicCore(
         bytes calldata _accountRlp,
         bytes calldata _accountBranchRlp,
         uint256 _originBlockHeight

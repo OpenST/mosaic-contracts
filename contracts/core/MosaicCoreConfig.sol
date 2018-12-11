@@ -14,8 +14,8 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title Configuration constants of the OriginCore contract. */
-contract OriginCoreConfig {
+/** @title Configuration constants of the MosaicCore contract. */
+contract MosaicCoreConfig {
 
     /** The number of decimals of the base token. */
     uint256 public constant DECIMALSFACTOR = 10 ** uint256(18);

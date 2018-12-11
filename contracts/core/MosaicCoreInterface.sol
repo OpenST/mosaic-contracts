@@ -14,8 +14,8 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @title Interface for the origin core contract on origin. */
-interface OriginCoreInterface {
+/** @title Interface for the mosaic core contract on origin. */
+interface MosaicCoreInterface {
 
     /**
      * @notice Proposes a new meta-block. The block is stored if the proposal

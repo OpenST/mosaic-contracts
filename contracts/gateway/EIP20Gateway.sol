@@ -217,7 +217,7 @@ contract EIP20Gateway is GatewayBase {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the ERC20 token address
+     * @notice Initialize the contract by providing the ERC20 token address
      *         for which the gateway will enable facilitation of stake and
      *         mint.
      *
@@ -234,7 +234,7 @@ contract EIP20Gateway is GatewayBase {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
@@ -447,9 +447,9 @@ contract EIP20Gateway is GatewayBase {
      *      CoGateway is either declared or progressed.
      *
      * @param _messageHash Message hash.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox outbox of CoGateway
-     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox outbox of CoGateway.
+     * @param _blockHeight Block number for which the proof is valid.
      * @param _messageStatus Message status i.e. Declared or Progressed that
      *                       will be proved.
      *
@@ -458,7 +458,7 @@ contract EIP20Gateway is GatewayBase {
      */
     function progressStakeWithProof(
         bytes32 _messageHash,
-        bytes calldata _rlpEncodedParentNodes,
+        bytes calldata _rlpParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -473,7 +473,7 @@ contract EIP20Gateway is GatewayBase {
             "Message hash must not be zero"
         );
         require(
-            _rlpEncodedParentNodes.length > 0,
+            _rlpParentNodes.length > 0,
             "RLP encoded parent nodes must not be zero"
         );
 
@@ -498,7 +498,7 @@ contract EIP20Gateway is GatewayBase {
             messageBox,
             STAKE_TYPEHASH,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
@@ -579,18 +579,18 @@ contract EIP20Gateway is GatewayBase {
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-     *                               DeclaredRevocation in messageBox inbox
-     *                               of CoGateway
+     * @param _rlpParentNodes RLP encoded parent node data to prove
+     *                        DeclaredRevocation in messageBox inbox of
+     *                        CoGateway.
      *
-     * @return staker_ Staker address
-     * @return stakerNonce_ Staker nonce
-     * @return amount_ Stake amount
+     * @return staker_ Staker address.
+     * @return stakerNonce_ Staker nonce.
+     * @return amount_ Stake amount.
      */
     function progressRevertStake(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedParentNodes
+        bytes calldata _rlpParentNodes
     )
         external
         returns (
@@ -604,8 +604,8 @@ contract EIP20Gateway is GatewayBase {
             "Message hash must not be zero"
         );
         require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            _rlpParentNodes.length > 0,
+            "RLP parent nodes must not be zero"
         );
 
         // Get the message object
@@ -628,7 +628,7 @@ contract EIP20Gateway is GatewayBase {
             message,
             STAKE_TYPEHASH,
             MESSAGE_BOX_OFFSET,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             storageRoot,
             MessageBus.MessageStatus.Revoked
         );
@@ -673,12 +673,12 @@ contract EIP20Gateway is GatewayBase {
      *                  redeem and unstake process done
      * @param _gasLimit Gas limit that redeemer is ready to pay.
      * @param _blockHeight Block number for which the proof is valid.
-     * @param _hashLock Hash lock
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-     *                               Declared in messageBox outbox
-     *                               of CoGateway
+     * @param _hashLock Hash lock.
+     * @param _rlpParentNodes RLP encoded parent node data to prove
+     *                        Declared in messageBox outbox of
+     *                        CoGateway.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function confirmRedeemIntent(
         address _redeemer,
@@ -689,7 +689,7 @@ contract EIP20Gateway is GatewayBase {
         uint256 _gasLimit,
         uint256 _blockHeight,
         bytes32 _hashLock,
-        bytes memory _rlpEncodedParentNodes
+        bytes memory _rlpParentNodes
     )
         public
         returns (bytes32 messageHash_)
@@ -710,7 +710,7 @@ contract EIP20Gateway is GatewayBase {
             "Redeem amount must not be zero"
         );
         require(
-            _rlpEncodedParentNodes.length > 0,
+            _rlpParentNodes.length > 0,
             "RLP encoded parent nodes must not be zero"
         );
 
@@ -756,7 +756,7 @@ contract EIP20Gateway is GatewayBase {
         confirmRedeemIntentInternal(
             messages[messageHash_],
             _blockHeight,
-            _rlpEncodedParentNodes
+            _rlpParentNodes
         );
 
         // Emit RedeemIntentConfirmed event.
@@ -834,9 +834,9 @@ contract EIP20Gateway is GatewayBase {
      *      CoGateway is either declared or progressed.
      *
      * @param _messageHash Message hash.
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove in
-     *                               messageBox inbox of CoGateway
-     * @param _blockHeight Block number for which the proof is valid
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        messageBox inbox of CoGateway.
+     * @param _blockHeight Block number for which the proof is valid.
      * @param _messageStatus Message status i.e. Declared or Progressed that
      *                       will be proved.
      *
@@ -850,7 +850,7 @@ contract EIP20Gateway is GatewayBase {
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
-        bytes memory _rlpEncodedParentNodes,
+        bytes memory _rlpParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
@@ -869,8 +869,8 @@ contract EIP20Gateway is GatewayBase {
             "Message hash must not be zero"
         );
         require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            _rlpParentNodes.length > 0,
+            "RLP parent nodes must not be zero"
         );
 
         // Get the storage root for the given block height
@@ -887,7 +887,7 @@ contract EIP20Gateway is GatewayBase {
             messageBox,
             REDEEM_TYPEHASH,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
@@ -903,19 +903,19 @@ contract EIP20Gateway is GatewayBase {
      *         clear unstakes mapping storage.
      *
      * @param _messageHash Message hash.
-     * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpEncodedParentNodes RLP encoded parent node data to prove
-     *                               DeclaredRevocation in messageBox outbox
-     *                               of CoGateway
+     * @param _blockHeight Block number for which the proof is valid.
+     * @param _rlpParentNodes RLP encoded parent node data to prove
+     *                        DeclaredRevocation in messageBox outbox of
+     *                        CoGateway.
      *
-     * @return redeemer_ Redeemer address
-     * @return redeemerNonce_ Redeemer nonce
-     * @return amount_ Redeem amount
+     * @return redeemer_ Redeemer address.
+     * @return redeemerNonce_ Redeemer nonce.
+     * @return amount_ Redeem amount.
      */
     function confirmRevertRedeemIntent(
         bytes32 _messageHash,
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedParentNodes
+        bytes calldata _rlpParentNodes
     )
         external
         returns (
@@ -932,8 +932,8 @@ contract EIP20Gateway is GatewayBase {
             "Message hash must not be zero"
         );
         require(
-            _rlpEncodedParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            _rlpParentNodes.length > 0,
+            "RLP parent nodes must not be zero"
         );
 
         // Get the message object.
@@ -955,7 +955,7 @@ contract EIP20Gateway is GatewayBase {
             messageBox,
             REDEEM_TYPEHASH,
             message,
-            _rlpEncodedParentNodes,
+            _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
             storageRoot
         );
