@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const coreUtils = require('./core_utils.js')
+const coreUtils = require('./safe_core_utils.js')
     , utils = require('../test_lib/utils.js')
     , proof = require('../data/proof')
     , BN = require('bn.js')
@@ -35,11 +35,11 @@ contract('Core', function (accounts) {
             contractsData = await coreUtils.deployCore(artifacts, accounts);
             core = contractsData.core;
             worker = contractsData.worker;
-            chainIdRemote = contractsData.chainIdRemote;
+            remoteChainId = contractsData.remoteChainId;
         });
 
         it('has coreChainIdRemote', async () => {
-            assert.equal(await core.chainIdRemote.call(), chainIdRemote);
+            assert.equal(await core.getRemoteChainId.call(), remoteChainId);
         });
     });
 

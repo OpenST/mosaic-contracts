@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Common: Core
 //
 // http://www.simpletoken.org/
 //
@@ -53,8 +52,11 @@ contract SafeCore is StateRootInterface, Organized {
     /** Maps block heights to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
 
-    /** chainIdRemote is the remote chain id where core contract is deployed. */
-    uint256 private coreChainIdRemote;
+    /**
+     * The remote chain ID is the remote chain id where core contract is
+     * deployed.
+     */
+    uint256 private remoteChainId;
 
     /** Latest block height of block for which state root was committed. */
     uint256 private latestStateRootBlockHeight;
@@ -68,14 +70,14 @@ contract SafeCore is StateRootInterface, Organized {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _chainIdRemote _chainIdRemote is the chain id of the auxiliary
+     *  @param _remoteChainId _remoteChainId is the chain id of the auxiliary
      *                        chain.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
      */
     constructor(
-        uint256 _chainIdRemote,
+        uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
         IsMemberInterface _membersManager
@@ -83,9 +85,12 @@ contract SafeCore is StateRootInterface, Organized {
         Organized(_membersManager)
         public
     {
-        require(_chainIdRemote != 0, "Remote chain Id is 0");
+        require(
+            _remoteChainId != 0,
+            "Remote chain Id must not be 0."
+        );
 
-        coreChainIdRemote = _chainIdRemote;
+        remoteChainId = _remoteChainId;
 
         latestStateRootBlockHeight = _blockHeight;
         stateRoots[latestStateRootBlockHeight] = _stateRoot;
@@ -188,19 +193,16 @@ contract SafeCore is StateRootInterface, Organized {
         success_ = true;
     }
 
-
-    /* Public functions */
-
     /**
-     *  @notice Public view function chainIdRemote.
+     *  @notice Get the remote chain id of this core.
      *
-     *  @return uint256 coreChainIdRemote.
+     *  @return remoteChainId_ The remote chain id.
      */
-    function chainIdRemote()
-        public
+    function getRemoteChainId()
+        external
         view
-        returns (uint256 chainIdRemote_)
+        returns (uint256 remoteChainId_)
     {
-        chainIdRemote_ = coreChainIdRemote;
+        remoteChainId_ = remoteChainId;
     }
 }

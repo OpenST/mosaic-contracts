@@ -26,14 +26,14 @@ const SafeCore = artifacts.require("./SafeCore.sol")
 
 /// @dev Deploy 
 module.exports.deployCore = async (artifacts, accounts) => {
-    const chainIdRemote = 1410;
+    const remoteChainId = 1410;
     const organizationOwner = accounts[7];
     const worker = accounts[8];
 
     // Deploy worker contract
     const organization = await Organization.new(organizationOwner, worker);
     const core = await SafeCore.new(
-        chainIdRemote,
+        remoteChainId,
         0,
         proof.account.stateRoot,
         organization.address,
@@ -43,7 +43,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
         core: core,
         owner: organizationOwner,
         worker: worker,
-        chainIdRemote: chainIdRemote,
+        remoteChainId: remoteChainId,
     };
 };
 
