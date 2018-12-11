@@ -38,7 +38,7 @@ contract('Organized.constructor()', async (accounts) => {
 
     });
 
-    it('checks that valid organization address is set', async () => {
+    it('checks that valid members manager address is set', async () => {
         organized = await Organized.new(organization.address, { from: owner });
         assert.strictEqual(
             await organized.membersManager.call(),

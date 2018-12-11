@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "../../gateway/WorkersInterface.sol";
 import "../../gateway/SafeCore.sol";
 
 /**
@@ -16,25 +15,23 @@ contract MockSafeCore is SafeCore {
     /**
      * @notice Contract constructor
      *
-     * @param _chainIdOrigin chain id where current core contract is deployed since core contract can be deployed on remote chain also
-     * @param _chainIdRemote if current chain is value then _chainIdRemote is chain id of utility chain
-     * @param _blockHeight block height at which _stateRoot needs to store
-     * @param _stateRoot state root hash of given _blockHeight
-     * @param _workers Workers contract address
+     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
+     *                        this core tracks.
+     * @param _blockHeight block height at which _stateRoot needs to store.
+     * @param _stateRoot state root hash of given _blockHeight.
+     *  @param _membersManager Address of a members manager contract.
      */
     constructor(
-        uint256 _chainIdOrigin,
-        uint256 _chainIdRemote,
+        uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        WorkersInterface _workers
+        IsMemberInterface _membersManager
     )
         SafeCore(
-            _chainIdOrigin,
-            _chainIdRemote,
+            _remoteChainId,
             _blockHeight,
             _stateRoot,
-            _workers
+            _membersManager
         )
         public
     {}
@@ -54,7 +51,7 @@ contract MockSafeCore is SafeCore {
         view
         returns (bytes32)
     {
-        // hashing dummy data
-        return keccak256(abi.encodePacked(coreChainIdOrigin));
+        // Hashing dummy data.
+        return keccak256(abi.encodePacked("dummy data"));
     }
 }

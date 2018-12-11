@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "../lib/MockGatewayLib.sol";
+import "../../StateRootInterface.sol";
 import "../../gateway/GatewayBase.sol";
 import "../../lib/IsMemberInterface.sol";
 
@@ -67,7 +68,7 @@ contract MockGatewayBase is GatewayBase {
             "Length of RLP parent nodes must not be 0."
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         //State root should be present for the block height
         require(

@@ -15,131 +15,115 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Common: Core
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./CoreInterface.sol";
-import "../lib/MerklePatriciaProof.sol";
+
 import "./WorkersInterface.sol";
-import "../lib//RLP.sol";
-import "../lib/SafeMath.sol";
 import "../StateRootInterface.sol";
+import "../lib/IsMemberInterface.sol";
+import "../lib/MerklePatriciaProof.sol";
+import "../lib/Organized.sol";
+import "../lib/RLP.sol";
+import "../lib/SafeMath.sol";
 
 /**
- *  @title Core contract which implements CoreInterface.
+ * @title SafeCore contract which implements StateRootInterface.
  *
- *  @notice Core is a minimal stub that will become the anchoring and consensus point for
- *          the utility chain to validate itself against.
+ * @notice SafeCore stores another chain's state roots. It stores the address of
+ *         the co-core, which will be the safe core on the other chain. State
+ *         roots are exchanged bidirectionally between the core and the co-core
+ *         by the workers that are registered as part of the `Organized`
+ *         interface.
  */
-contract SafeCore is CoreInterface, StateRootInterface {
+contract SafeCore is StateRootInterface, Organized {
     using SafeMath for uint256;
+
 
     /** Events */
 
-    event StateRootCommitted(uint256 blockHeight, bytes32 stateRoot);
+    event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
+
 
     /** Storage */
 
-    mapping (uint256 /* block height */ => bytes32) private stateRoots;
+    /** Maps block heights to their respective state root. */
+    mapping (uint256 => bytes32) private stateRoots;
 
-    /** chainIdOrigin is the origin chain id where core contract is deployed.  */
-    uint256 public coreChainIdOrigin;
-    /** chainIdRemote is the remote chain id where core contract is deployed. */
-    uint256 private coreChainIdRemote;
-    /** It is the address of the openSTUtility/openSTValue contract on the remote chain. */
-    address private coreOpenSTRemote;
+    /**
+     * The remote chain ID is the remote chain id where core contract is
+     * deployed.
+     */
+    uint256 private remoteChainId;
+
     /** Latest block height of block for which state root was committed. */
     uint256 private latestStateRootBlockHeight;
-
-    /** Workers contract address. */
-    WorkersInterface public workers;
 
     /** Address of the core on the auxiliary chain. Can be zero. */
     address public coCore;
 
-    /** Modifiers */
 
-    /**
-     *  @notice Modifier onlyWorker.
-     *
-     *  @dev Checks if msg.sender is whitelisted worker address to proceed.
-     */
-    modifier onlyWorker() {
-        // msg.sender should be worker only
-        require(workers.isWorker(msg.sender), "Worker address is not whitelisted");
-        _;
-    }
-
-    /*  Public functions */
+    /*  Constructor */
 
     /**
      *  @notice Contract constructor.
      *
-     *  @param _chainIdOrigin Chain id where current core contract is deployed since core contract can be deployed on remote chain also.
-     *  @param _chainIdRemote If current chain is value then _chainIdRemote is chain id of utility chain.
+     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
+     *                        this core tracks.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
-     *  @param _workers Workers contract address.
+     *  @param _membersManager Address of a members manager contract.
      */
     constructor(
-        uint256 _chainIdOrigin,
-        uint256 _chainIdRemote,
+        uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        WorkersInterface _workers
+        IsMemberInterface _membersManager
     )
+        Organized(_membersManager)
         public
     {
-        require(_chainIdOrigin != 0, "Origin chain Id is 0");
-        require(_chainIdRemote != 0, "Remote chain Id is 0");
         require(
-            address(_workers) != address(0),
-            "Workers contract address is 0"
+            _remoteChainId != 0,
+            "Remote chain Id must not be 0."
         );
 
-        coreChainIdOrigin = _chainIdOrigin;
-        coreChainIdRemote = _chainIdRemote;
-        workers = _workers;
+        remoteChainId = _remoteChainId;
 
         latestStateRootBlockHeight = _blockHeight;
         stateRoots[latestStateRootBlockHeight] = _stateRoot;
     }
 
+
     /* External functions */
 
     /**
      *  @notice The Co-Core address is the address of the core that is
-     *          deployed on the auxiliary chain. Should only be set if this
-     *          contract is deployed on the origin chain.
+     *          deployed on the other (origin/auxiliary) chain.
      *
      *  @param _coCore Address of the Co-Core on auxiliary.
      */
     function setCoCoreAddress(address _coCore)
         external
-        onlyWorker
-        returns (bool /*success*/)
+        onlyOrganization
+        returns (bool success_)
     {
-        require(_coCore != address(0), "Co-Core address is 0");
+        require(
+            coCore == address(0),
+            "Co-Core has already been set and cannot be updated."
+        );
+
+        require(
+            _coCore != address(0),
+            "Co-Core address must not be 0."
+        );
+
         coCore = _coCore;
-        return true;
-    }
 
-    /**
-     *  @notice Public view function chainIdRemote.
-     *
-     *  @return uint256 coreChainIdRemote.
-     */
-    function chainIdRemote()
-        public
-        view
-        returns (uint256 /* chainIdRemote */)
-    {
-        return coreChainIdRemote;
+        success_ = true;
     }
-
 
     /**
      * @notice Get the state root for the given block height.
@@ -155,7 +139,7 @@ contract SafeCore is CoreInterface, StateRootInterface {
         view
         returns (bytes32 stateRoot_)
     {
-        return stateRoots[_blockHeight];
+        stateRoot_ = stateRoots[_blockHeight];
     }
 
     /**
@@ -168,10 +152,8 @@ contract SafeCore is CoreInterface, StateRootInterface {
         view
         returns (uint256 height_)
     {
-        return latestStateRootBlockHeight;
+        height_ = latestStateRootBlockHeight;
     }
-
-    /* External functions */
 
     /**
      *  @notice External function commitStateRoot.
@@ -179,7 +161,8 @@ contract SafeCore is CoreInterface, StateRootInterface {
      *  @dev commitStateRoot Called from game process.
      *       Commit new state root for a block height.
      *
-     *  @param _blockHeight Block height for which stateRoots mapping needs to update.
+     *  @param _blockHeight Block height for which stateRoots mapping needs to
+     *                      update.
      *  @param _stateRoot State root of input block height.
      *
      *  @return bytes32 stateRoot
@@ -190,18 +173,35 @@ contract SafeCore is CoreInterface, StateRootInterface {
     )
         external
         onlyWorker
-        returns (bytes32 /* stateRoot */)
+        returns (bool success_)
     {
         // State root should be valid
         require(_stateRoot != bytes32(0), "State root is 0");
+
         // Input block height should be valid
-        require(_blockHeight > latestStateRootBlockHeight, "Given block height is lower or equal to highest committed state root block height.");
+        require(
+            _blockHeight > latestStateRootBlockHeight,
+            "Given block height is lower or equal to highest committed state root block height."
+        );
 
         stateRoots[_blockHeight] = _stateRoot;
         latestStateRootBlockHeight = _blockHeight;
 
-        emit StateRootCommitted(_blockHeight, _stateRoot);
+        emit StateRootAvailable(_blockHeight, _stateRoot);
 
-        return _stateRoot;
+        success_ = true;
+    }
+
+    /**
+     *  @notice Get the remote chain id of this core.
+     *
+     *  @return remoteChainId_ The remote chain id.
+     */
+    function getRemoteChainId()
+        external
+        view
+        returns (uint256 remoteChainId_)
+    {
+        remoteChainId_ = remoteChainId;
     }
 }
