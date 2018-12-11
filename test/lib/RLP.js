@@ -52,9 +52,9 @@ contract('RLP', function (accounts) {
 		it('should pass when list is RLP encoded of length one', async () => {
 			let rlpItem = RLP.encode('5')
 				, items = [rlpItem]
-				, rlpEncodedArray = RLP.encode(items).toString('hex')
+				, rlpArray = RLP.encode(items).toString('hex')
 				, index = 0;
-			let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
+			let result = await rlpTest.toList.call('0x' + rlpArray, index)
 				, itemAtIndex = result[0];
 			assert.equal('0x' + rlpItem.toString('hex'), itemAtIndex);
 
@@ -63,10 +63,10 @@ contract('RLP', function (accounts) {
 			let rlpItemOne = RLP.encode('5')
 				, rlpItemTwo = RLP.encode('6')
 				, items = [rlpItemOne, rlpItemTwo]
-				, rlpEncodedArray = RLP.encode(items).toString('hex');
+				, rlpArray = RLP.encode(items).toString('hex');
 
 			for (let index = 0; index < items.length; index++) {
-				let result = await rlpTest.toList.call('0x' + rlpEncodedArray, index)
+				let result = await rlpTest.toList.call('0x' + rlpArray, index)
 					, itemAtIndex = result[0];
 				assert.equal('0x' + items[index].toString('hex'), itemAtIndex);
 			}
