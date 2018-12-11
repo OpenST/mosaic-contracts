@@ -26,7 +26,7 @@ import "../StateRootInterface.sol";
 import "../lib/IsMemberInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/Organized.sol";
-import "../lib//RLP.sol";
+import "../lib/RLP.sol";
 import "../lib/SafeMath.sol";
 
 /**
