@@ -16,7 +16,12 @@ pragma solidity ^0.5.0;
 
 import "../../gateway/UtilityToken.sol";
 
-/** @title The TestUtilityToken is used to test few functions of UtilityToken. */
+/**
+ * @title TestUtilityToken contract
+ *
+ * @notice This contract is used to mock certain functions of UtilityToken
+ *         contract.
+ */
 contract TestUtilityToken is UtilityToken {
 
 
@@ -41,14 +46,30 @@ contract TestUtilityToken is UtilityToken {
         UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
     {}
 
+    /**
+     * @notice Set the CoGateway address for testing.
+     *
+     * @param _coGatewayAddress CoGateway address.
+     */
     function setCoGatewayAddress(address _coGatewayAddress) public {
         coGateway = _coGatewayAddress;
     }
 
+    /**
+     * @notice Set the balance of an account address for testing.
+     *
+     * @param _account Address of an account for which the balance is to be set.
+     * @param _balance The balance amount that should be set for the account.
+     */
     function setBalance(address _account, uint256 _balance) public {
         balances[_account] = _balance;
     }
 
+    /**
+     * @notice Set the total supply count for testing.
+     *
+     * @param _amount The supply amount.
+     */
     function setTotalSupply(uint256 _amount) public {
         totalTokenSupply = _amount;
     }

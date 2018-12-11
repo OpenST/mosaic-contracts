@@ -31,7 +31,7 @@ pragma solidity ^0.5.0;
 import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
-
+import "../lib/IsMemberInterface.sol";
 
 /**
  *  @title OSTPrime contract which implements UtilityToken and
@@ -92,7 +92,13 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      */
     constructor(address _valueToken)
         public
-        //UtilityToken(_valueToken, TOKEN_SYMBOL, TOKEN_NAME, TOKEN_DECIMALS, address(0))
+        UtilityToken(
+            _valueToken,
+            TOKEN_SYMBOL,
+            TOKEN_NAME,
+            TOKEN_DECIMALS,
+            IsMemberInterface(address(0))
+        )
     {
 
     }
