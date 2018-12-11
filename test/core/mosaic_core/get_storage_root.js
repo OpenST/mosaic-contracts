@@ -19,14 +19,14 @@
 // ----------------------------------------------------------------------------
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
-const OriginCore = artifacts.require('TestOriginCore');
+const MosaicCore = artifacts.require('TestMosaicCore');
 
 /**
  * @dev This test just verifies the value returned by function
  *      `getStateRoot()` is from `stateRoots` variable.
  */
 
-contract('OriginCore.getStorageRoot()', async (accounts) => {
+contract('MosaicCore.getStorageRoot()', async (accounts) => {
 
     const coreIdentifier = '0x0000000000000000000000000000000000000001';
     const zeroBytes =
@@ -37,11 +37,11 @@ contract('OriginCore.getStorageRoot()', async (accounts) => {
     let transactionRoot= web3.utils.sha3("1");
     let minimumWeight = new BN('1');
 
-    let originCore, ost;
+    let mosaicCore, ost;
 
-    /** Deploys the origin core contract */
-    async function deployOriginCore(){
-        originCore = await OriginCore.new(
+    /** Deploys the mosaic core contract */
+    async function deployMosaicCore(){
+        mosaicCore = await MosaicCore.new(
             coreIdentifier,
             ost,
             gas,
@@ -53,13 +53,13 @@ contract('OriginCore.getStorageRoot()', async (accounts) => {
 
     beforeEach(async () => {
         ost = accounts[0];
-        await deployOriginCore();
+        await deployMosaicCore();
     });
 
     it('should return zero bytes when the data does not exists.',
         async function () {
             let height = new BN(1);
-            let stateRoot = await originCore.getStateRoot.call(height);
+            let stateRoot = await mosaicCore.getStateRoot.call(height);
 
             assert.strictEqual(
                 stateRoot,
@@ -73,9 +73,9 @@ contract('OriginCore.getStorageRoot()', async (accounts) => {
         async function () {
             let height = new BN(1);
             let stateRoot = web3.utils.sha3("stateRoot");
-            await originCore.setStateRoot(height, stateRoot);
+            await mosaicCore.setStateRoot(height, stateRoot);
 
-            let cStateRoot = await originCore.getStateRoot.call(height);
+            let cStateRoot = await mosaicCore.getStateRoot.call(height);
 
             assert.strictEqual(
                 cStateRoot,

@@ -12,7 +12,7 @@ import "../../lib/IsMemberInterface.sol";
 contract MockGatewayBase is GatewayBase {
 
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
