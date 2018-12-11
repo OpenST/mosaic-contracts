@@ -17,12 +17,12 @@ contract('GatewayBase.sol', function (accounts) {
 
     beforeEach(async function () {
 
-      let core = await Core.new(1, 2, 0, stateRoot, accounts[1])
-        , owner = accounts[2]
+      let owner = accounts[2]
         , worker = accounts[3]
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
+      let core = await Core.new(1, 0, stateRoot, membersManager.address);
 
       gatewayBaseInstance = await GatewayBase.new(
         core.address,
