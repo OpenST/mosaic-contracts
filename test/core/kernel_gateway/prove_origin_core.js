@@ -33,12 +33,10 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
 
     let originCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
 
-    let accountRlp = testData.account.rlpEncodedAccount;
+    let accountRlp = testData.account.rlpAccount;
     let accountBranchRlp = testData.account.rlpParentNodes;
     let stateRoot = testData.account.stateRoot;
     let originBlockHeight = new BN(100);
-
-    let encodedPath;
 
     async function deploy(KernelGateway) {
         // deploy the kernel gateway
@@ -53,7 +51,6 @@ contract('KernelGateway.proveOriginCore()', async (accounts) => {
             web3.utils.sha3('genesisKernelHash'),
         );
 
-        encodedPath = await kernelGateway.encodedOriginCorePath();
         await originBlockStore.setStateRoot(stateRoot);
     }
 
