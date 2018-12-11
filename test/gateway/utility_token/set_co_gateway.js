@@ -46,7 +46,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address
+      membersManager.address,
     );
 
     coGateway = await MockEIP20CoGateway.new();
@@ -93,7 +93,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
     assert.strictEqual(
       result,
       true,
-      `Contract should return true.`,
+      'Contract should return true.',
     );
 
     await utilityToken.setCoGateway(coGateway.address, { from: owner });
@@ -103,7 +103,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
     assert.strictEqual(
       coGatewayAddress,
       coGateway.address,
-      `CoGateway address from contract should be ${coGateway.address}`,
+      `CoGateway address from contract should be ${coGateway.address}.`,
     );
 
   });
@@ -114,7 +114,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
 
     await Utils.expectRevert(
       utilityToken.setCoGateway(coGateway.address, { from: owner }),
-      'CoGateway address already set.',
+      'CoGateway address is already set.',
     );
 
   });
@@ -135,7 +135,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
     assert.strictEqual(
       eventData._coGateway,
       coGateway.address,
-      `The _coGateway address in the event should be equal to ${coGateway.address}`
+      `The _coGateway address in the event should be equal to ${coGateway.address}.`
     );
 
   });

@@ -19,7 +19,6 @@
 // ----------------------------------------------------------------------------
 
 const UtilityToken = artifacts.require('TestUtilityToken');
-const MockMembersManager = artifacts.require('MockMembersManager');
 const MockEIP20CoGateway = artifacts.require('MockEIP20CoGateway');
 
 const Utils = require("./../../test_lib/utils"),
@@ -32,28 +31,24 @@ const TOKEN_SYMBOL = "UT";
 const TOKEN_NAME = "Utility Token";
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.decreaseSupply() ', function (accounts) {
+contract('UtilityToken.decreaseSupply()', function (accounts) {
 
   let brandedToken,
     membersManager,
-    owner,
-    worker,
     utilityToken,
     coGatewayAddress,
     amount;
 
   beforeEach(async function () {
-    owner = accounts[2];
-    worker = accounts[3];
     brandedToken = accounts[4];
-    membersManager = await MockMembersManager.new(owner, worker);
-    amount = new BN(100);
+    membersManager = accounts[0];
+    amount = new BN(1000);
     utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address
+      membersManager,
     );
 
     coGatewayAddress = accounts[1];
@@ -79,7 +74,7 @@ contract('UtilityToken.decreaseSupply() ', function (accounts) {
 
     await Utils.expectRevert(
       utilityToken.decreaseSupply(amount, { from: accounts[5] }),
-      'Only CoGateway can call the function',
+      'Only CoGateway can call the function.',
     );
 
   });
@@ -87,7 +82,7 @@ contract('UtilityToken.decreaseSupply() ', function (accounts) {
   it('should fail when decrease supply amount is less than the available' +
     ' balance', async function () {
 
-    amount = new BN(200);
+    amount = new BN(2000);
 
     await Utils.expectRevert(
       utilityToken.decreaseSupply(amount, { from: coGatewayAddress }),
@@ -97,6 +92,8 @@ contract('UtilityToken.decreaseSupply() ', function (accounts) {
   });
 
   it('should pass when called with valid params', async function () {
+
+    amount = new BN(500);
 
     let result = await utilityToken.decreaseSupply.call(
       amount, { from: coGatewayAddress }
@@ -112,16 +109,16 @@ contract('UtilityToken.decreaseSupply() ', function (accounts) {
 
     let coGatewayBalance = await utilityToken.balanceOf.call(coGatewayAddress);
     assert.strictEqual(
-      coGatewayBalance.eqn(0),
+      coGatewayBalance.eqn(500),
       true,
-      `CoGateway address balance should be zero.`,
+      'CoGateway address balance should be zero.',
     );
 
     let totalSupply = await utilityToken.totalSupply();
     assert.strictEqual(
-      totalSupply.eqn(0),
+      totalSupply.eqn(500),
       true,
-      `Token total supply from contract must be equal to zero.`,
+      'Token total supply from contract must be equal to zero.',
     );
 
   });
@@ -145,19 +142,19 @@ contract('UtilityToken.decreaseSupply() ', function (accounts) {
     assert.strictEqual(
       eventData._from,
       coGatewayAddress,
-      `The _from address in the event should be equal to ${coGatewayAddress}`
+      `The _from address in the event should be equal to ${coGatewayAddress}.`
     );
 
     assert.strictEqual(
       eventData._to,
       NullAddress,
-      `The _to address in the event should be equal to zero`
+      'The _to address in the event should be equal to zero.'
     );
 
     assert.strictEqual(
       amount.eq(eventData._value),
       true,
-      `The _value amount in the event should be equal to ${amount}`
+      `The _value amount in the event should be equal to ${amount}.`
     );
 
   });

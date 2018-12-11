@@ -34,16 +34,16 @@ contract UtilityTokenInterface {
     /**
      * @notice Increases the total token supply.
      *
-     * @dev Adds _amount tokens to beneficiary balance and increases the
+     * @dev Adds number of tokens to beneficiary balance and increases the
      *      total token supply.
      *
-     * @param _beneficiary Address of tokens beneficiary.
-     * @param _amount Amount of tokens to increase.
+     * @param _account Account address for which the balance will be increased.
+     * @param _amount Amount of tokens.
      *
-     * @return bool `true` if increase supply is successful, false otherwise.
+     * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
-        address _beneficiary,
+        address _account,
         uint256 _amount
     )
         external
@@ -52,7 +52,10 @@ contract UtilityTokenInterface {
     /**
      * @notice Decreases the token supply.
      *
-     * @param _amount Amount of tokens to decrease.
+     * @dev Decreases the token balance from the msg.sender address and
+     *      decreases the total token supply count.
+     *
+     * @param _amount Amount of tokens.
      *
      * @return success_ `true` if decrease supply is successful, false otherwise.
      */

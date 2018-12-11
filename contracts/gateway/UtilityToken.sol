@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
@@ -54,12 +53,14 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /* Modifiers */
 
-    /** checks that only organization can call a particular function. */
+    /** checks that only CoGateway can call a particular function. */
     modifier onlyCoGateway() {
+
         require(
             msg.sender == address(coGateway),
-            "Only CoGateway can call the function"
+            "Only CoGateway can call the function."
         );
+
         _;
     }
 
@@ -73,6 +74,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @param _symbol Symbol of token
      * @param _name Name of token
      * @param _decimals Decimal of token
+     * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
         address _token,
@@ -99,20 +101,23 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /**
      * @notice Sets the CoGateway contract address.
      *
-     * @dev This can be called only by an organization address.
+     * @dev This can be called only by an organization address. This can be
+     *      set only once.
      *
      * @param _coGatewayAddress CoGateway contract address
      *
-     * @return `true` if CoGateway address was set
+     * @return success_ `true` if CoGateway address was set
      */
-    function setCoGateway(address _coGatewayAddress)
+    function setCoGateway(
+        address _coGatewayAddress
+    )
         external
         onlyOrganization
         returns (bool success_)
     {
         require(
             coGateway == address(0),
-            "CoGateway address already set."
+            "CoGateway address is already set."
         );
 
         require(
@@ -121,7 +126,8 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         );
 
         require(
-            CoGatewayUtilityTokenInterface(_coGatewayAddress).utilityToken() == address(this),
+            CoGatewayUtilityTokenInterface(_coGatewayAddress).utilityToken()
+                == address(this),
             "CoGateway should be linked with this utility token."
         );
 
@@ -135,13 +141,13 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /**
      * @notice Increases the total token supply.
      *
-     * @dev Adds _amount tokens to beneficiary balance and increases the
+     * @dev Adds number of tokens to beneficiary balance and increases the
      *      total token supply.
      *
-     * @param _account Account address for which the token will be increased.
-     * @param _amount Amount of tokens to increase.
+     * @param _account Account address for which the balance will be increased.
+     * @param _amount Amount of tokens.
      *
-     * @return bool `true` if increase supply is successful, false otherwise.
+     * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
         address _account,
@@ -171,12 +177,15 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
     /**
-      * @notice Decreases the token supply.
-      *
-      * @param _amount Amount of tokens to decrease.
-      *
-      * @return success_ `true` if decrease supply is successful, false otherwise.
-      */
+     * @notice Decreases the token supply.
+     *
+     * @dev Decreases the token balance from the msg.sender address and
+     *      decreases the total token supply count.
+     *
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if decrease supply is successful, false otherwise.
+     */
     function decreaseSupply(uint256 _amount)
         external
         onlyCoGateway

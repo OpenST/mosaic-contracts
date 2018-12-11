@@ -19,7 +19,6 @@
 // ----------------------------------------------------------------------------
 
 const UtilityToken = artifacts.require('TestUtilityToken');
-const MockMembersManager = artifacts.require('MockMembersManager');
 const MockEIP20CoGateway = artifacts.require('MockEIP20CoGateway');
 
 const Utils = require("./../../test_lib/utils"),
@@ -32,30 +31,27 @@ const TOKEN_SYMBOL = "UT";
 const TOKEN_NAME = "Utility Token";
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.increaseSupply() ', function (accounts) {
+contract('UtilityToken.increaseSupply()', function (accounts) {
 
   let brandedToken,
     membersManager,
-    owner,
-    worker,
     utilityToken,
     coGatewayAddress,
     beneficiary,
     amount;
 
   beforeEach(async function () {
-    owner = accounts[2];
-    worker = accounts[3];
+
     brandedToken = accounts[4];
-    membersManager = await MockMembersManager.new(owner, worker);
+    membersManager = accounts[0];
     beneficiary = accounts[6];
-    amount = new BN(100);
+    amount = new BN(1000);
     utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address
+      membersManager,
     );
 
     coGatewayAddress = accounts[1];
@@ -72,7 +68,8 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
       utilityToken.increaseSupply(
         beneficiary,
         amount,
-        { from: coGatewayAddress }),
+        { from: coGatewayAddress },
+      ),
       'Account address should not be zero.',
     );
 
@@ -86,7 +83,8 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
       utilityToken.increaseSupply(
         beneficiary,
         amount,
-        { from: coGatewayAddress }),
+        { from: coGatewayAddress },
+      ),
       'Amount should be greater than zero.',
     );
 
@@ -98,8 +96,9 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
       utilityToken.increaseSupply(
         beneficiary,
         amount,
-        { from: accounts[7] }),
-      'Only CoGateway can call the function',
+        { from: accounts[7] },
+      ),
+      'Only CoGateway can call the function.',
     );
 
   });
@@ -109,7 +108,7 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
     let result = await utilityToken.increaseSupply.call(
         beneficiary,
         amount,
-        { from: coGatewayAddress }
+        { from: coGatewayAddress },
       );
 
     assert.strictEqual(
@@ -118,17 +117,17 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
       'Contract should return true.',
     );
 
-    let tx = await utilityToken.increaseSupply(
+    await utilityToken.increaseSupply(
       beneficiary,
       amount,
-      { from: coGatewayAddress }
+      { from: coGatewayAddress },
     );
 
     let beneficiaryBalance = await utilityToken.balanceOf.call(beneficiary);
     assert.strictEqual(
       amount.eq(beneficiaryBalance),
       true,
-      `Beneficiary address balance should be ${amount}`,
+      `Beneficiary address balance should be ${amount}.`,
     );
 
     let totalSupply = await utilityToken.totalSupply();
@@ -152,7 +151,7 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
 
     assert.isDefined(
       event.Transfer,
-      'Event `Transfer` must be emitted.',
+      'Event Transfer must be emitted.',
     );
 
     let eventData = event.Transfer;
@@ -160,19 +159,19 @@ contract('UtilityToken.increaseSupply() ', function (accounts) {
     assert.strictEqual(
       eventData._from,
       NullAddress,
-      `The _from address in the event should be zero.`
+      'The _from address in the event should be zero.',
     );
 
     assert.strictEqual(
       eventData._to,
       beneficiary,
-      `The _to address in the event should be equal to ${beneficiary}`
+      `The _to address in the event should be equal to ${beneficiary}.`,
     );
 
     assert.strictEqual(
       amount.eq(eventData._value),
       true,
-      `The _value amount in the event should be equal to ${amount}`
+      `The _value amount in the event should be equal to ${amount}.`,
     );
 
   });

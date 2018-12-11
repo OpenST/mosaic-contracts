@@ -29,7 +29,7 @@ const TOKEN_SYMBOL = "UT";
 const TOKEN_NAME = "Utility Token";
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.constructor() ', function (accounts) {
+contract('UtilityToken.constructor()', function (accounts) {
 
   let brandedToken, membersManager, owner, worker;
 
@@ -42,7 +42,7 @@ contract('UtilityToken.constructor() ', function (accounts) {
 
   it('should fail to deploy when branded token address is zero', async function () {
 
-    brandedToken = NullAddress ;
+    brandedToken = NullAddress;
 
     await Utils.expectRevert(
       UtilityToken.new(
@@ -50,7 +50,7 @@ contract('UtilityToken.constructor() ', function (accounts) {
         TOKEN_SYMBOL,
         TOKEN_NAME,
         TOKEN_DECIMALS,
-        membersManager.address
+        membersManager.address,
       ),
       'Token address should not be zero.',
     );
@@ -65,20 +65,21 @@ contract('UtilityToken.constructor() ', function (accounts) {
         TOKEN_SYMBOL,
         TOKEN_NAME,
         TOKEN_DECIMALS,
-        NullAddress
+        NullAddress,
       ),
       'MembersManager contract address must not be address\\(0\\).',
     );
+
   });
 
-  it('should able to deploy contract with correct parameters.', async function () {
+  it('should pass with correct parameters.', async function () {
 
     let utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address
+      membersManager.address,
     );
 
     assert.strictEqual(
@@ -121,6 +122,13 @@ contract('UtilityToken.constructor() ', function (accounts) {
       totalSupply.eqn(0),
       true,
       `Token total supply from contract must be equal to zero.`,
+    );
+
+    let membersManagerAddress = await utilityToken.membersManager();
+    assert.strictEqual(
+      membersManagerAddress,
+      membersManager.address,
+      `Members manager address from the contract must be equal to ${membersManager.address}.`,
     );
 
   });
