@@ -89,5 +89,30 @@ describe('ContractRegistry', () => {
             expect(Object.keys(output)[0]).toEqual(MerklePatriciaProof.getAddress());
             expect(Object.keys(output)[1]).toEqual(MessageBus.getAddress());
         });
+
+        test('orders contracts correctly (address reference in constructor)', () => {
+            const EIP20Token = Contract.loadTruffleContract(
+                'EIP20Token',
+                ['MYT', 'MyToken', 18],
+                { rootDir },
+            );
+            const MosaicCore = Contract.loadTruffleContract('MosaicCore', [
+                '0x0',
+                EIP20Token.reference(),
+                '0x10',
+                '0x10',
+                '0x10',
+                '0x10',
+            ], { rootDir });
+
+            // provided ordering = wrong ordering
+            const registry = new ContractRegistry();
+            registry.addContracts([MosaicCore, EIP20Token]);
+
+            const output = registry.toParityGenesisAccounts();
+            expect(Object.keys(output)[0]).toEqual(EIP20Token.getAddress());
+            expect(Object.keys(output)[1]).toEqual(MosaicCore.getAddress());
+            expect(Object.values(output)[1].constructor).toContain(EIP20Token.getAddress().slice(2));
+        });
     });
 });

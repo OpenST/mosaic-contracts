@@ -6,6 +6,8 @@ const STATE_NEW = 'new';
 const STATE_LINKED = 'linked';
 const STATE_INSTANTIATED = 'instantiated';
 
+const TYPE_CONTRACT_REFERENCE = 'contract_reference';
+
 class Contract {
     /**
      * @param {string} contractName Name of the contract to create. If this contract is
@@ -27,12 +29,13 @@ class Contract {
 
         this._checkFullyLinked = this._checkFullyLinked.bind(this);
         this._getDependenciesCount = this._getDependenciesCount.bind(this);
-        this._linkBytecodeReplacement = this._linkBytecodeReplacement.bind(this);
         this._linkBytecode = this._linkBytecode.bind(this);
+        this._linkBytecodeReplacement = this._linkBytecodeReplacement.bind(this);
         this.addLinkedDependency = this.addLinkedDependency.bind(this);
         this.getAddress = this.getAddress.bind(this);
         this.instantiate = this.instantiate.bind(this);
         this.linkedBytecode = this.linkedBytecode.bind(this);
+        this.reference = this.reference.bind(this);
         this.setAddress = this.setAddress.bind(this);
     }
 
@@ -149,8 +152,18 @@ class Contract {
         let constructorData = this.linkedBytecode();
         if (this.constructorArgs) {
             const web3 = new Web3();
+
+            const dereferencedConstructorArgs = this.constructorArgs.map((constructorArg) => {
+                const referenceContract = this._getReferenceContract(constructorArg);
+                if (referenceContract) {
+                    return referenceContract.getAddress();
+                }
+
+                return constructorArg;
+            });
+
             const encodedArguments = web3.eth.abi
-                .encodeParameters(this.constructorABI.inputs, this.constructorArgs)
+                .encodeParameters(this.constructorABI.inputs, dereferencedConstructorArgs)
                 .slice(2);
             constructorData += encodedArguments;
         }
@@ -158,6 +171,34 @@ class Contract {
         this.constructorData = constructorData;
         this._state = STATE_INSTANTIATED;
         return constructorData;
+    }
+
+    /**
+     * Returns a reference to the contract, which can be used as a placeholder for
+     * a contract address in constructor arguments.
+     *
+     * @returns {object} A reference to this contract.
+     */
+    reference() {
+        return {
+            __type: TYPE_CONTRACT_REFERENCE,
+            contract: this,
+        };
+    }
+
+    /**
+     * Tries to interpret the provided constructor argument as a contract reference,
+     * and returns the referenced contract if it is one. See {@link Contract#reference}.
+     *
+     * @param {*} constructorArg A constructor argument that is possibly a contract reference.
+     *
+     * @returns {Contract|null} The referenced contract.
+     */
+    _getReferenceContract(constructorArg) {
+        if (!((typeof constructorArg === 'object') && (constructorArg !== null)) || constructorArg.__type !== TYPE_CONTRACT_REFERENCE) {
+            return null;
+        }
+        return constructorArg.contract;
     }
 
     /**
@@ -237,6 +278,14 @@ class Contract {
     _getDependenciesCount() {
         // start at 1 because we are also counting the contract itself
         let count = 1;
+
+        let constructorDependencies = [];
+        if (this.constructorArgs) {
+            constructorDependencies = this.constructorArgs.map(n => this._getReferenceContract(n)).filter(Boolean);
+        }
+        constructorDependencies.forEach((referencedContract) => {
+            count += referencedContract._getDependenciesCount();
+        });
 
         this.linkReplacements.forEach((linkedContract) => {
             count += linkedContract._getDependenciesCount();
