@@ -74,9 +74,6 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
-
     /** Address of core contract. */
     StateRootInterface public core;
 

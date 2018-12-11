@@ -28,7 +28,7 @@ const Stake = artifacts.require('Stake');
 
 contract('Stake.closeMetaBlock()', async (accounts) => {
 
-    let originCoreAccount = accounts[1];
+    let mosaicCoreAccount = accounts[1];
     let minimumWeight = new BN('1');
     let token;
     let stake;
@@ -37,7 +37,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
         token = await MockToken.new();
         stake = await Stake.new(
             token.address,
-            originCoreAccount,
+            mosaicCoreAccount,
             minimumWeight,
         );
         await StakeUtils.initializeStake(
@@ -53,7 +53,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
         for (let expectedHeight = 2; expectedHeight < 5; expectedHeight++) {
             await stake.closeMetaBlock(
                 new BN(expectedHeight - 1),
-                {from: originCoreAccount}
+                {from: mosaicCoreAccount}
             );
 
             height = await stake.height.call();
@@ -69,7 +69,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
 
         let tx = await stake.closeMetaBlock(
             new BN(1),
-            {from: originCoreAccount}
+            {from: mosaicCoreAccount}
         );
         let events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
@@ -80,7 +80,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
 
         tx = await stake.closeMetaBlock(
             new BN(2),
-            {from: originCoreAccount}
+            {from: mosaicCoreAccount}
         );
         events = Events.perform(tx.receipt, stake.address, stake.abi);
         assert.strictEqual(
@@ -94,7 +94,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
         await Utils.expectFailedAssert(
             stake.closeMetaBlock(
                 new BN(3),
-                {from: originCoreAccount}
+                {from: mosaicCoreAccount}
             )
         );
     });

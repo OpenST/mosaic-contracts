@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
 import "../../lib/OrganizationInterface.sol";
-import "../../gateway/Core.sol";
+import "../../gateway/SafeCore.sol";
 
 /**
- * @title CoreMock contract
+ * @title MockSafeCore contract
  *
  * @notice Used for test only
  */
-contract MockCore is Core {
+contract MockSafeCore is SafeCore {
 
 
     /*  Public functions */
@@ -28,7 +28,7 @@ contract MockCore is Core {
         bytes32 _stateRoot,
         IsMemberInterface _membersManager
     )
-        Core(
+        SafeCore(
             _chainIdRemote,
             _blockHeight,
             _stateRoot,

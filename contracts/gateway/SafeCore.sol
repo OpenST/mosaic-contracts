@@ -39,7 +39,7 @@ import "../lib/SafeMath.sol";
  *         by the workers that are registered as part of the `Organized`
  *         interface.
  */
-contract Core is StateRootInterface, Organized {
+contract SafeCore is StateRootInterface, Organized {
     using SafeMath for uint256;
 
 

@@ -19,7 +19,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const Core = artifacts.require("./Core.sol")
+const SafeCore = artifacts.require("./SafeCore.sol")
     , Organization = artifacts.require("MockOrganization.sol")
     , proof = require('../data/proof');
 ;
@@ -32,7 +32,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
 
     // Deploy worker contract
     const organization = await Organization.new(organizationOwner, worker);
-    const core = await Core.new(
+    const core = await SafeCore.new(
         chainIdRemote,
         0,
         proof.account.stateRoot,
