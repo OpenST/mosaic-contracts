@@ -29,7 +29,7 @@ contract KernelGateway is KernelGatewayInterface {
 
     /* Events */
 
-    /** Emit event when open kernel in origin core is proven. */
+    /** Emit event when open kernel in mosaic core is proven. */
     event OpenKernelProven(
         bytes20 _originCoreIdentifier,
         bytes20 _auxiliaryCoreIdentifier,
@@ -47,21 +47,21 @@ contract KernelGateway is KernelGatewayInterface {
         uint256 _currentDynasty
     );
 
-    /** Emit event origin core account is proven. */
-    event OriginCoreProven(
-        address _originCore,
+    /** Emit event mosaic core account is proven. */
+    event MosaicCoreProven(
+        address _mosaicCore,
         uint256 _blockHeight,
         bytes32 _storageRoot,
         bool _wasAlreadyProved
     );
 
-    /** Index of kernel hash storage location in origin core. */
+    /** Index of kernel hash storage location in mosaic core. */
     uint8 public constant KERNEL_HASH_INDEX = 5;
 
     /* Variables */
 
-    /** Address of origin core. */
-    address public originCore;
+    /** Address of mosaic core. */
+    address public mosaicCore;
 
     /** Address of the origin block store. */
     BlockStoreInterface public originBlockStore;
@@ -69,8 +69,8 @@ contract KernelGateway is KernelGatewayInterface {
     /** Address of the auxiliary block store. */
     BlockStoreInterface public auxiliaryBlockStore;
 
-    /** path to prove merkle account proof for OriginCore contract. */
-    bytes public encodedOriginCorePath;
+    /** path to prove merkle account proof for MosaicCore contract. */
+    bytes public encodedMosaicCorePath;
 
     /** Storage path. */
     bytes public storagePath;
@@ -78,7 +78,7 @@ contract KernelGateway is KernelGatewayInterface {
     /** A mapping of kernel hash to the kernel object. */
     mapping(bytes32 => MetaBlock.Kernel) public kernels;
 
-    /** A mapping of origin block height to the storage root of origin core. */
+    /** A mapping of origin block height to the storage root of mosaic core. */
     mapping(uint256 => bytes32) public storageRoots;
 
     /** The hash of the currently active kernel. */
@@ -90,7 +90,7 @@ contract KernelGateway is KernelGatewayInterface {
     /** The auxiliary dynasty height at which the open kernel will be active. */
     uint256 public openKernelActivationHeight;
 
-    /** The origin core identifier. */
+    /** The mosaic core identifier. */
     bytes20 public originCoreIdentifier;
 
     /** The auxiliary core identifier. */
@@ -116,14 +116,14 @@ contract KernelGateway is KernelGatewayInterface {
      * @notice Initializes the contract with origin and auxiliary block store
      *         addresses.
      *
-     * @param _originCore The address of OriginCore contract.
+     * @param _mosaicCore The address of MosaicCore contract.
      * @param _originBlockStore The block store that stores the origin chain.
      * @param _auxiliaryBlockStore The block store that stores the auxiliary
      *                             chain.
      * @param _kernelHash Initial kernel hash.
      */
     constructor (
-        address _originCore,
+        address _mosaicCore,
         BlockStoreInterface _originBlockStore,
         BlockStoreInterface _auxiliaryBlockStore,
         bytes32 _kernelHash
@@ -131,8 +131,8 @@ contract KernelGateway is KernelGatewayInterface {
         public
     {
         require(
-            _originCore != address(0),
-            "The address of the origin core must not be zero."
+            _mosaicCore != address(0),
+            "The address of the mosaic core must not be zero."
         );
 
         require(
@@ -152,7 +152,7 @@ contract KernelGateway is KernelGatewayInterface {
 
         originBlockStore = _originBlockStore;
         auxiliaryBlockStore = _auxiliaryBlockStore;
-        originCore = _originCore;
+        mosaicCore = _mosaicCore;
         activeKernelHash = _kernelHash;
         originCoreIdentifier = originBlockStore.getCoreIdentifier();
         auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
@@ -175,14 +175,14 @@ contract KernelGateway is KernelGatewayInterface {
             keccak256(abi.encodePacked(indexBytes))
         );
 
-        encodedOriginCorePath = BytesLib.bytes32ToBytes(
-            keccak256(abi.encodePacked(_originCore))
+        encodedMosaicCorePath = BytesLib.bytes32ToBytes(
+            keccak256(abi.encodePacked(_mosaicCore))
         );
     }
 
     /**
-     * @notice Prove origin core account and update the latest storage root of
-     *         origin core. This function will validate the proof against the
+     * @notice Prove mosaic core account and update the latest storage root of
+     *         mosaic core. This function will validate the proof against the
      *         state root from the OriginBlockStore
      *
      * @param _accountRlp RLP encoded account data.
@@ -194,7 +194,7 @@ contract KernelGateway is KernelGatewayInterface {
      *
      * @return success_ `true` if the proof is successful.
      */
-    function proveOriginCore(
+    function proveMosaicCore(
         bytes calldata _accountRlp,
         bytes calldata _accountBranchRlp,
         uint256 _originBlockHeight
@@ -235,14 +235,14 @@ contract KernelGateway is KernelGatewayInterface {
             storageRoot = updateStorageRoot(
                 _accountRlp,
                 _accountBranchRlp,
-                encodedOriginCorePath,
+                encodedMosaicCorePath,
                 stateRoot,
                 _originBlockHeight
             );
         }
 
-        emit OriginCoreProven(
-            originCore,
+        emit MosaicCoreProven(
+            mosaicCore,
             _originBlockHeight,
             storageRoot,
             isAlreadyProven
@@ -519,7 +519,7 @@ contract KernelGateway is KernelGatewayInterface {
     /* Internal functions */
 
     /**
-     * @notice Get storage root for the OriginCore contract.
+     * @notice Get storage root for the MosaicCore contract.
      *
      * @dev The existence of storage root is proved with merkle proof.
      *
@@ -555,7 +555,7 @@ contract KernelGateway is KernelGatewayInterface {
         );
 
         /*
-         * Verify the remote origin core contract against the committed state
+         * Verify the remote mosaic core contract against the committed state
          * root with the state trie Merkle proof.
          */
         require(

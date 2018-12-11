@@ -19,9 +19,9 @@
 // ----------------------------------------------------------------------------
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
-const OriginCore = artifacts.require('OriginCore');
+const MosaicCore = artifacts.require('MosaicCore');
 
-contract('OriginCore.getAccumulatedGasTarget()', async (accounts) => {
+contract('MosaicCore.getAccumulatedGasTarget()', async (accounts) => {
 
   /**
    * @dev while writing this test commitMetaBlock function is not
@@ -30,7 +30,7 @@ contract('OriginCore.getAccumulatedGasTarget()', async (accounts) => {
    *      meta block for testing
    */
 
-  let originCore,
+  let mosaicCore,
     maxAccumulateGasLimit,
     gas,
     auxiliaryCoreIdentifier,
@@ -39,9 +39,9 @@ contract('OriginCore.getAccumulatedGasTarget()', async (accounts) => {
     minimumWeight
   ;
 
-  /** Deploys the origin core contract */
-  async function deployOriginCore(){
-    originCore = await OriginCore.new(
+  /** Deploys the mosaic core contract */
+  async function deployMosaicCore(){
+    mosaicCore = await MosaicCore.new(
       auxiliaryCoreIdentifier,
       ost,
       gas,
@@ -53,8 +53,8 @@ contract('OriginCore.getAccumulatedGasTarget()', async (accounts) => {
 
   /** Asserts the accumulated gas target */
   async function testAccumulatedGasTarget(){
-    await deployOriginCore();
-    let accumulatedGasTarget = await originCore.getAccumulatedGasTarget.call();
+    await deployMosaicCore();
+    let accumulatedGasTarget = await mosaicCore.getAccumulatedGasTarget.call();
     assert(
       accumulatedGasTarget.eq(gas.add(maxAccumulateGasLimit)),
       `Accumulated gas target should` +

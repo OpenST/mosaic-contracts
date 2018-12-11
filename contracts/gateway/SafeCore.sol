@@ -34,7 +34,7 @@ import "../StateRootInterface.sol";
  *  @notice Core is a minimal stub that will become the anchoring and consensus point for
  *          the utility chain to validate itself against.
  */
-contract Core is CoreInterface, StateRootInterface {
+contract SafeCore is CoreInterface, StateRootInterface {
     using SafeMath for uint256;
 
     /** Events */

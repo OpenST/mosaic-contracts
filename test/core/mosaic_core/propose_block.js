@@ -24,11 +24,11 @@ const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
-const OriginCore = artifacts.require('OriginCore');
+const MosaicCore = artifacts.require('MosaicCore');
 
-contract('OriginCore.proposeBlock()', async (accounts) => {
+contract('MosaicCore.proposeBlock()', async (accounts) => {
 
-    let originCore;
+    let mosaicCore;
     let minimumWeight = new BN('1');
     let auxiliaryCoreIdentifier = web3.utils.sha3("1");
 
@@ -49,7 +49,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
 
         let ost = accounts[0];
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
              auxiliaryCoreIdentifier,
              ost,
              0,
@@ -61,7 +61,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
 
     it('should be able to propose meta-block', async function () {
 
-        let tx = await originCore.proposeBlock(
+        let tx = await mosaicCore.proposeBlock(
              height,
              auxiliaryCoreIdentifier,
              kernelHash,
@@ -73,7 +73,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
              transactionRoot
         );
 
-        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+        let events = EventsDecoder.perform(tx.receipt, mosaicCore.address, mosaicCore.abi);
 
         assert.equal(
              events.BlockProposed.height,
@@ -89,7 +89,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         height = 0;
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -110,7 +110,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         gas = 0;
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -129,7 +129,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
     it('should not be able to propose meta-block for same height and same' +
          ' transition object which is already proposed', async function () {
 
-        let tx = await originCore.proposeBlock(
+        let tx = await mosaicCore.proposeBlock(
              height,
              auxiliaryCoreIdentifier,
              kernelHash,
@@ -141,7 +141,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
              transactionRoot
         );
 
-        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+        let events = EventsDecoder.perform(tx.receipt, mosaicCore.address, mosaicCore.abi);
 
         assert.equal(
              events.BlockProposed.height,
@@ -150,7 +150,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         );
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -172,7 +172,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         auxiliaryDynasty = 0;
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -194,7 +194,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         auxiliaryCoreIdentifier = web3.utils.sha3("2");
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -218,7 +218,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -239,7 +239,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         originBlockHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -259,7 +259,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         originDynasty = 0;
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,
@@ -280,7 +280,7 @@ contract('OriginCore.proposeBlock()', async (accounts) => {
         kernelHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         await Utils.expectThrow(
-             originCore.proposeBlock(
+             mosaicCore.proposeBlock(
                   height,
                   auxiliaryCoreIdentifier,
                   kernelHash,

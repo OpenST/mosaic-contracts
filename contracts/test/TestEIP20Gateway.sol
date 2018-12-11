@@ -42,7 +42,7 @@ contract TestEIP20Gateway is EIP20Gateway {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )

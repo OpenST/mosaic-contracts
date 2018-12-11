@@ -24,12 +24,12 @@ const BN = require('bn.js');
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 const MetaBlockUtils = require('../../test_lib/meta_block.js');
-const OriginCoreUtils = require('./helpers/utils');
+const MosaicCoreUtils = require('./helpers/utils');
 
-const OriginCore = artifacts.require('OriginCore');
+const MosaicCore = artifacts.require('MosaicCore');
 const MockToken = artifacts.require('MockToken');
 
-let originCore;
+let mosaicCore;
 let transitionHash;
 let vote;
 let minimumWeight = new BN('1');
@@ -46,7 +46,7 @@ let requiredWeight;
 let stakeAddress;
 let tokenDeployer;
 
-contract('OriginCore.verifyVote()', async (accounts) => {
+contract('MosaicCore.verifyVote()', async (accounts) => {
 
     beforeEach(async () => {
 
@@ -72,7 +72,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         let tokenDeployer = accounts[0];
         erc20 = await MockToken.new({from: tokenDeployer});
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
              auxiliaryCoreIdentifier,
              erc20.address,
              initialGas,
@@ -80,9 +80,9 @@ contract('OriginCore.verifyVote()', async (accounts) => {
              minimumWeight,
              maxAccumulateGasLimit
         );
-        let stakeAddress = await originCore.stake.call();
+        let stakeAddress = await mosaicCore.stake.call();
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
              stakeAddress,
              erc20,
              tokenDeployer,
@@ -107,11 +107,11 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let expectedVerifiedWeight = new BN(initialStakes[0]);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
              initialStakes[0],
              initialValidators[0],
              vote,
-             originCore,
+             mosaicCore,
              kernelHash,
              expectedVerifiedWeight,
              requiredWeight
@@ -127,18 +127,18 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let expectedVerifiedWeight = new BN(initialStakes[0]);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
              initialStakes[0],
              validator,
              vote,
-             originCore,
+             mosaicCore,
              kernelHash,
              expectedVerifiedWeight,
              requiredWeight
         );
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   vote.coreIdentifier,
                   vote.transitionHash,
@@ -162,7 +162,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         let sig = await MetaBlockUtils.signVote(validator, vote);
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   vote.coreIdentifier,
                   vote.transitionHash,
@@ -183,11 +183,11 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         let expectedVerifiedWeight = new BN(initialStakes[0]);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
              initialStakes[0],
              initialValidators[0],
              vote,
-             originCore,
+             mosaicCore,
              kernelHash,
              expectedVerifiedWeight,
              requiredWeight
@@ -195,11 +195,11 @@ contract('OriginCore.verifyVote()', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
              initialStakes[1],
              initialValidators[1],
              vote,
-             originCore,
+             mosaicCore,
              kernelHash,
              expectedVerifiedWeight,
              requiredWeight
@@ -215,7 +215,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         };
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   vote.coreIdentifier,
                   vote.transitionHash,
@@ -241,7 +241,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         let wrongTransitionHash = web3.utils.sha3("wrong transition hash");
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   vote.coreIdentifier,
                   wrongTransitionHash,
@@ -266,7 +266,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         kernelHash = web3.utils.sha3("wrong kernel hash");
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   vote.coreIdentifier,
                   vote.transitionHash,
@@ -291,7 +291,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
         let wrongCoreIdentifier = accounts[8];
 
         await Utils.expectThrow(
-             originCore.verifyVote(
+             mosaicCore.verifyVote(
                   kernelHash,
                   wrongCoreIdentifier,
                   vote.transitionHash,
@@ -308,7 +308,7 @@ contract('OriginCore.verifyVote()', async (accounts) => {
     });
 });
 
-contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
+contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
 
     beforeEach(async () => {
 
@@ -316,7 +316,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         tokenDeployer = accounts[0];
         erc20 = await MockToken.new({from: tokenDeployer});
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
             auxiliaryCoreIdentifier,
             erc20.address,
             initialGas,
@@ -325,7 +325,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             maxAccumulateGasLimit
         );
 
-        kernelHash = await originCore.openKernelHash.call();
+        kernelHash = await mosaicCore.openKernelHash.call();
         await proposeMetaBlock();
 
         vote = {
@@ -337,7 +337,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             targetHeight: new BN('2'),
         };
 
-        stakeAddress = await originCore.stake.call();
+        stakeAddress = await mosaicCore.stake.call();
     });
 
     it('should commit a meta-block if 2/3 super majority is' +
@@ -359,7 +359,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN('100'),
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -371,11 +371,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(200);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -383,11 +383,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[1],
             initialValidators[1],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -395,9 +395,9 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
-        let head = await originCore.head.call();
+        let head = await mosaicCore.head.call();
 
-        OriginCoreUtils.assertCommitMetaBlock(
+        MosaicCoreUtils.assertCommitMetaBlock(
             events,
             expectedHeight,
             kernelHash,
@@ -427,7 +427,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN('100'),
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -439,11 +439,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(200);
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -473,7 +473,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN(1)
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -485,11 +485,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(3);
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -520,7 +520,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN('100'),
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -532,11 +532,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(200);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -544,11 +544,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[1],
             initialValidators[1],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -556,9 +556,9 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
-        let head = await originCore.head.call();
+        let head = await mosaicCore.head.call();
 
-        OriginCoreUtils.assertCommitMetaBlock(
+        MosaicCoreUtils.assertCommitMetaBlock(
             events,
             expectedHeight,
             kernelHash,
@@ -575,9 +575,9 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             updatedWeights: []
         };
 
-        let openKernel = await originCore.openKernel.call();
+        let openKernel = await mosaicCore.openKernel.call();
 
-        let openKernelHash = await originCore.openKernelHash.call();
+        let openKernelHash = await mosaicCore.openKernelHash.call();
 
         let expectedKernelHash = "0xb94e25ddd9ce2be28e1a66c2e0b5ac998573f23d089880aa9c3b8c96ef36221c";
 
@@ -619,7 +619,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN('100'),
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -631,11 +631,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(200);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -643,11 +643,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[1],
             initialValidators[1],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -655,9 +655,9 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
-        let head = await originCore.head.call();
+        let head = await mosaicCore.head.call();
 
-        OriginCoreUtils.assertCommitMetaBlock(
+        MosaicCoreUtils.assertCommitMetaBlock(
             events,
             expectedHeight,
             kernelHash,
@@ -694,7 +694,7 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
             new BN('100'),
         ];
 
-        await OriginCoreUtils.initializeStakeContract(
+        await MosaicCoreUtils.initializeStakeContract(
             stakeAddress,
             erc20,
             tokenDeployer,
@@ -706,11 +706,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
         let expectedVerifiedWeight = new BN(initialStakes[0]);
         let expectedRequiredWeight = new BN(200);
 
-        await OriginCoreUtils.verifyVote(
+        await MosaicCoreUtils.verifyVote(
             initialStakes[0],
             initialValidators[0],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -718,11 +718,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
-        let events = await OriginCoreUtils.verifyVote(
+        let events = await MosaicCoreUtils.verifyVote(
             initialStakes[1],
             initialValidators[1],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -730,9 +730,9 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         let expectedHeight = 1;
 
-        let head = await originCore.head.call();
+        let head = await mosaicCore.head.call();
 
-        OriginCoreUtils.assertCommitMetaBlock(
+        MosaicCoreUtils.assertCommitMetaBlock(
             events,
             expectedHeight,
             kernelHash,
@@ -744,11 +744,11 @@ contract('OriginCore.verifyVote() [commit meta-block]', async (accounts) => {
 
         expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[2]));
 
-        events = await OriginCoreUtils.verifyVote(
+        events = await MosaicCoreUtils.verifyVote(
             initialStakes[2],
             initialValidators[2],
             vote,
-            originCore,
+            mosaicCore,
             kernelHash,
             expectedVerifiedWeight,
             expectedRequiredWeight
@@ -771,7 +771,7 @@ async function proposeMetaBlock() {
         originDynasty = 1,
         originBlockHash = web3.utils.sha3("1");
 
-    let tx = await originCore.proposeBlock(
+    let tx = await mosaicCore.proposeBlock(
         height,
         auxiliaryCoreIdentifier,
         kernelHash,
@@ -782,7 +782,7 @@ async function proposeMetaBlock() {
         originBlockHash,
         transactionRoot,
     );
-    let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+    let events = EventsDecoder.perform(tx.receipt, mosaicCore.address, mosaicCore.abi);
 
     assert.equal(
         events.BlockProposed.height,
