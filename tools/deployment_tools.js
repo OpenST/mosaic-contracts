@@ -1,57 +1,119 @@
 const Web3 = require('web3');
 const fs = require('fs');
+const path = require('path');
+
+const STATE_NEW = 'new';
+const STATE_LINKED = 'linked';
+const STATE_INSTANTIATED = 'instantiated';
 
 class Contract {
-    constructor(contractName, contractBytecode, constructorABI) {
+    /**
+     * @param {string} contractName Name of the contract to create. If this contract is
+     *                 linked into another contracted, the provided contractName has to
+     *                 match the linking placeholder.
+     * @param {string} contracBytecode Bytecode of the contract.
+     * @param {Array<*>} [constructorABI] ABI of the contract constructor.
+     * @param {Array<*>} [constructorArgs] Arguments for the contract constructor.
+     */
+    constructor(contractName, contractBytecode, constructorABI, constructorArgs) {
         this.contractName = contractName;
         this.contractBytecode = contractBytecode;
         this.constructorABI = constructorABI;
+        this.constructorArgs = constructorArgs;
 
+        // initialize state machine
+        this._state = STATE_NEW;
         this.linkReplacements = [];
 
+        this._checkFullyLinked = this._checkFullyLinked.bind(this);
+        this._getDependenciesCount = this._getDependenciesCount.bind(this);
+        this._linkBytecodeReplacement = this._linkBytecodeReplacement.bind(this);
+        this._linkBytecode = this._linkBytecode.bind(this);
         this.addLinkedDependency = this.addLinkedDependency.bind(this);
+        this.getAddress = this.getAddress.bind(this);
+        this.instantiate = this.instantiate.bind(this);
+        this.linkedBytecode = this.linkedBytecode.bind(this);
+        this.setAddress = this.setAddress.bind(this);
     }
 
     /**
      * Helper for loading a contract saved in a format followin the truffle-contract-schema.
      *
-     * See https://github.com/trufflesuite/truffle/tree/66e3b1cb10df881d80e2a22ddea68e9dcfbdcdb1/packages/truffle-contract-schema
+     * See {@link https://github.com/trufflesuite/truffle/tree/66e3b1cb10df881d80e2a22ddea68e9dcfbdcdb1/packages/truffle-contract-schema}
+     *
+     * @param {string} contractName Name of the contract to load.
+     * @param {Array<*>} constructorArgs Arguments for the contract constructor.
+     * @param {object} options
+     * @param {string} options.rootDir The root directory of node project that is using truffle.
+     *                 Contract build artifacts are expected to be located at
+     *                 `rootDir/build/contracts`.
      */
-    static loadTruffleContract(contractName) {
-        const contents = fs.readFileSync(`${__dirname}/../build/contracts/${contractName}.json`);
+    static loadTruffleContract(contractName, constructorArgs, options = {}) {
+        const defaultOptions = {
+            rootDir: `${__dirname}/../`,
+        };
+        const mergedOptions = Object.assign(defaultOptions, options);
+
+        const contractPath = path.join(mergedOptions.rootDir, `build/contracts/${contractName}.json`);
+        const contents = fs.readFileSync(contractPath);
         const truffleJson = JSON.parse(contents);
 
         const constructorAbi = truffleJson.abi.find(n => n.type === 'constructor');
 
-        return new Contract(truffleJson.contractName, truffleJson.bytecode, constructorAbi);
+        return new Contract(
+            truffleJson.contractName,
+            truffleJson.bytecode,
+            constructorAbi,
+            constructorArgs,
+        );
     }
 
     /**
      * Add a linked dependency to the contract.
      */
     addLinkedDependency(linkedContract) {
+        this._ensureState(STATE_NEW);
         this.linkReplacements.push(linkedContract);
     }
 
     /**
      * Returns the contract's address as detemined by the provided AddressGenerator.
      *
-     * @param {Object} [addressGenerator] The AddressGenerator used for generating the addresses.
-     *                                    Not required if an address has been provided in the
-     *                                    constructor, or the address has been generated previously.
+     * @param {Object|string} addressGeneratorOrAddress The AddressGenerator used for
+     *                        generating the addresses. Can alternatively be a fixed address.
      * @returns {string} The contract's address.
      */
-    generatedAddress(addressGenerator) {
+    setAddress(addressGeneratorOrAddress) {
+        this._ensureState([STATE_NEW, STATE_LINKED]);
+        // Return early if the address has previously been set.
+        // This allows for setting a fixed address for specific contracts.
         if (this.address) {
             return this.address;
         }
+
+        if (typeof addressGeneratorOrAddress === 'string') {
+            this.address = addressGeneratorOrAddress;
+            return this.address;
+        }
+
+        const addressGenerator = addressGeneratorOrAddress;
         if (!addressGenerator) {
             throw new Error(`addressGenerator not provided when generating address for ${this.contractName}`);
         }
 
-        const address = addressGenerator.generate();
+        const address = addressGenerator.generateAddress();
         this.address = address;
-        return address;
+        return this.address;
+    }
+
+    /**
+     * Get the address of an instantiated contract.
+     *
+     * @returns {string} The address of the instantiated contract.
+     */
+    getAddress() {
+        this._ensureState([STATE_INSTANTIATED]);
+        return this.address;
     }
 
     /**
@@ -61,17 +123,70 @@ class Contract {
      * @returns {string} The linked bytecode of the contract.
      */
     linkedBytecode() {
-    // We can return the bytecode as-is if it doesn't require linking.
-        if (this._checkFullyLinked()) {
-            return this.contractBytecode;
+        this._ensureState([STATE_LINKED, STATE_INSTANTIATED]);
+        return this.contractBytecode;
+    }
+
+    /*
+     * Instantiate the contract by calculating the data of the contract creation transaction.
+     * This includes encoding the provided constructor arguments.
+     * Freezes the object to prevent any further changes.
+     *
+     * @return {string} The transaction data for contract creation.
+     */
+    instantiate() {
+        this._ensureState(STATE_NEW);
+
+        if (this.constructorABI && !this.constructorArgs) {
+            throw new Error(`Expected constructor arguments for constract ${this.contractName}`);
+        }
+        if (this.constructorArgs && !this.constructorABI) {
+            throw new Error(`Provided arguments for contract ${this.contractName}, but no constructorAbi is set.`);
         }
 
-        const bytecode = this.contractBytecode;
+        this._linkBytecode();
+
+        let constructorData = this.linkedBytecode();
+        if (this.constructorArgs) {
+            const web3 = new Web3();
+            const encodedArguments = web3.eth.abi
+                .encodeParameters(this.constructorABI.inputs, this.constructorArgs)
+                .slice(2);
+            constructorData += encodedArguments;
+        }
+
+        this.constructorData = constructorData;
+        this._state = STATE_INSTANTIATED;
+        return constructorData;
+    }
+
+    /**
+     * Helper for ensuring that the internal state machine is in the expected state.
+     *
+     * @param {string|Array<string>} stateOrStates One or multiple accepted states.
+     */
+    _ensureState(stateOrStates) {
+        if (Array.isArray(stateOrStates)) {
+            if (!stateOrStates.includes(this._state)) {
+                throw new Error(`Can only do this action in one of the following states: ${JSON.stringify(stateOrStates)}. Currently in state "${this._state}".`);
+            }
+        } else if (this._state !== stateOrStates) {
+            throw new Error(`Can only do this action in the "${stateOrStates}" state. Currently in state "${this._state}".`);
+        }
+    }
+
+    /**
+     * Replaces all linking placeholder in this contract's bytecode with address.
+     * See {@link Contract#_linkBytecodeReplacement}.
+     */
+    _linkBytecode() {
+        this._ensureState(STATE_NEW);
+
         this.linkReplacements.forEach(
             (linkedContract) => {
-                this.contractBytecode = this._linkBytecode(
+                this.contractBytecode = this._linkBytecodeReplacement(
                     linkedContract.contractName,
-                    linkedContract.generatedAddress(),
+                    linkedContract.getAddress(),
                 );
             },
         );
@@ -82,37 +197,7 @@ class Contract {
             );
         }
 
-        return bytecode;
-    }
-
-    /*
-     * Instantiate the contract by calculating the data of the contract creation transaction.
-     * This includes encoding the provided constructor arguments.
-     * Freezes the object to prevent any further changes.
-     *
-     * @param {Array.} [constructorArgs] The constructor arguments as expected by the
-     *                                   constructor ABI.
-     * @return {string} The transaction data for contract creation.
-     */
-    instantiate(constructorArgs) {
-        if (this.constructorABI && !constructorArgs) {
-            throw new Error(`Expected constructor arguments for constract ${this.contractName}`);
-        }
-        if (constructorArgs && !this.constructorABI) {
-            throw new Error(`Provided arguments for contract ${this.contractName}, but no constructorAbi is set.`);
-        }
-
-        let constructorData = this.linkedBytecode();
-        if (constructorArgs) {
-            const web3 = new Web3();
-            const encodedArguments = web3.eth.abi
-                .encodeParameters(this.constructorABI.inputs, constructorArgs)
-                .slice(2);
-            constructorData += encodedArguments;
-        }
-
-        this.constructorData = constructorData;
-        return constructorData;
+        this._state = STATE_LINKED;
     }
 
     /**
@@ -122,7 +207,7 @@ class Contract {
      * @param {string} contractAddress Address of the linked contract that will be used.
      * @return {string} The linked bytecode.
      */
-    _linkBytecode(contractName, contractAddress) {
+    _linkBytecodeReplacement(contractName, contractAddress) {
         let pattern = `__${contractName}______________________________________`;
         pattern = pattern.slice(0, 40);
         const address = contractAddress.replace('0x', '');
@@ -214,7 +299,7 @@ class ContractRegistry {
     }
 
     /**
-     * Add multiple contracts to the registry. See {@link ContractRegistry.addContract}.
+     * Add multiple contracts to the registry. See {@link ContractRegistry#addContract}.
      *
      * @param {Array.<Contract>} contracts Contracts to add to the registry.
      */
@@ -230,20 +315,29 @@ class ContractRegistry {
      * See {@link https://wiki.parity.io/Chain-specification} for more details on the
      * parity chainspec format.
      *
+     * @param {Object} options.addressGenerator Address generator to use.
+     *                 Defaults to a IncrementingAddressGenerator.
+     *
      * @returns {object} The "accounts" section for a parity chainspec.
      */
-    toParityGenesisAccounts() {
+    toParityGenesisAccounts(options = {}) {
+        const defaultOptions = {
+            addressGenerator: new IncrementingAddressGenerator(),
+        };
+        const mergedOptions = Object.assign(defaultOptions, options);
+
         // prepare contracts by ordering and generating addresses
-        const addressGenerator = new IncrementingAddressGenerator();
+        const { addressGenerator } = mergedOptions;
         this._orderContracts();
-        this.contracts.forEach(contract => contract.generatedAddress(addressGenerator));
+        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
+        this.contracts.forEach(contract => contract.instantiate());
 
         const output = {
         };
 
         Object.values(this.contracts)
             .forEach((contract) => {
-                const address = contract.generatedAddress();
+                const address = contract.getAddress();
                 const constructor = contract.constructorData;
                 if (!constructor) {
                     throw new Error(`constructorData for contract ${contract.contractName} is missing. This probably means that .instantiate() has not been called for the contract`);
