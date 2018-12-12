@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const EIP20CoGateway = artifacts.require('EIP20CoGateway'),
+const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
     MockSafeCore = artifacts.require('MockSafeCore'),
     MessageBus = artifacts.require('MessageBus'),
     UtilityToken = artifacts.require('UtilityToken'),
@@ -27,7 +27,7 @@ const EIP20CoGateway = artifacts.require('EIP20CoGateway'),
     MockToken = artifacts.require('MockToken'),
     Utils = require("../../test_lib/utils");
 
-let eip20CoGateway,
+let testEIP20CoGateway,
     stateRoot = "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
     valueToken,
     mockSafeCore,
@@ -38,6 +38,14 @@ let eip20CoGateway,
     owner,
     redeemer,
     redeemerBalance;
+
+let MessageStatusEnum = {
+    Undeclared: 0,
+    Declared: 1,
+    Progressed: 2,
+    DeclaredRevocation: 3,
+    Revoked: 4
+};
 
 async function _setup(accounts) {
     
@@ -51,7 +59,7 @@ async function _setup(accounts) {
     redeemer = accounts[7];
     redeemerBalance = new BN(1000);
     
-    eip20CoGateway = await EIP20CoGateway.new(
+    testEIP20CoGateway = await TestEIP20CoGateway.new(
         valueToken,
         utilityToken.address,
         mockSafeCore.address,
@@ -63,7 +71,7 @@ async function _setup(accounts) {
     await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
     
     await utilityToken.approve(
-        eip20CoGateway.address,
+        testEIP20CoGateway.address,
         redeemerBalance,
         {from: redeemer},
     );
@@ -91,7 +99,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
         let bounty = new BN(10);
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -108,7 +116,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
         let bounty = new BN(110);
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -125,7 +133,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
         amount = 0;
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -140,7 +148,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     
     it('should fail when redeem with same nonce is already initiated', async function () {
         
-        await eip20CoGateway.redeem(
+        await testEIP20CoGateway.redeem(
             amount,
             beneficiary,
             gasPrice,
@@ -151,7 +159,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
         
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -167,7 +175,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     
     it('should fail when previous redeem is in progress', async function () {
         
-        await eip20CoGateway.redeem(
+        await testEIP20CoGateway.redeem(
             amount,
             beneficiary,
             gasPrice,
@@ -178,7 +186,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
         
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -194,7 +202,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     
     it('should fail when cogateway is not approved with redeem amount', async function () {
         
-        let eip20CoGateway2 = await EIP20CoGateway.new(
+        let testEIP20CoGateway2 = await TestEIP20CoGateway.new(
             valueToken,
             utilityToken.address,
             mockSafeCore.address,
@@ -204,7 +212,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
         
         await Utils.expectRevert(
-            eip20CoGateway2.redeem(
+            testEIP20CoGateway2.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -213,20 +221,16 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount},
             ),
-            "Underflow when subtracting."
+            "Underflow when subtracting.",
         );
         
     });
     
     it('should fail when the redeemer \'s base token balance is less than the bounty amount', async function () {
         
-        let redeemer = accounts[2],
-            redeemerBalance = new BN(20);
-        
-        await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
-        
+        bountyAmount = new BN(10);
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -235,7 +239,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount},
             ),
-            "Underflow when subtracting."
+            "Payable amount should be equal to the bounty amount.",
         )
     });
     
@@ -243,7 +247,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
         let amount = new BN(10000);
         await Utils.expectRevert(
-            eip20CoGateway.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -252,15 +256,58 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount},
             ),
-            "Underflow when subtracting."
+            "Underflow when subtracting.",
         )
     });
+    
+    it('should fail if the previous process is in revocation declared state', async function () {
+        
+        let messageHash = await testEIP20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+        
+        await testEIP20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+        
+        await testEIP20CoGateway.setOutboxStatus(
+            messageHash,
+            MessageStatusEnum.DeclaredRevocation,
+        );
+        
+        Utils.expectRevert(
+            testEIP20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce.addn(1),
+                hashLock,
+                {from: redeemer, value: bountyAmount},
+            ),
+            'Previous process is not completed.'
+        );
+        
+    });
+    
     
     it('should successfully redeem', async function () {
         
         let messageHash = "0x193fa194eef3c001da102ee129c23b1e13a723cb9335edefe9100e85132c77d8";
         
-        let actualMessageHash = await eip20CoGateway.redeem.call(
+        let actualMessageHash = await testEIP20CoGateway.redeem.call(
             amount,
             beneficiary,
             gasPrice,
@@ -276,7 +323,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             "Incorrect messagehash from contract",
         );
         
-        let response = await eip20CoGateway.redeem(
+        let response = await testEIP20CoGateway.redeem(
             amount,
             beneficiary,
             gasPrice,
@@ -287,7 +334,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
         
         let eip20CoGatewayBaseBalance = new BN(
-            await web3.eth.getBalance(eip20CoGateway.address),
+            await web3.eth.getBalance(testEIP20CoGateway.address),
         );
         
         assert.strictEqual(
@@ -296,7 +343,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             "Bounty is not transferred to CoGateway",
         );
         
-        let eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
+        let eip20CoGatewayBalance = await utilityToken.balanceOf(testEIP20CoGateway.address);
         
         assert.strictEqual(
             eip20CoGatewayBalance.eq(amount),
