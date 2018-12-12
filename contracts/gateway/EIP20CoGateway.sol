@@ -1167,7 +1167,7 @@ contract EIP20CoGateway is GatewayBase {
         redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
         // Burn the redeem amount.
-        UtilityTokenInterface(utilityToken).burn(address(this), redeemAmount_);
+        UtilityTokenInterface(utilityToken).burn(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator
         msg.sender.transfer(redeems[_messageHash].bounty);
