@@ -422,7 +422,7 @@ contract GatewayBase is Organized {
             require(
                 status == MessageBus.MessageStatus.Progressed ||
                 status == MessageBus.MessageStatus.Revoked,
-                "Previous process is not completed"
+                "Previous process is not completed."
             );
 
             delete messages[previousMessageHash_];

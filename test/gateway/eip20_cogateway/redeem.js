@@ -138,7 +138,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
     });
     
-    it('should fail when redeem is already initiated', async function () {
+    it('should fail when redeem with same nonce is already initiated', async function () {
         
         await eip20CoGateway.redeem(
             amount,
@@ -183,16 +183,16 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 beneficiary,
                 gasPrice,
                 gasLimit,
-                (nonce + 1),
+                nonce.addn(1),
                 hashLock,
                 {from: redeemer, value: bountyAmount},
             ),
-            'Invalid nonce',
+            'Previous process is not completed.',
         );
         
     });
     
-    it('should fail when cogateway is not approved', async function () {
+    it('should fail when cogateway is not approved with redeem amount', async function () {
         
         let eip20CoGateway2 = await EIP20CoGateway.new(
             valueToken,
@@ -218,7 +218,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
     });
     
-    it('should fail when the redeemer has balance less than the bounty amount', async function () {
+    it('should fail when the redeemer \'s base token balance is less than the bounty amount', async function () {
         
         let redeemer = accounts[2],
             redeemerBalance = new BN(20);
@@ -239,7 +239,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         )
     });
     
-    it('should fail when the redeemer balance is less than the redeem amount', async function () {
+    it('should fail when the redeemer\'s BT balance is less than the redeem amount', async function () {
         
         let amount = new BN(10000);
         await Utils.expectRevert(
