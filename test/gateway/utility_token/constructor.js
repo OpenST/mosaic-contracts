@@ -67,7 +67,7 @@ contract('UtilityToken.constructor()', function (accounts) {
         TOKEN_DECIMALS,
         NullAddress,
       ),
-      'MembersManager contract address must not be address\\(0\\).',
+      'MembersManager contract address must not be zero.',
     );
 
   });

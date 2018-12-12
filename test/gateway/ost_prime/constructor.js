@@ -104,7 +104,7 @@ contract('OSTPrime.constructor()', function (accounts) {
     membersManager = NullAddress;
     await Utils.expectRevert(
       OSTPrime.new(brandedTokenAddress, membersManager),
-      'MembersManager contract address must not be address\\(0\\).',
+      'MembersManager contract address must not be zero.',
     );
 
   });
