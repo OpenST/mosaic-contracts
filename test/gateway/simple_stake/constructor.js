@@ -48,7 +48,7 @@ contract('SimpleStake.constructor()', function (accounts) {
             'Returned value is not a valid address.',
         );
 
-        let eip20Token = await simpleStake.eip20Token.call();
+        let eip20Token = await simpleStake.token.call();
         let actualGateway = await simpleStake.gateway.call();
 
         assert.strictEqual(
