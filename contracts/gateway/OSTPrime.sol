@@ -21,7 +21,8 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-/* Simple Token Prime [OST'] is equivalently staked for with Simple Token
+/*
+ * Simple Token Prime [OST'] is equivalently staked for with Simple Token
  * on the value chain and is the base token that pays for gas on the auxiliary
  * chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
  * Ether pays for gas on Ethereum mainnet) when sending a transaction on
@@ -43,6 +44,8 @@ import "../lib/IsMemberInterface.sol";
  *       utility chain.
  */
 contract OSTPrime is UtilityToken, OSTPrimeConfig {
+
+    /* Usings */
 
     using SafeMath for uint256;
 
