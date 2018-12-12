@@ -34,7 +34,7 @@ contract SimpleStake {
 
     /* Events */
 
-    /* Emitted when amount in un-staked */
+    /* Emitted when amount is un-staked */
     event ReleasedStake(
         address indexed _gateway,
         address indexed _to,
@@ -62,6 +62,7 @@ contract SimpleStake {
         _;
     }
 
+
     /* Constructor */
 
     /**
@@ -77,7 +78,7 @@ contract SimpleStake {
         public
     {
         require(
-            address(_eip20Token)!= address(0),
+            address(_eip20Token) != address(0),
             "Token contract address must not be zero."
         );
         require(
@@ -94,10 +95,9 @@ contract SimpleStake {
 
     /**
      *  @notice This allows gateway to release staked amount to provided address.
-     *
-     *  @dev Only gateway contract can call this method which defines set of rules
-     *       on how the stake can be released and to who. Beneficiary address
-     *       can be zero address in order to burn tokens.
+     *          Only gateway contract can call this method which defines set of rules
+     *          on how the stake can be released and to who. Beneficiary address
+     *          can be zero address in order to burn tokens.
      *
      *  @param _to Beneficiary of the amount of the stake.
      *  @param _amount Amount of stake to release to beneficiary.
@@ -123,7 +123,7 @@ contract SimpleStake {
 
         emit ReleasedStake(msg.sender, _to, _amount);
 
-        success_= true;
+        success_ = true;
     }
 
     /**
@@ -141,7 +141,7 @@ contract SimpleStake {
         external
         view
         returns (uint256 stakedAmount_)
-        {
+    {
             stakedAmount_ = eip20Token.balanceOf(address(this));
     }
 }
