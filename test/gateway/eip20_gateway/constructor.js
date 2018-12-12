@@ -103,6 +103,13 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             !isActivated,
             "Gateway is not deactivated by default."
         );
+        
+        let storedMembersManager = await gateway.membersManager();
+        assert.equal(
+          membersManager.address,
+          storedMembersManager,
+          "Incorrect membersManager from contract"
+        );
     });
 
     it('should not deploy contract if token is passed as zero.', async function () {
@@ -149,6 +156,22 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             "Core contract address must not be zero."
         );
 
+    });
+    
+    it('should fail when members manager address is passed as zero', async function () {
+        let membersManager = NullAddress;
+        
+        await Utils.expectRevert(
+             Gateway.new(
+                mockToken.address,
+                baseToken.address,
+                coreAddress,
+                bountyAmount,
+                membersManager
+            ),
+            "MembersManager contract address must not be zero."
+        );
+        
     });
 
     it('should able to deploy contract with zero bounty.', async function () {
