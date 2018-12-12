@@ -64,7 +64,7 @@ async function _setup(accounts) {
     
     await utilityToken.approve(
         eip20CoGateway.address,
-        new BN(1000),
+        redeemerBalance,
         {from: redeemer},
     );
     
@@ -105,7 +105,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     
     it('should fail when the bounty amount is more than expected bounty amount', async function () {
         
-        let bounty = new BN(10);
+        let bounty = new BN(110);
         await Utils.expectRevert(eip20CoGateway.redeem(
             amount,
             beneficiary,
@@ -119,7 +119,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         );
     });
     
-    it('should fail when amount is zero', async function () {
+    it('should fail when redeem amount is zero', async function () {
         
         amount = 0;
         await Utils.expectRevert(eip20CoGateway.redeem(
