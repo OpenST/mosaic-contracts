@@ -89,7 +89,7 @@ contract('OSTPrime.unwrap()', function (accounts) {
 
     await initialize();
 
-    let amount = new BN(1).add(TOKENS_MAX);
+    let amount = TOKENS_MAX.addn(1);
     await ostPrime.setTokenBalance(callerAddress, amount);
     await Utils.expectFailedAssert(
       ostPrime.unwrap(amount, { from: callerAddress }),
