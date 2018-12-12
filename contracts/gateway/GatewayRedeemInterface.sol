@@ -73,7 +73,7 @@ contract GatewayRedeemInterface {
 		uint256 _nonce,
 		bytes32 _hashLock
 	)
-		public
+		external
 		payable
 		returns (bytes32 messageHash_);
 
