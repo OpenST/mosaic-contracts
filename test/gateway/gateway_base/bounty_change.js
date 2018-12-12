@@ -4,7 +4,6 @@ const GatewayBase = artifacts.require("./GatewayBase.sol")
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const Utils = require('../../../test/test_lib/utils');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
 let unlockTimeInBlocks = 100;
 
 async function proposeBountyChange(gatewayBaseInstance, proposedBounty, organization, currentBounty) {
@@ -50,13 +49,11 @@ contract('GatewayBase.sol', function (accounts) {
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
-      let burner = NullAddress;
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         bounty,
-        membersManager.address,
-        burner
+        membersManager.address
       );
 
     });
@@ -110,13 +107,11 @@ contract('GatewayBase.sol', function (accounts) {
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
-      let burner = NullAddress;
 
       gatewayBaseInstance = await GatewayBase.new(
         core,
         bounty,
-        membersManager.address,
-        burner
+        membersManager.address
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
       currentBlock = unlockHeight - unlockTimeInBlocks;

@@ -21,20 +21,17 @@ contract MockGatewayBase is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
-     * @param _burner Address where tokens will be burned.
      */
     constructor(
         StateRootInterface _core,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
-        address _burner
+        IsMemberInterface _membersManager
     )
         public
         GatewayBase(
             _core,
             _bounty,
-            _membersManager,
-            _burner
+            _membersManager
         )
     {}
 

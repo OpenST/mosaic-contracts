@@ -186,6 +186,9 @@ contract EIP20CoGateway is GatewayBase {
     /** address of value token. */
     address public valueToken;
 
+    /** Address where token will be burned. */
+    address payable public burner;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -216,13 +219,12 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _gateway,
-        address _burner
+        address payable _burner
     )
         GatewayBase(
             _core,
             _bounty,
-            _membersManager,
-            _burner
+            _membersManager
         )
         public
     {
@@ -242,6 +244,7 @@ contract EIP20CoGateway is GatewayBase {
         valueToken = _valueToken;
         utilityToken = _utilityToken;
         remoteGateway = _gateway;
+        burner = _burner;
 
         // update the encodedGatewayPath
         encodedGatewayPath = GatewayLib.bytes32ToBytes(

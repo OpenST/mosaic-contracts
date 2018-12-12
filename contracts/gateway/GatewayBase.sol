@@ -95,9 +95,6 @@ contract GatewayBase is Organized {
     /** Bounty proposal block height. */
     uint256 public proposedBountyUnlockHeight;
 
-    /** Address where token will be burned. */
-    address public burner;
-
     /** Maps messageHash to the Message object. */
     mapping(bytes32 => MessageBus.Message) messages;
 
@@ -135,13 +132,11 @@ contract GatewayBase is Organized {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
-     * @param _burner Address where tokens will be burned.
      */
     constructor(
         StateRootInterface _core,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
-        address _burner
+        IsMemberInterface _membersManager
     )
         Organized(_membersManager)
         public
@@ -154,7 +149,6 @@ contract GatewayBase is Organized {
         core = _core;
 
         bounty = _bounty;
-        burner = _burner;
     }
 
     /* External functions */

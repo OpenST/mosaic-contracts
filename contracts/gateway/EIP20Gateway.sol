@@ -195,6 +195,9 @@ contract EIP20Gateway is GatewayBase {
      */
     EIP20Interface public baseToken;
 
+    /** Address where token will be burned. */
+    address public burner;
+
     /** Maps messageHash to the Stake object. */
     mapping(bytes32 /*messageHash*/ => Stake) stakes;
 
@@ -243,8 +246,7 @@ contract EIP20Gateway is GatewayBase {
         GatewayBase(
             _core,
             _bounty,
-            _membersManager,
-            _burner
+            _membersManager
         )
         public
     {
@@ -258,6 +260,7 @@ contract EIP20Gateway is GatewayBase {
         );
         token = _token;
         baseToken = _baseToken;
+        burner = _burner;
         // gateway is in-active initially.
         activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
