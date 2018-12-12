@@ -166,16 +166,24 @@ Utils.prototype = {
     assert(false, "Did not revert as expected.");
   },
 
-  /// @dev Expect failure from assert, but returns error instead
-  expectFailedAssert: async (promise) => {
+  /**
+   * Asserts that a given ethereum call/transaction leads to a assert failure.
+   * The call/transaction is given as a promise.
+   *
+   * @param {promise} promise Awaiting this promise must lead to a error.
+   * @param {string} expectedMessage If given, the returned error message must
+   *                                 include this string (optional).
+   */
+  expectFailedAssert: async (promise, expectedMessage) => {
     try {
       await promise;
     } catch (error) {
       assert(
-        error.message.search('invalid opcode') > -1,
+        error.message.search('Returned error:') > -1,
         'The contract should fail an assert. Instead: ' + error.message
       );
 
+      assertExpectedMessage(expectedMessage, error);
       return;
     }
 
