@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: stake.js
 //
 // http://www.simpletoken.org/
 //
@@ -40,13 +39,13 @@ contract('SimpleStake.constructor()', function (accounts) {
         let simpleStake = await SimpleStake.new(
             token.address,
             gateway,
-            {from: accounts[0]}
+            {from: accounts[0]},
         );
 
         assert.strictEqual(
             web3.utils.isAddress(simpleStake.address),
             true,
-            'Returned value is not a valid address.'
+            'Returned value is not a valid address.',
         );
 
         let eip20Token = await simpleStake.eip20Token.call();
@@ -55,12 +54,12 @@ contract('SimpleStake.constructor()', function (accounts) {
         assert.strictEqual(
           eip20Token,
           token.address,
-          "Expected token address is different from actual address."
+          "Expected token address is different from actual address.",
         );
         assert.strictEqual(
           gateway,
           actualGateway,
-          "Expected gateway address is different from actual address."
+          "Expected gateway address is different from actual address.",
         );
     });
 
@@ -70,9 +69,9 @@ contract('SimpleStake.constructor()', function (accounts) {
             SimpleStake.new(
                 zeroAddress,
                 gateway,
-                {from: accounts[0]}
+                {from: accounts[0]},
             ),
-            "Token contract address must not be zero."
+            "Token contract address must not be zero.",
         );
 
     });
@@ -83,9 +82,9 @@ contract('SimpleStake.constructor()', function (accounts) {
             SimpleStake.new(
                 token.address,
                 zeroAddress,
-                {from: accounts[0]}
+                {from: accounts[0]},
             ),
-            "Gateway contract address must not be zero."
+            "Gateway contract address must not be zero.",
         );
 
     });

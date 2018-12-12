@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: stake.js
 //
 // http://www.simpletoken.org/
 //
@@ -33,7 +32,7 @@ contract('SimpleStake.getTotalStake()', function (accounts) {
         simpleStake = await SimpleStake.new(
             token.address,
             gateway,
-            {from: accounts[0]}
+            {from: accounts[0]},
         );
 
     });
@@ -46,20 +45,24 @@ contract('SimpleStake.getTotalStake()', function (accounts) {
         assert.strictEqual(
             totalStakedAmount.eq(expectedTotalStakedAmount),
             true,
-            'Initial total staked amount is not zero'
+            'Initial total staked amount is not zero',
         );
     });
 
     it('should return correct total staked amount.', async function () {
         let expectedTotalStakedAmount = new BN(100);
-        await token.transfer(simpleStake.address, expectedTotalStakedAmount, {from: accounts[0]});
+        await token.transfer(
+            simpleStake.address,
+            expectedTotalStakedAmount,
+            {from: accounts[0]},
+        );
 
         let totalStakedAmount = await simpleStake.getTotalStake.call();
 
         assert.strictEqual(
             totalStakedAmount.eq(expectedTotalStakedAmount),
             true,
-            'Total staked amount is not as expected.'
+            'Total staked amount is not as expected.',
         );
     });
 
@@ -82,7 +85,7 @@ contract('SimpleStake.getTotalStake()', function (accounts) {
         assert.strictEqual(
             totalStakedAmount.eq(expectedTotalStakedAmount),
             true,
-            'Total staked amount is not as expected.'
+            'Total staked amount is not as expected.',
         );
     });
 });

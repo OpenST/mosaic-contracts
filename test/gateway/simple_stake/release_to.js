@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: stake.js
 //
 // http://www.simpletoken.org/
 //
@@ -37,7 +36,7 @@ contract('SimpleStake.releaseTo()', function (accounts) {
         simpleStake = await SimpleStake.new(
             token.address,
             gateway,
-            {from: accounts[0]}
+            {from: accounts[0]},
         );
 
         await token.transfer(simpleStake.address, amount, {from: accounts[0]});
@@ -48,46 +47,70 @@ contract('SimpleStake.releaseTo()', function (accounts) {
         let beneficiary = accounts[5];
         let releasedAmount = new BN(50);
 
-        let previousBalance = await token.balanceOf.call(beneficiary);
-        let success = await simpleStake.releaseTo.call(beneficiary, releasedAmount, {from: gateway});
+        let previousBeneficiaryBalance = await token.balanceOf.call(beneficiary);
+        let previousSimpleStakeBalance = await token.balanceOf.call(simpleStake.address);
 
-        let tx = await simpleStake.releaseTo(beneficiary, releasedAmount, {from: gateway});
-
-        let events = Events.perform(tx.receipt, simpleStake.address, simpleStake.abi);
-
-        assert.isDefined(
-            events.ReleasedStake,
-            'Release stake event not emitted.'
-        );
-        assert.strictEqual(
-            events.ReleasedStake._gateway,
-            gateway,
-            'Expected gateway address is different from actual address.'
-        );
-        assert.strictEqual(
-            events.ReleasedStake._to,
+        let success = await simpleStake.releaseTo.call(
             beneficiary,
-            'Expected beneficiary address is different from actual address.'
+            releasedAmount,
+            {from: gateway},
         );
-        assert.strictEqual(
-            events.ReleasedStake._amount.eq(releasedAmount),
-            true,
-            'Released stake amount is different from expected amount.'
-        );
-
-        let expectedBalance = previousBalance.add(releasedAmount);
-        let latestBalance = await token.balanceOf.call(beneficiary);
 
         assert.strictEqual(
             success,
             true,
-            'Expected success status.'
+            'Expected success status.',
+        );
+
+        let tx = await simpleStake.releaseTo(
+            beneficiary,
+            releasedAmount,
+            {from: gateway},
+        );
+
+        let events = Events.perform(
+            tx.receipt,
+            simpleStake.address,
+            simpleStake.abi,
+        );
+
+        assert.isDefined(
+            events.ReleasedStake,
+            'Release stake event not emitted.',
         );
         assert.strictEqual(
-            latestBalance.eq(expectedBalance),
+            events.ReleasedStake._gateway,
+            gateway,
+            'Expected gateway address is different from actual address.',
+        );
+        assert.strictEqual(
+            events.ReleasedStake._to,
+            beneficiary,
+            'Expected beneficiary address is different from actual address.',
+        );
+        assert.strictEqual(
+            events.ReleasedStake._amount.eq(releasedAmount),
+            true,
+            'Released stake amount is different from expected amount.',
+        );
+
+        let expectedBeneficiaryBalance = previousBeneficiaryBalance.add(releasedAmount);
+        let expectedSimpleStakeBalance = previousSimpleStakeBalance.sub(releasedAmount);
+
+        let latestBeneficiaryBalance = await token.balanceOf.call(beneficiary);
+        let latestSimpleStakeBalance = await token.balanceOf.call(simpleStake.address);
+        assert.strictEqual(
+            latestBeneficiaryBalance.eq(expectedBeneficiaryBalance),
             true,
             'Expected balance of beneficiary after release is not equal to' +
-            ' actual balance'
+            ' actual balance',
+        );
+
+        assert.strictEqual(
+            latestSimpleStakeBalance.eq(expectedSimpleStakeBalance),
+            true,
+            'Expected balance of simple stake after release is not equal to' +
+            ' actual balance',
         );
 
     });
@@ -110,7 +133,7 @@ contract('SimpleStake.releaseTo()', function (accounts) {
 
         await Utils.expectRevert(
             simpleStake.releaseTo(beneficiary, releasedAmount, {from: gateway}),
-            'Underflow when subtracting.'
+            'Underflow when subtracting.',
         );
     });
 
@@ -121,7 +144,7 @@ contract('SimpleStake.releaseTo()', function (accounts) {
 
         await Utils.expectRevert(
             simpleStake.releaseTo(beneficiary, releasedAmount, {from: accounts[3]}),
-            'Only gateway can call the function.'
+            'Only gateway can call the function.',
         );
     });
 

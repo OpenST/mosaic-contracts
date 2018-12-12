@@ -29,6 +29,9 @@ import "../lib/SafeMath.sol";
  *  @notice This holds staked EIP20 tokens for a gateway.
  */
 contract SimpleStake {
+
+    /* Usings */
+
     using SafeMath for uint256;
 
 
@@ -45,7 +48,7 @@ contract SimpleStake {
     /* Storage */
 
     /** EIP20 token contract that can be staked. */
-    EIP20Interface public eip20Token;
+    EIP20Interface public token;
 
     /** EIP20 gateway address. */
     address public gateway;
@@ -68,17 +71,17 @@ contract SimpleStake {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _eip20Token EIP20 token that will be staked.
+     *  @param _token EIP20 token that will be staked.
      *  @param _gateway EIP20Gateway contract that governs staking.
      */
     constructor(
-        EIP20Interface _eip20Token,
+        EIP20Interface _token,
         address _gateway
     )
         public
     {
         require(
-            address(_eip20Token) != address(0),
+            address(_token) != address(0),
             "Token contract address must not be zero."
         );
         require(
@@ -86,7 +89,7 @@ contract SimpleStake {
             "Gateway contract address must not be zero."
         );
 
-        eip20Token = _eip20Token;
+        token = _token;
         gateway = _gateway;
     }
 
@@ -113,12 +116,12 @@ contract SimpleStake {
         returns (bool success_)
     {
         require(
-            _amount != 0,
+            _amount > 0,
             "Amount must not be zero."
         );
         require(
-            eip20Token.transfer(_to, _amount) == true,
-            "EIP20Token transfer must success."
+            token.transfer(_to, _amount) == true,
+            "Token transfer must success."
         );
 
         emit ReleasedStake(msg.sender, _to, _amount);
@@ -142,6 +145,6 @@ contract SimpleStake {
         view
         returns (uint256 stakedAmount_)
     {
-            stakedAmount_ = eip20Token.balanceOf(address(this));
+            stakedAmount_ = token.balanceOf(address(this));
     }
 }
