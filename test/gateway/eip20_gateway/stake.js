@@ -52,19 +52,7 @@ let mockToken,
     errorMessage;
 
 
-async function _setup(accounts) {
-
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
-
-    bountyAmount = new BN(100);
-    gateway = await Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        accounts[3], //core address
-        bountyAmount,
-        accounts[4] // organisation address
-    );
+async function _setup(accounts, gateway) {
 
     helper = new HelperKlass(gateway);
     gatewayTest = new EIP20GatewayKlass(gateway, mockToken, baseToken);
@@ -73,7 +61,7 @@ async function _setup(accounts) {
     hashLockObj = utils.generateHashLock();
 
     facilitator = accounts[4];
-    nonce = await  helper.getNonce(accounts[1]);
+    nonce = await helper.getNonce(accounts[1]);
     stakeAmount = new BN(100000000000);
     beneficiary = accounts[2];
     stakerAddress = accounts[1];
@@ -82,11 +70,11 @@ async function _setup(accounts) {
     hashLock = hashLockObj.l;
 
 
-    await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-    await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
 
-    await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-    await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+    await baseToken.transfer(facilitator, bountyAmount, { from: accounts[0] });
+    await baseToken.approve(gateway.address, bountyAmount, { from: facilitator });
 
     errorMessage = "";
 }
@@ -130,7 +118,7 @@ async function _stake(resultType) {
     };
 
     let expectedResult = {
-        returns: {messageHash: messageHash},
+        returns: { messageHash: messageHash },
         events: {
             StakeIntentDeclared: {
                 _messageHash: messageHash,
@@ -159,7 +147,20 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
 
     beforeEach(async function () {
-        await _setup(accounts);
+
+        mockToken = await MockToken.new();
+        baseToken = await MockToken.new();
+
+        bountyAmount = new BN(100);
+        gateway = await Gateway.new(
+            mockToken.address,
+            baseToken.address,
+            accounts[1], //core address
+            bountyAmount,
+            accounts[2] // organisation address
+        );
+
+        await _setup(accounts, gateway);
     });
 
     it('should fail to stake when stake amount is 0', async function () {
@@ -214,14 +215,14 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
     it('should fail to stake when staker has balance less than the stake amount', async function () {
         stakeAmount = new BN(200000000000);
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
+        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
         await _prepareData();
         errorMessage = "revert";
         await _stake(utils.ResultType.FAIL);
     });
 
     it('should fail to stake when facilitator has balance less than the bounty amount', async function () {
-        await baseToken.transfer(accounts[0], new BN(50), {from: facilitator});
+        await baseToken.transfer(accounts[0], new BN(50), { from: facilitator });
         await _prepareData();
         errorMessage = "revert";
         await _stake(utils.ResultType.FAIL);
@@ -229,7 +230,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
     it('should fail to stake when gateway is not approved by the staker', async function () {
         stakerAddress = accounts[5];
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
+        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
         await _prepareData();
         errorMessage = "revert";
         await _stake(utils.ResultType.FAIL);
@@ -237,7 +238,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
     it('should fail to stake when gateway is not approved by the facilitator', async function () {
         facilitator = accounts[6];
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
+        await baseToken.transfer(facilitator, bountyAmount, { from: accounts[0] });
         await _prepareData();
         errorMessage = "revert";
         await _stake(utils.ResultType.FAIL);
@@ -253,10 +254,10 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         await _prepareData();
         await _stake(utils.ResultType.SUCCESS);
 
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+        await baseToken.transfer(facilitator, bountyAmount, { from: accounts[0] });
+        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+        await baseToken.approve(gateway.address, bountyAmount, { from: facilitator });
 
         errorMessage = "Invalid nonce";
         await _stake(utils.ResultType.FAIL);
@@ -267,10 +268,10 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         await _prepareData();
         await _stake(utils.ResultType.SUCCESS);
 
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+        await baseToken.transfer(facilitator, bountyAmount, { from: accounts[0] });
+        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+        await baseToken.approve(gateway.address, bountyAmount, { from: facilitator });
 
         nonce = new BN(2);
         await _prepareData();
@@ -287,22 +288,41 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         let penalty = new BN(bountyAmount * PENALTY_PERCENT);
 
         // funding staker for penalty amount
-        await baseToken.transfer(stakerAddress, penalty, {from: accounts[0]});
+        await baseToken.transfer(stakerAddress, penalty, { from: accounts[0] });
         // approving gateway for penalty amount
-        await baseToken.approve(gateway.address, penalty, {from: stakerAddress});
+        await baseToken.approve(gateway.address, penalty, { from: stakerAddress });
 
         //revertStaking
-        await gateway.revertStake(messageHash, {from: stakerAddress});
+        await gateway.revertStake(messageHash, { from: stakerAddress });
 
-        await mockToken.transfer(stakerAddress, stakeAmount, {from: accounts[0]});
-        await baseToken.transfer(facilitator, bountyAmount, {from: accounts[0]});
-        await mockToken.approve(gateway.address, stakeAmount, {from: stakerAddress});
-        await baseToken.approve(gateway.address, bountyAmount, {from: facilitator});
+        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+        await baseToken.transfer(facilitator, bountyAmount, { from: accounts[0] });
+        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+        await baseToken.approve(gateway.address, bountyAmount, { from: facilitator });
 
         nonce = new BN(2);
         await _prepareData();
         errorMessage = "Previous process is not completed";
         await _stake(utils.ResultType.FAIL);
     });
-});
 
+    it('should fail stake if gateway is not activated.', async function () {
+
+        let mockToken = await MockToken.new();
+        let baseToken = await MockToken.new();
+        let bountyAmount = new BN(100);
+
+        gateway = await Gateway.new(
+            mockToken.address,
+            baseToken.address,
+            accounts[1], //core address
+            bountyAmount,
+            accounts[2] // organisation address
+        );
+
+        await _setup(accounts, gateway);
+        await _prepareData();
+        await _stake(utils.ResultType.FAIL);
+    });
+
+});

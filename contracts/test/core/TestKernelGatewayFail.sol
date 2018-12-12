@@ -25,20 +25,20 @@ contract TestKernelGatewayFail is TestKernelGateway{
      * @notice Initializes the contract with origin and auxiliary block store
      *         addresses.
      *
-     * @param _originCore The address of OriginCore contract.
+     * @param _mosaicCore The address of MosaicCore contract.
      * @param _originBlockStore The block store that stores the origin chain.
      * @param _auxiliaryBlockStore The block store that stores the auxiliary
      *                             chain.
      * @param _kernelHash Initial kernel hash.
      */
     constructor (
-        address _originCore,
+        address _mosaicCore,
         BlockStoreInterface _originBlockStore,
         BlockStoreInterface _auxiliaryBlockStore,
         bytes32 _kernelHash
     )
         TestKernelGateway(
-            _originCore,
+            _mosaicCore,
             _originBlockStore,
             _auxiliaryBlockStore,
             _kernelHash

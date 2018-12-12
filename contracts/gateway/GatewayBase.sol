@@ -1,26 +1,27 @@
 pragma solidity ^0.5.0;
 
-import "../lib/GatewayLib.sol";
-import "./CoreInterface.sol";
-import "../lib/SafeMath.sol";
+import "./EIP20Interface.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
-import "./EIP20Interface.sol";
+import "../lib/GatewayLib.sol";
+import "../lib/IsMemberInterface.sol";
+import "../lib/Organized.sol";
+import "../lib/SafeMath.sol";
 
 
 /**
  *  @title GatewayBase contract.
  *
  *  @notice GatewayBase contains general purpose functions shared between
- *  gateway and co-gateway contract.
+ *          gateway and co-gateway contract.
  */
-contract GatewayBase {
-
+contract GatewayBase is Organized {
     using SafeMath for uint256;
+
     /**
      * Emitted whenever a Gateway/CoGateway contract is proven.
      * wasAlreadyProved parameter differentiates between first call and replay
-     * call of proveGateway method for same block height
+     * call of proveGateway method for same block height.
      */
     event GatewayProven(
         address _gateway,
@@ -54,56 +55,51 @@ contract GatewayBase {
 
     /* constants */
 
-    /** Position of message bus in the storage */
+    /** Position of message bus in the storage. */
     uint8 constant MESSAGE_BOX_OFFSET = 1;
 
     /**
-     * Penalty in bounty amount percentage charged to staker on revert stake
+     * Penalty in bounty amount percentage charged to staker on revert stake.
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
-    /** Unlock period for change bounty in block height */
+    /** Unlock period for change bounty in block height. */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
     /**
      * Message box.
-     * @dev keep this is at location 1, in case this is changed then update
+     * @dev Keep this is at location 1, in case this is changed then update
      *      constant MESSAGE_BOX_OFFSET accordingly.
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
+    /** Address of core contract. */
+    StateRootInterface public core;
 
-    /** Organisation address. */
-    address public organisation;
-
-    /** address of core contract. */
-    CoreInterface public core;
-
-    /** path to prove merkle account proof for Gateway/CoGateway contract. */
-    bytes internal encodedGatewayPath;
+    /** Path to make Merkle account proof for Gateway/CoGateway contract. */
+    bytes public encodedGatewayPath;
 
     /**
-     * Remote gateway contract address. If gateway contract remote gateway
-     * is CoGateway and vice versa.
+     * Remote gateway contract address. If this is a gateway contract, then the
+     * remote gateway is a CoGateway and vice versa.
      */
     address public remoteGateway;
 
-    /** amount of ERC20 which is staked by facilitator. */
+    /** Amount of ERC20 which is staked by facilitator. */
     uint256 public bounty;
 
     /** Proposed new bounty amount for bounty change. */
     uint256 public proposedBounty;
-    /** bounty proposal block height*/
+
+    /** Bounty proposal block height. */
     uint256 public proposedBountyUnlockHeight;
 
     /** Maps messageHash to the Message object. */
-    mapping(bytes32 /*messageHash*/ => MessageBus.Message) messages;
+    mapping(bytes32 => MessageBus.Message) messages;
 
-    /** Mapping to store blockHeight to storageRoot. */
-    mapping(uint256 /* block height */ => bytes32 /* storageRoot */) internal storageRoots;
+    /** Maps blockHeight to storageRoot. */
+    mapping(uint256 => bytes32) internal storageRoots;
 
     /**
      * Maps address to message hash.
@@ -114,7 +110,7 @@ contract GatewayBase {
      * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
-    mapping(address /*address*/ => bytes32 /*messageHash*/) inboxActiveProcess;
+    mapping(address => bytes32) inboxActiveProcess;
 
     /**
      * Maps address to message hash.
@@ -125,96 +121,69 @@ contract GatewayBase {
      * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
-    mapping(address /*address*/ => bytes32 /*messageHash*/) outboxActiveProcess;
-
-    /* modifiers */
-
-    /** checks that only organisation can call a particular function. */
-    modifier onlyOrganisation() {
-        require(
-            msg.sender == organisation,
-            "Only organisation can call the function"
-        );
-        _;
-    }
-
-    /** checks that contract is activated */
-    modifier isActive() {
-        require(
-            activated == true,
-            "Gateway is not activated."
-        );
-        _;
-    }
+    mapping(address => bytes32) outboxActiveProcess;
 
     /* Constructor */
 
     /**
-     * @notice Initialise the contract and set default values.
+     * @notice Initialize the contract and set default values.
      *
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
-     * @param _organisation Organisation address.
+     * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
-        address _organisation
+        IsMemberInterface _membersManager
     )
+        Organized(_membersManager)
         public
     {
         require(
             address(_core) != address(0),
             "Core contract address must not be zero."
         );
-        require(
-            _organisation != address(0),
-            "Organisation address must not be zero."
-        );
 
         core = _core;
 
         bounty = _bounty;
-        organisation = _organisation;
-
     }
 
-    /* external functions */
+    /* External functions */
 
     /**
-     *  @notice External function prove gateway/co-gateway.
-     *
-     *  @dev proveGateway can be called by anyone to verify merkle proof of
-     *       gateway/co-gateway contract address. Trust factor is brought by
-     *       stateRoots mapping. stateRoot is committed in commitStateRoot
-     *       function by mosaic process which is a trusted decentralized system
-     *       running separately. It's important to note that in replay calls of
-     *       proveGateway bytes _rlpParentNodes variable is not validated. In
-     *       this case input storage root derived from merkle proof account
-     *       nodes is verified with stored storage root of given blockHeight.
-     *       GatewayProven event has parameter wasAlreadyProved to
-     *       differentiate between first call and replay calls.
+     *  @notice proveGateway can be called by anyone to verify merkle proof of
+     *          gateway/co-gateway contract address. Trust factor is brought by
+     *          stateRoots mapping. stateRoot is committed in commitStateRoot
+     *          function by mosaic process which is a trusted decentralized system
+     *          running separately. It's important to note that in replay calls of
+     *          proveGateway bytes _rlpParentNodes variable is not validated. In
+     *          this case input storage root derived from merkle proof account
+     *          nodes is verified with stored storage root of given blockHeight.
+     *          GatewayProven event has parameter wasAlreadyProved to
+     *          differentiate between first call and replay calls.
      *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
      *                      proven.
-     *  @param _rlpEncodedAccount RLP encoded account node object.
+     *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
      *
      *  @return `true` if Gateway account is proved
      */
     function proveGateway(
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
     )
         external
         returns (bool /* success */)
     {
-        // _rlpEncodedAccount should be valid
+        // _rlpAccount should be valid
         require(
-            _rlpEncodedAccount.length != 0,
-            "Length of RLP encoded account is 0"
+            _rlpAccount.length != 0,
+            "Length of RLP account must not be 0."
         );
 
         // _rlpParentNodes should be valid
@@ -223,7 +192,7 @@ contract GatewayBase {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(
@@ -250,7 +219,7 @@ contract GatewayBase {
         }
 
         bytes32 storageRoot = GatewayLib.proveAccount(
-            _rlpEncodedAccount,
+            _rlpAccount,
             _rlpParentNodes,
             encodedGatewayPath,
             stateRoot
@@ -294,8 +263,8 @@ contract GatewayBase {
      * @return uint256 proposed bounty amount.
      */
     function initiateBountyAmountChange(uint256 _proposedBounty)
-        onlyOrganisation()
         external
+        onlyOrganization
         returns(uint256)
     {
         proposedBounty = _proposedBounty;
@@ -318,8 +287,8 @@ contract GatewayBase {
      * @return previousBountyAmount_ previous bounty amount.
      */
     function confirmBountyAmountChange()
-        onlyOrganisation()
         external
+        onlyOrganization
         returns (
             uint256 changedBountyAmount_,
             uint256 previousBountyAmount_
@@ -459,7 +428,7 @@ contract GatewayBase {
             delete messages[previousMessageHash_];
         }
 
-        // Update the active proccess.
+        // Update the active process.
         outboxActiveProcess[_account] = _messageHash;
 
     }

@@ -73,13 +73,11 @@ contract UtilityTokenInterface {
      * @dev only burns the amount from CoGateway address, So to burn
      *      transfer the amount to CoGateway.
      *
-     * @param _burner Burner address.
      * @param _amount Amount of tokens to burn.
      *
      * @return bool `true` if burn is successful, false otherwise.
      */
     function burn(
-        address _burner,
         uint256 _amount
     )
         external

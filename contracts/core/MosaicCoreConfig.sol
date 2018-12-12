@@ -14,21 +14,12 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- *  @title IsWorkerInterface provides a method to check if an address is
- *         currently registered as an active worker.
- */
-interface IsWorkerInterface {
+/** @title Configuration constants of the MosaicCore contract. */
+contract MosaicCoreConfig {
 
-    /**
-     * @notice Checks if an address is currently registered as an active worker.
-     *
-     * @param _worker Address to check.
-     *
-     * @return isWorker_ True if the worker is already added and expiration
-     *                   height is more than or equal to current block number.
-     *                   Returns false otherwise.
-     */
-    function isWorker(address _worker) external view returns (bool isWorker_);
+    /** The number of decimals of the base token. */
+    uint256 public constant DECIMALSFACTOR = 10 ** uint256(18);
 
+    /** The cost in base tokens that it costs a validator to report a block. */
+    uint256 public constant COST_REPORT_BLOCK = 1 * DECIMALSFACTOR;
 }
