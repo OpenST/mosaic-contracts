@@ -66,4 +66,21 @@ contract TestOSTPrime is OSTPrime {
         balances[_account] = _amount;
     }
 
+    /**
+     * @notice Set the CoGateway address for testing.
+     *
+     * @param _coGatewayAddress CoGateway address.
+     */
+    function setCoGatewayAddress(address _coGatewayAddress) public {
+        coGateway = _coGatewayAddress;
+    }
+
+    /**
+     * @notice Set the total supply count for testing.
+     *
+     * @param _amount The supply amount.
+     */
+    function setTotalSupply(uint256 _amount) public {
+        totalTokenSupply = _amount;
+    }
 }
