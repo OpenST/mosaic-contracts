@@ -50,7 +50,7 @@ async function _setup(accounts) {
     bountyAmount = new BN(100);
     redeemer = accounts[7];
     redeemerBalance = new BN(1000);
-
+    
     eip20CoGateway = await EIP20CoGateway.new(
         valueToken,
         utilityToken.address,
@@ -60,7 +60,7 @@ async function _setup(accounts) {
         gateway,
     );
     
-    await utilityToken.transfer(redeemer, redeemerBalance,{from: owner});
+    await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
     
     await utilityToken.approve(
         eip20CoGateway.address,
@@ -88,7 +88,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     });
     
     it('should fail when the bounty amount is less than expected bounty amount', async function () {
-
+        
         let bounty = new BN(10);
         await Utils.expectRevert(eip20CoGateway.redeem(
             amount,
@@ -97,7 +97,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bounty },
+            {from: redeemer, value: bounty},
             ),
             'Payable amount should be equal to the bounty amount.',
         );
@@ -113,14 +113,14 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bounty },
+            {from: redeemer, value: bounty},
             ),
             'Payable amount should be equal to the bounty amount.',
         );
     });
     
     it('should fail when amount is zero', async function () {
-
+        
         amount = 0;
         await Utils.expectRevert(eip20CoGateway.redeem(
             amount,
@@ -129,7 +129,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             'Redeem amount must not be zero.',
         );
@@ -144,7 +144,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
         );
         
         await Utils.expectRevert(eip20CoGateway.redeem(
@@ -154,7 +154,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             'Invalid nonce',
         );
@@ -170,7 +170,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
         );
         
         await Utils.expectRevert(eip20CoGateway.redeem(
@@ -180,7 +180,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             (nonce + 1),
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             'Invalid nonce',
         );
@@ -188,7 +188,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     });
     
     it('should fail when cogateway is not approved', async function () {
-    
+        
         let eip20CoGateway2 = await EIP20CoGateway.new(
             valueToken,
             utilityToken.address,
@@ -205,7 +205,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         );
@@ -217,7 +217,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         let redeemer = accounts[2],
             redeemerBalance = new BN(20);
         
-        await utilityToken.transfer(redeemer, redeemerBalance,{from: owner});
+        await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
         
         await Utils.expectRevert(eip20CoGateway.redeem(
             amount,
@@ -226,7 +226,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         )
@@ -242,16 +242,16 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         )
     });
     
     it('should successfully redeem', async function () {
-    
+        
         let messageHash = "0x193fa194eef3c001da102ee129c23b1e13a723cb9335edefe9100e85132c77d8";
-    
+        
         let actualMessageHash = await eip20CoGateway.redeem.call(
             amount,
             beneficiary,
@@ -259,7 +259,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
         );
         
         assert.strictEqual(
@@ -275,13 +275,13 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gasLimit,
             nonce,
             hashLock,
-            { from: redeemer, value: bountyAmount },
+            {from: redeemer, value: bountyAmount},
         );
-    
+        
         let eip20CoGatewayBaseBalance = new BN(
             await web3.eth.getBalance(eip20CoGateway.address),
         );
-     
+        
         assert.strictEqual(
             bountyAmount.eq(eip20CoGatewayBaseBalance),
             true,
@@ -313,16 +313,16 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 _amount: amount
             }
         };
-    
+        
         assert.equal(
             response.receipt.status,
             1,
             "Receipt status is unsuccessful"
         );
-    
+        
         let eventData = response.logs;
         await Utils.validateEvents(eventData, expectedEvent);
-
+        
     });
     
 });
