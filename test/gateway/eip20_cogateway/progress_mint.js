@@ -80,7 +80,6 @@ async function _setup(accounts) {
         organization,
         gateway,
     );
-    
     }
 
 contract('EIP20CoGateway.progressMint() ', function (accounts) {
