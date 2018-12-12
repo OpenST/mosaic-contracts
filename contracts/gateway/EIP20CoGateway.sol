@@ -722,7 +722,7 @@ contract EIP20CoGateway is GatewayBase {
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // burn bounty
-        address(0).transfer(redeemProcess.bounty);
+        burner.transfer(redeemProcess.bounty);
 
         //penalty charged to redeemer
         uint256 penalty = redeemProcess.bounty
@@ -730,7 +730,7 @@ contract EIP20CoGateway is GatewayBase {
         .div(100);
 
         //burn penalty
-        address(0).transfer(penalty);
+        burner.transfer(penalty);
 
         // delete the redeem data
         delete redeems[_messageHash];

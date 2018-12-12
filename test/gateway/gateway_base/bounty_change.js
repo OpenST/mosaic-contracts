@@ -164,6 +164,6 @@ contract('GatewayBase.sol', function (accounts) {
       await Utils.expectThrow(gatewayBaseInstance.confirmBountyAmountChange({ from: accounts[5] }));
     });
 
-
   });
 });
+

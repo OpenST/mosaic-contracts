@@ -644,14 +644,14 @@ contract EIP20Gateway is GatewayBase {
         token.transfer(message.sender, amount_);
 
         // burn facilitator bounty
-        baseToken.transfer(address(0), bounty);
+        baseToken.transfer(burner, bounty);
         //penalty charged to staker
         uint256 penalty = stakes[_messageHash].bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
 
         // burn staker penalty
-        baseToken.transfer(address(0), penalty);
+        baseToken.transfer(burner, penalty);
 
         // delete the stake data
         delete stakes[_messageHash];
