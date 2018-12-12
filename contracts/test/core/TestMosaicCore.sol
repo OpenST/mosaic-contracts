@@ -14,10 +14,10 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../core/OriginCore.sol";
+import "../../core/MosaicCore.sol";
 
-/** @title The TestOriginCore is used to test few functions of OriginCore. */
-contract TestOriginCore is OriginCore {
+/** @title The TestMosaicCore is used to test few functions of MosaicCore. */
+contract TestMosaicCore is MosaicCore {
 
     /* Constructor */
 
@@ -46,7 +46,7 @@ contract TestOriginCore is OriginCore {
         uint256 _minimumWeight,
         uint256 _maxAccumulateGasLimit
     )
-        OriginCore(
+        MosaicCore(
             _auxiliaryCoreIdentifier,
             _ost,
             _initialAuxiliaryGas,

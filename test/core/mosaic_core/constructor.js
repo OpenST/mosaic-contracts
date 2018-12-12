@@ -24,12 +24,12 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
-const OriginCore = artifacts.require('OriginCore');
+const MosaicCore = artifacts.require('MosaicCore');
 
-contract('OriginCore.constructor()', async (accounts) => {
+contract('MosaicCore.constructor()', async (accounts) => {
 
 
-    let originCore, gas, transactionRoot, ost, maxAccumulateGasLimit;
+    let mosaicCore, gas, transactionRoot, ost, maxAccumulateGasLimit;
     let auxiliaryCoreIdentifier = web3.utils.sha3("1");
     let minimumWeight = new BN('1');
 
@@ -40,9 +40,9 @@ contract('OriginCore.constructor()', async (accounts) => {
         maxAccumulateGasLimit = new BN(105000);
     });
 
-    it('should be able to deploy Origin core', async function () {
+    it('should be able to deploy mosaic core', async function () {
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
             auxiliaryCoreIdentifier,
             ost,
             gas,
@@ -51,12 +51,12 @@ contract('OriginCore.constructor()', async (accounts) => {
             maxAccumulateGasLimit
         );
 
-        assert(web3.utils.isAddress(originCore.address));
+        assert(web3.utils.isAddress(mosaicCore.address));
     });
 
-    it('should deploy stake contract on Origin core deployment', async function () {
+    it('should deploy stake contract on mosaic core deployment', async function () {
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
             auxiliaryCoreIdentifier,
             ost,
             gas,
@@ -65,16 +65,16 @@ contract('OriginCore.constructor()', async (accounts) => {
             maxAccumulateGasLimit
         );
 
-        assert(web3.utils.isAddress(originCore.address));
+        assert(web3.utils.isAddress(mosaicCore.address));
 
-        let stakeAddress = await originCore.stake.call();
+        let stakeAddress = await mosaicCore.stake.call();
 
         assert(web3.utils.isAddress(stakeAddress));
     });
 
-    it('should report genesis block on Origin core deployment', async function () {
+    it('should report genesis block on mosaic core deployment', async function () {
 
-        originCore = await OriginCore.new(
+        mosaicCore = await MosaicCore.new(
             auxiliaryCoreIdentifier,
             ost,
             gas,
@@ -83,18 +83,18 @@ contract('OriginCore.constructor()', async (accounts) => {
             maxAccumulateGasLimit
         );
 
-        assert(web3.utils.isAddress(originCore.address));
+        assert(web3.utils.isAddress(mosaicCore.address));
 
-        let head = await originCore.head.call();
+        let head = await mosaicCore.head.call();
 
         assert(head !== '0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
-    it('should not deploy origin core if transaction root is zero', async function () {
+    it('should not deploy mosaic core if transaction root is zero', async function () {
 
         transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
         await Utils.expectThrow(
-            OriginCore.new(
+            MosaicCore.new(
                 auxiliaryCoreIdentifier,
                 ost,
                 gas,
@@ -105,12 +105,12 @@ contract('OriginCore.constructor()', async (accounts) => {
         );
     });
 
-    it('should not deploy origin core if ost token root is zero', async function () {
+    it('should not deploy mosaic core if ost token root is zero', async function () {
 
         ost = 0;
 
         await Utils.expectThrow(
-            OriginCore.new(
+            MosaicCore.new(
                 auxiliaryCoreIdentifier,
                 ost,
                 gas,
@@ -121,13 +121,13 @@ contract('OriginCore.constructor()', async (accounts) => {
         );
     });
 
-    it('should not deploy origin core if max accumulated gas limit is zero',
+    it('should not deploy mosaic core if max accumulated gas limit is zero',
         async function () {
 
         maxAccumulateGasLimit = new BN(0);
 
         await Utils.expectThrow(
-            OriginCore.new(
+            MosaicCore.new(
                 auxiliaryCoreIdentifier,
                 ost,
                 gas,

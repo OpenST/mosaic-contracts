@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
-const OriginCore = artifacts.require('TestOriginCore');
+const MosaicCore = artifacts.require('TestMosaicCore');
 
 /**
  * @dev This test just verifies the value of variable is
@@ -27,7 +27,7 @@ const OriginCore = artifacts.require('TestOriginCore');
  *      `getLatestStateRootBlockHeight()`.
  */
 
-contract('OriginCore.getLatestStateRootBlockHeight()', async (accounts) => {
+contract('MosaicCore.getLatestStateRootBlockHeight()', async (accounts) => {
 
     const coreIdentifier = '0x0000000000000000000000000000000000000001';
 
@@ -36,11 +36,11 @@ contract('OriginCore.getLatestStateRootBlockHeight()', async (accounts) => {
     let transactionRoot= web3.utils.sha3("1");
     let minimumWeight = new BN('1');
 
-    let originCore, ost;
+    let mosaicCore, ost;
 
-    /** Deploys the origin core contract */
-    async function deployOriginCore(){
-        originCore = await OriginCore.new(
+    /** Deploys the mosaic core contract */
+    async function deployMosaicCore(){
+        mosaicCore = await MosaicCore.new(
             coreIdentifier,
             ost,
             gas,
@@ -52,13 +52,13 @@ contract('OriginCore.getLatestStateRootBlockHeight()', async (accounts) => {
 
     beforeEach(async () => {
         ost = accounts[0];
-        await deployOriginCore();
+        await deployMosaicCore();
     });
 
     it('should return zero.',
         async function () {
             let latestStateRootBlockHeight =
-                await originCore.getLatestStateRootBlockHeight.call();
+                await mosaicCore.getLatestStateRootBlockHeight.call();
 
             assert(
                 latestStateRootBlockHeight.eq(new BN(0)),
@@ -70,10 +70,10 @@ contract('OriginCore.getLatestStateRootBlockHeight()', async (accounts) => {
     it('should return latestStateRootBlockHeight variable value.',
         async function () {
             let height = new BN(1234);
-            await originCore.setLatestStateRootBlockHeight(height);
+            await mosaicCore.setLatestStateRootBlockHeight(height);
 
             let latestStateRootBlockHeight =
-                await originCore.getLatestStateRootBlockHeight.call();
+                await mosaicCore.getLatestStateRootBlockHeight.call();
 
             assert(
                 latestStateRootBlockHeight.eq(height),

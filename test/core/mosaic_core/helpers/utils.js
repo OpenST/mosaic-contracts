@@ -15,7 +15,7 @@ Utils.prototype = {
          stakeAmount,
          validator,
          vote,
-         originCore,
+         mosaicCore,
          kernelHash,
          expectedVerifiedWeight,
          requiredWeight
@@ -25,7 +25,7 @@ Utils.prototype = {
 
         let sig = await MetaBlockUtils.signVote(validator, vote);
 
-        let tx = await originCore.verifyVote(
+        let tx = await mosaicCore.verifyVote(
              kernelHash,
              vote.coreIdentifier,
              vote.transitionHash,
@@ -38,7 +38,7 @@ Utils.prototype = {
              sig.s
         );
 
-        let events = EventsDecoder.perform(tx.receipt, originCore.address, originCore.abi);
+        let events = EventsDecoder.perform(tx.receipt, mosaicCore.address, mosaicCore.abi);
 
         assert.equal(
              web3.utils.toChecksumAddress(events.VoteVerified.validator),

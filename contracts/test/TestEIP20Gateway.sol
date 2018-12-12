@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary Chain: MockMerklePatriciaProof
 //
 // http://www.simpletoken.org/
 //
@@ -24,6 +23,9 @@ pragma solidity ^0.5.0;
 import "../gateway/EIP20Gateway.sol";
 import "../gateway/MessageBus.sol";
 
+/**
+ * @title Test EIP20 gateway is an EIP20 gateway that is activated by default.
+ */
 contract TestEIP20Gateway is EIP20Gateway {
 
     /**
@@ -42,7 +44,7 @@ contract TestEIP20Gateway is EIP20Gateway {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )

@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "./CoreInterface.sol";
 import "./EIP20Interface.sol";
 import "./MessageBus.sol";
 import "../StateRootInterface.sol";
@@ -75,14 +74,11 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Specifies if the Gateway is activated for any new process. */
-    bool public activated;
-
     /** Address of core contract. */
-    CoreInterface public core;
+    StateRootInterface public core;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
-    bytes internal encodedGatewayPath;
+    bytes public encodedGatewayPath;
 
     /**
      * Remote gateway contract address. If this is a gateway contract, then the
@@ -127,18 +123,6 @@ contract GatewayBase is Organized {
      */
     mapping(address => bytes32) outboxActiveProcess;
 
-
-    /* Modifiers */
-
-    /** checks that contract is activated */
-    modifier isActive() {
-        require(
-            activated == true,
-            "Gateway is not activated."
-        );
-        _;
-    }
-
     /* Constructor */
 
     /**
@@ -150,7 +134,7 @@ contract GatewayBase is Organized {
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        CoreInterface _core,
+        StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
@@ -183,23 +167,23 @@ contract GatewayBase is Organized {
      *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
      *                      proven.
-     *  @param _rlpEncodedAccount RLP encoded account node object.
+     *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
      *
      *  @return `true` if Gateway account is proved
      */
     function proveGateway(
         uint256 _blockHeight,
-        bytes calldata _rlpEncodedAccount,
+        bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
     )
         external
         returns (bool /* success */)
     {
-        // _rlpEncodedAccount should be valid
+        // _rlpAccount should be valid
         require(
-            _rlpEncodedAccount.length != 0,
-            "Length of RLP encoded account is 0"
+            _rlpAccount.length != 0,
+            "Length of RLP account must not be 0."
         );
 
         // _rlpParentNodes should be valid
@@ -208,7 +192,7 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = StateRootInterface(address(core)).getStateRoot(_blockHeight);
+        bytes32 stateRoot = core.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(
@@ -235,7 +219,7 @@ contract GatewayBase is Organized {
         }
 
         bytes32 storageRoot = GatewayLib.proveAccount(
-            _rlpEncodedAccount,
+            _rlpAccount,
             _rlpParentNodes,
             encodedGatewayPath,
             stateRoot
