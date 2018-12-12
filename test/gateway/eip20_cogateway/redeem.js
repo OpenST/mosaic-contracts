@@ -90,14 +90,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     it('should fail when the bounty amount is less than expected bounty amount', async function () {
         
         let bounty = new BN(10);
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bounty},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bounty},
             ),
             'Payable amount should be equal to the bounty amount.',
         );
@@ -106,14 +107,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     it('should fail when the bounty amount is more than expected bounty amount', async function () {
         
         let bounty = new BN(110);
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bounty},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bounty},
             ),
             'Payable amount should be equal to the bounty amount.',
         );
@@ -122,14 +124,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     it('should fail when redeem amount is zero', async function () {
         
         amount = 0;
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             'Redeem amount must not be zero.',
         );
@@ -147,14 +150,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             {from: redeemer, value: bountyAmount},
         );
         
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             'Invalid nonce',
         );
@@ -173,14 +177,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             {from: redeemer, value: bountyAmount},
         );
         
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            (nonce + 1),
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                (nonce + 1),
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             'Invalid nonce',
         );
@@ -198,14 +203,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             gateway,
         );
         
-        await Utils.expectRevert(eip20CoGateway2.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway2.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         );
@@ -219,14 +225,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         
         await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
         
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         )
@@ -235,14 +242,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     it('should fail when the redeemer balance is less than the redeem amount', async function () {
         
         let amount = new BN(10000);
-        await Utils.expectRevert(eip20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount},
+        await Utils.expectRevert(
+            eip20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount},
             ),
             "Underflow when subtracting."
         )
