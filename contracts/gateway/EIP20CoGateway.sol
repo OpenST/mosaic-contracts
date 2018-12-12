@@ -207,6 +207,7 @@ contract EIP20CoGateway is GatewayBase {
      *                process.
      * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
         address _valueToken,
@@ -214,12 +215,14 @@ contract EIP20CoGateway is GatewayBase {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway
+        address _gateway,
+        address _burner
     )
         GatewayBase(
             _core,
             _bounty,
-            _membersManager
+            _membersManager,
+            _burner
         )
         public
     {

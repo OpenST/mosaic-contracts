@@ -12,16 +12,29 @@ import "../../lib/IsMemberInterface.sol";
  */
 contract MockGatewayBase is GatewayBase {
 
+    /* Constructor */
+
+    /**
+     * @notice This is used for testing.
+     *
+     * @param _core Core contract address.
+     * @param _bounty The amount that facilitator will stakes to initiate the
+     *                stake process.
+     * @param _membersManager Address of a contract that manages workers.
+     * @param _burner Address where tokens will be burned.
+     */
     constructor(
         StateRootInterface _core,
         uint256 _bounty,
-        IsMemberInterface _membersManager
+        IsMemberInterface _membersManager,
+        address _burner
     )
         public
         GatewayBase(
             _core,
             _bounty,
-            _membersManager
+            _membersManager,
+            _burner
         )
     {}
 
