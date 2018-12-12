@@ -67,7 +67,7 @@ contract Organized {
     constructor(IsMemberInterface _membersManager) public {
         require(
             address(_membersManager) != address(0),
-            "MembersManager contract address must not be address(0)."
+            "MembersManager contract address must not be zero."
         );
 
         membersManager = _membersManager;
