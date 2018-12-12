@@ -65,7 +65,7 @@ contract('SafeCore.constructor()', function (accounts) {
         stateRoot,
         membersManager,
       ),
-      'MembersManager contract address must not be address\\(0\\).',
+      'MembersManager contract address must not be zero.',
     );
 
   });
