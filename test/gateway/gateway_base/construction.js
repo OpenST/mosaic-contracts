@@ -64,7 +64,7 @@ contract('GatewayBase.sol', function (accounts) {
 
       await Utils.expectRevert(
         GatewayBase.new(core, bounty, NullAddress),
-        "MembersManager contract address must not be address\\(0\\)."
+        "MembersManager contract address must not be zero."
       );
 
     });
