@@ -141,9 +141,6 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /**
      * @notice Increases the total token supply.
      *
-     * @dev Adds number of tokens to beneficiary balance and increases the
-     *      total token supply.
-     *
      * @param _account Account address for which the balance will be increased.
      * @param _amount Amount of tokens.
      *
@@ -155,6 +152,47 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     )
         external
         onlyCoGateway
+        returns (bool success_)
+    {
+        success_ = increaseSupplyInternal(_account, _amount);
+    }
+
+    /**
+     * @notice Decreases the token supply.
+     *
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if decrease supply is successful, false otherwise.
+     */
+    function decreaseSupply(
+        uint256 _amount
+    )
+        external
+        onlyCoGateway
+        returns (bool success_)
+    {
+        success_ = decreaseSupplyInternal(_amount);
+    }
+
+
+    /* Internal functions. */
+
+    /**
+     * @notice Internal function to increases the total token supply.
+     *
+     * @dev Adds number of tokens to beneficiary balance and increases the
+     *      total token supply.
+     *
+     * @param _account Account address for which the balance will be increased.
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if increase supply is successful, false otherwise.
+     */
+    function increaseSupplyInternal(
+        address _account,
+        uint256 _amount
+    )
+        internal
         returns (bool success_)
     {
         require(
@@ -177,7 +215,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
     /**
-     * @notice Decreases the token supply.
+     * @notice Internal function to decreases the token supply.
      *
      * @dev Decreases the token balance from the msg.sender address and
      *      decreases the total token supply count.
@@ -186,11 +224,10 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      *
      * @return success_ `true` if decrease supply is successful, false otherwise.
      */
-    function decreaseSupply(
+    function decreaseSupplyInternal(
         uint256 _amount
     )
-        external
-        onlyCoGateway
+        internal
         returns (bool success_)
     {
         require(
@@ -213,5 +250,4 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
         success_ = true;
     }
-
 }

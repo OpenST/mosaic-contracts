@@ -36,10 +36,14 @@ contract TestOSTPrime is OSTPrime {
      * @dev This contract is used only for testing.
      *
      * @param _valueToken ERC20 token address in origin chain.
+     * @param _membersManager Address of a contract that manages organization.
      */
-    constructor(address _valueToken)
+    constructor(
+        address _valueToken,
+        IsMemberInterface _membersManager
+    )
         public
-        OSTPrime(_valueToken)
+        OSTPrime(_valueToken, _membersManager)
     {}
 
 
