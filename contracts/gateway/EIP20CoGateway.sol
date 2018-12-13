@@ -142,6 +142,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _amount
     );
 
+
     /* Struct */
 
     /**

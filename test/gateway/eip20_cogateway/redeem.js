@@ -50,7 +50,7 @@ let MessageStatusEnum = {
 async function _setup(accounts) {
     
     valueToken = accounts[0];
-    mockSafeCore = await MockSafeCore.new(1, 2, stateRoot, accounts[1]);
+    mockSafeCore = accounts[1];
     organization = accounts[2];
     gateway = accounts[3];
     owner = accounts[8];
@@ -62,7 +62,7 @@ async function _setup(accounts) {
     testEIP20CoGateway = await TestEIP20CoGateway.new(
         valueToken,
         utilityToken.address,
-        mockSafeCore.address,
+        mockSafeCore,
         bountyAmount,
         organization,
         gateway,
@@ -158,6 +158,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             {from: redeemer, value: bountyAmount},
         );
         
+        amount = new BN(200);
         await Utils.expectRevert(
             testEIP20CoGateway.redeem(
                 amount,
@@ -168,7 +169,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount},
             ),
-            'Invalid nonce',
+            'Invalid nonce.',
         );
         
     });
@@ -202,17 +203,10 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     
     it('should fail when cogateway is not approved with redeem amount', async function () {
         
-        let testEIP20CoGateway2 = await TestEIP20CoGateway.new(
-            valueToken,
-            utilityToken.address,
-            mockSafeCore.address,
-            bountyAmount,
-            organization,
-            gateway,
-        );
+        amount = new BN(100000);
         
         await Utils.expectRevert(
-            testEIP20CoGateway2.redeem(
+            testEIP20CoGateway.redeem(
                 amount,
                 beneficiary,
                 gasPrice,
@@ -246,6 +240,13 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     it('should fail when the redeemer\'s BT balance is less than the redeem amount', async function () {
         
         let amount = new BN(10000);
+        
+        await utilityToken.approve(
+            testEIP20CoGateway.address,
+            amount,
+            {from: redeemer},
+        );
+        
         await Utils.expectRevert(
             testEIP20CoGateway.redeem(
                 amount,
@@ -320,7 +321,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         assert.strictEqual(
             actualMessageHash,
             messageHash,
-            "Incorrect messagehash from contract",
+            "Incorrect messageHash from contract",
         );
         
         let response = await testEIP20CoGateway.redeem(
@@ -351,7 +352,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             "EIP20CoGateway address did not receive redeemed amount",
         );
         
-        let expectedBalance = new BN(redeemerBalance - amount);
+        let expectedBalance = redeemerBalance.sub(amount);
         
         assert.strictEqual(
             (await utilityToken.balanceOf(redeemer)).eq(expectedBalance),

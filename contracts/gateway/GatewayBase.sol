@@ -409,7 +409,7 @@ contract GatewayBase is Organized {
     {
         require(
             _nonce == _getOutboxNonce(_account),
-            "Invalid nonce"
+            "Invalid nonce."
         );
 
         previousMessageHash_ = outboxActiveProcess[_account];
