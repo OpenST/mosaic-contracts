@@ -33,7 +33,7 @@ contract('Organized.constructor()', async (accounts) => {
                 { from: owner },
             ),
             // Escaping as a regular expression is expected.
-            'MembersManager contract address must not be address\\(0\\)\\.',
+            'MembersManager contract address must not be zero.',
         );
 
     });
