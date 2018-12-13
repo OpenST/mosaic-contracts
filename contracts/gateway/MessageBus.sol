@@ -359,7 +359,7 @@ library MessageBus {
         // verify the unlock secret
         require(
             _message.hashLock == keccak256(abi.encode(_unlockSecret)),
-            "Invalid unlock secret"
+            "Invalid unlock secret."
         );
 
         // Get the message hash
@@ -374,7 +374,7 @@ library MessageBus {
         // Verify the current message status is `Declared`
         require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message status must be Declared."
         );
 
         // Update the message status of outbox to `Progressed`
