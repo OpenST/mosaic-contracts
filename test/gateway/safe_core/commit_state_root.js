@@ -55,7 +55,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     );
 
     stateRoot = web3.utils.sha3("dummy_state_root_1");
-    blockHeight = new BN(6);
+    blockHeight = blockHeight.addn(1);
 
   });
 
@@ -69,7 +69,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
         stateRoot,
         { from: worker },
       ),
-      'State root is 0',
+      'State root must not be zero.',
     );
 
   });

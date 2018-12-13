@@ -23,6 +23,9 @@ const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
+const zeroBytes =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
 contract('SafeCore.getStateRoot()', function (accounts) {
 
   let remoteChainId,
@@ -59,6 +62,19 @@ contract('SafeCore.getStateRoot()', function (accounts) {
       latestStateRoot,
       stateRoot,
       `Latest state root from the contract must be ${stateRoot}.`,
+    );
+
+  });
+
+  it('should return the zero bytes for non committed block heights', async () => {
+
+    blockHeight = new BN(500);
+
+    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    assert.strictEqual(
+      latestStateRoot,
+      zeroBytes,
+      `Latest state root from the contract must be ${zeroBytes}.`,
     );
 
   });

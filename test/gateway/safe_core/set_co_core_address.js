@@ -56,8 +56,7 @@ contract('SafeCore.setCoCoreAddress()', function (accounts) {
 
   });
 
-
-  it('should fail to set coCore address zero', async () => {
+  it('should fail when coCore address is zero', async () => {
 
     coCoreAddress = NullAddress;
 
