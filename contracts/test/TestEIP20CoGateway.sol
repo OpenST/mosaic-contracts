@@ -1,5 +1,25 @@
 pragma solidity ^0.5.0;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 import "../gateway/EIP20CoGateway.sol";
 
 /**
@@ -22,7 +42,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _core Core contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _membersManager Organisation address.
+     * @param _membersManager Address of a members manager contract.
      * @param _gateway Gateway contract address.
      */
     constructor(
@@ -31,7 +51,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway
+        address _gateway,
+        address payable _burner
     )
         EIP20CoGateway(
             _valueToken,
@@ -39,12 +60,11 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _core,
             _bounty,
             _membersManager,
-            _gateway
-        )
-    public
-    {
-
-    }
+            _gateway,
+            _burner
+    )
+        public
+    { }
 
 
     /* Public Functions */
@@ -123,12 +143,12 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     }
 
     /**
-     * @notice It sets the status of message in inbox.
+     * @notice It sets the status of inbox.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash Message for which status is to be set.
-     * @param _status State of the message.
+     * @param _messageHash It sets the status of the message.
+     * @param _status It sets the state of the message.
      */
     function setInboxStatus(
         bytes32 _messageHash,
@@ -137,6 +157,23 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         public
     {
         messageBox.inbox[_messageHash] = _status;
+    }
+
+    /**
+     * @notice It sets the status of outbox.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash MessageHash for which status is the be set.
+     * @param _status Status of the message to be set.
+     */
+    function setOutboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _status
+    )
+        public
+    {
+        messageBox.outbox[_messageHash] = _status;
     }
 
 }
