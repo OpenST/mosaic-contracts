@@ -51,7 +51,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway
+        address _gateway,
+        address payable _burner
     )
         EIP20CoGateway(
             _valueToken,
@@ -59,7 +60,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _core,
             _bounty,
             _membersManager,
-            _gateway
+            _gateway,
+            _burner
     )
         public
     { }

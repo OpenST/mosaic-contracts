@@ -28,7 +28,7 @@ const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
     Utils = require("../../test_lib/utils");
 
 let testEIP20CoGateway,
-    stateRoot = "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
+    burner,
     valueToken,
     mockSafeCore,
     membersManager,
@@ -58,6 +58,7 @@ async function _setup(accounts) {
     bountyAmount = new BN(100);
     redeemer = accounts[7];
     redeemerBalance = new BN(1000);
+    burner = accounts[10];
     
     testEIP20CoGateway = await TestEIP20CoGateway.new(
         valueToken,
@@ -66,6 +67,7 @@ async function _setup(accounts) {
         bountyAmount,
         membersManager,
         gateway,
+        burner
     );
     
     await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
