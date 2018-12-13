@@ -30,7 +30,7 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('EIP20Gateway.constructor() ', function (accounts) {
 
     let mockToken, baseToken, bountyAmount, coreAddress, membersManager,
-        gateway, owner, worker;
+        gateway, owner, worker, burner = NullAddress;
 
     beforeEach(async function () {
 
@@ -51,7 +51,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             );
 
         assert(
@@ -67,7 +68,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             );
 
         let tokenAddress = await gateway.token.call();
@@ -121,7 +123,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             ),
             "Token contract address must not be zero."
         );
@@ -136,7 +139,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseTokenAddress,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             ),
             "Base token contract address for bounty must not be zero."
         );
@@ -151,7 +155,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             ),
             "Core contract address must not be zero."
         );
@@ -167,7 +172,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager
+                membersManager,
+                burner
             ),
             "MembersManager contract address must not be zero."
         );
@@ -183,7 +189,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address
+                membersManager.address,
+                burner
             );
 
         assert(
