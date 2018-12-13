@@ -31,7 +31,7 @@ let testEIP20CoGateway,
     stateRoot = "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
     valueToken,
     mockSafeCore,
-    organization,
+    membersManager,
     gateway,
     utilityToken,
     bountyAmount,
@@ -51,7 +51,7 @@ async function _setup(accounts) {
     
     valueToken = accounts[0];
     mockSafeCore = accounts[1];
-    organization = accounts[2];
+    membersManager = accounts[2];
     gateway = accounts[3];
     owner = accounts[8];
     utilityToken = await MockToken.new({from: owner});
@@ -64,7 +64,7 @@ async function _setup(accounts) {
         utilityToken.address,
         mockSafeCore,
         bountyAmount,
-        organization,
+        membersManager,
         gateway,
     );
     
@@ -259,6 +259,130 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             ),
             "Underflow when subtracting.",
         )
+    });
+    
+    it('should fail when the message status is progressed', async function () {
+    
+        let messageHash = await testEIP20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+    
+        await testEIP20CoGateway.setOutboxStatus(
+            messageHash,
+            MessageStatusEnum.Progressed,
+        );
+        
+        await Utils.expectRevert(testEIP20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount}
+            ),
+            "Message status must be Undeclared."
+        );
+        
+    });
+    
+    it('should fail when the message status is declared revocation', async function () {
+        
+        let messageHash = await testEIP20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+        
+        await testEIP20CoGateway.setOutboxStatus(
+            messageHash,
+            MessageStatusEnum.DeclaredRevocation,
+        );
+        
+        await Utils.expectRevert(testEIP20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount}
+            ),
+            "Message status must be Undeclared."
+        );
+        
+    });
+    
+    it('should fail when the message status is declared', async function () {
+        
+        let messageHash = await testEIP20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+        
+        await testEIP20CoGateway.setOutboxStatus(
+            messageHash,
+            MessageStatusEnum.Declared,
+        );
+        
+        await Utils.expectRevert(testEIP20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount}
+            ),
+            "Message status must be Undeclared."
+        );
+        
+    });
+    
+    it('should fail when the message status is revoked', async function () {
+        
+        let messageHash = await testEIP20CoGateway.redeem.call(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount},
+        );
+        
+        await testEIP20CoGateway.setOutboxStatus(
+            messageHash,
+            MessageStatusEnum.Revoked,
+        );
+        
+        await Utils.expectRevert(testEIP20CoGateway.redeem(
+            amount,
+            beneficiary,
+            gasPrice,
+            gasLimit,
+            nonce,
+            hashLock,
+            {from: redeemer, value: bountyAmount}
+            ),
+            "Message status must be Undeclared."
+        );
+        
     });
     
     it('should fail if the previous process is in revocation declared state', async function () {

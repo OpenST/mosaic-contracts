@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary Chain: CoGateway Contract
 //
 // http://www.simpletoken.org/
 //

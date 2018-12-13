@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary Chain: CoGateway Contract
 //
 // http://www.simpletoken.org/
 //
@@ -919,6 +918,12 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
+        require(
+            messageBox.outbox[messageHash_] ==
+            MessageBus.MessageStatus.Undeclared,
+            "Message status must be Undeclared."
+        );
+
         // Get previousMessageHash.
         bytes32 previousMessageHash = registerOutboxProcess(
             msg.sender,
@@ -945,11 +950,6 @@ contract EIP20CoGateway is GatewayBase {
             _hashLock
         );
 
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared."
-        );
         // Update the message outbox status to declared.
         messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
 
@@ -969,6 +969,7 @@ contract EIP20CoGateway is GatewayBase {
             _amount
         );
     }
+
 
     /* Private functions */
 
