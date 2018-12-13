@@ -105,16 +105,28 @@ contract('Core', function (accounts) {
     });
 
     describe('commitStateRoot', async () => {
-        // Before all.
-        before(async () => {
+        let core;
+        let worker;
+        let blockHeight;
+        let stateRoot;
+        let maxNumberOfStateRoots;
+
+        beforeEach(async () => {
             blockHeight = 5;
-            contractsData = await coreUtils.deployCore(artifacts, accounts);
+            contractsData = await coreUtils.deployCore(
+                artifacts,
+                accounts,
+                blockHeight,
+            );
             core = contractsData.core;
             worker = contractsData.worker;
             stateRoot = proof.account.stateRoot;
+            maxNumberOfStateRoots = contractsData.numberOfStateRoots;
         });
 
         it('should be able to commit state root and getStateRoot for given block height', async () => {
+            blockHeight++;
+
             let response = await core.commitStateRoot.call(
                 blockHeight,
                 stateRoot,
@@ -151,6 +163,55 @@ contract('Core', function (accounts) {
             assert.equal(latestStateRootBlockHeight.toNumber(), blockHeight);
         });
 
+        it('should store only the given number of max store roots', async () => {
+            /*
+             * It should store the given state roots and they should be
+             * available for querying afterwards. After the max number of state
+             * roots has been exceeded, the old state roots should no longer be
+             * available.
+             */
+
+            let iterations = maxNumberOfStateRoots * 2;
+            for (let i = 0; i < iterations; i++) {
+                blockHeight++;
+                await core.commitStateRoot(
+                    blockHeight,
+                    stateRoot,
+                    { from: worker },
+                );
+
+                // Check that the older state root has been deleted.
+                if (i > maxNumberOfStateRoots) {
+                    let prunedBlockHeight = blockHeight - maxNumberOfStateRoots;
+                    let storedStateRoot = await core.getStateRoot.call(
+                        new BN(prunedBlockHeight),
+                    );
+
+                    assert.strictEqual(
+                        storedStateRoot,
+                        '0x0000000000000000000000000000000000000000000000000000000000000000',
+                        'There should not be any state root stored at a ' +
+                        'pruned height. It should have been reset by now.',
+                    );
+
+                    /*
+                     * The state root that is one block younger than the pruned
+                     * one should still be available.
+                     */
+                    let existingBlockHeight = prunedBlockHeight + 1;
+                    storedStateRoot = await core.getStateRoot.call(
+                        new BN(existingBlockHeight),
+                    );
+                    assert.strictEqual(
+                        storedStateRoot,
+                        stateRoot,
+                        'The stored state root should still exist.',
+                    );
+
+                }
+            }
+        });
+
         it('should not be able to commit state root of block height which is equal to latest block height', async () => {
             await utils.expectThrow(
                 core.commitStateRoot(blockHeight, stateRoot, { from: worker }),
@@ -158,20 +219,23 @@ contract('Core', function (accounts) {
         });
 
         it('should not be able to commit state root of block height which is less than latest block height', async () => {
+            blockHeight--;
             await utils.expectThrow(
-                core.commitStateRoot(3, stateRoot, { from: worker })
+                core.commitStateRoot(blockHeight, stateRoot, { from: worker })
             );
         });
 
         it('should not be able to commit state root of block height if non worker commits root', async () => {
+            blockHeight++;
             await utils.expectThrow(
-                core.commitStateRoot(6, stateRoot, { from: accounts[0] })
+                core.commitStateRoot(blockHeight, stateRoot, { from: accounts[0] })
             );
         });
 
         it('should not be able to commit state root when state root is empty', async () => {
+            blockHeight++;
             await utils.expectThrow(
-                core.commitStateRoot(6, '0x', { from: worker })
+                core.commitStateRoot(blockHeight, '0x', { from: worker })
             );
         });
 

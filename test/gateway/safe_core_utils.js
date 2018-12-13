@@ -19,23 +19,32 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
+
 const SafeCore = artifacts.require("./SafeCore.sol")
     , Organization = artifacts.require("MockOrganization.sol")
     , proof = require('../data/proof');
 ;
 
 /// @dev Deploy 
-module.exports.deployCore = async (artifacts, accounts) => {
+module.exports.deployCore = async (artifacts, accounts, blockHeight) => {
+    if (blockHeight === undefined) {
+        blockHeight = 0;
+    }
+
     const remoteChainId = 1410;
     const organizationOwner = accounts[7];
     const worker = accounts[8];
+
+    const numberOfStateRoots = new BN(10);
 
     // Deploy worker contract
     const organization = await Organization.new(organizationOwner, worker);
     const core = await SafeCore.new(
         remoteChainId,
-        0,
+        blockHeight,
         proof.account.stateRoot,
+        numberOfStateRoots,
         organization.address,
         { from: accounts[0] },
     );
@@ -44,6 +53,7 @@ module.exports.deployCore = async (artifacts, accounts) => {
         owner: organizationOwner,
         worker: worker,
         remoteChainId: remoteChainId,
+        numberOfStateRoots: numberOfStateRoots,
     };
 };
 
