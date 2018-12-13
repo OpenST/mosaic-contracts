@@ -4,7 +4,7 @@ const MockMembersManager = artifacts.require('MockMembersManager.sol');
 
 const Utils = require('../../../test/test_lib/utils');
 
-
+const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
     let gateway;
@@ -12,6 +12,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
     let worker = accounts[3];
     let coGateway = accounts[5];
     let membersManager;
+    let burner = NullAddress;
 
     beforeEach(async function () {
 
@@ -27,7 +28,8 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
             baseToken,
             coreAddress,
             bountyAmount,
-            membersManager.address
+            membersManager.address,
+            burner
         );
 
         await  gateway.activateGateway(coGateway, {from: owner});

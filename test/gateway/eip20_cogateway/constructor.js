@@ -31,7 +31,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
     let valueToken, utilityToken, bountyAmount, coreAddress, owner, worker,
-        membersManager, coGateway, gatewayAddress = accounts[6];
+        membersManager, coGateway, gatewayAddress = accounts[6],
+        burner = NullAddress;
 
     beforeEach(async function () {
 
@@ -53,7 +54,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             );
 
         assert(
@@ -70,7 +72,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             );
 
         let valueTokenAddress = await coGateway.valueToken.call();
@@ -113,7 +116,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             ),
             'Value token address must not be zero.'
         );
@@ -129,7 +133,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             ),
             'Utility token address must not be zero.'
         );
@@ -145,7 +150,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             ),
             'Core contract address must not be zero.'
         );
@@ -162,7 +168,8 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 coreAddress,
                 bountyAmount,
                 membersManager.address,
-                gatewayAddress
+                gatewayAddress,
+                burner
             );
 
         assert(

@@ -40,20 +40,23 @@ contract TestEIP20Gateway is EIP20Gateway {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
         StateRootInterface _core,
         uint256 _bounty,
-        IsMemberInterface _membersManager
+        IsMemberInterface _membersManager,
+        address _burner
     )
         EIP20Gateway(
             _token,
             _baseToken,
             _core,
             _bounty,
-            _membersManager
+            _membersManager,
+            _burner
         )
         public
     {
