@@ -264,7 +264,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     });
     
     it('should fail when the message status is progressed', async function () {
-    
+        
         let messageHash = await testEIP20CoGateway.redeem.call(
             amount,
             beneficiary,
@@ -274,20 +274,21 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             hashLock,
             {from: redeemer, value: bountyAmount},
         );
-    
+        
         await testEIP20CoGateway.setOutboxStatus(
             messageHash,
             MessageStatusEnum.Progressed,
         );
         
-        await Utils.expectRevert(testEIP20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount}
+        await Utils.expectRevert(
+            testEIP20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount}
             ),
             "Message status must be Undeclared."
         );
@@ -311,14 +312,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             MessageStatusEnum.DeclaredRevocation,
         );
         
-        await Utils.expectRevert(testEIP20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount}
+        await Utils.expectRevert(
+            testEIP20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount}
             ),
             "Message status must be Undeclared."
         );
@@ -342,14 +344,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             MessageStatusEnum.Declared,
         );
         
-        await Utils.expectRevert(testEIP20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount}
+        await Utils.expectRevert(
+            testEIP20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount}
             ),
             "Message status must be Undeclared."
         );
@@ -373,14 +376,15 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
             MessageStatusEnum.Revoked,
         );
         
-        await Utils.expectRevert(testEIP20CoGateway.redeem(
-            amount,
-            beneficiary,
-            gasPrice,
-            gasLimit,
-            nonce,
-            hashLock,
-            {from: redeemer, value: bountyAmount}
+        await Utils.expectRevert(
+            testEIP20CoGateway.redeem(
+                amount,
+                beneficiary,
+                gasPrice,
+                gasLimit,
+                nonce,
+                hashLock,
+                {from: redeemer, value: bountyAmount}
             ),
             "Message status must be Undeclared."
         );
