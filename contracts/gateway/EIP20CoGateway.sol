@@ -186,6 +186,9 @@ contract EIP20CoGateway is GatewayBase {
     /** address of value token. */
     address public valueToken;
 
+    /** Address where token will be burned. */
+    address payable public burner;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -207,6 +210,7 @@ contract EIP20CoGateway is GatewayBase {
      *                process.
      * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
         address _valueToken,
@@ -214,7 +218,8 @@ contract EIP20CoGateway is GatewayBase {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway
+        address _gateway,
+        address payable _burner
     )
         GatewayBase(
             _core,
@@ -239,6 +244,7 @@ contract EIP20CoGateway is GatewayBase {
         valueToken = _valueToken;
         utilityToken = _utilityToken;
         remoteGateway = _gateway;
+        burner = _burner;
 
         // update the encodedGatewayPath
         encodedGatewayPath = GatewayLib.bytes32ToBytes(
@@ -719,7 +725,7 @@ contract EIP20CoGateway is GatewayBase {
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // burn bounty
-        address(0).transfer(redeemProcess.bounty);
+        burner.transfer(redeemProcess.bounty);
 
         //penalty charged to redeemer
         uint256 penalty = redeemProcess.bounty
@@ -727,7 +733,7 @@ contract EIP20CoGateway is GatewayBase {
         .div(100);
 
         //burn penalty
-        address(0).transfer(penalty);
+        burner.transfer(penalty);
 
         // delete the redeem data
         delete redeems[_messageHash];
