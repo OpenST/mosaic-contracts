@@ -23,7 +23,7 @@ pragma solidity ^0.5.0;
 
 import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
-import "../lib/IsMemberInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/Organized.sol";
 import "../lib/RLP.sol";
@@ -74,15 +74,15 @@ contract SafeCore is StateRootInterface, Organized {
      *                        this core tracks.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
-     *  @param _membersManager Address of a members manager contract.
+     *  @param _organization Address of an organization contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
-        Organized(_membersManager)
+        Organized(_organization)
         public
     {
         require(

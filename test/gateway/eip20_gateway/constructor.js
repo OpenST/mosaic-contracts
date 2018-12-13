@@ -20,7 +20,7 @@
 
 const Gateway = artifacts.require("EIP20Gateway");
 const MockToken = artifacts.require("MockToken");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const Utils = require("./../../test_lib/utils"),
     BN = require('bn.js');
@@ -29,7 +29,7 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('EIP20Gateway.constructor() ', function (accounts) {
 
-    let mockToken, baseToken, bountyAmount, coreAddress, membersManager,
+    let mockToken, baseToken, bountyAmount, coreAddress, organization,
         gateway, owner, worker, burner = NullAddress;
 
     beforeEach(async function () {
@@ -41,7 +41,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
 
         owner = accounts[2];
         worker = accounts[3];
-        membersManager = await MockMembersManager.new(owner, worker);
+        organization = await MockOrganization.new(owner, worker);
     });
 
     it('should able to deploy contract with correct parameters.', async function () {
@@ -51,7 +51,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             );
 
@@ -68,7 +68,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             );
 
@@ -105,12 +105,12 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             !isActivated,
             "Gateway is not deactivated by default."
         );
-        
-        let storedMembersManager = await gateway.membersManager();
+
+        let storedMembersManager = await gateway.organization();
         assert.equal(
-          membersManager.address,
-          storedMembersManager,
-          "Incorrect membersManager from contract"
+            organization.address,
+            storedMembersManager,
+            "Incorrect organization from contract"
         );
     });
 
@@ -123,7 +123,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             ),
             "Token contract address must not be zero."
@@ -139,7 +139,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseTokenAddress,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             ),
             "Base token contract address for bounty must not be zero."
@@ -155,29 +155,29 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             ),
             "Core contract address must not be zero."
         );
 
     });
-    
+
     it('should fail when members manager address is passed as zero', async function () {
-        let membersManager = NullAddress;
-        
+        let organization = NullAddress;
+
         await Utils.expectRevert(
-             Gateway.new(
+            Gateway.new(
                 mockToken.address,
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager,
+                organization,
                 burner
             ),
-            "MembersManager contract address must not be zero."
+            "Organization contract address must not be zero."
         );
-        
+
     });
 
     it('should able to deploy contract with zero bounty.', async function () {
@@ -189,7 +189,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 burner
             );
 

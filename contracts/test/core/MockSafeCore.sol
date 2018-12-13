@@ -19,19 +19,19 @@ contract MockSafeCore is SafeCore {
      *                        this core tracks.
      * @param _blockHeight block height at which _stateRoot needs to store.
      * @param _stateRoot state root hash of given _blockHeight.
-     *  @param _membersManager Address of a members manager contract.
+     * @param _organization Address of a members manager contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         SafeCore(
             _remoteChainId,
             _blockHeight,
             _stateRoot,
-            _membersManager
+            _organization
         )
         public
     {}

@@ -16,7 +16,6 @@ pragma solidity ^0.5.0;
 
 import "./SafeMath.sol";
 import "./OrganizationInterface.sol";
-import "./IsMemberInterface.sol";
 
 
 /**
@@ -26,8 +25,35 @@ import "./IsMemberInterface.sol";
  *         mosaic ecosystem and therefore the Organization.sol contract holds
  *         all the keys required to administer the mosaic contracts.
  */
-contract Organization is OrganizationInterface, IsMemberInterface {
+contract Organization is OrganizationInterface {
+
+
+    /* Using */
+
     using SafeMath for uint256;
+
+
+    /* Events */
+
+    /** Emitted when a current owner initiates a change of ownership. */
+    event OwnershipTransferInitiated(address indexed proposedOwner);
+
+    /** Emitted when a new owner accepts the ownership transfer. */
+    event OwnershipTransferCompleted(address newOwner);
+
+    /** Emitted whenever an owner or admin changes the address of the admin. */
+    event AdminAddressChanged(address indexed newAdmin);
+
+    /** Emitted when a worker address was set. */
+    event WorkerSet(
+        address indexed worker,
+        uint256 expirationHeight,
+        uint256 remainingHeight
+    );
+
+    /** Emitted when a worker address is deleted from the contract. */
+    event WorkerUnset(address worker, bool wasSet);
+
 
     /* Storage */
 

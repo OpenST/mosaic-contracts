@@ -20,7 +20,7 @@
 
 const CoGateway = artifacts.require("EIP20CoGateway");
 const MockToken = artifacts.require("MockToken");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const Utils = require("./../../test_lib/utils"),
     BN = require('bn.js');
@@ -31,7 +31,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
     let valueToken, utilityToken, bountyAmount, coreAddress, owner, worker,
-        membersManager, coGateway, gatewayAddress = accounts[6],
+        organization, coGateway, gatewayAddress = accounts[6],
         burner = NullAddress;
 
     beforeEach(async function () {
@@ -43,7 +43,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
 
         owner = accounts[2];
         worker = accounts[3];
-        membersManager = await MockMembersManager.new(owner, worker);
+        organization = await MockOrganization.new(owner, worker);
     });
 
     it('should able to deploy contract with correct parameters.', async function () {
@@ -53,7 +53,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             );
@@ -71,7 +71,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             );
@@ -115,7 +115,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             ),
@@ -132,7 +132,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityTokenAddress,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             ),
@@ -149,7 +149,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             ),
@@ -167,7 +167,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 utilityToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager.address,
+                organization.address,
                 gatewayAddress,
                 burner
             );

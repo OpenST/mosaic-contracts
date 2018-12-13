@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const SafeCore = artifacts.require("./SafeCore.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -33,7 +33,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   let remoteChainId,
     blockHeight,
     stateRoot,
-    membersManager,
+    organization,
     safeCore,
     owner,
     worker;
@@ -45,13 +45,13 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
 
     safeCore = await SafeCore.new(
       remoteChainId,
       blockHeight,
       stateRoot,
-      membersManager.address,
+      organization.address,
     );
 
     stateRoot = web3.utils.sha3("dummy_state_root_1");
@@ -77,32 +77,32 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   it('should fail when block height is less than the latest committed ' +
     'state root\'s block height', async () => {
 
-    blockHeight = blockHeight.subn(1);
+      blockHeight = blockHeight.subn(1);
 
-    await Utils.expectRevert(
-      safeCore.commitStateRoot(
-        blockHeight,
-        stateRoot,
-        { from: worker },
-      ),
-      'Given block height is lower or equal to highest committed state root block height.',
-    );
+      await Utils.expectRevert(
+        safeCore.commitStateRoot(
+          blockHeight,
+          stateRoot,
+          { from: worker },
+        ),
+        'Given block height is lower or equal to highest committed state root block height.',
+      );
 
-  });
+    });
 
   it('should fail when block height is equal to the latest committed ' +
     'state root\'s block height', async () => {
 
-    await Utils.expectRevert(
-      safeCore.commitStateRoot(
-        blockHeight,
-        stateRoot,
-        { from: worker },
-      ),
-      'Given block height is lower or equal to highest committed state root block height.',
-    );
+      await Utils.expectRevert(
+        safeCore.commitStateRoot(
+          blockHeight,
+          stateRoot,
+          { from: worker },
+        ),
+        'Given block height is lower or equal to highest committed state root block height.',
+      );
 
-  });
+    });
 
   it('should fail when caller is not worker address', async () => {
 

@@ -27,14 +27,14 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('SafeCore.constructor()', function (accounts) {
 
-  let remoteChainId, blockHeight, stateRoot, membersManager, safeCore;
+  let remoteChainId, blockHeight, stateRoot, organization, safeCore;
 
   beforeEach(async function () {
 
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
-    membersManager = accounts[1];
+    organization = accounts[1];
 
   });
 
@@ -47,25 +47,25 @@ contract('SafeCore.constructor()', function (accounts) {
         remoteChainId,
         blockHeight,
         stateRoot,
-        membersManager,
+        organization,
       ),
       'Remote chain Id must not be 0.',
     );
 
   });
 
-  it('should fail when members manager address is zero', async () => {
+  it('should fail when organization address is zero', async () => {
 
-    membersManager = NullAddress;
+    organization = NullAddress;
 
     await Utils.expectRevert(
       SafeCore.new(
         remoteChainId,
         blockHeight,
         stateRoot,
-        membersManager,
+        organization,
       ),
-      'MembersManager contract address must not be zero.',
+      'Organization contract address must not be zero.',
     );
 
   });
@@ -76,7 +76,7 @@ contract('SafeCore.constructor()', function (accounts) {
       remoteChainId,
       blockHeight,
       stateRoot,
-      membersManager,
+      organization,
     );
 
     let chainId = await safeCore.getRemoteChainId.call();
@@ -100,11 +100,11 @@ contract('SafeCore.constructor()', function (accounts) {
       `Latest state root from the contract must be ${stateRoot}.`,
     );
 
-    let membersManagerAddress = await safeCore.membersManager.call();
+    let organizationAddress = await safeCore.organization.call();
     assert.strictEqual(
-      membersManagerAddress,
-      membersManager,
-      `Members manager address from the contract must be ${membersManager}.`,
+      organizationAddress,
+      organization,
+      `Members manager address from the contract must be ${organization}.`,
     );
 
   });
