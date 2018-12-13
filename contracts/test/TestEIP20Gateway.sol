@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../gateway/EIP20Gateway.sol";
-import "../gateway/MessageBus.sol";
+import "../lib/MessageBus.sol";
 
 /**
  * @title Test EIP20 gateway is an EIP20 gateway that is activated by default.

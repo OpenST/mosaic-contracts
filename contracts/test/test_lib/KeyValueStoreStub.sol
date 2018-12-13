@@ -15,7 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 
-import "../../gateway/MockMessageBus.sol";
+import "../../lib/MockMessageBus.sol";
 import "../../gateway/GatewayBase.sol";
 
 /**

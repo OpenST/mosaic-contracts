@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Mocked MessageBus Library
 //
 // http://www.simpletoken.org/
 //
