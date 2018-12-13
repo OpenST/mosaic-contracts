@@ -281,7 +281,7 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];

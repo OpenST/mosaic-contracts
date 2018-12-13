@@ -266,4 +266,43 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         
     });
     
+    it('should fail when messagehash is zero', async function () {
+        
+        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
+            intentHash,
+            nonce,
+            gasPrice,
+            gasLimit,
+            hashLock,
+            staker,
+        );
+        await testEIP20CoGateway.setStakeMessage(
+            intentHash,
+            nonce,
+            gasPrice,
+            gasLimit,
+            hashLock,
+            staker,
+        );
+        await testEIP20CoGateway.setInboxStatus(
+            messageHash,
+            MessageStatusEnum.Declared,
+        );
+        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
+    
+        const zeroBytes =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        
+        messageHash = zeroBytes;
+        
+        await Utils.expectRevert(testEIP20CoGateway.progressMint(
+            messageHash,
+            unlockSecret,
+            {from: facilitator},
+            ),
+            "Message hash must not be zero."
+        );
+    
+    });
+    
 });
