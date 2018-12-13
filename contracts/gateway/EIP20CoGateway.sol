@@ -298,7 +298,7 @@ contract EIP20CoGateway is GatewayBase {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
+        progressMintInternal(_messageHash, initialGas, true, _unlockSecret);
     }
 
     /**

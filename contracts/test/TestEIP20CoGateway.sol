@@ -123,21 +123,20 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     }
 
     /**
-     * @notice It sets the status of inbox to declared.
+     * @notice It sets the status of message in inbox.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash It sets the status of the inbox to declared status.
+     * @param _messageHash Message for which status is to be set.
+     * @param _status State of the message.
      */
     function setInboxStatus(
         bytes32 _messageHash,
-        MessageBus.MessageStatus status
+        MessageBus.MessageStatus _status
     )
         public
     {
-
-        messageBox.inbox[_messageHash] = status;
-
+        messageBox.inbox[_messageHash] = _status;
     }
 
 }

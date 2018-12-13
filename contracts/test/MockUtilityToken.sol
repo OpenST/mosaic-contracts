@@ -37,17 +37,6 @@ contract MockUtilityToken is UtilityToken {
     using SafeMath for uint256;
 
 
-    /* Storage */
-
-    /**
-     * Address to which the utility tokens will be transferred after minting.
-     */
-    address public beneficiary;
-
-    /* Amount received by beneficiary.  */
-    uint256 public amount;
-
-
     /* Constructor */
 
     /**
@@ -69,38 +58,20 @@ contract MockUtilityToken is UtilityToken {
         public
         UtilityToken(_symbol, _name, _decimals, _valueToken)
     {
-        require(
-            _valueToken != address(0),
-            "ERC20 token should not be zero"
-        );
 
-        valueToken = _valueToken;
     }
 
 
     /* External functions */
 
     /**
-     * @notice Mints the utility token. This is for testing purpose.
+     * @notice It sets the coGateway address. This is for testing purpose.
      *
-     * @dev Adds _amount tokens to beneficiary balance and increases the
-     *      totalTokenSupply. Can be called only by CoGateway.
-     *
-     * @param _beneficiary Address of tokens beneficiary.
-     * @param _amount Amount of tokens to mint.
-     *
-     * @return True if mint is successful, false otherwise.
+     * @param _coGateway CoGateway address to be set.
      */
-    function mint(
-        address _beneficiary,
-        uint256 _amount
-    )
-        external
-        returns (bool)
+    function setCoGateway(address _coGateway) external returns (bool)
     {
-        beneficiary = _beneficiary;
-        amount = _amount;
-        return true;
+        coGateway = _coGateway;
     }
 
 }

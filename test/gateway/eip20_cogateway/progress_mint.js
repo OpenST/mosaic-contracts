@@ -20,8 +20,7 @@
 
 const BN = require('bn.js'),
     Utils = require("../../test_lib/utils"),
-    EIP20CoGatewayHelper = require("./helpers/helper");
-    EIP20CoGateway = artifacts.require('EIP20CoGateway'),
+    EIP20CoGatewayHelper = require("./helpers/helper"),
     MockSafeCore = artifacts.require('MockSafeCore'),
     MessageBus = artifacts.require('MessageBus'),
     UtilityToken = artifacts.require('UtilityToken'),
@@ -29,12 +28,11 @@ const BN = require('bn.js'),
     TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
     MockUtilityToken = artifacts.require('MockUtilityToken');
 
-let eip20CoGateway,
-    stateRoot = "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
+let stateRoot = "0x70b4172eb30c495bf20b5b12224cd2380fccdd7ffa2292416b9dbdfc8511585d",
     valueToken,
     mockSafeCore,
     organization,
-    gateway,
+    coGateway,
     utilityToken,
     bountyAmount,
     owner,
@@ -59,7 +57,7 @@ async function _setup(accounts) {
     valueToken = accounts[0];
     mockSafeCore = await MockSafeCore.new(1, 2, stateRoot, accounts[1]);
     organization = accounts[2];
-    gateway = accounts[3];
+    coGateway = accounts[3];
     owner = accounts[8];
     utilityToken = await MockUtilityToken.new(
         symbol,
@@ -72,19 +70,11 @@ async function _setup(accounts) {
     stakerBalance = new BN(1000000);
     rewardAmount = new BN(100);
     
-    eip20CoGateway = await EIP20CoGateway.new(
-        valueToken,
-        utilityToken.address,
-        mockSafeCore.address,
-        bountyAmount,
-        organization,
-        gateway,
-    );
-    }
+}
 
 contract('EIP20CoGateway.progressMint() ', function (accounts) {
     
-    let amount = new BN(100),
+    let amount = new BN(200),
         beneficiary = accounts[4],
         gasPrice = new BN(10),
         gasLimit = new BN(10),
@@ -95,13 +85,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         facilitator = accounts[5],
         intentHash,
         testEIP20CoGateway;
-        helper = new EIP20CoGatewayHelper();
+    helper = new EIP20CoGatewayHelper();
     
     beforeEach(async function () {
         
         await _setup(accounts);
-        amount = new BN(100);
-        await helper.setGateway(eip20CoGateway.address);
+        amount = new BN(200);
+        
         intentHash = await helper.hashRedeemIntent(
             amount,
             beneficiary,
@@ -117,8 +107,11 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             mockSafeCore.address,
             bountyAmount,
             organization,
-            gateway,
+            coGateway,
         );
+        
+        await utilityToken.setCoGateway(testEIP20CoGateway.address);
+        await helper.setCoGateway(testEIP20CoGateway.address);
         
     });
     
@@ -145,13 +138,14 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             MessageStatusEnum.Declared,
         );
         await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
-    
+        
         let progressMintValues = await testEIP20CoGateway.progressMint.call(
             messageHash,
             unlockSecret,
-            {from : facilitator},
+            {from: facilitator},
         );
-        let expectedMintedToken = new BN(0),
+        
+        let expectedMintedToken = new BN(100),
             expectedReward = new BN(100);
         
         assert.strictEqual(
@@ -159,45 +153,68 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             beneficiary,
             "Incorrect beneficiary address",
         );
-
+        
         assert.strictEqual(
             amount.eq(progressMintValues.stakeAmount_),
             true,
             "Incorrect staked amount",
         );
-     
+        
         assert.strictEqual(
             expectedMintedToken.eq(progressMintValues.mintedAmount_),
             true,
             "Incorrect minted amount",
         );
-
+        
         assert.strictEqual(
             expectedReward.eq(progressMintValues.rewardAmount_),
             true,
             "Incorrect reward to facilitator",
         );
         
-        await testEIP20CoGateway.progressMint(
+        let response = await testEIP20CoGateway.progressMint(
             messageHash,
             unlockSecret,
-            {from : facilitator},
+            {from: facilitator},
+        );
+        
+        let facilitatorBalance = await utilityToken.balanceOf(facilitator);
+        let beneficiaryBalance = await utilityToken.balanceOf(beneficiary);
+        
+        assert.strictEqual(
+            facilitatorBalance.eq(expectedReward),
+            true,
+            'Facilitator didnt receive reward'
         );
         
         assert.strictEqual(
-            (await utilityToken.beneficiary()),
-            facilitator,
-            "Facilitator address is incorrect",
+            beneficiaryBalance.eq(new BN(amount - expectedReward)),
+            true,
+            'Minting is not done for beneficiary'
         );
     
-        assert.strictEqual(
-            (await utilityToken.amount()).eq(rewardAmount),
-            true,
-            "Facilitator address is incorrect",
+        let expectedEvent = {
+            MintProgressed: {
+                _messageHash: messageHash,
+                _staker: staker,
+                _stakeAmount: amount,
+                _mintedAmount: expectedMintedToken,
+                _rewardAmount: expectedReward,
+                _proofProgress: true,
+                _unlockSecret: unlockSecret
+            }
+        };
+    
+        assert.equal(
+            response.receipt.status,
+            1,
+            "Receipt status is unsuccessful"
         );
+    
+        let eventData = response.logs;
+        await Utils.validateEvents(eventData, expectedEvent);
         
     });
-    
     
     it('should not mint reward for zero reward amount', async function () {
         
@@ -229,13 +246,22 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         await testEIP20CoGateway.progressMint(
             messageHash,
             unlockSecret,
-            {from : facilitator},
+            {from: facilitator},
         );
         
-        assert.notStrictEqual(
-            (await utilityToken.beneficiary()),
-            facilitator,
-            "Facilitator address is not correct",
+        let facilitatorBalance = await utilityToken.balanceOf(facilitator);
+        let beneficiaryBalance = await utilityToken.balanceOf(beneficiary);
+        
+        assert.strictEqual(
+            beneficiaryBalance.eq(amount),
+            true,
+            'Balance for beneficiary should be ${amount}'
+        );
+        
+        assert.strictEqual(
+            facilitatorBalance.eq(new BN(0)),
+            true,
+            'Facilitator should not receive reward'
         );
         
     });
