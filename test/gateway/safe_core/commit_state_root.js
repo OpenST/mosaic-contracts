@@ -74,7 +74,23 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
   });
 
-  it('should fail when block height is not greater than the latest committed ' +
+  it('should fail when block height is less than the latest committed ' +
+    'state root\'s block height', async () => {
+
+    blockHeight = new BN(4);
+
+    await Utils.expectRevert(
+      safeCore.commitStateRoot(
+        blockHeight,
+        stateRoot,
+        { from: worker },
+      ),
+      'Given block height is lower or equal to highest committed state root block height.',
+    );
+
+  });
+
+  it('should fail when block height is equal to the latest committed ' +
     'state root\'s block height', async () => {
 
     blockHeight = new BN(5);
