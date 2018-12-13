@@ -1,5 +1,6 @@
 const Contract = require('../deployment_tools.js').Contract;
 const ContractRegistry = require('../deployment_tools.js').ContractRegistry;
+const IncrementingNonceAddressGenerator = require('../deployment_tools.js').IncrementingNonceAddressGenerator;
 
 const EIP20TokenFile = require('../../build/contracts/EIP20Token.json');
 
@@ -114,5 +115,50 @@ describe('ContractRegistry', () => {
             expect(Object.keys(output)[1]).toEqual(MosaicCore.getAddress());
             expect(Object.values(output)[1].constructor).toContain(EIP20Token.getAddress().slice(2));
         });
+    });
+
+    describe('toLiveTransactionObjects', () => {
+        test('returns correctly formed transaction objects', () => {
+            const EIP20Token = Contract.loadTruffleContract(
+                'EIP20Token',
+                ['MYT', 'MyToken', 18],
+                { rootDir },
+            );
+
+            const registry = new ContractRegistry();
+            registry.addContract(EIP20Token);
+
+            const output = registry.toLiveTransactionObjects('0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13', 0);
+            expect(output[0]).toEqual({
+                from: '0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13',
+                nonce: 0,
+                data: EIP20Token.constructorData,
+
+                address: '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d',
+                contractName: 'EIP20Token',
+            });
+        });
+    });
+});
+
+describe('IncrementingNonceAddressGenerator', () => {
+    test('generates correct first address', () => {
+        const generator = new IncrementingNonceAddressGenerator('0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13', 0);
+        const address = generator.generateAddress();
+
+        expect(address).toEqual('0x5eceb671884153e2e312f8c5ae8e38fdc473c18d');
+    });
+
+    test('generates multiple addresses correctly', () => {
+        const generator = new IncrementingNonceAddressGenerator('0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13', 0);
+        const address1 = generator.generateAddress();
+        const address2 = generator.generateAddress();
+        const address3 = generator.generateAddress();
+        const address4 = generator.generateAddress();
+
+        expect(address1).toEqual('0x5eceb671884153e2e312f8c5ae8e38fdc473c18d');
+        expect(address2).toEqual('0x20e8a23a99c26334aed05051d6e5c6cdf50d63f6');
+        expect(address3).toEqual('0xf0cd575450fc03b90eead03d65e79741a19665e4');
+        expect(address4).toEqual('0x10ef71366ad76d6bddddc66677c38e137aa564db');
     });
 });

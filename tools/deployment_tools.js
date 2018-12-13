@@ -1,6 +1,7 @@
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
+const rlp = require('rlp');
 
 const STATE_NEW = 'new';
 const STATE_LINKED = 'linked';
@@ -120,8 +121,7 @@ class Contract {
     }
 
     /**
-     * Performs all linking for a contract and returns the linked bytecode.
-     * Assumes that the addresses of all linked dependencies have previously been set.
+     * Returns the previously linked bytecode.
      *
      * @returns {string} The linked bytecode of the contract.
      */
@@ -217,7 +217,9 @@ class Contract {
     }
 
     /**
-     * Replaces all linking placeholder in this contract's bytecode with address.
+     * Replaces all linking placeholder in this contract's bytecode with addresses.
+     * Assumes that the addresses of all linked dependencies have previously been set.
+     *
      * See {@link Contract#_linkBytecodeReplacement}.
      */
     _linkBytecode() {
@@ -328,6 +330,49 @@ class IncrementingAddressGenerator {
 }
 
 /**
+ * A AddressGenerator that returns addresses based on the provided `from` address and
+ * that address's current transaction nonce (which is auto-incremented).
+ *
+ * Suitable for deployment on a running network.
+ */
+class IncrementingNonceAddressGenerator {
+    /**
+     * @param {string} fromAddress The address that is used for deployment.
+     * @param {number} startingNonce The first nonce to used for generating addresses.
+     *                 This should be equivalent to the number of transactions made
+     *                 from the `fromAddress`.
+     */
+    constructor(fromAddress, startingNonce) {
+        if (typeof fromAddress === 'undefined') {
+            throw new Error('"fromAddress" address not provided');
+        }
+        if (typeof startingNonce === 'undefined') {
+            throw new Error('"startingNonce" not provided');
+        }
+
+        this.fromAddress = fromAddress;
+        this.nextNonce = startingNonce;
+    }
+
+    /**
+     * Returns the next available address.
+     *
+     * @return {string} Next address that will be used for a contract created by
+     *                  a transaction from `fromAddress` at the current transaction
+     *                  count (= nonce).
+     */
+    generateAddress() {
+        const addressBytes = Web3.utils.sha3(rlp.encode([this.fromAddress, this.nextNonce]))
+            .slice(12)
+            .substring(14);
+        const address = `0x${addressBytes}`;
+        this.nextNonce += 1;
+
+        return address;
+    }
+}
+
+/**
  * A contract registry that allows for registering contracts and planning deployment.
  */
 class ContractRegistry {
@@ -384,13 +429,10 @@ class ContractRegistry {
         const output = {
         };
 
-        Object.values(this.contracts)
+        this.contracts
             .forEach((contract) => {
                 const address = contract.getAddress();
                 const constructor = contract.constructorData;
-                if (!constructor) {
-                    throw new Error(`constructorData for contract ${contract.contractName} is missing. This probably means that .instantiate() has not been called for the contract`);
-                }
 
                 output[address] = {
                     balance: '0',
@@ -399,6 +441,44 @@ class ContractRegistry {
             });
 
         return output;
+    }
+
+    /**
+     * Generate transaction objects that can be passed as an argument
+     * to `web3.eth.sendTransaction()`.
+     * This allows for deployment on a live network.
+     *
+     * @param {string} fromAddress See {@ IncrementingNonceAddressGenerator#constructor}.
+     * @param {number} startingNonce See {@ IncrementingNonceAddressGenerator#constructor}.
+     *
+     * @returns {Array.<object>} The transaction objects that can be used for deployment.
+     */
+    toLiveTransactionObjects(fromAddress, startingNonce) {
+        const addressGenerator = new IncrementingNonceAddressGenerator(fromAddress, startingNonce);
+
+        this._orderContracts();
+        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
+        this.contracts.forEach(contract => contract.instantiate());
+
+        const transactionObjects = [];
+        this.contracts
+            .forEach((contract, i) => {
+                const transactionObject = {
+                    // fields for web3.eth.sendTransaction()
+                    from: fromAddress,
+                    data: contract.constructorData,
+                    nonce: startingNonce + i,
+                };
+                const deploymentObject = {
+                    transactionObject,
+                    // metadata
+                    address: contract.getAddress(),
+                    contractName: contract.contractName,
+                };
+                transactionObjects.push(deploymentObject);
+            });
+
+        return transactionObjects;
     }
 
     /**
@@ -415,4 +495,5 @@ module.exports = {
     Contract,
     ContractRegistry,
     IncrementingAddressGenerator,
+    IncrementingNonceAddressGenerator,
 };

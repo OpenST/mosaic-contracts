@@ -12,7 +12,7 @@
     "ganache-cli": "6.1.8",
     "jest": "^23.6.0",
     "keccak": "1.4.0",
-    "rlp": "2.1.0",
+    "rlp": "^2.1.0",
     "solidity-coverage": "0.5.11",
     "solparse": "2.2.5",
     "truffle": "beta",
