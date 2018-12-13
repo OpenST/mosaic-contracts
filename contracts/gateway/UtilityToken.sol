@@ -35,7 +35,6 @@ import "../lib/Organized.sol";
  */
 contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
-
     /* events */
 
     /** Emitted whenever a CoGateway address is set */
@@ -44,8 +43,8 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /* Storage */
 
-    /** Address of the EIP20 token(Branded token) in origin chain */
-    address public token;
+    /** Address of the EIP20 token (branded token) in origin chain */
+    EIP20Interface public token;
 
     /** Address of CoGateway contract*/
     address public coGateway;
@@ -77,7 +76,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
-        address _token,
+        EIP20Interface _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
@@ -99,10 +98,8 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /* external functions */
 
     /**
-     * @notice Sets the CoGateway contract address.
-     *
-     * @dev This can be called only by an organization address. This can be
-     *      set only once.
+     * @notice Sets the CoGateway contract address. This can be called only by
+     *         an organization address. This can be set only once.
      *
      * @param _coGatewayAddress CoGateway contract address
      *

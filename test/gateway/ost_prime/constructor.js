@@ -77,7 +77,7 @@ contract('OSTPrime.constructor()', function (accounts) {
     assert.strictEqual(
       initialized,
       false,
-      `Contract should not be initialized.`,
+      `initialized value from contract should be false.`,
     );
 
     let membersManagerAddress = await ostPrime.membersManager();

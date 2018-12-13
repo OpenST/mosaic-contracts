@@ -22,14 +22,14 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 /**
- *  @title UtilityTokenInterface contract
+ *  @title UtilityTokenInterface contract.
  *
  *  @notice Provides the interface to utility token contract.
  */
 contract UtilityTokenInterface {
 
 
-    /* external Functions */
+    /* External functions */
 
     /**
      * @notice Increases the total token supply.

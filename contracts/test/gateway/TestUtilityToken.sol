@@ -36,7 +36,7 @@ contract TestUtilityToken is UtilityToken {
      * @param _decimals Decimal of token
      */
     constructor(
-        address _token,
+        EIP20Interface _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,

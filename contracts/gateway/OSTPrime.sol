@@ -95,7 +95,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
-        address _valueToken,
+        EIP20Interface _valueToken,
         IsMemberInterface _membersManager
     )
         public
@@ -218,11 +218,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     }
 
     /**
-     * @notice Increases the total token supply.
-     *
-     * @dev Adds number of OST Prime tokens to account balance and increases
-     *      the total token supply. Can be called only when contract is
-     *      initialized and only by CoGateway address.
+     * @notice Adds number of OST Prime tokens to account balance and increases
+     *         the total token supply. Can be called only when contract is
+     *         initialized and only by CoGateway address.
      *
      * @param _account Account address for which the OST Prime balance will be
      *                 increased.
@@ -243,11 +241,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     }
 
     /**
-     * @notice Decreases the token supply.
-     *
-     * @dev Decreases the OST Prime token balance from the msg.sender address
-     *     and decreases the total token supply count. Can be called only when
-     *     contract is initialized and only by CoGateway address.
+     * @notice Decreases the OST Prime token balance from the msg.sender
+     *         address and decreases the total token supply count. Can be
+     *         called only when contract is initialized and only by CoGateway
+     *         address.
      *
      * @param _amount Amount of tokens.
      *

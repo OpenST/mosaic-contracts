@@ -39,7 +39,7 @@ contract TestOSTPrime is OSTPrime {
      * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
-        address _valueToken,
+        EIP20Interface _valueToken,
         IsMemberInterface _membersManager
     )
         public

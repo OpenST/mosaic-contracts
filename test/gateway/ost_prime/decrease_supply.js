@@ -41,7 +41,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
 
   async function initialize(){
     await ostPrime.initialize(
-      {from: accounts[2], value:TOKENS_MAX}
+      {from: accounts[2], value: TOKENS_MAX}
     );
   };
 
@@ -97,7 +97,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
 
   });
 
-  it('should fail when decrease supply amount is less than the available' +
+  it('should fail when decrease supply amount is greater than the available' +
     ' balance', async function () {
 
     await initialize();

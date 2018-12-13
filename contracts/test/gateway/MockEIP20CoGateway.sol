@@ -23,14 +23,14 @@ pragma solidity ^0.5.0;
 import "../../gateway/CoGatewayUtilityTokenInterface.sol";
 
 /**
- * @title MockEIP20CoGateway contract
+ * @title MockEIP20CoGateway contract.
  *
  * @notice This contract mocks the EIP20CoGateway. This is used only for testing.
  */
 contract MockEIP20CoGateway is CoGatewayUtilityTokenInterface {
 
-    // Stores the utility token address for testing.
-    address utilityTokenAddress;
+    /** Stores the utility token address for testing. */
+    address private utilityTokenAddress;
 
     /**
      * @notice Set the utility token address for testing.
