@@ -18,7 +18,7 @@ const Organization = artifacts.require('Organization');
 contract('Organization.isWorker()', async (accounts) => {
 
   let owner = accounts[0];
-  let worker = accounts[0];
+  let worker = accounts[1];
   let organization = null;
 
   beforeEach(async function () {

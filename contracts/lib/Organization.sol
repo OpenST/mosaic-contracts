@@ -22,8 +22,11 @@ import "./OrganizationInterface.sol";
  * @title Organization contract.
  *
  * @notice The organization represents an entity that manages the
- *         mosaic ecosystem and therefore the Organization.sol contract holds
+ *         mosaic ecosystem and therefore the `Organization.sol` contract holds
  *         all the keys required to administer the mosaic contracts.
+ *         This contract supports the notion of an "admin" that can act on
+ *         behalf of the organization. When seen from the outside by consumers
+ *         of the `OrganizationInterface`, a notion of an admin does not exist.
  */
 contract Organization is OrganizationInterface {
 
@@ -66,7 +69,14 @@ contract Organization is OrganizationInterface {
      */
     address public proposedOwner;
 
-    /** Admin address set by owner to facilitate operations of an economy. */
+    /**
+     * Admin address set by owner to facilitate operations of an economy on
+     * behalf of the owner.
+     * While this contract includes details that regard the admin, e.g. a
+     * modifier, when looking at the `OrganizationInterface`, the existence of
+     * an admin is a concrete implementation detail and not known to the
+     * consumers of the interface.
+     */
     address public admin;
 
     /**
@@ -79,10 +89,9 @@ contract Organization is OrganizationInterface {
 
     /**
      * onlyOwner functions can only be called from the address that is
-     * registered as the owner.
+     * registered as the owner or admin.
      */
-    modifier onlyOwner()
-    {
+    modifier onlyOwner() {
         require(
             msg.sender == owner,
             "Only owner is allowed to call this method."
@@ -95,8 +104,7 @@ contract Organization is OrganizationInterface {
      * onlyOwnerOrAdmin functions can only be called from an address that is
      * either registered as owner or as admin.
      */
-    modifier onlyOwnerOrAdmin()
-    {
+    modifier onlyOwnerOrAdmin() {
         require(
             msg.sender == owner || msg.sender == admin,
             "Only owner and admin are allowed to call this method."
@@ -118,7 +126,7 @@ contract Organization is OrganizationInterface {
     }
 
 
-    /* External Functions */
+    /* External functions */
 
     /**
      * @notice Proposes a new owner of this contract. Ownership will not be
@@ -263,13 +271,17 @@ contract Organization is OrganizationInterface {
     /**
      * @notice Checks if an address is currently registered as the owner.
      *
+     * @dev It is an implementation detail of this contract that the admin can
+     *      act on behalf of the organization. To the outside, an "admin"
+     *      doesn't exist. See also the `admin` storage variable.
+     *
      * @param _owner Address to check.
      *
      * @return isOwner_ True if the given address is the owner of the
      *                  organization. Returns false otherwise.
      */
     function isOwner(address _owner) external view returns (bool isOwner_) {
-        isOwner_ = _owner == owner;
+        isOwner_ = _owner == owner || _owner == admin;
     }
 
     /**
