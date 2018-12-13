@@ -8,6 +8,7 @@ const MetaBlock = artifacts.require("../contracts/lib/MetaBlock.sol");
 const BlockStore = artifacts.require("../contracts/BlockStore.sol");
 const TestEIP20Gateway = artifacts.require("TestEIP20Gateway");
 const EIP20CoGateway = artifacts.require("EIP20CoGateway");
+const TestEIP20CoGateway = artifacts.require("TestEIP20CoGateway");
 const AuxiliaryBlockStore = artifacts.require(
     "../contracts/AuxiliaryBlockStore.sol"
 );
@@ -35,8 +36,8 @@ module.exports = function (deployer) {
     deployer.deploy(GatewayLib);
     deployer.deploy(MockGatewayLib);
     deployer.deploy(MetaBlock);
-    deployer.link(GatewayLib, [GatewayBase, EIP20Gateway, TestEIP20Gateway, EIP20CoGateway]);
-    deployer.link(MessageBus, [EIP20CoGateway,TestEIP20Gateway, EIP20Gateway]);
+    deployer.link(GatewayLib, [GatewayBase, EIP20Gateway, TestEIP20Gateway, EIP20CoGateway, TestEIP20CoGateway]);
+    deployer.link(MessageBus, [EIP20CoGateway, TestEIP20CoGateway, TestEIP20Gateway, EIP20Gateway] );
     deployer.link(MockGatewayLib, [MockGatewayBase, TestEIP20Gateway]);
     deployer.link(MetaBlock, [BlockStore, AuxiliaryBlockStore]);
 
