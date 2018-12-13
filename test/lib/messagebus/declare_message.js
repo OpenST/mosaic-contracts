@@ -129,19 +129,6 @@ contract('MessageBus', async (accounts) => {
       await messageBusUtils.declareMessage(params, false);
     });
 
-    it('should fail when signature incorrect', async () => {
-
-      params.signature = "0xa0448f820b67d07ee7c7d1a4141177401933d97f744e785c435458032b7c8ae46a482c3c058fc94c3110df3488e1e537bcd8b13468f16aaea5d203e17301d47301";
-      await messageBusUtils.declareMessage(params, false);
-
-    });
-
-    it('should fail when signature is empty', async () => {
-
-      params.signature = '0x00';
-      await messageBusUtils.declareMessage(params, false);
-
-    });
   });
 });
 

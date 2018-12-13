@@ -41,7 +41,6 @@ contract MessageBusWrapper {
      * @param _gasLimit maximum amount of gas can be used for reward.
      * @param _gasPrice price at which reward is calculated.
      * @param _sender signer of the signature
-     * @param _signature Signed data.
      * @param _gasConsumed gas consumption during message confirmation.
      * @param _hashLock Hash lock.
      *
@@ -55,8 +54,7 @@ contract MessageBusWrapper {
         uint256 _gasLimit,
         address _sender,
         bytes32 _hashLock,
-        uint256 _gasConsumed,
-        bytes memory _signature
+        uint256 _gasConsumed
     )
         public
         returns(bytes32 messageHash_)
@@ -75,8 +73,7 @@ contract MessageBusWrapper {
         messageHash_ = MockMessageBus.declareMessage(
             messageBox,
             _messageTypeHash,
-            message,
-            _signature
+            message
         );
 
     }

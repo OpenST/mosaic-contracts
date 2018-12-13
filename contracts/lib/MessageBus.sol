@@ -111,15 +111,13 @@ library MessageBus {
      * @param _messageBox Message Box
      * @param _messageTypeHash Message type hash
      * @param _message Message object
-     * @param _signature Signed data.
      *
      * @return messageHash_ Message hash
      */
     function declareMessage(
         MessageBox storage _messageBox,
         bytes32 _messageTypeHash,
-        Message storage _message,
-        bytes calldata _signature
+        Message storage _message
     )
         external
         returns (bytes32 messageHash_)
@@ -137,12 +135,6 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Undeclared,
             "Message status must be Undeclared"
-        );
-
-        // Verify the signature.
-        require(
-            verifySignature(messageHash_, _signature, _message.sender),
-            "Invalid signature"
         );
 
         // Update the outbox message status to `Declared`.

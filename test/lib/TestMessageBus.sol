@@ -90,16 +90,12 @@ contract TestMessageBus is KeyValueStoreStub{
     function testDeclareMessage()
         public
     {
-        bytes memory signature = new bytes(65);
-        signature = hex"b3ea4cd2196f5723de9bda449c8bb7745a444383f27586148a358ab855aed1bd4b9b3ebf0920982d016b6b5eaa00a83ddf1b07bb9b154677f005d08db5c5240d00";
-
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromDeclare = MockMessageBus.declareMessage(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
-            message,
-            signature
+            message
         );
 
         Assert.equal(
