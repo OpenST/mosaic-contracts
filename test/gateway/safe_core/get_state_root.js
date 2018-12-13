@@ -68,7 +68,7 @@ contract('SafeCore.getStateRoot()', function (accounts) {
 
   it('should return the zero bytes for non committed block heights', async () => {
 
-    blockHeight = new BN(500);
+    blockHeight = blockHeight.addn(500);
 
     let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
     assert.strictEqual(
@@ -81,7 +81,7 @@ contract('SafeCore.getStateRoot()', function (accounts) {
 
   it('should return the latest committed state root', async () => {
 
-    blockHeight = new BN(50000);
+    blockHeight = blockHeight.addn(50000);
     stateRoot = web3.utils.sha3("dummy_state_root_1");
 
     await safeCore.commitStateRoot(

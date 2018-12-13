@@ -69,10 +69,10 @@ contract('SafeCore.setCoCoreAddress()', function (accounts) {
 
   it('should fail when caller is not organisation owner', async () => {
 
-    owner = accounts[7];
+    let notOwner = accounts[7];
 
     await Utils.expectRevert(
-      safeCore.setCoCoreAddress(coCoreAddress, { from: owner }),
+      safeCore.setCoCoreAddress(coCoreAddress, { from: notOwner }),
       'Only the organization is allowed to call this method.',
     );
 
@@ -103,7 +103,7 @@ contract('SafeCore.setCoCoreAddress()', function (accounts) {
 
   });
 
-  it('should fail to set coCore address if its already set', async () => {
+  it('should fail to set coCore address if it\'s already set', async () => {
 
     await safeCore.setCoCoreAddress(coCoreAddress, { from: owner });
 

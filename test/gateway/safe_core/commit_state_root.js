@@ -55,13 +55,13 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     );
 
     stateRoot = web3.utils.sha3("dummy_state_root_1");
-    blockHeight = blockHeight.addn(1);
 
   });
 
   it('should fail when state root is zero', async () => {
 
     stateRoot = zeroBytes;
+    blockHeight = blockHeight.addn(1);
 
     await Utils.expectRevert(
       safeCore.commitStateRoot(
@@ -77,7 +77,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   it('should fail when block height is less than the latest committed ' +
     'state root\'s block height', async () => {
 
-    blockHeight = new BN(4);
+    blockHeight = blockHeight.subn(1);
 
     await Utils.expectRevert(
       safeCore.commitStateRoot(
@@ -93,8 +93,6 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   it('should fail when block height is equal to the latest committed ' +
     'state root\'s block height', async () => {
 
-    blockHeight = new BN(5);
-
     await Utils.expectRevert(
       safeCore.commitStateRoot(
         blockHeight,
@@ -108,6 +106,8 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
   it('should fail when caller is not worker address', async () => {
 
+    blockHeight = blockHeight.addn(1);
+
     await Utils.expectRevert(
       safeCore.commitStateRoot(
         blockHeight,
@@ -120,6 +120,8 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   });
 
   it('should pass with correct params', async () => {
+
+    blockHeight = blockHeight.addn(1);
 
     let result = await safeCore.commitStateRoot.call(
       blockHeight,
@@ -156,6 +158,8 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
   });
 
   it('should emit `StateRootAvailable` event', async () => {
+
+    blockHeight = blockHeight.addn(1);
 
     let tx = await safeCore.commitStateRoot(
       blockHeight,

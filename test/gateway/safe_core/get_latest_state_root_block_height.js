@@ -64,7 +64,7 @@ contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
 
   it('should return the latest committed state root block height', async () => {
 
-    blockHeight = new BN(50000);
+    blockHeight = blockHeight.addn(50000);
 
     await safeCore.commitStateRoot(
       blockHeight,
