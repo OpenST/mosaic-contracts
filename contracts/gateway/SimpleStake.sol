@@ -56,7 +56,7 @@ contract SimpleStake {
 
     /* Modifiers */
 
-    /** checks that only gateway can call a particular function. */
+    /** Checks that only gateway can call a particular function. */
     modifier onlyGateway() {
         require(
             msg.sender == gateway,
