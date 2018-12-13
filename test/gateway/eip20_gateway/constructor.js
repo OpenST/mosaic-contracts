@@ -172,7 +172,8 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 baseToken.address,
                 coreAddress,
                 bountyAmount,
-                membersManager
+                membersManager,
+                burner
             ),
             "MembersManager contract address must not be zero."
         );
