@@ -924,12 +924,6 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared."
-        );
-
         // Get previousMessageHash.
         bytes32 previousMessageHash = registerOutboxProcess(
             msg.sender,
@@ -956,8 +950,12 @@ contract EIP20CoGateway is GatewayBase {
             _hashLock
         );
 
-        // Update the message outbox status to declared.
-        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
+        // Declare message in outbox
+        MessageBus.declareMessage(
+            messageBox,
+            REDEEM_TYPEHASH,
+            messages[messageHash_]
+        );
 
         // Transfer redeem amount to Co-Gateway.
         EIP20Interface(utilityToken).transferFrom(
