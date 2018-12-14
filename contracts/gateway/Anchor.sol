@@ -32,7 +32,7 @@ import "../lib/SafeMath.sol";
  * @title Anchor contract which implements StateRootInterface.
  *
  * @notice Anchor stores another chain's state roots. It stores the address of
- *         the co-core, which will be the safe core on the other chain. State
+ *         the co-core, which will be the anchor on the other chain. State
  *         roots are exchanged bidirectionally between the core and the co-core
  *         by the workers that are registered as part of the `Organized`
  *         interface.
