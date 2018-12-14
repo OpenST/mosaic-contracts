@@ -412,13 +412,13 @@ contract TestMessageBus is KeyValueStoreStub{
 
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         bytes32 messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
-            messageBox,
-            message,
-            getBytes32("STAKE_TYPEHASH"),
-            uint8(getUint256("MESSAGEBOX_OFFSET")),
-            getBytes("RLP_PARENT_NODES"),
-            getBytes32("STORAGE_ROOT"),
-            MockMessageBus.MessageStatus.Revoked
+                messageBox,
+                message,
+                getBytes32("STAKE_TYPEHASH"),
+                uint8(getUint256("MESSAGEBOX_OFFSET")),
+                getBytes("RLP_PARENT_NODES"),
+                getBytes32("STORAGE_ROOT"),
+                MockMessageBus.MessageStatus.Revoked
         );
 
         Assert.equal(
