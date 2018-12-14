@@ -195,6 +195,9 @@ contract EIP20Gateway is GatewayBase {
      */
     EIP20Interface public baseToken;
 
+    /** Address where token will be burned. */
+    address public burner;
+
     /** Maps messageHash to the Stake object. */
     mapping(bytes32 /*messageHash*/ => Stake) stakes;
 
@@ -230,13 +233,15 @@ contract EIP20Gateway is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
         StateRootInterface _core,
         uint256 _bounty,
-        IsMemberInterface _membersManager
+        IsMemberInterface _membersManager,
+        address _burner
     )
         GatewayBase(
             _core,
@@ -255,6 +260,7 @@ contract EIP20Gateway is GatewayBase {
         );
         token = _token;
         baseToken = _baseToken;
+        burner = _burner;
         // gateway is in-active initially.
         activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
@@ -630,14 +636,14 @@ contract EIP20Gateway is GatewayBase {
         token.transfer(message.sender, amount_);
 
         // burn facilitator bounty
-        baseToken.transfer(address(0), bounty);
+        baseToken.transfer(burner, bounty);
         //penalty charged to staker
         uint256 penalty = stakes[_messageHash].bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
 
         // burn staker penalty
-        baseToken.transfer(address(0), penalty);
+        baseToken.transfer(burner, penalty);
 
         // delete the stake data
         delete stakes[_messageHash];

@@ -409,7 +409,7 @@ contract GatewayBase is Organized {
     {
         require(
             _nonce == _getOutboxNonce(_account),
-            "Invalid nonce"
+            "Invalid nonce."
         );
 
         previousMessageHash_ = outboxActiveProcess[_account];
@@ -422,7 +422,7 @@ contract GatewayBase is Organized {
             require(
                 status == MessageBus.MessageStatus.Progressed ||
                 status == MessageBus.MessageStatus.Revoked,
-                "Previous process is not completed"
+                "Previous process is not completed."
             );
 
             delete messages[previousMessageHash_];

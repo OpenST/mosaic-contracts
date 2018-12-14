@@ -30,6 +30,7 @@ const utils = require("./../../test_lib/utils"),
     HelperKlass = require("./helpers/helper");
 
 const PENALTY_PERCENT = 1.5;
+const NullAddress = "0x0000000000000000000000000000000000000000";
 
 let stakeAmount,
     beneficiary,
@@ -40,6 +41,8 @@ let stakeAmount,
     hashLock,
     messageHash,
     bountyAmount;
+    bountyAmount,
+    burner = NullAddress;
 
 let mockToken,
     baseToken,
@@ -152,7 +155,8 @@ contract('EIP20Gateway.stake() ', function (accounts) {
             baseToken.address,
             accounts[1], //core address
             bountyAmount,
-            accounts[2] // organisation address
+            accounts[2], // organisation address,
+            burner
         );
 
         await _setup(accounts, gateway);
@@ -269,7 +273,8 @@ contract('EIP20Gateway.stake() ', function (accounts) {
             baseToken.address,
             accounts[1], //core address
             bountyAmount,
-            accounts[2] // organisation address
+            accounts[2], // organisation address
+            burner
         );
 
         await _setup(accounts, gateway);

@@ -5,7 +5,7 @@ const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 
-const zeroAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('EIP20Gateway.activateGateway()', function (accounts) {
 
     let gateway;
@@ -13,6 +13,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     let owner = accounts[2];
     let worker = accounts[3];
     let membersManager;
+    let burner = NullAddress;
 
     beforeEach(async function () {
 
@@ -28,7 +29,8 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             baseToken,
             coreAddress,
             bountyAmount,
-            membersManager.address
+            membersManager.address,
+            burner
         );
     });
 
@@ -83,7 +85,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     it('should not activate with zero co-gateway address', async function () {
 
         await Utils.expectRevert(
-            gateway.activateGateway(zeroAddress, {from: owner}),
+            gateway.activateGateway(NullAddress, {from: owner}),
             'Co-gateway address must not be zero.'
         );
     });
