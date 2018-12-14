@@ -180,8 +180,12 @@ contract Organization is OrganizationInterface {
     /**
      * @notice Sets the admin address. Can only be called by owner or current
      *         admin. If called by the current admin, adminship is transferred
-     *         to the given address.
-     *         Admin can be set to address(0).
+     *         to the given address immediately.
+     *         It is discouraged to set the admin address to be the same as the
+     *         address of the owner. The point of the admin is to act on behalf
+     *         of the organization without requiring the possibly very safely
+     *         stored owner key(s).
+     *         Admin can be set to `address(0)` if no admin is desired.
      *
      * @param _admin Admin address to be set.
      *
@@ -194,11 +198,6 @@ contract Organization is OrganizationInterface {
         onlyOwnerOrAdmin
         returns (bool success_)
     {
-        require(
-            _admin != owner,
-            "Admin address can't be the same as the owner address."
-        );
-
         /*
          * If the address does not change, the call is considered a success,
          * but we don't need to emit an event as it did not actually change.

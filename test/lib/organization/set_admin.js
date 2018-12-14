@@ -38,18 +38,6 @@ contract('Organization.setAdmin()', async (accounts) => {
     );
   });
 
-  it('reverts when admin is same as owner', async () => {
-
-    await Utils.expectRevert(
-      organization.setAdmin(
-        owner,
-        { from: owner },
-      ),
-      'Admin address can\'t be the same as the owner address.',
-    );
-
-  });
-
   it('should pass when valid admin is passed by owner', async () => {
     const admin = accounts[2];
     await organization.setAdmin(
