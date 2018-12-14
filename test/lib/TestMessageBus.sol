@@ -418,7 +418,7 @@ contract TestMessageBus is KeyValueStoreStub{
             uint8(getUint256("MESSAGEBOX_OFFSET")),
             getBytes("RLP_PARENT_NODES"),
             getBytes32("STORAGE_ROOT"),
-            MockMessageBus.MessageStatus.DeclaredRevocation
+            MockMessageBus.MessageStatus.Revoked
         );
 
         Assert.equal(
