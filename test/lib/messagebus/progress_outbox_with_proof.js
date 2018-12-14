@@ -142,7 +142,7 @@ contract('MessageBus',  async (accounts) => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
+      params.messageStatus = MessageStatusEnum.Revoked;
       await messageBusUtils.progressOutboxRevocation(params, true);
       
       params.messageStatus = MessageStatusEnum.Revoked;
@@ -173,7 +173,7 @@ contract('MessageBus',  async (accounts) => {
       
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
+      params.messageStatus = MessageStatusEnum.Revoked;
       await messageBusUtils.progressOutboxRevocation(params, true);
       
       params.messageStatus = '';

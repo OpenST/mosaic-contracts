@@ -95,6 +95,8 @@ contract('MessageBus', async (accounts) => {
     });
 
     it('should fail when message status is already in declared state', async () => {
+      let message = 'Message on source must be Undeclared.';
+      params.message = message;
 
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareMessage(params, false);
@@ -102,6 +104,8 @@ contract('MessageBus', async (accounts) => {
     });
 
     it('should fail when message status is progressed in outbox', async () => {
+      let message = 'Message on source must be Undeclared.';
+      params.message = message;
 
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.progressOutbox(params, true);
@@ -111,6 +115,8 @@ contract('MessageBus', async (accounts) => {
     });
 
     it('should fail when message status is DeclaredRevocation in outbox', async () => {
+      let message = 'Message on source must be Undeclared.';
+      params.message = message;
 
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
@@ -120,10 +126,12 @@ contract('MessageBus', async (accounts) => {
     });
 
     it('should fail when message status is Revoked in outbox', async () => {
+      let message = 'Message on source must be Undeclared.';
+      params.message = message;
 
       await messageBusUtils.declareMessage(params, true);
       await messageBusUtils.declareRevocationMessage(params, true);
-      params.messageStatus = MessageStatusEnum.DeclaredRevocation;
+      params.messageStatus = MessageStatusEnum.Revoked;
       await messageBusUtils.progressOutboxRevocation(params, true);
 
       await messageBusUtils.declareMessage(params, false);

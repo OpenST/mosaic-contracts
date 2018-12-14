@@ -28,8 +28,8 @@ MessageBusUtils.prototype = {
             gasConsumed = params.gasConsumed;
 
         if (changeState === false) {
-            await utils.expectThrow(
-                messageBus.declareMessage.call(
+            await utils.expectRevert(
+                messageBus.declareMessage(
                     messageTypeHash,
                     intentHash,
                     nonce,
@@ -38,7 +38,8 @@ MessageBusUtils.prototype = {
                     sender,
                     hashLock,
                     gasConsumed
-                )
+                ),
+                params.message
             );
 
         }
@@ -70,8 +71,8 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
-                messageBus.progressOutbox.call(
+            await utils.expectRevert(
+                messageBus.progressOutbox(
                     messageTypeHash,
                     intentHash,
                     nonce,
@@ -81,7 +82,8 @@ MessageBusUtils.prototype = {
                     hashLock,
                     gasConsumed,
                     unlockSecret
-                )
+                ),
+                params.message
             );
 
         }
@@ -113,7 +115,7 @@ MessageBusUtils.prototype = {
             gasConsumed = params.gasConsumed;
 
         if (changeState === false) {
-            await utils.expectThrow(
+            await utils.expectRevert(
                 messageBus.declareRevocationMessage.call(
                     messageTypeHash,
                     intentHash,
@@ -123,7 +125,8 @@ MessageBusUtils.prototype = {
                     sender,
                     hashLock,
                     gasConsumed
-                )
+                ),
+                params.message
             )
             ;
         }
@@ -155,7 +158,7 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
+            await utils.expectRevert(
                 messageBus.progressInbox.call(
                     messageTypeHash,
                     intentHash,
@@ -166,7 +169,8 @@ MessageBusUtils.prototype = {
                     hashLock,
                     gasConsumed,
                     unlockSecret
-                )
+                ),
+                params.message
             );
         }
         else {
@@ -199,7 +203,7 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
+            await utils.expectRevert(
                 messageBus.progressInboxRevocation.call(
                     messageTypeHash,
                     intentHash,
@@ -210,7 +214,8 @@ MessageBusUtils.prototype = {
                     storageRoot,
                     messageStatus,
                     hashLock
-                )
+                ),
+                params.message
             );
         }
         else {
@@ -243,7 +248,7 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
+            await utils.expectRevert(
                 messageBus.progressOutboxRevocation.call(
                     messageTypeHash,
                     intentHash,
@@ -254,7 +259,8 @@ MessageBusUtils.prototype = {
                     storageRoot,
                     messageStatus,
                     hashLock
-                )
+                ),
+                params.message
             );
         }
 
@@ -286,8 +292,8 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
-                messageBus.confirmRevocation.call(
+            await utils.expectRevert(
+                messageBus.confirmRevocation(
                     messageTypeHash,
                     intentHash,
                     nonce,
@@ -296,7 +302,8 @@ MessageBusUtils.prototype = {
                     rlpParentNodes,
                     storageRoot,
                     hashLock
-                )
+                ),
+                params.message
             );
         }
         else {
@@ -328,8 +335,8 @@ MessageBusUtils.prototype = {
 
         if (changeState === false) {
 
-            await utils.expectThrow(
-                messageBus.confirmMessage.call(
+            await utils.expectRevert(
+                messageBus.confirmMessage(
                     messageTypeHash,
                     intentHash,
                     nonce,
@@ -338,7 +345,8 @@ MessageBusUtils.prototype = {
                     storageRoot,
                     messageBoxOffset,
                     hashLock
-                )
+                ),
+                params.message
             );
 
         }
@@ -415,8 +423,8 @@ MessageBusUtils.prototype = {
             messageBoxOffset = params.messageBoxOffset;
 
         if (changeState === false) {
-            await utils.expectThrow(
-                messageBus.progressInboxWithProof.call(
+            await utils.expectRevert(
+                messageBus.progressInboxWithProof(
                     messageTypeHash,
                     intentHash,
                     nonce,
@@ -426,7 +434,8 @@ MessageBusUtils.prototype = {
                     messageStatus,
                     hashLock,
                     messageBoxOffset
-                )
+                ),
+                params.message
             );
         }
         else {

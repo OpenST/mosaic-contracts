@@ -134,7 +134,7 @@ library MessageBus {
         // Check the outbox message status is `Undeclared`.
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Undeclared,
-            "Message status must be Undeclared"
+            "Message on source must be Undeclared."
         );
 
         // Update the outbox message status to `Declared`.
@@ -180,7 +180,7 @@ library MessageBus {
         // Check the inbox message status is `Undeclared`.
         require(
             _messageBox.inbox[messageHash_] == MessageStatus.Undeclared,
-            "Message status must be Undeclared"
+            "Message on target must be Undeclared."
         );
 
         // Get the storage path to verify proof.
@@ -199,7 +199,7 @@ library MessageBus {
                 path,
                 _rlpParentNodes,
                 _storageRoot),
-            "Merkle proof verification failed"
+            "Merkle proof verification failed."
         );
 
         // Update the message box inbox status to `Declared`.
@@ -229,7 +229,7 @@ library MessageBus {
         // Verify the unlock secret.
         require(
             _message.hashLock == keccak256(abi.encode(_unlockSecret)),
-            "Invalid unlock secret"
+            "Invalid unlock secret."
         );
 
         // Get the message hash.
@@ -244,7 +244,7 @@ library MessageBus {
         // Verify the current message status is `Declared`.
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message on source must be Declared."
         );
 
         // Update the outbox message status to `Progressed`.
@@ -288,7 +288,7 @@ library MessageBus {
         require(
             _messageStatus == MessageStatus.Declared ||
             _messageStatus == MessageStatus.Progressed,
-            "Message status must be Declared or Progressed"
+            "Message on target must be Declared or Progressed."
         );
 
         // Get the message hash
@@ -305,7 +305,7 @@ library MessageBus {
             _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
             _messageBox.outbox[messageHash_] ==
             MessageStatus.DeclaredRevocation,
-            "Message status must be Declared"
+            "Message on source must be Declared."
         );
 
         // Get the storage path.
@@ -324,7 +324,7 @@ library MessageBus {
                 path,
                 _rlpParentNodes,
                 _storageRoot),
-            "Merkle proof verification failed"
+            "Merkle proof verification failed."
         );
 
         // Update the status to `Progressed`.
@@ -355,7 +355,7 @@ library MessageBus {
         // Verify the unlock secret.
         require(
             _message.hashLock == keccak256(abi.encode(_unlockSecret)),
-            "Invalid unlock secret"
+            "Invalid unlock secret."
         );
 
         // Get the message hash.
@@ -370,7 +370,7 @@ library MessageBus {
         // Verify the current message status is `Declared`.
         require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message on target status must be Declared."
         );
 
         // Update the message status of outbox to `Progressed`.
@@ -414,7 +414,7 @@ library MessageBus {
         require(
             _messageStatus == MessageStatus.Declared ||
             _messageStatus == MessageStatus.Progressed,
-            "Message status must be Declared or Progressed"
+            "Message on source must be Declared or Progressed."
         );
 
         // Get the message hash.
@@ -429,7 +429,7 @@ library MessageBus {
         // The existing message status must be `Declared`.
         require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message on target must be Declared."
         );
 
         // @dev the outbox location index is 0 in the MessageBox struct, so it
@@ -450,7 +450,7 @@ library MessageBus {
                 _rlpParentNodes,
                 _storageRoot
             ),
-            "Merkle proof verification failed"
+            "Merkle proof verification failed."
         );
 
         // Update the status to `Progressed`.
@@ -491,7 +491,7 @@ library MessageBus {
         // Outbox should be declared.
         require(
             _messageBox.outbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message on source must be Declared."
         );
 
         // Change the status of outbox.
@@ -539,7 +539,7 @@ library MessageBus {
         // Check the existing inbox message status `Declared`.
         require(
             _messageBox.inbox[messageHash_] == MessageStatus.Declared,
-            "Message status must be Declared"
+            "Message on target must be Declared."
         );
 
         // Get the path.
@@ -559,7 +559,7 @@ library MessageBus {
                 _rlpParentNodes,
                 _storageRoot
             ),
-            "Merkle proof verification failed"
+            "Merkle proof verification failed."
         );
 
         // Update the message box inbox status to `Revoked`.
@@ -599,12 +599,10 @@ library MessageBus {
         external
         returns (bytes32 messageHash_)
     {
-
-        // Inbox message status must be either `DeclaredRevocation` or `Revoked`.
+        // Inbox message status must be `Revoked`.
         require(
-            _messageStatus == MessageStatus.DeclaredRevocation ||
             _messageStatus == MessageStatus.Revoked,
-            "Message status must be DeclaredRevocation or Revoked"
+            "Message on target status must be Revoked."
         );
 
         // Get the message hash.
@@ -620,7 +618,7 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] ==
             MessageStatus.DeclaredRevocation,
-            "Message status must be DeclaredRevocation"
+            "Message on source must be DeclaredRevocation."
         );
 
         // @dev The outbox is at location 1 of the MessageBox struct.
@@ -641,7 +639,7 @@ library MessageBus {
                 _rlpParentNodes,
                 _storageRoot
             ),
-            "Merkle proof verification failed"
+            "Merkle proof verification failed."
         );
 
         // Update the status to `Revoked`.
