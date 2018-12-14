@@ -19,6 +19,10 @@ const CircularBufferUint = artifacts.require('TestCircularBufferUint');
 contract('CircularBufferUint.store()', async (accounts) => {
 
     it('stores the given number of max items', async () => {
+        /*
+         * The first ten items are `0`, because that is the buffer length and
+         * in the loop it will check for data at a lower index than was written.
+         */
         let data = [
             new BN(0),
             new BN(0),
@@ -52,9 +56,19 @@ contract('CircularBufferUint.store()', async (accounts) => {
             new BN(20),
         ];
 
+        /*
+         * Buffer length is less than the length of the array of test data. This
+         * means, that by iterating over all test data, the buffer will start
+         * overwriting old values. In the loop, it checks that the buffer
+         * returns the correct overwritten value.
+         */
         let bufferLength = 10;
         let buffer = await CircularBufferUint.new(new BN(bufferLength));
 
+        /*
+         *  Start at `i = bufferLength` to be able to query for test data at a
+         * lower index.
+         */
         let count = data.length;
         for (let i = bufferLength; i < count; i++) {
             let previousItem = await buffer.storeExternal.call(data[i]);
