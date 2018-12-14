@@ -21,7 +21,6 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 
-import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
