@@ -1,24 +1,23 @@
 pragma solidity ^0.5.0;
 
-import "../../gateway/SafeCore.sol";
+import "../../gateway/Anchor.sol";
 
 /**
- * @title MockSafeCore contract
+ * @title MockAnchor contract.
  *
- * @notice Used for test only
+ * @notice Used for test only.
  */
-contract MockSafeCore is SafeCore {
-
+contract MockAnchor is Anchor {
 
     /*  Public functions */
 
     /**
-     * @notice Contract constructor
+     * @notice Contract constructor.
      *
      *  @param _remoteChainId _remoteChainId is the chain id of the chain that
      *                        this core tracks.
-     * @param _blockHeight block height at which _stateRoot needs to store.
-     * @param _stateRoot state root hash of given _blockHeight.
+     * @param _blockHeight Block height at which _stateRoot needs to store.
+     * @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
      */
     constructor(
@@ -27,7 +26,7 @@ contract MockSafeCore is SafeCore {
         bytes32 _stateRoot,
         IsMemberInterface _membersManager
     )
-        SafeCore(
+        Anchor(
             _remoteChainId,
             _blockHeight,
             _stateRoot,

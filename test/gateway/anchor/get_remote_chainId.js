@@ -18,13 +18,13 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
+const Anchor = artifacts.require("./Anchor.sol");
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
-contract('SafeCore.getRemoteChainId()', function (accounts) {
+contract('Anchor.getRemoteChainId()', function (accounts) {
 
-  let remoteChainId, blockHeight, stateRoot, membersManager, safeCore;
+  let remoteChainId, blockHeight, stateRoot, membersManager, anchor;
 
   beforeEach(async function () {
 
@@ -33,7 +33,7 @@ contract('SafeCore.getRemoteChainId()', function (accounts) {
     stateRoot = web3.utils.sha3("dummy_state_root");
     membersManager = accounts[1];
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -44,7 +44,7 @@ contract('SafeCore.getRemoteChainId()', function (accounts) {
 
   it('should return correct remote chain id', async () => {
 
-    let chainId = await safeCore.getRemoteChainId.call();
+    let chainId = await anchor.getRemoteChainId.call();
     assert.strictEqual(
       remoteChainId.eq(chainId),
       true,

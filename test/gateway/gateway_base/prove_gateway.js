@@ -1,5 +1,5 @@
 const GatewayBase = artifacts.require("./MockGatewayBase.sol")
-  , Core = artifacts.require("./MockSafeCore.sol")
+  , Core = artifacts.require("./MockAnchor.sol")
   , BN = require('bn.js');
 
 const MockMembersManager = artifacts.require('MockMembersManager.sol');

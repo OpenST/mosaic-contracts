@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
+const Anchor = artifacts.require("./Anchor.sol");
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
@@ -28,13 +28,13 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-contract('SafeCore.commitStateRoot()', function (accounts) {
+contract('Anchor.anchorStateRoot()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
     membersManager,
-    safeCore,
+    anchor,
     owner,
     worker;
 
@@ -47,7 +47,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     stateRoot = web3.utils.sha3("dummy_state_root");
     membersManager = await MockMembersManager.new(owner, worker);
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -64,7 +64,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     blockHeight = blockHeight.addn(1);
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+        anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
         { from: worker },
@@ -74,32 +74,32 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
   });
 
-  it('should fail when block height is less than the latest committed ' +
+  it('should fail when block height is less than the latest anchored ' +
     'state root\'s block height', async () => {
 
     blockHeight = blockHeight.subn(1);
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+      anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
         { from: worker },
       ),
-      'Given block height is lower or equal to highest committed state root block height.',
+      'Given block height is lower or equal to highest anchored state root block height.',
     );
 
   });
 
-  it('should fail when block height is equal to the latest committed ' +
+  it('should fail when block height is equal to the latest anchored ' +
     'state root\'s block height', async () => {
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+        anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
         { from: worker },
       ),
-      'Given block height is lower or equal to highest committed state root block height.',
+      'Given block height is lower or equal to highest anchored state root block height.',
     );
 
   });
@@ -109,7 +109,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     blockHeight = blockHeight.addn(1);
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+        anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
         { from: accounts[6] },
@@ -123,7 +123,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
     blockHeight = blockHeight.addn(1);
 
-    let result = await safeCore.commitStateRoot.call(
+    let result = await anchor.anchorStateRoot.call(
       blockHeight,
       stateRoot,
       { from: worker },
@@ -132,23 +132,23 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     assert.strictEqual(
       result,
       true,
-      'Return value of commitStateRoot must be true.',
+      'Return value of anchorStateRoot must be true.',
     );
 
-    await safeCore.commitStateRoot(
+    await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
       { from: worker },
     );
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
@@ -161,13 +161,13 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
     blockHeight = blockHeight.addn(1);
 
-    let tx = await safeCore.commitStateRoot(
+    let tx = await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
       { from: worker },
     );
 
-    let event = EventDecoder.getEvents(tx, safeCore);
+    let event = EventDecoder.getEvents(tx, anchor);
 
     assert.isDefined(
       event.StateRootAvailable,

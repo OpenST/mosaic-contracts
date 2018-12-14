@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-    MockSafeCore = artifacts.require('MockSafeCore'),
+    MockAnchor = artifacts.require('MockAnchor'),
     MessageBus = artifacts.require('MessageBus'),
     UtilityToken = artifacts.require('UtilityToken'),
     EIP20Token = artifacts.require('EIP20Token'),
@@ -30,7 +30,7 @@ const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
 let testEIP20CoGateway,
     burner,
     valueToken,
-    mockSafeCore,
+    mockAnchor,
     membersManager,
     gateway,
     utilityToken,
@@ -50,7 +50,7 @@ let MessageStatusEnum = {
 async function _setup(accounts) {
     
     valueToken = accounts[0];
-    mockSafeCore = accounts[1];
+    mockAnchor = accounts[1];
     membersManager = accounts[2];
     gateway = accounts[3];
     owner = accounts[8];
@@ -63,7 +63,7 @@ async function _setup(accounts) {
     testEIP20CoGateway = await TestEIP20CoGateway.new(
         valueToken,
         utilityToken.address,
-        mockSafeCore,
+        mockAnchor,
         bountyAmount,
         membersManager,
         gateway,

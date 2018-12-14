@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-
 import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
 import "../lib/IsMemberInterface.sol";
@@ -30,15 +29,18 @@ import "../lib/RLP.sol";
 import "../lib/SafeMath.sol";
 
 /**
- * @title SafeCore contract which implements StateRootInterface.
+ * @title Anchor contract which implements StateRootInterface.
  *
- * @notice SafeCore stores another chain's state roots. It stores the address of
+ * @notice Anchor stores another chain's state roots. It stores the address of
  *         the co-core, which will be the safe core on the other chain. State
  *         roots are exchanged bidirectionally between the core and the co-core
  *         by the workers that are registered as part of the `Organized`
  *         interface.
  */
-contract SafeCore is StateRootInterface, Organized {
+contract Anchor is StateRootInterface, Organized {
+
+    /** Usings */
+
     using SafeMath for uint256;
 
 
@@ -58,7 +60,7 @@ contract SafeCore is StateRootInterface, Organized {
      */
     uint256 private remoteChainId;
 
-    /** Latest block height of block for which state root was committed. */
+    /** Latest block height of block for which state root was anchored. */
     uint256 private latestStateRootBlockHeight;
 
     /** Address of the core on the auxiliary chain. Can be zero. */
@@ -143,9 +145,9 @@ contract SafeCore is StateRootInterface, Organized {
     }
 
     /**
-     * @notice Gets the block height of latest committed state root.
+     * @notice Gets the block height of latest anchored state root.
      *
-     * @return uint256 Block height of the latest committed state root.
+     * @return uint256 Block height of the latest anchored state root.
      */
     function getLatestStateRootBlockHeight()
         external
@@ -156,10 +158,10 @@ contract SafeCore is StateRootInterface, Organized {
     }
 
     /**
-     *  @notice External function commitStateRoot.
+     *  @notice External function anchorStateRoot.
      *
-     *  @dev commitStateRoot Called from game process.
-     *       Commit new state root for a block height.
+     *  @dev anchorStateRoot Called from game process.
+     *       Anchor new state root for a block height.
      *
      *  @param _blockHeight Block height for which stateRoots mapping needs to
      *                      update.
@@ -167,7 +169,7 @@ contract SafeCore is StateRootInterface, Organized {
      *
      *  @return bytes32 stateRoot
      */
-    function commitStateRoot(
+    function anchorStateRoot(
         uint256 _blockHeight,
         bytes32 _stateRoot
     )
@@ -184,7 +186,7 @@ contract SafeCore is StateRootInterface, Organized {
         // Input block height should be valid
         require(
             _blockHeight > latestStateRootBlockHeight,
-            "Given block height is lower or equal to highest committed state root block height."
+            "Given block height is lower or equal to highest anchored state root block height."
         );
 
         stateRoots[_blockHeight] = _stateRoot;
