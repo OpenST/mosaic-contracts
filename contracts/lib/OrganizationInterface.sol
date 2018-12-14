@@ -21,14 +21,19 @@ pragma solidity ^0.5.0;
 interface OrganizationInterface {
 
     /**
-     * @notice Checks if an address is currently registered as the owner.
+     * @notice Checks if an address is currently registered as the organization.
      *
-     * @param _owner Address to check.
+     * @param _organization Address to check.
      *
-     * @return isOwner_ True if the given address is the owner of the
-     *                  organization. Returns false otherwise.
+     * @return isOrganization_ True if the given address represents the
+     *                         organization. Returns false otherwise.
      */
-    function isOwner(address _owner) external view returns (bool isOwner_);
+    function isOrganization(
+        address _organization
+    )
+        external
+        view
+        returns (bool isOrganization_);
 
     /**
      * @notice Checks if an address is currently registered as an active worker.

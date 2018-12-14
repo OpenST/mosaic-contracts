@@ -60,7 +60,7 @@ contract Organization is OrganizationInterface {
 
     /* Storage */
 
-    /** Address for which private key will be owned by organization. */
+    /** Address for which private key will be owned by the organization. */
     address public owner;
 
     /**
@@ -269,19 +269,25 @@ contract Organization is OrganizationInterface {
     }
 
     /**
-     * @notice Checks if an address is currently registered as the owner.
+     * @notice Checks if an address is currently registered as the organization.
      *
      * @dev It is an implementation detail of this contract that the admin can
      *      act on behalf of the organization. To the outside, an "admin"
      *      doesn't exist. See also the `admin` storage variable.
      *
-     * @param _owner Address to check.
+     * @param _organization Address to check.
      *
-     * @return isOwner_ True if the given address is the owner of the
-     *                  organization. Returns false otherwise.
+     * @return isOrganization_ True if the given address represents the
+     *                         organization. Returns false otherwise.
      */
-    function isOwner(address _owner) external view returns (bool isOwner_) {
-        isOwner_ = _owner == owner || _owner == admin;
+    function isOrganization(
+        address _organization
+    )
+        external
+        view
+        returns (bool isOrganization_)
+    {
+        isOrganization_ = _organization == owner || _organization == admin;
     }
 
     /**

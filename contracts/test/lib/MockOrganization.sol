@@ -51,14 +51,21 @@ contract MockOrganization is OrganizationInterface {
     /* External functions */
 
     /**
-     * @notice Checks if an address is currently registered as the owner.
+     * @notice Checks if an address is currently registered as the organization.
      *
-     * @param _owner Address to check.
+     * @param _organization Address to check.
      *
-     * @return isOwner_ True if the given address is the registered owner.
+     * @return isOrganization_ True if the given address represents the
+     *                         organization. Returns false otherwise.
      */
-    function isOwner(address _owner) external view returns (bool isOwner_) {
-        isOwner_ = owner == _owner;
+    function isOrganization(
+        address _organization
+    )
+        external
+        view
+        returns (bool isOrganization_)
+    {
+        isOrganization_ = owner == _organization;
     }
 
     /**

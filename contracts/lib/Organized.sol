@@ -36,7 +36,7 @@ contract Organized {
     modifier onlyOrganization()
     {
         require(
-            organization.isOwner(msg.sender),
+            organization.isOrganization(msg.sender),
             "Only the organization is allowed to call this method."
         );
 

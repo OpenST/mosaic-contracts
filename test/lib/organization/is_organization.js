@@ -17,7 +17,7 @@ const BN = require('bn.js');
 
 const Organization = artifacts.require('Organization');
 
-contract('Organization.isOwner()', async (accounts) => {
+contract('Organization.isOrganization()', async (accounts) => {
 
     let owner = accounts[0];
     let admin = accounts[1];
@@ -28,28 +28,28 @@ contract('Organization.isOwner()', async (accounts) => {
         organization = await Organization.new({ from: owner });
     });
 
-    it('should return the owner as the owner', async () => {
-        let isOwner = await organization.isOwner(owner);
+    it('should return the owner as the organization', async () => {
+        let isOrganization = await organization.isOrganization(owner);
 
         assert.strictEqual(
-            isOwner,
+            isOrganization,
             true,
-            'The owner should be recognized as owner.',
+            'The owner should be recognized as organization.',
         );
     });
 
-    it('should return the admin as the owner', async () => {
+    it('should return the admin as the organization', async () => {
         await organization.setAdmin(admin, { from: owner });
-        let isOwner = await organization.isOwner(admin);
+        let isOrganization = await organization.isOrganization(admin);
 
         assert.strictEqual(
-            isOwner,
+            isOrganization,
             true,
-            'The admin should be recognized as owner.',
+            'The admin should be recognized as organization.',
         );
     });
 
-    it('should not return a worker as the owner', async () => {
+    it('should not return a worker as the organization', async () => {
         let currentBlockHeight = await web3.eth.getBlockNumber();
         let expirationHeight = currentBlockHeight + 1000;
         await organization.setWorker(
@@ -57,12 +57,12 @@ contract('Organization.isOwner()', async (accounts) => {
             new BN(expirationHeight),
             { from: owner },
         );
-        let isOwner = await organization.isOwner(admin);
+        let isOrganization = await organization.isOrganization(admin);
 
         assert.strictEqual(
-            isOwner,
+            isOrganization,
             false,
-            'A worker should not be recognized as owner.',
+            'A worker should not be recognized as organization.',
         );
     });
 
