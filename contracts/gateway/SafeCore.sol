@@ -178,7 +178,10 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
         returns (bool success_)
     {
         // State root should be valid
-        require(_stateRoot != bytes32(0), "State root is 0");
+        require(
+            _stateRoot != bytes32(0),
+            "State root must not be zero."
+        );
 
         // Input block height should be valid
         require(

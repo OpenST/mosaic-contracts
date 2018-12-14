@@ -15,7 +15,6 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary Chain: CoGateway Contract
 //
 // http://www.simpletoken.org/
 //
@@ -142,6 +141,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _amount
     );
 
+
     /* Struct */
 
     /**
@@ -159,8 +159,6 @@ contract EIP20CoGateway is GatewayBase {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the stake process. */
-        address facilitator;  //todo need to discuss revocation process
         /** bounty amount kept by facilitator for transferring redeem messages*/
         uint256 bounty;
     }
@@ -186,6 +184,9 @@ contract EIP20CoGateway is GatewayBase {
     /** address of value token. */
     address public valueToken;
 
+    /** Address where token will be burned. */
+    address payable public burner;
+
     /** Maps messageHash to the Mint object. */
     mapping(bytes32 /*messageHash*/ => Mint) mints;
 
@@ -207,6 +208,7 @@ contract EIP20CoGateway is GatewayBase {
      *                process.
      * @param _membersManager Address of a contract that manages workers.
      * @param _gateway Gateway contract address.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
         address _valueToken,
@@ -214,7 +216,8 @@ contract EIP20CoGateway is GatewayBase {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway
+        address _gateway,
+        address payable _burner
     )
         GatewayBase(
             _core,
@@ -239,6 +242,7 @@ contract EIP20CoGateway is GatewayBase {
         valueToken = _valueToken;
         utilityToken = _utilityToken;
         remoteGateway = _gateway;
+        burner = _burner;
 
         // update the encodedGatewayPath
         encodedGatewayPath = GatewayLib.bytes32ToBytes(
@@ -719,7 +723,7 @@ contract EIP20CoGateway is GatewayBase {
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // burn bounty
-        address(0).transfer(redeemProcess.bounty);
+        burner.transfer(redeemProcess.bounty);
 
         //penalty charged to redeemer
         uint256 penalty = redeemProcess.bounty
@@ -727,7 +731,7 @@ contract EIP20CoGateway is GatewayBase {
         .div(100);
 
         //burn penalty
-        address(0).transfer(penalty);
+        burner.transfer(penalty);
 
         // delete the redeem data
         delete redeems[_messageHash];
@@ -864,49 +868,43 @@ contract EIP20CoGateway is GatewayBase {
      * @dev In order to redeem the redeemer needs to approve CoGateway contract
      *      for redeem amount. Redeem amount is transferred from redeemer
      *      address to CoGateway contract.
-     *      This is a payable function. The bounty is transferred in base token
-     *      Redeemer is always msg.sender
+     *      This is a payable function. The bounty is transferred in base token.
+     *      Redeemer is always msg.sender.
      *
      * @param _amount Redeem amount that will be transferred from redeemer
      *                account.
      * @param _beneficiary The address in the origin chain where the value
      *                     tok ens will be released.
-     * @param _facilitator Facilitator address.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
      *                  redeem process done.
-     * @param _gasLimit Gas limit that redeemer is ready to pay
+     * @param _gasLimit Gas limit that redeemer is ready to pay.
      * @param _nonce Nonce of the redeemer address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
-     * @return messageHash_ which is unique for each request.
+     * @return messageHash_ Unique for each request.
      */
     function redeem(
         uint256 _amount,
         address _beneficiary,
-        address _facilitator,
         uint256 _gasPrice,
         uint256 _gasLimit,
         uint256 _nonce,
         bytes32 _hashLock
     )
-        public
+        external
         payable
         returns (bytes32 messageHash_)
     {
         require(
             msg.value == bounty,
-            "msg.value must match the bounty amount"
+            "Payable amount should be equal to the bounty amount."
         );
         require(
             _amount > uint256(0),
-            "Redeem amount must not be zero"
+            "Redeem amount must not be zero."
         );
 
-        require(
-            _facilitator != address(0),
-            "Facilitator address must not be zero"
-        );
-        // Get the redeem intent hash
+        // Get the redeem intent hash.
         bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
@@ -917,7 +915,7 @@ contract EIP20CoGateway is GatewayBase {
             valueToken
         );
 
-        // Get the messageHash
+        // Get the messageHash.
         messageHash_ = MessageBus.messageDigest(
             REDEEM_TYPEHASH,
             intentHash,
@@ -926,24 +924,29 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        // Get previousMessageHash
+        require(
+            messageBox.outbox[messageHash_] ==
+            MessageBus.MessageStatus.Undeclared,
+            "Message status must be Undeclared."
+        );
+
+        // Get previousMessageHash.
         bytes32 previousMessageHash = registerOutboxProcess(
             msg.sender,
             _nonce,
             messageHash_
         );
 
-        // Delete the previous progressed/revoked redeem data
+        // Delete the previous progressed/revoked redeem data.
         delete redeems[previousMessageHash];
 
         redeems[messageHash_] = Redeem({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : _facilitator,
             bounty : bounty
-            });
+        });
 
-        // create message object
+        // Create message object.
         messages[messageHash_] = getMessage(
             msg.sender,
             _nonce,
@@ -953,22 +956,17 @@ contract EIP20CoGateway is GatewayBase {
             _hashLock
         );
 
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
-        );
         // Update the message outbox status to declared.
         messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
 
-        //transfer redeem amount to Co-Gateway
+        // Transfer redeem amount to Co-Gateway.
         EIP20Interface(utilityToken).transferFrom(
             msg.sender,
             address(this),
             _amount
         );
 
-        // Emit RedeemIntentDeclared event
+        // Emit RedeemIntentDeclared event.
         emit RedeemIntentDeclared(
             messageHash_,
             msg.sender,
@@ -977,6 +975,7 @@ contract EIP20CoGateway is GatewayBase {
             _amount
         );
     }
+
 
     /* Private functions */
 
