@@ -26,10 +26,19 @@ contract('Organization.unsetWorker()', async (accounts) => {
   let admin = accounts[2];
 
   let organization = null;
+  let expirationHeight;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
     expirationHeight = (await web3.eth.getBlockNumber()) + 10;
+
+    let zeroAdmin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    organization = await Organization.new(
+      owner,
+      zeroAdmin,
+      workers,
+      expirationHeight,
+    );
     await organization.setWorker(worker, expirationHeight, { from: owner });
   });
 

@@ -24,7 +24,17 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
+    let admin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    let expirationHeight = 0;
+
+    organization = await Organization.new(
+      owner,
+      admin,
+      workers,
+      expirationHeight,
+    );
+
     await organization.initiateOwnershipTransfer(
       proposedOwner,
       { from: owner },

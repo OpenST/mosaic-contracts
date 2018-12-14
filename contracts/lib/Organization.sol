@@ -117,12 +117,36 @@ contract Organization is OrganizationInterface {
     /* Constructor */
 
     /**
-     * @notice The address that creates the contract is set as the initial
-     *         owner.
+     * @notice 
+     *
+     * @param _owner The address that shall be registered as the owner of the
+     *               organization.
+     * @param _admin The address that shall be registered as the admin of the
+     *               organization. Can be address(0) if no admin is desired.
+     * @param _workers An array of initial worker addresses. Can be an empty
+     *                 array if no workers are desired or known at construction.
+     * @param _expirationHeight If any workers are given, this will be the
+     *                          block height at which they expire.
      */
-    constructor() public
+    constructor(
+        address _owner,
+        address _admin,
+        address[] memory _workers,
+        uint256 _expirationHeight
+    )
+        public
     {
-        owner = msg.sender;
+        require(
+            _owner != address(0),
+            "The owner must not be the zero address."
+        );
+
+        owner = _owner;
+        admin = _admin;
+
+        for(uint256 i = 0; i < _workers.length; i++) {
+            setWorkerInternal(_workers[i], _expirationHeight);
+        }
     }
 
 
@@ -230,20 +254,7 @@ contract Organization is OrganizationInterface {
         onlyOwnerOrAdmin
         returns (uint256 remainingBlocks_)
     {
-        require(
-            _worker != address(0),
-            "Worker address cannot be null."
-        );
-
-        require(
-            _expirationHeight > block.number,
-            "Expiration height must be in the future."
-        );
-
-        workers[_worker] = _expirationHeight;
-        remainingBlocks_ = _expirationHeight.sub(block.number);
-
-        emit WorkerSet(_worker, _expirationHeight, remainingBlocks_);
+        remainingBlocks_ = setWorkerInternal(_worker, _expirationHeight);
     }
 
     /**
@@ -301,6 +312,41 @@ contract Organization is OrganizationInterface {
     function isWorker(address _worker) external view returns (bool isWorker_)
     {
         isWorker_ = workers[_worker] > block.number;
+    }
+
+
+    /* Private functions */
+
+    /**
+     * @notice Sets worker and its expiration block height.
+     *
+     * @param _worker Worker address to be added.
+     * @param _expirationHeight Expiration block height of worker.
+     *
+     * @return remainingBlocks_ Remaining number of blocks for which worker is
+     *                          active.
+     */
+    function setWorkerInternal(
+        address _worker,
+        uint256 _expirationHeight
+    )
+        private 
+        returns (uint256 remainingBlocks_)
+    {
+        require(
+            _worker != address(0),
+            "Worker address cannot be null."
+        );
+
+        require(
+            _expirationHeight > block.number,
+            "Expiration height must be in the future."
+        );
+
+        workers[_worker] = _expirationHeight;
+        remainingBlocks_ = _expirationHeight.sub(block.number);
+
+        emit WorkerSet(_worker, _expirationHeight, remainingBlocks_);
     }
 
 }

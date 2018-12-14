@@ -104,7 +104,7 @@ contract('SafeCore.constructor()', function (accounts) {
     assert.strictEqual(
       organizationAddress,
       organization,
-      `Members manager address from the contract must be ${organization}.`,
+      `Organization address from the contract must be ${organization}.`,
     );
 
   });

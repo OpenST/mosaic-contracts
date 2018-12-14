@@ -106,10 +106,10 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             "Gateway is not deactivated by default."
         );
 
-        let storedMembersManager = await gateway.organization();
+        let storedOrganization = await gateway.organization();
         assert.equal(
             organization.address,
-            storedMembersManager,
+            storedOrganization,
             "Incorrect organization from contract"
         );
     });
@@ -163,7 +163,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
 
     });
 
-    it('should fail when members manager address is passed as zero', async function () {
+    it('should fail when organization address is passed as zero', async function () {
         let organization = NullAddress;
 
         await Utils.expectRevert(

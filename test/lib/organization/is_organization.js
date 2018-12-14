@@ -25,7 +25,16 @@ contract('Organization.isOrganization()', async (accounts) => {
     let organization = null;
 
     beforeEach(async function () {
-        organization = await Organization.new({ from: owner });
+        let zeroAdmin = '0x0000000000000000000000000000000000000000';
+        let workers = [];
+        let expirationHeight = 0;
+
+        organization = await Organization.new(
+            owner,
+            zeroAdmin,
+            workers,
+            expirationHeight,
+        );
     });
 
     it('should return the owner as the organization', async () => {
