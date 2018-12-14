@@ -19,28 +19,27 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js'),
-    Utils = require("../../test_lib/utils"),
-    EIP20CoGatewayHelper = require("./helpers/helper"),
+    Utils = require('../../test_lib/utils'),
+    EIP20CoGatewayHelper = require('./helpers/helper'),
     MockSafeCore = artifacts.require('MockSafeCore'),
     MessageBus = artifacts.require('MessageBus'),
-    UtilityToken = artifacts.require('UtilityToken'),
     EIP20Token = artifacts.require('EIP20Token'),
     TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-    MockUtilityToken = artifacts.require('MockUtilityToken');
+    TestUtilityToken = artifacts.require('TestUtilityToken');
 
 let valueToken,
     burner,
     mockSafeCore,
-    organization,
+    membersManager,
     coGateway,
-    utilityToken,
+    testUtilityToken,
     bountyAmount,
     owner,
     staker,
     stakerBalance,
     rewardAmount,
-    symbol = "OST",
-    name = "Simple Token",
+    symbol = 'OST',
+    name = 'Simple Token',
     decimals = 18,
     helper;
 
@@ -60,10 +59,10 @@ async function _setup(accounts) {
     valueToken = accounts[0];
     burner = accounts[10];
     mockSafeCore = accounts[11];
-    organization = accounts[2];
+    membersManager = accounts[2];
     coGateway = accounts[3];
     owner = accounts[8];
-    utilityToken = await MockUtilityToken.new(
+    testUtilityToken = await TestUtilityToken.new(
         symbol,
         name,
         decimals,
@@ -80,21 +79,26 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     
     let amount = new BN(200),
         beneficiary = accounts[4],
-        gasPrice = new BN(10),
-        gasLimit = new BN(10),
+        gasPrice,
+        gasLimit,
         nonce = new BN(1),
         hashLockObj = Utils.generateHashLock(),
         facilitator = accounts[5],
         intentHash,
         hashLock,
         unlockSecret,
-        testEIP20CoGateway;
+        testEIP20CoGateway,
+        messageHash;
     helper = new EIP20CoGatewayHelper();
     
     beforeEach(async function () {
         
         await _setup(accounts);
         amount = new BN(200);
+        hashLock = hashLockObj.l;
+        unlockSecret = hashLockObj.s;
+        gasPrice = new BN(10);
+        gasLimit = new BN(10);
         
         intentHash = await helper.hashRedeemIntent(
             amount,
@@ -107,24 +111,18 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         );
         testEIP20CoGateway = await TestEIP20CoGateway.new(
             valueToken,
-            utilityToken.address,
+            testUtilityToken.address,
             mockSafeCore,
             bountyAmount,
-            organization,
+            membersManager,
             coGateway,
             burner,
         );
         
-        await utilityToken.setCoGateway(testEIP20CoGateway.address);
+        await testUtilityToken.setCoGateway(testEIP20CoGateway.address);
         await helper.setCoGateway(testEIP20CoGateway.address);
-        hashLock = hashLockObj.l;
-        unlockSecret = hashLockObj.s;
         
-    });
-    
-    it('should pass when facilitator is rewarded', async function () {
-        
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
+        messageHash = await testEIP20CoGateway.setStakeMessage.call(
             intentHash,
             nonce,
             gasPrice,
@@ -140,6 +138,11 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             hashLock,
             staker,
         );
+        
+    });
+    
+    it('should mint reward to facilitator', async function () {
+        
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Declared,
@@ -158,25 +161,25 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             progressMintValues.beneficiary_,
             beneficiary,
-            "Incorrect beneficiary address",
+            'Beneficiary address should be ${beneficiary}',
         );
         
         assert.strictEqual(
             amount.eq(progressMintValues.stakeAmount_),
             true,
-            "Incorrect staked amount",
+            'Staked amount should be ${amount}.',
         );
         
         assert.strictEqual(
             expectedMintedToken.eq(progressMintValues.mintedAmount_),
             true,
-            "Incorrect minted amount",
+            'Minted amount should be ${expectedMintedToken}.',
         );
         
         assert.strictEqual(
             expectedReward.eq(progressMintValues.rewardAmount_),
             true,
-            "Incorrect reward to facilitator",
+            'Reward to facilitator should be ${expectedReward}.',
         );
         
         let response = await testEIP20CoGateway.progressMint(
@@ -185,19 +188,19 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             {from: facilitator},
         );
         
-        let facilitatorBalance = await utilityToken.balanceOf(facilitator);
-        let beneficiaryBalance = await utilityToken.balanceOf(beneficiary);
+        let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+        let beneficiaryBalance = await testUtilityToken.balanceOf(beneficiary);
         
         assert.strictEqual(
             facilitatorBalance.eq(expectedReward),
             true,
-            'Facilitator didnt receive reward'
+            'Facilitator reward should be ${expectedReward}.',
         );
         
         assert.strictEqual(
-            beneficiaryBalance.eq(new BN(amount - expectedReward)),
+            beneficiaryBalance.eq(amount.sub(expectedReward)),
             true,
-            'Minting is not done for beneficiary'
+            'Beneficiary balance should be ${amount.sub(expectedReward)}.'
         );
         
         let expectedEvent = {
@@ -215,15 +218,15 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.equal(
             response.receipt.status,
             1,
-            "Receipt status is unsuccessful"
+            'Receipt status is unsuccessful.',
         );
         
         let eventData = response.logs;
-        await Utils.validateEvents(eventData, expectedEvent);
+        Utils.validateEvents(eventData, expectedEvent);
         
     });
     
-    it('should not mint reward for zero reward amount', async function () {
+    it('should not mint reward to facilitator', async function () {
         
         gasPrice = new BN(0);
         
@@ -256,8 +259,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             {from: facilitator},
         );
         
-        let facilitatorBalance = await utilityToken.balanceOf(facilitator);
-        let beneficiaryBalance = await utilityToken.balanceOf(beneficiary);
+        let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+        let beneficiaryBalance = await testUtilityToken.balanceOf(beneficiary);
         
         assert.strictEqual(
             beneficiaryBalance.eq(amount),
@@ -268,29 +271,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             facilitatorBalance.eq(new BN(0)),
             true,
-            'Facilitator should not receive reward',
+            'Facilitator reward should be zero',
         );
         
     });
     
     it('should fail when messagehash is zero', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Declared,
@@ -305,29 +292,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Message hash must not be zero.",
+            'Message hash must not be zero.',
         );
         
     });
     
     it('should fail when status of the messagehash is declared revocation', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.DeclaredRevocation,
@@ -340,29 +311,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Message status must be Declared."
+            'Message status must be Declared.'
         );
         
     });
     
     it('should fail when status of the messagehash is revoked', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Revoked,
@@ -375,29 +330,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Message status must be Declared."
+            'Message status must be Declared.'
         );
         
     });
     
     it('should fail when status of the messagehash is undeclared', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Undeclared,
@@ -410,29 +349,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Message status must be Declared."
+            'Message status must be Declared.'
         );
         
     });
     
-    it('should fail when unlock provided is zero', async function () {
+    it('should fail when unlock secret is zero', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Undeclared,
@@ -447,29 +370,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Invalid unlock secret."
+            'Invalid unlock secret.'
         );
         
     });
     
     it('should fail when message status is already progressed', async function () {
         
-        let messageHash = await testEIP20CoGateway.setStakeMessage.call(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
-        await testEIP20CoGateway.setStakeMessage(
-            intentHash,
-            nonce,
-            gasPrice,
-            gasLimit,
-            hashLock,
-            staker,
-        );
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Declared,
@@ -488,10 +395,10 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
                 unlockSecret,
                 {from: facilitator},
             ),
-            "Message status must be Declared.",
+            'Message status must be Declared.',
         );
         
     });
     
-    
 });
+
