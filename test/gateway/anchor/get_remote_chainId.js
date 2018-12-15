@@ -23,34 +23,34 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
 contract('Anchor.getRemoteChainId()', function (accounts) {
-
-  let remoteChainId, blockHeight, stateRoot, membersManager, anchor;
-
-  beforeEach(async function () {
-
-    remoteChainId = new BN(1410);
-    blockHeight = new BN(5);
-    stateRoot = web3.utils.sha3("dummy_state_root");
-    membersManager = accounts[1];
-
-    anchor = await Anchor.new(
-      remoteChainId,
-      blockHeight,
-      stateRoot,
-      membersManager,
-    );
-
-  });
-
-  it('should return correct remote chain id', async () => {
-
-    let chainId = await anchor.getRemoteChainId.call();
-    assert.strictEqual(
-      remoteChainId.eq(chainId),
-      true,
-      `Remote chain id from the contract must be ${remoteChainId}.`,
-    );
-
-  });
-
+    
+    let remoteChainId, blockHeight, stateRoot, membersManager, anchor;
+    
+    beforeEach(async function () {
+        
+        remoteChainId = new BN(1410);
+        blockHeight = new BN(5);
+        stateRoot = web3.utils.sha3("dummy_state_root");
+        membersManager = accounts[1];
+        
+        anchor = await Anchor.new(
+            remoteChainId,
+            blockHeight,
+            stateRoot,
+            membersManager,
+        );
+        
+    });
+    
+    it('should return correct remote chain id', async () => {
+        
+        let chainId = await anchor.getRemoteChainId.call();
+        assert.strictEqual(
+            remoteChainId.eq(chainId),
+            true,
+            `Remote chain id from the contract must be ${remoteChainId}.`,
+        );
+        
+    });
+    
 });

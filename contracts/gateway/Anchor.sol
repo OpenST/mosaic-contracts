@@ -32,10 +32,10 @@ import "../lib/SafeMath.sol";
  * @title Anchor contract which implements StateRootInterface.
  *
  * @notice Anchor stores another chain's state roots. It stores the address of
- *         the co-core, which will be the anchor on the other chain. State
- *         roots are exchanged bidirectionally between the core and the co-core
- *         by the workers that are registered as part of the `Organized`
- *         interface.
+ *         the co-anchor, which will be the anchor on the other chain. State
+ *         roots are exchanged bidirectionally between the anchor and the
+ *         co-anchor by the workers that are registered as part of the
+ *         `Organized` interface.
  */
 contract Anchor is StateRootInterface, Organized {
 
@@ -55,7 +55,7 @@ contract Anchor is StateRootInterface, Organized {
     mapping (uint256 => bytes32) private stateRoots;
 
     /**
-     * The remote chain ID is the remote chain id where core contract is
+     * The remote chain ID is the remote chain id where anchor contract is
      * deployed.
      */
     uint256 private remoteChainId;
@@ -63,8 +63,8 @@ contract Anchor is StateRootInterface, Organized {
     /** Latest block height of block for which state root was anchored. */
     uint256 private latestStateRootBlockHeight;
 
-    /** Address of the core on the auxiliary chain. Can be zero. */
-    address public coCore;
+    /** Address of the anchor on the auxiliary chain. Can be zero. */
+    address public coAnchor;
 
 
     /*  Constructor */
@@ -73,7 +73,7 @@ contract Anchor is StateRootInterface, Organized {
      *  @notice Contract constructor.
      *
      *  @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                        this core tracks.
+     *                        this anchor tracks.
      *  @param _blockHeight Block height at which _stateRoot needs to store.
      *  @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
@@ -102,27 +102,28 @@ contract Anchor is StateRootInterface, Organized {
     /* External functions */
 
     /**
-     *  @notice The Co-Core address is the address of the core that is
+     *  @notice The Co-Anchor address is the address of the anchor that is
      *          deployed on the other (origin/auxiliary) chain.
      *
-     *  @param _coCore Address of the Co-Core on auxiliary.
+     *  @param _coAnchor Address of the Co-Anchor on auxiliary.
      */
-    function setCoCoreAddress(address _coCore)
+    function setCoAnchorAddress(address _coAnchor)
         external
         onlyOrganization
         returns (bool success_)
     {
+
         require(
-            coCore == address(0),
-            "Co-Core has already been set and cannot be updated."
+            _coAnchor != address(0),
+            "Co-Anchor address must not be 0."
         );
 
         require(
-            _coCore != address(0),
-            "Co-Core address must not be 0."
+            coAnchor == address(0),
+            "Co-Anchor has already been set and cannot be updated."
         );
 
-        coCore = _coCore;
+        coAnchor = _coAnchor;
 
         success_ = true;
     }
@@ -158,10 +159,7 @@ contract Anchor is StateRootInterface, Organized {
     }
 
     /**
-     *  @notice External function anchorStateRoot.
-     *
-     *  @dev anchorStateRoot Called from game process.
-     *       Anchor new state root for a block height.
+     *  @notice Anchor new state root for a block height.
      *
      *  @param _blockHeight Block height for which stateRoots mapping needs to
      *                      update.
@@ -198,7 +196,7 @@ contract Anchor is StateRootInterface, Organized {
     }
 
     /**
-     *  @notice Get the remote chain id of this core.
+     *  @notice Get the remote chain id of this anchor.
      *
      *  @return remoteChainId_ The remote chain id.
      */

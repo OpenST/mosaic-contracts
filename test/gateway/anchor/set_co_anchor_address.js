@@ -22,11 +22,11 @@ const Anchor = artifacts.require("./Anchor.sol");
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
+const Utils = require('../../../test/test_lib/utils');
 
-const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+const NullAddress = "0x0000000000000000000000000000000000000000";
 
-contract('Anchor.getStateRoot()', function (accounts) {
+contract('Anchor.setCoAnchorAddress()', function (accounts) {
     
     let remoteChainId,
         blockHeight,
@@ -34,7 +34,8 @@ contract('Anchor.getStateRoot()', function (accounts) {
         membersManager,
         anchor,
         owner,
-        worker;
+        worker,
+        coAnchorAddress;
     
     beforeEach(async function () {
         
@@ -44,6 +45,7 @@ contract('Anchor.getStateRoot()', function (accounts) {
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
         membersManager = await MockMembersManager.new(owner, worker);
+        coAnchorAddress = accounts[6];
         
         anchor = await Anchor.new(
             remoteChainId,
@@ -54,47 +56,60 @@ contract('Anchor.getStateRoot()', function (accounts) {
         
     });
     
-    it('should return the latest state root block height that was set ' +
-        'while deployment', async () => {
+    it('should fail when coAnchor address is zero', async () => {
         
-        let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
-        assert.strictEqual(
-            latestStateRoot,
-            stateRoot,
-            `Latest state root from the contract must be ${stateRoot}.`,
+        coAnchorAddress = NullAddress;
+        
+        await Utils.expectRevert(
+            anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
+            "Co-Anchor address must not be 0.",
         );
         
     });
     
-    it('should return the zero bytes for non committed block heights', async () => {
+    it('should fail when caller is not organisation owner', async () => {
         
-        blockHeight = blockHeight.addn(500);
+        let notOwner = accounts[7];
         
-        let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
-        assert.strictEqual(
-            latestStateRoot,
-            zeroBytes,
-            `Latest state root from the contract must be ${zeroBytes}.`,
+        await Utils.expectRevert(
+            anchor.setCoAnchorAddress(coAnchorAddress, {from: notOwner}),
+            'Only the organization is allowed to call this method.',
         );
         
     });
     
-    it('should return the latest committed state root', async () => {
+    it('should pass with correct params', async () => {
         
-        blockHeight = blockHeight.addn(50000);
-        stateRoot = web3.utils.sha3("dummy_state_root_1");
-        
-        await anchor.anchorStateRoot(
-            blockHeight,
-            stateRoot,
-            {from: worker},
+        let result = await anchor.setCoAnchorAddress.call(
+            coAnchorAddress,
+            {from: owner},
         );
         
-        let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
         assert.strictEqual(
-            latestStateRoot,
-            stateRoot,
-            `Latest state root from the contract must be ${stateRoot}.`,
+            result,
+            true,
+            'Return value of setAnchorAddress must be true.',
+        );
+        
+        await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
+        
+        let coAnchor = await anchor.coAnchor.call();
+        
+        assert.strictEqual(
+            coAnchor,
+            coAnchorAddress,
+            `CoAnchor address must be equal to ${coAnchorAddress}.`,
+        );
+        
+    });
+    
+    it('should fail to set coAnchor address if it\'s already set', async () => {
+        
+        await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
+        
+        await Utils.expectRevert(
+            anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
+            'Co-Anchor has already been set and cannot be updated.',
         );
         
     });
