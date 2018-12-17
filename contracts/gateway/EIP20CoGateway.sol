@@ -1061,12 +1061,12 @@ contract EIP20CoGateway is GatewayBase {
      * @notice This is internal method for process minting contains common logic.
      *
      * @param _messageHash Message hash.
-     * @param _initialGas initial gas during progress process.
+     * @param _initialGas Initial gas during progress process.
      *
-     * @param _proofProgress true if progress with proof, false if progress
+     * @param _proofProgress `true` if progress with proof, false if progress
      *                       with hashlock.
-     * @param _unlockSecret unlock secret to progress, zero in case of progress
-     *                      with proof
+     * @param _unlockSecret Unlock secret to progress, zero in case of progress
+     *                      with proof.
      *
      * @return  beneficiary_ Address to which the utility tokens will be
      *                      transferred after minting.
@@ -1075,7 +1075,7 @@ contract EIP20CoGateway is GatewayBase {
      *                      is given to the facilitator.
      * @return mintedAmount_ Actual minted amount, after deducting the reward
      *                        from the total amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
 
     function progressMintInternal(
@@ -1109,7 +1109,7 @@ contract EIP20CoGateway is GatewayBase {
 
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
-        //Mint token after subtracting reward amount
+        // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             beneficiary_,
             mintedAmount_
