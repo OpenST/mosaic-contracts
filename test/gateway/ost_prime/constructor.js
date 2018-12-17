@@ -20,6 +20,7 @@
 
 const OSTPrime = artifacts.require("OSTPrime")
   , BN = require('bn.js');
+const MockMembersManager = artifacts.require('MockMembersManager');
 
 const Utils = require('../../../test/test_lib/utils');
 
@@ -30,17 +31,21 @@ contract('OSTPrime.constructor()', function (accounts) {
   const TOKEN_NAME = "Simple Token";
   const TOKEN_DECIMALS = new BN(18);
 
-  let brandedTokenAddress, ostPrime;
+  let brandedTokenAddress, ostPrime, membersManager, owner, worker;
 
   beforeEach(async function () {
     brandedTokenAddress = accounts[2];
+    owner = accounts[3];
+    worker = accounts[4];
+    membersManager = await MockMembersManager.new(owner, worker);
+
   });
 
   it('should pass with right set of parameters', async function () {
 
-    ostPrime = await OSTPrime.new(brandedTokenAddress);
+    ostPrime = await OSTPrime.new(brandedTokenAddress, membersManager.address);
 
-    let tokenAddress = await ostPrime.valueToken.call();
+    let tokenAddress = await ostPrime.token.call();
     assert.strictEqual(
       tokenAddress,
       brandedTokenAddress,
@@ -72,7 +77,14 @@ contract('OSTPrime.constructor()', function (accounts) {
     assert.strictEqual(
       initialized,
       false,
-      `Contract should not be initialized.`,
+      `initialized value from contract should be false.`,
+    );
+
+    let membersManagerAddress = await ostPrime.membersManager();
+    assert.strictEqual(
+      membersManagerAddress,
+      membersManager.address,
+      `Members manager address from the contract must be equal to ${membersManager.address}.`,
     );
 
   });
@@ -81,8 +93,18 @@ contract('OSTPrime.constructor()', function (accounts) {
 
     brandedTokenAddress = NullAddress;
     await Utils.expectRevert(
-      OSTPrime.new(brandedTokenAddress),
-      'ERC20 token should not be zero.',
+      OSTPrime.new(brandedTokenAddress, membersManager.address),
+      'Token address should not be zero.',
+    );
+
+  });
+
+  it('should fail if member manager address is zero', async function () {
+
+    membersManager = NullAddress;
+    await Utils.expectRevert(
+      OSTPrime.new(brandedTokenAddress, membersManager),
+      'MembersManager contract address must not be zero.',
     );
 
   });
