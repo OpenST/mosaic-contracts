@@ -142,7 +142,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         
     });
     
-    it('should mint and reward to facilitator', async function () {
+    it('should mint for non-zero facilitator reward', async function () {
         
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
@@ -226,7 +226,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         
     });
     
-    it('should mint and not reward to facilitator', async function () {
+    it('should mint for zero facilitator reward', async function () {
         
         gasPrice = new BN(0);
         
@@ -271,7 +271,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             facilitatorBalance.eq(new BN(0)),
             true,
-            `Facilitator reward should be zero`,
+            'Facilitator reward should be zero',
         );
         
     });
