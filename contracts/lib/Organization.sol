@@ -19,11 +19,11 @@ import "./OrganizationInterface.sol";
 
 
 /**
- * @title Organization contract.
+ * @title Organization contract handles an organization and its workers.
  *
- * @notice The organization represents an entity that manages the
- *         mosaic ecosystem and therefore the `Organization.sol` contract holds
- *         all the keys required to administer the mosaic contracts.
+ * @notice The organization represents an entity that manages other contracts
+ *         and therefore the `Organization.sol` contract holds all the keys
+ *         required to administer the other contracts.
  *         This contract supports the notion of an "admin" that can act on
  *         behalf of the organization. When seen from the outside by consumers
  *         of the `OrganizationInterface`, a notion of an admin does not exist.
@@ -39,13 +39,16 @@ contract Organization is OrganizationInterface {
     /* Events */
 
     /** Emitted when a current owner initiates a change of ownership. */
-    event OwnershipTransferInitiated(address indexed proposedOwner);
+    event OwnershipTransferInitiated(
+        address indexed proposedOwner,
+        address currentOwner
+    );
 
     /** Emitted when a new owner accepts the ownership transfer. */
-    event OwnershipTransferCompleted(address newOwner);
+    event OwnershipTransferCompleted(address newOwner, address previousOwner);
 
     /** Emitted whenever an owner or admin changes the address of the admin. */
-    event AdminAddressChanged(address indexed newAdmin);
+    event AdminAddressChanged(address indexed newAdmin, address previousAdmin);
 
     /** Emitted when a worker address was set. */
     event WorkerSet(
@@ -55,7 +58,7 @@ contract Organization is OrganizationInterface {
     );
 
     /** Emitted when a worker address is deleted from the contract. */
-    event WorkerUnset(address worker, bool wasSet);
+    event WorkerUnset(address worker);
 
 
     /* Storage */
@@ -89,7 +92,7 @@ contract Organization is OrganizationInterface {
 
     /**
      * onlyOwner functions can only be called from the address that is
-     * registered as the owner or admin.
+     * registered as the owner.
      */
     modifier onlyOwner() {
         require(
@@ -102,7 +105,7 @@ contract Organization is OrganizationInterface {
 
     /**
      * onlyOwnerOrAdmin functions can only be called from an address that is
-     * either registered as owner or as admin.
+     * registered as owner or as admin.
      */
     modifier onlyOwnerOrAdmin() {
         require(
@@ -117,7 +120,11 @@ contract Organization is OrganizationInterface {
     /* Constructor */
 
     /**
-     * @notice 
+     * @notice Creates a new organization. When you first initialize the
+     *         organization, you can specify owner, admin, and workers. The
+     *         owner is mandatory as it will be the only address able to make
+     *         all later changes. An admin and workers can be added at
+     *         construction or they can be set by the owner later.
      *
      * @param _owner The address that shall be registered as the owner of the
      *               organization.
@@ -175,7 +182,7 @@ contract Organization is OrganizationInterface {
 
         proposedOwner = _proposedOwner;
 
-        emit OwnershipTransferInitiated(_proposedOwner);
+        emit OwnershipTransferInitiated(_proposedOwner, owner);
 
         success_ = true;
     }
@@ -193,10 +200,10 @@ contract Organization is OrganizationInterface {
             "Caller is not proposed owner address."
         );
 
+        emit OwnershipTransferCompleted(proposedOwner, owner);
+
         owner = proposedOwner;
         proposedOwner = address(0);
-
-        emit OwnershipTransferCompleted(owner);
 
         success_ = true;
     }
@@ -227,8 +234,8 @@ contract Organization is OrganizationInterface {
          * but we don't need to emit an event as it did not actually change.
          */
         if (admin != _admin) {
+            emit AdminAddressChanged(_admin, admin);
             admin = _admin;
-            emit AdminAddressChanged(admin);
         }
 
         success_ = true;
@@ -271,11 +278,12 @@ contract Organization is OrganizationInterface {
         onlyOwnerOrAdmin
         returns (bool isUnset_)
     {
-        isUnset_ = (workers[_worker] > 0);
+        if (workers[_worker] > 0) {
+            delete workers[_worker];
+            emit WorkerUnset(_worker);
 
-        delete workers[_worker];
-
-        emit WorkerUnset(_worker, isUnset_);
+            isUnset_ = true;
+        }
     }
 
     /**
@@ -318,7 +326,9 @@ contract Organization is OrganizationInterface {
     /* Private functions */
 
     /**
-     * @notice Sets worker and its expiration block height.
+     * @notice Sets worker and its expiration block height. If the worker
+     *         already exists, then its expiration height will be overwritten
+     *         with the given one.
      *
      * @param _worker Worker address to be added.
      * @param _expirationHeight Expiration block height of worker.

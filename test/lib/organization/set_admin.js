@@ -93,6 +93,7 @@ contract('Organization.setAdmin()', async (accounts) => {
   });
 
   it('verifies emitting of AdminAddressChanged event', async () => {
+    const previousAdmin = await organization.admin.call();
     const transaction = await organization.setAdmin(
       admin,
       { from: owner },
@@ -107,6 +108,11 @@ contract('Organization.setAdmin()', async (accounts) => {
       events.AdminAddressChanged.newAdmin,
       admin,
       'The event should emit the correct admin address.'
+    );
+    assert.strictEqual(
+      events.AdminAddressChanged.previousAdmin,
+      previousAdmin,
+      'The event should emit the correct address of the previous admin.'
     );
 
   });

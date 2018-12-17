@@ -106,6 +106,11 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
       proposedOwner,
       'The event does not emit the correct proposed owner.',
     );
+    assert.strictEqual(
+      events.OwnershipTransferInitiated.currentOwner,
+      owner,
+      'The event does not emit the correct current owner.',
+    );
 
   });
 

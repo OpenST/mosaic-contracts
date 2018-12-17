@@ -99,35 +99,6 @@ contract('Organization.unsetWorker()', async (accounts) => {
       worker,
       'The event should list the worker that was unset.',
     );
-    assert.strictEqual(
-      events.WorkerUnset.wasSet,
-      true,
-      'The event should list the worker as previously set.',
-    );
-
-  });
-
-  it('emits an unsetWorker event when worker is not present', async () => {
-    let nonSetWorker = accounts[4];
-    const transaction = await organization.unsetWorker(
-      nonSetWorker,
-      { from: owner },
-    );
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
-
-    assert.strictEqual(
-      events.WorkerUnset.worker,
-      nonSetWorker,
-      'The event should list the worker that was unset.',
-    );
-    assert.strictEqual(
-      events.WorkerUnset.wasSet,
-      false,
-      'The event should not list the worker as previously set.',
-    );
 
   });
 

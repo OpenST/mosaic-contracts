@@ -40,9 +40,8 @@ interface OrganizationInterface {
      *
      * @param _worker Address to check.
      *
-     * @return isWorker_ True if the worker is already added and expiration
-     *                   height is more than or equal to current block number.
-     *                   Returns false otherwise.
+     * @return isWorker_ True if the given address is a registered, active
+     *                   worker. Returns false otherwise.
      */
     function isWorker(address _worker) external view returns (bool isWorker_);
 
