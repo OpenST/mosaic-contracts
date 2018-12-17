@@ -36,10 +36,14 @@ contract TestOSTPrime is OSTPrime {
      * @dev This contract is used only for testing.
      *
      * @param _valueToken ERC20 token address in origin chain.
+     * @param _membersManager Address of a contract that manages organization.
      */
-    constructor(address _valueToken)
+    constructor(
+        EIP20Interface _valueToken,
+        IsMemberInterface _membersManager
+    )
         public
-        OSTPrime(_valueToken)
+        OSTPrime(_valueToken, _membersManager)
     {}
 
 
@@ -62,4 +66,21 @@ contract TestOSTPrime is OSTPrime {
         balances[_account] = _amount;
     }
 
+    /**
+     * @notice Set the CoGateway address for testing.
+     *
+     * @param _coGatewayAddress CoGateway address.
+     */
+    function setCoGatewayAddress(address _coGatewayAddress) public {
+        coGateway = _coGatewayAddress;
+    }
+
+    /**
+     * @notice Set the total supply count for testing.
+     *
+     * @param _amount The supply amount.
+     */
+    function setTotalSupply(uint256 _amount) public {
+        totalTokenSupply = _amount;
+    }
 }
