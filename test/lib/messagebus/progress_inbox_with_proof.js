@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: ProgressInboxWithProof.js
 //
 // http://www.simpletoken.org/
 //

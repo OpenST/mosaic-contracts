@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: ConfirmRevocation.js
 //
 // http://www.simpletoken.org/
 //

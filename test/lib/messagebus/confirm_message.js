@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: ConfirmMessage.js
 //
 // http://www.simpletoken.org/
 //

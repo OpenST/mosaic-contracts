@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: ProgressOutboxRevocation.js
 //
 // http://www.simpletoken.org/
 //

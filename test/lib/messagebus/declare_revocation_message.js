@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: DeclareRevocationMessage.js
 //
 // http://www.simpletoken.org/
 //

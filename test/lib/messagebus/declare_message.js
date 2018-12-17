@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Test: DeclareMessage.js
 //
 // http://www.simpletoken.org/
 //
