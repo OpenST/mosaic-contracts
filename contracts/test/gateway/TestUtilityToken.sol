@@ -30,9 +30,9 @@ contract TestUtilityToken is UtilityToken {
      * @dev This is used for testing by mocking certain variables.
      *
      * @param _token Address of branded token.
-     * @param _symbol Symbol of token
-     * @param _name Name of token
-     * @param _decimals Decimal of token
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
      */
     constructor(
         EIP20Interface _token,

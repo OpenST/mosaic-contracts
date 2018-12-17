@@ -28,74 +28,78 @@ const EIP20CoGatewayHelper = function () {
 };
 
 EIP20CoGatewayHelper.prototype = {
+  
+  /**
+   * It sets the cogateway address.
+   * @param coGateway CoGateway contract address.
+   */
+  setCoGateway: async function (coGateway)
+  {
     
-    /**
-     * It sets the cogateway address.
-     * @param coGateway CoGateway contract address.
-     */
-    setCoGateway: async function (coGateway) {
-        
-        this.coGateway = coGateway;
-        
-    },
+    this.coGateway = coGateway;
     
-    /**
-     * Generate the redeem type hash. This is as per EIP-712.
-     *
-     * @return {string} Message type hash.
-     */
-    redeemTypeHash: async function () {
-        return web3.utils.soliditySha3(
-            'string',
-            'Redeem(uint256 amount,address beneficiary,MessageBus.Message message)'
-        );
-    },
+  },
+  
+  /**
+   * Generate the redeem type hash. This is as per EIP-712.
+   *
+   * @return {string} Message type hash.
+   */
+  redeemTypeHash: async function ()
+  {
+    return web3.utils.soliditySha3(
+      'string',
+      'Redeem(uint256 amount,address beneficiary,MessageBus.Message message)'
+    );
+  },
+  
+  /**
+   * Generate the redeem intent hash.
+   *
+   * @param {object} amount Redeem amount.
+   * @param {string} beneficiary Beneficiary address.
+   * @param {string} redeemer Redeemer address.
+   * @param {object} nonce Nonce of staker (Big Number).
+   * @param {object} gasPrice Gas price (Big Number).
+   * @param {object} gasLimit Gas limit (Big Number).
+   * @param {string} token EIP20 token address.
+   *
+   * @return {string} Redeem intent hash.
+   */
+  hashRedeemIntent: async function (
+    amount,
+    beneficiary,
+    redeemer,
+    nonce,
+    gasPrice,
+    gasLimit,
+    token)
+  {
     
-    /**
-     * Generate the redeem intent hash.
-     *
-     * @param {object} amount Redeem amount.
-     * @param {string} beneficiary Beneficiary address.
-     * @param {string} redeemer Redeemer address.
-     * @param {object} nonce Nonce of staker (Big Number).
-     * @param {object} gasPrice Gas price (Big Number).
-     * @param {object} gasLimit Gas limit (Big Number).
-     * @param {string} token EIP20 token address.
-     *
-     * @return {string} Redeem intent hash.
-     */
-    hashRedeemIntent: async function (
-        amount,
-        beneficiary,
-        redeemer,
-        nonce,
-        gasPrice,
-        gasLimit,
-        token) {
-        
-        return web3.utils.soliditySha3(
-            {t: 'uint256', v: amount},
-            {t: 'address', v: beneficiary},
-            {t: 'address', v: redeemer},
-            {t: 'uint256', v: nonce},
-            {t: 'uint256', v: gasPrice},
-            {t: 'uint256', v: gasLimit},
-            {t: 'address', v: token}
-        );
-    },
+    return web3.utils.soliditySha3(
+      {t: 'uint256', v: amount},
+      {t: 'address', v: beneficiary},
+      {t: 'address', v: redeemer},
+      {t: 'uint256', v: nonce},
+      {t: 'uint256', v: gasPrice},
+      {t: 'uint256', v: gasLimit},
+      {t: 'address', v: token}
+    );
+  },
+  
+  /**
+   * It returns the nonce value for the account address.
+   *
+   * @param address Account for which nonce is required.
+   *
+   * @returns {Promise<void>} Nonce of the address.
+   */
+  getNonce: async function (address)
+  {
     
-    /**
-     * It returns the nonce value for the account address.
-     *
-     * @param address Account for which nonce is required.
-     *
-     * @returns {Promise<void>} Nonce of the address.
-     */
-    getNonce: async function (address) {
-        
-        return await this.coGateway.getNonce.call(address);
-    }
-    
+    return await this.coGateway.getNonce.call(address);
+  }
+  
 };
 
 module.exports = EIP20CoGatewayHelper;

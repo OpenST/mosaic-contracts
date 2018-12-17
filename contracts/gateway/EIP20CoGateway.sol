@@ -302,7 +302,7 @@ contract EIP20CoGateway is GatewayBase {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, true, _unlockSecret);
+        progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
     }
 
     /**
@@ -1111,8 +1111,6 @@ contract EIP20CoGateway is GatewayBase {
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         // Mint token after subtracting reward amount.
-        UtilityTokenInterface(utilityToken).mint(beneficiary_, mintedAmount_);
-        // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             beneficiary_,
             mintedAmount_
@@ -1124,7 +1122,6 @@ contract EIP20CoGateway is GatewayBase {
                 msg.sender,
                 rewardAmount_
             );
-
         }
 
         // Delete the mint data.
