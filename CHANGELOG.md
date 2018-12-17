@@ -1,6 +1,6 @@
 # Mosaic Contracts Change Log
 
-## Version 0.10.0
+## Version 0.10.0 ⚓️ Anchor
 
 [**Release v0.10.0, (date goes here)**](Link to release goes here)
 
@@ -14,11 +14,19 @@
   * Verify a seal on a proposal on origin.
   * Transfer the new kernel to auxiliary.
 * Significantly improved test coverage (various PRs).
+* Significantly improved readability and maintainability (various PRs).
 * Message-based gateway ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
 * Ported repository to Truffle v5 ([#334](https://github.com/OpenSTFoundation/mosaic-contracts/pull/334)).
 * Ported repository to solidity 0.5.0 ([#480](https://github.com/OpenSTFoundation/mosaic-contracts/pull/480)).
 * Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399)).
 * Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
+* Contracts can now be `Organized` in line with [openst-contracts](https://github.com/OpenSTFoundation/openst-contracts) ([#513](https://github.com/OpenSTFoundation/mosaic-contracts/pull/513)).
+  * Gateways are now `Organized` ([#515](https://github.com/OpenSTFoundation/mosaic-contracts/pull/515)).
+* Redeeming no longer requires a facilitator argument ([#517](https://github.com/OpenSTFoundation/mosaic-contracts/pull/517)).
+* CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
+* Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
+* Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
+* The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
 
 ### Known Issues
 
