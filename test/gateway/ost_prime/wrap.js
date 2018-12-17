@@ -32,7 +32,7 @@ contract('OSTPrime.wrap()', function (accounts) {
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress, ostPrime, callerAddress, amount;
+  let brandedTokenAddress, ostPrime, callerAddress, amount, organization;
 
   async function initialize(){
     await ostPrime.initialize(
@@ -42,8 +42,9 @@ contract('OSTPrime.wrap()', function (accounts) {
 
   beforeEach(async function () {
 
+    organization = accounts[0];
     brandedTokenAddress = accounts[2];
-    ostPrime = await OSTPrime.new(brandedTokenAddress);
+    ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
 
     callerAddress = accounts[3];
     amount = new BN(500);

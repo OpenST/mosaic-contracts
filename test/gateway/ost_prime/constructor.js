@@ -20,6 +20,7 @@
 
 const OSTPrime = artifacts.require("OSTPrime")
   , BN = require('bn.js');
+const MockOrganization = artifacts.require('MockOrganization');
 
 const Utils = require('../../../test/test_lib/utils');
 
@@ -30,17 +31,21 @@ contract('OSTPrime.constructor()', function (accounts) {
   const TOKEN_NAME = "Simple Token";
   const TOKEN_DECIMALS = new BN(18);
 
-  let brandedTokenAddress, ostPrime;
+  let brandedTokenAddress, ostPrime, organization, owner, worker;
 
   beforeEach(async function () {
     brandedTokenAddress = accounts[2];
+    owner = accounts[3];
+    worker = accounts[4];
+    organization = await MockOrganization.new(owner, worker);
+
   });
 
   it('should pass with right set of parameters', async function () {
 
-    ostPrime = await OSTPrime.new(brandedTokenAddress);
+    ostPrime = await OSTPrime.new(brandedTokenAddress, organization.address);
 
-    let tokenAddress = await ostPrime.valueToken.call();
+    let tokenAddress = await ostPrime.token.call();
     assert.strictEqual(
       tokenAddress,
       brandedTokenAddress,
@@ -72,7 +77,14 @@ contract('OSTPrime.constructor()', function (accounts) {
     assert.strictEqual(
       initialized,
       false,
-      `Contract should not be initialized.`,
+      `initialized value from contract should be false.`,
+    );
+
+    let organizationAddress = await ostPrime.organization();
+    assert.strictEqual(
+      organizationAddress,
+      organization.address,
+      `Organization address from the contract must be equal to ${organization.address}.`,
     );
 
   });
@@ -81,8 +93,18 @@ contract('OSTPrime.constructor()', function (accounts) {
 
     brandedTokenAddress = NullAddress;
     await Utils.expectRevert(
-      OSTPrime.new(brandedTokenAddress),
-      'ERC20 token should not be zero.',
+      OSTPrime.new(brandedTokenAddress, organization.address),
+      'Token address should not be zero.',
+    );
+
+  });
+
+  it('should fail if organization address is zero', async function () {
+
+    organization = NullAddress;
+    await Utils.expectRevert(
+      OSTPrime.new(brandedTokenAddress, organization),
+      'Organization contract address must not be zero.',
     );
 
   });
