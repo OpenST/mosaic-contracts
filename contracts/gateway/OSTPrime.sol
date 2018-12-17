@@ -31,7 +31,7 @@ pragma solidity ^0.5.0;
 import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
-
+import "../lib/IsMemberInterface.sol";
 
 /**
  *  @title OSTPrime contract implements UtilityToken and
@@ -92,14 +92,19 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      * @dev This contract should be deployed with zero gas.
      *
      * @param _valueToken ERC20 token address in origin chain.
+     * @param _membersManager Address of a contract that manages organization.
      */
-    constructor(address _valueToken)
+    constructor(
+        EIP20Interface _valueToken,
+        IsMemberInterface _membersManager
+    )
         public
         UtilityToken(
+            _valueToken,
             TOKEN_SYMBOL,
             TOKEN_NAME,
             TOKEN_DECIMALS,
-            _valueToken
+            _membersManager
         )
     {}
 
@@ -212,4 +217,53 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         success_ = true;
     }
 
+    /**
+     * @notice Adds number of OST Prime tokens to account balance and increases
+     *         the total token supply. Can be called only when contract is
+     *         initialized and only by CoGateway address.
+     *
+     * @dev The parameters _account and _amount should not be zero. This check
+     *      is added in function increaseSupplyInternal.
+     *
+     * @param _account Account address for which the OST Prime balance will be
+     *                 increased.
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if increase supply is successful, false otherwise.
+     */
+    function increaseSupply(
+        address _account,
+        uint256 _amount
+    )
+        external
+        onlyInitialized
+        onlyCoGateway
+        returns (bool success_)
+    {
+        success_ = increaseSupplyInternal(_account, _amount);
+    }
+
+    /**
+     * @notice Decreases the OST Prime token balance from the msg.sender
+     *         address and decreases the total token supply count. Can be
+     *         called only when contract is initialized and only by CoGateway
+     *         address.
+     *
+     * @dev The parameters _amount should not be zero. This check is added in
+     *      function decreaseSupplyInternal.
+     *
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if decrease supply is successful, false otherwise.
+     */
+    function decreaseSupply(
+        uint256 _amount
+    )
+        external
+        onlyInitialized
+        onlyCoGateway
+        returns (bool success_)
+    {
+        success_ = decreaseSupplyInternal(_amount);
+    }
 }
