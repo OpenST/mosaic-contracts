@@ -1,7 +1,7 @@
 /* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,70 +16,49 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Auxiliary chain: UtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 /**
- *  @title UtilityTokenInterface contract
+ *  @title UtilityTokenInterface contract.
  *
  *  @notice Provides the interface to utility token contract.
  */
 contract UtilityTokenInterface {
 
-    /** Events */
 
-    /** Minted raised when new utility tokens are minted for a beneficiary */
-    event Minted(
-        address indexed _beneficiary,
-        uint256 _amount,
-        uint256 _totalSupply,
-        address _utilityToken
-    );
-
-    /** Burnt raised when new utility tokens are burnt for an address */
-    event Burnt(
-        address indexed _account,
-        uint256 _amount,
-        uint256 _totalSupply,
-        address _utilityToken
-    );
-
-    /* Public Functions */
+    /* External functions */
 
     /**
-     * @notice Mints the utility token
+     * @notice Increases the total token supply.
      *
-     * @dev Adds _amount tokens to beneficiary balance and increases the
-     *      totalTokenSupply. Can be called only by CoGateway.
+     * @dev Adds number of tokens to beneficiary balance and increases the
+     *      total token supply.
      *
-     * @param _beneficiary Address of tokens beneficiary.
-     * @param _amount Amount of tokens to mint.
+     * @param _account Account address for which the balance will be increased.
+     * @param _amount Amount of tokens.
      *
-     * @return bool `true` if mint is successful, false otherwise.
+     * @return success_ `true` if increase supply is successful, false otherwise.
      */
-    function mint(
-        address _beneficiary,
+    function increaseSupply(
+        address _account,
         uint256 _amount
     )
         external
-        returns (bool success);
+        returns (bool success_);
 
     /**
-     * @notice Burns the balance for the burner's address
+     * @notice Decreases the token supply.
      *
-     * @dev only burns the amount from CoGateway address, So to burn
-     *      transfer the amount to CoGateway.
+     * @dev Decreases the token balance from the msg.sender address and
+     *      decreases the total token supply count.
      *
-     * @param _amount Amount of tokens to burn.
+     * @param _amount Amount of tokens.
      *
-     * @return bool `true` if burn is successful, false otherwise.
+     * @return success_ `true` if decrease supply is successful, false otherwise.
      */
-    function burn(
-        uint256 _amount
-    )
-        external
-        returns (bool success);
+    function decreaseSupply(uint256 _amount) external returns (bool success_);
+
 }
