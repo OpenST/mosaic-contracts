@@ -222,6 +222,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *         the total token supply. Can be called only when contract is
      *         initialized and only by CoGateway address.
      *
+     * @dev The parameters _account and _amount should not be zero. This check
+     *      is added in function increaseSupplyInternal.
+     *
      * @param _account Account address for which the OST Prime balance will be
      *                 increased.
      * @param _amount Amount of tokens.
@@ -245,6 +248,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      *         address and decreases the total token supply count. Can be
      *         called only when contract is initialized and only by CoGateway
      *         address.
+     *
+     * @dev The parameters _amount should not be zero. This check is added in
+     *      function decreaseSupplyInternal.
      *
      * @param _amount Amount of tokens.
      *

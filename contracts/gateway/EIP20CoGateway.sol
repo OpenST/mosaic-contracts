@@ -1110,15 +1110,21 @@ contract EIP20CoGateway is GatewayBase {
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         //Mint token after subtracting reward amount
-        UtilityTokenInterface(utilityToken).increaseSupply(beneficiary_, mintedAmount_);
+        UtilityTokenInterface(utilityToken).increaseSupply(
+            beneficiary_,
+            mintedAmount_
+        );
 
-        //reward beneficiary with the reward amount
-        UtilityTokenInterface(utilityToken).increaseSupply(msg.sender, rewardAmount_);
+        // Reward beneficiary with the reward amount.
+        UtilityTokenInterface(utilityToken).increaseSupply(
+            msg.sender,
+            rewardAmount_
+        );
 
-        // delete the mint data
+        // Delete the mint data.
         delete mints[_messageHash];
 
-        // Emit MintProgressed event
+        // Emit MintProgressed event.
         emit MintProgressed(
             _messageHash,
             message.sender,
@@ -1136,13 +1142,13 @@ contract EIP20CoGateway is GatewayBase {
      * @notice Internal method to progressRedeemInternal.
      *
      * @param _messageHash Message hash.
-     * @param _proofProgress true if progress with proof, false if progress
+     * @param _proofProgress True if progress with proof, false if progress
      *                       with hashlock.
-     * @param _unlockSecret unlock secret to progress, zero in case of progress
-     *                      with proof
+     * @param _unlockSecret Unlock secret to progress, zero in case of progress
+     *                      with proof.
      *
-     * @return redeemer_ Redeemer address
-     * @return redeemAmount_ Redeem amount
+     * @return redeemer_ Redeemer address.
+     * @return redeemAmount_ Redeem amount.
      */
     function progressRedeemInternal(
         bytes32 _messageHash,
@@ -1159,13 +1165,14 @@ contract EIP20CoGateway is GatewayBase {
 
         redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
-        // Burn the redeem amount.
+
+        // Decrease the token supply.
         UtilityTokenInterface(utilityToken).decreaseSupply(redeemAmount_);
 
-        // Transfer the bounty amount to the facilitator
+        // Transfer the bounty amount to the facilitator.
         msg.sender.transfer(redeems[_messageHash].bounty);
 
-        // delete the redeem data
+        // Delete the redeem data.
         delete redeems[_messageHash];
 
         // Emit RedeemProgressed event.

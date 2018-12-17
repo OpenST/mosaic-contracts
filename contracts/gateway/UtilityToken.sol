@@ -136,7 +136,11 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
     /**
-     * @notice Increases the total token supply.
+     * @notice Increases the total token supply. Also, adds the number of
+     *         tokens to the beneficiary balance.
+     *
+     * @dev The parameters _account and _amount should not be zero. This check
+     *      is added in function increaseSupplyInternal.
      *
      * @param _account Account address for which the balance will be increased.
      * @param _amount Amount of tokens.
@@ -156,6 +160,9 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /**
      * @notice Decreases the token supply.
+     *
+     * @dev The parameters _amount should not be zero. This check is added in
+     *      function decreaseSupplyInternal.
      *
      * @param _amount Amount of tokens.
      *
@@ -206,6 +213,10 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         balances[_account] = balances[_account].add(_amount);
         totalTokenSupply = totalTokenSupply.add(_amount);
 
+        /*
+         * Creation of the new tokens should trigger a Transfer event with
+         * _from as 0x0.
+         */
         emit Transfer(address(0), _account, _amount);
 
         success_ = true;
@@ -243,6 +254,10 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         balances[sender] = balances[sender].sub(_amount);
         totalTokenSupply = totalTokenSupply.sub(_amount);
 
+        /*
+         * Burning of the tokens should trigger a Transfer event with _to
+         * as 0x0.
+         */
         emit Transfer(sender, address(0), _amount);
 
         success_ = true;

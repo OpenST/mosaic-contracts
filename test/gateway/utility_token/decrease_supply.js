@@ -109,14 +109,14 @@ contract('UtilityToken.decreaseSupply()', function (accounts) {
 
     let coGatewayBalance = await utilityToken.balanceOf.call(coGatewayAddress);
     assert.strictEqual(
-      coGatewayBalance.eqn(500),
+      coGatewayBalance.eq(amount),
       true,
       'CoGateway address balance should be zero.',
     );
 
     let totalSupply = await utilityToken.totalSupply();
     assert.strictEqual(
-      totalSupply.eqn(500),
+      totalSupply.eq(amount),
       true,
       'Token total supply from contract must be equal to zero.',
     );
