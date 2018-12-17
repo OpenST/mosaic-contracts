@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,7 @@ pragma solidity ^0.5.0;
  */
 contract CircularBufferUint {
 
-
-    /** Storage */
+    /* Storage */
 
     /**
      * The circular buffer that stores the latest `items.length` items. Once

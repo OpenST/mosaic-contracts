@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,15 +40,18 @@ import "../lib/SafeMath.sol";
  *         interface.
  */
 contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
+
+    /* Usings */
+
     using SafeMath for uint256;
 
 
-    /** Events */
+    /* Events */
 
     event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
 
 
-    /** Storage */
+    /* Storage */
 
     /** Maps block heights to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
@@ -68,8 +71,8 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     /**
      * @notice Contract constructor.
      *
-     * @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                       this core tracks.
+     * @param _remoteChainId The chain id of the chain that is tracked by this
+     *                       core.
      * @param _blockHeight Block height at which _stateRoot needs to store.
      * @param _stateRoot State root hash of given _blockHeight.
      * @param _maxStateRoots The max number of state roots to store in the

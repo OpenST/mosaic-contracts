@@ -11,6 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
 const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
@@ -19,10 +25,14 @@ const CircularBufferUint = artifacts.require('CircularBufferUint');
 
 contract('CircularBufferUint.constructor()', async (accounts) => {
 
+    it('deploys given accepted arguments', async () => {
+        await CircularBufferUint.new(new BN(100));
+    });
+
     it('reverts if the given buffer length is 0', async () => {
         await Utils.expectRevert(
             CircularBufferUint.new(new BN(0)),
-            'The max number of items to store in a circular buffer must be greater than 0\\.',
+            'The max number of items to store in a circular buffer must be greater than 0.',
         );
     });
 });

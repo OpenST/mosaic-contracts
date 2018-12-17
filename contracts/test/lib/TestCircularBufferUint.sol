@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import "../../lib/CircularBufferUint.sol";
  *         methods of the circular buffer under test.
  */
 contract TestCircularBufferUint is CircularBufferUint {
-
 
     /* Constructor */
 
