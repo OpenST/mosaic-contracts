@@ -21,7 +21,6 @@
 const BN = require('bn.js'),
     Utils = require('../../test_lib/utils'),
     EIP20CoGatewayHelper = require('./helpers/helper'),
-    MockSafeCore = artifacts.require('MockSafeCore'),
     MessageBus = artifacts.require('MessageBus'),
     EIP20Token = artifacts.require('EIP20Token'),
     TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
@@ -138,16 +137,17 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             hashLock,
             staker,
         );
+    
+        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
     });
     
-    it('should mint reward to facilitator', async function () {
+    it('should mint and reward to facilitator', async function () {
         
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Declared,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         let progressMintValues = await testEIP20CoGateway.progressMint.call(
             messageHash,
@@ -161,25 +161,25 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             progressMintValues.beneficiary_,
             beneficiary,
-            'Beneficiary address should be ${beneficiary}',
+            `Beneficiary address should be ${beneficiary}`,
         );
         
         assert.strictEqual(
             amount.eq(progressMintValues.stakeAmount_),
             true,
-            'Staked amount should be ${amount}.',
+            `Staked amount should be ${amount}.`,
         );
         
         assert.strictEqual(
             expectedMintedToken.eq(progressMintValues.mintedAmount_),
             true,
-            'Minted amount should be ${expectedMintedToken}.',
+            `Minted amount should be ${expectedMintedToken}.`,
         );
         
         assert.strictEqual(
             expectedReward.eq(progressMintValues.rewardAmount_),
             true,
-            'Reward to facilitator should be ${expectedReward}.',
+            `Reward to facilitator should be ${expectedReward}.`,
         );
         
         let response = await testEIP20CoGateway.progressMint(
@@ -194,13 +194,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             facilitatorBalance.eq(expectedReward),
             true,
-            'Facilitator reward should be ${expectedReward}.',
+            `Facilitator reward should be ${expectedReward}.`,
         );
         
         assert.strictEqual(
             beneficiaryBalance.eq(amount.sub(expectedReward)),
             true,
-            'Beneficiary balance should be ${amount.sub(expectedReward)}.'
+            `Beneficiary balance should be ${amount.sub(expectedReward)}.`
         );
         
         let expectedEvent = {
@@ -226,7 +226,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         
     });
     
-    it('should not mint reward to facilitator', async function () {
+    it('should mint and not reward to facilitator', async function () {
         
         gasPrice = new BN(0);
         
@@ -265,13 +265,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         assert.strictEqual(
             beneficiaryBalance.eq(amount),
             true,
-            'Balance for beneficiary should be ${amount}',
+            `Balance for beneficiary should be ${amount}`,
         );
         
         assert.strictEqual(
             facilitatorBalance.eq(new BN(0)),
             true,
-            'Facilitator reward should be zero',
+            `Facilitator reward should be zero`,
         );
         
     });
@@ -282,7 +282,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             messageHash,
             MessageStatusEnum.Declared,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         messageHash = zeroBytes;
         
@@ -303,7 +302,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             messageHash,
             MessageStatusEnum.DeclaredRevocation,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         await Utils.expectRevert(
             testEIP20CoGateway.progressMint(
@@ -322,7 +320,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             messageHash,
             MessageStatusEnum.Revoked,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         await Utils.expectRevert(
             testEIP20CoGateway.progressMint(
@@ -341,7 +338,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             messageHash,
             MessageStatusEnum.Undeclared,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         await Utils.expectRevert(
             testEIP20CoGateway.progressMint(
@@ -354,13 +350,12 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         
     });
     
-    it('should fail when unlock secret is zero', async function () {
+    it('should fail when unlock secret is invalid', async function () {
         
         await testEIP20CoGateway.setInboxStatus(
             messageHash,
             MessageStatusEnum.Undeclared,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         unlockSecret = zeroBytes;
         
@@ -381,7 +376,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
             messageHash,
             MessageStatusEnum.Declared,
         );
-        await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
         
         await testEIP20CoGateway.progressMint(
             messageHash,

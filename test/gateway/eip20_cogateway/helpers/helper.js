@@ -40,7 +40,7 @@ EIP20CoGatewayHelper.prototype = {
     },
     
     /**
-     * Generate the stake type hash. This is as per EIP-712.
+     * Generate the redeem type hash. This is as per EIP-712.
      *
      * @return {string} Message type hash.
      */
@@ -54,7 +54,7 @@ EIP20CoGatewayHelper.prototype = {
     /**
      * Generate the redeem intent hash.
      *
-     * @param {object} amount Staking amount.
+     * @param {object} amount Redeem amount.
      * @param {string} beneficiary Beneficiary address.
      * @param {string} redeemer Redeemer address.
      * @param {object} nonce Nonce of staker (Big Number).

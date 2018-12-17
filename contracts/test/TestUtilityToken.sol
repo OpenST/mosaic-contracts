@@ -23,9 +23,9 @@ pragma solidity ^0.5.0;
 import "../gateway/UtilityToken.sol";
 
 /**
- *  @title MockUtilityToken contract.
+ * @title TestUtilityToken contract.
  *
- *  @notice This is for testing purpose.
+ * @notice This is for testing purpose.
  *
  */
 contract TestUtilityToken is UtilityToken {
@@ -55,9 +55,7 @@ contract TestUtilityToken is UtilityToken {
     )
         public
         UtilityToken(_symbol, _name, _decimals, _valueToken)
-    {
-
-    }
+    { }
 
 
     /* External functions */
