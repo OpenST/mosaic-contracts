@@ -23,8 +23,7 @@ import "../../gateway/UtilityToken.sol";
  *         contract.
  */
 contract TestUtilityToken is UtilityToken {
-
-
+    
     /* Constructor */
 
     /**

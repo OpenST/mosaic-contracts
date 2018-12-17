@@ -43,16 +43,16 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /* Storage */
 
-    /** Address of the EIP20 token (branded token) in origin chain */
+    /** Address of the EIP20 token (branded token) in origin chain. */
     EIP20Interface public token;
 
-    /** Address of CoGateway contract*/
+    /** Address of CoGateway contract. */
     address public coGateway;
 
 
     /* Modifiers */
 
-    /** checks that only CoGateway can call a particular function. */
+    /** Checks that only CoGateway can call a particular function. */
     modifier onlyCoGateway() {
 
         require(
@@ -70,9 +70,9 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @notice Contract constructor.
      *
      * @param _token Address of branded token.
-     * @param _symbol Symbol of token
-     * @param _name Name of token
-     * @param _decimals Decimal of token
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
      * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
@@ -95,7 +95,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
 
-    /* external functions */
+    /* External functions */
 
     /**
      * @notice Sets the CoGateway contract address. This can be called only by
