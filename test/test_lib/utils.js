@@ -60,14 +60,6 @@ function Utils() {
 
 Utils.prototype = {
 
-    logResponse: (response, description) => {
-        receipts.push({
-            receipt: response.receipt,
-            description: description,
-            response: response
-        });
-    },
-
     logReceipt: (receipt, description) => {
         receipts.push({
             receipt: receipt,
@@ -76,11 +68,9 @@ Utils.prototype = {
         })
     },
 
-    logTransaction: async (hash, description) => {
-        const receipt = await web3.eth.getTransactionReceipt(hash)
-        await this.logReceipt(receipt, description)
-    },
-
+    /**
+     * Print gas statistics.
+     */
     printGasStatistics: () => {
         var totalGasUsed = 0
 
@@ -99,28 +89,37 @@ Utils.prototype = {
         console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
     },
 
+    /**
+     *  Clear receipt.
+     */
     clearReceipts: () => {
         receipts.splice(0, receipts.length);
     },
 
-    /*
-     *  General event checks
+    /**
+     * Asserts no events in the receipt.
+     * @param result Receipt
      */
     expectNoEvents: (result) => {
         Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
     },
 
-    /*
-     *  Basic Ethereum checks
+    /**
+     * Checks null address.
+     * @param address
+     * @return {boolean} `true` if address is null.
      */
-    /// @dev Compare to null address
     isNullAddress: (address) => {
         Assert.strictEqual(typeof address, 'string', `address must be of type 'string'`);
         return (address == NullAddress);
     },
 
-    /// @dev Expect failure from invalid opcode or out of gas,
-    ///      but returns error instead
+    /**
+     * Expect failure from invalid opcode or out of gas, but returns error
+     * instead.
+     * @param promise Contract method call.
+     * @param expectedMessage Message.
+     */
     expectThrow: async (promise, expectedMessage) => {
         try {
             await promise;
@@ -264,6 +263,7 @@ Utils.prototype = {
     generateHashLock: () => {
         return hashLock.getHashLock();
     },
+
     messageHash: (
         typeHash,
         intentHash,
@@ -280,13 +280,9 @@ Utils.prototype = {
             {t: 'uint256', v: gasLimit}
         );
         return digest
-
     },
+
     ResultType: ResultType
 };
 
 module.exports = new Utils();
-
-
-
-

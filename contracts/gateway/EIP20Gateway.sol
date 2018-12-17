@@ -271,23 +271,22 @@ contract EIP20Gateway is GatewayBase {
     /* External functions */
 
     /**
-     * @notice Initiates the stake process.
-     *
-     * @dev In order to stake the staker needs to approve Gateway contract for
-     *      stake amount. Staked amount is transferred from staker address to
-     *      Gateway contract.
+     * @notice Initiates the stake process.  In order to stake the staker
+     *         needs to approve Gateway contract for stake amount.
+     *         Staked amount is transferred from staker address to
+     *         Gateway contract. Bounty amount is also transferred from staker.
      *
      * @param _amount Stake amount that will be transferred from the staker
      *                account.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done
-     * @param _gasLimit Gas limit that staker is ready to pay
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
      * @param _nonce Nonce of the staker address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
-     * @return messageHash_ which is unique for each request.
+     * @return messageHash_ Message hash is unique for each request.
      */
     function stake(
         uint256 _amount,
@@ -297,7 +296,7 @@ contract EIP20Gateway is GatewayBase {
         uint256 _nonce,
         bytes32 _hashLock
     )
-        public
+        external
         isActive
         returns (bytes32 messageHash_)
     {
@@ -366,19 +365,18 @@ contract EIP20Gateway is GatewayBase {
             messages[messageHash_]
         );
 
-        //transfer staker amount to gateway
+        // Transfer staker amount to the gateway.
         require(
             token.transferFrom(staker, address(this), _amount),
             "Stake amount must be transferred to gateway"
         );
 
-        // transfer the bounty amount
+        // Transfer the bounty amount to the gateway.
         require(
             baseToken.transferFrom(staker, address(this), bounty),
             "Bounty amount must be transferred to gateway"
         );
 
-        // Emit StakeIntentDeclared event
         emit StakeIntentDeclared(
             messageHash_,
             staker,

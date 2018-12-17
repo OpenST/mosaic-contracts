@@ -33,18 +33,18 @@ contract MessageBusWrapper {
 
     /**
      * @notice Declare a new message. This will update the outbox status to
-     *         `Declared` for the given message hash
+     *         `Declared` for the given message hash.
      *
-     * @param _messageTypeHash Message type hash
-     * @param _intentHash Intent hash
+     * @param _messageTypeHash Message type hash.
+     * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _gasLimit maximum amount of gas can be used for reward.
      * @param _gasPrice price at which reward is calculated.
-     * @param _sender signer of the signature
+     * @param _sender Message sender.
      * @param _gasConsumed gas consumption during message confirmation.
      * @param _hashLock Hash lock.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function declareMessage(
         bytes32 _messageTypeHash,
@@ -80,10 +80,10 @@ contract MessageBusWrapper {
 
     /**
      * @notice Update the status for the outbox for a given message hash to
-     *         `Progressed`
+     *         `Progressed`.
      *
-     * @param _messageTypeHash Message type hash
-     * @param _intentHash Intent hash
+     * @param _messageTypeHash Message type hash.
+     * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _gasLimit maximum amount of gas can be used for reward.
      * @param _gasPrice price at which reward is calculated.
@@ -93,7 +93,7 @@ contract MessageBusWrapper {
      * @param _unlockSecret unlock secret for the hash lock provided while
      *                      declaration.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressOutbox(
         bytes32 _messageTypeHash,
@@ -129,10 +129,10 @@ contract MessageBusWrapper {
 
     /**
      * @notice Update the status for the outbox for a given message hash to
-     *         `Progressed`
+     *         `Progressed`.
      *
-     * @param _messageTypeHash Message type hash
-     * @param _intentHash Intent hash
+     * @param _messageTypeHash Message type hash.
+     * @param _intentHash Intent hash.
      * @param _nonce message nonce.
      * @param _gasLimit maximum amount of gas can be used for reward.
      * @param _gasPrice price at which reward is calculated.
@@ -142,7 +142,7 @@ contract MessageBusWrapper {
      * @param _unlockSecret unlock secret for the hash lock provided while
      *                      declaration.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressInbox(
         bytes32 _messageTypeHash,
@@ -181,23 +181,22 @@ contract MessageBusWrapper {
      *         `Revoked`. Merkle proof is used to verify status of inbox in
      *         source chain.
      *
-     * @dev The messsage status in the inbox should be
-     *      either `DeclaredRevocation` or `Revoked`. Either of this status
-     *      will be verified in the merkle proof
+     * @dev The messsage status in the inbox should be `Revoked`.
+     *      This will be verified in the merkle proof.
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
      * @param _messageBoxOffset position of the messageBox.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
-     * @param _storageRoot storage root for proof
+     * @param _storageRoot Storage root for proof.
      * @param _messageStatus Message status of message hash in the inbox of
-     *                       source chain
+     *                       source chain.
      * @param _hashLock Hash lock.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressOutboxRevocation(
         bytes32 _messageTypeHash,
@@ -242,17 +241,17 @@ contract MessageBusWrapper {
      * @dev In order to declare revocation the existing message status for the
      *      given message hash should be `Declared`.
      *
-     * @param _messageTypeHash Message type hash
+     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
-     * @param _messageBoxOffset position of the messageBox.
-     * @param _storageRoot storage root for proof.
+     * @param _messageBoxOffset Position of the messageBox.
+     * @param _storageRoot Storage root for proof.
      * @param _hashLock Hash lock.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function confirmRevocation(
         bytes32 _messageTypeHash,
@@ -295,12 +294,12 @@ contract MessageBusWrapper {
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
-     * @param _messageBoxOffset position of the messageBox.
-     * @param _storageRoot storage root for proof.
+     * @param _messageBoxOffset Position of the messageBox.
+     * @param _storageRoot Storage root for proof.
      * @param _hashLock Hash lock.
      *
      * @return messageHash_ Message hash
@@ -340,21 +339,21 @@ contract MessageBusWrapper {
 
     /**
      * @notice Declare a new revocation message. This will update the outbox
-     *         status to `DeclaredRevocation` for the given message hash
+     *         status to `DeclaredRevocation` for the given message hash.
      *
      * @dev In order to declare revocation the existing message status for the
      *      given message hash should be `Declared`.
      *
      * @param _messageTypeHash Message type hash
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated.
-     * @param _gasConsumed gas consumption during message confirmation.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function declareRevocationMessage(
         bytes32 _messageTypeHash,
@@ -395,20 +394,20 @@ contract MessageBusWrapper {
      *
      * @dev The messsage status for the message hash in the inbox should be
      *      either `Declared` or `Progresses`. Either of this status will be
-     *      verified in the merkle proof
+     *      verified in the merkle proof.
      *
-     * @param _messageTypeHash Message type hash
+     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
-     * @param _storageRoot storage root for proof
+     * @param _storageRoot Storage root for proof.
      * @param _messageStatus Message status of message hash in the inbox of
-     *                       source chain
+     *                       source chain.
      * @param _hashLock Hash lock.
      *
-     * @return messageHash_ Message hash
+     * @return messageHash_ Message hash.
      */
     function progressOutboxWithProof(
         bytes32 _messageTypeHash,
@@ -457,11 +456,11 @@ contract MessageBusWrapper {
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _sender signer of the signature.
+     * @param _nonce Message nonce.
+     * @param _sender Message sender.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
-     * @param _storageRoot storage root for proof.
+     * @param _storageRoot Storage root for proof.
      * @param _messageStatus Message status of message hash in the outbox of
      *                       source chain.
      *
@@ -502,23 +501,35 @@ contract MessageBusWrapper {
         );
     }
 
+    /**
+     * @notice Returns the status of message stored in the outbox.
+     *
+     * @param messageHash_ Message hash.
+     *
+     * @return status_ Status of message in the outbox.
+     */
     function getOutboxStatus(bytes32 _messageHash)
         public
         view
-        returns(uint256)
+        returns(uint256 status_)
     {
-
-        return uint256(messageBox.outbox[_messageHash]);
-
+        status_ = uint256(messageBox.outbox[_messageHash]);
     }
 
+    /**
+     * @notice Returns the status of message stored in the inbox.
+     *
+     * @param messageHash_ Message hash.
+     *
+     * @return status_ Status of message in the inbox.
+     */
     function getInboxStatus(bytes32 _messageHash)
         public
         view
-        returns(uint256)
+        returns(uint256 status_)
     {
 
-        return uint256(messageBox.inbox[_messageHash]);
+        status_ =  uint256(messageBox.inbox[_messageHash]);
 
     }
 

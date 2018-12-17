@@ -106,11 +106,11 @@ library MessageBus {
 
     /**
      * @notice Declare a new message. This will update the outbox status to
-     *         `Declared` for the given message hash
+     *         `Declared` for the given message hash.
      *
-     * @param _messageBox Message Box
-     * @param _messageTypeHash Message type hash
-     * @param _message Message object
+     * @param _messageBox Message Box.
+     * @param _messageTypeHash Message type hash.
+     * @param _message Message object.
      *
      * @return messageHash_ Message hash
      */
@@ -291,7 +291,7 @@ library MessageBus {
             "Message on target must be Declared or Progressed."
         );
 
-        // Get the message hash
+        // Get the message hash.
         messageHash_ = messageDigest(
             _messageTypeHash,
             _message.intentHash,
@@ -384,7 +384,7 @@ library MessageBus {
      *
      * @dev The messsage status for the message hash in the outbox should be
      *      either `Declared` or `Progresses`. Either of this status will be
-     *      verified in the merkle proof
+     *      verified in the merkle proof.
      *
      * @param _messageBox Message Box.
      * @param _messageTypeHash Message type hash.
@@ -689,7 +689,7 @@ library MessageBus {
      * @param _signature Signature.
      * @param _signer Signer address.
      *
-     * @return `true` If the signature is signed by the signer.
+     * @return success_ `true` if the signature is signed by the signer.
      */
     function verifySignature(
         bytes32 _message,
@@ -715,8 +715,10 @@ library MessageBus {
             s := mload(add(_signature, 64))
             v := byte(0, mload(add(_signature, 96)))
         }
-        // Version of signature should be 27 or 28, but 0 and 1 are also
-        // possible versions
+        /*
+         * Version of signature should be 27 or 28, but 0 and 1 are also
+         * possible versions.
+         */
         if (v < 27) {
             v += 27;
         }
@@ -734,7 +736,7 @@ library MessageBus {
      * @param _offset Offset of variable inside the struct.
      * @param _key Key of variable in case of mapping
      *
-     * @return bytes32 Storage path of the variable.
+     * @return storagePath_ Storage path of the variable.
      */
     function storageVariablePathForStruct(
         uint8 _structPosition,
@@ -777,7 +779,7 @@ library MessageBus {
      *
      * @param _inBytes32 Bytes32 value.
      *
-     * @return bytes value.
+     * @return _inBytes32 value.
      */
     function bytes32ToBytes(bytes32 _inBytes32)
         private
