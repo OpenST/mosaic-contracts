@@ -25,7 +25,8 @@
     "compile": "truffle compile",
     "test": "truffle test",
     "ganache": "sh tools/runGanacheCli.sh",
-    "test:deployment_tool": "mocha tools/deployment_tool/test"
+    "test:deployment_tool": "mocha tools/deployment_tool/test",
+    "deploy:gateway": "npm run compile && node tools/blue_deployment/step1_origin_contracts.js"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"

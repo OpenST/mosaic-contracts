@@ -1,5 +1,6 @@
 const chai = require('chai');
-const assert = chai.assert;
+
+const { assert } = chai;
 
 const {
     Contract,
@@ -23,8 +24,8 @@ describe('Contract', () => {
             registry.addContract(EIP20Token);
 
             const output = registry.toParityGenesisAccounts();
-            assert(Object.keys(output).includes('0x0000000000444440000000000000000000000100'));
-            assert.equal(Object.keys(output).length, 1);
+            assert.strictEqual(Object.keys(output).length, 1, 'Output should only contain a single address-contstructor pair');
+            assert.strictEqual(Object.keys(output)[0], '0x0000000000444440000000000000000000000100', 'Address in output is different to the explicitly set address');
         });
 
         it('can not set address after instantiation', () => {
@@ -34,7 +35,12 @@ describe('Contract', () => {
             EIP20Token.setAddress('0x0000000000444440000000000000000000000100');
             EIP20Token.instantiate();
 
-            assert.throws(() => EIP20Token.setAddress('0x0000000000444440000000000000000000000100'));
+            assert.throws(
+                () => EIP20Token.setAddress('0x0000000000444440000000000000000000000100'),
+                null,
+                null,
+                "Didn't throw an Error when trying to set an address after instantiation",
+            );
         });
     });
 
@@ -46,7 +52,11 @@ describe('Contract', () => {
                 { rootDir: `${__dirname}/../../../` },
             );
 
-            assert.equal(EIP20Token.contractName, 'EIP20Token');
+            assert.strictEqual(
+                EIP20Token.contractName,
+                'EIP20Token',
+                'Name of loaded contract is incorrect',
+            );
         });
     });
 });
@@ -63,9 +73,11 @@ describe('ContractRegistry', () => {
             registry.addContracts([MerklePatriciaProof, MessageBus]);
 
             const output = registry.toParityGenesisAccounts();
-            assert.equal(Object.keys(output).length, 2);
+            assert.strictEqual(Object.keys(output).length, 2, 'Output should contain both link source and link target');
             // check that link placeholders have been removed
-            Object.values(output).forEach(bytecode => assert.isNotOk(bytecode.constructor.includes('_')));
+            Object
+                .values(output)
+                .forEach(bytecode => assert.isNotOk(bytecode.constructor.includes('_'), 'Contract still contains linking placholder'));
         });
 
         it('orders contracts correctly (correct order provided)', () => {
@@ -78,8 +90,16 @@ describe('ContractRegistry', () => {
             registry.addContracts([MerklePatriciaProof, MessageBus]);
 
             const output = registry.toParityGenesisAccounts();
-            assert.equal(Object.keys(output)[0], MerklePatriciaProof.getAddress());
-            assert.equal(Object.keys(output)[1], MessageBus.getAddress());
+            assert.strictEqual(
+                Object.keys(output)[0],
+                MerklePatriciaProof.getAddress(),
+                'MerklePatriciaProof is not at first output position',
+            );
+            assert.strictEqual(
+                Object.keys(output)[1],
+                MessageBus.getAddress(),
+                'MessageBus is not at second output position',
+            );
         });
 
         it('orders contracts correctly (wrong order provided)', () => {
@@ -92,8 +112,16 @@ describe('ContractRegistry', () => {
             registry.addContracts([MessageBus, MerklePatriciaProof]);
 
             const output = registry.toParityGenesisAccounts();
-            assert.equal(Object.keys(output)[0], MerklePatriciaProof.getAddress());
-            assert.equal(Object.keys(output)[1], MessageBus.getAddress());
+            assert.strictEqual(
+                Object.keys(output)[0],
+                MerklePatriciaProof.getAddress(),
+                'MerklePatriciaProof is not at first output position',
+            );
+            assert.strictEqual(
+                Object.keys(output)[1],
+                MessageBus.getAddress(),
+                'MessageBus is not at second output position',
+            );
         });
 
         it('orders contracts correctly (address reference in constructor)', () => {
@@ -116,9 +144,20 @@ describe('ContractRegistry', () => {
             registry.addContracts([MosaicCore, EIP20Token]);
 
             const output = registry.toParityGenesisAccounts();
-            assert.equal(Object.keys(output)[0], EIP20Token.getAddress());
-            assert.equal(Object.keys(output)[1], MosaicCore.getAddress());
-            assert(Object.values(output)[1].constructor.includes(EIP20Token.getAddress().slice(2)));
+            assert.strictEqual(
+                Object.keys(output)[0],
+                EIP20Token.getAddress(),
+                'EIP20Token is not at first output position',
+            );
+            assert.strictEqual(
+                Object.keys(output)[1],
+                MosaicCore.getAddress(),
+                'MosaicCore is not at second output position',
+            );
+            assert(
+                Object.values(output)[1].constructor.includes(EIP20Token.getAddress().slice(2)),
+                'EIP20Token address is not part of MosaicCore constructor bytecode',
+            );
         });
     });
 
@@ -134,16 +173,19 @@ describe('ContractRegistry', () => {
             registry.addContract(EIP20Token);
 
             const output = registry.toLiveTransactionObjects('0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13', 0);
-            assert.deepEqual(output[0], {
-                transactionObject: {
-                    from: '0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13',
-                    data: EIP20Token.constructorData,
-                    nonce: 0,
-                },
+            assert.deepEqual(
+                output[0],
+                {
+                    transactionObject: {
+                        from: '0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13',
+                        data: EIP20Token.constructorData,
+                        nonce: 0,
+                    },
 
-                address: '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d',
-                contractName: 'EIP20Token',
-            });
+                    address: '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d',
+                    contractName: 'EIP20Token',
+                },
+            );
         });
     });
 });
@@ -153,7 +195,11 @@ describe('IncrementingNonceAddressGenerator', () => {
         const generator = new IncrementingNonceAddressGenerator('0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13', 0);
         const address = generator.generateAddress();
 
-        assert.equal(address, '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d');
+        assert.strictEqual(
+            address,
+            '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d',
+            'Generated address is not the address expected for account 0xc02345a911471fd46c47c4d3c2e5c85f5ae93d13 at nonce 0',
+        );
     });
 
     it('generates multiple addresses correctly', () => {
@@ -163,9 +209,25 @@ describe('IncrementingNonceAddressGenerator', () => {
         const address3 = generator.generateAddress();
         const address4 = generator.generateAddress();
 
-        assert.equal(address1, '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d');
-        assert.equal(address2, '0x20e8a23a99c26334aed05051d6e5c6cdf50d63f6');
-        assert.equal(address3, '0xf0cd575450fc03b90eead03d65e79741a19665e4');
-        assert.equal(address4, '0x10ef71366ad76d6bddddc66677c38e137aa564db');
+        assert.strictEqual(
+            address1,
+            '0x5eceb671884153e2e312f8c5ae8e38fdc473c18d',
+            'Generated address is not the address expected for account at nonce 0',
+        );
+        assert.strictEqual(
+            address2,
+            '0x20e8a23a99c26334aed05051d6e5c6cdf50d63f6',
+            'Generated address is not the address expected for account at nonce 1',
+        );
+        assert.strictEqual(
+            address3,
+            '0xf0cd575450fc03b90eead03d65e79741a19665e4',
+            'Generated address is not the address expected for account at nonce 2',
+        );
+        assert.strictEqual(
+            address4,
+            '0x10ef71366ad76d6bddddc66677c38e137aa564db',
+            'Generated address is not the address expected for account at nonce 3',
+        );
     });
 });
