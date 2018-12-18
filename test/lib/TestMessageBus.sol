@@ -13,6 +13,12 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
 import "truffle/Assert.sol";
 import "../../contracts/test/test_lib/KeyValueStoreStub.sol";
@@ -85,269 +91,17 @@ contract TestMessageBus is KeyValueStoreStub{
     }
 
     /**
-     * @notice it tests change inbox state method of messageBus.
-     */
-    function testChangeInboxState()
-        external
-    {
-        bool isChanged;
-        MockMessageBus.MessageStatus nextState;
-        bytes32 messageHash = getBytes32(
-            "MESSAGE_BUS_DIGEST"
-        );
-        // Test Undeclared => Declared
-        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
-        (isChanged, nextState) = MockMessageBus.changeInboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState should not be equal to Progressed."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState should not be equal to Revoked."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState not changed to Declared."
-        );
-
-
-        // Test Declared => Progressed
-        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
-        (isChanged, nextState) = MockMessageBus.changeInboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState should not be equal to Declared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState should not be equal to Revoked."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState not changed to Progressed."
-        );
-
-        // Test DeclaredRevocation => Revoked
-        messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-        (isChanged, nextState) = MockMessageBus.changeInboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState should not be equal to Declared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState should not be equal to Progressed."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState not changed to Revoked."
-        );
-    }
-
-    /**
-     * @notice it tests change outbox state method of MockMessageBus.
-     */
-    function testChangeOutboxState()
-        external
-    {
-        bool isChanged;
-        MockMessageBus.MessageStatus nextState;
-        bytes32 messageHash = getBytes32(
-            "MESSAGE_BUS_DIGEST"
-        );
-
-        // Test Undeclared => Declared
-        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
-        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState should not be equal to Progressed."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState should not be equal to Revoked."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged is not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState is not changed to Declared."
-        );
-
-        // Test Declared => Progressed
-        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
-        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState should not be equal to Declared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState should not be equal to Revoked."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged is not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState is not changed to Progressed."
-        );
-
-        // Test DeclaredRevocation => Revoked
-        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-        (isChanged, nextState) = MockMessageBus.changeOutboxState(
-            messageBox,
-            messageHash
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Undeclared),
-            "nextState should not be equal to Undeclared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Declared),
-            "nextState should not be equal to Declared."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "nextState should not be equal to Progressed."
-        );
-        Assert.notEqual(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.DeclaredRevocation),
-            "nextState should not be equal to DeclaredRevocation."
-        );
-        Assert.equal(
-            bool(isChanged),
-            true,
-            "isChanged is not equal to true."
-        );
-        Assert.equal(
-            uint256(nextState),
-            uint256(MockMessageBus.MessageStatus.Revoked),
-            "nextState is not changed to Revoked."
-        );
-    }
-
-    /**
      * @notice it tests declare message method of MockMessageBus.
      */
     function testDeclareMessage()
         public
     {
-        bytes memory signature = new bytes(65);
-        signature = hex"b3ea4cd2196f5723de9bda449c8bb7745a444383f27586148a358ab855aed1bd4b9b3ebf0920982d016b6b5eaa00a83ddf1b07bb9b154677f005d08db5c5240d00";
-
         bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromDeclare = MockMessageBus.declareMessage(
             messageBox,
             getBytes32("STAKE_TYPEHASH"),
-            message,
-            signature
+            message
         );
 
         Assert.equal(
@@ -664,13 +418,13 @@ contract TestMessageBus is KeyValueStoreStub{
 
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         bytes32 messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
-            messageBox,
-            message,
-            getBytes32("STAKE_TYPEHASH"),
-            uint8(getUint256("MESSAGEBOX_OFFSET")),
-            getBytes("RLP_PARENT_NODES"),
-            getBytes32("STORAGE_ROOT"),
-            MockMessageBus.MessageStatus.DeclaredRevocation
+                messageBox,
+                message,
+                getBytes32("STAKE_TYPEHASH"),
+                uint8(getUint256("MESSAGEBOX_OFFSET")),
+                getBytes("RLP_PARENT_NODES"),
+                getBytes32("STORAGE_ROOT"),
+                MockMessageBus.MessageStatus.Revoked
         );
 
         Assert.equal(

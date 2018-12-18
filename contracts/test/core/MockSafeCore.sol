@@ -13,24 +13,28 @@ contract MockSafeCore is SafeCore {
     /*  Public functions */
 
     /**
-     * @notice Contract constructor
+     * @notice Contract constructor.
      *
-     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                        this core tracks.
-     * @param _blockHeight block height at which _stateRoot needs to store.
-     * @param _stateRoot state root hash of given _blockHeight.
+     * @param _remoteChainId The chain id of the chain that is tracked by this
+     *                       core.
+     * @param _blockHeight Block height at which _stateRoot needs to store.
+     * @param _stateRoot State root hash of given _blockHeight.
+     * @param _maxStateRoots The max number of state roots to store in the
+     *                       circular buffer.
      * @param _organization Address of an organization contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
+        uint256 _maxStateRoots,
         OrganizationInterface _organization
     )
         SafeCore(
             _remoteChainId,
             _blockHeight,
             _stateRoot,
+            _maxStateRoots,
             _organization
         )
         public

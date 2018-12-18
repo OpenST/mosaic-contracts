@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const GatewayBase = artifacts.require('./MockGatewayBase.sol')
-  , Core = artifacts.require('./MockSafeCore.sol')
+const GatewayBase = artifacts.require("./MockGatewayBase.sol")
+  , Core = artifacts.require("./MockSafeCore.sol")
   , BN = require('bn.js');
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
@@ -41,8 +41,16 @@ contract('GatewayBase.sol', function (accounts) {
         , worker = accounts[3]
         , bounty = new BN(100);
 
+      let maxStateRoots = new BN(1000);
+
       let organization = await MockOrganization.new(owner, worker);
-      let core = await Core.new(1, 0, stateRoot, organization.address);
+      let core = await Core.new(
+        1,
+        0,
+        stateRoot,
+        maxStateRoots,
+        organization.address,
+      );
 
       gatewayBaseInstance = await GatewayBase.new(
         core.address,

@@ -1,4 +1,3 @@
-/* solhint-disable-next-line compiler-fixed */
 pragma solidity ^0.5.0;
 
 // Copyright 2018 OpenST Ltd.
