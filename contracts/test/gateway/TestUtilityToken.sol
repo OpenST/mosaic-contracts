@@ -47,9 +47,9 @@ contract TestUtilityToken is UtilityToken {
         uint8 _decimals,
         IsMemberInterface _membersManager
     )
-    public
-    UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
-    {}
+        public
+        UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
+        {}
 
     /**
      * @notice Set the CoGateway address for testing.
