@@ -39,6 +39,7 @@ contract TestUtilityToken is UtilityToken {
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
+     * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _token,

@@ -23,7 +23,7 @@ pragma solidity ^0.5.0;
 import "../../gateway/UtilityToken.sol";
 
 /**
- * @title TestUtilityToken contract
+ * @title MockUtilityToken contract.
  *
  * @notice This contract is used to mock certain functions of UtilityToken
  *         contract.
@@ -33,12 +33,15 @@ contract MockUtilityToken is UtilityToken {
     /* Constructor */
 
     /**
-     * @dev This is used for testing by mocking certain variables.
+     * @notice Constructor.
+     *
+     * @dev This is used for testing only.
      *
      * @param _token Address of branded token.
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
+     * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _token,
@@ -47,16 +50,16 @@ contract MockUtilityToken is UtilityToken {
         uint8 _decimals,
         IsMemberInterface _membersManager
     )
-    public
-    UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
-    {}
+        public
+        UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
+        {}
 
     /**
      * @notice Set the CoGateway address for testing.
      *
      * @param _coGatewayAddress CoGateway address.
      */
-    function setCoGatewayAddress(address _coGatewayAddress) public {
+    function setCoGatewayAddress(address _coGatewayAddress) external {
         coGateway = _coGatewayAddress;
     }
 
