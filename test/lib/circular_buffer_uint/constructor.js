@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +11,28 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Contracts: MockTokenConfig 
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
+const Utils = require('../../test_lib/utils.js');
+const BN = require('bn.js');
 
-contract MockTokenConfig {
+const CircularBufferUint = artifacts.require('CircularBufferUint');
 
-    string  public constant TOKEN_SYMBOL   = "MOCK";
-    string  public constant TOKEN_NAME     = "Mock Token";
-    uint8   public constant TOKEN_DECIMALS = 18;
+contract('CircularBufferUint.constructor()', async (accounts) => {
 
-    uint256 public constant DECIMALSFACTOR = 10**uint256(TOKEN_DECIMALS);
-    uint256 public constant TOKENS_MAX     = 800000000 * DECIMALSFACTOR;
-}
+    it('deploys given accepted arguments', async () => {
+        await CircularBufferUint.new(new BN(100));
+    });
+
+    it('reverts if the given buffer length is 0', async () => {
+        await Utils.expectRevert(
+            CircularBufferUint.new(new BN(0)),
+            'The max number of items to store in a circular buffer must be greater than 0.',
+        );
+    });
+});
