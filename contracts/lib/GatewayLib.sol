@@ -126,7 +126,7 @@ library GatewayLib {
         );
 
         /**
-         * Verify the remote OpenST contract against the committed state
+         * Verify the remote OpenST contract against the anchored state
          * root with the state trie Merkle proof
          */
         require(MerklePatriciaProof.verify(hashedAccount, _encodedPath,

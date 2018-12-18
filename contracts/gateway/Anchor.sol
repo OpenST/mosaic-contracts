@@ -181,7 +181,7 @@ contract Anchor is StateRootInterface, Organized {
             "State root must not be zero."
         );
 
-        // Input block height should be valid
+        // Input block height should be valid.
         require(
             _blockHeight > latestStateRootBlockHeight,
             "Given block height is lower or equal to highest anchored state root block height."

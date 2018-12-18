@@ -66,7 +66,7 @@ contract('Anchor.getStateRoot()', function (accounts) {
         
     });
     
-    it('should return the zero bytes for non committed block heights', async () => {
+    it('should return the zero bytes for non anchored block heights', async () => {
         
         blockHeight = blockHeight.addn(500);
         
@@ -79,7 +79,7 @@ contract('Anchor.getStateRoot()', function (accounts) {
         
     });
     
-    it('should return the latest committed state root', async () => {
+    it('should return the latest anchored state root', async () => {
         
         blockHeight = blockHeight.addn(50000);
         stateRoot = web3.utils.sha3("dummy_state_root_1");

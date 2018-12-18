@@ -156,7 +156,7 @@ contract GatewayBase is Organized {
     /**
      *  @notice proveGateway can be called by anyone to verify merkle proof of
      *          gateway/co-gateway contract address. Trust factor is brought by
-     *          stateRoots mapping. stateRoot is committed in commitStateRoot
+     *          stateRoots mapping. stateRoot is anchored in anchorStateRoot
      *          function by mosaic process which is a trusted decentralized system
      *          running separately. It's important to note that in replay calls of
      *          proveGateway bytes _rlpParentNodes variable is not validated. In

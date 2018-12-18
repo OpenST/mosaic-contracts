@@ -6,9 +6,9 @@ import "../../gateway/GatewayBase.sol";
 import "../../lib/IsMemberInterface.sol";
 
 /**
- * @title MockGatewayBase contract
+ * @title MockGatewayBase contract.
  *
- * @notice Used for test only
+ * @notice Used for test only.
  */
 contract MockGatewayBase is GatewayBase {
 
@@ -42,7 +42,7 @@ contract MockGatewayBase is GatewayBase {
      *
      *  @dev proveGateway can be called by anyone to verify merkle proof of
      *       gateway/co-gateway contract address. Trust factor is brought by
-     *       stateRoots mapping. stateRoot is committed in anchorStateRoot
+     *       stateRoots mapping. stateRoot is anchored in anchorStateRoot
      *       function by mosaic process which is a trusted decentralized system
      *       running separately. It's important to note that in replay calls of
      *       proveGateway bytes _rlpParentNodes variable is not validated. In

@@ -15,7 +15,7 @@ contract MockAnchor is Anchor {
      * @notice Contract constructor.
      *
      *  @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                        this core tracks.
+     *                        this anchor tracks.
      * @param _blockHeight Block height at which _stateRoot needs to store.
      * @param _stateRoot State root hash of given _blockHeight.
      *  @param _membersManager Address of a members manager contract.
@@ -39,7 +39,7 @@ contract MockAnchor is Anchor {
      * @notice Get the mocked state root.
      *
      * @dev This is for testing only so the data is mocked here. Also please
-     *      note the Core contract has defined this function as view,
+     *      note the Anchor contract has defined this function as view,
      *      so to keep this overridden function as view, reading a storage
      *      variable.
      *

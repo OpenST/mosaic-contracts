@@ -62,7 +62,7 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
         
     });
     
-    it('should return the latest committed state root block height', async () => {
+    it('should return the latest anchored state root block height', async () => {
         
         blockHeight = blockHeight.addn(50000);
         
