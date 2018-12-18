@@ -23,7 +23,7 @@ import "../../gateway/UtilityToken.sol";
  *         contract.
  */
 contract TestUtilityToken is UtilityToken {
-    
+
     /* Constructor */
 
     /**
@@ -41,8 +41,8 @@ contract TestUtilityToken is UtilityToken {
         uint8 _decimals,
         IsMemberInterface _membersManager
     )
-        public
-        UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
+    public
+    UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
     {}
 
     /**

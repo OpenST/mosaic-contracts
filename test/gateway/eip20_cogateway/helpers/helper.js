@@ -33,8 +33,7 @@ EIP20CoGatewayHelper.prototype = {
    * It sets the cogateway address.
    * @param coGateway CoGateway contract address.
    */
-  setCoGateway: async function (coGateway)
-  {
+  setCoGateway: async function (coGateway) {
     
     this.coGateway = coGateway;
     
@@ -45,11 +44,10 @@ EIP20CoGatewayHelper.prototype = {
    *
    * @return {string} Message type hash.
    */
-  redeemTypeHash: async function ()
-  {
+  redeemTypeHash: async function () {
     return web3.utils.soliditySha3(
       'string',
-      'Redeem(uint256 amount,address beneficiary,MessageBus.Message message)'
+      'Redeem(uint256 amount,address beneficiary,MessageBus.Message message)',
     );
   },
   
@@ -73,8 +71,8 @@ EIP20CoGatewayHelper.prototype = {
     nonce,
     gasPrice,
     gasLimit,
-    token)
-  {
+    token
+  ) {
     
     return web3.utils.soliditySha3(
       {t: 'uint256', v: amount},
@@ -83,7 +81,7 @@ EIP20CoGatewayHelper.prototype = {
       {t: 'uint256', v: nonce},
       {t: 'uint256', v: gasPrice},
       {t: 'uint256', v: gasLimit},
-      {t: 'address', v: token}
+      {t: 'address', v: token},
     );
   },
   
@@ -94,8 +92,7 @@ EIP20CoGatewayHelper.prototype = {
    *
    * @returns {Promise<void>} Nonce of the address.
    */
-  getNonce: async function (address)
-  {
+  getNonce: async function (address) {
     
     return await this.coGateway.getNonce.call(address);
   }

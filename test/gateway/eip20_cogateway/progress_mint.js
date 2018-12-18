@@ -24,14 +24,14 @@ const BN = require('bn.js'),
   MessageBus = artifacts.require('MessageBus'),
   EIP20Token = artifacts.require('EIP20Token'),
   TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-  TestUtilityToken = artifacts.require('TestUtilityToken');
+  MockUtilityToken = artifacts.require('MockUtilityToken');
 
 let valueToken,
   burner,
   mockSafeCore,
   membersManager,
   coGateway,
-  testUtilityToken,
+  mockUtilityToken,
   bountyAmount,
   owner,
   staker,
@@ -61,7 +61,7 @@ async function _setup(accounts) {
   membersManager = accounts[2];
   coGateway = accounts[3];
   owner = accounts[8];
-  testUtilityToken = await TestUtilityToken.new(
+  mockUtilityToken = await MockUtilityToken.new(
     valueToken,
     symbol,
     name,
@@ -111,7 +111,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     );
     testEIP20CoGateway = await TestEIP20CoGateway.new(
       valueToken,
-      testUtilityToken.address,
+      mockUtilityToken.address,
       mockSafeCore,
       bountyAmount,
       membersManager,
@@ -119,7 +119,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       burner,
     );
     
-    await testUtilityToken.setCoGatewayAddress(testEIP20CoGateway.address);
+    await mockUtilityToken.setCoGatewayAddress(testEIP20CoGateway.address);
     
     await helper.setCoGateway(testEIP20CoGateway.address);
     
@@ -190,8 +190,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       {from: facilitator},
     );
     
-    let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
-    let beneficiaryBalance = await testUtilityToken.balanceOf(beneficiary);
+    let facilitatorBalance = await mockUtilityToken.balanceOf(facilitator);
+    let beneficiaryBalance = await mockUtilityToken.balanceOf(beneficiary);
     
     assert.strictEqual(
       facilitatorBalance.eq(expectedReward),
@@ -261,8 +261,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       {from: facilitator},
     );
     
-    let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
-    let beneficiaryBalance = await testUtilityToken.balanceOf(beneficiary);
+    let facilitatorBalance = await mockUtilityToken.balanceOf(facilitator);
+    let beneficiaryBalance = await mockUtilityToken.balanceOf(beneficiary);
     
     assert.strictEqual(
       beneficiaryBalance.eq(amount),
@@ -332,7 +332,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         unlockSecret,
         {from: facilitator},
       ),
-      'Message status must be Declared.'
+      'Message status must be Declared.',
     );
     
   });
@@ -350,7 +350,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         unlockSecret,
         {from: facilitator},
       ),
-      'Message status must be Declared.'
+      'Message status must be Declared.',
     );
     
   });
@@ -368,7 +368,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         unlockSecret,
         {from: facilitator},
       ),
-      'Message status must be Declared.'
+      'Message status must be Declared.',
     );
     
   });
@@ -388,7 +388,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
         unlockSecret,
         {from: facilitator},
       ),
-      'Invalid unlock secret.'
+      'Invalid unlock secret.',
     );
     
   });
