@@ -39,7 +39,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
-     * @param _core Core contract address.
+     * @param _anchor Anchor contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _membersManager Address of a members manager contract.
@@ -48,7 +48,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     constructor(
         address _valueToken,
         address _utilityToken,
-        StateRootInterface _core,
+        StateRootInterface _anchor,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _gateway,
@@ -57,7 +57,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         EIP20CoGateway(
             _valueToken,
             _utilityToken,
-            _core,
+            _anchor,
             _bounty,
             _membersManager,
             _gateway,

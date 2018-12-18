@@ -17,19 +17,19 @@ contract MockGatewayBase is GatewayBase {
     /**
      * @notice This is used for testing.
      *
-     * @param _core Core contract address.
+     * @param _anchor Anchor contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        StateRootInterface _core,
+        StateRootInterface _anchor,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
         public
         GatewayBase(
-            _core,
+            _anchor,
             _bounty,
             _membersManager
         )
@@ -78,7 +78,7 @@ contract MockGatewayBase is GatewayBase {
             "Length of RLP parent nodes must not be 0."
         );
 
-        bytes32 stateRoot = core.getStateRoot(_blockHeight);
+        bytes32 stateRoot = anchor.getStateRoot(_blockHeight);
 
         //State root should be present for the block height
         require(

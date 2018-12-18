@@ -29,14 +29,14 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('EIP20Gateway.constructor() ', function (accounts) {
 
-    let mockToken, baseToken, bountyAmount, coreAddress, membersManager,
+    let mockToken, baseToken, bountyAmount, anchorAddress, membersManager,
         gateway, owner, worker, burner = NullAddress;
 
     beforeEach(async function () {
 
         mockToken = await MockToken.new();
         baseToken = await MockToken.new();
-        coreAddress = accounts[1];
+        anchorAddress = accounts[1];
         bountyAmount = new BN(100);
 
         owner = accounts[2];
@@ -49,7 +49,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             Gateway.new(
                 mockToken.address,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner
@@ -66,7 +66,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             Gateway.new(
                 mockToken.address,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner
@@ -87,10 +87,10 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             "Invalid bounty token address from contract."
         );
 
-        let coreAdd = await gateway.core.call();
+        let coreAdd = await gateway.anchor.call();
         assert.equal(
             coreAdd,
-            coreAddress,
+            anchorAddress,
             "Invalid core address from contract"
         );
 
@@ -121,7 +121,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             Gateway.new(
                 mockToken,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner
@@ -137,7 +137,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             Gateway.new(
                 mockToken.address,
                 baseTokenAddress,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner
@@ -147,13 +147,13 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
     });
 
     it('should not deploy contract if core address is passed as zero.', async function () {
-        let coreAddress = NullAddress;
+        let anchorAddress = NullAddress;
 
         await Utils.expectRevert(
             Gateway.new(
                 mockToken.address,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner
@@ -170,7 +170,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
              Gateway.new(
                 mockToken.address,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager,
                 burner
@@ -187,7 +187,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             Gateway.new(
                 mockToken.address,
                 baseToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 burner

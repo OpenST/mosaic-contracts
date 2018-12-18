@@ -1,5 +1,5 @@
 const GatewayBase = artifacts.require("./MockGatewayBase.sol")
-  , Core = artifacts.require("./MockAnchor.sol")
+  , MockAnchor = artifacts.require("./MockAnchor.sol")
   , BN = require('bn.js');
 
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
@@ -22,10 +22,10 @@ contract('GatewayBase.sol', function (accounts) {
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
-      let core = await Core.new(1, 0, stateRoot, membersManager.address);
+      let anchor = await MockAnchor.new(1, 0, stateRoot, membersManager.address);
 
       gatewayBaseInstance = await GatewayBase.new(
-        core.address,
+        anchor.address,
         bounty,
         membersManager.address
       );

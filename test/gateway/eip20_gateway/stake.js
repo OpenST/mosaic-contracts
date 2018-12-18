@@ -157,7 +157,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         gateway = await Gateway.new(
             mockToken.address,
             baseToken.address,
-            accounts[1], //core address
+            accounts[1], //anchor address
             bountyAmount,
             accounts[2], // organisation address,
             burner
@@ -318,7 +318,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
         gateway = await Gateway.new(
             mockToken.address,
             baseToken.address,
-            accounts[1], //core address
+            accounts[1], //anchor address
             bountyAmount,
             accounts[2], // organisation address
             burner

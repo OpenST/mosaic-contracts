@@ -203,7 +203,7 @@ contract EIP20CoGateway is GatewayBase {
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
-     * @param _core Core contract address.
+     * @param _anchor Anchor contract address.
      * @param _bounty The amount that facilitator stakes to initiate the stake
      *                process.
      * @param _membersManager Address of a contract that manages workers.
@@ -213,14 +213,14 @@ contract EIP20CoGateway is GatewayBase {
     constructor(
         address _valueToken,
         address _utilityToken,
-        StateRootInterface _core,
+        StateRootInterface _anchor,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _gateway,
         address payable _burner
     )
         GatewayBase(
-            _core,
+            _anchor,
             _bounty,
             _membersManager
         )

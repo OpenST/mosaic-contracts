@@ -30,7 +30,7 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
-    let valueToken, utilityToken, bountyAmount, coreAddress, owner, worker,
+    let valueToken, utilityToken, bountyAmount, anchorAddress, owner, worker,
         membersManager, coGateway, gatewayAddress = accounts[6],
         burner = NullAddress;
 
@@ -38,7 +38,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
 
         valueToken = await MockToken.new();
         utilityToken = await MockToken.new();
-        coreAddress = accounts[1];
+        anchorAddress = accounts[1];
         bountyAmount = new BN(100);
 
         owner = accounts[2];
@@ -51,7 +51,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -69,7 +69,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -94,7 +94,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
         let coreAdd = await coGateway.core.call();
         assert.strictEqual(
             coreAdd,
-            coreAddress,
+            anchorAddress,
             'Invalid core address from contract.'
         );
 
@@ -113,7 +113,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueTokenAddress,
                 utilityToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -130,7 +130,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityTokenAddress,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -140,14 +140,14 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
         );
     });
 
-    it('should not deploy contract if core address is passed as zero.', async function () {
-        let coreAddress = NullAddress;
+    it('should not deploy contract if anchor address is passed as zero.', async function () {
+        let anchorAddress = NullAddress;
 
         await Utils.expectRevert(
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -165,7 +165,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                coreAddress,
+                anchorAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,

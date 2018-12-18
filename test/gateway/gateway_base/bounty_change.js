@@ -45,13 +45,13 @@ contract('GatewayBase.sol', function (accounts) {
 
     beforeEach(async function () {
 
-      let core = accounts[0]
+      let anchor = accounts[0]
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
-        core,
+        anchor,
         bounty,
         membersManager.address
       );
@@ -103,13 +103,13 @@ contract('GatewayBase.sol', function (accounts) {
 
     beforeEach(async function () {
 
-      let core = accounts[0]
+      let anchor = accounts[0]
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
-        core,
+        anchor,
         bounty,
         membersManager.address
       );

@@ -18,7 +18,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
         let mockToken = accounts[0],
             baseToken = accounts[1],
-            coreAddress = accounts[2],
+            anchorAddress = accounts[2],
             bountyAmount = new BN(100);
 
         membersManager = await MockMembersManager.new(owner, worker);
@@ -26,7 +26,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
         gateway = await Gateway.new(
             mockToken,
             baseToken,
-            coreAddress,
+          anchorAddress,
             bountyAmount,
             membersManager.address,
             burner
