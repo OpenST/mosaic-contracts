@@ -24,19 +24,26 @@ const BN = require('bn.js');
 
 contract('SafeCore.getRemoteChainId()', function (accounts) {
 
-  let remoteChainId, blockHeight, stateRoot, membersManager, safeCore;
+  let remoteChainId,
+    blockHeight,
+    stateRoot,
+    maxNumberOfStateRoots,
+    membersManager,
+    safeCore;
 
   beforeEach(async function () {
 
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
+    maxNumberOfStateRoots = new BN(10);
     membersManager = accounts[1];
 
     safeCore = await SafeCore.new(
       remoteChainId,
       blockHeight,
       stateRoot,
+      maxNumberOfStateRoots,
       membersManager,
     );
 

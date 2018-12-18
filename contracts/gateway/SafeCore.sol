@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ pragma solidity ^0.5.0;
 
 import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
+import "../lib/CircularBufferUint.sol";
 import "../lib/IsMemberInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/Organized.sol";
@@ -38,16 +39,19 @@ import "../lib/SafeMath.sol";
  *         by the workers that are registered as part of the `Organized`
  *         interface.
  */
-contract SafeCore is StateRootInterface, Organized {
+contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
+
+    /* Usings */
+
     using SafeMath for uint256;
 
 
-    /** Events */
+    /* Events */
 
     event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
 
 
-    /** Storage */
+    /* Storage */
 
     /** Maps block heights to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
@@ -58,9 +62,6 @@ contract SafeCore is StateRootInterface, Organized {
      */
     uint256 private remoteChainId;
 
-    /** Latest block height of block for which state root was committed. */
-    uint256 private latestStateRootBlockHeight;
-
     /** Address of the core on the auxiliary chain. Can be zero. */
     address public coCore;
 
@@ -68,21 +69,25 @@ contract SafeCore is StateRootInterface, Organized {
     /*  Constructor */
 
     /**
-     *  @notice Contract constructor.
+     * @notice Contract constructor.
      *
-     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                        this core tracks.
-     *  @param _blockHeight Block height at which _stateRoot needs to store.
-     *  @param _stateRoot State root hash of given _blockHeight.
-     *  @param _membersManager Address of a members manager contract.
+     * @param _remoteChainId The chain id of the chain that is tracked by this
+     *                       core.
+     * @param _blockHeight Block height at which _stateRoot needs to store.
+     * @param _stateRoot State root hash of given _blockHeight.
+     * @param _maxStateRoots The max number of state roots to store in the
+     *                       circular buffer.
+     * @param _membersManager Address of a members manager contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
+        uint256 _maxStateRoots,
         IsMemberInterface _membersManager
     )
         Organized(_membersManager)
+        CircularBufferUint(_maxStateRoots)
         public
     {
         require(
@@ -92,8 +97,8 @@ contract SafeCore is StateRootInterface, Organized {
 
         remoteChainId = _remoteChainId;
 
-        latestStateRootBlockHeight = _blockHeight;
-        stateRoots[latestStateRootBlockHeight] = _stateRoot;
+        stateRoots[_blockHeight] = _stateRoot;
+        CircularBufferUint.store(_blockHeight);
     }
 
 
@@ -152,7 +157,7 @@ contract SafeCore is StateRootInterface, Organized {
         view
         returns (uint256 height_)
     {
-        height_ = latestStateRootBlockHeight;
+        height_ = CircularBufferUint.head();
     }
 
     /**
@@ -183,12 +188,13 @@ contract SafeCore is StateRootInterface, Organized {
 
         // Input block height should be valid
         require(
-            _blockHeight > latestStateRootBlockHeight,
+            _blockHeight > CircularBufferUint.head(),
             "Given block height is lower or equal to highest committed state root block height."
         );
 
         stateRoots[_blockHeight] = _stateRoot;
-        latestStateRootBlockHeight = _blockHeight;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete stateRoots[oldestStoredBlockHeight];
 
         emit StateRootAvailable(_blockHeight, _stateRoot);
 
