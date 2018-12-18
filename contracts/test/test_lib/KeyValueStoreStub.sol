@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 
-import "../../gateway/MockMessageBus.sol";
+import "../../lib/MockMessageBus.sol";
 import "../../gateway/GatewayBase.sol";
 
 /**
