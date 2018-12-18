@@ -31,6 +31,7 @@ import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 import "../lib/IsMemberInterface.sol";
+import "../lib/Mutex.sol";
 
 /**
  *  @title OSTPrime contract implements UtilityToken and
@@ -42,7 +43,7 @@ import "../lib/IsMemberInterface.sol";
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
  */
-contract OSTPrime is UtilityToken, OSTPrimeConfig {
+contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
     /* Usings */
 
@@ -231,7 +232,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
      * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
-        address _account,
+        address payable _account,
         uint256 _amount
     )
         external
@@ -239,7 +240,12 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         onlyCoGateway
         returns (bool success_)
     {
-        success_ = increaseSupplyInternal(_account, _amount);
+        acquire(msg.sender);
+
+        success_ = increaseSupplyInternal(address(this), _amount);
+        _account.transfer(_amount);
+
+        release(msg.sender);
     }
 
     /**

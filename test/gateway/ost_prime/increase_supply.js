@@ -64,23 +64,6 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
 
   });
 
-  it('should fail when account address is zero', async function () {
-
-    await initialize();
-
-    beneficiary = NullAddress;
-
-    await Utils.expectRevert(
-      ostPrime.increaseSupply(
-        beneficiary,
-        amount,
-        { from: coGatewayAddress },
-      ),
-      'Account address should not be zero.',
-    );
-
-  });
-
   it('should fail when amount is zero', async function () {
 
     await initialize();
@@ -141,18 +124,23 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
       true,
       'Contract should return true.',
     );
+    let initialBeneficiaryBalance = await Utils.getBalance(beneficiary);
 
     await ostPrime.increaseSupply(
-      beneficiary,
-      amount,
-      { from: coGatewayAddress },
+        beneficiary,
+        amount,
+        {from: coGatewayAddress},
     );
 
-    let beneficiaryBalance = await ostPrime.balanceOf.call(beneficiary);
+    let finalBeneficiaryBalance = await Utils.getBalance(beneficiary);
+
+    initialBeneficiaryBalance = new BN(initialBeneficiaryBalance);
+    finalBeneficiaryBalance = new BN(finalBeneficiaryBalance);
+
     assert.strictEqual(
-      amount.eq(beneficiaryBalance),
+      finalBeneficiaryBalance.eq(initialBeneficiaryBalance.add(amount)),
       true,
-      `Beneficiary address balance should be ${amount}.`,
+      `Beneficiary base token address balance should be ${amount}.`,
     );
 
     let totalSupply = await ostPrime.totalSupply();
@@ -191,8 +179,8 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
 
     assert.strictEqual(
       eventData._to,
-      beneficiary,
-      `The _to address in the event should be equal to ${beneficiary}.`,
+      ostPrime.address,
+      `The _to address in the event should be equal to ${ostPrime.address}.`,
     );
 
     assert.strictEqual(

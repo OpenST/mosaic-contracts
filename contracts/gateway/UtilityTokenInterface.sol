@@ -43,7 +43,7 @@ contract UtilityTokenInterface {
      * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
-        address _account,
+        address payable _account,
         uint256 _amount
     )
         external

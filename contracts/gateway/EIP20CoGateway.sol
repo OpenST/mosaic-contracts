@@ -173,7 +173,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 amount;
 
         /** Address for which the utility tokens will be minted */
-        address beneficiary;
+        address payable beneficiary;
     }
 
     /* public Variables */
@@ -768,7 +768,7 @@ contract EIP20CoGateway is GatewayBase {
     function confirmStakeIntent(
         address _staker,
         uint256 _stakerNonce,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount,
         uint256 _gasPrice,
         uint256 _gasLimit,
@@ -1112,7 +1112,7 @@ contract EIP20CoGateway is GatewayBase {
 
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
-            beneficiary_,
+            mint.beneficiary,
             mintedAmount_
         );
 
