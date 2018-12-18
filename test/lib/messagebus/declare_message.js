@@ -29,9 +29,8 @@ let MessageStatusEnum = {
   Revoked: 4
 };
 
-contract('MessageBus', async (accounts) => {
+contract('MessageBus.declareMessage()', async (accounts) => {
 
-  describe('declareMessage', async () => {
     let params;
 
     beforeEach(async function () {
@@ -84,8 +83,6 @@ contract('MessageBus', async (accounts) => {
 
       await messageBusUtils.declareMessage(params, false);
     });
-
-  });
 });
 
 
