@@ -1,4 +1,4 @@
-// Copyright 2017 OpenST Ltd.
+// Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,5 +28,5 @@ module.exports.getHashLock = () => {
 	var secretBytes = crypto.randomBytes(32);
 	var lock = "0x" + keccak256('keccak256').update(secretBytes).digest('hex');
 	var unlockSecret = "0x" + secretBytes.toString('hex');
-	return {s: unlockSecret, l: lock};
+	return { s: unlockSecret, l: lock };
 }

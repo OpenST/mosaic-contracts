@@ -17,6 +17,7 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
+
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 const MetaBlockUtils = require('../../test_lib/meta_block.js');
