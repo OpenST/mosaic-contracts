@@ -504,7 +504,7 @@ contract MessageBusWrapper {
     /**
      * @notice Returns the status of message stored in the outbox.
      *
-     * @param messageHash_ Message hash.
+     * @param _messageHash Message hash.
      *
      * @return status_ Status of message in the outbox.
      */
@@ -519,7 +519,7 @@ contract MessageBusWrapper {
     /**
      * @notice Returns the status of message stored in the inbox.
      *
-     * @param messageHash_ Message hash.
+     * @param _messageHash Message hash.
      *
      * @return status_ Status of message in the inbox.
      */
