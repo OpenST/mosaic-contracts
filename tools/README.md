@@ -53,6 +53,30 @@ Given a chainspec located at `./chainspec.json` and a accounts section at `./acc
 node tools/merge_chainspec_accounts.js ./chainspec.json ./accounts > merged_chainspec.json
 ```
 
+## Deploying Anchor-based EIP20 Gateway
+
+The repo contains a tool to deploy an Anchor-based EIP20Gateway<->EIP20CoGateway setup.
+
+### Requirements
+
+- Address of EIP20 token on Origin the gateway should be deployed for (optional for development)
+- Address of EIP20 base token on Origin, which is used for bounty (optional for development)
+- An RPC node for the Origin chain
+  - Needs to have an unlocked account with sufficient tokens and base tokens for deployment
+- An RPC node for the Auxiliary chain
+  - Needs to have an unlocked account with sufficient tokens and base tokens for deployment
+
+### Commands
+
+To run a local testnet setup via `ganache-cli` run in two seperate terminals:
+
+- `ganache-cli --gasLimit=0x7A1200`
+- `ganache-cli --gasLimit=0x7A1200 --port 8546`
+
+To deploy the gateway run:
+
+- `npm install`
+- `npm deploy:gateway` will start the interactive deployment process
 
 [parity-chainspec]: https://wiki.parity.io/Chain-specification
 [web3-sendtransaction]: https://web3js.readthedocs.io/en/1.0/web3-eth.html#sendtransaction

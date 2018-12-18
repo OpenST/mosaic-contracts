@@ -196,7 +196,7 @@ const deploySafeCoreAndCoGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    await deployContracts(web3, deploymentObjects);
+    return await deployContracts(web3, deploymentObjects);
 };
 
 const printSign = (text) => {
@@ -220,7 +220,7 @@ const main = async () => {
     checkEip20Address(rpcEndpointOrigin, tokenAddressOrigin);
 
     let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress(rpcEndpointOrigin);
-    baseTokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, tokenAddressOrigin);
+    baseTokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, baseTokenAddressOrigin);
     checkEip20Address(rpcEndpointOrigin, baseTokenAddressOrigin);
 
     printSign('QUESTIONS AUXILIARY');
@@ -247,7 +247,7 @@ const main = async () => {
 
     printSign('DEPLOYING AUXILIARY');
     const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-    await deploySafeCoreAndCoGateway(
+    const auxiliaryAddresses = await deploySafeCoreAndCoGateway(
         rpcEndpointAuxiliary,
         deployerAddressAuxiliary,
         tokenAddressOrigin,
@@ -257,6 +257,17 @@ const main = async () => {
         originInfo.blockHeight,
         originInfo.stateRoot,
     );
+
+    const web3 = new Web3(rpcEndpointOrigin);
+    const EIP20GatewaySchema = require('../../build/contracts/EIP20Gateway.json');
+    const EIP20Gateway = new web3.eth.Contract(EIP20GatewaySchema.abi, originAddresses.EIP20Gateway);
+    EIP20Gateway.methods.activateGateway(auxiliaryAddresses.EIP20CoGateway).send({
+        from: deployerAddressOrigin,
+        gasPrice: 1,
+        gas: 8000000,
+    }).then((receipt) => {
+        console.log(`Activated Gateway (tx ${receipt.transactionHash})`);
+    });
 };
 
 main();

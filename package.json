@@ -39,7 +39,8 @@
     "test:deployment_tool": "mocha tools/deployment_tool/test",
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
-    "prepare": "npm run compile-all && npm run build-package"
+    "prepare": "npm run compile-all && npm run build-package",
+    "deploy:gateway": "npm run compile && node tools/blue_deployment/step1_origin_contracts.js"
   },
   "main": "dist/index.js",
   "files": [

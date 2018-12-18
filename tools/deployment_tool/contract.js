@@ -13,7 +13,7 @@ class Contract {
      * @param {string} contractName Name of the contract to create. If this contract is
      *                 linked into another contracted, the provided contractName has to
      *                 match the linking placeholder.
-     * @param {string} contracBytecode Bytecode of the contract.
+     * @param {string} contractBytecode Bytecode of the contract.
      * @param {Array<*>} [constructorABI] ABI of the contract constructor.
      * @param {Array<*>} [constructorArgs] Arguments for the contract constructor.
      */
@@ -37,10 +37,11 @@ class Contract {
         this.linkedBytecode = this.linkedBytecode.bind(this);
         this.reference = this.reference.bind(this);
         this.setAddress = this.setAddress.bind(this);
+        this.setGeneratedAddress = this.setGeneratedAddress.bind(this);
     }
 
     /**
-     * Helper for loading a contract saved in a format followin the truffle-contract-schema.
+     * Helper for loading a contract saved in a format following the truffle-contract-schema.
      *
      * See {@link https://github.com/trufflesuite/truffle/tree/66e3b1cb10df881d80e2a22ddea68e9dcfbdcdb1/packages/truffle-contract-schema}
      *
@@ -80,26 +81,41 @@ class Contract {
     }
 
     /**
-     * Returns the contract's address as detemined by the provided AddressGenerator.
+     * Set the address of the contract to a fixed address.
      *
-     * @param {Object|string} addressGeneratorOrAddress The AddressGenerator used for
-     *                        generating the addresses. Can alternatively be a fixed address.
+     * See {@link Contract#setGeneratedAddress} for setting an address for the contract
+     * via an AddressGenerator instead.
+     *
+     * @param {string} address The fixed address to use for this contract.
      * @returns {string} The contract's address.
      */
-    setAddress(addressGeneratorOrAddress) {
+    setAddress(address) {
         this._ensureStateOneOf([STATE_NEW, STATE_LINKED]);
-        // Return early if the address has previously been set.
-        // This allows for setting a fixed address for specific contracts.
+        if (typeof address !== 'string') {
+            throw new Error(`Invalid address provided for ${this.contractName}`);
+        }
+
+        this.address = address;
+        return this.address;
+    }
+
+    /**
+     * Set the address by generating an address with provided AddressGenerator,
+     * and return that address.
+     *
+     * See {@link Contract#setAddress} for setting a fixed address for the contract instead.
+     *
+     * @param {Object} addressGenerator The AddressGenerator used for generating the addresses.
+     * @returns {string} The contract's address.
+     */
+    setGeneratedAddress(addressGenerator) {
+        this._ensureStateOneOf([STATE_NEW, STATE_LINKED]);
+        // Return early if the address has previously been set, so we don't overwrite it.
+        // This allows for setting a fixed address for specific contracts via `setAddress`.
         if (this.address) {
             return this.address;
         }
 
-        if (typeof addressGeneratorOrAddress === 'string') {
-            this.address = addressGeneratorOrAddress;
-            return this.address;
-        }
-
-        const addressGenerator = addressGeneratorOrAddress;
         if (!addressGenerator) {
             throw new Error(`addressGenerator not provided when generating address for ${this.contractName}`);
         }
@@ -148,6 +164,9 @@ class Contract {
 
         this._linkBytecode();
 
+        // Build the data for used for the deployment transaction, which consists
+        // of the linked bytecode, optionally concatenated with the arguments to the
+        // constructor (if there are any).
         let constructorData = this.linkedBytecode();
         constructorData += this._encodeConstructorArguments();
 
@@ -170,6 +189,21 @@ class Contract {
     }
 
     /**
+     * Checks if the provided constructor argument is a contract reference,
+     *
+     * @param {*} constructorArg A constructor argument that is possibly a contract reference.
+     *
+     * @returns {bool} Whether the provided argument is a contract reference.
+     */
+    _isContractReference(constructorArg) {
+        if (constructorArg === null) {
+            return false;
+        }
+
+        return constructorArg.__type === TYPE_CONTRACT_REFERENCE;
+    }
+
+    /**
      * Tries to interpret the provided constructor argument as a contract reference,
      * and returns the referenced contract if it is one. See {@link Contract#reference}.
      *
@@ -178,9 +212,10 @@ class Contract {
      * @returns {Contract|null} The referenced contract.
      */
     _getReferenceContract(constructorArg) {
-        if (!((typeof constructorArg === 'object') && (constructorArg !== null)) || constructorArg.__type !== TYPE_CONTRACT_REFERENCE) {
+        if (!this._isContractReference(constructorArg)) {
             return null;
         }
+
         return constructorArg.contract;
     }
 
