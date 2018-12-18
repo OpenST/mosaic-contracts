@@ -49,9 +49,7 @@ function assertExpectedMessage(message, error) {
     }
 };
 
-/*
- *  Tracking Gas Usage
- */
+/** Tracking Gas Usage. */
 const receipts = [];
 
 function Utils() {
@@ -60,6 +58,7 @@ function Utils() {
 
 Utils.prototype = {
 
+    /** Log receipt. */
     logReceipt: (receipt, description) => {
         receipts.push({
             receipt: receipt,
@@ -68,9 +67,7 @@ Utils.prototype = {
         })
     },
 
-    /**
-     * Print gas statistics.
-     */
+    /** Print gas statistics. */
     printGasStatistics: () => {
         var totalGasUsed = 0
 
@@ -89,9 +86,7 @@ Utils.prototype = {
         console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
     },
 
-    /**
-     *  Clear receipt.
-     */
+    /** Clear receipt. */
     clearReceipts: () => {
         receipts.splice(0, receipts.length);
     },
@@ -106,7 +101,7 @@ Utils.prototype = {
 
     /**
      * Checks null address.
-     * @param address
+     * @param address Address to be checked.
      * @return {boolean} `true` if address is null.
      */
     isNullAddress: (address) => {
@@ -118,7 +113,7 @@ Utils.prototype = {
      * Expect failure from invalid opcode or out of gas, but returns error
      * instead.
      * @param promise Contract method call.
-     * @param expectedMessage Message.
+     * @param expectedMessage Message needs to be asserted.
      */
     expectThrow: async (promise, expectedMessage) => {
         try {
@@ -189,7 +184,7 @@ Utils.prototype = {
         assert(false, "Did not fail assert as expected.");
     },
 
-    /// @dev Get account balance
+    /** Get account balance. */
     getBalance: (address) => {
         return new Promise((resolve, reject) => {
             web3.eth.getBalance(address, (error, result) => {
@@ -202,7 +197,7 @@ Utils.prototype = {
         })
     },
 
-    /// @dev Get gas price
+    /** Get gas price. */
     getGasPrice: () => {
         return new Promise((resolve, reject) => {
             web3.eth.getGasPrice((error, result) => {
@@ -259,7 +254,7 @@ Utils.prototype = {
         });
     },
 
-    //Get latest hash
+    /** Get latest hash. */
     generateHashLock: () => {
         return hashLock.getHashLock();
     },

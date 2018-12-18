@@ -37,11 +37,11 @@ contract MessageBusWrapper {
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated.
+     * @param _nonce Message nonce.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
      * @param _sender Message sender.
-     * @param _gasConsumed gas consumption during message confirmation.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
      *
      * @return messageHash_ Message hash.
@@ -84,13 +84,13 @@ contract MessageBusWrapper {
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated.
-     * @param _sender signer of the signature.
-     * @param _gasConsumed gas consumption during message confirmation.
+     * @param _nonce Message nonce.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
+     * @param _sender Signer of the signature.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
-     * @param _unlockSecret unlock secret for the hash lock provided while
+     * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
      *
      * @return messageHash_ Message hash.
@@ -133,13 +133,13 @@ contract MessageBusWrapper {
      *
      * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
-     * @param _nonce message nonce.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated.
-     * @param _sender signer of the signature.
-     * @param _gasConsumed gas consumption during message confirmation.
+     * @param _nonce Message nonce.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
+     * @param _sender Signer of the signature.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
-     * @param _unlockSecret unlock secret for the hash lock provided while
+     * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
      *
      * @return messageHash_ Message hash.
@@ -188,7 +188,7 @@ contract MessageBusWrapper {
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
-     * @param _messageBoxOffset position of the messageBox.
+     * @param _messageBoxOffset Position of the messageBox.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
      * @param _storageRoot Storage root for proof.

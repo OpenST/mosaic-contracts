@@ -141,6 +141,7 @@ contract EIP20Gateway is GatewayBase {
         uint256 _amount
     );
 
+
     /* Struct */
 
     /**
@@ -161,7 +162,7 @@ contract EIP20Gateway is GatewayBase {
         /** Address of the facilitator that initiates the stake process. */
         address facilitator;
 
-        /** Bounty kept by facilitator for stake message transfer*/
+        /** Bounty kept by facilitator for stake message transfer. */
         uint256 bounty;
     }
 
@@ -174,11 +175,12 @@ contract EIP20Gateway is GatewayBase {
         /** Amount that will be unstaked. */
         uint256 amount;
 
-        /** Address that will receive the unstaked token */
+        /** Address that will receive the unstaked token. */
         address beneficiary;
     }
 
-    /* public variables */
+
+    /* Public Variables */
 
     /** Specifies if the Gateway is activated for any new process. */
     bool public activated;
@@ -186,12 +188,12 @@ contract EIP20Gateway is GatewayBase {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
-    /** address of EIP20 token. */
+    /** Address of EIP20 token. */
     EIP20Interface public token;
 
     /**
-     * address of ERC20 token in which
-     * the facilitator will stake(bounty) for a process
+     * Address of ERC20 token in which the facilitator will stake(bounty)
+     * for a process.
      */
     EIP20Interface public baseToken;
 
