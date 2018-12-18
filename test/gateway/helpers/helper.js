@@ -64,11 +64,11 @@ GatewayHelper.prototype = {
                 "Invalid bounty token address from contract"
             );
 
-            let coreAdd = await this.gateway.core.call();
+            let anchorAdd = await this.gateway.anchor.call();
             assert.equal(
-                coreAdd,
+                anchorAdd,
                 anchorAddress,
-                "Invalid core address from contract"
+                "Invalid anchor address from contract"
             );
 
             let bounty = await this.gateway.bounty.call();

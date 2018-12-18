@@ -31,7 +31,7 @@ contract('GatewayBase.sol', function (accounts) {
       assert.strictEqual(
         anchor,
         await gatewayBaseInstance.anchor.call(),
-        "Core contract address doesn't match."
+        "Anchor contract address doesn't match."
       );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
@@ -55,7 +55,7 @@ contract('GatewayBase.sol', function (accounts) {
       anchor = NullAddress;
       await Utils.expectRevert(
         GatewayBase.new(anchor, bounty, membersManager.address),
-        "Core contract address must not be zero."
+        "Anchor contract address must not be zero."
       );
 
     });

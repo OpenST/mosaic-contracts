@@ -87,11 +87,11 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
             "Invalid bounty token address from contract."
         );
 
-        let coreAdd = await gateway.anchor.call();
+        let anchorAdd = await gateway.anchor.call();
         assert.equal(
-            coreAdd,
+            anchorAdd,
             anchorAddress,
-            "Invalid core address from contract"
+            "Invalid anchor address from contract"
         );
 
         let bounty = await gateway.bounty.call();
@@ -146,7 +146,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
         );
     });
 
-    it('should not deploy contract if core address is passed as zero.', async function () {
+    it('should not deploy contract if anchor address is passed as zero.', async function () {
         let anchorAddress = NullAddress;
 
         await Utils.expectRevert(
@@ -158,7 +158,7 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
                 membersManager.address,
                 burner
             ),
-            "Core contract address must not be zero."
+            "Anchor contract address must not be zero."
         );
 
     });

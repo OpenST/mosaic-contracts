@@ -143,7 +143,7 @@ contract GatewayBase is Organized {
     {
         require(
             address(_anchor) != address(0),
-            "Core contract address must not be zero."
+            "Anchor contract address must not be zero."
         );
 
         anchor = _anchor;

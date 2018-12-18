@@ -91,11 +91,11 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             'Invalid bounty token address from contract.'
         );
 
-        let coreAdd = await coGateway.core.call();
+        let anchorAdd = await coGateway.anchor.call();
         assert.strictEqual(
-            coreAdd,
+            anchorAdd,
             anchorAddress,
-            'Invalid core address from contract.'
+            'Invalid anchor address from contract.'
         );
 
         let bounty = await coGateway.bounty.call();
@@ -153,7 +153,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
                 gatewayAddress,
                 burner
             ),
-            'Core contract address must not be zero.'
+            'Anchor contract address must not be zero.'
         );
 
     });
