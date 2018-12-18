@@ -14,22 +14,26 @@ contract MockAnchor is Anchor {
     /**
      * @notice Contract constructor.
      *
-     *  @param _remoteChainId _remoteChainId is the chain id of the chain that
-     *                        this anchor tracks.
+     * @param _remoteChainId The chain id of the chain that is tracked by this
+     *                       anchor.
      * @param _blockHeight Block height at which _stateRoot needs to store.
      * @param _stateRoot State root hash of given _blockHeight.
-     *  @param _membersManager Address of a members manager contract.
+     * @param _maxStateRoots The max number of state roots to store in the
+     *                       circular buffer.
+     * @param _membersManager Address of a members manager contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
+        uint256 _maxStateRoots,
         IsMemberInterface _membersManager
     )
         Anchor(
             _remoteChainId,
             _blockHeight,
             _stateRoot,
+            _maxStateRoots,
             _membersManager
         )
         public

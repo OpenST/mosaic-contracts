@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,29 +18,21 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-/** @title An interface to an get state root. */
-interface StateRootInterface {
+const Utils = require('../../test_lib/utils.js');
+const BN = require('bn.js');
 
-    /**
-     * @notice Gets the block number of latest anchored state root.
-     *
-     * @return uint256 Block height of the latest anchored state root.
-     */
-    function getLatestStateRootBlockHeight()
-        external
-        view
-        returns (uint256 height_);
+const CircularBufferUint = artifacts.require('CircularBufferUint');
 
-    /**
-     * @notice Get the state root for the given block height.
-     *
-     * @param _blockHeight The block height for which the state root is fetched.
-     *
-     * @return bytes32 State root at the given height.
-     */
-    function getStateRoot(uint256 _blockHeight)
-        external
-        view
-        returns (bytes32 stateRoot_);
+contract('CircularBufferUint.constructor()', async (accounts) => {
 
-}
+    it('deploys given accepted arguments', async () => {
+        await CircularBufferUint.new(new BN(100));
+    });
+
+    it('reverts if the given buffer length is 0', async () => {
+        await Utils.expectRevert(
+            CircularBufferUint.new(new BN(0)),
+            'The max number of items to store in a circular buffer must be greater than 0.',
+        );
+    });
+});
