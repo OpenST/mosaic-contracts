@@ -1,7 +1,6 @@
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
-const rlp = require('rlp');
 
 const STATE_NEW = 'new';
 const STATE_LINKED = 'linked';
@@ -41,7 +40,7 @@ class Contract {
     }
 
     /**
-     * Helper for loading a contract saved in a format followin the truffle-contract-schema.
+     * Helper for loading a contract saved in a format following the truffle-contract-schema.
      *
      * See {@link https://github.com/trufflesuite/truffle/tree/66e3b1cb10df881d80e2a22ddea68e9dcfbdcdb1/packages/truffle-contract-schema}
      *
@@ -88,7 +87,7 @@ class Contract {
      * @returns {string} The contract's address.
      */
     setAddress(addressGeneratorOrAddress) {
-        this._ensureState([STATE_NEW, STATE_LINKED]);
+        this._ensureStateOneOf([STATE_NEW, STATE_LINKED]);
         // Return early if the address has previously been set.
         // This allows for setting a fixed address for specific contracts.
         if (this.address) {
@@ -116,7 +115,7 @@ class Contract {
      * @returns {string} The address of the instantiated contract.
      */
     getAddress() {
-        this._ensureState([STATE_INSTANTIATED]);
+        this._ensureState(STATE_INSTANTIATED);
         return this.address;
     }
 
@@ -126,11 +125,11 @@ class Contract {
      * @returns {string} The linked bytecode of the contract.
      */
     linkedBytecode() {
-        this._ensureState([STATE_LINKED, STATE_INSTANTIATED]);
+        this._ensureStateOneOf([STATE_LINKED, STATE_INSTANTIATED]);
         return this.contractBytecode;
     }
 
-    /*
+    /**
      * Instantiate the contract by calculating the data of the contract creation transaction.
      * This includes encoding the provided constructor arguments.
      * Freezes the object to prevent any further changes.
@@ -149,24 +148,11 @@ class Contract {
 
         this._linkBytecode();
 
+        // Build the data for used for the deployment transaction, which consists
+        // of the linked bytecode, optionally concatenated with the arguments to the
+        // constructor (if there are any).
         let constructorData = this.linkedBytecode();
-        if (this.constructorArgs) {
-            const web3 = new Web3();
-
-            const dereferencedConstructorArgs = this.constructorArgs.map((constructorArg) => {
-                const referenceContract = this._getReferenceContract(constructorArg);
-                if (referenceContract) {
-                    return referenceContract.getAddress();
-                }
-
-                return constructorArg;
-            });
-
-            const encodedArguments = web3.eth.abi
-                .encodeParameters(this.constructorABI.inputs, dereferencedConstructorArgs)
-                .slice(2);
-            constructorData += encodedArguments;
-        }
+        constructorData += this._encodeConstructorArguments();
 
         this.constructorData = constructorData;
         this._state = STATE_INSTANTIATED;
@@ -187,6 +173,21 @@ class Contract {
     }
 
     /**
+     * Checks if the provided constructor argument is a contract reference,
+     *
+     * @param {*} constructorArg A constructor argument that is possibly a contract reference.
+     *
+     * @returns {bool} Whether the provided argument is a contract reference.
+     */
+    _isContractReference(constructorArg) {
+        if (constructorArg === null) {
+            return false;
+        }
+
+        return constructorArg.__type === TYPE_CONTRACT_REFERENCE;
+    }
+
+    /**
      * Tries to interpret the provided constructor argument as a contract reference,
      * and returns the referenced contract if it is one. See {@link Contract#reference}.
      *
@@ -195,25 +196,62 @@ class Contract {
      * @returns {Contract|null} The referenced contract.
      */
     _getReferenceContract(constructorArg) {
-        if (!((typeof constructorArg === 'object') && (constructorArg !== null)) || constructorArg.__type !== TYPE_CONTRACT_REFERENCE) {
+        if (!this._isContractReference(constructorArg)) {
             return null;
         }
+
         return constructorArg.contract;
     }
 
     /**
      * Helper for ensuring that the internal state machine is in the expected state.
      *
-     * @param {string|Array<string>} stateOrStates One or multiple accepted states.
+     * @param {Array<string>} states Multiple accepted states.
      */
-    _ensureState(stateOrStates) {
-        if (Array.isArray(stateOrStates)) {
-            if (!stateOrStates.includes(this._state)) {
-                throw new Error(`Can only do this action in one of the following states: ${JSON.stringify(stateOrStates)}. Currently in state "${this._state}".`);
-            }
-        } else if (this._state !== stateOrStates) {
-            throw new Error(`Can only do this action in the "${stateOrStates}" state. Currently in state "${this._state}".`);
+    _ensureStateOneOf(states) {
+        if (!states.includes(this._state)) {
+            throw new Error(`Can only do this action in one of the following states: ${JSON.stringify(states)}. Currently in state "${this._state}".`);
         }
+    }
+
+    /**
+     * Helper for ensuring that the internal state machine is in the expected state.
+     *
+     * See {@link Contract#_ensureStateOneOf}.
+     *
+     * @param {string} state The accepted states.
+     */
+    _ensureState(state) {
+        this._ensureStateOneOf([state]);
+    }
+
+    /**
+     * Encodes the constructor arguments that have been set for the contract.
+     * Also takes care of dereferencing Contract references. See {@link Contract#reference}.
+     *
+     * @return {string} The encoded constructor arguments.
+     */
+    _encodeConstructorArguments() {
+        if (!this.constructorArgs) {
+            return '';
+        }
+
+        const web3 = new Web3();
+
+        const dereferencedConstructorArgs = this.constructorArgs.map((constructorArg) => {
+            const referenceContract = this._getReferenceContract(constructorArg);
+            if (referenceContract) {
+                return referenceContract.getAddress();
+            }
+
+            return constructorArg;
+        });
+
+        const encodedArguments = web3.eth.abi
+            .encodeParameters(this.constructorABI.inputs, dereferencedConstructorArgs)
+            .slice(2); // Cut of leading '0x'
+
+        return encodedArguments;
     }
 
     /**
@@ -283,7 +321,9 @@ class Contract {
 
         let constructorDependencies = [];
         if (this.constructorArgs) {
-            constructorDependencies = this.constructorArgs.map(n => this._getReferenceContract(n)).filter(Boolean);
+            constructorDependencies = this.constructorArgs
+                .map(n => this._getReferenceContract(n))
+                .filter(Boolean);
         }
         constructorDependencies.forEach((referencedContract) => {
             count += referencedContract._getDependenciesCount();
@@ -297,203 +337,6 @@ class Contract {
     }
 }
 
-/**
- * A simple AddressGenerator that returns auto-incremented addresses starting
- * from a provided address.
- * Suitable for genesis deployment.
- */
-class IncrementingAddressGenerator {
-    /**
-     * @param {string} [startAddress=0x0000000000000000000000000000000000010000]
-     *                  Address from which we generate
-     *        (by incrementing) new addresses for contracts to deploy.
-     */
-    constructor(startAddress = '0x0000000000000000000000000000000000010000') {
-        this.nextAvailableAddress = startAddress;
-    }
-
-    /**
-     * Function returns next available address.
-     *
-     * @return {string} Next address to use as a pre-allocated address within
-     *         genesis file for contract deployment.
-     */
-    generateAddress() {
-        const addressHex = this.nextAvailableAddress;
-
-        // Incrementing next available address.
-        const nextAddressBN = Web3.utils.toBN(addressHex).add(Web3.utils.toBN('1'));
-        this.nextAvailableAddress = `0x${Web3.utils.padLeft(nextAddressBN, 40)}`;
-
-        return addressHex;
-    }
-}
-
-/**
- * A AddressGenerator that returns addresses based on the provided `from` address and
- * that address's current transaction nonce (which is auto-incremented).
- *
- * Suitable for deployment on a running network.
- */
-class IncrementingNonceAddressGenerator {
-    /**
-     * @param {string} fromAddress The address that is used for deployment.
-     * @param {number} startingNonce The first nonce to used for generating addresses.
-     *                 This should be equivalent to the number of transactions made
-     *                 from the `fromAddress`.
-     */
-    constructor(fromAddress, startingNonce) {
-        if (typeof fromAddress === 'undefined') {
-            throw new Error('"fromAddress" address not provided');
-        }
-        if (typeof startingNonce === 'undefined') {
-            throw new Error('"startingNonce" not provided');
-        }
-
-        this.fromAddress = fromAddress;
-        this.nextNonce = startingNonce;
-    }
-
-    /**
-     * Returns the next available address.
-     *
-     * @return {string} Next address that will be used for a contract created by
-     *                  a transaction from `fromAddress` at the current transaction
-     *                  count (= nonce).
-     */
-    generateAddress() {
-        const addressBytes = Web3.utils.sha3(rlp.encode([this.fromAddress, this.nextNonce]))
-            .slice(12)
-            .substring(14);
-        const address = `0x${addressBytes}`;
-        this.nextNonce += 1;
-
-        return address;
-    }
-}
-
-/**
- * A contract registry that allows for registering contracts and planning deployment.
- */
-class ContractRegistry {
-    constructor() {
-        this.contracts = [];
-
-        this.addContract = this.addContract.bind(this);
-        this.toParityGenesisAccounts = this.toParityGenesisAccounts.bind(this);
-    }
-
-    /**
-     * Add a contract to the registry.
-     *
-     * @param {Contract} contracts Contract to add to the registry.
-     */
-    addContract(contract) {
-        this.contracts.push(contract);
-    }
-
-    /**
-     * Add multiple contracts to the registry. See {@link ContractRegistry#addContract}.
-     *
-     * @param {Array.<Contract>} contracts Contracts to add to the registry.
-     */
-    addContracts(contracts) {
-        contracts.forEach(contract => this.addContract(contract));
-    }
-
-    /**
-     * Generate the "accounts" object for a parity chainspec for all the contracts have been added.
-     * For that the { "0x...": { "constructor": "0x..." } } version of account intialization
-     * which is currently exclusive to parity is used.
-     *
-     * See {@link https://wiki.parity.io/Chain-specification} for more details on the
-     * parity chainspec format.
-     *
-     * @param {Object} options.addressGenerator Address generator to use.
-     *                 Defaults to a IncrementingAddressGenerator.
-     *
-     * @returns {object} The "accounts" section for a parity chainspec.
-     */
-    toParityGenesisAccounts(options = {}) {
-        const defaultOptions = {
-            addressGenerator: new IncrementingAddressGenerator(),
-        };
-        const mergedOptions = Object.assign(defaultOptions, options);
-
-        // prepare contracts by ordering and generating addresses
-        const { addressGenerator } = mergedOptions;
-        this._orderContracts();
-        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
-        this.contracts.forEach(contract => contract.instantiate());
-
-        const output = {
-        };
-
-        this.contracts
-            .forEach((contract) => {
-                const address = contract.getAddress();
-                const constructor = contract.constructorData;
-
-                output[address] = {
-                    balance: '0',
-                    constructor,
-                };
-            });
-
-        return output;
-    }
-
-    /**
-     * Generate transaction objects that can be passed as an argument
-     * to `web3.eth.sendTransaction()`.
-     * This allows for deployment on a live network.
-     *
-     * @param {string} fromAddress See {@ IncrementingNonceAddressGenerator#constructor}.
-     * @param {number} startingNonce See {@ IncrementingNonceAddressGenerator#constructor}.
-     *
-     * @returns {Array.<object>} The transaction objects that can be used for deployment.
-     */
-    toLiveTransactionObjects(fromAddress, startingNonce) {
-        const addressGenerator = new IncrementingNonceAddressGenerator(fromAddress, startingNonce);
-
-        this._orderContracts();
-        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
-        this.contracts.forEach(contract => contract.instantiate());
-
-        const transactionObjects = [];
-        this.contracts
-            .forEach((contract, i) => {
-                const transactionObject = {
-                    // fields for web3.eth.sendTransaction()
-                    from: fromAddress,
-                    data: contract.constructorData,
-                    nonce: startingNonce + i,
-                };
-                const deploymentObject = {
-                    transactionObject,
-                    // metadata
-                    address: contract.getAddress(),
-                    contractName: contract.contractName,
-                };
-                transactionObjects.push(deploymentObject);
-            });
-
-        return transactionObjects;
-    }
-
-    /**
-     * Orders all contracts in the order of sequential deployment.
-     * This is determined by the amount of transitive dependencies (including self).
-     */
-    _orderContracts() {
-        this.contracts.sort((a, b) => a._getDependenciesCount() - b._getDependenciesCount());
-    }
-}
-
-
 module.exports = {
     Contract,
-    ContractRegistry,
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
 };
