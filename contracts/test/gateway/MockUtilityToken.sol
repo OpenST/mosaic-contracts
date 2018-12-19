@@ -52,7 +52,7 @@ contract MockUtilityToken is UtilityToken {
     )
         public
         UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
-        {}
+    {}
 
     /**
      * @notice Set the CoGateway address for testing.
