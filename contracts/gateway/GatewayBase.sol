@@ -74,8 +74,8 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Address of state root provider contract which implements
-     *  StateRootInterface.
+    /**
+     *  Address of contract which implements StateRootInterface.
      */
     StateRootInterface public stateRootProvider;
 

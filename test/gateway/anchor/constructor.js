@@ -26,96 +26,96 @@ const Utils = require('../../../test/test_lib/utils');
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('Anchor.constructor()', function (accounts) {
-  
+
   let remoteChainId,
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
     membersManager,
     anchor;
-    
-    beforeEach(async function () {
-        
-        remoteChainId = new BN(1410);
-        blockHeight = new BN(5);
-        stateRoot = web3.utils.sha3("dummy_state_root");
-        maxNumberOfStateRoots = new BN(10);
-        membersManager = accounts[1];
-        
-    });
-    
-    it('should fail when remote chain id is zero', async () => {
-        
-        remoteChainId = new BN(0);
-        
-        await Utils.expectRevert(
-            Anchor.new(
-                remoteChainId,
-                blockHeight,
-                stateRoot,
-                maxNumberOfStateRoots,
-                membersManager,
-            ),
-            'Remote chain Id must not be 0.',
-        );
-        
-    });
-    
-    it('should fail when members manager address is zero', async () => {
-        
-        membersManager = NullAddress;
-        
-        await Utils.expectRevert(
-            Anchor.new(
-                remoteChainId,
-                blockHeight,
-                stateRoot,
-                maxNumberOfStateRoots,
-                membersManager,
-            ),
-            'MembersManager contract address must not be zero.',
-        );
-        
-    });
-    
-    it('should pass with correct params', async () => {
-    
-        anchor = await Anchor.new(
-            remoteChainId,
-            blockHeight,
-            stateRoot,
-            maxNumberOfStateRoots,
-            membersManager,
-        );
-        
-        let chainId = await anchor.getRemoteChainId.call();
-        assert.strictEqual(
-            remoteChainId.eq(chainId),
-            true,
-            `Remote chain id from the contract must be ${remoteChainId}.`,
-        );
-        
-        let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
-        assert.strictEqual(
-            blockHeight.eq(latestBlockHeight),
-            true,
-            `Latest block height from the contract must be ${blockHeight}.`,
-        );
-        
-        let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
-        assert.strictEqual(
-            latestStateRoot,
-            stateRoot,
-            `Latest state root from the contract must be ${stateRoot}.`,
-        );
-        
-        let membersManagerAddress = await anchor.membersManager.call();
-        assert.strictEqual(
-            membersManagerAddress,
-            membersManager,
-            `Members manager address from the contract must be ${membersManager}.`,
-        );
-        
-    });
-    
+
+  beforeEach(async function () {
+
+    remoteChainId = new BN(1410);
+    blockHeight = new BN(5);
+    stateRoot = web3.utils.sha3("dummy_state_root");
+    maxNumberOfStateRoots = new BN(10);
+    membersManager = accounts[1];
+
+  });
+
+  it('should fail when remote chain id is zero', async () => {
+
+    remoteChainId = new BN(0);
+
+    await Utils.expectRevert(
+      Anchor.new(
+        remoteChainId,
+        blockHeight,
+        stateRoot,
+        maxNumberOfStateRoots,
+        membersManager,
+      ),
+      'Remote chain Id must not be 0.',
+    );
+
+  });
+
+  it('should fail when members manager address is zero', async () => {
+
+    membersManager = NullAddress;
+
+    await Utils.expectRevert(
+      Anchor.new(
+        remoteChainId,
+        blockHeight,
+        stateRoot,
+        maxNumberOfStateRoots,
+        membersManager,
+      ),
+      'MembersManager contract address must not be zero.',
+    );
+
+  });
+
+  it('should pass with correct params', async () => {
+
+    anchor = await Anchor.new(
+      remoteChainId,
+      blockHeight,
+      stateRoot,
+      maxNumberOfStateRoots,
+      membersManager,
+    );
+
+    let chainId = await anchor.getRemoteChainId.call();
+    assert.strictEqual(
+      remoteChainId.eq(chainId),
+      true,
+      `Remote chain id from the contract must be ${remoteChainId}.`,
+    );
+
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    assert.strictEqual(
+      blockHeight.eq(latestBlockHeight),
+      true,
+      `Latest block height from the contract must be ${blockHeight}.`,
+    );
+
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
+    assert.strictEqual(
+      latestStateRoot,
+      stateRoot,
+      `Latest state root from the contract must be ${stateRoot}.`,
+    );
+
+    let membersManagerAddress = await anchor.membersManager.call();
+    assert.strictEqual(
+      membersManagerAddress,
+      membersManager,
+      `Members manager address from the contract must be ${membersManager}.`,
+    );
+
+  });
+
 });

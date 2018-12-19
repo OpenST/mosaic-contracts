@@ -64,9 +64,9 @@ GatewayHelper.prototype = {
                 "Invalid bounty token address from contract"
             );
 
-            let anchorAdd = await this.gateway.anchor.call();
+            let stateRootProviderAdd = await this.gateway.stateRootProvider.call();
             assert.equal(
-                anchorAdd,
+                stateRootProviderAdd,
                 stateRootProviderAddress,
                 "Invalid state root provider address from contract"
             );

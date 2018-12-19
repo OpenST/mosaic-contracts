@@ -95,7 +95,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
     assert.strictEqual(
       stateRootProviderAdd,
       dummyStateRootProvider,
-      'Invalid anchor address from contract.'
+      'Invalid stateRootProvider address from contract.'
     );
 
     let bounty = await coGateway.bounty.call();

@@ -27,7 +27,7 @@ const Utils = require('../../../test/test_lib/utils');
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('Anchor.setCoAnchorAddress()', function (accounts) {
-  
+
   let remoteChainId,
     blockHeight,
     stateRoot,
@@ -37,9 +37,9 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     owner,
     worker,
     coAnchorAddress;
-  
+
   beforeEach(async function () {
-    
+
     owner = accounts[2];
     worker = accounts[3];
     remoteChainId = new BN(1410);
@@ -48,7 +48,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     maxNumberOfStateRoots = new BN(10);
     membersManager = await MockMembersManager.new(owner, worker);
     coAnchorAddress = accounts[6];
-    
+
     anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
@@ -56,65 +56,65 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
       maxNumberOfStateRoots,
       membersManager.address,
     );
-    
+
   });
-  
+
   it('should fail when coAnchor address is zero', async () => {
-    
+
     coAnchorAddress = NullAddress;
-    
+
     await Utils.expectRevert(
       anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
       "Co-Anchor address must not be 0.",
     );
-    
+
   });
-  
+
   it('should fail when caller is not organisation owner', async () => {
-    
+
     let notOwner = accounts[7];
-    
+
     await Utils.expectRevert(
       anchor.setCoAnchorAddress(coAnchorAddress, {from: notOwner}),
       'Only the organization is allowed to call this method.',
     );
-    
+
   });
-  
+
   it('should pass with correct params', async () => {
-    
+
     let result = await anchor.setCoAnchorAddress.call(
       coAnchorAddress,
       {from: owner},
     );
-    
+
     assert.strictEqual(
       result,
       true,
       'Return value of setAnchorAddress must be true.',
     );
-    
+
     await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
-    
+
     let coAnchor = await anchor.coAnchor.call();
-    
+
     assert.strictEqual(
       coAnchor,
       coAnchorAddress,
       `CoAnchor address must be equal to ${coAnchorAddress}.`,
     );
-    
+
   });
-  
+
   it('should fail to set coAnchor address if it\'s already set', async () => {
-    
+
     await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
-    
+
     await Utils.expectRevert(
       anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
       'Co-Anchor has already been set and cannot be updated.',
     );
-    
+
   });
-  
+
 });

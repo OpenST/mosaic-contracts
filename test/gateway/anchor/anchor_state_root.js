@@ -29,7 +29,7 @@ const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 contract('Anchor.anchorStateRoot()', function (accounts) {
-  
+
   let remoteChainId,
     blockHeight,
     stateRoot,
@@ -38,9 +38,9 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     owner,
     worker,
     maxNumberOfStateRoots;
-  
+
   beforeEach(async function () {
-    
+
     owner = accounts[2];
     worker = accounts[3];
     remoteChainId = new BN(1410);
@@ -48,7 +48,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
     membersManager = await MockMembersManager.new(owner, worker);
-    
+
     anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
@@ -56,16 +56,16 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       maxNumberOfStateRoots,
       membersManager.address,
     );
-    
+
     stateRoot = web3.utils.sha3("dummy_state_root_1");
-    
+
   });
-  
+
   it('should fail when state root is zero', async () => {
-    
+
     stateRoot = zeroBytes;
     blockHeight = blockHeight.addn(1);
-    
+
     await Utils.expectRevert(
       anchor.anchorStateRoot(
         blockHeight,
@@ -74,14 +74,14 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       ),
       'State root must not be zero.',
     );
-    
+
   });
-  
+
   it('should fail when block height is less than the latest anchored ' +
     'state root\'s block height', async () => {
-    
+
     blockHeight = blockHeight.subn(1);
-    
+
     await Utils.expectRevert(
       anchor.anchorStateRoot(
         blockHeight,
@@ -90,12 +90,12 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       ),
       'Given block height is lower or equal to highest anchored state root block height.',
     );
-    
+
   });
-  
+
   it('should fail when block height is equal to the latest anchored ' +
     'state root\'s block height', async () => {
-    
+
     await Utils.expectRevert(
       anchor.anchorStateRoot(
         blockHeight,
@@ -104,13 +104,13 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       ),
       'Given block height is lower or equal to highest anchored state root block height.',
     );
-    
+
   });
-  
+
   it('should fail when caller is not worker address', async () => {
-    
+
     blockHeight = blockHeight.addn(1);
-    
+
     await Utils.expectRevert(
       anchor.anchorStateRoot(
         blockHeight,
@@ -119,80 +119,80 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       ),
       'Only whitelisted workers are allowed to call this method.',
     );
-    
+
   });
-  
+
   it('should pass with correct params', async () => {
-    
+
     blockHeight = blockHeight.addn(1);
-    
+
     let result = await anchor.anchorStateRoot.call(
       blockHeight,
       stateRoot,
       {from: worker},
     );
-    
+
     assert.strictEqual(
       result,
       true,
       'Return value of anchorStateRoot must be true.',
     );
-    
+
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
       {from: worker},
     );
-    
+
     let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
-    
+
     let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
       `Latest state root from the contract must be ${stateRoot}.`,
     );
-    
+
   });
-  
+
   it('should emit `StateRootAvailable` event', async () => {
-    
+
     blockHeight = blockHeight.addn(1);
-    
+
     let tx = await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
       {from: worker},
     );
-    
+
     let event = EventDecoder.getEvents(tx, anchor);
-    
+
     assert.isDefined(
       event.StateRootAvailable,
       'Event `StateRootAvailable` must be emitted.',
     );
-    
+
     let eventData = event.StateRootAvailable;
-    
+
     assert.strictEqual(
       eventData._stateRoot,
       stateRoot,
       `The _stateRoot value in the event should be equal to ${stateRoot}`
     );
-    
+
     assert.strictEqual(
       blockHeight.eq(eventData._blockHeight),
       true,
       `The _blockHeight in the event should be equal to ${blockHeight}`
     );
-    
+
   });
-  
+
   it('should store only the given number of max store roots', async () => {
     /*
      * It should store the given state roots and they should be
@@ -208,7 +208,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         stateRoot,
         {from: worker},
       );
-      
+
       // Check that the older state root has been deleted when i > max state roots.
       if (maxNumberOfStateRoots.ltn(i)) {
         let prunedBlockHeight = blockHeight.sub(maxNumberOfStateRoots);
@@ -221,7 +221,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
           'There should not be any state root stored at a ' +
           'pruned height. It should have been reset by now.',
         );
-        
+
         /*
          * The state root that is one block younger than the pruned
          * one should still be available.
@@ -238,5 +238,5 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       }
     }
   });
-  
+
 });
