@@ -290,7 +290,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount}
             ),
-            "Message status must be Undeclared."
+            "Message on source must be Undeclared."
         );
         
     });
@@ -322,7 +322,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount}
             ),
-            "Message status must be Undeclared."
+            "Message on source must be Undeclared."
         );
         
     });
@@ -354,7 +354,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount}
             ),
-            "Message status must be Undeclared."
+            "Message on source must be Undeclared."
         );
         
     });
@@ -386,7 +386,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
                 hashLock,
                 {from: redeemer, value: bountyAmount}
             ),
-            "Message status must be Undeclared."
+            "Message on source must be Undeclared."
         );
         
     });

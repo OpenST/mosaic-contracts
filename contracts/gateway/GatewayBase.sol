@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./EIP20Interface.sol";
-import "./MessageBus.sol";
+import "../lib/MessageBus.sol";
 import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
 import "../lib/IsMemberInterface.sol";

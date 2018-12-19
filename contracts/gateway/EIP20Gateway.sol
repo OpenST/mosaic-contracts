@@ -141,6 +141,7 @@ contract EIP20Gateway is GatewayBase {
         uint256 _amount
     );
 
+
     /* Struct */
 
     /**
@@ -161,7 +162,7 @@ contract EIP20Gateway is GatewayBase {
         /** Address of the facilitator that initiates the stake process. */
         address facilitator;
 
-        /** Bounty kept by facilitator for stake message transfer*/
+        /** Bounty kept by facilitator for stake message transfer. */
         uint256 bounty;
     }
 
@@ -174,11 +175,12 @@ contract EIP20Gateway is GatewayBase {
         /** Amount that will be unstaked. */
         uint256 amount;
 
-        /** Address that will receive the unstaked token */
+        /** Address that will receive the unstaked token. */
         address beneficiary;
     }
 
-    /* public variables */
+
+    /* Public Variables */
 
     /** Specifies if the Gateway is activated for any new process. */
     bool public activated;
@@ -186,12 +188,12 @@ contract EIP20Gateway is GatewayBase {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
-    /** address of EIP20 token. */
+    /** Address of EIP20 token. */
     EIP20Interface public token;
 
     /**
-     * address of ERC20 token in which
-     * the facilitator will stake(bounty) for a process
+     * Address of ERC20 token in which the facilitator will stake(bounty)
+     * for a process.
      */
     EIP20Interface public baseToken;
 
@@ -271,40 +273,37 @@ contract EIP20Gateway is GatewayBase {
     /* External functions */
 
     /**
-     * @notice Initiates the stake process.
-     *
-     * @dev In order to stake the staker needs to approve Gateway contract for
-     *      stake amount. Staked amount is transferred from staker address to
-     *      Gateway contract.
+     * @notice Initiates the stake process.  In order to stake the staker
+     *         needs to approve Gateway contract for stake amount.
+     *         Staked amount is transferred from staker address to
+     *         Gateway contract. Bounty amount is also transferred from staker.
      *
      * @param _amount Stake amount that will be transferred from the staker
      *                account.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
-     * @param _staker Staker address.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done
-     * @param _gasLimit Gas limit that staker is ready to pay
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
      * @param _nonce Nonce of the staker address.
      * @param _hashLock Hash Lock provided by the facilitator.
-     * @param _signature Signature signed by staker.
      *
-     * @return messageHash_ which is unique for each request.
+     * @return messageHash_ Message hash is unique for each request.
      */
     function stake(
         uint256 _amount,
         address _beneficiary,
-        address _staker,
         uint256 _gasPrice,
         uint256 _gasLimit,
         uint256 _nonce,
-        bytes32 _hashLock,
-        bytes memory _signature
+        bytes32 _hashLock
     )
-        public
+        external
         isActive
         returns (bytes32 messageHash_)
     {
+        address staker = msg.sender;
+
         require(
             _amount > uint256(0),
             "Stake amount must not be zero"
@@ -313,20 +312,12 @@ contract EIP20Gateway is GatewayBase {
             _beneficiary != address(0),
             "Beneficiary address must not be zero"
         );
-        require(
-            _staker != address(0),
-            "Staker address must not be zero"
-        );
-        require(
-            _signature.length == 65,
-            "Signature must be of length 65"
-        );
 
         // Get the stake intent hash
         bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
-            _staker,
+            staker,
             _nonce,
             _gasPrice,
             _gasLimit,
@@ -344,7 +335,7 @@ contract EIP20Gateway is GatewayBase {
 
         // Get previousMessageHash
         bytes32 previousMessageHash = registerOutboxProcess(
-            _staker,
+            staker,
             _nonce,
             messageHash_
         );
@@ -362,7 +353,7 @@ contract EIP20Gateway is GatewayBase {
 
         // New message object
         messages[messageHash_] = getMessage(
-            _staker,
+            staker,
             _nonce,
             _gasPrice,
             _gasLimit,
@@ -373,26 +364,24 @@ contract EIP20Gateway is GatewayBase {
         MessageBus.declareMessage(
             messageBox,
             STAKE_TYPEHASH,
-            messages[messageHash_],
-            _signature
+            messages[messageHash_]
         );
 
-        //transfer staker amount to gateway
+        // Transfer staker amount to the gateway.
         require(
-            token.transferFrom(_staker, address(this), _amount),
+            token.transferFrom(staker, address(this), _amount),
             "Stake amount must be transferred to gateway"
         );
 
-        // transfer the bounty amount
+        // Transfer the bounty amount to the gateway.
         require(
-            baseToken.transferFrom(msg.sender, address(this), bounty),
+            baseToken.transferFrom(staker, address(this), bounty),
             "Bounty amount must be transferred to gateway"
         );
 
-        // Emit StakeIntentDeclared event
         emit StakeIntentDeclared(
             messageHash_,
-            _staker,
+            staker,
             _nonce,
             _beneficiary,
             _amount
@@ -902,6 +891,9 @@ contract EIP20Gateway is GatewayBase {
         (redeemAmount_, unstakeAmount_, rewardAmount_) =
         progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
+
+
+    /** External methods */
 
     /**
      * @notice Declare redeem revert intent.

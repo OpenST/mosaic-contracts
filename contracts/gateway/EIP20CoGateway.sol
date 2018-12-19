@@ -154,18 +154,18 @@ contract EIP20CoGateway is GatewayBase {
         uint256 amount;
 
         /**
-         * Address where the value tokens will be unstaked in the
-         * origin chain.
+         * Address where the value tokens will be unstaked in the origin
+         * chain.
          */
         address beneficiary;
 
-        /** bounty amount kept by facilitator for transferring redeem messages*/
+        /** Bounty amount kept by facilitator for transferring redeem messages. */
         uint256 bounty;
     }
 
     /**
-     * Mint stores the minting information
-     * like mint amount, beneficiary address, message data.
+     * Mint stores the minting information like mint amount,
+     * beneficiary address, message data.
      */
     struct Mint {
 
@@ -176,12 +176,12 @@ contract EIP20CoGateway is GatewayBase {
         address beneficiary;
     }
 
-    /* public variables */
+    /* Public Variables */
 
-    /** address of utility token. */
+    /** Address of utility token. */
     address public utilityToken;
 
-    /** address of value token. */
+    /** Address of value token. */
     address public valueToken;
 
     /** Address where token will be burned. */
@@ -192,6 +192,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /** Maps messageHash to the Redeem object. */
     mapping(bytes32/*messageHash*/ => Redeem) public redeems;
+
 
     /* Constructor */
 
@@ -244,7 +245,7 @@ contract EIP20CoGateway is GatewayBase {
         remoteGateway = _gateway;
         burner = _burner;
 
-        // update the encodedGatewayPath
+        // Update the encodedGatewayPath.
         encodedGatewayPath = GatewayLib.bytes32ToBytes(
             keccak256(abi.encodePacked(remoteGateway))
         );
@@ -280,17 +281,17 @@ contract EIP20CoGateway is GatewayBase {
             uint256 rewardAmount_
         )
     {
-        // Get the initial gas amount
+        // Get the initial gas amount.
         uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
 
-        // Progress inbox
+        // Progress inbox.
         MessageBus.progressInbox(
             messageBox,
             STAKE_TYPEHASH,
@@ -302,7 +303,7 @@ contract EIP20CoGateway is GatewayBase {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
+        progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
     }
 
     /**
@@ -344,7 +345,7 @@ contract EIP20CoGateway is GatewayBase {
             uint256 rewardAmount_
         )
     {
-        // Get the inital gas
+        // Get the inital gas.
         uint256 initialGas = gasleft();
 
         require(
@@ -356,7 +357,7 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero"
         );
 
-        // Get the storage root for the given block height
+        // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
@@ -408,7 +409,7 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-        // Get the initial gas value
+        // Get the initial gas value.
         uint256 initialGas = gasleft();
 
         require(
@@ -426,14 +427,14 @@ contract EIP20CoGateway is GatewayBase {
             "Stake intent hash must not be zero"
         );
 
-        // Get the storage root
+        // Get the storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-        // Confirm revocation
+        // Confirm revocation.
         MessageBus.confirmRevocation(
             messageBox,
             STAKE_TYPEHASH,
@@ -449,7 +450,7 @@ contract EIP20CoGateway is GatewayBase {
         stakerNonce_ = message.nonce;
         amount_ = mint.amount;
 
-        // delete the mint data
+        // Delete the mint data.
         delete mints[_messageHash];
 
         emit RevertStakeIntentConfirmed(
@@ -607,7 +608,7 @@ contract EIP20CoGateway is GatewayBase {
             "Message hash must not be zero"
         );
 
-        // get the message object for the _messageHash
+        // Get the message object for the _messageHash.
         MessageBus.Message storage message = messages[_messageHash];
 
         require(message.intentHash != bytes32(0));
@@ -622,7 +623,7 @@ contract EIP20CoGateway is GatewayBase {
             "Only redeemer can revert redeem."
         );
 
-        //penalty charged to redeemer
+        // Penalty charged to redeemer.
         uint256 penalty = redeems[_messageHash].bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
@@ -688,21 +689,21 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero"
         );
 
-        // Get the message object
+        // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
             "RedeemIntentHash must not be zero"
         );
 
-        // Get the storageRoot for the given block height
+        // Get the storageRoot for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-        // Progress with revocation message
+        // Progress with revocation message.
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
@@ -719,21 +720,21 @@ contract EIP20CoGateway is GatewayBase {
         redeemerNonce_ = message.nonce;
         amount_ = redeemProcess.amount;
 
-        // return the redeem amount back
+        // Return the redeem amount back.
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
-        // burn bounty
+        // Burn bounty.
         burner.transfer(redeemProcess.bounty);
 
-        //penalty charged to redeemer
+        // Penalty charged to redeemer.
         uint256 penalty = redeemProcess.bounty
         .mul(REVOCATION_PENALTY)
         .div(100);
 
-        //burn penalty
+        // Burn penalty.
         burner.transfer(penalty);
 
-        // delete the redeem data
+        // Delete the redeem data.
         delete redeems[_messageHash];
 
         emit RedeemReverted(
@@ -743,6 +744,7 @@ contract EIP20CoGateway is GatewayBase {
             redeemProcess.amount
         );
     }
+
 
     /* Public functions */
 
@@ -778,7 +780,7 @@ contract EIP20CoGateway is GatewayBase {
         public
         returns (bytes32 messageHash_)
     {
-        // Get the initial gas amount
+        // Get the initial gas amount.
         uint256 initialGas = gasleft();
 
         require(
@@ -798,18 +800,17 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
-        // Get the stake intent hash
-        bytes32 intentHash = GatewayLib.hashStakeIntent(
+        // Get the stake intent hash.
+        bytes32 intentHash = hashStakeIntent(
             _amount,
             _beneficiary,
             _staker,
             _stakerNonce,
             _gasPrice,
-            _gasLimit,
-            address(valueToken)
+            _gasLimit
         );
 
-        // Get the messageHash
+        // Get the messageHash.
         messageHash_ = MessageBus.messageDigest(
             STAKE_TYPEHASH,
             intentHash,
@@ -824,13 +825,13 @@ contract EIP20CoGateway is GatewayBase {
             messageHash_
         );
 
-        // Create new mint object
+        // Create new mint object.
         mints[messageHash_] = Mint({
             amount : _amount,
             beneficiary : _beneficiary
             });
 
-        // create new message object
+        // Create new message object.
         messages[messageHash_] = getMessage(
             _staker,
             _stakerNonce,
@@ -840,15 +841,17 @@ contract EIP20CoGateway is GatewayBase {
             _hashLock);
 
 
-        // execute the confirm stake intent. This is done in separate
-        // function to avoid stack too deep error
+        /*
+         * Execute the confirm stake intent. This is done in separate
+         * function to avoid stack too deep error
+         */
         confirmStakeIntentInternal(
             messages[messageHash_],
             _blockHeight,
             _rlpParentNodes
         );
 
-        // Emit StakeIntentConfirmed event
+        // Emit StakeIntentConfirmed event.
         emit StakeIntentConfirmed(
             messageHash_,
             _staker,
@@ -925,12 +928,6 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        require(
-            messageBox.outbox[messageHash_] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared."
-        );
-
         // Get previousMessageHash.
         bytes32 previousMessageHash = registerOutboxProcess(
             msg.sender,
@@ -957,8 +954,12 @@ contract EIP20CoGateway is GatewayBase {
             _hashLock
         );
 
-        // Update the message outbox status to declared.
-        messageBox.outbox[messageHash_] = MessageBus.MessageStatus.Declared;
+        // Declare message in outbox.
+        MessageBus.declareMessage(
+            messageBox,
+            REDEEM_TYPEHASH,
+            messages[messageHash_]
+        );
 
         // Transfer redeem amount to Co-Gateway.
         EIP20Interface(utilityToken).transferFrom(
@@ -1000,14 +1001,14 @@ contract EIP20CoGateway is GatewayBase {
         private
         returns (bool)
     {
-        // Get storage root
+        // Get storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-        // Confirm message
+        // Confirm message.
         MessageBus.confirmMessage(
             messageBox,
             STAKE_TYPEHASH,
@@ -1060,6 +1061,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /**
      * @notice This is internal method for process minting contains common logic.
+     *         It doesn't mint reward if reward is 0.
      *
      * @param _messageHash Message hash.
      * @param _initialGas Initial gas during progress process.
@@ -1078,7 +1080,6 @@ contract EIP20CoGateway is GatewayBase {
      *                        from the total amount.
      * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
-
     function progressMintInternal(
         bytes32 _messageHash,
         uint256 _initialGas,
@@ -1116,11 +1117,13 @@ contract EIP20CoGateway is GatewayBase {
             mintedAmount_
         );
 
-        // Reward beneficiary with the reward amount.
-        UtilityTokenInterface(utilityToken).increaseSupply(
-            msg.sender,
-            rewardAmount_
-        );
+        if(rewardAmount_ > 0) {
+            // Reward beneficiary with the reward amount.
+            UtilityTokenInterface(utilityToken).increaseSupply(
+                msg.sender,
+                rewardAmount_
+            );
+        }
 
         // Delete the mint data.
         delete mints[_messageHash];

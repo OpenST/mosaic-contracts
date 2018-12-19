@@ -13,6 +13,12 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
 import "../../gateway/UtilityToken.sol";
 
@@ -23,16 +29,17 @@ import "../../gateway/UtilityToken.sol";
  *         contract.
  */
 contract TestUtilityToken is UtilityToken {
-    
+
     /* Constructor */
 
     /**
      * @dev This is used for testing by mocking certain variables.
      *
      * @param _token Address of branded token.
-     * @param _symbol Symbol of token
-     * @param _name Name of token
-     * @param _decimals Decimal of token
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
+     * @param _membersManager Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _token,

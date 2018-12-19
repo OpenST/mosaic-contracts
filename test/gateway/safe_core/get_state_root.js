@@ -31,6 +31,7 @@ contract('SafeCore.getStateRoot()', function (accounts) {
   let remoteChainId,
     blockHeight,
     stateRoot,
+    maxNumberOfStateRoots,
     membersManager,
     safeCore,
     owner,
@@ -43,12 +44,14 @@ contract('SafeCore.getStateRoot()', function (accounts) {
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
+    maxNumberOfStateRoots = new BN(10);
     membersManager = await MockMembersManager.new(owner, worker);
 
     safeCore = await SafeCore.new(
       remoteChainId,
       blockHeight,
       stateRoot,
+      maxNumberOfStateRoots,
       membersManager.address,
     );
 
@@ -57,14 +60,14 @@ contract('SafeCore.getStateRoot()', function (accounts) {
   it('should return the latest state root block height that was set ' +
     'while deployment', async () => {
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
-    assert.strictEqual(
-      latestStateRoot,
-      stateRoot,
-      `Latest state root from the contract must be ${stateRoot}.`,
-    );
+      let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+      assert.strictEqual(
+        latestStateRoot,
+        stateRoot,
+        `Latest state root from the contract must be ${stateRoot}.`,
+      );
 
-  });
+    });
 
   it('should return the zero bytes for non committed block heights', async () => {
 
