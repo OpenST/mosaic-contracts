@@ -45,12 +45,12 @@ contract Anchor is StateRootInterface, Organized, CircularBufferUint {
     using SafeMath for uint256;
 
 
-    /** Events */
+    /* Events */
 
     event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
 
 
-    /** Storage */
+    /* Storage */
 
     /** Maps block heights to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
