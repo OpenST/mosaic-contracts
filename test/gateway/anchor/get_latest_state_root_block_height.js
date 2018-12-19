@@ -24,64 +24,64 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
 contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
+  
+  let remoteChainId,
+    blockHeight,
+    stateRoot,
+    membersManager,
+    maxNumberOfStateRoots,
+    anchor,
+    owner,
+    worker;
+  
+  beforeEach(async function () {
     
-    let remoteChainId,
-        blockHeight,
-        stateRoot,
-        membersManager,
-        maxNumberOfStateRoots,
-        anchor,
-        owner,
-        worker;
+    owner = accounts[2];
+    worker = accounts[3];
+    remoteChainId = new BN(1410);
+    blockHeight = new BN(5);
+    stateRoot = web3.utils.sha3("dummy_state_root");
+    maxNumberOfStateRoots = new BN(10);
+    membersManager = await MockMembersManager.new(owner, worker);
     
-    beforeEach(async function () {
-        
-        owner = accounts[2];
-        worker = accounts[3];
-        remoteChainId = new BN(1410);
-        blockHeight = new BN(5);
-        stateRoot = web3.utils.sha3("dummy_state_root");
-        maxNumberOfStateRoots = new BN(10);
-        membersManager = await MockMembersManager.new(owner, worker);
-        
-        anchor = await Anchor.new(
-            remoteChainId,
-            blockHeight,
-            stateRoot,
-            maxNumberOfStateRoots,
-            membersManager.address,
-        );
-        
-    });
+    anchor = await Anchor.new(
+      remoteChainId,
+      blockHeight,
+      stateRoot,
+      maxNumberOfStateRoots,
+      membersManager.address,
+    );
     
-    it('should return the state root that was set while deployment', async () => {
-        
-        let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
-        assert.strictEqual(
-            blockHeight.eq(latestBlockHeight),
-            true,
-            `Latest block height from the contract must be ${blockHeight}.`,
-        );
-        
-    });
+  });
+  
+  it('should return the state root that was set while deployment', async () => {
     
-    it('should return the latest anchored state root block height', async () => {
-        
-        blockHeight = blockHeight.addn(50000);
-        
-        await anchor.anchorStateRoot(
-            blockHeight,
-            stateRoot,
-            {from: worker},
-        );
-        
-        let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
-        assert.strictEqual(
-            blockHeight.eq(latestBlockHeight),
-            true,
-            `Latest block height from the contract must be ${blockHeight}.`,
-        );
-        
-    });
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    assert.strictEqual(
+      blockHeight.eq(latestBlockHeight),
+      true,
+      `Latest block height from the contract must be ${blockHeight}.`,
+    );
     
+  });
+  
+  it('should return the latest anchored state root block height', async () => {
+    
+    blockHeight = blockHeight.addn(50000);
+    
+    await anchor.anchorStateRoot(
+      blockHeight,
+      stateRoot,
+      {from: worker},
+    );
+    
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    assert.strictEqual(
+      blockHeight.eq(latestBlockHeight),
+      true,
+      `Latest block height from the contract must be ${blockHeight}.`,
+    );
+    
+  });
+  
 });

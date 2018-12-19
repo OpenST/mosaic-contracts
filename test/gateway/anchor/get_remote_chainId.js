@@ -30,34 +30,34 @@ contract('Anchor.getRemoteChainId()', function (accounts) {
     maxNumberOfStateRoots,
     membersManager,
     anchor;
+  
+  beforeEach(async function () {
     
-    beforeEach(async function () {
-        
-        remoteChainId = new BN(1410);
-        blockHeight = new BN(5);
-        stateRoot = web3.utils.sha3("dummy_state_root");
-        maxNumberOfStateRoots = new BN(10);
-        membersManager = accounts[1];
-        
-        anchor = await Anchor.new(
-            remoteChainId,
-            blockHeight,
-            stateRoot,
-            maxNumberOfStateRoots,
-            membersManager,
-        );
-        
-    });
+    remoteChainId = new BN(1410);
+    blockHeight = new BN(5);
+    stateRoot = web3.utils.sha3("dummy_state_root");
+    maxNumberOfStateRoots = new BN(10);
+    membersManager = accounts[1];
     
-    it('should return correct remote chain id', async () => {
-        
-        let chainId = await anchor.getRemoteChainId.call();
-        assert.strictEqual(
-            remoteChainId.eq(chainId),
-            true,
-            `Remote chain id from the contract must be ${remoteChainId}.`,
-        );
-        
-    });
+    anchor = await Anchor.new(
+      remoteChainId,
+      blockHeight,
+      stateRoot,
+      maxNumberOfStateRoots,
+      membersManager,
+    );
     
+  });
+  
+  it('should return correct remote chain id', async () => {
+    
+    let chainId = await anchor.getRemoteChainId.call();
+    assert.strictEqual(
+      remoteChainId.eq(chainId),
+      true,
+      `Remote chain id from the contract must be ${remoteChainId}.`,
+    );
+    
+  });
+  
 });

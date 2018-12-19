@@ -32,7 +32,7 @@ contract('Anchor.constructor()', function (accounts) {
     stateRoot,
     maxNumberOfStateRoots,
     membersManager,
-    safeCore;
+    anchor;
     
     beforeEach(async function () {
         
