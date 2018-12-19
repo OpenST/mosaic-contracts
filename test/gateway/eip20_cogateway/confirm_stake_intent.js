@@ -205,7 +205,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     await utilityToken.setCoGatewayAddress(coGateway.address);
 
     // Set the storage root.
-    await coGateway.setStorageRoot(storageRoot, blockHeight);
+    await coGateway.setStorageRoot(blockHeight, storageRoot);
 
   });
 
@@ -267,7 +267,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "Mint amount must not be zero.",
+      "Stake amount must not be zero.",
     );
 
   });
@@ -293,7 +293,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
-  it('should fail staker nonce is already consumed.', async function () {
+  it('should fail when staker nonce is already consumed.', async function () {
 
     stakerNonce = new BN(0);
 
@@ -314,7 +314,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
-  it('should fail storage root for the block height is not available.',
+  it('should fail when storage root for the block height is not available.',
     async function () {
 
       blockHeight = new BN(1);
@@ -431,6 +431,38 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
+  it('should fail to confirm stake intent if its already confirmed once',
+    async function () {
+
+    await coGateway.confirmStakeIntent(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
+
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      "Invalid nonce.",
+    );
+
+  });
+
   it('should fail to confirm new stake intent if status of previous ' +
     'confirmed stake intent is declared', async function () {
 
@@ -448,7 +480,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     initializeData(TestData[1]);
 
-    await coGateway.setStorageRoot(storageRoot, blockHeight);
+    await coGateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       coGateway.confirmStakeIntent(
@@ -464,7 +496,6 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       ),
       "Previous process is not completed.",
     );
-
 
   });
 
@@ -487,7 +518,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     initializeData(TestData[1]);
 
-    await coGateway.setStorageRoot(storageRoot, blockHeight);
+    await coGateway.setStorageRoot(blockHeight, storageRoot);
 
     await assertConfirmStakeIntent();
 
@@ -508,14 +539,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       rlpParentNodes,
     );
 
-    await coGateway.progressMint(
-      data.messageHash,
-      unlockSecret,
-    );
+    await coGateway.setInboxStatus(data.messageHash,MessageStatusEnum.Progressed);
 
     initializeData(TestData[1]);
 
-    await coGateway.setStorageRoot(storageRoot, blockHeight);
+    await coGateway.setStorageRoot(blockHeight, storageRoot);
 
     await assertConfirmStakeIntent();
 

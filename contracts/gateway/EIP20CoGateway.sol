@@ -188,10 +188,10 @@ contract EIP20CoGateway is GatewayBase {
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
-    mapping(bytes32 /*messageHash*/ => Mint) public mints;
+    mapping(bytes32 => Mint) public mints;
 
     /** Maps messageHash to the Redeem object. */
-    mapping(bytes32/*messageHash*/ => Redeem) public redeems;
+    mapping(bytes32 => Redeem) public redeems;
 
 
     /* Constructor */
@@ -755,7 +755,7 @@ contract EIP20CoGateway is GatewayBase {
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
-     * @param _amount Amount of utility token will be minted.
+     * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
      * @param _gasLimit Gas limit that staker is ready to pay
@@ -793,7 +793,7 @@ contract EIP20CoGateway is GatewayBase {
         );
         require(
             _amount != 0,
-            "Mint amount must not be zero."
+            "Stake amount must not be zero."
         );
         require(
             _rlpParentNodes.length != 0,

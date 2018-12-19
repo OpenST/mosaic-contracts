@@ -181,12 +181,12 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *
      * @dev This is used for testing purpose.
      *
-     * @param _storageRoot Mocked storage root for merkle proof testing.
      * @param _blockHeight Mocked block height for testing.
+     * @param _storageRoot Mocked storage root for merkle proof testing.
      */
     function setStorageRoot(
-        bytes32 _storageRoot,
-        uint256 _blockHeight
+        uint256 _blockHeight,
+        bytes32 _storageRoot
     )
         public
     {
