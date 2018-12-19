@@ -121,8 +121,6 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     
     await testUtilityToken.setCoGatewayAddress(testEIP20CoGateway.address);
     
-    await helper.setCoGateway(testEIP20CoGateway.address);
-    
     messageHash = await testEIP20CoGateway.setStakeMessage.call(
       intentHash,
       nonce,

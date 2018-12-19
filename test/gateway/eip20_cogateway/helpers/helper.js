@@ -30,16 +30,6 @@ const EIP20CoGatewayHelper = function () {
 EIP20CoGatewayHelper.prototype = {
   
   /**
-   * It sets the cogateway address.
-   * @param coGateway CoGateway contract address.
-   */
-  setCoGateway: async function (coGateway) {
-    
-    this.coGateway = coGateway;
-    
-  },
-  
-  /**
    * Generate the redeem type hash. This is as per EIP-712.
    *
    * @return {string} Message type hash.
@@ -84,18 +74,6 @@ EIP20CoGatewayHelper.prototype = {
       {t: 'address', v: token},
     );
   },
-  
-  /**
-   * It returns the nonce value for the account address.
-   *
-   * @param address Account for which nonce is required.
-   *
-   * @returns {Promise<void>} Nonce of the address.
-   */
-  getNonce: async function (address) {
-    
-    return await this.coGateway.getNonce.call(address);
-  }
   
 };
 
