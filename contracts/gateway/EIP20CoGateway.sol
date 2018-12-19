@@ -753,7 +753,9 @@ contract EIP20CoGateway is GatewayBase {
      * @param _staker Staker address.
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
+     *                     tokens will be minted. This is payable so that it
+     *                     provides flexibility of transferring base token
+     *                     to account on minting.
      * @param _amount Amount of utility token will be minted.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done

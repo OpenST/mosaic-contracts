@@ -226,7 +226,8 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      *      is added in function increaseSupplyInternal.
      *
      * @param _account Account address for which the OST Prime balance will be
-     *                 increased.
+     *                 increased. This is payable so that base token can be
+     *                 transferred to the account.
      * @param _amount Amount of tokens.
      *
      * @return success_ `true` if increase supply is successful, false otherwise.
@@ -240,11 +241,17 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         onlyCoGateway
         returns (bool success_)
     {
+        /*
+         * Acquire lock for msg.sender so that this function can only be
+         * executed once in a transaction.
+         */
+
         acquire(msg.sender);
 
         success_ = increaseSupplyInternal(address(this), _amount);
         _account.transfer(_amount);
 
+        // Release lock for msg.sender.
         release(msg.sender);
     }
 

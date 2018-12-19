@@ -13,10 +13,16 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
 import "../lib/Mutex.sol";
 
-/** @title TestMutex contract to test Mutex */
+/** @title TestMutex contract to test Mutex. */
 contract TestMutex is Mutex{
 
     constructor()
