@@ -38,7 +38,7 @@ contract('Mutex.acquire()', async (accounts) => {
         );
         await mutex.acquireExternal(address);
 
-        Utils.expectRevert(
+        await Utils.expectRevert(
             mutex.acquireExternal(address),
             'Lock already acquired for the address.'
         );
@@ -51,7 +51,7 @@ contract('Mutex.acquire()', async (accounts) => {
         let address = accounts[0];
         await mutex.acquireExternal(address);
 
-        Utils.expectRevert(
+        await Utils.expectRevert(
             mutex.acquireExternal(address),
             'Lock already acquired for the address.'
         );

@@ -39,7 +39,7 @@ contract('Mutex.release()', async (accounts) => {
         );
         await mutex.releaseExternal(address);
 
-        Utils.expectRevert(
+        await Utils.expectRevert(
             mutex.releaseExternal(address),
             'Lock is not acquired for the address.'
         );
@@ -65,7 +65,7 @@ contract('Mutex.release()', async (accounts) => {
 
         let address = accounts[0];
 
-        Utils.expectRevert(
+        await Utils.expectRevert(
             mutex.releaseExternal(address),
             'Lock is not acquired for the address.'
         );

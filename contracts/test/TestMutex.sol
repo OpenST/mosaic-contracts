@@ -19,7 +19,9 @@ import "../lib/Mutex.sol";
 /** @title TestMutex contract to test Mutex */
 contract TestMutex is Mutex{
 
-    constructor() public
+    constructor()
+        Mutex()
+        public
     { }
 
     /** @notice This acquires lock for an address if not already acquired.
