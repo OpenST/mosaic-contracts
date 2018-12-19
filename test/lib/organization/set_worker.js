@@ -139,9 +139,6 @@ contract('Organization.setWorker()', async (accounts) => {
       organization,
     );
 
-    let currentBlockNumber = await web3.eth.getBlockNumber();
-    let remainingHeight = expirationHeight - currentBlockNumber;
-
     assert.strictEqual(
       events.WorkerSet.worker,
       worker,
@@ -150,10 +147,6 @@ contract('Organization.setWorker()', async (accounts) => {
     assert(
       events.WorkerSet.expirationHeight.eqn(expirationHeight),
       'Event must emit correct expiration height.',
-    );
-    assert(
-      events.WorkerSet.remainingHeight.eqn(remainingHeight),
-      'Event must emit correct remaining height.',
     );
 
   });

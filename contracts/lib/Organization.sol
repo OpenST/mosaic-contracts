@@ -57,11 +57,7 @@ contract Organization is OrganizationInterface {
     event AdminAddressChanged(address indexed newAdmin, address previousAdmin);
 
     /** Emitted when a worker address was set. */
-    event WorkerSet(
-        address indexed worker,
-        uint256 expirationHeight,
-        uint256 remainingHeight
-    );
+    event WorkerSet(address indexed worker, uint256 expirationHeight);
 
     /** Emitted when a worker address is deleted from the contract. */
     event WorkerUnset(address worker);
@@ -163,7 +159,7 @@ contract Organization is OrganizationInterface {
     }
 
 
-    /* External functions */
+    /* External Functions */
 
     /**
      * @notice Proposes a new owner of this contract. Ownership will not be
@@ -265,9 +261,8 @@ contract Organization is OrganizationInterface {
     )
         external
         onlyOwnerOrAdmin
-        returns (uint256 remainingBlocks_)
     {
-        remainingBlocks_ = setWorkerInternal(_worker, _expirationHeight);
+        setWorkerInternal(_worker, _expirationHeight);
     }
 
     /**
@@ -329,7 +324,7 @@ contract Organization is OrganizationInterface {
     }
 
 
-    /* Private functions */
+    /* Private Functions */
 
     /**
      * @notice Sets worker and its expiration block height. If the worker
@@ -346,8 +341,7 @@ contract Organization is OrganizationInterface {
         address _worker,
         uint256 _expirationHeight
     )
-        private 
-        returns (uint256 remainingBlocks_)
+        private
     {
         require(
             _worker != address(0),
@@ -360,9 +354,8 @@ contract Organization is OrganizationInterface {
         );
 
         workers[_worker] = _expirationHeight;
-        remainingBlocks_ = _expirationHeight.sub(block.number);
 
-        emit WorkerSet(_worker, _expirationHeight, remainingBlocks_);
+        emit WorkerSet(_worker, _expirationHeight);
     }
 
 }
