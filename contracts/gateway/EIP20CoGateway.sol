@@ -1109,6 +1109,11 @@ contract EIP20CoGateway is GatewayBase {
             50000  //21000 * 2 for transactions + approx buffer
         );
 
+        require(
+            rewardAmount_ <= stakeAmount_,
+            "Reward amount must not be greater than the stake amount."
+        );
+
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         // Mint token after subtracting reward amount.

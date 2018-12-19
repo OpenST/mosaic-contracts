@@ -19,18 +19,27 @@
 // ----------------------------------------------------------------------------
 
 const CoGateway = artifacts.require("TestEIP20CoGateway");
+const Token = artifacts.require("MockUtilityToken");
 const BN = require('bn.js');
 const Utils = require("./../../test_lib/utils");
 const TestData =  require("./test_data/confirm_stake_intent.json");
-EventDecoder = require('../../test_lib/event_decoder.js');
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
+
+let MessageStatusEnum = {
+  Undeclared: 0,
+  Declared: 1,
+  Progressed: 2,
+  DeclaredRevocation: 3,
+  Revoked: 4
+};
 
 contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   // Contract deployment related variables.
   let valueTokenAddress,
-    utilityTokenAddress,
+    utilityToken,
     bountyAmount,
     coreAddress,
     membersManagerAddress,
@@ -49,11 +58,12 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     blockHeight,
     rlpParentNodes,
     storageRoot,
-    unlockSecret;
+    unlockSecret,
+    data;
 
-  let data = TestData[0];
-
+  // Function to initialize test data.
   function initializeData(testData) {
+
     data = testData;
 
     // Populate the deployment params.
@@ -75,12 +85,107 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     unlockSecret = data.hashSecret;
 
   }
+
+  // Common assertion code for confirm stake intent.
+  async function assertConfirmStakeIntent() {
+
+    let result = await coGateway.confirmStakeIntent.call(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
+
+    assert.strictEqual(
+      result,
+      data.messageHash,
+      `Message hash form the contract must match ${data.messageHash}.`,
+    );
+
+    await coGateway.confirmStakeIntent(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
+
+    let mintData = await coGateway.mints(data.messageHash);
+
+    assert.strictEqual(
+      amount.eq(mintData.amount),
+      true,
+      `Mints.amount from the contract must match ${amount.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      mintData.beneficiary,
+      beneficiary,
+      `Mints.beneficiary from the contract must match ${beneficiary}.`,
+    );
+
+    let messageData = await coGateway.messages(data.messageHash);
+
+    assert.strictEqual(
+      messageData.intentHash,
+      data.intentHash,
+      `Message.intentHash from the contract must be equal to ${data.intentHash}.`,
+    );
+
+    assert.strictEqual(
+      stakerNonce.eq(messageData.nonce),
+      true,
+      `Message.nonce from the contract must be equal to ${stakerNonce.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      gasPrice.eq(messageData.gasPrice),
+      true,
+      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      gasLimit.eq(messageData.gasLimit),
+      true,
+      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      messageData.sender,
+      staker,
+      `Message.sender from the contract must be equal to ${staker}.`,
+    );
+
+    assert.strictEqual(
+      messageData.hashLock,
+      hashLock,
+      `Message.hashLock from the contract must be equal to ${hashLock}.`,
+    );
+  }
+
   beforeEach(async function () {
 
     initializeData(TestData[0]);
 
-    // Populate the deployment params.
-    utilityTokenAddress = accounts[2];
+    // Deploy mocked utility token.
+    utilityToken = await Token.new(
+      data.token,
+      "",
+      "" ,
+      18,
+      data.membersManager,
+      {from: accounts[0]}
+    );
+
     coreAddress = accounts[3];
     membersManagerAddress = accounts[4];
     burnerAddress = accounts[6];
@@ -88,7 +193,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     // Deploy CoGateway.
     coGateway = await CoGateway.new(
       valueTokenAddress,
-      utilityTokenAddress,
+      utilityToken.address,
       coreAddress,
       bountyAmount,
       membersManagerAddress,
@@ -96,6 +201,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       burnerAddress,
     );
 
+    // Set CoGateway address in mocked utility token.
+    await utilityToken.setCoGatewayAddress(coGateway.address);
 
     // Set the storage root.
     await coGateway.setStorageRoot(storageRoot, blockHeight);
@@ -253,87 +360,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   it('should pass with valid params.', async function () {
 
-    let result = await coGateway.confirmStakeIntent.call(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
-
-    assert.strictEqual(
-      result,
-      data.messageHash,
-      `Message hash form the contract must match ${data.messageHash}.`,
-    );
-
-    await coGateway.confirmStakeIntent(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
-
-    let mintData = await coGateway.mints(data.messageHash);
-
-    assert.strictEqual(
-      amount.eq(mintData.amount),
-      true,
-      `Mints.amount from the contract must match ${amount.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      mintData.beneficiary,
-      beneficiary,
-      `Mints.beneficiary from the contract must match ${beneficiary}.`,
-    );
-
-    let messageData = await coGateway.messages(data.messageHash);
-
-    assert.strictEqual(
-      messageData.intentHash,
-      data.intentHash,
-      `Message.intentHash from the contract must be equal to ${data.intentHash}.`,
-    );
-
-    assert.strictEqual(
-      stakerNonce.eq(messageData.nonce),
-      true,
-      `Message.nonce from the contract must be equal to ${stakerNonce.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      gasPrice.eq(messageData.gasPrice),
-      true,
-      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      gasLimit.eq(messageData.gasLimit),
-      true,
-      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      messageData.sender,
-      staker,
-      `Message.sender from the contract must be equal to ${staker}.`,
-    );
-
-    assert.strictEqual(
-      messageData.hashLock,
-      hashLock,
-      `Message.hashLock from the contract must be equal to ${hashLock}.`,
-    );
+    await assertConfirmStakeIntent();
 
   });
 
@@ -444,6 +471,26 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
   it('should confirm new stake intent if status of previous ' +
     'confirmed stake intent is revoked', async function () {
 
+    await coGateway.confirmStakeIntent(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
+
+    await coGateway.setInboxStatus(data.messageHash,MessageStatusEnum.Revoked);
+
+    initializeData(TestData[1]);
+
+    await coGateway.setStorageRoot(storageRoot, blockHeight);
+
+    await assertConfirmStakeIntent();
+
   });
 
   it('should confirm new stake intent if status of previous ' +
@@ -465,94 +512,13 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       data.messageHash,
       unlockSecret,
     );
-/*
+
     initializeData(TestData[1]);
 
     await coGateway.setStorageRoot(storageRoot, blockHeight);
 
-    let result = await coGateway.confirmStakeIntent.call(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
+    await assertConfirmStakeIntent();
 
-    assert.strictEqual(
-      result,
-      data.messageHash,
-      `Message hash form the contract must match ${data.messageHash}.`,
-    );
-
-    await coGateway.confirmStakeIntent(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
-
-    let mintData = await coGateway.mints(data.messageHash);
-
-    assert.strictEqual(
-      amount.eq(mintData.amount),
-      true,
-      `Mints.amount from the contract must match ${amount.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      mintData.beneficiary,
-      beneficiary,
-      `Mints.beneficiary from the contract must match ${beneficiary}.`,
-    );
-
-    let messageData = await coGateway.messages(data.messageHash);
-
-    assert.strictEqual(
-      messageData.intentHash,
-      data.intentHash,
-      `Message.intentHash from the contract must be equal to ${data.intentHash}.`,
-    );
-
-    assert.strictEqual(
-      stakerNonce.eq(messageData.nonce),
-      true,
-      `Message.nonce from the contract must be equal to ${stakerNonce.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      gasPrice.eq(messageData.gasPrice),
-      true,
-      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      gasLimit.eq(messageData.gasLimit),
-      true,
-      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      messageData.sender,
-      staker,
-      `Message.sender from the contract must be equal to ${staker}.`,
-    );
-
-    assert.strictEqual(
-      messageData.hashLock,
-      hashLock,
-      `Message.hashLock from the contract must be equal to ${hashLock}.`,
-    );
-*/
   });
-
 
 });
