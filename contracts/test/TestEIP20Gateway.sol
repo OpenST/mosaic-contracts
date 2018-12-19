@@ -48,7 +48,7 @@ contract TestEIP20Gateway is EIP20Gateway {
         StateRootInterface _core,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _burner
+        address payable _burner
     )
         EIP20Gateway(
             _token,
