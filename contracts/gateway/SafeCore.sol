@@ -177,7 +177,7 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
         bytes32 _stateRoot
     )
         external
-        onlyWorker
+        onlyOrganization
         returns (bool success_)
     {
         // State root should be valid

@@ -72,7 +72,7 @@ contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
     await safeCore.commitStateRoot(
       blockHeight,
       stateRoot,
-      { from: worker },
+      { from: owner },
     );
 
     let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
