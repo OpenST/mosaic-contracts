@@ -892,6 +892,9 @@ contract EIP20Gateway is GatewayBase {
         progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
 
+
+    /** External methods */
+
     /**
      * @notice Declare redeem revert intent.
      *         This will set message status to revoked. This method will also
