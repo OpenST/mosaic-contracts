@@ -31,6 +31,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     let remoteChainId,
         blockHeight,
         stateRoot,
+        maxNumberOfStateRoots,
         membersManager,
         anchor,
         owner,
@@ -44,6 +45,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
         remoteChainId = new BN(1410);
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
+        maxNumberOfStateRoots = new BN(10);
         membersManager = await MockMembersManager.new(owner, worker);
         coAnchorAddress = accounts[6];
         
@@ -51,6 +53,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
             remoteChainId,
             blockHeight,
             stateRoot,
+            maxNumberOfStateRoots,
             membersManager.address,
         );
         

@@ -36,7 +36,8 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         membersManager,
         anchor,
         owner,
-        worker;
+        worker,
+        maxNumberOfStateRoots;
     
     beforeEach(async function () {
         
@@ -45,12 +46,14 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         remoteChainId = new BN(1410);
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
+        maxNumberOfStateRoots = new BN(10);
         membersManager = await MockMembersManager.new(owner, worker);
         
         anchor = await Anchor.new(
             remoteChainId,
             blockHeight,
             stateRoot,
+            maxNumberOfStateRoots,
             membersManager.address,
         );
         
@@ -189,5 +192,51 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         );
         
     });
+  
+  it('should store only the given number of max store roots', async () => {
+    /*
+     * It should store the given state roots and they should be
+     * available for querying afterwards. After the max number of state
+     * roots has been exceeded, the old state roots should no longer be
+     * available.
+     */
+    let iterations = maxNumberOfStateRoots.muln(2).toNumber();
+    for (let i = 0; i < iterations; i++) {
+      blockHeight = blockHeight.addn(1);
+      await anchor.anchorStateRoot(
+        blockHeight,
+        stateRoot,
+        { from: worker },
+      );
+      
+      // Check that the older state root has been deleted when i > max state roots.
+      if (maxNumberOfStateRoots.ltn(i)) {
+        let prunedBlockHeight = blockHeight.sub(maxNumberOfStateRoots);
+        let storedStateRoot = await anchor.getStateRoot.call(
+          prunedBlockHeight,
+        );
+        assert.strictEqual(
+          storedStateRoot,
+          '0x0000000000000000000000000000000000000000000000000000000000000000',
+          'There should not be any state root stored at a ' +
+          'pruned height. It should have been reset by now.',
+        );
+        
+        /*
+         * The state root that is one block younger than the pruned
+         * one should still be available.
+         */
+        let existingBlockHeight = prunedBlockHeight.addn(1);
+        storedStateRoot = await anchor.getStateRoot.call(
+          existingBlockHeight,
+        );
+        assert.strictEqual(
+          storedStateRoot,
+          stateRoot,
+          'The stored state root should still exist.',
+        );
+      }
+    }
+  });
     
 });

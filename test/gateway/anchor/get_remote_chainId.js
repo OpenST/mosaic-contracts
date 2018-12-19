@@ -23,20 +23,27 @@ const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
 contract('Anchor.getRemoteChainId()', function (accounts) {
-    
-    let remoteChainId, blockHeight, stateRoot, membersManager, anchor;
+  
+  let remoteChainId,
+    blockHeight,
+    stateRoot,
+    maxNumberOfStateRoots,
+    membersManager,
+    anchor;
     
     beforeEach(async function () {
         
         remoteChainId = new BN(1410);
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
+        maxNumberOfStateRoots = new BN(10);
         membersManager = accounts[1];
         
         anchor = await Anchor.new(
             remoteChainId,
             blockHeight,
             stateRoot,
+            maxNumberOfStateRoots,
             membersManager,
         );
         

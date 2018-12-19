@@ -29,6 +29,7 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
         blockHeight,
         stateRoot,
         membersManager,
+        maxNumberOfStateRoots,
         anchor,
         owner,
         worker;
@@ -40,12 +41,14 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
         remoteChainId = new BN(1410);
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
+        maxNumberOfStateRoots = new BN(10);
         membersManager = await MockMembersManager.new(owner, worker);
         
         anchor = await Anchor.new(
             remoteChainId,
             blockHeight,
             stateRoot,
+            maxNumberOfStateRoots,
             membersManager.address,
         );
         

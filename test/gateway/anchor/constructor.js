@@ -26,14 +26,20 @@ const Utils = require('../../../test/test_lib/utils');
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('Anchor.constructor()', function (accounts) {
-    
-    let remoteChainId, blockHeight, stateRoot, membersManager, anchor;
+  
+  let remoteChainId,
+    blockHeight,
+    stateRoot,
+    maxNumberOfStateRoots,
+    membersManager,
+    safeCore;
     
     beforeEach(async function () {
         
         remoteChainId = new BN(1410);
         blockHeight = new BN(5);
         stateRoot = web3.utils.sha3("dummy_state_root");
+        maxNumberOfStateRoots = new BN(10);
         membersManager = accounts[1];
         
     });
@@ -47,6 +53,7 @@ contract('Anchor.constructor()', function (accounts) {
                 remoteChainId,
                 blockHeight,
                 stateRoot,
+                maxNumberOfStateRoots,
                 membersManager,
             ),
             'Remote chain Id must not be 0.',
@@ -63,6 +70,7 @@ contract('Anchor.constructor()', function (accounts) {
                 remoteChainId,
                 blockHeight,
                 stateRoot,
+                maxNumberOfStateRoots,
                 membersManager,
             ),
             'MembersManager contract address must not be zero.',
@@ -76,6 +84,7 @@ contract('Anchor.constructor()', function (accounts) {
             remoteChainId,
             blockHeight,
             stateRoot,
+            maxNumberOfStateRoots,
             membersManager,
         );
         

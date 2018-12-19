@@ -189,7 +189,7 @@ contract Anchor is StateRootInterface, Organized, CircularBufferUint {
         // Input block height should be valid.
         require(
             _blockHeight > CircularBufferUint.head(),
-            "Given block height is lower or equal to highest committed state root block height."
+            "Given block height is lower or equal to highest anchored state root block height."
         );
 
         stateRoots[_blockHeight] = _stateRoot;
