@@ -23,17 +23,19 @@ pragma solidity ^0.5.0;
 import "../../gateway/UtilityToken.sol";
 
 /**
- * @title TestUtilityToken contract
+ * @title MockUtilityToken contract.
  *
  * @notice This contract is used to mock certain functions of UtilityToken
  *         contract.
  */
-contract TestUtilityToken is UtilityToken {
+contract MockUtilityToken is UtilityToken {
 
     /* Constructor */
 
     /**
-     * @dev This is used for testing by mocking certain variables.
+     * @notice Constructor.
+     *
+     * @dev This is used for testing only.
      *
      * @param _token Address of branded token.
      * @param _symbol Symbol of token.
@@ -57,26 +59,8 @@ contract TestUtilityToken is UtilityToken {
      *
      * @param _coGatewayAddress CoGateway address.
      */
-    function setCoGatewayAddress(address _coGatewayAddress) public {
+    function setCoGatewayAddress(address _coGatewayAddress) external {
         coGateway = _coGatewayAddress;
     }
 
-    /**
-     * @notice Set the balance of an account address for testing.
-     *
-     * @param _account Address of an account for which the balance is to be set.
-     * @param _balance The balance amount that should be set for the account.
-     */
-    function setBalance(address _account, uint256 _balance) public {
-        balances[_account] = _balance;
-    }
-
-    /**
-     * @notice Set the total supply count for testing.
-     *
-     * @param _amount The supply amount.
-     */
-    function setTotalSupply(uint256 _amount) public {
-        totalTokenSupply = _amount;
-    }
 }
