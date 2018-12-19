@@ -70,7 +70,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /* Public Functions */
 
     /**
-     * @notice It is used to set the message.
+     * @notice It is used to set the stake message.
      *
      * @dev This is used for testing purpose.
      *

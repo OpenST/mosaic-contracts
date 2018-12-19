@@ -286,7 +286,7 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -303,7 +303,7 @@ contract EIP20CoGateway is GatewayBase {
         stakeAmount_,
         mintedAmount_,
         rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
+        progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
     }
 
     /**
@@ -745,6 +745,7 @@ contract EIP20CoGateway is GatewayBase {
         );
     }
 
+
     /* Public functions */
 
     /**
@@ -1062,6 +1063,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /**
      * @notice This is internal method for process minting contains common logic.
+     *         It doesn't mint reward if reward is 0.
      *
      * @param _messageHash Message hash.
      * @param _initialGas Initial gas during progress process.
@@ -1080,7 +1082,6 @@ contract EIP20CoGateway is GatewayBase {
      *                        from the total amount.
      * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
-
     function progressMintInternal(
         bytes32 _messageHash,
         uint256 _initialGas,
@@ -1118,11 +1119,13 @@ contract EIP20CoGateway is GatewayBase {
             mintedAmount_
         );
 
-        // Reward beneficiary with the reward amount.
-        UtilityTokenInterface(utilityToken).increaseSupply(
-            msg.sender,
-            rewardAmount_
-        );
+        if(rewardAmount_ > 0) {
+            // Reward beneficiary with the reward amount.
+            UtilityTokenInterface(utilityToken).increaseSupply(
+                msg.sender,
+                rewardAmount_
+            );
+        }
 
         // Delete the mint data.
         delete mints[_messageHash];
