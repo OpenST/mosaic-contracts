@@ -31,7 +31,7 @@ import "../lib/SafeMath.sol";
 import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
 import "../lib/IsMemberInterface.sol";
-import "../lib/Mutex.sol";
+import "../lib/MutexAddress.sol";
 
 /**
  *  @title OSTPrime contract implements UtilityToken and
@@ -43,7 +43,7 @@ import "../lib/Mutex.sol";
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
  */
-contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
+contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
 
     /* Usings */
 
@@ -245,14 +245,12 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
          * Acquire lock for msg.sender so that this function can only be
          * executed once in a transaction.
          */
-
-        acquire(msg.sender);
+        MutexAddress.acquire(msg.sender);
 
         success_ = increaseSupplyInternal(address(this), _amount);
         _account.transfer(_amount);
 
-        // Release lock for msg.sender.
-        release(msg.sender);
+        MutexAddress.release(msg.sender);
     }
 
     /**

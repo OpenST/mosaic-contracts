@@ -20,67 +20,67 @@
 
 const Utils = require('../../test_lib/utils.js');
 
-const Mutex = artifacts.require('TestMutex');
+const MutexAddress = artifacts.require('TestMutexAddress');
 
-contract('Mutex.acquire()', async (accounts) => {
+contract('MutexAddress.acquire()', async (accounts) => {
 
-    it('should acquire lock for an address', async () => {
+  it('should acquire lock for an address', async () => {
 
-        let mutex = await Mutex.new();
+    let mutex = await MutexAddress.new();
 
-        let address = accounts[0];
-        let result = await mutex.acquireExternal.call(address);
+    let address = accounts[0];
+    let result = await mutex.acquireExternal.call(address);
 
-        assert.strictEqual(
-            result,
-            true,
-            'Lock acquire should success.'
-        );
-        await mutex.acquireExternal(address);
+    assert.strictEqual(
+      result,
+      true,
+      'Lock acquire should succeed.'
+    );
+    await mutex.acquireExternal(address);
 
-        await Utils.expectRevert(
-            mutex.acquireExternal(address),
-            'Lock already acquired for the address.'
-        );
-    });
+    await Utils.expectRevert(
+      mutex.acquireExternal(address),
+      'Lock already acquired for the address.'
+    );
+  });
 
-    it('should not acquire lock for an address if already acquired', async () => {
+  it('should not acquire lock for an address if already acquired', async () => {
 
-        let mutex = await Mutex.new();
+    let mutex = await MutexAddress.new();
 
-        let address = accounts[0];
-        await mutex.acquireExternal(address);
+    let address = accounts[0];
+    await mutex.acquireExternal(address);
 
-        await Utils.expectRevert(
-            mutex.acquireExternal(address),
-            'Lock already acquired for the address.'
-        );
-    });
+    await Utils.expectRevert(
+      mutex.acquireExternal(address),
+      'Lock already acquired for the address.'
+    );
+  });
 
-    it('should allow lock acquisition for more than one account', async () => {
-        let mutex = await Mutex.new();
+  it('should allow lock acquisition for more than one account', async () => {
+    let mutex = await MutexAddress.new();
 
-        let firstAddress = accounts[0];
-        let result = await mutex.acquireExternal.call(firstAddress);
+    let firstAddress = accounts[0];
+    let result = await mutex.acquireExternal.call(firstAddress);
 
-        assert.strictEqual(
-            result,
-            true,
-            'Lock acquire should success.'
-        );
+    assert.strictEqual(
+      result,
+      true,
+      'Lock acquire should succeed.'
+    );
 
-        await mutex.acquireExternal(firstAddress);
+    await mutex.acquireExternal(firstAddress);
 
-        let secondAddress = accounts[1];
-        result = await mutex.acquireExternal.call(secondAddress);
+    let secondAddress = accounts[1];
+    result = await mutex.acquireExternal.call(secondAddress);
 
-        assert.strictEqual(
-            result,
-            true,
-            'Lock acquire should success.'
-        );
+    assert.strictEqual(
+      result,
+      true,
+      'Lock acquire should succeed.'
+    );
 
-        await mutex.acquireExternal(secondAddress);
-    });
+    await mutex.acquireExternal(secondAddress);
+  });
 
 });

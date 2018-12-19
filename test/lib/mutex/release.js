@@ -20,54 +20,61 @@
 
 const Utils = require('../../test_lib/utils.js');
 
-const Mutex = artifacts.require('TestMutex');
+const MutexAddress = artifacts.require('TestMutexAddress');
 
-contract('Mutex.release()', async (accounts) => {
+contract('MutexAddress.release()', async (accounts) => {
 
-    it('should release lock for an address', async () => {
+  it('should release lock for an address', async () => {
 
-        let mutex = await Mutex.new();
+    let mutex = await MutexAddress.new();
 
-        let address = accounts[0];
-        await mutex.acquireExternal(address);
+    let address = accounts[0];
+    await mutex.acquireExternal(address);
 
-        let result = await mutex.releaseExternal.call(address);
-        assert.strictEqual(
-            result,
-            true,
-            'Lock acquire should success.'
-        );
-        await mutex.releaseExternal(address);
+    let result = await mutex.releaseExternal.call(address);
+    assert.strictEqual(
+      result,
+      true,
+      'Lock acquire should succeed.'
+    );
+    await mutex.releaseExternal(address);
 
-        await Utils.expectRevert(
-            mutex.releaseExternal(address),
-            'Lock is not acquired for the address.'
-        );
-    });
+    await Utils.expectRevert(
+      mutex.releaseExternal(address),
+      'Lock is not acquired for the address.'
+    );
+    result = await mutex.acquireExternal.call(address);
 
-    it('should not release lock for an address if already released', async () => {
+    assert.strictEqual(
+      result,
+      true,
+      'Lock acquire should succeed.'
+    );
+  });
 
-        let mutex = await Mutex.new();
+  it('should not release lock for an address if already released', async () => {
 
-        let address = accounts[0];
-        await mutex.acquireExternal(address);
+    let mutex = await MutexAddress.new();
 
-        await mutex.releaseExternal(address);
+    let address = accounts[0];
+    await mutex.acquireExternal(address);
 
-        Utils.expectRevert(
-            mutex.releaseExternal(address),
-            'Lock is not acquired for the address.'
-        );
-    });
+    await mutex.releaseExternal(address);
 
-    it('should not release lock if lock is not acquired', async () => {
-        let mutex = await Mutex.new();
+    Utils.expectRevert(
+      mutex.releaseExternal(address),
+      'Lock is not acquired for the address.'
+    );
+  });
 
-        let address = accounts[0];
+  it('should not release lock if lock is not acquired', async () => {
+    let mutex = await MutexAddress.new();
 
-        await Utils.expectRevert(
-            mutex.releaseExternal(address),
-            'Lock is not acquired for the address.'
-        );
-    });
+    let address = accounts[0];
+
+    await Utils.expectRevert(
+      mutex.releaseExternal(address),
+      'Lock is not acquired for the address.'
+    );
+  });
 });

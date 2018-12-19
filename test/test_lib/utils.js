@@ -191,7 +191,7 @@ Utils.prototype = {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(result);
+                    resolve(new BN(result));
                 }
             })
         })

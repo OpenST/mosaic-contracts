@@ -13,19 +13,21 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
-/** @title Mutex contract provide locking mechanism. */
-contract Mutex {
+import "../lib/MutexAddress.sol";
 
-    /* Storage */
+/** @title TestMutexAddress contract to test Mutex. */
+contract TestMutexAddress is MutexAddress {
 
-    /** Mapping of address and lock status. */
-    mapping(address => bool) private locks;
-
-
-    /* Constructor */
-
-    constructor() public
+    constructor()
+        MutexAddress()
+        public
     { }
 
     /** @notice This acquires lock for an address if not already acquired.
@@ -35,17 +37,11 @@ contract Mutex {
      *
      * @return success_ `true` on successful lock acquisition, `false` otherwise.
      */
-    function acquire(address _address)
-        internal
+    function acquireExternal(address _address)
+        external
         returns(bool success_)
     {
-        require(
-            locks[_address] == false,
-            "Lock already acquired for the address."
-        );
-
-        locks[msg.sender] = true;
-        success_ = true;
+        success_ = super.acquire(_address);
     }
 
     /** @notice This releases lock for an address if lock is acquired.
@@ -55,16 +51,10 @@ contract Mutex {
      *
      * @return success_ `true` on successful lock release, `false` otherwise.
      */
-    function release(address _address)
-        internal
+    function releaseExternal(address _address)
+        external
         returns(bool success_)
     {
-        require(
-            locks[_address] == true,
-            "Lock is not acquired for the address."
-        );
-
-        locks[_address] = false;
-        success_ = true;
+        success_ = super.release(_address);
     }
 }
