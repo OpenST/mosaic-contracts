@@ -44,7 +44,7 @@ contract('GatewayBase.sol', function (accounts) {
       let maxStateRoots = new BN(1000);
 
       let membersManager = await MockMembersManager.new(owner, worker);
-      let anchor = await MockAnchor.new(
+      let mockAnchor = await MockAnchor.new(
         1,
         0,
         stateRoot,
@@ -53,7 +53,7 @@ contract('GatewayBase.sol', function (accounts) {
       );
 
       gatewayBaseInstance = await GatewayBase.new(
-        anchor.address,
+        mockAnchor.address,
         bounty,
         membersManager.address
       );

@@ -24,9 +24,9 @@ pragma solidity ^0.5.0;
 interface StateRootInterface {
 
     /**
-     * @notice Gets the block number of latest anchored state root.
+     * @notice Gets the block number of latest committed state root.
      *
-     * @return uint256 Block height of the latest anchored state root.
+     * @return height_ Block height of the latest committed state root.
      */
     function getLatestStateRootBlockHeight()
         external

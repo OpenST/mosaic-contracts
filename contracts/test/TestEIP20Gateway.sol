@@ -36,7 +36,7 @@ contract TestEIP20Gateway is EIP20Gateway {
      *               in auxiliary chain.
      * @param _baseToken The ERC20 token address that will be used for
      *                     staking bounty from the facilitators.
-     * @param _anchor Anchor contract address.
+     * @param _stateRootProvider State roots provider contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
@@ -45,7 +45,7 @@ contract TestEIP20Gateway is EIP20Gateway {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        StateRootInterface _anchor,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address payable _burner
@@ -53,7 +53,7 @@ contract TestEIP20Gateway is EIP20Gateway {
         EIP20Gateway(
             _token,
             _baseToken,
-            _anchor,
+            _stateRootProvider,
             _bounty,
             _membersManager,
             _burner

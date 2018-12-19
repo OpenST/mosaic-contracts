@@ -30,7 +30,7 @@ const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
 let testEIP20CoGateway,
     burner,
     valueToken,
-    mockAnchor,
+    dummyStateRootProvider,
     membersManager,
     gateway,
     utilityToken,
@@ -50,7 +50,7 @@ let MessageStatusEnum = {
 async function _setup(accounts) {
     
     valueToken = accounts[0];
-    mockAnchor = accounts[1];
+    dummyStateRootProvider = accounts[1];
     membersManager = accounts[2];
     gateway = accounts[3];
     owner = accounts[8];
@@ -63,7 +63,7 @@ async function _setup(accounts) {
     testEIP20CoGateway = await TestEIP20CoGateway.new(
         valueToken,
         utilityToken.address,
-        mockAnchor,
+        dummyStateRootProvider,
         bountyAmount,
         membersManager,
         gateway,

@@ -28,7 +28,7 @@ const BN = require('bn.js'),
 
 let valueToken,
   burner,
-  mockAnchor,
+  dummyStateRootProvider,
   membersManager,
   coGateway,
   testUtilityToken,
@@ -57,7 +57,7 @@ async function _setup(accounts) {
   
   valueToken = accounts[0];
   burner = accounts[10];
-  mockAnchor = accounts[11];
+  dummyStateRootProvider = accounts[11];
   membersManager = accounts[2];
   coGateway = accounts[3];
   owner = accounts[8];
@@ -112,7 +112,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     testEIP20CoGateway = await TestEIP20CoGateway.new(
       valueToken,
       testUtilityToken.address,
-      mockAnchor,
+      dummyStateRootProvider,
       bountyAmount,
       membersManager,
       coGateway,

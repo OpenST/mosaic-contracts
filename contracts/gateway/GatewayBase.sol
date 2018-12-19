@@ -75,7 +75,7 @@ contract GatewayBase is Organized {
     MessageBus.MessageBox messageBox;
 
     /** Address of anchor contract. */
-    StateRootInterface public anchor;
+    StateRootInterface public stateRootProvider;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
     bytes public encodedGatewayPath;
@@ -128,13 +128,13 @@ contract GatewayBase is Organized {
     /**
      * @notice Initialize the contract and set default values.
      *
-     * @param _anchor Anchor contract address.
+     * @param _stateRootProvider State roots provider contract address.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        StateRootInterface _anchor,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
@@ -142,11 +142,11 @@ contract GatewayBase is Organized {
         public
     {
         require(
-            address(_anchor) != address(0),
+            address(_stateRootProvider) != address(0),
             "Anchor contract address must not be zero."
         );
 
-        anchor = _anchor;
+        stateRootProvider = _stateRootProvider;
 
         bounty = _bounty;
     }
@@ -192,7 +192,7 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = anchor.getStateRoot(_blockHeight);
+        bytes32 stateRoot = stateRootProvider.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(

@@ -30,15 +30,15 @@ const NullAddress = "0x0000000000000000000000000000000000000000";
 contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
-    let valueToken, utilityToken, bountyAmount, anchorAddress, owner, worker,
-        membersManager, coGateway, gatewayAddress = accounts[6],
+    let valueToken, utilityToken, bountyAmount, dummyStateRootProvider,
+        owner, worker, membersManager, coGateway, gatewayAddress = accounts[6],
         burner = NullAddress;
 
     beforeEach(async function () {
 
         valueToken = await MockToken.new();
         utilityToken = await MockToken.new();
-        anchorAddress = accounts[1];
+        dummyStateRootProvider = accounts[1];
         bountyAmount = new BN(100);
 
         owner = accounts[2];
@@ -51,7 +51,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                anchorAddress,
+                dummyStateRootProvider,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -69,7 +69,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                anchorAddress,
+                dummyStateRootProvider,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -91,10 +91,10 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             'Invalid bounty token address from contract.'
         );
 
-        let anchorAdd = await coGateway.anchor.call();
+        let stateRootProviderAdd = await coGateway.stateRootProvider.call();
         assert.strictEqual(
-            anchorAdd,
-            anchorAddress,
+            stateRootProviderAdd,
+            dummyStateRootProvider,
             'Invalid anchor address from contract.'
         );
 
@@ -113,7 +113,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueTokenAddress,
                 utilityToken.address,
-                anchorAddress,
+                dummyStateRootProvider,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -130,7 +130,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityTokenAddress,
-                anchorAddress,
+                dummyStateRootProvider,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -141,13 +141,13 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
     });
 
     it('should not deploy contract if anchor address is passed as zero.', async function () {
-        let anchorAddress = NullAddress;
+        let stateRootProviderAddress = NullAddress;
 
         await Utils.expectRevert(
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                anchorAddress,
+                stateRootProviderAddress,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
@@ -165,7 +165,7 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
             CoGateway.new(
                 valueToken.address,
                 utilityToken.address,
-                anchorAddress,
+                dummyStateRootProvider,
                 bountyAmount,
                 membersManager.address,
                 gatewayAddress,
