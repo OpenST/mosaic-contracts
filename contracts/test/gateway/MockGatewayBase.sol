@@ -17,7 +17,8 @@ contract MockGatewayBase is GatewayBase {
     /**
      * @notice This is used for testing.
      *
-     * @param _stateRootProvider State roots provider contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.

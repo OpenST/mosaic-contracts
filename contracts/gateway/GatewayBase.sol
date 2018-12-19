@@ -74,7 +74,9 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Address of anchor contract. */
+    /** Address of state root provider contract which implements
+     *  StateRootInterface.
+     */
     StateRootInterface public stateRootProvider;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
@@ -128,7 +130,8 @@ contract GatewayBase is Organized {
     /**
      * @notice Initialize the contract and set default values.
      *
-     * @param _stateRootProvider State roots provider contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
@@ -143,7 +146,7 @@ contract GatewayBase is Organized {
     {
         require(
             address(_stateRootProvider) != address(0),
-            "Anchor contract address must not be zero."
+            "State root provider contract address must not be zero."
         );
 
         stateRootProvider = _stateRootProvider;

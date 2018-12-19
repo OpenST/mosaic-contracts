@@ -204,7 +204,8 @@ contract EIP20CoGateway is GatewayBase {
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
-     * @param _stateRootProvider State roots provider contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator stakes to initiate the stake
      *                process.
      * @param _membersManager Address of a contract that manages workers.
