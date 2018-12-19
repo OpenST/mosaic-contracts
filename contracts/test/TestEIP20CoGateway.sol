@@ -176,4 +176,21 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         messageBox.outbox[_messageHash] = _status;
     }
 
+    /**
+     * @notice It sets the storage root for given block height.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _storageRoot Mocked storage root for merkle proof testing.
+     * @param _blockHeight Mocked block height for testing.
+     */
+    function setStorageRoot(
+        bytes32 _storageRoot,
+        uint256 _blockHeight
+    )
+        public
+    {
+        storageRoots[_blockHeight] = _storageRoot;
+    }
+
 }

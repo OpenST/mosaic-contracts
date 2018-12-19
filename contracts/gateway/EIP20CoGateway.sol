@@ -188,10 +188,10 @@ contract EIP20CoGateway is GatewayBase {
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
-    mapping(bytes32 /*messageHash*/ => Mint) mints;
+    mapping(bytes32 /*messageHash*/ => Mint) public mints;
 
     /** Maps messageHash to the Redeem object. */
-    mapping(bytes32/*messageHash*/ => Redeem) redeems;
+    mapping(bytes32/*messageHash*/ => Redeem) public redeems;
 
     /* Constructor */
 
@@ -783,29 +783,30 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _staker != address(0),
-            "Staker address must not be zero"
+            "Staker address must not be zero."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
         );
         require(
             _amount != 0,
-            "Mint amount must not be zero"
+            "Mint amount must not be zero."
         );
         require(
             _rlpParentNodes.length != 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the stake intent hash
-        bytes32 intentHash = hashStakeIntent(
+        bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
             _staker,
             _stakerNonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            address(valueToken)
         );
 
         // Get the messageHash

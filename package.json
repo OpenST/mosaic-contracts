@@ -16,7 +16,8 @@
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test"
+    "test": "truffle test test/gateway/eip20_cogateway/confirm_stake_intent.js",
+    "integration": "truffle migrate --network integration"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
