@@ -61,4 +61,17 @@ contract UtilityTokenInterface {
      */
     function decreaseSupply(uint256 _amount) external returns (bool success_);
 
+    /**
+     * @notice Sets the CoGateway contract address.
+     *
+     * @dev Function requires:
+     *          - It is called by whitelisted workers.
+     *          - coGateway address is set only once.
+     *          - coGateway.utilityToken must match this contract.
+     *
+     * @param _coGateway CoGateway contract address.
+     *
+     */
+    function setCoGateway(address _coGateway) external returns (bool);
+
 }
