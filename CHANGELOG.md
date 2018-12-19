@@ -26,7 +26,11 @@
 * CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
 * Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
 * Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
+* Cogateway no more mints zero reward amount for facilitator ([#527](https://github.com/OpenSTFoundation/mosaic-contracts/pull/527)).
+* Mint and burn now changed to increase and decrease supply ([#529](https://github.com/OpenSTFoundation/mosaic-contracts/pull/529)).
 * The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
+* Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
+
 
 ### Known Issues
 
