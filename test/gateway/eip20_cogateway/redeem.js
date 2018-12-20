@@ -19,7 +19,6 @@
 // ----------------------------------------------------------------------------
 
 const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-  MockAnchor = artifacts.require('MockAnchor'),
   MessageBus = artifacts.require('MessageBus'),
   UtilityToken = artifacts.require('UtilityToken'),
   EIP20Token = artifacts.require('EIP20Token'),
