@@ -23,16 +23,17 @@ pragma solidity ^0.5.0;
 import "../gateway/EIP20CoGateway.sol";
 
 /**
- * @title TestEIP20CoGateway contract.
+ * @title The TestEIP20CoGateway contract allows to directly set certain
+ *        statuses and variables.
  *
- * @notice This is used for testing purpose.
+ * @notice This is only used for testing purposes.
  */
 contract TestEIP20CoGateway is EIP20CoGateway {
 
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         minting and redeeming.This is used for testing purpose.
      *
@@ -44,6 +45,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                staking process.
      * @param _membersManager Address of a members manager contract.
      * @param _gateway Gateway contract address.
+     * @param _burner An address where tokens are sent when they should be burnt.
      */
     constructor(
         address _valueToken,
@@ -95,23 +97,25 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         public
         returns (bytes32 messageHash_)
     {
-
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        messages[messageHash_] = getMessage(
-            _staker,
             _stakerNonce,
             _gasPrice,
             _gasLimit,
-            _intentHash,
+            _staker,
             _hashLock
         );
+
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
+        );
+
+        messages[messageHash_] = message;
 
         return messageHash_;
 

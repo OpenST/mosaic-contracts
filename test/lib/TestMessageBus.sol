@@ -46,7 +46,6 @@ contract TestMessageBus is KeyValueStoreStub{
 
         bytes32 returnedMessageHash = MockMessageBus.progressInbox(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes32("UNLOCK_SECRET")
         );
@@ -75,7 +74,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 returnedMessageHash = MockMessageBus.declareRevocationMessage(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message
         );
         Assert.equal(
@@ -100,7 +98,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromDeclare = MockMessageBus.declareMessage(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message
         );
 
@@ -128,7 +125,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromOutbox = MockMessageBus.progressOutbox(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes32("UNLOCK_SECRET")
         );
@@ -156,7 +152,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Undeclared;
         bytes32 messageHashFromConfirm = MockMessageBus.confirmMessage(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -190,7 +185,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromProgressInboxWithProof = MockMessageBus.progressInboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -217,7 +211,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromProgressInboxWithProof = MockMessageBus.progressInboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             1,
@@ -251,7 +244,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -285,7 +277,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -318,7 +309,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -352,7 +342,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
         bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -386,7 +375,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageBox.inbox[messageHash] = MockMessageBus.MessageStatus.Declared;
         bytes32 messageHashFromConfirmRevocation = MockMessageBus.confirmRevocation(
             messageBox,
-            getBytes32("STAKE_TYPEHASH"),
             message,
             getBytes("RLP_PARENT_NODES"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
@@ -420,7 +408,6 @@ contract TestMessageBus is KeyValueStoreStub{
         bytes32 messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
                 messageBox,
                 message,
-                getBytes32("STAKE_TYPEHASH"),
                 uint8(getUint256("MESSAGEBOX_OFFSET")),
                 getBytes("RLP_PARENT_NODES"),
                 getBytes32("STORAGE_ROOT"),
@@ -443,7 +430,6 @@ contract TestMessageBus is KeyValueStoreStub{
         messageHashFromProgressOutboxRevocation = MockMessageBus.progressOutboxRevocation(
             messageBox,
             message,
-            getBytes32("STAKE_TYPEHASH"),
             uint8(getUint256("MESSAGEBOX_OFFSET")),
             getBytes("RLP_PARENT_NODES"),
             getBytes32("STORAGE_ROOT"),

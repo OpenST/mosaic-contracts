@@ -35,19 +35,17 @@ contract MessageBusWrapper {
      * @notice Declare a new message. This will update the outbox status to
      *         `Declared` for the given message hash.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
-     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _gasPrice Price at which reward is calculated.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _sender Message sender.
-     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
+     * @param _gasConsumed Gas consumption during message confirmation.
      *
      * @return messageHash_ Message hash.
      */
     function declareMessage(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -72,7 +70,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.declareMessage(
             messageBox,
-            _messageTypeHash,
             message
         );
 
@@ -82,21 +79,19 @@ contract MessageBusWrapper {
      * @notice Update the status for the outbox for a given message hash to
      *         `Progressed`.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
-     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _gasPrice Price at which reward is calculated.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _sender Signer of the signature.
-     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
      *
      * @return messageHash_ Message hash.
      */
     function progressOutbox(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -121,7 +116,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.progressOutbox(
             messageBox,
-            _messageTypeHash,
             message,
             _unlockSecret
         );
@@ -131,21 +125,19 @@ contract MessageBusWrapper {
      * @notice Update the status for the outbox for a given message hash to
      *         `Progressed`.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
-     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _gasPrice Price at which reward is calculated.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _sender Signer of the signature.
-     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _hashLock Hash lock.
+     * @param _gasConsumed Gas consumption during message confirmation.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
      *
      * @return messageHash_ Message hash.
      */
     function progressInbox(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -170,7 +162,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.progressInbox(
             messageBox,
-            _messageTypeHash,
             message,
             _unlockSecret
         );
@@ -184,7 +175,6 @@ contract MessageBusWrapper {
      * @dev The messsage status in the inbox should be `Revoked`.
      *      This will be verified in the merkle proof.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
@@ -199,7 +189,6 @@ contract MessageBusWrapper {
      * @return messageHash_ Message hash.
      */
     function progressOutboxRevocation(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
@@ -225,7 +214,6 @@ contract MessageBusWrapper {
         messageHash_ = MockMessageBus.progressOutboxRevocation(
             messageBox,
             message,
-            _messageTypeHash,
             _messageBoxOffset,
             _rlpParentNodes,
             _storageRoot,
@@ -241,7 +229,6 @@ contract MessageBusWrapper {
      * @dev In order to declare revocation the existing message status for the
      *      given message hash should be `Declared`.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
@@ -254,7 +241,6 @@ contract MessageBusWrapper {
      * @return messageHash_ Message hash.
      */
     function confirmRevocation(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
@@ -278,7 +264,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.confirmRevocation(
             messageBox,
-            _messageTypeHash,
             message,
             _rlpParentNodes,
             _messageBoxOffset,
@@ -292,7 +277,6 @@ contract MessageBusWrapper {
      *         status in source chains outbox. This will update the inbox
      *         status to `Declared` for the given message hash.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
@@ -305,7 +289,6 @@ contract MessageBusWrapper {
      * @return messageHash_ Message hash
      */
     function confirmMessage(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
@@ -329,7 +312,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.confirmMessage(
             messageBox,
-            _messageTypeHash,
             message,
             _rlpParentNodes,
             _messageBoxOffset,
@@ -344,19 +326,17 @@ contract MessageBusWrapper {
      * @dev In order to declare revocation the existing message status for the
      *      given message hash should be `Declared`.
      *
-     * @param _messageTypeHash Message type hash
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
-     * @param _sender Message sender.
-     * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _gasPrice Price at which reward is calculated.
-     * @param _gasConsumed Gas consumption during message confirmation.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _sender Message sender.
      * @param _hashLock Hash lock.
+     * @param _gasConsumed Gas consumption during message confirmation.
      *
      * @return messageHash_ Message hash.
      */
     function declareRevocationMessage(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -381,7 +361,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.declareRevocationMessage(
             messageBox,
-            _messageTypeHash,
             message
         );
 
@@ -396,7 +375,6 @@ contract MessageBusWrapper {
      *      either `Declared` or `Progresses`. Either of this status will be
      *      verified in the merkle proof.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
@@ -410,7 +388,6 @@ contract MessageBusWrapper {
      * @return messageHash_ Message hash.
      */
     function progressOutboxWithProof(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
@@ -435,7 +412,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.progressOutboxWithProof(
             messageBox,
-            _messageTypeHash,
             message,
             _rlpParentNodes,
             _messageBoxOffset,
@@ -454,7 +430,6 @@ contract MessageBusWrapper {
      *      either `Declared` or `Progresses`. Either of this status will be
      *      verified in the merkle proof.
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Message nonce.
      * @param _sender Message sender.
@@ -467,7 +442,6 @@ contract MessageBusWrapper {
      * @return messageHash_ Message hash.
      */
     function progressInboxWithProof(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         address _sender,
@@ -492,7 +466,6 @@ contract MessageBusWrapper {
 
         messageHash_ = MockMessageBus.progressInboxWithProof(
             messageBox,
-            _messageTypeHash,
             message,
             _rlpParentNodes,
             _messageBoxOffset,

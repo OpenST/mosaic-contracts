@@ -1,3 +1,23 @@
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 const Gateway = artifacts.require("./EIP20Gateway.sol")
     , BN = require('bn.js');
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
@@ -32,13 +52,13 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
             burner
         );
 
-        await  gateway.activateGateway(coGateway, {from: owner});
+        await gateway.activateGateway(coGateway, { from: owner });
 
     });
 
     it('should deactivate if activated', async function () {
 
-        let isSuccess = await gateway.deactivateGateway.call({from: owner});
+        let isSuccess = await gateway.deactivateGateway.call({ from: owner });
 
         assert.strictEqual(
             isSuccess,
@@ -46,7 +66,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
             "Gateway deactivation failed, deactivateGateway returned false.",
         );
 
-        await gateway.deactivateGateway({from: owner});
+        await gateway.deactivateGateway({ from: owner });
         let isActivated = await gateway.activated.call();
 
         assert.strictEqual(
@@ -58,9 +78,9 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
     it('should not deactivate if already deactivated', async function () {
 
-        await gateway.deactivateGateway({from: owner});
+        await gateway.deactivateGateway({ from: owner });
         await Utils.expectRevert(
-            gateway.deactivateGateway.call({from: owner}),
+            gateway.deactivateGateway.call({ from: owner }),
             'Gateway is already deactivated.'
         );
     });
@@ -68,7 +88,7 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
     it('should deactivated by organization only', async function () {
 
         await Utils.expectRevert(
-            gateway.deactivateGateway.call({from: accounts[0]}),
+            gateway.deactivateGateway.call({ from: accounts[0] }),
             'Only the organization is allowed to call this method.'
         );
     });

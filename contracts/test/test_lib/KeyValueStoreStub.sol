@@ -85,7 +85,6 @@ contract KeyValueStoreStub {
         setBytes32(
             "MESSAGE_BUS_DIGEST",
             MockMessageBus.messageDigest(
-                STAKE_TYPEHASH,
                 getBytes32("INTENT_HASH"),
                 getUint256("NONCE"),
                 getUint256("GAS_PRICE"),

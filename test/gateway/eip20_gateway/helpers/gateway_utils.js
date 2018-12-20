@@ -1,7 +1,27 @@
 'use strict';
 
-const EIP20Gateway = artifacts.require("EIP20Gateway");
-const utils = require("../../../test_lib/utils");
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
+const web3 = require("../../../test_lib/web3.js");
+const utils = require("../../../test_lib/utils.js");
 
 /**
  * @constructor
@@ -10,20 +30,82 @@ const utils = require("../../../test_lib/utils");
  * @param {Object} token EIP20 token contract object.
  * @param {Object} baseToken EIP20 token contract object. This is the base token.
  */
-const EIP20GatewayKlass = function (gateway, token, baseToken) {
+const GatewayUtils = function (gateway, token, baseToken) {
     this.gateway = gateway;
     this.token = token;
     this.baseToken = baseToken;
 };
 
-EIP20GatewayKlass.prototype = {
+GatewayUtils.prototype = {
+
+    /**
+     * Generate the stake type hash. This is as per EIP-712
+     *
+     * @return {string} message type hash.
+     */
+    stakeTypeHash: async function () {
+        return utils.getTypeHash(
+            'Stake(uint256 amount,address beneficiary,MessageBus.Message message)'
+        );
+    },
+
+    /**
+     * Generate the stake intent hash
+     *
+     * @param {object} amount Staking amount.
+     * @param {string} beneficiary Beneficiary address.
+     * @param {string} gateway The address of the gateway where the staking was
+     *                         initiated.
+     *
+     * @return {string} stake intent hash.
+     */
+    hashStakeIntent: (
+        amount,
+        beneficiary,
+        gateway,
+    ) => {
+        let stakeIntentTypeHash = utils.getTypeHash(
+            'StakeIntent(uint256 amount,address beneficiary,address gateway)'
+        );
+
+        let stakeIntent = web3.utils.sha3(
+            web3.eth.abi.encodeParameters(
+                [
+                    'bytes32',
+                    'uint256',
+                    'address',
+                    'address',
+                ],
+                [
+                    stakeIntentTypeHash,
+                    amount.toNumber(),
+                    beneficiary,
+                    gateway,
+                ],
+            )
+        );
+
+        return stakeIntent;
+    },
+
+    /**
+     * Get a nonce for an address as currently registered in the gateway.
+     *
+     * @param {string} address The address for which to get the current nonce.
+     *
+     * @returns {BN} The current nonce of the given address.
+     */
+    getNonce: async function (address) {
+        return await this.gateway.getNonce.call(address);
+    },
 
     /**
      * Asserts all the conditions for stake
      *
      * @param {Object} params All the input params for calling stake function.
-     * @param {Object} resultType Expected result success or fail.
-     * @param {Object} expectedResults Expected results, returns and events data.
+     * @param {Object} resultType Expected result (success or fail).
+     * @param {Object} expectedResults Expected results, returns, and events
+     *                                 data.
      * @param {Object} txOptions Transaction options.
      *
      */
@@ -33,7 +115,6 @@ EIP20GatewayKlass.prototype = {
         expectedResults,
         txOptions
     ) {
-
         let amount = params.amount,
             beneficiary = params.beneficiary,
             staker = params.staker,
@@ -51,14 +132,15 @@ EIP20GatewayKlass.prototype = {
         let bounty = await this.gateway.bounty.call();
 
         if (resultType === utils.ResultType.FAIL) {
-            await utils.expectThrow(this.gateway.stake.call(
-                amount,
-                beneficiary,
-                gasPrice,
-                gasLimit,
-                nonce,
-                hashLock,
-                txOptions
+            await utils.expectThrow(
+                this.gateway.stake.call(
+                    amount,
+                    beneficiary,
+                    gasPrice,
+                    gasLimit,
+                    nonce,
+                    hashLock,
+                    txOptions
                 ),
                 expectedResults.errorMessage);
         } else {
@@ -216,4 +298,4 @@ EIP20GatewayKlass.prototype = {
 
 };
 
-module.exports = EIP20GatewayKlass;
+module.exports = GatewayUtils;
