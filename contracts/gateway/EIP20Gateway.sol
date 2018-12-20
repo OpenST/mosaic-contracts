@@ -317,11 +317,7 @@ contract EIP20Gateway is GatewayBase {
         bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
-            staker,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            address(token)
+            address(this)
         );
 
         MessageBus.Message memory message = getMessage(
@@ -710,11 +706,7 @@ contract EIP20Gateway is GatewayBase {
         // Get the redeem intent hash
         bytes32 intentHash = hashRedeemIntent(
             _amount,
-            _beneficiary,
-            _redeemer,
-            _redeemerNonce,
-            _gasPrice,
-            _gasLimit
+            _beneficiary
         );
 
         // Get the message hash
@@ -1214,7 +1206,7 @@ contract EIP20Gateway is GatewayBase {
         return GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
-            token.gateway
+            address(this)
         );
     }
 

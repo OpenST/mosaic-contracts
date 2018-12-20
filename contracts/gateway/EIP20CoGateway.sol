@@ -766,7 +766,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _gasLimit,
         bytes32 _hashLock,
         uint256 _blockHeight,
-        bytes memory _rlpParentNodes
+        bytes calldata _rlpParentNodes
     )
         external
         returns (bytes32 messageHash_)
@@ -794,30 +794,17 @@ contract EIP20CoGateway is GatewayBase {
         // Get the stake intent hash.
         bytes32 intentHash = hashStakeIntent(
             _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
+            _beneficiary
         );
 
-        MessageBus.Message memory message = getMessage(
+        // Get the messageHash.
+        messageHash_ = MessageBus.messageDigest(
             intentHash,
             _stakerNonce,
             _gasPrice,
             _gasLimit,
             _staker,
             _hashLock
-        );
-
-        // Get the messageHash.
-        messageHash_ = MessageBus.messageDigest(
-            message.intentHash,
-            message.nonce,
-            message.gasPrice,
-            message.gasLimit,
-            message.sender,
-            message.hashLock
         );
 
         registerInboxProcess(
@@ -832,7 +819,14 @@ contract EIP20CoGateway is GatewayBase {
             beneficiary : _beneficiary
             });
 
-        messages[messageHash_] = message;
+        messages[messageHash_] = getMessage(
+            intentHash,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit,
+            _staker,
+            _hashLock
+        );
 
         /*
          * Execute the confirm stake intent. This is done in separate
@@ -905,11 +899,7 @@ contract EIP20CoGateway is GatewayBase {
         bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
+            remoteGateway
         );
 
         MessageBus.Message memory message = getMessage(
@@ -1022,20 +1012,12 @@ contract EIP20CoGateway is GatewayBase {
      *
      * @param _amount stake amount
      * @param _beneficiary minting account
-     * @param _staker stake account
-     * @param _stakerNonce nonce of staker
-     * @param _gasPrice price used for reward calculation
-     * @param _gasLimit max limit for reward calculation
      *
      * @return bytes32 stake intent hash
      */
     function hashStakeIntent(
         uint256 _amount,
-        address _beneficiary,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
+        address _beneficiary
     )
         private
         view
@@ -1044,11 +1026,7 @@ contract EIP20CoGateway is GatewayBase {
         return GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
+            remoteGateway
         );
     }
 

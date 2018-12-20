@@ -159,7 +159,7 @@ library GatewayLib {
      *
      * @param _amount stake amount.
      * @param _beneficiary mint account.
-     * @param _gateway
+     * @param _gateway text
      *
      * @return bytes32 stake intent hash
      */
@@ -187,7 +187,7 @@ library GatewayLib {
      *
      * @param _amount redeem amount
      * @param _beneficiary unstake account
-     * @param _gateway
+     * @param _gateway text
      *
      * @return bytes32 redeem intent hash
      */
