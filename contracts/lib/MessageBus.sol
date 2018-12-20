@@ -31,7 +31,7 @@ library MessageBus {
     using SafeMath for uint256;
 
 
-    /* Enum */
+    /* Enums */
 
     /** Status of the message state machine. */
     enum MessageStatus {
@@ -49,16 +49,16 @@ library MessageBus {
     }
 
 
-    /* Struct */
+    /* Structs */
 
     /** MessageBox stores the inbox and outbox mapping. */
     struct MessageBox {
 
-        /** Maps messageHash to the MessageStatus. */
-        mapping(bytes32 /* messageHash */ => MessageStatus) outbox;
+        /** Maps message hash to the MessageStatus. */
+        mapping(bytes32 => MessageStatus) outbox;
 
-        /** Maps messageHash to the MessageStatus. */
-        mapping(bytes32 /* messageHash */ => MessageStatus) inbox;
+        /** Maps message hash to the MessageStatus. */
+        mapping(bytes32 => MessageStatus) inbox;
     }
 
     /** Message */
@@ -92,6 +92,12 @@ library MessageBus {
 
     /* Constants */
 
+    bytes32 public constant MESSAGE_TYPEHASH = keccak256(
+        abi.encode(
+            "bytes32 intentHash,uint256 nonce,uint256 gasPrice,uint256 gasLimit,address sender,bytes32 hashLock"
+        )
+    );
+
     /**
      * Position of outbox in struct MessageBox.
      * This is used to generate storage merkel proof.
@@ -104,32 +110,27 @@ library MessageBus {
      */
     uint8 public constant INBOX_OFFSET = 1;
 
+
+    /* External Functions */
+
     /**
      * @notice Declare a new message. This will update the outbox status to
      *         `Declared` for the given message hash.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      *
      * @return messageHash_ Message hash
      */
     function declareMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message
     )
         external
         returns (bytes32 messageHash_)
     {
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Check the outbox message status is `Undeclared`.
         require(
@@ -148,7 +149,6 @@ library MessageBus {
      *         status to `Declared` for the given message hash.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -159,7 +159,6 @@ library MessageBus {
      */
     function confirmMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -169,13 +168,7 @@ library MessageBus {
         returns (bytes32 messageHash_)
     {
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Check the inbox message status is `Undeclared`.
         require(
@@ -210,7 +203,6 @@ library MessageBus {
      * @notice Update the outbox message hash status to `Progressed`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
@@ -219,7 +211,6 @@ library MessageBus {
      */
     function progressOutbox(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes32 _unlockSecret
     )
@@ -233,13 +224,7 @@ library MessageBus {
         );
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Verify the current message status is `Declared`.
         require(
@@ -261,7 +246,6 @@ library MessageBus {
      *      verified with the merkle proof.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
@@ -274,7 +258,6 @@ library MessageBus {
      */
     function progressOutboxWithProof(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -292,13 +275,7 @@ library MessageBus {
         );
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // The message status must be `Declared` or DeclaredRevocation`.
         require(
@@ -336,7 +313,6 @@ library MessageBus {
      *         `Progressed`
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
@@ -345,7 +321,6 @@ library MessageBus {
      */
     function progressInbox(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes32 _unlockSecret
     )
@@ -359,13 +334,7 @@ library MessageBus {
         );
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Verify the current message status is `Declared`.
         require(
@@ -387,7 +356,6 @@ library MessageBus {
      *      verified in the merkle proof.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -400,7 +368,6 @@ library MessageBus {
      */
     function progressInboxWithProof(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -418,13 +385,7 @@ library MessageBus {
         );
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // The existing message status must be `Declared`.
         require(
@@ -465,14 +426,12 @@ library MessageBus {
      *      given message hash should be `Declared`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      *
      * @return messageHash_ Message hash.
      */
     function declareRevocationMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message
     )
         external
@@ -480,13 +439,7 @@ library MessageBus {
     {
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Outbox should be declared.
         require(
@@ -507,7 +460,6 @@ library MessageBus {
      *      given message hash should be `Declared`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -518,7 +470,6 @@ library MessageBus {
      */
     function confirmRevocation(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -528,13 +479,7 @@ library MessageBus {
         returns (bytes32 messageHash_)
     {
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // Check the existing inbox message status `Declared`.
         require(
@@ -577,7 +522,6 @@ library MessageBus {
      *
      * @param _messageBox Message Box.
      * @param _message Message object.
-     * @param _messageTypeHash Message type hash.
      * @param _messageBoxOffset Position of the messageBox.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
@@ -590,7 +534,6 @@ library MessageBus {
     function progressOutboxRevocation(
         MessageBox storage _messageBox,
         Message storage _message,
-        bytes32 _messageTypeHash,
         uint8 _messageBoxOffset,
         bytes calldata _rlpParentNodes,
         bytes32 _storageRoot,
@@ -606,13 +549,7 @@ library MessageBus {
         );
 
         // Get the message hash.
-        messageHash_ = messageDigest(
-            _messageTypeHash,
-            _message.intentHash,
-            _message.nonce,
-            _message.gasPrice,
-            _message.gasLimit
-        );
+        messageHash_ = messageDigest(_message);
 
         // The existing message status must be `DeclaredRevocation`.
         require(
@@ -646,12 +583,12 @@ library MessageBus {
         _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
     }
 
+
     /* Public Functions */
 
     /**
      * @notice Generate message hash from the input params
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Nonce of the message sender.
      * @param _gasPrice Gas price.
@@ -659,28 +596,49 @@ library MessageBus {
      * @return messageHash_ Message hash.
      */
     function messageDigest(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
-        uint256 _gasLimit
+        uint256 _gasLimit,
+        address _sender,
+        bytes32 _hashLock
     )
         public
         pure
         returns (bytes32 messageHash_)
     {
-        messageHash_ =  keccak256(
+        messageHash_ = keccak256(
             abi.encode(
-                _messageTypeHash,
+                MESSAGE_TYPEHASH,
                 _intentHash,
                 _nonce,
                 _gasPrice,
-                _gasLimit
+                _gasLimit,
+                _sender,
+                _hashLock
             )
         );
     }
 
+
     /* Private Functions */
+
+    function messageDigest(
+        Message storage _message
+    )
+        private
+        view
+        returns (bytes32 messageHash_)
+    {
+        messageHash_ = messageDigest(
+            _message.intentHash,
+            _message.nonce,
+            _message.gasPrice,
+            _message.gasLimit,
+            _message.sender,
+            _message.hashLock
+        );
+    }
 
     /**
      * @notice Verify the signature is signed by the signer address.

@@ -109,14 +109,12 @@ library MockMessageBus {
      *         `Declared` for the given message hash
      *
      * @param _messageBox Message Box
-     * @param _messageTypeHash Message type hash
      * @param _message Message object
      *
      * @return messageHash_ Message hash
      */
     function declareMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message
     )
         external
@@ -124,7 +122,6 @@ library MockMessageBus {
     {
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -148,7 +145,6 @@ library MockMessageBus {
      *         status to `Declared` for the given message hash.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -159,7 +155,6 @@ library MockMessageBus {
      */
     function confirmMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -170,7 +165,6 @@ library MockMessageBus {
     {
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -210,7 +204,6 @@ library MockMessageBus {
      * @notice Update the outbox message hash status to `Progressed`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
@@ -219,7 +212,6 @@ library MockMessageBus {
      */
     function progressOutbox(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes32 _unlockSecret
     )
@@ -234,7 +226,6 @@ library MockMessageBus {
 
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -261,7 +252,6 @@ library MockMessageBus {
      *      verified with the merkle proof.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
@@ -274,7 +264,6 @@ library MockMessageBus {
      */
     function progressOutboxWithProof(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -293,7 +282,6 @@ library MockMessageBus {
 
         // Get the message hash
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -336,7 +324,6 @@ library MockMessageBus {
      *         `Progressed`
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _unlockSecret Unlock secret for the hash lock provided while
      *                      declaration.
@@ -345,7 +332,6 @@ library MockMessageBus {
      */
     function progressInbox(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes32 _unlockSecret
     )
@@ -360,7 +346,6 @@ library MockMessageBus {
 
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -387,7 +372,6 @@ library MockMessageBus {
      *      verified in the merkle proof
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -399,7 +383,6 @@ library MockMessageBus {
      */
     function progressInboxWithProof(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -418,7 +401,6 @@ library MockMessageBus {
 
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -464,14 +446,12 @@ library MockMessageBus {
      *      given message hash should be `Declared`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      *
      * @return messageHash_ Message hash.
      */
     function declareRevocationMessage(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message
     )
         external
@@ -480,7 +460,6 @@ library MockMessageBus {
 
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -506,7 +485,6 @@ library MockMessageBus {
      *      given message hash should be `Declared`.
      *
      * @param _messageBox Message Box.
-     * @param _messageTypeHash Message type hash.
      * @param _message Message object.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox outbox.
@@ -517,7 +495,6 @@ library MockMessageBus {
      */
     function confirmRevocation(
         MessageBox storage _messageBox,
-        bytes32 _messageTypeHash,
         Message storage _message,
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
@@ -528,7 +505,6 @@ library MockMessageBus {
     {
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -576,7 +552,6 @@ library MockMessageBus {
      *
      * @param _messageBox Message Box.
      * @param _message Message object.
-     * @param _messageTypeHash Message type hash.
      * @param _messageBoxOffset Position of the messageBox.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
@@ -589,7 +564,6 @@ library MockMessageBus {
     function progressOutboxRevocation(
         MessageBox storage _messageBox,
         Message storage _message,
-        bytes32 _messageTypeHash,
         uint8 _messageBoxOffset,
         bytes calldata _rlpParentNodes,
         bytes32 _storageRoot,
@@ -606,7 +580,6 @@ library MockMessageBus {
 
         // Get the message hash.
         messageHash_ = messageDigest(
-            _messageTypeHash,
             _message.intentHash,
             _message.nonce,
             _message.gasPrice,
@@ -650,7 +623,6 @@ library MockMessageBus {
     /**
      * @notice Generate message hash from the input params
      *
-     * @param _messageTypeHash Message type hash.
      * @param _intentHash Intent hash.
      * @param _nonce Nonce of the message sender.
      * @param _gasPrice Gas price.
@@ -658,7 +630,6 @@ library MockMessageBus {
      * @return messageHash_ Message hash.
      */
     function messageDigest(
-        bytes32 _messageTypeHash,
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -670,7 +641,7 @@ library MockMessageBus {
     {
         messageHash_ =  keccak256(
             abi.encode(
-                _messageTypeHash,
+                // TODO: add type hash
                 _intentHash,
                 _nonce,
                 _gasPrice,

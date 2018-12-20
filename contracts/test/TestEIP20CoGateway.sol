@@ -95,23 +95,25 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         public
         returns (bytes32 messageHash_)
     {
-
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        messages[messageHash_] = getMessage(
-            _staker,
             _stakerNonce,
             _gasPrice,
             _gasLimit,
-            _intentHash,
+            _staker,
             _hashLock
         );
+
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
+        );
+
+        messages[messageHash_] = message;
 
         return messageHash_;
 

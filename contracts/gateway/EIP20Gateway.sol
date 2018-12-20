@@ -324,13 +324,23 @@ contract EIP20Gateway is GatewayBase {
             address(token)
         );
 
-        // Get the messageHash
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             intentHash,
             _nonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            staker,
+            _hashLock
+        );
+
+        // Get the messageHash.
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
         );
 
         // Get previousMessageHash
@@ -351,19 +361,11 @@ contract EIP20Gateway is GatewayBase {
             bounty : bounty
             });
 
-        // New message object
-        messages[messageHash_] = getMessage(
-            staker,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock);
+        messages[messageHash_] = message;
 
         // Declare message in outbox
         MessageBus.declareMessage(
             messageBox,
-            STAKE_TYPEHASH,
             messages[messageHash_]
         );
 
@@ -426,7 +428,6 @@ contract EIP20Gateway is GatewayBase {
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -491,7 +492,6 @@ contract EIP20Gateway is GatewayBase {
 
         MessageBus.progressOutboxWithProof(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -542,7 +542,6 @@ contract EIP20Gateway is GatewayBase {
         // Declare stake revocation.
         MessageBus.declareRevocationMessage(
             messageBox,
-            STAKE_TYPEHASH,
             message
         );
 
@@ -592,7 +591,7 @@ contract EIP20Gateway is GatewayBase {
             address staker_,
             uint256 stakerNonce_,
             uint256 amount_
-    )
+        )
     {
         require(
             _messageHash != bytes32(0),
@@ -621,7 +620,6 @@ contract EIP20Gateway is GatewayBase {
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
-            STAKE_TYPEHASH,
             MESSAGE_BOX_OFFSET,
             _rlpParentNodes,
             storageRoot,
@@ -684,9 +682,9 @@ contract EIP20Gateway is GatewayBase {
         uint256 _gasLimit,
         uint256 _blockHeight,
         bytes32 _hashLock,
-        bytes memory _rlpParentNodes
+        bytes calldata _rlpParentNodes
     )
-        public
+        external
         returns (bytes32 messageHash_)
     {
         // Get the initial gas
@@ -721,11 +719,12 @@ contract EIP20Gateway is GatewayBase {
 
         // Get the message hash
         messageHash_ = MessageBus.messageDigest(
-            REDEEM_TYPEHASH,
             intentHash,
             _redeemerNonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            _redeemer,
+            _hashLock
         );
 
         registerInboxProcess(
@@ -740,11 +739,11 @@ contract EIP20Gateway is GatewayBase {
             });
 
         messages[messageHash_] = getMessage(
-            _redeemer,
+            intentHash,
             _redeemerNonce,
             _gasPrice,
             _gasLimit,
-            intentHash,
+            _redeemer,
             _hashLock
         );
 
@@ -810,7 +809,6 @@ contract EIP20Gateway is GatewayBase {
         // Progress inbox
         MessageBus.progressInbox(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -818,6 +816,9 @@ contract EIP20Gateway is GatewayBase {
         progressUnstakeInternal(_messageHash, initialGas, _unlockSecret, false);
 
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice Completes the redeem process by providing the merkle proof
@@ -856,7 +857,7 @@ contract EIP20Gateway is GatewayBase {
             uint256 rewardAmount_
         )
     {
-        // Get the inital gas
+        // Get the initial gas.
         uint256 initialGas = gasleft();
 
         require(
@@ -880,7 +881,6 @@ contract EIP20Gateway is GatewayBase {
 
         MessageBus.progressInboxWithProof(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -951,7 +951,6 @@ contract EIP20Gateway is GatewayBase {
         // Confirm revocation
         MessageBus.confirmRevocation(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -1064,7 +1063,6 @@ contract EIP20Gateway is GatewayBase {
         // Confirm message
         MessageBus.confirmMessage(
             messageBox,
-            REDEEM_TYPEHASH,
             _message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -1202,20 +1200,12 @@ contract EIP20Gateway is GatewayBase {
      *
      * @param _amount redeem amount
      * @param _beneficiary unstake account
-     * @param _redeemer redeemer account
-     * @param _redeemer nonce of staker
-     * @param _gasPrice price used for reward calculation
-     * @param _gasLimit max limit for reward calculation
      *
      * @return bytes32 redeem intent hash
      */
     function hashRedeemIntent(
         uint256 _amount,
-        address _beneficiary,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
+        address _beneficiary
     )
         private
         view
@@ -1224,11 +1214,7 @@ contract EIP20Gateway is GatewayBase {
         return GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
-            _redeemer,
-            _redeemerNonce,
-            _gasPrice,
-            _gasLimit,
-            address(token)
+            token.gateway
         );
     }
 

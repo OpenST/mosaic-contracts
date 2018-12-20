@@ -1,5 +1,25 @@
 pragma solidity ^0.5.0;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 import "./EIP20Interface.sol";
 import "../lib/MessageBus.sol";
 import "../StateRootInterface.sol";
@@ -10,13 +30,16 @@ import "../lib/SafeMath.sol";
 
 
 /**
- *  @title GatewayBase contract.
- *
- *  @notice GatewayBase contains general purpose functions shared between
- *          gateway and co-gateway contract.
+ *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
  */
 contract GatewayBase is Organized {
+
+    /* Usings */
+
     using SafeMath for uint256;
+
+
+    /* Events */
 
     /**
      * Emitted whenever a Gateway/CoGateway contract is proven.
@@ -41,19 +64,8 @@ contract GatewayBase is Organized {
         uint256 _changedBounty
     );
 
-    bytes32 constant STAKE_TYPEHASH = keccak256(
-        abi.encode(
-            "Stake(uint256 amount,address beneficiary,MessageBus.Message message)"
-        )
-    );
 
-    bytes32 constant REDEEM_TYPEHASH = keccak256(
-        abi.encode(
-            "Redeem(uint256 amount,address beneficiary,MessageBus.Message message)"
-        )
-    );
-
-    /* constants */
+    /* Constants */
 
     /** Position of message bus in the storage. */
     uint8 constant MESSAGE_BOX_OFFSET = 1;
@@ -67,12 +79,8 @@ contract GatewayBase is Organized {
     /** Unlock period for change bounty in block height. */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
 
-    /**
-     * Message box.
-     * @dev Keep this is at location 1, in case this is changed then update
-     *      constant MESSAGE_BOX_OFFSET accordingly.
-     */
-    MessageBus.MessageBox messageBox;
+
+    /* Public Variables */
 
     /** Address of core contract. */
     StateRootInterface public core;
@@ -95,11 +103,24 @@ contract GatewayBase is Organized {
     /** Bounty proposal block height. */
     uint256 public proposedBountyUnlockHeight;
 
+
+    /* Internal Variables */
+
+    /**
+     * Message box.
+     * @dev Keep this is at location 1, in case this is changed then update
+     *      constant MESSAGE_BOX_OFFSET accordingly.
+     */
+    MessageBus.MessageBox internal messageBox;
+
     /** Maps messageHash to the Message object. */
-    mapping(bytes32 => MessageBus.Message) messages;
+    mapping(bytes32 => MessageBus.Message) internal messages;
 
     /** Maps blockHeight to storageRoot. */
     mapping(uint256 => bytes32) internal storageRoots;
+
+
+    /* Private Variables */
 
     /**
      * Maps address to message hash.
@@ -110,7 +131,7 @@ contract GatewayBase is Organized {
      * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
-    mapping(address => bytes32) inboxActiveProcess;
+    mapping(address => bytes32) private inboxActiveProcess;
 
     /**
      * Maps address to message hash.
@@ -121,7 +142,8 @@ contract GatewayBase is Organized {
      * for a particular address. This is also used to determine the
      * nonce of the particular address. Refer getNonce for the details.
      */
-    mapping(address => bytes32) outboxActiveProcess;
+    mapping(address => bytes32) private outboxActiveProcess;
+
 
     /* Constructor */
 
@@ -151,7 +173,8 @@ contract GatewayBase is Organized {
         bounty = _bounty;
     }
 
-    /* External functions */
+
+    /* External Functions */
 
     /**
      *  @notice proveGateway can be called by anyone to verify merkle proof of
@@ -314,26 +337,29 @@ contract GatewayBase is Organized {
         emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
+
+    /* Internal Functions */
+
     /**
      * @notice Create and return Message object.
      *
      * @dev This function is to avoid stack too deep error.
      *
-     * @param _account Account address
+     * @param _intentHash Intent hash
      * @param _accountNonce Nonce for the account address
      * @param _gasPrice Gas price
      * @param _gasLimit Gas limit
-     * @param _intentHash Intent hash
+     * @param _account Account address
      * @param _hashLock Hash lock
      *
      * @return Message object
      */
     function getMessage(
-        address _account,
+        bytes32 _intentHash,
         uint256 _accountNonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        bytes32 _intentHash,
+        address _account,
         bytes32 _hashLock
     )
         internal
@@ -476,6 +502,9 @@ contract GatewayBase is Organized {
         // Update the active proccess.
         inboxActiveProcess[_account] = _messageHash;
     }
+
+
+    /* Private Functions */
 
     /**
      * @notice Returns the next nonce of inbox or outbox process

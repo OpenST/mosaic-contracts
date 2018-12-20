@@ -1,7 +1,5 @@
 pragma solidity ^0.5.0;
 
-
-
 // Copyright 2018 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +21,28 @@ import "./RLPEncode.sol";
 import "./SafeMath.sol";
 
 library GatewayLib {
+
+    /* Usings */
+
     using SafeMath for uint256;
+
+
+    /* Constants */
+
+    bytes32 constant STAKE_INTENT_TYPEHASH = keccak256(
+        abi.encode(
+            "StakeIntent(uint256 amount,address beneficiary,address gateway)"
+        )
+    );
+
+    bytes32 constant REDEEM_INTENT_TYPEHASH = keccak256(
+        abi.encode(
+            "RedeemIntent(uint256 amount,address beneficiary,address gateway)"
+        )
+    );
+
+
+    /* External Functions */
 
     /**
      * @notice Calculate the fee amount which is rewarded to facilitator for
@@ -140,36 +159,25 @@ library GatewayLib {
      *
      * @param _amount stake amount.
      * @param _beneficiary mint account.
-     * @param _staker staker address.
-     * @param _stakerNonce nounce of staker.
-     * @param _gasPrice price used for reward calculation.
-     * @param _gasLimit max limit for reward calculation.
-     * @param _token EIP20 token address used for stake.
+     * @param _gateway
      *
      * @return bytes32 stake intent hash
      */
     function hashStakeIntent(
         uint256 _amount,
         address _beneficiary,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _token
+        address _gateway
     )
-    external
-    pure
-    returns (bytes32)
+        external
+        pure
+        returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
+                STAKE_INTENT_TYPEHASH,
                 _amount,
                 _beneficiary,
-                _staker,
-                _stakerNonce,
-                _gasPrice,
-                _gasLimit,
-                _token
+                _gateway
             )
         );
     }
@@ -179,39 +187,31 @@ library GatewayLib {
      *
      * @param _amount redeem amount
      * @param _beneficiary unstake account
-     * @param _redeemer redeemer account
-     * @param _redeemerNonce nonce of staker
-     * @param _gasPrice price used for reward calculation
-     * @param _gasLimit max limit for reward calculation
-     * @param _token utility token address
+     * @param _gateway
      *
      * @return bytes32 redeem intent hash
      */
     function hashRedeemIntent(
         uint256 _amount,
         address _beneficiary,
-        address _redeemer,
-        uint256 _redeemerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _token
+        address _gateway
     )
-    external
-    pure
-    returns (bytes32)
+        external
+        pure
+        returns (bytes32)
     {
         return keccak256(
             abi.encodePacked(
+                REDEEM_INTENT_TYPEHASH,
                 _amount,
                 _beneficiary,
-                _redeemer,
-                _redeemerNonce,
-                _gasPrice,
-                _gasLimit,
-                _token
+                _gateway
             )
         );
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice Convert bytes32 to bytes
@@ -220,7 +220,9 @@ library GatewayLib {
      *
      * @return bytes value
      */
-    function bytes32ToBytes(bytes32 _inBytes32)
+    function bytes32ToBytes(
+        bytes32 _inBytes32
+    )
         public
         pure
         returns (bytes memory)

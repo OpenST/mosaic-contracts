@@ -294,7 +294,6 @@ contract EIP20CoGateway is GatewayBase {
         // Progress inbox.
         MessageBus.progressInbox(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -368,7 +367,6 @@ contract EIP20CoGateway is GatewayBase {
 
         MessageBus.progressInboxWithProof(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -437,7 +435,6 @@ contract EIP20CoGateway is GatewayBase {
         // Confirm revocation.
         MessageBus.confirmRevocation(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -500,7 +497,6 @@ contract EIP20CoGateway is GatewayBase {
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -565,7 +561,6 @@ contract EIP20CoGateway is GatewayBase {
 
         MessageBus.progressOutboxWithProof(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -707,7 +702,6 @@ contract EIP20CoGateway is GatewayBase {
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
-            REDEEM_TYPEHASH,
             MESSAGE_BOX_OFFSET,
             _rlpParentNodes,
             storageRoot,
@@ -745,9 +739,6 @@ contract EIP20CoGateway is GatewayBase {
         );
     }
 
-
-    /* Public functions */
-
     /**
      * @notice Confirms the initiation of the stake process.
      *
@@ -777,7 +768,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
     )
-        public
+        external
         returns (bytes32 messageHash_)
     {
         // Get the initial gas amount.
@@ -810,13 +801,23 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        // Get the messageHash.
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             intentHash,
             _stakerNonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            _staker,
+            _hashLock
+        );
+
+        // Get the messageHash.
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
         );
 
         registerInboxProcess(
@@ -831,15 +832,7 @@ contract EIP20CoGateway is GatewayBase {
             beneficiary : _beneficiary
             });
 
-        // Create new message object.
-        messages[messageHash_] = getMessage(
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock);
-
+        messages[messageHash_] = message;
 
         /*
          * Execute the confirm stake intent. This is done in separate
@@ -919,13 +912,23 @@ contract EIP20CoGateway is GatewayBase {
             valueToken
         );
 
-        // Get the messageHash.
-        messageHash_ = MessageBus.messageDigest(
-            REDEEM_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             intentHash,
             _nonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            msg.sender,
+            _hashLock
+        );
+
+        // Get the messageHash.
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
         );
 
         // Get previousMessageHash.
@@ -944,20 +947,11 @@ contract EIP20CoGateway is GatewayBase {
             bounty : bounty
         });
 
-        // Create message object.
-        messages[messageHash_] = getMessage(
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock
-        );
+        messages[messageHash_] = message;
 
         // Declare message in outbox.
         MessageBus.declareMessage(
             messageBox,
-            REDEEM_TYPEHASH,
             messages[messageHash_]
         );
 
@@ -1011,7 +1005,6 @@ contract EIP20CoGateway is GatewayBase {
         // Confirm message.
         MessageBus.confirmMessage(
             messageBox,
-            STAKE_TYPEHASH,
             _message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
