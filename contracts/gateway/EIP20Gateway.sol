@@ -333,15 +333,12 @@ contract EIP20Gateway is GatewayBase {
             _gasLimit
         );
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerOutboxProcess(
+        // Register for new stake process
+        registerOutboxProcess(
             staker,
             _nonce,
             messageHash_
         );
-
-        // Delete the previous progressed/Revoked stake data
-        delete stakes[previousMessageHash];
 
         // New stake object
         stakes[messageHash_] = Stake({

@@ -136,17 +136,17 @@ library GatewayLib {
     }
 
     /**
-     * @notice  function to calculate stake intent hash.
+     * @notice Function to calculate stake intent hash.
      *
-     * @param _amount stake amount.
-     * @param _beneficiary mint account.
-     * @param _staker staker address.
-     * @param _stakerNonce nounce of staker.
-     * @param _gasPrice price used for reward calculation.
-     * @param _gasLimit max limit for reward calculation.
+     * @param _amount Stake amount.
+     * @param _beneficiary Mint account.
+     * @param _staker Staker address.
+     * @param _stakerNonce Nonce of staker.
+     * @param _gasPrice Gas price used for reward calculation.
+     * @param _gasLimit Max gas limit for reward calculation.
      * @param _token EIP20 token address used for stake.
      *
-     * @return bytes32 stake intent hash
+     * @return intentHash_ Stake intent hash.
      */
     function hashStakeIntent(
         uint256 _amount,
@@ -157,11 +157,11 @@ library GatewayLib {
         uint256 _gasLimit,
         address _token
     )
-    external
-    pure
-    returns (bytes32)
+        external
+        pure
+        returns (bytes32 intentHash_)
     {
-        return keccak256(
+        intentHash_ = keccak256(
             abi.encodePacked(
                 _amount,
                 _beneficiary,
