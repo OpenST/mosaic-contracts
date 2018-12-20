@@ -34,13 +34,14 @@ contract('MutexAddress.acquire()', async (accounts) => {
     assert.strictEqual(
       result,
       true,
-      'Lock acquire should succeed.'
+      'Lock acquire should succeed.',
     );
+
     await mutex.acquireExternal(address);
 
     await Utils.expectRevert(
       mutex.acquireExternal(address),
-      'Lock already acquired for the address.'
+      'Lock already acquired for the account.',
     );
   });
 
@@ -53,7 +54,7 @@ contract('MutexAddress.acquire()', async (accounts) => {
 
     await Utils.expectRevert(
       mutex.acquireExternal(address),
-      'Lock already acquired for the address.'
+      'Lock already acquired for the account.',
     );
   });
 
@@ -66,7 +67,7 @@ contract('MutexAddress.acquire()', async (accounts) => {
     assert.strictEqual(
       result,
       true,
-      'Lock acquire should succeed.'
+      'Lock acquire should succeed.',
     );
 
     await mutex.acquireExternal(firstAddress);
@@ -77,7 +78,7 @@ contract('MutexAddress.acquire()', async (accounts) => {
     assert.strictEqual(
       result,
       true,
-      'Lock acquire should succeed.'
+      'Lock acquire should succeed.',
     );
 
     await mutex.acquireExternal(secondAddress);

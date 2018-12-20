@@ -30,31 +30,33 @@ contract TestMutexAddress is MutexAddress {
         public
     { }
 
-    /** @notice This acquires lock for an address if not already acquired.
+    /**
+     * @notice This acquires lock for an account if not already acquired.
      *          This will revert the transaction if lock is already acquired.
      *
-     * @param _address Address for which lock acquisition is required.
+     * @param _account Account for which lock acquisition is required.
      *
-     * @return success_ `true` on successful lock acquisition, `false` otherwise.
+     * @return isAcquired_ `true` on successful lock acquisition, `false` otherwise.
      */
-    function acquireExternal(address _address)
+    function acquireExternal(address _account)
         external
         returns(bool success_)
     {
-        success_ = super.acquire(_address);
+        success_ = super.acquire(_account);
     }
 
-    /** @notice This releases lock for an address if lock is acquired.
+    /**
+     * @notice This releases lock for an account if lock is acquired.
      *          This will revert the transaction if lock is not acquired.
      *
-     * @param _address Address for which release lock is required.
+     * @param _account Account for which release lock is required.
      *
-     * @return success_ `true` on successful lock release, `false` otherwise.
+     * @return isReleased_ `true` on successful lock release, `false` otherwise.
      */
-    function releaseExternal(address _address)
+    function releaseExternal(address _account)
         external
         returns(bool success_)
     {
-        success_ = super.release(_address);
+        success_ = super.release(_account);
     }
 }

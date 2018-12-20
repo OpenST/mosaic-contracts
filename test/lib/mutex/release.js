@@ -35,20 +35,20 @@ contract('MutexAddress.release()', async (accounts) => {
     assert.strictEqual(
       result,
       true,
-      'Lock acquire should succeed.'
+      'Lock acquire should succeed.',
     );
     await mutex.releaseExternal(address);
 
     await Utils.expectRevert(
       mutex.releaseExternal(address),
-      'Lock is not acquired for the address.'
+      'Lock is not acquired for the address.',
     );
     result = await mutex.acquireExternal.call(address);
 
     assert.strictEqual(
       result,
       true,
-      'Lock acquire should succeed.'
+      'Lock acquire should succeed.',
     );
   });
 
@@ -63,7 +63,7 @@ contract('MutexAddress.release()', async (accounts) => {
 
     Utils.expectRevert(
       mutex.releaseExternal(address),
-      'Lock is not acquired for the address.'
+      'Lock is not acquired for the address.',
     );
   });
 
@@ -74,7 +74,7 @@ contract('MutexAddress.release()', async (accounts) => {
 
     await Utils.expectRevert(
       mutex.releaseExternal(address),
-      'Lock is not acquired for the address.'
+      'Lock is not acquired for the address.',
     );
   });
 });

@@ -13,6 +13,13 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Origin Chain: Gateway Contract
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
 /** @title MutexAddress contract provide locking mechanism. */
 contract MutexAddress {
@@ -29,44 +36,44 @@ contract MutexAddress {
     { }
 
     /**
-     * @notice This acquires lock for an address if not already acquired.
+     * @notice This acquires lock for an account if not already acquired.
      *          This will revert the transaction if lock is already acquired.
      *
-     * @param _address Address for which lock acquisition is required.
+     * @param _account Account for which lock acquisition is required.
      *
      * @return isAcquired_ `true` on successful lock acquisition, `false` otherwise.
      */
-    function acquire(address _address)
+    function acquire(address _account)
         internal
         returns(bool isAcquired_)
     {
         require(
-            locks[_address] == false,
-            "Lock already acquired for the address."
+            locks[_account] == false,
+            "Lock already acquired for the account."
         );
 
-        locks[msg.sender] = true;
+        locks[_account] = true;
         isAcquired_ = true;
     }
 
     /**
-     * @notice This releases lock for an address if lock is acquired.
+     * @notice This releases lock for an account if lock is acquired.
      *          This will revert the transaction if lock is not acquired.
      *
-     * @param _address Address for which release lock is required.
+     * @param _account Account for which release lock is required.
      *
      * @return isReleased_ `true` on successful lock release, `false` otherwise.
      */
-    function release(address _address)
+    function release(address _account)
         internal
         returns(bool isReleased_)
     {
         require(
-            locks[_address] == true,
+            locks[_account] == true,
             "Lock is not acquired for the address."
         );
 
-        locks[_address] = false;
+        locks[_account] = false;
         isReleased_ = true;
     }
 }
