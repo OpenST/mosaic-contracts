@@ -395,8 +395,6 @@ contract GatewayBase is Organized {
      * @param _account Account address
      * @param _nonce Nonce for the account address
      * @param _messageHash Message hash
-     *
-     * @return previousMessageHash_ previous messageHash
      */
     function registerOutboxProcess(
         address _account,
@@ -405,19 +403,18 @@ contract GatewayBase is Organized {
 
     )
         internal
-        returns (bytes32 previousMessageHash_)
     {
         require(
             _nonce == _getOutboxNonce(_account),
             "Invalid nonce."
         );
 
-        previousMessageHash_ = outboxActiveProcess[_account];
+        bytes32 previousMessageHash = outboxActiveProcess[_account];
 
-        if (previousMessageHash_ != bytes32(0)) {
+        if (previousMessageHash != bytes32(0)) {
 
             MessageBus.MessageStatus status =
-            messageBox.outbox[previousMessageHash_];
+                messageBox.outbox[previousMessageHash];
 
             require(
                 status == MessageBus.MessageStatus.Progressed ||
@@ -425,7 +422,7 @@ contract GatewayBase is Organized {
                 "Previous process is not completed."
             );
 
-            delete messages[previousMessageHash_];
+            delete messages[previousMessageHash];
         }
 
         // Update the active process.
@@ -436,13 +433,11 @@ contract GatewayBase is Organized {
 
     /**
      * @notice Clears the previous outbox process. Validates the
-     *         nonce. Updates the process with new process
+     *         nonce. Updates the process with new process.
      *
-     * @param _account Account address
-     * @param _nonce Nonce for the account address
-     * @param _messageHash Message hash
-     *
-     * @return previousMessageHash_ previous messageHash
+     * @param _account Account address.
+     * @param _nonce Nonce for the account address.
+     * @param _messageHash Message hash.
      */
     function registerInboxProcess(
         address _account,
@@ -450,19 +445,18 @@ contract GatewayBase is Organized {
         bytes32 _messageHash
     )
         internal
-        returns (bytes32 previousMessageHash_)
     {
         require(
             _nonce == _getInboxNonce(_account),
             "Invalid nonce"
         );
 
-        previousMessageHash_ = inboxActiveProcess[_account];
+        bytes32 previousMessageHash = inboxActiveProcess[_account];
 
-        if (previousMessageHash_ != bytes32(0)) {
+        if (previousMessageHash != bytes32(0)) {
 
             MessageBus.MessageStatus status =
-            messageBox.inbox[previousMessageHash_];
+                messageBox.inbox[previousMessageHash];
 
             require(
                 status == MessageBus.MessageStatus.Progressed ||
@@ -470,7 +464,7 @@ contract GatewayBase is Organized {
                 "Previous process is not completed"
             );
 
-            delete messages[previousMessageHash_];
+            delete messages[previousMessageHash];
         }
 
         // Update the active proccess.

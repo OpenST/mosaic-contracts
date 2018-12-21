@@ -805,7 +805,7 @@ contract EIP20CoGateway is GatewayBase {
             _stakerNonce,
             _gasPrice,
             _gasLimit,
-            address(valueToken)
+            valueToken
         );
 
         // Get the messageHash.
@@ -925,7 +925,7 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        // Register new redeem process
+        // Register new redeem process.
         registerOutboxProcess(
             msg.sender,
             _nonce,
