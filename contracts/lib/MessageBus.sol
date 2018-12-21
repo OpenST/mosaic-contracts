@@ -526,7 +526,7 @@ library MessageBus {
         );
 
         /*
-         * The outbox is at location 1 of the MessageBox struct.
+         * The inbox is at location 1 of the MessageBox struct.
          * So add one to get the path.
          */
         bytes memory path = bytes32ToBytes(
