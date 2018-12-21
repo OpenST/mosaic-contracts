@@ -173,7 +173,7 @@ contract EIP20CoGateway is GatewayBase {
         uint256 amount;
 
         /** Address for which the utility tokens will be minted */
-        address beneficiary;
+        address payable beneficiary;
     }
 
     /* Public Variables */
@@ -755,7 +755,9 @@ contract EIP20CoGateway is GatewayBase {
      * @param _staker Staker address.
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
+     *                     tokens will be minted. This is payable so that it
+     *                     provides flexibility of transferring base token
+     *                     to account on minting.
      * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
@@ -770,7 +772,7 @@ contract EIP20CoGateway is GatewayBase {
     function confirmStakeIntent(
         address _staker,
         uint256 _stakerNonce,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount,
         uint256 _gasPrice,
         uint256 _gasLimit,
@@ -1119,7 +1121,7 @@ contract EIP20CoGateway is GatewayBase {
 
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
-            beneficiary_,
+            mint.beneficiary,
             mintedAmount_
         );
 
