@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Anchor = artifacts.require("./Anchor.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -32,7 +32,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
-    membersManager,
+    organization,
     anchor,
     owner,
     worker,
@@ -46,7 +46,8 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
+    coCoreAddress = accounts[6];
     coAnchorAddress = accounts[6];
 
     anchor = await Anchor.new(
@@ -54,7 +55,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager.address,
+      organization.address,
     );
 
   });
@@ -64,7 +65,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     coAnchorAddress = NullAddress;
 
     await Utils.expectRevert(
-      anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
+      anchor.setCoAnchorAddress(coAnchorAddress, { from: owner }),
       "Co-Anchor address must not be 0.",
     );
 
@@ -75,7 +76,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
     let notOwner = accounts[7];
 
     await Utils.expectRevert(
-      anchor.setCoAnchorAddress(coAnchorAddress, {from: notOwner}),
+      anchor.setCoAnchorAddress(coAnchorAddress, { from: notOwner }),
       'Only the organization is allowed to call this method.',
     );
 
@@ -85,7 +86,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
 
     let result = await anchor.setCoAnchorAddress.call(
       coAnchorAddress,
-      {from: owner},
+      { from: owner },
     );
 
     assert.strictEqual(
@@ -94,7 +95,7 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
       'Return value of setAnchorAddress must be true.',
     );
 
-    await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
+    await anchor.setCoAnchorAddress(coAnchorAddress, { from: owner });
 
     let coAnchor = await anchor.coAnchor.call();
 
@@ -108,10 +109,10 @@ contract('Anchor.setCoAnchorAddress()', function (accounts) {
 
   it('should fail to set coAnchor address if it\'s already set', async () => {
 
-    await anchor.setCoAnchorAddress(coAnchorAddress, {from: owner});
+    await anchor.setCoAnchorAddress(coAnchorAddress, { from: owner });
 
     await Utils.expectRevert(
-      anchor.setCoAnchorAddress(coAnchorAddress, {from: owner}),
+      anchor.setCoAnchorAddress(coAnchorAddress, { from: owner }),
       'Co-Anchor has already been set and cannot be updated.',
     );
 

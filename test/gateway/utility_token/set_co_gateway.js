@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const UtilityToken = artifacts.require('UtilityToken');
-const MockMembersManager = artifacts.require('MockMembersManager');
+const MockOrganization = artifacts.require('MockOrganization');
 const MockEIP20CoGateway = artifacts.require('MockEIP20CoGateway');
 
 const Utils = require("./../../test_lib/utils"),
@@ -33,20 +33,20 @@ const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.setCoGateway() ', function (accounts) {
 
-  let brandedToken, membersManager, owner, worker, utilityToken, coGateway;
+  let brandedToken, organization, owner, worker, utilityToken, coGateway;
 
   beforeEach(async function () {
     owner = accounts[2];
     worker = accounts[3];
     brandedToken = accounts[4];
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
 
     utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address,
+      organization.address,
     );
 
     coGateway = await MockEIP20CoGateway.new();
@@ -75,20 +75,21 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
   it('should fail when cogateway address is not linked with current ' +
     'utility token', async function () {
 
-    await coGateway.setUtilityToken(NullAddress);
+      await coGateway.setUtilityToken(NullAddress);
 
-    await Utils.expectRevert(
-      utilityToken.setCoGateway(coGateway.address, { from: owner }),
-      'CoGateway should be linked with this utility token.',
-    );
+      await Utils.expectRevert(
+        utilityToken.setCoGateway(coGateway.address, { from: owner }),
+        'CoGateway should be linked with this utility token.',
+      );
 
-  });
+    }
+  );
 
   it('should pass with correct params', async function () {
 
     let result = await utilityToken.setCoGateway.call(
-        coGateway.address, { from: owner }
-      );
+      coGateway.address, { from: owner }
+    );
 
     assert.strictEqual(
       result,
@@ -98,7 +99,7 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
 
     await utilityToken.setCoGateway(coGateway.address, { from: owner });
 
-    let coGatewayAddress =  await utilityToken.coGateway.call();
+    let coGatewayAddress = await utilityToken.coGateway.call();
 
     assert.strictEqual(
       coGatewayAddress,

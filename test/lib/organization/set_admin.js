@@ -30,7 +30,16 @@ contract('Organization.setAdmin()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
+    let zeroAdmin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    let expirationHeight = 0;
+
+    organization = await Organization.new(
+      owner,
+      zeroAdmin,
+      workers,
+      expirationHeight,
+    );
   });
 
   it('reverts when caller is not owner/admin', async () => {
@@ -42,18 +51,6 @@ contract('Organization.setAdmin()', async (accounts) => {
       ),
       'Only owner and admin are allowed to call this method.',
     );
-  });
-
-  it('reverts when admin is same as owner', async () => {
-
-    await Utils.expectRevert(
-      organization.setAdmin(
-        owner,
-        { from: owner },
-      ),
-      'Admin address can\'t be the same as the owner address.',
-    );
-
   });
 
   it('should pass when valid admin is passed by owner', async () => {
@@ -102,6 +99,7 @@ contract('Organization.setAdmin()', async (accounts) => {
   });
 
   it('verifies emitting of AdminAddressChanged event', async () => {
+    const previousAdmin = await organization.admin.call();
     const transaction = await organization.setAdmin(
       admin,
       { from: owner },
@@ -116,6 +114,11 @@ contract('Organization.setAdmin()', async (accounts) => {
       events.AdminAddressChanged.newAdmin,
       admin,
       'The event should emit the correct admin address.'
+    );
+    assert.strictEqual(
+      events.AdminAddressChanged.previousAdmin,
+      previousAdmin,
+      'The event should emit the correct address of the previous admin.'
     );
 
   });

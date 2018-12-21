@@ -32,10 +32,19 @@ contract('Organization.unsetWorker()', async (accounts) => {
   let admin = accounts[2];
 
   let organization = null;
+  let expirationHeight;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
     expirationHeight = (await web3.eth.getBlockNumber()) + 10;
+
+    let zeroAdmin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    organization = await Organization.new(
+      owner,
+      zeroAdmin,
+      workers,
+      expirationHeight,
+    );
     await organization.setWorker(worker, expirationHeight, { from: owner });
   });
 
@@ -95,35 +104,6 @@ contract('Organization.unsetWorker()', async (accounts) => {
       events.WorkerUnset.worker,
       worker,
       'The event should list the worker that was unset.',
-    );
-    assert.strictEqual(
-      events.WorkerUnset.wasSet,
-      true,
-      'The event should list the worker as previously set.',
-    );
-
-  });
-
-  it('emits an unsetWorker event when worker is not present', async () => {
-    let nonSetWorker = accounts[4];
-    const transaction = await organization.unsetWorker(
-      nonSetWorker,
-      { from: owner },
-    );
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
-
-    assert.strictEqual(
-      events.WorkerUnset.worker,
-      nonSetWorker,
-      'The event should list the worker that was unset.',
-    );
-    assert.strictEqual(
-      events.WorkerUnset.wasSet,
-      false,
-      'The event should not list the worker as previously set.',
     );
 
   });

@@ -24,10 +24,9 @@ pragma solidity ^0.5.0;
 
 import "./EIP20Interface.sol";
 import "./MockTokenConfig.sol";
-import "./Owned.sol";
 import "../lib/SafeMath.sol";
 
-contract MockToken is EIP20Interface, MockTokenConfig, Owned {
+contract MockToken is EIP20Interface, MockTokenConfig {
 
     using SafeMath for uint256;
 
@@ -39,19 +38,16 @@ contract MockToken is EIP20Interface, MockTokenConfig, Owned {
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
 
-    constructor()
-        public
-        Owned()
-    {
+    constructor() public {
         tokenSymbol = TOKEN_SYMBOL;
         tokenName = TOKEN_NAME;
         tokenDecimals = TOKEN_DECIMALS;
         tokenTotalSupply = TOKENS_MAX;
-        balances[owner] = TOKENS_MAX;
+        balances[msg.sender] = TOKENS_MAX;
 
         // According to the ERC20 standard, a token contract which creates new tokens should trigger
         // a Transfer event and transfers of 0 values must also fire the event.
-        emit Transfer(address(0), owner, TOKENS_MAX);
+        emit Transfer(address(0), msg.sender, TOKENS_MAX);
     }
 
     function name() public view returns (string memory) {
@@ -115,9 +111,5 @@ contract MockToken is EIP20Interface, MockTokenConfig, Owned {
         emit Approval(msg.sender, _spender, _value);
 
         return true;
-    }
-
-    function remove() public onlyOwner {
-        selfdestruct(msg.sender);
     }
 }

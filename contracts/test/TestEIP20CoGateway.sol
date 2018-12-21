@@ -44,7 +44,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _membersManager Address of a members manager contract.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _burner An address where tokens are sent when they should be burnt.
      */
@@ -53,7 +53,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         address _utilityToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
+        OrganizationInterface _organization,
         address _gateway,
         address payable _burner
     )
@@ -62,7 +62,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _utilityToken,
             _stateRootProvider,
             _bounty,
-            _membersManager,
+            _organization,
             _gateway,
             _burner
     )

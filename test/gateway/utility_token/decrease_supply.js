@@ -34,21 +34,21 @@ const TOKEN_DECIMALS = 18;
 contract('UtilityToken.decreaseSupply()', function (accounts) {
 
   let brandedToken,
-    membersManager,
+    organization,
     utilityToken,
     coGatewayAddress,
     amount;
 
   beforeEach(async function () {
     brandedToken = accounts[4];
-    membersManager = accounts[0];
+    organization = accounts[0];
     amount = new BN(1000);
     utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager,
+      organization,
     );
 
     coGatewayAddress = accounts[1];

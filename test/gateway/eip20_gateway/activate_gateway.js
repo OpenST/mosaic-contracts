@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const Gateway = artifacts.require("./EIP20Gateway.sol")
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -32,7 +32,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     let coGateway = accounts[5];
     let owner = accounts[2];
     let worker = accounts[3];
-    let membersManager;
+    let organization;
     let burner = NullAddress;
 
     beforeEach(async function () {
@@ -42,14 +42,14 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             dummyStateRootProvider = accounts[2],
             bountyAmount = new BN(100);
 
-        membersManager = await MockMembersManager.new(owner, worker);
+        organization = await MockOrganization.new(owner, worker);
 
         gateway = await Gateway.new(
             mockToken,
             baseToken,
             dummyStateRootProvider,
             bountyAmount,
-            membersManager.address,
+            organization.address,
             burner
         );
     });

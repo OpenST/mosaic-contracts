@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
 
 const BN = require('bn.js');
@@ -66,7 +66,7 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
 
     let owner = accounts[2];
     let worker = accounts[7];
-    let membersManager = await MockMembersManager.new(owner, worker);
+    let organization = await MockOrganization.new(owner, worker);
 
     let coreAddress = accounts[5];
     let burner = NullAddress;
@@ -76,7 +76,7 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       baseToken.address,
       coreAddress,
       bountyAmount,
-      membersManager.address,
+      organization.address,
       burner,
     );
 

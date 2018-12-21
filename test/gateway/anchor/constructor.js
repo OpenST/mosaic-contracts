@@ -31,7 +31,8 @@ contract('Anchor.constructor()', function (accounts) {
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
-    membersManager,
+    organization,
+    safeCore,
     anchor;
 
   beforeEach(async function () {
@@ -40,7 +41,7 @@ contract('Anchor.constructor()', function (accounts) {
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = accounts[1];
+    organization = accounts[1];
 
   });
 
@@ -54,16 +55,16 @@ contract('Anchor.constructor()', function (accounts) {
         blockHeight,
         stateRoot,
         maxNumberOfStateRoots,
-        membersManager,
+        organization,
       ),
       'Remote chain Id must not be 0.',
     );
 
   });
 
-  it('should fail when members manager address is zero', async () => {
+  it('should fail when organization address is zero', async () => {
 
-    membersManager = NullAddress;
+    organization = NullAddress;
 
     await Utils.expectRevert(
       Anchor.new(
@@ -71,9 +72,9 @@ contract('Anchor.constructor()', function (accounts) {
         blockHeight,
         stateRoot,
         maxNumberOfStateRoots,
-        membersManager,
+        organization,
       ),
-      'MembersManager contract address must not be zero.',
+      'Organization contract address must not be zero.',
     );
 
   });
@@ -85,7 +86,7 @@ contract('Anchor.constructor()', function (accounts) {
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager,
+      organization,
     );
 
     let chainId = await anchor.getRemoteChainId.call();
@@ -109,11 +110,11 @@ contract('Anchor.constructor()', function (accounts) {
       `Latest state root from the contract must be ${stateRoot}.`,
     );
 
-    let membersManagerAddress = await anchor.membersManager.call();
+    let organizationAddress = await anchor.organization.call();
     assert.strictEqual(
-      membersManagerAddress,
-      membersManager,
-      `Members manager address from the contract must be ${membersManager}.`,
+      organizationAddress,
+      organization,
+      `Organization address from the contract must be ${organization}.`,
     );
 
   });

@@ -25,10 +25,11 @@ import "../../lib/OrganizationInterface.sol";
 /**
  * @title Mocks an organization interface implementation.
  *
- * @notice The only valid registered worker is given at construction and cannot
- *         be removed.
+ * @notice The only valid registered owner and worker are given at
+ *         construction and cannot be changed or removed.
  */
 contract MockOrganization is OrganizationInterface {
+
 
     /* Storage */
 
@@ -38,10 +39,11 @@ contract MockOrganization is OrganizationInterface {
     /** The address of the registered worker. */
     address worker;
 
+
     /* Constructor */
 
     /**
-     * @notice Sets the address of the worker.
+     * @notice Sets the address of the owner and the worker.
      *
      * @param _owner Address that should be used as a registered owner.
      * @param _worker Address that should be used as a registered worker.
@@ -51,24 +53,25 @@ contract MockOrganization is OrganizationInterface {
         worker = _worker;
     }
 
+
     /* External functions */
 
     /**
-     * @notice Checks if an address is the owner of the organization.
+     * @notice Checks if an address is currently registered as the organization.
      *
-     * @param _owner Address to check.
+     * @param _organization Address to check.
      *
-     * @return isOwner_ True if the given address is the current owner of the
-     *                  organization. Returns false otherwise.
+     * @return isOrganization_ True if the given address represents the
+     *                         organization. Returns false otherwise.
      */
-    function isOwner(
-        address _owner
+    function isOrganization(
+        address _organization
     )
         external
         view
-        returns (bool isOwner_)
+        returns (bool isOrganization_)
     {
-        isOwner_ = owner == _owner;
+        isOrganization_ = owner == _organization;
     }
 
     /**
@@ -80,77 +83,5 @@ contract MockOrganization is OrganizationInterface {
      */
     function isWorker(address _worker) external view returns (bool isWorker_) {
         isWorker_ = worker == _worker;
-    }
-
-    /**
-     * @notice Proposes a new owner of this contract. Ownership will not be
-     *         transferred until the new, proposed owner accepts the proposal.
-     *         Allows resetting of proposed owner to address(0).
-     *
-     * @param _proposedOwner Proposed owner address.
-     *
-     * @return success_ True on successful execution.
-     */
-    function initiateOwnershipTransfer(
-        address _proposedOwner
-    )
-        external
-        returns (bool success_)
-    {
-        _proposedOwner;
-        success_ = true;
-    }
-
-    /**
-     * @notice Complete ownership transfer to proposed owner.
-     *
-     * @return success_ True on successful execution.
-     */
-    function completeOwnershipTransfer() external returns (bool success_) {
-        success_ = true;
-    }
-
-    /**
-     * @notice Sets admin address.
-     *
-     * @param _admin Admin address to be set.
-     *
-     * @return success_ True on successful execution.
-     */
-    function setAdmin(address _admin) external returns (bool success_) {
-        _admin;
-        success_ = true;
-    }
-
-    /**
-     * @notice Sets worker and its expiration block height.
-     *
-     * @param _worker Worker address to be added.
-     * @param _expirationHeight Expiration block height of the given worker.
-     *
-     * @return remainingBlocks_ Remaining number of blocks for which worker is
-     *                          active.
-     */
-    function setWorker(
-        address _worker,
-        uint256 _expirationHeight
-    )
-        external
-        returns (uint256 remainingBlocks_)
-    {
-        _worker;
-        remainingBlocks_ = _expirationHeight - block.number;
-    }
-
-    /**
-     * @notice Removes a worker.
-     *
-     * @param _worker Worker address to be removed.
-     *
-     * @return isUnset_ True if the worker existed else returns false.
-     */
-    function unsetWorker(address _worker) external returns (bool isUnset_) {
-        _worker;
-        isUnset_ = true;
     }
 }

@@ -30,12 +30,12 @@ contract('OSTPrime.initialize()', function (accounts) {
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress, ostPrime, membersManager;
+  let brandedTokenAddress, ostPrime, organization;
 
   beforeEach(async function () {
     brandedTokenAddress = accounts[2];
-    membersManager = accounts[0];
-    ostPrime = await OSTPrime.new(brandedTokenAddress, membersManager);
+    organization = accounts[0];
+    ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
   });
 
   it('The balance of OST prime contract must be zero', async function () {
