@@ -82,7 +82,8 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
         'CoGateway should be linked with this utility token.',
       );
 
-    });
+    }
+  );
 
   it('should pass with correct params', async function () {
 

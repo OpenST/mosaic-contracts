@@ -34,8 +34,7 @@ import "../lib/SafeMath.sol";
  * @notice Anchor stores another chain's state roots. It stores the address of
  *         the co-anchor, which will be the anchor on the other chain. State
  *         roots are exchanged bidirectionally between the anchor and the
- *         co-anchor by the workers that are registered as part of the
- *         `Organized` interface.
+ *         co-anchor by the organization.
  */
 contract Anchor is StateRootInterface, Organized, CircularBufferUint {
 

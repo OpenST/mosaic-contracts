@@ -333,7 +333,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         "Storage root must not be zero.",
       );
 
-    });
+    }
+  );
 
   it('should fail when the rlp parent node is a incorrect proof data.',
     async function () {
@@ -355,7 +356,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         "Merkle proof verification failed.",
       );
 
-    });
+    }
+  );
 
   it('should fail to confirm stake intent if its already confirmed once',
     async function () {
@@ -387,7 +389,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         "Invalid nonce.",
       );
 
-    });
+    }
+  );
 
   it('should fail to confirm new stake intent if status of previous ' +
     'confirmed stake intent is declared', async function () {
@@ -423,7 +426,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         "Previous process is not completed.",
       );
 
-    });
+    }
+  );
 
   it('should pass with valid params.', async function () {
 
@@ -522,7 +526,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
       await assertConfirmStakeIntent();
 
-    });
+    }
+  );
 
   it('should confirm new stake intent if status of previous ' +
     'confirmed stake intent is progressed', async function () {
@@ -547,6 +552,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
       await assertConfirmStakeIntent();
 
-    });
+    }
+  );
 
 });
