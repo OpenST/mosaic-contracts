@@ -26,7 +26,7 @@ interface StateRootInterface {
     /**
      * @notice Gets the block number of latest committed state root.
      *
-     * @return uint256 Block height of the latest committed state root.
+     * @return height_ Block height of the latest committed state root.
      */
     function getLatestStateRootBlockHeight()
         external

@@ -231,7 +231,8 @@ contract EIP20Gateway is GatewayBase {
      *               in auxiliary chain.
      * @param _baseToken The ERC20 token address that will be used for
      *                     staking bounty from the facilitators.
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
@@ -240,13 +241,13 @@ contract EIP20Gateway is GatewayBase {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _burner
     )
         GatewayBase(
-            _core,
+            _stateRootProvider,
             _bounty,
             _membersManager
         )

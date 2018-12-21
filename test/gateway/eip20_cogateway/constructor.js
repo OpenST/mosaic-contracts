@@ -23,158 +23,158 @@ const MockToken = artifacts.require("MockToken");
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 
 const Utils = require("./../../test_lib/utils"),
-    BN = require('bn.js');
+  BN = require('bn.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
 contract('EIP20CoGateway.constructor() ', function (accounts) {
 
 
-    let valueToken, utilityToken, bountyAmount, coreAddress, owner, worker,
-        membersManager, coGateway, gatewayAddress = accounts[6],
-        burner = NullAddress;
+  let valueToken, utilityToken, bountyAmount, dummyStateRootProvider,
+    owner, worker, membersManager, coGateway, gatewayAddress = accounts[6],
+    burner = NullAddress;
 
-    beforeEach(async function () {
+  beforeEach(async function () {
 
-        valueToken = await MockToken.new();
-        utilityToken = await MockToken.new();
-        coreAddress = accounts[1];
-        bountyAmount = new BN(100);
+    valueToken = await MockToken.new();
+    utilityToken = await MockToken.new();
+    dummyStateRootProvider = accounts[1];
+    bountyAmount = new BN(100);
 
-        owner = accounts[2];
-        worker = accounts[3];
-        membersManager = await MockMembersManager.new(owner, worker);
-    });
+    owner = accounts[2];
+    worker = accounts[3];
+    membersManager = await MockMembersManager.new(owner, worker);
+  });
 
-    it('should able to deploy contract with correct parameters.', async function () {
-        coGateway = await
-            CoGateway.new(
-                valueToken.address,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            );
+  it('should able to deploy contract with correct parameters.', async function () {
+    coGateway = await
+      CoGateway.new(
+        valueToken.address,
+        utilityToken.address,
+        dummyStateRootProvider,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      );
 
-        assert(
-            web3.utils.isAddress(coGateway.address),
-            'Returned value is not a valid address.'
-        );
-    });
+    assert(
+      web3.utils.isAddress(coGateway.address),
+      'Returned value is not a valid address.'
+    );
+  });
 
-    it('should initialize coGateway contract with correct parameters.', async function () {
-        coGateway = await
-            CoGateway.new(
-                valueToken.address,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            );
+  it('should initialize coGateway contract with correct parameters.', async function () {
+    coGateway = await
+      CoGateway.new(
+        valueToken.address,
+        utilityToken.address,
+        dummyStateRootProvider,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      );
 
-        let valueTokenAddress = await coGateway.valueToken.call();
+    let valueTokenAddress = await coGateway.valueToken.call();
 
-        assert.strictEqual(
-            valueTokenAddress,
-            valueToken.address,
-            'Invalid valueTokenAddress address from contract.'
-        );
+    assert.strictEqual(
+      valueTokenAddress,
+      valueToken.address,
+      'Invalid valueTokenAddress address from contract.'
+    );
 
-        let utilityTokenAddress = await coGateway.utilityToken.call();
-        assert.strictEqual(
-            utilityTokenAddress,
-            utilityToken.address,
-            'Invalid bounty token address from contract.'
-        );
+    let utilityTokenAddress = await coGateway.utilityToken.call();
+    assert.strictEqual(
+      utilityTokenAddress,
+      utilityToken.address,
+      'Invalid bounty token address from contract.'
+    );
 
-        let coreAdd = await coGateway.core.call();
-        assert.strictEqual(
-            coreAdd,
-            coreAddress,
-            'Invalid core address from contract.'
-        );
+    let stateRootProviderAdd = await coGateway.stateRootProvider.call();
+    assert.strictEqual(
+      stateRootProviderAdd,
+      dummyStateRootProvider,
+      'Invalid stateRootProvider address from contract.'
+    );
 
-        let bounty = await coGateway.bounty.call();
-        assert(
-            bounty.eq(bountyAmount),
-            'Invalid bounty amount from contract'
-        );
+    let bounty = await coGateway.bounty.call();
+    assert(
+      bounty.eq(bountyAmount),
+      'Invalid bounty amount from contract'
+    );
 
-    });
+  });
 
-    it('should not deploy contract if value token is passed as zero.', async function () {
-        let valueTokenAddress = NullAddress;
+  it('should not deploy contract if value token is passed as zero.', async function () {
+    let valueTokenAddress = NullAddress;
 
-        await Utils.expectRevert(
-            CoGateway.new(
-                valueTokenAddress,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            ),
-            'Value token address must not be zero.'
-        );
-    });
+    await Utils.expectRevert(
+      CoGateway.new(
+        valueTokenAddress,
+        utilityToken.address,
+        dummyStateRootProvider,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      ),
+      'Value token address must not be zero.'
+    );
+  });
 
-    it('should not deploy contract if utility token is passed as zero.', async function () {
-        let utilityTokenAddress = NullAddress;
+  it('should not deploy contract if utility token is passed as zero.', async function () {
+    let utilityTokenAddress = NullAddress;
 
-        await Utils.expectRevert(
-            CoGateway.new(
-                valueToken.address,
-                utilityTokenAddress,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            ),
-            'Utility token address must not be zero.'
-        );
-    });
+    await Utils.expectRevert(
+      CoGateway.new(
+        valueToken.address,
+        utilityTokenAddress,
+        dummyStateRootProvider,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      ),
+      'Utility token address must not be zero.'
+    );
+  });
 
-    it('should not deploy contract if core address is passed as zero.', async function () {
-        let coreAddress = NullAddress;
+  it('should not deploy contract if state root provider contract address is passed as zero.', async function () {
+    let stateRootProviderAddress = NullAddress;
 
-        await Utils.expectRevert(
-            CoGateway.new(
-                valueToken.address,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            ),
-            'Core contract address must not be zero.'
-        );
+    await Utils.expectRevert(
+      CoGateway.new(
+        valueToken.address,
+        utilityToken.address,
+        stateRootProviderAddress,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      ),
+      'State root provider contract address must not be zero.'
+    );
 
-    });
+  });
 
-    it('should able to deploy contract with zero bounty.', async function () {
-        let bountyAmount = new BN(0);
+  it('should able to deploy contract with zero bounty.', async function () {
+    let bountyAmount = new BN(0);
 
-        coGateway = await
-            CoGateway.new(
-                valueToken.address,
-                utilityToken.address,
-                coreAddress,
-                bountyAmount,
-                membersManager.address,
-                gatewayAddress,
-                burner
-            );
+    coGateway = await
+      CoGateway.new(
+        valueToken.address,
+        utilityToken.address,
+        dummyStateRootProvider,
+        bountyAmount,
+        membersManager.address,
+        gatewayAddress,
+        burner
+      );
 
-        assert(
-            web3.utils.isAddress(coGateway.address),
-            'Returned value is not a valid address.'
-        );
-    });
+    assert(
+      web3.utils.isAddress(coGateway.address),
+      'Returned value is not a valid address.'
+    );
+  });
 });
