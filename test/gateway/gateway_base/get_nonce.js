@@ -13,13 +13,13 @@ contract('GatewayBase.sol', function (accounts) {
 
       let owner = accounts[2]
         , worker = accounts[3]
-        , core = accounts[0]
+        , dummyStateRootProviderAddress = accounts[0]
         , bounty = new BN(100);
 
       let membersManager = await MockMembersManager.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
-        core,
+        dummyStateRootProviderAddress,
         bounty,
         membersManager.address
       );

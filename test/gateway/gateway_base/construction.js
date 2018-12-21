@@ -9,13 +9,13 @@ contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {
 
-    let core, bounty, worker, membersManager;
+    let dummyStateRootProvider, bounty, worker, membersManager;
 
     beforeEach(async function () {
 
       owner = accounts[2]
         , worker = accounts[3]
-        , core = accounts[0]
+        , dummyStateRootProvider = accounts[0]
         , bounty = new BN(100);
 
       membersManager = await MockMembersManager.new(owner, worker);
@@ -23,15 +23,15 @@ contract('GatewayBase.sol', function (accounts) {
 
     it('should pass with right set of parameters', async function () {
       gatewayBaseInstance = await GatewayBase.new(
-        core,
+        dummyStateRootProvider,
         bounty,
         membersManager.address
       );
 
       assert.strictEqual(
-        core,
-        await gatewayBaseInstance.core.call(),
-        "Core contract address doesn't match."
+        dummyStateRootProvider,
+        await gatewayBaseInstance.stateRootProvider.call(),
+        "State root provider contract address doesn't match."
       );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
@@ -41,21 +41,21 @@ contract('GatewayBase.sol', function (accounts) {
       bounty = new BN(0);
 
       gatewayBaseInstance = await GatewayBase.new(
-        core,
+        dummyStateRootProvider,
         bounty,
         membersManager.address
       );
 
-      assert.equal(core, await gatewayBaseInstance.core.call());
+      assert.equal(dummyStateRootProvider, await gatewayBaseInstance.stateRootProvider.call());
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
 
-    it('should fail if core address is not passed', async function () {
+    it('should fail if state root provider contract address is zero', async function () {
 
-      core = NullAddress;
+      let stateRootProvider = NullAddress;
       await Utils.expectRevert(
-        GatewayBase.new(core, bounty, membersManager.address),
-        "Core contract address must not be zero."
+        GatewayBase.new(stateRootProvider, bounty, membersManager.address),
+        "State root provider contract address must not be zero."
       );
 
     });
@@ -63,7 +63,7 @@ contract('GatewayBase.sol', function (accounts) {
     it('should fail if worker manager address is not passed', async function () {
 
       await Utils.expectRevert(
-        GatewayBase.new(core, bounty, NullAddress),
+        GatewayBase.new(dummyStateRootProvider, bounty, NullAddress),
         "MembersManager contract address must not be zero."
       );
 
