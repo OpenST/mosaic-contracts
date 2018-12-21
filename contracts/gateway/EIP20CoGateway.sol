@@ -176,7 +176,7 @@ contract EIP20CoGateway is GatewayBase {
         address payable beneficiary;
     }
 
-    /* public Variables */
+    /* Public Variables */
 
     /** Address of utility token. */
     address public utilityToken;
@@ -188,10 +188,10 @@ contract EIP20CoGateway is GatewayBase {
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
-    mapping(bytes32 /*messageHash*/ => Mint) mints;
+    mapping(bytes32 => Mint) public mints;
 
     /** Maps messageHash to the Redeem object. */
-    mapping(bytes32/*messageHash*/ => Redeem) redeems;
+    mapping(bytes32 => Redeem) public redeems;
 
 
     /* Constructor */
@@ -755,7 +755,7 @@ contract EIP20CoGateway is GatewayBase {
      *                     tokens will be minted. This is payable so that it
      *                     provides flexibility of transferring base token
      *                     to account on minting.
-     * @param _amount Amount of utility token will be minted.
+     * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
      * @param _gasLimit Gas limit that staker is ready to pay
@@ -785,19 +785,19 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _staker != address(0),
-            "Staker address must not be zero"
+            "Staker address must not be zero."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
         );
         require(
             _amount != 0,
-            "Mint amount must not be zero"
+            "Stake amount must not be zero."
         );
         require(
             _rlpParentNodes.length != 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the stake intent hash.
@@ -1066,6 +1066,11 @@ contract EIP20CoGateway is GatewayBase {
             message.gasPrice,
             _initialGas,
             50000  //21000 * 2 for transactions + approx buffer
+        );
+
+        require(
+            rewardAmount_ <= stakeAmount_,
+            "Reward amount must not be greater than the stake amount."
         );
 
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);

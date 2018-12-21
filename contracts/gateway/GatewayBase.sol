@@ -117,7 +117,7 @@ contract GatewayBase is Organized {
     uint256 public proposedBountyUnlockHeight;
 
     /** Maps messageHash to the Message object. */
-    mapping(bytes32 => MessageBus.Message) messages;
+    mapping(bytes32 => MessageBus.Message) public messages;
 
     /** Maps blockHeight to storageRoot. */
     mapping(uint256 => bytes32) internal storageRoots;

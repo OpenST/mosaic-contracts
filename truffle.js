@@ -7,6 +7,13 @@ module.exports = {
       gas: 12000000,
       gasPrice: 0x01,
     },
+    integration: {
+      host: "localhost",
+      network_id: "*",
+      port: 8546,
+      gas: 9000000,
+      gasPrice: 0x3B9ACA00,
+    },
     coverage: {
       host: "localhost",
       network_id: "*",
