@@ -551,6 +551,15 @@ library MessageBus {
         _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
     }
 
+    /**
+     * @notice Returns the type hash of the type "Message".
+     *
+     * @return messageTypehash_ The type hash of the "Message" type.
+     */
+    function messageTypehash() public pure returns(bytes32 messageTypehash_) {
+        messageTypehash_ = MESSAGE_TYPEHASH;
+    }
+
 
     /* Public Functions */
 

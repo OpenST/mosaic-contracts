@@ -64,20 +64,6 @@ contract GatewayBase is Organized {
     );
 
 
-    /* Structs */
-
-    struct MessageRegistration {
-        bytes32 intentHash;
-        uint256 amount;
-        address beneficiary;
-        uint256 nonce;
-        uint256 gasPrice;
-        uint256 gasLimit;
-        address sender;
-        bytes32 hashLock;
-    }
-
-
     /* Constants */
 
     /** Position of message bus in the storage. */

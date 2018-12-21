@@ -27,6 +27,7 @@ module.exports = function (deployer) {
 
     deployer.link(MerklePatriciaProof, MessageBus);
     deployer.deploy(MessageBus);
+    deployer.link(MessageBus, MockMessageBus);
 
     deployer.link(
         MerklePatriciaProof,
