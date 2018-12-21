@@ -28,6 +28,7 @@ const messageTypeHash = utils.getTypeHash(
 function MessageBus() { }
 
 MessageBus.prototype = {
+
     /**
      * Creates an EIP-712 conform hash of the message that is equal to the hash
      * generated in solidity.

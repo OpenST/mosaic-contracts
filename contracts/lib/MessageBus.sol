@@ -372,8 +372,10 @@ library MessageBus {
             "Message on target must be Declared."
         );
 
-        // The outbox location index is 0 in the MessageBox struct, so it
-        // is same as _messageBoxOffset.
+        /*
+         * The outbox location index is 0 in the MessageBox struct, so it
+         * is same as _messageBoxOffset.
+         */
         bytes memory path = bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
@@ -523,8 +525,10 @@ library MessageBus {
             "Message on source must be DeclaredRevocation."
         );
 
-        // The outbox is at location 1 of the MessageBox struct.
-        // So add one to get the path.
+        /*
+         * The outbox is at location 1 of the MessageBox struct.
+         * So add one to get the path.
+         */
         bytes memory path = bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,

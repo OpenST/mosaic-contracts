@@ -22,6 +22,7 @@
 const web3 = require('./web3.js');
 const hashLock = require("./hash_lock");
 const Assert = require('assert');
+const BN = require('bn.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
@@ -56,8 +57,6 @@ function Utils() {
 }
 
 Utils.prototype = {
-
-    this: this,
 
     /** Log receipt. */
     logReceipt: (receipt, description) => {

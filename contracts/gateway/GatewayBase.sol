@@ -432,6 +432,8 @@ contract GatewayBase is Organized {
      * @notice Stores a message at its hash in the messages mapping.
      *
      * @param _message The message to store.
+     *
+     * @return messageHash_ The hash that represents the given message.
      */
     function storeMessage(
         MessageBus.Message memory _message
