@@ -6,6 +6,7 @@ branches:
   - master
   - develop
   - /^feature\/.*/
+  - /^release-.*/
 notifications:
   email:
     recipients:
