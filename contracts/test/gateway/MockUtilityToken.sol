@@ -41,17 +41,17 @@ contract MockUtilityToken is UtilityToken {
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
-     * @param _membersManager Address of a contract that manages organization.
+     * @param _organization Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         public
-        UtilityToken(_token, _symbol, _name, _decimals, _membersManager)
+        UtilityToken(_token, _symbol, _name, _decimals, _organization)
     {}
 
     /**

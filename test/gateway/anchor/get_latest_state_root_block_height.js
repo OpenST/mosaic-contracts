@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Anchor = artifacts.require("./Anchor.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
@@ -28,8 +28,8 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
   let remoteChainId,
     blockHeight,
     stateRoot,
-    membersManager,
     maxNumberOfStateRoots,
+    organization,
     anchor,
     owner,
     worker;
@@ -42,14 +42,14 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
 
     anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager.address,
+      organization.address,
     );
 
   });
@@ -72,7 +72,7 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: owner},
+      { from: owner },
     );
 
     let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();

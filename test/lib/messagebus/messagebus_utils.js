@@ -179,10 +179,8 @@ MessageBusUtils.prototype = {
                     gasConsumed
                 ),
                 params.message
-            )
-                ;
-        }
-        else {
+            );
+        } else {
             await messageBus.declareRevocationMessage(
                 intentHash,
                 nonce,

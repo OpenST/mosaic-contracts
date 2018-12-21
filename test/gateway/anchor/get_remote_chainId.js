@@ -28,7 +28,7 @@ contract('Anchor.getRemoteChainId()', function (accounts) {
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
-    membersManager,
+    organization,
     anchor;
 
   beforeEach(async function () {
@@ -37,14 +37,14 @@ contract('Anchor.getRemoteChainId()', function (accounts) {
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = accounts[1];
+    organization = accounts[1];
 
     anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager,
+      organization,
     );
 
   });

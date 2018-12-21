@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Anchor = artifacts.require("./Anchor.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -33,11 +33,11 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
   let remoteChainId,
     blockHeight,
     stateRoot,
-    membersManager,
+    maxNumberOfStateRoots,
+    organization,
     anchor,
     owner,
-    worker,
-    maxNumberOfStateRoots;
+    worker;
 
   beforeEach(async function () {
 
@@ -47,14 +47,14 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
 
     anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager.address,
+      organization.address,
     );
 
     stateRoot = web3.utils.sha3("dummy_state_root_1");
@@ -70,7 +70,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: owner},
+        { from: owner },
       ),
       'State root must not be zero.',
     );
@@ -80,32 +80,32 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
   it('should fail when block height is less than the latest anchored ' +
     'state root\'s block height', async () => {
 
-    blockHeight = blockHeight.subn(1);
+      blockHeight = blockHeight.subn(1);
 
-    await Utils.expectRevert(
-      anchor.anchorStateRoot(
-        blockHeight,
-        stateRoot,
-        {from: owner},
-      ),
-      'Given block height is lower or equal to highest anchored state root block height.',
-    );
+      await Utils.expectRevert(
+        anchor.anchorStateRoot(
+          blockHeight,
+          stateRoot,
+          { from: owner },
+        ),
+        'Given block height is lower or equal to highest anchored state root block height.',
+      );
 
-  });
+    });
 
   it('should fail when block height is equal to the latest anchored ' +
     'state root\'s block height', async () => {
 
-    await Utils.expectRevert(
-      anchor.anchorStateRoot(
-        blockHeight,
-        stateRoot,
-        {from: owner},
-      ),
-      'Given block height is lower or equal to highest anchored state root block height.',
-    );
+      await Utils.expectRevert(
+        anchor.anchorStateRoot(
+          blockHeight,
+          stateRoot,
+          { from: owner },
+        ),
+        'Given block height is lower or equal to highest anchored state root block height.',
+      );
 
-  });
+    });
 
   it('should fail when caller is not owner address', async () => {
 
@@ -116,7 +116,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: nonOwner},
+        { from: nonOwner },
       ),
       'Only the organization is allowed to call this method.',
     );
@@ -130,7 +130,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     let result = await anchor.anchorStateRoot.call(
       blockHeight,
       stateRoot,
-      {from: owner},
+      { from: owner },
     );
 
     assert.strictEqual(
@@ -142,7 +142,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: owner},
+      { from: owner },
     );
 
     let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
@@ -168,7 +168,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     let tx = await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: owner},
+      { from: owner },
     );
 
     let event = EventDecoder.getEvents(tx, anchor);
@@ -207,7 +207,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       await anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: owner},
+        { from: owner },
       );
 
       // Check that the older state root has been deleted when i > max state roots.

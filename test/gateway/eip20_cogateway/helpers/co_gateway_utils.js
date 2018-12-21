@@ -32,27 +32,27 @@ CoGatewayUtils.prototype = {
    *
    * @return {string} message type hash.
    */
-  redeemTypeHash: async function () {
+  redeemTypeHash: function () {
     return utils.getTypeHash(
       'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
     );
   },
 
   /**
-   * Generate the stake intent hash
+   * Generate the redeem intent hash
    *
    * @param {object} amount Redeem amount.
    * @param {string} beneficiary Beneficiary address.
    * @param {string} gateway The address of the gateway where the redemption was
    *                         initiated.
    *
-   * @return {string} stake intent hash.
+   * @return {string} redeem intent hash.
    */
-  hashRedeemIntent: (
+  hashRedeemIntent: function (
     amount,
     beneficiary,
     gateway,
-  ) => {
+  ) {
     let redeemIntentTypeHash = utils.getTypeHash(
       'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
     );

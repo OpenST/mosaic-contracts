@@ -19,14 +19,15 @@
 // ----------------------------------------------------------------------------
 
 const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
 
 const BN = require('bn.js');
-const Utils = require('../../../test/test_lib/utils');
 const GatewayUtils = require('./helpers/gateway_utils.js');
-const web3 = require('../../../test/test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
+const messageBus = require('../../test_lib/message_bus.js');
+const Utils = require('../../../test/test_lib/utils');
+const web3 = require('../../../test/test_lib/web3.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 const ZeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -66,7 +67,7 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
 
     let owner = accounts[2];
     let worker = accounts[7];
-    let membersManager = await MockMembersManager.new(owner, worker);
+    let organization = await MockOrganization.new(owner, worker);
 
     let coreAddress = accounts[5];
     let burner = NullAddress;
@@ -76,24 +77,26 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       baseToken.address,
       coreAddress,
       bountyAmount,
-      membersManager.address,
+      organization.address,
       burner,
     );
 
     await mockToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
     await baseToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
 
+    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
+
     let hashLockObj = Utils.generateHashLock();
 
     stakeMessage.hashLock = hashLockObj.l;
     stakeMessage.unlockSecret = hashLockObj.s;
-    let stakeTypeHash = gatewayUtils.stakeTypeHash();
-    stakeMessage.messageHash = Utils.messageHash(
-      stakeTypeHash,
+    stakeMessage.messageHash = messageBus.messageDigest(
       stakeMessage.intentHash,
       stakeMessage.stakerNonce,
       stakeMessage.gasPrice,
       stakeMessage.gasLimit,
+      stakeMessage.staker,
+      stakeMessage.hashLock,
     );
 
     await gateway.setStake(
@@ -110,8 +113,6 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       stakeMessage.staker,
       stakeMessage.hashLock,
     );
-
-    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
 
   });
 

@@ -24,11 +24,20 @@ const Organization = artifacts.require('Organization');
 contract('Organization.isWorker()', async (accounts) => {
 
   let owner = accounts[0];
-  let worker = accounts[0];
+  let worker = accounts[1];
   let organization = null;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
+    let admin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    let expirationHeight = 0;
+
+    organization = await Organization.new(
+      owner,
+      admin,
+      workers,
+      expirationHeight,
+    );
   });
 
   it('should return false if the worker wasn\'t set', async () => {

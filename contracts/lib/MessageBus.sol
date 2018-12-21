@@ -20,9 +20,9 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../lib/MerklePatriciaProof.sol";
-import "../lib/SafeMath.sol";
-import "../lib/BytesLib.sol";
+import "./MerklePatriciaProof.sol";
+import "./SafeMath.sol";
+import "./BytesLib.sol";
 
 library MessageBus {
 
@@ -372,8 +372,10 @@ library MessageBus {
             "Message on target must be Declared."
         );
 
-        // The outbox location index is 0 in the MessageBox struct, so it
-        // is same as _messageBoxOffset.
+        /*
+         * The outbox location index is 0 in the MessageBox struct, so it
+         * is same as _messageBoxOffset.
+         */
         bytes memory path = bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
@@ -523,8 +525,10 @@ library MessageBus {
             "Message on source must be DeclaredRevocation."
         );
 
-        // The outbox is at location 1 of the MessageBox struct.
-        // So add one to get the path.
+        /*
+         * The inbox is at location 1 of the MessageBox struct.
+         * So add one to get the path.
+         */
         bytes memory path = bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
@@ -545,6 +549,15 @@ library MessageBus {
         );
 
         _messageBox.outbox[messageHash_] = MessageStatus.Revoked;
+    }
+
+    /**
+     * @notice Returns the type hash of the type "Message".
+     *
+     * @return messageTypehash_ The type hash of the "Message" type.
+     */
+    function messageTypehash() public pure returns(bytes32 messageTypehash_) {
+        messageTypehash_ = MESSAGE_TYPEHASH;
     }
 
 

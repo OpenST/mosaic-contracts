@@ -29,7 +29,16 @@ contract('Organized.constructor()', async (accounts) => {
     let organization = null;
 
     beforeEach(async function () {
-        organization = await Organization.new({ from: owner });
+        let admin = '0x0000000000000000000000000000000000000000';
+        let workers = [];
+        let expirationHeight = 0;
+
+        organization = await Organization.new(
+            owner,
+            admin,
+            workers,
+            expirationHeight,
+        );
     });
 
     it('reverts when organization address is null', async () => {
@@ -38,15 +47,15 @@ contract('Organized.constructor()', async (accounts) => {
                 '0x0000000000000000000000000000000000000000',
                 { from: owner },
             ),
-            'MembersManager contract address must not be zero.',
+            'Organization contract address must not be zero.',
         );
 
     });
 
-    it('checks that valid members manager address is set', async () => {
+    it('checks that valid organization address is set', async () => {
         organized = await Organized.new(organization.address, { from: owner });
         assert.strictEqual(
-            await organized.membersManager.call(),
+            await organized.organization.call(),
             organization.address,
             'The organized contract should store the given organization.',
         );

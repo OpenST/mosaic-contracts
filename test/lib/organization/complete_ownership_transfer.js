@@ -25,21 +25,31 @@ const Organization = artifacts.require('Organization');
 
 contract('Organization.completeOwnershipTransfer()', async (accounts) => {
 
-  let owner = accounts[0];
+  let initialOwner = accounts[0];
   let proposedOwner = accounts[1];
   let organization = null;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
+    let admin = '0x0000000000000000000000000000000000000000';
+    let workers = [];
+    let expirationHeight = 0;
+
+    organization = await Organization.new(
+      initialOwner,
+      admin,
+      workers,
+      expirationHeight,
+    );
+
     await organization.initiateOwnershipTransfer(
       proposedOwner,
-      { from: owner },
+      { from: initialOwner },
     )
   });
 
   it('reverts when caller is not proposed owner', async () => {
     await Utils.expectRevert(
-      organization.completeOwnershipTransfer({ from: owner }),
+      organization.completeOwnershipTransfer({ from: initialOwner }),
       'Caller is not proposed owner address.',
     );
   });
@@ -82,6 +92,11 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
       events.OwnershipTransferCompleted.newOwner,
       proposedOwner,
       'The emitted event does not record the new owner.',
+    );
+    assert.strictEqual(
+      events.OwnershipTransferCompleted.previousOwner,
+      initialOwner,
+      'The emitted event does not record the previous owner.',
     );
 
   });

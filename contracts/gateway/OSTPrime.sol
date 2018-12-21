@@ -27,11 +27,11 @@ pragma solidity ^0.5.0;
  * Ether pays for gas on Ethereum mainnet) when sending a transaction on
  * the auxiliary chain.
  */
-import "../lib/SafeMath.sol";
-import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
-import "../lib/IsMemberInterface.sol";
+import "./UtilityToken.sol";
 import "../lib/MutexAddress.sol";
+import "../lib/OrganizationInterface.sol";
+import "../lib/SafeMath.sol";
 
 /**
  *  @title OSTPrime contract implements UtilityToken and
@@ -92,11 +92,11 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
      * @dev This contract should be deployed with zero gas.
      *
      * @param _valueToken ERC20 token address in origin chain.
-     * @param _membersManager Address of a contract that manages organization.
+     * @param _organization Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _valueToken,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         public
         UtilityToken(
@@ -104,7 +104,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
             TOKEN_SYMBOL,
             TOKEN_NAME,
             TOKEN_DECIMALS,
-            _membersManager
+            _organization
         )
     {}
 

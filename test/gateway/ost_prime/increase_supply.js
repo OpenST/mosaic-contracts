@@ -37,7 +37,7 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
     ostPrime,
     callerAddress,
     amount,
-    membersManager,
+    organization,
     coGatewayAddress;
 
   async function initialize() {
@@ -49,9 +49,9 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
   beforeEach(async function () {
 
     beneficiary = accounts[6];
-    membersManager = accounts[0];
+    organization = accounts[0];
     brandedTokenAddress = accounts[2];
-    ostPrime = await OSTPrime.new(brandedTokenAddress, membersManager);
+    ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
 
     callerAddress = accounts[3];
     amount = new BN(1000);

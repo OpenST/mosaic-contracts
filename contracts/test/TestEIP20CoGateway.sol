@@ -44,7 +44,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _membersManager Address of a members manager contract.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _burner An address where tokens are sent when they should be burnt.
      */
@@ -53,7 +53,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         address _utilityToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
+        OrganizationInterface _organization,
         address _gateway,
         address payable _burner
     )
@@ -62,7 +62,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _utilityToken,
             _stateRootProvider,
             _bounty,
-            _membersManager,
+            _organization,
             _gateway,
             _burner
     )
@@ -82,8 +82,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _hashLock Hash Lock provided by the facilitator.
      * @param _staker Staker address.
+     * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
@@ -92,8 +92,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         uint256 _stakerNonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        bytes32 _hashLock,
-        address _staker
+        address _staker,
+        bytes32 _hashLock
     )
         public
         returns (bytes32 messageHash_)

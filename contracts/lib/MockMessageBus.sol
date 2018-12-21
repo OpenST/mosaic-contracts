@@ -21,8 +21,9 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../test/lib/MockMerklePatriciaProof.sol";
-import "../lib/SafeMath.sol";
-import "../lib/BytesLib.sol";
+import "./BytesLib.sol";
+import "./MessageBus.sol";
+import "./SafeMath.sol";
 
 library MockMessageBus {
 
@@ -641,7 +642,7 @@ library MockMessageBus {
     {
         messageHash_ =  keccak256(
             abi.encode(
-                // TODO: add type hash
+                MessageBus.messageTypehash(),
                 _intentHash,
                 _nonce,
                 _gasPrice,

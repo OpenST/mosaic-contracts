@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "../lib/MockGatewayLib.sol";
 import "../../StateRootInterface.sol";
 import "../../gateway/GatewayBase.sol";
-import "../../lib/IsMemberInterface.sol";
+import "../../lib/OrganizationInterface.sol";
 
 /**
  * @title MockGatewayBase contract.
@@ -21,18 +21,18 @@ contract MockGatewayBase is GatewayBase {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
-     * @param _membersManager Address of a contract that manages workers.
+     * @param _organization Address of a contract that manages workers.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         public
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _membersManager
+            _organization
         )
     {}
 

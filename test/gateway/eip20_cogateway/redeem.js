@@ -28,8 +28,8 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
 let eip20CoGateway,
   burner,
   valueToken,
-  mockSafeCore,
-  membersManager,
+  dummyStateRootProvider,
+  organization,
   gateway,
   utilityToken,
   bountyAmount,
@@ -58,8 +58,8 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
   beforeEach(async function () {
 
     valueToken = accounts[0];
-    mockSafeCore = accounts[1];
-    membersManager = accounts[2];
+    dummyStateRootProvider = accounts[1];
+    organization = accounts[2];
     gateway = accounts[3];
     owner = accounts[8];
     utilityToken = await MockToken.new({ from: owner });
@@ -71,9 +71,9 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     eip20CoGateway = await EIP20CoGateway.new(
       valueToken,
       utilityToken.address,
-      mockSafeCore,
+      dummyStateRootProvider,
       bountyAmount,
-      membersManager,
+      organization,
       gateway,
       burner
     );
