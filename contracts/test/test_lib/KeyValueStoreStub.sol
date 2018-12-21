@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 
-import "../../lib/MockMessageBus.sol";
+import "../lib/MockMessageBus.sol";
 import "../../gateway/GatewayBase.sol";
 
 /**
@@ -88,7 +88,9 @@ contract KeyValueStoreStub {
                 getBytes32("INTENT_HASH"),
                 getUint256("NONCE"),
                 getUint256("GAS_PRICE"),
-                getUint256("GAS_LIMIT")
+                getUint256("GAS_LIMIT"),
+                getAddress("SENDER"),
+                getBytes32("HASH_LOCK")
             )
         );
 

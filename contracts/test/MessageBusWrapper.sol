@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../../contracts/lib/MockMessageBus.sol";
+import "./lib/MockMessageBus.sol";
 
 /**
  * @title Tests the MessageBus library.
