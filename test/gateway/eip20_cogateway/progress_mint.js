@@ -26,7 +26,7 @@ const BN = require('bn.js'),
 
 let valueToken,
   burner,
-  mockSafeCore,
+  dummyStateRootProvider,
   membersManager,
   coGateway,
   testUtilityToken,
@@ -51,7 +51,7 @@ async function _setup(accounts) {
 
   valueToken = accounts[0];
   burner = accounts[10];
-  mockSafeCore = accounts[11];
+  dummyStateRootProvider = accounts[11];
   membersManager = accounts[2];
   coGateway = accounts[3];
   owner = accounts[8];
@@ -105,7 +105,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     testEIP20CoGateway = await TestEIP20CoGateway.new(
       valueToken,
       testUtilityToken.address,
-      mockSafeCore,
+      dummyStateRootProvider,
       bountyAmount,
       membersManager,
       coGateway,
@@ -119,16 +119,16 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
     await testEIP20CoGateway.setStakeMessage(
       intentHash,
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
 
     await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
@@ -228,8 +228,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
 
     await testEIP20CoGateway.setStakeMessage(
@@ -237,8 +237,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
     await testEIP20CoGateway.setInboxStatus(
       messageHash,

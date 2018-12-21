@@ -20,54 +20,49 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../gateway/EIP20CoGateway.sol";
+import "../gateway/EIP20Gateway.sol";
+import "../lib/MessageBus.sol";
 
 /**
- * @title The TestEIP20CoGateway contract allows to directly set certain
- *        statuses and variables.
- *
- * @notice This is only used for testing purposes.
+ * @title Test EIP20 gateway is an EIP20 gateway that is activated by default.
  */
-contract TestEIP20CoGateway is EIP20CoGateway {
-
-    /* Constructor */
+contract TestEIP20Gateway is EIP20Gateway {
 
     /**
-     * @notice Initialize the contract by providing the Gateway contract
-     *         address for which the CoGateway will enable facilitation of
-     *         minting and redeeming.This is used for testing purpose.
+     * @notice Instantiate TestEIP20Gateway for unit testing.
      *
-     * @param _valueToken The value token contract address.
-     * @param _utilityToken The utility token address that will be used for
-     *                      minting the utility token.
+     * @param _token The ERC20 token contract address that will be
+     *               staked and corresponding utility tokens will be minted
+     *               in auxiliary chain.
+     * @param _baseToken The ERC20 token address that will be used for
+     *                     staking bounty from the facilitators.
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                staking process.
-     * @param _membersManager Address of a members manager contract.
-     * @param _gateway Gateway contract address.
-     * @param _burner An address where tokens are sent when they should be burnt.
+     *                stake process.
+     * @param _membersManager Address of a contract that manages workers.
+     * @param _burner Address where tokens will be burned.
      */
     constructor(
-        address _valueToken,
-        address _utilityToken,
+        EIP20Interface _token,
+        EIP20Interface _baseToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager,
-        address _gateway,
         address payable _burner
     )
-        EIP20CoGateway(
-            _valueToken,
-            _utilityToken,
+        EIP20Gateway(
+            _token,
+            _baseToken,
             _stateRootProvider,
             _bounty,
             _membersManager,
-            _gateway,
             _burner
-    )
+        )
         public
-    { }
+    {
+        activated = true;
+    }
 
 
     /* Public Functions */
@@ -77,28 +72,29 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *
      * @dev This is used for testing purpose.
      *
+     * @param _messageHash Message hash.
      * @param _intentHash Intent hash.
      * @param _stakerNonce Nonce of the staker address.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _hashLock Hash Lock provided by the facilitator.
      * @param _staker Staker address.
+     * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
     function setStakeMessage(
+        bytes32 _messageHash,
         bytes32 _intentHash,
         uint256 _stakerNonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        bytes32 _hashLock,
-        address _staker
+        address _staker,
+        bytes32 _hashLock
     )
         public
-        returns (bytes32 messageHash_)
     {
-        MessageBus.Message memory message = getMessage(
+        messages[_messageHash] = getMessage(
             _intentHash,
             _stakerNonce,
             _gasPrice,
@@ -106,62 +102,30 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _staker,
             _hashLock
         );
-
-        messageHash_ = MessageBus.messageDigest(
-            message.intentHash,
-            message.nonce,
-            message.gasPrice,
-            message.gasLimit,
-            message.sender,
-            message.hashLock
-        );
-
-        messages[messageHash_] = message;
-
-        return messageHash_;
-
     }
 
     /**
-     * @notice It sets the mints mapping with respect to the messageHash.
+     * @notice It sets the stakes mapping with respect to the messageHash.
      *
      * @dev This is used for testing purpose.
      *
      * @param _messageHash Hash for which mints mapping is updated.
      * @param _beneficiary Beneficiary  Address to which the utility tokens
      *                     will be transferred after minting.
-     * @param _amount Total amount for which the stake was initiated. The
-     *                reward amount is deducted from the total amount and
-     *                is given to the facilitator.
+     * @param _amount Total stake amount for which the stake is initiated.
      */
-    function setMints(
+    function setStake(
         bytes32 _messageHash,
-        address payable _beneficiary,
+        address _beneficiary,
         uint256 _amount
     )
         public
     {
-        mints[_messageHash] = Mint({
+        stakes[_messageHash] = Stake({
             amount : _amount,
-            beneficiary : _beneficiary
+            beneficiary : _beneficiary,
+            bounty : bounty
         });
-    }
-
-    /**
-     * @notice It sets the status of inbox.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _messageHash It sets the status of the message.
-     * @param _status It sets the state of the message.
-     */
-    function setInboxStatus(
-        bytes32 _messageHash,
-        MessageBus.MessageStatus _status
-    )
-        public
-    {
-        messageBox.inbox[_messageHash] = _status;
     }
 
     /**
@@ -179,23 +143,6 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         public
     {
         messageBox.outbox[_messageHash] = _status;
-    }
-
-    /**
-     * @notice It sets the storage root for given block height.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _blockHeight Mocked block height for testing.
-     * @param _storageRoot Mocked storage root for merkle proof testing.
-     */
-    function setStorageRoot(
-        uint256 _blockHeight,
-        bytes32 _storageRoot
-    )
-        public
-    {
-        storageRoots[_blockHeight] = _storageRoot;
     }
 
 }

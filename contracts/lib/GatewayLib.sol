@@ -146,7 +146,7 @@ library GatewayLib {
 
         /**
          * Verify the remote OpenST contract against the committed state
-         * root with the state trie Merkle proof
+         * root with the state trie Merkle proof.
          */
         require(MerklePatriciaProof.verify(hashedAccount, _encodedPath,
             _rlpParentNodes, _stateRoot), "Account proof is not verified.");

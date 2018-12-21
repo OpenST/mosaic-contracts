@@ -19,7 +19,7 @@ GatewayHelper.prototype = {
 
         let valueTokenAddress = params.token,
             bountyToken = params.bountyToken,
-            coreAddress = params.core,
+            stateRootProviderAddress = params.stateRootProviderAddress,
             bountyAmount = params.bounty,
             organizationAddress = params.organization;
 
@@ -27,7 +27,7 @@ GatewayHelper.prototype = {
             await utils.expectThrow(Gateway.new(
                 valueTokenAddress,
                 bountyToken,
-                coreAddress,
+                stateRootProviderAddress,
                 bountyAmount,
                 organizationAddress
             ));
@@ -35,7 +35,7 @@ GatewayHelper.prototype = {
             this.gateway = await Gateway.new(
                 valueTokenAddress,
                 bountyToken,
-                coreAddress,
+                stateRootProviderAddress,
                 bountyAmount,
                 organizationAddress
             );
@@ -64,11 +64,11 @@ GatewayHelper.prototype = {
                 "Invalid bounty token address from contract"
             );
 
-            let coreAdd = await this.gateway.core.call();
+            let stateRootProviderAdd = await this.gateway.stateRootProvider.call();
             assert.equal(
-                coreAdd,
-                coreAddress,
-                "Invalid core address from contract"
+                stateRootProviderAdd,
+                stateRootProviderAddress,
+                "Invalid state root provider address from contract"
             );
 
             let bounty = await this.gateway.bounty.call();

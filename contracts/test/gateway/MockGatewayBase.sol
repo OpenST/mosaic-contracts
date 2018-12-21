@@ -6,9 +6,9 @@ import "../../gateway/GatewayBase.sol";
 import "../../lib/IsMemberInterface.sol";
 
 /**
- * @title MockGatewayBase contract
+ * @title MockGatewayBase contract.
  *
- * @notice Used for test only
+ * @notice Used for test only.
  */
 contract MockGatewayBase is GatewayBase {
 
@@ -17,19 +17,20 @@ contract MockGatewayBase is GatewayBase {
     /**
      * @notice This is used for testing.
      *
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
         public
         GatewayBase(
-            _core,
+            _stateRootProvider,
             _bounty,
             _membersManager
         )
@@ -42,9 +43,7 @@ contract MockGatewayBase is GatewayBase {
      *
      *  @dev proveGateway can be called by anyone to verify merkle proof of
      *       gateway/co-gateway contract address. Trust factor is brought by
-     *       stateRoots mapping. stateRoot is committed in commitStateRoot
-     *       function by mosaic process which is a trusted decentralized system
-     *       running separately. It's important to note that in replay calls of
+     *       stateRoots mapping. It's important to note that in replay calls of
      *       proveGateway bytes _rlpParentNodes variable is not validated. In
      *       this case input storage root derived from merkle proof account
      *       nodes is verified with stored storage root of given blockHeight.
@@ -78,7 +77,7 @@ contract MockGatewayBase is GatewayBase {
             "Length of RLP parent nodes must not be 0."
         );
 
-        bytes32 stateRoot = core.getStateRoot(_blockHeight);
+        bytes32 stateRoot = stateRootProvider.getStateRoot(_blockHeight);
 
         //State root should be present for the block height
         require(

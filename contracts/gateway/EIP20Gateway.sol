@@ -159,9 +159,6 @@ contract EIP20Gateway is GatewayBase {
          */
         address beneficiary;
 
-        /** Address of the facilitator that initiates the stake process. */
-        address facilitator;
-
         /** Bounty kept by facilitator for stake message transfer. */
         uint256 bounty;
     }
@@ -231,7 +228,8 @@ contract EIP20Gateway is GatewayBase {
      *               in auxiliary chain.
      * @param _baseToken The ERC20 token address that will be used for
      *                     staking bounty from the facilitators.
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
@@ -240,13 +238,13 @@ contract EIP20Gateway is GatewayBase {
     constructor(
         EIP20Interface _token,
         EIP20Interface _baseToken,
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _burner
     )
         GatewayBase(
-            _core,
+            _stateRootProvider,
             _bounty,
             _membersManager
         )
@@ -313,7 +311,7 @@ contract EIP20Gateway is GatewayBase {
             "Beneficiary address must not be zero"
         );
 
-        // Get the stake intent hash
+        // Get the stake intent hash.
         bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
@@ -331,21 +329,16 @@ contract EIP20Gateway is GatewayBase {
 
         messageHash_ = storeMessage(message);
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerOutboxProcess(
+        registerOutboxProcess(
             staker,
             _nonce,
             messageHash_
         );
 
-        // Delete the previous progressed/Revoked stake data
-        delete stakes[previousMessageHash];
-
         // New stake object
         stakes[messageHash_] = Stake({
             amount : _amount,
             beneficiary : _beneficiary,
-            facilitator : msg.sender,
             bounty : bounty
         });
 
@@ -381,10 +374,10 @@ contract EIP20Gateway is GatewayBase {
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the stake
+     *                      staker while initiating the stake.
      *
-     * @return staker_ Staker address
-     * @return stakeAmount_ Stake amount
+     * @return staker_ Staker address.
+     * @return stakeAmount_ Stake amount.
      */
     function progressStake(
         bytes32 _messageHash,
@@ -404,18 +397,18 @@ contract EIP20Gateway is GatewayBase {
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
 
-        (staker_, stakeAmount_) = progressStakeInternal(
-            _messageHash,
-            message,
-            _unlockSecret,
-            false
-        );
-
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
             message,
             _unlockSecret
+        );
+
+        (staker_, stakeAmount_) = progressStakeInternal(
+            _messageHash,
+            message,
+            _unlockSecret,
+            false
         );
     }
 
@@ -673,7 +666,7 @@ contract EIP20Gateway is GatewayBase {
         external
         returns (bytes32 messageHash_)
     {
-        // Get the initial gas
+        // Get the initial gas.
         uint256 initialGas = gasleft();
 
         require(
@@ -1046,7 +1039,7 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Internal function contains logic for process stake.
+     * @notice Private function contains logic for process stake.
      *
      * @param _messageHash Message hash.
      * @param _message Message object.
@@ -1072,7 +1065,7 @@ contract EIP20Gateway is GatewayBase {
         // Get the staker address
         staker_ = _message.sender;
 
-        //Get the stake amount
+        //Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
 
         // Transfer the staked amount to stakeVault.
@@ -1080,7 +1073,7 @@ contract EIP20Gateway is GatewayBase {
 
         baseToken.transfer(msg.sender, stakes[_messageHash].bounty);
 
-        // delete the stake data
+        // Delete the stake entry.
         delete stakes[_messageHash];
 
         emit StakeProgressed(

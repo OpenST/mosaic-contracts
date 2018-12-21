@@ -40,9 +40,9 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
     membersManager,
     coGatewayAddress;
 
-  async function initialize(){
+  async function initialize() {
     await ostPrime.initialize(
-      {from: accounts[2], value:TOKENS_MAX}
+      {from: accounts[2], value: TOKENS_MAX}
     );
   };
 
@@ -91,7 +91,7 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
       ostPrime.increaseSupply(
         beneficiary,
         amount,
-        { from: coGatewayAddress },
+        {from: coGatewayAddress},
       ),
       'Amount should be greater than zero.',
     );
@@ -106,7 +106,7 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
       ostPrime.increaseSupply(
         beneficiary,
         amount,
-        { from: accounts[7] },
+        {from: accounts[7]},
       ),
       'Only CoGateway can call the function.',
     );
@@ -119,7 +119,7 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
       ostPrime.increaseSupply(
         beneficiary,
         amount,
-        { from: accounts[7] },
+        {from: accounts[7]},
       ),
       'Contract is not initialized.',
     );
@@ -131,28 +131,38 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
     await initialize();
 
     let result = await ostPrime.increaseSupply.call(
-        beneficiary,
-        amount,
-        { from: coGatewayAddress },
-      );
+      beneficiary,
+      amount,
+      {from: coGatewayAddress},
+    );
 
     assert.strictEqual(
       result,
       true,
       'Contract should return true.',
     );
+    let initialBeneficiaryBalance = await Utils.getBalance(beneficiary);
+    let initialOSTPrimeBalance = await Utils.getBalance(ostPrime.address);
 
     await ostPrime.increaseSupply(
       beneficiary,
       amount,
-      { from: coGatewayAddress },
+      {from: coGatewayAddress},
     );
 
-    let beneficiaryBalance = await ostPrime.balanceOf.call(beneficiary);
+    let finalBeneficiaryBalance = await Utils.getBalance(beneficiary);
+    let finalOSTPrimeBalance = await Utils.getBalance(ostPrime.address);
+
     assert.strictEqual(
-      amount.eq(beneficiaryBalance),
+      finalBeneficiaryBalance.eq(initialBeneficiaryBalance.add(amount)),
       true,
-      `Beneficiary address balance should be ${amount}.`,
+      `Beneficiary base token address balance should be ${amount}.`,
+    );
+
+    assert.strictEqual(
+      finalOSTPrimeBalance.eq(initialOSTPrimeBalance.sub(amount)),
+      true,
+      `OST Prime base token balance should be reduced by ${amount}.`,
     );
 
     let totalSupply = await ostPrime.totalSupply();
@@ -171,7 +181,7 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
     let tx = await ostPrime.increaseSupply(
       beneficiary,
       amount,
-      { from: coGatewayAddress }
+      {from: coGatewayAddress}
     );
 
     let event = EventDecoder.getEvents(tx, ostPrime);
@@ -191,8 +201,8 @@ contract('OSTPrime.increaseSupply()', function (accounts) {
 
     assert.strictEqual(
       eventData._to,
-      beneficiary,
-      `The _to address in the event should be equal to ${beneficiary}.`,
+      ostPrime.address,
+      `The _to address in the event should be equal to ${ostPrime.address}.`,
     );
 
     assert.strictEqual(

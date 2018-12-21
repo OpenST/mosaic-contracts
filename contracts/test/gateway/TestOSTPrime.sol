@@ -27,7 +27,6 @@ import "../../gateway/OSTPrime.sol";
 /** @title Test OST prime contract. */
 contract TestOSTPrime is OSTPrime {
 
-
     /* Constructor */
 
     /**

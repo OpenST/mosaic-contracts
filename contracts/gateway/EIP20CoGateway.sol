@@ -173,10 +173,10 @@ contract EIP20CoGateway is GatewayBase {
         uint256 amount;
 
         /** Address for which the utility tokens will be minted */
-        address beneficiary;
+        address payable beneficiary;
     }
 
-    /* public Variables */
+    /* Public Variables */
 
     /** Address of utility token. */
     address public utilityToken;
@@ -188,10 +188,10 @@ contract EIP20CoGateway is GatewayBase {
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
-    mapping(bytes32 /*messageHash*/ => Mint) mints;
+    mapping(bytes32 => Mint) public mints;
 
     /** Maps messageHash to the Redeem object. */
-    mapping(bytes32/*messageHash*/ => Redeem) redeems;
+    mapping(bytes32 => Redeem) public redeems;
 
 
     /* Constructor */
@@ -204,7 +204,8 @@ contract EIP20CoGateway is GatewayBase {
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator stakes to initiate the stake
      *                process.
      * @param _membersManager Address of a contract that manages workers.
@@ -214,14 +215,14 @@ contract EIP20CoGateway is GatewayBase {
     constructor(
         address _valueToken,
         address _utilityToken,
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager,
         address _gateway,
         address payable _burner
     )
         GatewayBase(
-            _core,
+            _stateRootProvider,
             _bounty,
             _membersManager
         )
@@ -298,11 +299,8 @@ contract EIP20CoGateway is GatewayBase {
             _unlockSecret
         );
 
-        (beneficiary_,
-        stakeAmount_,
-        mintedAmount_,
-        rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
+        (beneficiary_, stakeAmount_, mintedAmount_, rewardAmount_) =
+            progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
     }
 
     /**
@@ -745,8 +743,10 @@ contract EIP20CoGateway is GatewayBase {
      * @param _staker Staker address.
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
-     * @param _amount Amount of utility token will be minted.
+     *                     tokens will be minted. This is payable so that it
+     *                     provides flexibility of transferring base token
+     *                     to account on minting.
+     * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
      * @param _gasLimit Gas limit that staker is ready to pay
@@ -760,7 +760,7 @@ contract EIP20CoGateway is GatewayBase {
     function confirmStakeIntent(
         address _staker,
         uint256 _stakerNonce,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount,
         uint256 _gasPrice,
         uint256 _gasLimit,
@@ -776,19 +776,19 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _staker != address(0),
-            "Staker address must not be zero"
+            "Staker address must not be zero."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
         );
         require(
             _amount != 0,
-            "Mint amount must not be zero"
+            "Stake amount must not be zero."
         );
         require(
             _rlpParentNodes.length != 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         bytes32 intentHash = hashStakeIntent(
@@ -904,14 +904,11 @@ contract EIP20CoGateway is GatewayBase {
 
         messageHash_ = storeMessage(message);
 
-        bytes32 previousMessageHash = registerOutboxProcess(
+        registerOutboxProcess(
             msg.sender,
             _nonce,
             messageHash_
         );
-
-        // Delete the previous progressed/revoked redeem data.
-        delete redeems[previousMessageHash];
 
         redeems[messageHash_] = Redeem({
             amount : _amount,
@@ -1060,11 +1057,16 @@ contract EIP20CoGateway is GatewayBase {
             50000  //21000 * 2 for transactions + approx buffer
         );
 
+        require(
+            rewardAmount_ <= stakeAmount_,
+            "Reward amount must not be greater than the stake amount."
+        );
+
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
-            beneficiary_,
+            mint.beneficiary,
             mintedAmount_
         );
 

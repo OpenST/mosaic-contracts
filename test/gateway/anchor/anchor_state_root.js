@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
+const Anchor = artifacts.require("./Anchor.sol");
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
@@ -28,16 +28,16 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-contract('SafeCore.commitStateRoot()', function (accounts) {
+contract('Anchor.anchorStateRoot()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
-    maxNumberOfStateRoots,
     membersManager,
-    safeCore,
+    anchor,
     owner,
-    worker;
+    worker,
+    maxNumberOfStateRoots;
 
   beforeEach(async function () {
 
@@ -49,7 +49,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     maxNumberOfStateRoots = new BN(10);
     membersManager = await MockMembersManager.new(owner, worker);
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -67,57 +67,58 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     blockHeight = blockHeight.addn(1);
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+      anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        { from: worker },
+        {from: owner},
       ),
       'State root must not be zero.',
     );
 
   });
 
-  it('should fail when block height is less than the latest committed ' +
+  it('should fail when block height is less than the latest anchored ' +
     'state root\'s block height', async () => {
 
-      blockHeight = blockHeight.subn(1);
-
-      await Utils.expectRevert(
-        safeCore.commitStateRoot(
-          blockHeight,
-          stateRoot,
-          { from: worker },
-        ),
-        'Given block height is lower or equal to highest committed state root block height.',
-      );
-
-    });
-
-  it('should fail when block height is equal to the latest committed ' +
-    'state root\'s block height', async () => {
-
-      await Utils.expectRevert(
-        safeCore.commitStateRoot(
-          blockHeight,
-          stateRoot,
-          { from: worker },
-        ),
-        'Given block height is lower or equal to highest committed state root block height.',
-      );
-
-    });
-
-  it('should fail when caller is not worker address', async () => {
-
-    blockHeight = blockHeight.addn(1);
+    blockHeight = blockHeight.subn(1);
 
     await Utils.expectRevert(
-      safeCore.commitStateRoot(
+      anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        { from: accounts[6] },
+        {from: owner},
       ),
-      'Only whitelisted workers are allowed to call this method.',
+      'Given block height is lower or equal to highest anchored state root block height.',
+    );
+
+  });
+
+  it('should fail when block height is equal to the latest anchored ' +
+    'state root\'s block height', async () => {
+
+    await Utils.expectRevert(
+      anchor.anchorStateRoot(
+        blockHeight,
+        stateRoot,
+        {from: owner},
+      ),
+      'Given block height is lower or equal to highest anchored state root block height.',
+    );
+
+  });
+
+  it('should fail when caller is not owner address', async () => {
+
+    blockHeight = blockHeight.addn(1);
+    let nonOwner = accounts[6];
+
+    await Utils.expectRevert(
+      anchor.anchorStateRoot(
+        blockHeight,
+        stateRoot,
+        {from: nonOwner},
+      ),
+      'Only the organization is allowed to call this method.',
     );
 
   });
@@ -126,32 +127,32 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
     blockHeight = blockHeight.addn(1);
 
-    let result = await safeCore.commitStateRoot.call(
+    let result = await anchor.anchorStateRoot.call(
       blockHeight,
       stateRoot,
-      { from: worker },
+      {from: owner},
     );
 
     assert.strictEqual(
       result,
       true,
-      'Return value of commitStateRoot must be true.',
+      'Return value of anchorStateRoot must be true.',
     );
 
-    await safeCore.commitStateRoot(
+    await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      { from: worker },
+      {from: owner},
     );
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
@@ -164,13 +165,13 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
 
     blockHeight = blockHeight.addn(1);
 
-    let tx = await safeCore.commitStateRoot(
+    let tx = await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      { from: worker },
+      {from: owner},
     );
 
-    let event = EventDecoder.getEvents(tx, safeCore);
+    let event = EventDecoder.getEvents(tx, anchor);
 
     assert.isDefined(
       event.StateRootAvailable,
@@ -203,16 +204,16 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
     let iterations = maxNumberOfStateRoots.muln(2).toNumber();
     for (let i = 0; i < iterations; i++) {
       blockHeight = blockHeight.addn(1);
-      await safeCore.commitStateRoot(
+      await anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        { from: worker },
+        {from: owner},
       );
 
       // Check that the older state root has been deleted when i > max state roots.
       if (maxNumberOfStateRoots.ltn(i)) {
         let prunedBlockHeight = blockHeight.sub(maxNumberOfStateRoots);
-        let storedStateRoot = await safeCore.getStateRoot.call(
+        let storedStateRoot = await anchor.getStateRoot.call(
           prunedBlockHeight,
         );
         assert.strictEqual(
@@ -227,7 +228,7 @@ contract('SafeCore.commitStateRoot()', function (accounts) {
          * one should still be available.
          */
         let existingBlockHeight = prunedBlockHeight.addn(1);
-        storedStateRoot = await safeCore.getStateRoot.call(
+        storedStateRoot = await anchor.getStateRoot.call(
           existingBlockHeight,
         );
         assert.strictEqual(

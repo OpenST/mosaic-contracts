@@ -18,68 +18,44 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const Anchor = artifacts.require("./Anchor.sol");
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
-contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
+contract('Anchor.getRemoteChainId()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
     membersManager,
-    safeCore,
-    owner,
-    worker;
+    anchor;
 
   beforeEach(async function () {
 
-    owner = accounts[2];
-    worker = accounts[3];
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
     stateRoot = web3.utils.sha3("dummy_state_root");
     maxNumberOfStateRoots = new BN(10);
-    membersManager = await MockMembersManager.new(owner, worker);
+    membersManager = accounts[1];
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
       maxNumberOfStateRoots,
-      membersManager.address,
+      membersManager,
     );
 
   });
 
-  it('should return the state root that was set while deployment', async () => {
+  it('should return correct remote chain id', async () => {
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let chainId = await anchor.getRemoteChainId.call();
     assert.strictEqual(
-      blockHeight.eq(latestBlockHeight),
+      remoteChainId.eq(chainId),
       true,
-      `Latest block height from the contract must be ${blockHeight}.`,
-    );
-
-  });
-
-  it('should return the latest committed state root block height', async () => {
-
-    blockHeight = blockHeight.addn(50000);
-
-    await safeCore.commitStateRoot(
-      blockHeight,
-      stateRoot,
-      { from: worker },
-    );
-
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
-    assert.strictEqual(
-      blockHeight.eq(latestBlockHeight),
-      true,
-      `Latest block height from the contract must be ${blockHeight}.`,
+      `Remote chain id from the contract must be ${remoteChainId}.`,
     );
 
   });

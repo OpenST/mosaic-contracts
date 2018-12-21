@@ -20,7 +20,6 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-
 import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
 import "../lib/CircularBufferUint.sol";
@@ -31,15 +30,15 @@ import "../lib/RLP.sol";
 import "../lib/SafeMath.sol";
 
 /**
- * @title SafeCore contract which implements StateRootInterface.
+ * @title Anchor contract which implements StateRootInterface.
  *
- * @notice SafeCore stores another chain's state roots. It stores the address of
- *         the co-core, which will be the safe core on the other chain. State
- *         roots are exchanged bidirectionally between the core and the co-core
- *         by the workers that are registered as part of the `Organized`
- *         interface.
+ * @notice Anchor stores another chain's state roots. It stores the address of
+ *         the co-anchor, which will be the anchor on the other chain. State
+ *         roots are exchanged bidirectionally between the anchor and the
+ *         co-anchor by the workers that are registered as part of the
+ *         `Organized` interface.
  */
-contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
+contract Anchor is StateRootInterface, Organized, CircularBufferUint {
 
     /* Usings */
 
@@ -57,13 +56,13 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     mapping (uint256 => bytes32) private stateRoots;
 
     /**
-     * The remote chain ID is the remote chain id where core contract is
+     * The remote chain ID is the remote chain id where anchor contract is
      * deployed.
      */
     uint256 private remoteChainId;
 
-    /** Address of the core on the auxiliary chain. Can be zero. */
-    address public coCore;
+    /** Address of the anchor on the auxiliary chain. Can be zero. */
+    address public coAnchor;
 
 
     /*  Constructor */
@@ -72,7 +71,7 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
      * @notice Contract constructor.
      *
      * @param _remoteChainId The chain id of the chain that is tracked by this
-     *                       core.
+     *                       anchor.
      * @param _blockHeight Block height at which _stateRoot needs to store.
      * @param _stateRoot State root hash of given _blockHeight.
      * @param _maxStateRoots The max number of state roots to store in the
@@ -105,27 +104,28 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     /* External functions */
 
     /**
-     *  @notice The Co-Core address is the address of the core that is
+     *  @notice The Co-Anchor address is the address of the anchor that is
      *          deployed on the other (origin/auxiliary) chain.
      *
-     *  @param _coCore Address of the Co-Core on auxiliary.
+     *  @param _coAnchor Address of the Co-Anchor on auxiliary.
      */
-    function setCoCoreAddress(address _coCore)
+    function setCoAnchorAddress(address _coAnchor)
         external
         onlyOrganization
         returns (bool success_)
     {
+
         require(
-            coCore == address(0),
-            "Co-Core has already been set and cannot be updated."
+            _coAnchor != address(0),
+            "Co-Anchor address must not be 0."
         );
 
         require(
-            _coCore != address(0),
-            "Co-Core address must not be 0."
+            coAnchor == address(0),
+            "Co-Anchor has already been set and cannot be updated."
         );
 
-        coCore = _coCore;
+        coAnchor = _coAnchor;
 
         success_ = true;
     }
@@ -148,9 +148,9 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     }
 
     /**
-     * @notice Gets the block height of latest committed state root.
+     * @notice Gets the block height of latest anchored state root.
      *
-     * @return uint256 Block height of the latest committed state root.
+     * @return uint256 Block height of the latest anchored state root.
      */
     function getLatestStateRootBlockHeight()
         external
@@ -161,10 +161,10 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     }
 
     /**
-     *  @notice External function commitStateRoot.
+     *  @notice External function anchorStateRoot.
      *
-     *  @dev commitStateRoot Called from game process.
-     *       Commit new state root for a block height.
+     *  @dev anchorStateRoot Called from game process.
+     *       Anchor new state root for a block height.
      *
      *  @param _blockHeight Block height for which stateRoots mapping needs to
      *                      update.
@@ -172,12 +172,12 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
      *
      *  @return bytes32 stateRoot
      */
-    function commitStateRoot(
+    function anchorStateRoot(
         uint256 _blockHeight,
         bytes32 _stateRoot
     )
         external
-        onlyWorker
+        onlyOrganization
         returns (bool success_)
     {
         // State root should be valid
@@ -186,10 +186,10 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
             "State root must not be zero."
         );
 
-        // Input block height should be valid
+        // Input block height should be valid.
         require(
             _blockHeight > CircularBufferUint.head(),
-            "Given block height is lower or equal to highest committed state root block height."
+            "Given block height is lower or equal to highest anchored state root block height."
         );
 
         stateRoots[_blockHeight] = _stateRoot;
@@ -202,7 +202,7 @@ contract SafeCore is StateRootInterface, Organized, CircularBufferUint {
     }
 
     /**
-     *  @notice Get the remote chain id of this core.
+     *  @notice Get the remote chain id of this anchor.
      *
      *  @return remoteChainId_ The remote chain id.
      */
