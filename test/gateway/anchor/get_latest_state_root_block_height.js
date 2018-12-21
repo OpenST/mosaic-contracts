@@ -72,7 +72,7 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: worker},
+      {from: owner},
     );
 
     let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();

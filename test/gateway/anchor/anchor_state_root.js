@@ -70,7 +70,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: worker},
+        {from: owner},
       ),
       'State root must not be zero.',
     );
@@ -86,7 +86,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: worker},
+        {from: owner},
       ),
       'Given block height is lower or equal to highest anchored state root block height.',
     );
@@ -100,24 +100,25 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: worker},
+        {from: owner},
       ),
       'Given block height is lower or equal to highest anchored state root block height.',
     );
 
   });
 
-  it('should fail when caller is not worker address', async () => {
+  it('should fail when caller is not owner address', async () => {
 
     blockHeight = blockHeight.addn(1);
+    let nonOwner = accounts[6];
 
     await Utils.expectRevert(
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: accounts[6]},
+        {from: nonOwner},
       ),
-      'Only whitelisted workers are allowed to call this method.',
+      'Only the organization is allowed to call this method.',
     );
 
   });
@@ -129,7 +130,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     let result = await anchor.anchorStateRoot.call(
       blockHeight,
       stateRoot,
-      {from: worker},
+      {from: owner},
     );
 
     assert.strictEqual(
@@ -141,7 +142,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: worker},
+      {from: owner},
     );
 
     let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
@@ -167,7 +168,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
     let tx = await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: worker},
+      {from: owner},
     );
 
     let event = EventDecoder.getEvents(tx, anchor);
@@ -206,7 +207,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       await anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: worker},
+        {from: owner},
       );
 
       // Check that the older state root has been deleted when i > max state roots.
