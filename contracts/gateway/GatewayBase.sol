@@ -1,5 +1,26 @@
 pragma solidity ^0.5.0;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Origin Chain: Gateway Contract
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 import "./EIP20Interface.sol";
 import "../lib/MessageBus.sol";
 import "../StateRootInterface.sol";
@@ -7,7 +28,6 @@ import "../lib/GatewayLib.sol";
 import "../lib/IsMemberInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
-
 
 /**
  *  @title GatewayBase contract.
@@ -74,8 +94,10 @@ contract GatewayBase is Organized {
      */
     MessageBus.MessageBox messageBox;
 
-    /** Address of core contract. */
-    StateRootInterface public core;
+    /**
+     *  Address of contract which implements StateRootInterface.
+     */
+    StateRootInterface public stateRootProvider;
 
     /** Path to make Merkle account proof for Gateway/CoGateway contract. */
     bytes public encodedGatewayPath;
@@ -128,13 +150,14 @@ contract GatewayBase is Organized {
     /**
      * @notice Initialize the contract and set default values.
      *
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _membersManager Address of a contract that manages workers.
      */
     constructor(
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         IsMemberInterface _membersManager
     )
@@ -142,26 +165,26 @@ contract GatewayBase is Organized {
         public
     {
         require(
-            address(_core) != address(0),
-            "Core contract address must not be zero."
+            address(_stateRootProvider) != address(0),
+            "State root provider contract address must not be zero."
         );
 
-        core = _core;
+        stateRootProvider = _stateRootProvider;
 
         bounty = _bounty;
     }
 
+
     /* External functions */
 
     /**
-     *  @notice proveGateway can be called by anyone to verify merkle proof of
+     *  @notice This can be called by anyone to verify merkle proof of
      *          gateway/co-gateway contract address. Trust factor is brought by
-     *          stateRoots mapping. stateRoot is committed in commitStateRoot
-     *          function by mosaic process which is a trusted decentralized system
-     *          running separately. It's important to note that in replay calls of
-     *          proveGateway bytes _rlpParentNodes variable is not validated. In
-     *          this case input storage root derived from merkle proof account
-     *          nodes is verified with stored storage root of given blockHeight.
+     *          state roots of the contract which implements StateRootInterface.
+     *          It's important to note that in replay calls of proveGateway
+     *          bytes _rlpParentNodes variable is not validated. In this case
+     *          input storage root derived from merkle proof account nodes is
+     *          verified with stored storage root of given blockHeight.
      *          GatewayProven event has parameter wasAlreadyProved to
      *          differentiate between first call and replay calls.
      *
@@ -192,7 +215,7 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
-        bytes32 stateRoot = core.getStateRoot(_blockHeight);
+        bytes32 stateRoot = stateRootProvider.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
         require(

@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
+const Anchor = artifacts.require("./Anchor.sol");
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
@@ -26,14 +26,14 @@ const BN = require('bn.js');
 const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-contract('SafeCore.getStateRoot()', function (accounts) {
+contract('Anchor.getStateRoot()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
     membersManager,
-    safeCore,
+    anchor,
     owner,
     worker;
 
@@ -47,7 +47,7 @@ contract('SafeCore.getStateRoot()', function (accounts) {
     maxNumberOfStateRoots = new BN(10);
     membersManager = await MockMembersManager.new(owner, worker);
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -60,20 +60,20 @@ contract('SafeCore.getStateRoot()', function (accounts) {
   it('should return the latest state root block height that was set ' +
     'while deployment', async () => {
 
-      let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
-      assert.strictEqual(
-        latestStateRoot,
-        stateRoot,
-        `Latest state root from the contract must be ${stateRoot}.`,
-      );
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
+    assert.strictEqual(
+      latestStateRoot,
+      stateRoot,
+      `Latest state root from the contract must be ${stateRoot}.`,
+    );
 
-    });
+  });
 
-  it('should return the zero bytes for non committed block heights', async () => {
+  it('should return the zero bytes for non anchored block heights', async () => {
 
     blockHeight = blockHeight.addn(500);
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       zeroBytes,
@@ -82,18 +82,18 @@ contract('SafeCore.getStateRoot()', function (accounts) {
 
   });
 
-  it('should return the latest committed state root', async () => {
+  it('should return the latest anchored state root', async () => {
 
     blockHeight = blockHeight.addn(50000);
     stateRoot = web3.utils.sha3("dummy_state_root_1");
 
-    await safeCore.commitStateRoot(
+    await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      { from: worker },
+      {from: worker},
     );
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
