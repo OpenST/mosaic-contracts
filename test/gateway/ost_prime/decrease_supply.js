@@ -39,7 +39,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     membersManager,
     coGatewayAddress;
 
-  async function initialize(){
+  async function initialize() {
     await ostPrime.initialize(
       {from: accounts[2], value: TOKENS_MAX}
     );
@@ -71,7 +71,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     amount = new BN(0);
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
+      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
       'Amount should be greater than zero.',
     );
 
@@ -82,7 +82,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     await initialize();
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, { from: accounts[5] }),
+      ostPrime.decreaseSupply(amount, {from: accounts[5]}),
       'Only CoGateway can call the function.',
     );
 
@@ -91,7 +91,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
   it('should fail when OST Prime contract is not initialized', async function () {
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
+      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
       'Contract is not initialized.',
     );
 
@@ -105,7 +105,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     amount = new BN(2000);
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
+      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
       'Insufficient balance.',
     );
 
@@ -118,7 +118,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     amount = new BN(500);
 
     let result = await ostPrime.decreaseSupply.call(
-      amount, { from: coGatewayAddress }
+      amount, {from: coGatewayAddress}
     );
 
     assert.strictEqual(
@@ -127,7 +127,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
       'Contract should return true.',
     );
 
-    await ostPrime.decreaseSupply(amount, { from: coGatewayAddress });
+    await ostPrime.decreaseSupply(amount, {from: coGatewayAddress});
 
     let coGatewayBalance = await ostPrime.balanceOf.call(coGatewayAddress);
 
@@ -152,7 +152,7 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
 
     let tx = await ostPrime.decreaseSupply(
       amount,
-      { from: coGatewayAddress }
+      {from: coGatewayAddress}
     );
 
     let event = EventDecoder.getEvents(tx, ostPrime);

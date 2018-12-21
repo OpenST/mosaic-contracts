@@ -132,7 +132,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      */
     function setMints(
         bytes32 _messageHash,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount
     )
         public
