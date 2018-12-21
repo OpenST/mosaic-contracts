@@ -18,21 +18,21 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
+const Anchor = artifacts.require("./Anchor.sol");
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
-contract('SafeCore.constructor()', function (accounts) {
+contract('Anchor.constructor()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
     membersManager,
-    safeCore;
+    anchor;
 
   beforeEach(async function () {
 
@@ -49,7 +49,7 @@ contract('SafeCore.constructor()', function (accounts) {
     remoteChainId = new BN(0);
 
     await Utils.expectRevert(
-      SafeCore.new(
+      Anchor.new(
         remoteChainId,
         blockHeight,
         stateRoot,
@@ -66,7 +66,7 @@ contract('SafeCore.constructor()', function (accounts) {
     membersManager = NullAddress;
 
     await Utils.expectRevert(
-      SafeCore.new(
+      Anchor.new(
         remoteChainId,
         blockHeight,
         stateRoot,
@@ -80,7 +80,7 @@ contract('SafeCore.constructor()', function (accounts) {
 
   it('should pass with correct params', async () => {
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -88,28 +88,28 @@ contract('SafeCore.constructor()', function (accounts) {
       membersManager,
     );
 
-    let chainId = await safeCore.getRemoteChainId.call();
+    let chainId = await anchor.getRemoteChainId.call();
     assert.strictEqual(
       remoteChainId.eq(chainId),
       true,
       `Remote chain id from the contract must be ${remoteChainId}.`,
     );
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
 
-    let latestStateRoot = await safeCore.getStateRoot.call(blockHeight);
+    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
       `Latest state root from the contract must be ${stateRoot}.`,
     );
 
-    let membersManagerAddress = await safeCore.membersManager.call();
+    let membersManagerAddress = await anchor.membersManager.call();
     assert.strictEqual(
       membersManagerAddress,
       membersManager,
