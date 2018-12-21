@@ -21,22 +21,17 @@
 const BN = require('bn.js'),
   Utils = require('../../test_lib/utils'),
   EIP20CoGatewayHelper = require('./helpers/helper'),
-  MessageBus = artifacts.require('MessageBus'),
-  EIP20Token = artifacts.require('EIP20Token'),
   TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
   TestUtilityToken = artifacts.require('TestUtilityToken');
 
 let valueToken,
   burner,
+  organization,
   dummyStateRootProvider,
-  membersManager,
   coGateway,
   testUtilityToken,
   bountyAmount,
-  owner,
   staker,
-  stakerBalance,
-  rewardAmount,
   symbol = 'OST',
   name = 'Simple Token',
   decimals = 18,
@@ -57,8 +52,8 @@ async function _setup(accounts) {
 
   valueToken = accounts[0];
   burner = accounts[10];
+  organization = accounts[2];
   dummyStateRootProvider = accounts[11];
-  membersManager = accounts[2];
   coGateway = accounts[3];
   owner = accounts[8];
   testUtilityToken = await TestUtilityToken.new(
@@ -66,7 +61,7 @@ async function _setup(accounts) {
     symbol,
     name,
     decimals,
-    membersManager
+    organization
   );
   bountyAmount = new BN(100);
   staker = accounts[7];
@@ -114,7 +109,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testUtilityToken.address,
       dummyStateRootProvider,
       bountyAmount,
-      membersManager,
+      organization,
       coGateway,
       burner,
     );
@@ -152,7 +147,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     let progressMintValues = await testEIP20CoGateway.progressMint.call(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     let expectedMintedToken = new BN(100),
@@ -185,7 +180,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     let response = await testEIP20CoGateway.progressMint(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
@@ -256,7 +251,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     let response = await testEIP20CoGateway.progressMint(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
@@ -310,7 +305,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message hash must not be zero.',
     );
@@ -328,7 +323,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target status must be Declared.',
     );
@@ -346,7 +341,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target status must be Declared.',
     );
@@ -364,7 +359,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target status must be Declared.',
     );
@@ -384,7 +379,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Invalid unlock secret.',
     );
@@ -401,14 +396,14 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     await testEIP20CoGateway.progressMint(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     await Utils.expectRevert(
       testEIP20CoGateway.progressMint(
         messageHash,
         unlockSecret,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target status must be Declared.',
     );

@@ -5,7 +5,7 @@
     "coreAddress": "0x15113927E0EdF6b8430FA4B92FfFEB29B6F78D7C",
     "bountyAmount": "0",
     "burnerAddress": "0x445E0E6fb15C14AB6c4d1267C92D736122e127e1",
-    "membersManager": "0x731866f1822b7394DcDC507840AA2282764F8B0C",
+    "organization": "0x731866f1822b7394DcDC507840AA2282764F8B0C",
     "gateway": "0x8C39C9C4Ea23c4f950e351DB7d23d77a83bc57Cd",
     "hashLock": "0xe7b393298a0cf74e3d50ce42d919cf2e9f342dcd0613b36f3ef321aacd9e4f35",
     "hashSecret": "0xb651d1936bacb80450fa08a2015f1e41dc125209bfce3f900362cf881e32f352",
@@ -50,7 +50,7 @@
     "coreAddress": "0x15113927E0EdF6b8430FA4B92FfFEB29B6F78D7C",
     "bountyAmount": "0",
     "burnerAddress": "0x445E0E6fb15C14AB6c4d1267C92D736122e127e1",
-    "membersManager": "0x731866f1822b7394DcDC507840AA2282764F8B0C",
+    "organization": "0x731866f1822b7394DcDC507840AA2282764F8B0C",
     "gateway": "0x8C39C9C4Ea23c4f950e351DB7d23d77a83bc57Cd",
     "hashLock": "0x57578d985e360e128a9f1f04a07b585c2dff82232d3ebe8260d54f96c27a4527",
     "hashSecret": "0xa3b61da11edcc2f9cf02073ca3507164c9b922e2e67dca004098e3b09ff43e5a",
@@ -91,4 +91,3 @@
     }
   }
 ]
-

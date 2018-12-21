@@ -54,7 +54,7 @@ pragma solidity ^0.5.0;
 
 import "./UtilityTokenInterface.sol";
 import "./GatewayBase.sol";
-import "../lib/IsMemberInterface.sol";
+import "../lib/OrganizationInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
@@ -208,7 +208,7 @@ contract EIP20CoGateway is GatewayBase {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator stakes to initiate the stake
      *                process.
-     * @param _membersManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _burner Address where tokens will be burned.
      */
@@ -217,14 +217,14 @@ contract EIP20CoGateway is GatewayBase {
         address _utilityToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
+        OrganizationInterface _organization,
         address _gateway,
         address payable _burner
     )
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _membersManager
+            _organization
         )
         public
     {

@@ -36,9 +36,17 @@ contract('Organization.setWorker()', async (accounts) => {
   let expirationHeight = 0;
 
   beforeEach(async function () {
-    organization = await Organization.new({ from: owner });
-    await organization.setAdmin(admin, { from: owner });
-    expirationHeight = (await web3.eth.getBlockNumber()) + 10;
+    let workers = [];
+
+    organization = await Organization.new(
+      owner,
+      admin,
+      workers,
+      expirationHeight,
+    );
+
+    let currentBlockNumber = await web3.eth.getBlockNumber();
+    expirationHeight = currentBlockNumber + expirationHeightDelta;
   });
 
   it('reverts when caller is not owner/admin', async () => {
@@ -69,7 +77,7 @@ contract('Organization.setWorker()', async (accounts) => {
   it('reverts when expiration height is expired', async () => {
 
     const blockNumber = await web3.eth.getBlockNumber();
-    const expirationHeight = blockNumber + expirationHeightDelta;
+    expirationHeight = blockNumber + expirationHeightDelta;
     for (let i = 0; i < expirationHeightDelta; i++) {
       await Utils.advanceBlock();
     }
@@ -131,9 +139,6 @@ contract('Organization.setWorker()', async (accounts) => {
       organization,
     );
 
-    let currentBlockNumber = await web3.eth.getBlockNumber();
-    let remainingHeight = expirationHeight - currentBlockNumber;
-
     assert.strictEqual(
       events.WorkerSet.worker,
       worker,
@@ -142,10 +147,6 @@ contract('Organization.setWorker()', async (accounts) => {
     assert(
       events.WorkerSet.expirationHeight.eqn(expirationHeight),
       'Event must emit correct expiration height.',
-    );
-    assert(
-      events.WorkerSet.remainingHeight.eqn(remainingHeight),
-      'Event must emit correct remaining height.',
     );
 
   });

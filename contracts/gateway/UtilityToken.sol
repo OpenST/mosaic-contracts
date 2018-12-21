@@ -23,7 +23,7 @@ pragma solidity ^0.5.0;
 import "./UtilityTokenInterface.sol";
 import "./EIP20Token.sol";
 import "./CoGatewayUtilityTokenInterface.sol";
-import "../lib/IsMemberInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 
 /**
@@ -73,17 +73,17 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
-     * @param _membersManager Address of a contract that manages organization.
+     * @param _organization Address of a contract that manages organization.
      */
     constructor(
         EIP20Interface _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         public
-        Organized(_membersManager)
+        Organized(_organization)
         EIP20Token(_symbol, _name, _decimals)
     {
         require(

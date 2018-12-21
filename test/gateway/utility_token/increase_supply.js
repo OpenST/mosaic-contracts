@@ -34,7 +34,7 @@ const TOKEN_DECIMALS = 18;
 contract('UtilityToken.increaseSupply()', function (accounts) {
 
   let brandedToken,
-    membersManager,
+    organization,
     utilityToken,
     coGatewayAddress,
     beneficiary,
@@ -43,7 +43,7 @@ contract('UtilityToken.increaseSupply()', function (accounts) {
   beforeEach(async function () {
 
     brandedToken = accounts[4];
-    membersManager = accounts[0];
+    organization = accounts[0];
     beneficiary = accounts[6];
     amount = new BN(1000);
     utilityToken = await UtilityToken.new(
@@ -51,7 +51,7 @@ contract('UtilityToken.increaseSupply()', function (accounts) {
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager,
+      organization,
     );
 
     coGatewayAddress = accounts[1];

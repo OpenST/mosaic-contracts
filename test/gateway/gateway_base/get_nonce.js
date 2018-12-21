@@ -1,7 +1,27 @@
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 const GatewayBase = artifacts.require("./GatewayBase.sol")
   , BN = require('bn.js');
 
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 contract('GatewayBase.sol', function (accounts) {
 
@@ -16,12 +36,12 @@ contract('GatewayBase.sol', function (accounts) {
         , dummyStateRootProviderAddress = accounts[0]
         , bounty = new BN(100);
 
-      let membersManager = await MockMembersManager.new(owner, worker);
+      let organization = await MockOrganization.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
-        membersManager.address
+        organization.address,
       );
 
     });

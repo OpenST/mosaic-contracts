@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const UtilityToken = artifacts.require('UtilityToken');
-const MockMembersManager = artifacts.require('MockMembersManager');
+const MockOrganization = artifacts.require('MockOrganization');
 
 const Utils = require("./../../test_lib/utils");
 
@@ -31,13 +31,13 @@ const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.constructor()', function (accounts) {
 
-  let brandedToken, membersManager, owner, worker;
+  let brandedToken, organization, owner, worker;
 
   beforeEach(async function () {
     owner = accounts[2];
     worker = accounts[3];
     brandedToken = accounts[4];
-    membersManager = await MockMembersManager.new(owner, worker);
+    organization = await MockOrganization.new(owner, worker);
   });
 
   it('should fail to deploy when branded token address is zero', async function () {
@@ -50,14 +50,14 @@ contract('UtilityToken.constructor()', function (accounts) {
         TOKEN_SYMBOL,
         TOKEN_NAME,
         TOKEN_DECIMALS,
-        membersManager.address,
+        organization.address,
       ),
       'Token address should not be zero.',
     );
 
   });
 
-  it('should fail to deploy when member manager address is zero', async function () {
+  it('should fail to deploy when organization address is zero', async function () {
 
     await Utils.expectRevert(
       UtilityToken.new(
@@ -67,7 +67,7 @@ contract('UtilityToken.constructor()', function (accounts) {
         TOKEN_DECIMALS,
         NullAddress,
       ),
-      'MembersManager contract address must not be zero.',
+      'Organization contract address must not be zero.',
     );
 
   });
@@ -79,7 +79,7 @@ contract('UtilityToken.constructor()', function (accounts) {
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
-      membersManager.address,
+      organization.address,
     );
 
     assert.strictEqual(
@@ -124,11 +124,11 @@ contract('UtilityToken.constructor()', function (accounts) {
       `Token total supply from contract must be equal to zero.`,
     );
 
-    let membersManagerAddress = await utilityToken.membersManager();
+    let organizationAddress = await utilityToken.organization();
     assert.strictEqual(
-      membersManagerAddress,
-      membersManager.address,
-      `Members manager address from the contract must be equal to ${membersManager.address}.`,
+      organizationAddress,
+      organization.address,
+      `Organization address from the contract must be equal to ${organization.address}.`,
     );
 
   });

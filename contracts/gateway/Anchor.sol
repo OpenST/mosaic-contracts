@@ -20,10 +20,9 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./WorkersInterface.sol";
 import "../StateRootInterface.sol";
 import "../lib/CircularBufferUint.sol";
-import "../lib/IsMemberInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/Organized.sol";
 import "../lib/RLP.sol";
@@ -35,8 +34,7 @@ import "../lib/SafeMath.sol";
  * @notice Anchor stores another chain's state roots. It stores the address of
  *         the co-anchor, which will be the anchor on the other chain. State
  *         roots are exchanged bidirectionally between the anchor and the
- *         co-anchor by the workers that are registered as part of the
- *         `Organized` interface.
+ *         co-anchor by the organization.
  */
 contract Anchor is StateRootInterface, Organized, CircularBufferUint {
 
@@ -76,16 +74,16 @@ contract Anchor is StateRootInterface, Organized, CircularBufferUint {
      * @param _stateRoot State root hash of given _blockHeight.
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.
-     * @param _membersManager Address of a members manager contract.
+     * @param _organization Address of an organization contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
         uint256 _maxStateRoots,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
-        Organized(_membersManager)
+        Organized(_organization)
         CircularBufferUint(_maxStateRoots)
         public
     {

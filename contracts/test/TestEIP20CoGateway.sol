@@ -32,7 +32,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /* Constructor */
 
     /**
-     * @notice Initialise the contract by providing the Gateway contract
+     * @notice Initialize the contract by providing the Gateway contract
      *         address for which the CoGateway will enable facilitation of
      *         minting and redeeming.This is used for testing purpose.
      *
@@ -43,7 +43,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
-     * @param _membersManager Address of a members manager contract.
+     * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      */
     constructor(
@@ -51,7 +51,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         address _utilityToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager,
+        OrganizationInterface _organization,
         address _gateway,
         address payable _burner
     )
@@ -60,7 +60,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _utilityToken,
             _stateRootProvider,
             _bounty,
-            _membersManager,
+            _organization,
             _gateway,
             _burner
     )

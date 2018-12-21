@@ -19,9 +19,6 @@
 // ----------------------------------------------------------------------------
 
 const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-  MessageBus = artifacts.require('MessageBus'),
-  UtilityToken = artifacts.require('UtilityToken'),
-  EIP20Token = artifacts.require('EIP20Token'),
   BN = require('bn.js'),
   MockToken = artifacts.require('MockToken'),
   Utils = require("../../test_lib/utils");
@@ -30,7 +27,7 @@ let testEIP20CoGateway,
   burner,
   valueToken,
   dummyStateRootProvider,
-  membersManager,
+  organization,
   gateway,
   utilityToken,
   bountyAmount,
@@ -50,10 +47,10 @@ async function _setup(accounts) {
 
   valueToken = accounts[0];
   dummyStateRootProvider = accounts[1];
-  membersManager = accounts[2];
+  organization = accounts[2];
   gateway = accounts[3];
   owner = accounts[8];
-  utilityToken = await MockToken.new({from: owner});
+  utilityToken = await MockToken.new({ from: owner });
   bountyAmount = new BN(100);
   redeemer = accounts[7];
   redeemerBalance = new BN(1000);
@@ -64,17 +61,17 @@ async function _setup(accounts) {
     utilityToken.address,
     dummyStateRootProvider,
     bountyAmount,
-    membersManager,
+    organization,
     gateway,
     burner
   );
 
-  await utilityToken.transfer(redeemer, redeemerBalance, {from: owner});
+  await utilityToken.transfer(redeemer, redeemerBalance, { from: owner });
 
   await utilityToken.approve(
     testEIP20CoGateway.address,
     redeemerBalance,
-    {from: redeemer},
+    { from: redeemer },
   );
 
 }
@@ -107,7 +104,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bounty},
+        { from: redeemer, value: bounty },
       ),
       'Payable amount should be equal to the bounty amount.',
     );
@@ -124,7 +121,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bounty},
+        { from: redeemer, value: bounty },
       ),
       'Payable amount should be equal to the bounty amount.',
     );
@@ -141,7 +138,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       'Redeem amount must not be zero.',
     );
@@ -156,7 +153,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     amount = new BN(200);
@@ -168,7 +165,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       'Invalid nonce.',
     );
@@ -184,7 +181,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await Utils.expectRevert(
@@ -195,7 +192,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce.addn(1),
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       'Previous process is not completed.',
     );
@@ -214,7 +211,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       "Underflow when subtracting.",
     );
@@ -232,7 +229,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       "Payable amount should be equal to the bounty amount.",
     )
@@ -245,7 +242,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     await utilityToken.approve(
       testEIP20CoGateway.address,
       amount,
-      {from: redeemer},
+      { from: redeemer },
     );
 
     await Utils.expectRevert(
@@ -256,7 +253,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       "Underflow when subtracting.",
     )
@@ -271,7 +268,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.setOutboxStatus(
@@ -287,7 +284,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount}
+        { from: redeemer, value: bountyAmount }
       ),
       "Message on source must be Undeclared."
     );
@@ -303,7 +300,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.setOutboxStatus(
@@ -319,7 +316,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount}
+        { from: redeemer, value: bountyAmount }
       ),
       "Message on source must be Undeclared."
     );
@@ -335,7 +332,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.setOutboxStatus(
@@ -351,7 +348,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount}
+        { from: redeemer, value: bountyAmount }
       ),
       "Message on source must be Undeclared."
     );
@@ -367,7 +364,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.setOutboxStatus(
@@ -383,7 +380,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        {from: redeemer, value: bountyAmount}
+        { from: redeemer, value: bountyAmount }
       ),
       "Message on source must be Undeclared."
     );
@@ -399,7 +396,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.redeem(
@@ -409,7 +406,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     await testEIP20CoGateway.setOutboxStatus(
@@ -425,7 +422,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce.addn(1),
         hashLock,
-        {from: redeemer, value: bountyAmount},
+        { from: redeemer, value: bountyAmount },
       ),
       'Previous process is not completed.'
     );
@@ -444,7 +441,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     assert.strictEqual(
@@ -460,7 +457,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bountyAmount},
+      { from: redeemer, value: bountyAmount },
     );
 
     let eip20CoGatewayBaseBalance = new BN(

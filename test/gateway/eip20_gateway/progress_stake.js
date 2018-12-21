@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
 
 const BN = require('bn.js');
@@ -60,12 +60,12 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
 
   beforeEach(async function () {
 
-    mockToken = await MockToken.new({from: accounts[0]});
-    baseToken = await MockToken.new({from: accounts[0]});
+    mockToken = await MockToken.new({ from: accounts[0] });
+    baseToken = await MockToken.new({ from: accounts[0] });
 
     let owner = accounts[2];
     let worker = accounts[7];
-    let membersManager = await MockMembersManager.new(owner, worker);
+    let organization = await MockOrganization.new(owner, worker);
 
     let coreAddress = accounts[5];
     let burner = NullAddress;
@@ -75,18 +75,18 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       baseToken.address,
       coreAddress,
       bountyAmount,
-      membersManager.address,
+      organization.address,
       burner,
     );
 
-    await mockToken.transfer(gateway.address, new BN(10000), {from: accounts[0]});
-    await baseToken.transfer(gateway.address, new BN(10000), {from: accounts[0]});
+    await mockToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
+    await baseToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
 
     let hashLockObj = Utils.generateHashLock();
 
     stakeMessage.hashLock = hashLockObj.l;
     stakeMessage.unlockSecret = hashLockObj.s;
-    let stakeTypeHash = await  gatewayHelper.stakeTypeHash();
+    let stakeTypeHash = await gatewayHelper.stakeTypeHash();
     stakeMessage.messageHash = Utils.messageHash(
       stakeTypeHash,
       stakeMessage.intentHash,
@@ -240,7 +240,7 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
     let tx = await gateway.progressStake(
       stakeMessage.messageHash,
       stakeMessage.unlockSecret,
-      {from: caller}
+      { from: caller }
     );
 
     let event = EventDecoder.getEvents(tx, gateway);

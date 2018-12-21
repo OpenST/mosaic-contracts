@@ -20,21 +20,21 @@ contract MockAnchor is Anchor {
      * @param _stateRoot State root hash of given _blockHeight.
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.
-     * @param _membersManager Address of a members manager contract.
+     * @param _organization Address of an organization contract.
      */
     constructor(
         uint256 _remoteChainId,
         uint256 _blockHeight,
         bytes32 _stateRoot,
         uint256 _maxStateRoots,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
         Anchor(
             _remoteChainId,
             _blockHeight,
             _stateRoot,
             _maxStateRoots,
-            _membersManager
+            _organization
         )
         public
     {}

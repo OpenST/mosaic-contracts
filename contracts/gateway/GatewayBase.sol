@@ -24,7 +24,7 @@ import "./EIP20Interface.sol";
 import "../lib/MessageBus.sol";
 import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
-import "../lib/IsMemberInterface.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
 
@@ -153,14 +153,14 @@ contract GatewayBase is Organized {
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
-     * @param _membersManager Address of a contract that manages workers.
+     * @param _organization Address of an organization contract.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        IsMemberInterface _membersManager
+        OrganizationInterface _organization
     )
-        Organized(_membersManager)
+        Organized(_organization)
         public
     {
         require(

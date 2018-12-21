@@ -1,7 +1,27 @@
-const GatewayBase = artifacts.require("./GatewayBase.sol")
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
+const GatewayBase = artifacts.require('./GatewayBase.sol')
   , BN = require('bn.js');
 
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
 let unlockTimeInBlocks = 100;
@@ -20,14 +40,14 @@ async function proposeBountyChange(gatewayBaseInstance, proposedBounty, organiza
     BountyChangeInitiated: {
       _currentBounty: currentBounty,
       _proposedBounty: proposedBounty,
-      _unlockHeight: new BN(expectedUnlockHeight)
+      _unlockHeight: new BN(expectedUnlockHeight),
     }
   };
 
   assert.equal(
     response.receipt.status,
     1,
-    "Receipt status is unsuccessful"
+    'Receipt status is unsuccessful',
   );
 
   let eventData = response.logs;
@@ -48,12 +68,12 @@ contract('GatewayBase.sol', function (accounts) {
       let dummyStateRootProviderAddress = accounts[0]
         , bounty = new BN(100);
 
-      let membersManager = await MockMembersManager.new(owner, worker);
+      let organization = await MockOrganization.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
-        membersManager.address
+        organization.address,
       );
 
     });
@@ -106,12 +126,12 @@ contract('GatewayBase.sol', function (accounts) {
       let dummyStateRootProviderAddress = accounts[0]
         , bounty = new BN(100);
 
-      let membersManager = await MockMembersManager.new(owner, worker);
+      let organization = await MockOrganization.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
-        membersManager.address
+        organization.address,
       );
       unlockHeight = await proposeBountyChange(gatewayBaseInstance, proposedBounty, owner, currentBounty);
       currentBlock = unlockHeight - unlockTimeInBlocks;
@@ -135,7 +155,7 @@ contract('GatewayBase.sol', function (accounts) {
       assert.equal(
         response.receipt.status,
         1,
-        "Receipt status is unsuccessful"
+        'Receipt status is unsuccessful',
       );
 
       let eventData = response.logs;

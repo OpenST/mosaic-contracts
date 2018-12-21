@@ -22,22 +22,50 @@ pragma solidity ^0.5.0;
 
 import "./SafeMath.sol";
 import "./OrganizationInterface.sol";
-import "./IsMemberInterface.sol";
 
 
 /**
- * @title Organization contract.
+ * @title Organization contract handles an organization and its workers.
  *
- * @notice The organization represents an entity that manages the
- *         mosaic ecosystem and therefore the Organization.sol contract holds
- *         all the keys required to administer the mosaic contracts.
+ * @notice The organization represents an entity that manages other contracts
+ *         and therefore the `Organization.sol` contract holds all the keys
+ *         required to administer the other contracts.
+ *         This contract supports the notion of an "admin" that can act on
+ *         behalf of the organization. When seen from the outside by consumers
+ *         of the `OrganizationInterface`, a notion of an admin does not exist.
  */
-contract Organization is OrganizationInterface, IsMemberInterface {
+contract Organization is OrganizationInterface {
+
+
+    /* Using */
+
     using SafeMath for uint256;
+
+
+    /* Events */
+
+    /** Emitted when a current owner initiates a change of ownership. */
+    event OwnershipTransferInitiated(
+        address indexed proposedOwner,
+        address currentOwner
+    );
+
+    /** Emitted when a new owner accepts the ownership transfer. */
+    event OwnershipTransferCompleted(address newOwner, address previousOwner);
+
+    /** Emitted whenever an owner or admin changes the address of the admin. */
+    event AdminAddressChanged(address indexed newAdmin, address previousAdmin);
+
+    /** Emitted when a worker address was set. */
+    event WorkerSet(address indexed worker, uint256 expirationHeight);
+
+    /** Emitted when a worker address is deleted from the contract. */
+    event WorkerUnset(address worker);
+
 
     /* Storage */
 
-    /** Address for which private key will be owned by organization. */
+    /** Address for which private key will be owned by the organization. */
     address public owner;
 
     /**
@@ -46,7 +74,14 @@ contract Organization is OrganizationInterface, IsMemberInterface {
      */
     address public proposedOwner;
 
-    /** Admin address set by owner to facilitate operations of an economy. */
+    /**
+     * Admin address set by owner to facilitate operations of an economy on
+     * behalf of the owner.
+     * While this contract includes details that regard the admin, e.g. a
+     * modifier, when looking at the `OrganizationInterface`, the existence of
+     * an admin is a concrete implementation detail and not known to the
+     * consumers of the interface.
+     */
     address public admin;
 
     /**
@@ -61,8 +96,7 @@ contract Organization is OrganizationInterface, IsMemberInterface {
      * onlyOwner functions can only be called from the address that is
      * registered as the owner.
      */
-    modifier onlyOwner()
-    {
+    modifier onlyOwner() {
         require(
             msg.sender == owner,
             "Only owner is allowed to call this method."
@@ -73,10 +107,9 @@ contract Organization is OrganizationInterface, IsMemberInterface {
 
     /**
      * onlyOwnerOrAdmin functions can only be called from an address that is
-     * either registered as owner or as admin.
+     * registered as owner or as admin.
      */
-    modifier onlyOwnerOrAdmin()
-    {
+    modifier onlyOwnerOrAdmin() {
         require(
             msg.sender == owner || msg.sender == admin,
             "Only owner and admin are allowed to call this method."
@@ -89,12 +122,40 @@ contract Organization is OrganizationInterface, IsMemberInterface {
     /* Constructor */
 
     /**
-     * @notice The address that creates the contract is set as the initial
-     *         owner.
+     * @notice Creates a new organization. When you first initialize the
+     *         organization, you can specify owner, admin, and workers. The
+     *         owner is mandatory as it will be the only address able to make
+     *         all later changes. An admin and workers can be added at
+     *         construction or they can be set by the owner later.
+     *
+     * @param _owner The address that shall be registered as the owner of the
+     *               organization.
+     * @param _admin The address that shall be registered as the admin of the
+     *               organization. Can be address(0) if no admin is desired.
+     * @param _workers An array of initial worker addresses. Can be an empty
+     *                 array if no workers are desired or known at construction.
+     * @param _expirationHeight If any workers are given, this will be the
+     *                          block height at which they expire.
      */
-    constructor() public
+    constructor(
+        address _owner,
+        address _admin,
+        address[] memory _workers,
+        uint256 _expirationHeight
+    )
+        public
     {
-        owner = msg.sender;
+        require(
+            _owner != address(0),
+            "The owner must not be the zero address."
+        );
+
+        owner = _owner;
+        admin = _admin;
+
+        for(uint256 i = 0; i < _workers.length; i++) {
+            setWorkerInternal(_workers[i], _expirationHeight);
+        }
     }
 
 
@@ -123,7 +184,7 @@ contract Organization is OrganizationInterface, IsMemberInterface {
 
         proposedOwner = _proposedOwner;
 
-        emit OwnershipTransferInitiated(_proposedOwner);
+        emit OwnershipTransferInitiated(_proposedOwner, owner);
 
         success_ = true;
     }
@@ -141,10 +202,10 @@ contract Organization is OrganizationInterface, IsMemberInterface {
             "Caller is not proposed owner address."
         );
 
+        emit OwnershipTransferCompleted(proposedOwner, owner);
+
         owner = proposedOwner;
         proposedOwner = address(0);
-
-        emit OwnershipTransferCompleted(owner);
 
         success_ = true;
     }
@@ -152,8 +213,12 @@ contract Organization is OrganizationInterface, IsMemberInterface {
     /**
      * @notice Sets the admin address. Can only be called by owner or current
      *         admin. If called by the current admin, adminship is transferred
-     *         to the given address.
-     *         Admin can be set to address(0).
+     *         to the given address immediately.
+     *         It is discouraged to set the admin address to be the same as the
+     *         address of the owner. The point of the admin is to act on behalf
+     *         of the organization without requiring the possibly very safely
+     *         stored owner key(s).
+     *         Admin can be set to `address(0)` if no admin is desired.
      *
      * @param _admin Admin address to be set.
      *
@@ -166,18 +231,13 @@ contract Organization is OrganizationInterface, IsMemberInterface {
         onlyOwnerOrAdmin
         returns (bool success_)
     {
-        require(
-            _admin != owner,
-            "Admin address can't be the same as the owner address."
-        );
-
         /*
          * If the address does not change, the call is considered a success,
          * but we don't need to emit an event as it did not actually change.
          */
         if (admin != _admin) {
+            emit AdminAddressChanged(_admin, admin);
             admin = _admin;
-            emit AdminAddressChanged(admin);
         }
 
         success_ = true;
@@ -201,22 +261,8 @@ contract Organization is OrganizationInterface, IsMemberInterface {
     )
         external
         onlyOwnerOrAdmin
-        returns (uint256 remainingBlocks_)
     {
-        require(
-            _worker != address(0),
-            "Worker address cannot be null."
-        );
-
-        require(
-            _expirationHeight > block.number,
-            "Expiration height must be in the future."
-        );
-
-        workers[_worker] = _expirationHeight;
-        remainingBlocks_ = _expirationHeight.sub(block.number);
-
-        emit WorkerSet(_worker, _expirationHeight, remainingBlocks_);
+        setWorkerInternal(_worker, _expirationHeight);
     }
 
     /**
@@ -233,23 +279,34 @@ contract Organization is OrganizationInterface, IsMemberInterface {
         onlyOwnerOrAdmin
         returns (bool isUnset_)
     {
-        isUnset_ = (workers[_worker] > 0);
+        if (workers[_worker] > 0) {
+            delete workers[_worker];
+            emit WorkerUnset(_worker);
 
-        delete workers[_worker];
-
-        emit WorkerUnset(_worker, isUnset_);
+            isUnset_ = true;
+        }
     }
 
     /**
-     * @notice Checks if an address is currently registered as the owner.
+     * @notice Checks if an address is currently registered as the organization.
      *
-     * @param _owner Address to check.
+     * @dev It is an implementation detail of this contract that the admin can
+     *      act on behalf of the organization. To the outside, an "admin"
+     *      doesn't exist. See also the `admin` storage variable.
      *
-     * @return isOwner_ True if the given address is the owner of the
-     *                  organization. Returns false otherwise.
+     * @param _organization Address to check.
+     *
+     * @return isOrganization_ True if the given address represents the
+     *                         organization. Returns false otherwise.
      */
-    function isOwner(address _owner) external view returns (bool isOwner_) {
-        isOwner_ = _owner == owner;
+    function isOrganization(
+        address _organization
+    )
+        external
+        view
+        returns (bool isOrganization_)
+    {
+        isOrganization_ = _organization == owner || _organization == admin;
     }
 
     /**
@@ -264,6 +321,41 @@ contract Organization is OrganizationInterface, IsMemberInterface {
     function isWorker(address _worker) external view returns (bool isWorker_)
     {
         isWorker_ = workers[_worker] > block.number;
+    }
+
+
+    /* Private Functions */
+
+    /**
+     * @notice Sets worker and its expiration block height. If the worker
+     *         already exists, then its expiration height will be overwritten
+     *         with the given one.
+     *
+     * @param _worker Worker address to be added.
+     * @param _expirationHeight Expiration block height of worker.
+     *
+     * @return remainingBlocks_ Remaining number of blocks for which worker is
+     *                          active.
+     */
+    function setWorkerInternal(
+        address _worker,
+        uint256 _expirationHeight
+    )
+        private
+    {
+        require(
+            _worker != address(0),
+            "Worker address cannot be null."
+        );
+
+        require(
+            _expirationHeight > block.number,
+            "Expiration height must be in the future."
+        );
+
+        workers[_worker] = _expirationHeight;
+
+        emit WorkerSet(_worker, _expirationHeight);
     }
 
 }

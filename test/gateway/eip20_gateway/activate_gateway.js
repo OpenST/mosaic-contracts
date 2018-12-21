@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const Gateway = artifacts.require("./EIP20Gateway.sol")
-const MockMembersManager = artifacts.require('MockMembersManager.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -32,7 +32,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     let coGateway = accounts[5];
     let owner = accounts[2];
     let worker = accounts[3];
-    let membersManager;
+    let organization;
     let burner = NullAddress;
 
     beforeEach(async function () {
@@ -42,21 +42,21 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             dummyStateRootProvider = accounts[2],
             bountyAmount = new BN(100);
 
-        membersManager = await MockMembersManager.new(owner, worker);
+        organization = await MockOrganization.new(owner, worker);
 
         gateway = await Gateway.new(
             mockToken,
             baseToken,
             dummyStateRootProvider,
             bountyAmount,
-            membersManager.address,
+            organization.address,
             burner
         );
     });
 
     it('should activate if not already activated', async function () {
 
-        let isSuccess = await gateway.activateGateway.call(coGateway, {from: owner});
+        let isSuccess = await gateway.activateGateway.call(coGateway, { from: owner });
 
         assert.strictEqual(
             isSuccess,
@@ -64,7 +64,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
             "Gateway activation failed, activateGateway returned false.",
         );
 
-        await gateway.activateGateway(coGateway, {from: owner});
+        await gateway.activateGateway(coGateway, { from: owner });
         let isActivated = await gateway.activated.call();
 
         assert.strictEqual(
@@ -94,10 +94,10 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
 
     it('should not activate if already activated', async function () {
 
-        await gateway.activateGateway(coGateway, {from: owner});
+        await gateway.activateGateway(coGateway, { from: owner });
 
         await Utils.expectRevert(
-            gateway.activateGateway(coGateway, {from: owner}),
+            gateway.activateGateway(coGateway, { from: owner }),
             'Gateway was already activated once.'
         );
     });
@@ -105,7 +105,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     it('should not activate with zero co-gateway address', async function () {
 
         await Utils.expectRevert(
-            gateway.activateGateway(NullAddress, {from: owner}),
+            gateway.activateGateway(NullAddress, { from: owner }),
             'Co-gateway address must not be zero.'
         );
     });
@@ -113,7 +113,7 @@ contract('EIP20Gateway.activateGateway()', function (accounts) {
     it('should be activated by organization only', async function () {
 
         await Utils.expectRevert(
-            gateway.activateGateway(coGateway, {from: accounts[0]}),
+            gateway.activateGateway(coGateway, { from: accounts[0] }),
             'Only the organization is allowed to call this method.'
         );
     });
