@@ -90,7 +90,7 @@ contract('Anchor.getStateRoot()', function (accounts) {
     await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      {from: worker},
+      {from: owner},
     );
 
     let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
