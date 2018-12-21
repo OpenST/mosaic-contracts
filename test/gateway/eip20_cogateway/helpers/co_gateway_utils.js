@@ -32,7 +32,7 @@ CoGatewayUtils.prototype = {
    *
    * @return {string} message type hash.
    */
-  redeemTypeHash: async function () {
+  redeemTypeHash: function () {
     return utils.getTypeHash(
       'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
     );
