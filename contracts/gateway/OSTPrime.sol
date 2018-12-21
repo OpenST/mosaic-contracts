@@ -218,11 +218,14 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
     }
 
     /**
-     * @notice Adds number of OST Prime tokens to account balance and increases
-     *         the total token supply. Can be called only when contract is
-     *         initialized and only by CoGateway address.
+     * @notice This method performs following operations:
+     *          - Adds number of OST Prime EIP20 tokens to this contract address.
+     *          - Increases the total token supply.
+     *          - Transfers base token to the beneficiary address.
+     *          It can be called by CoGateway address and when contract is
+     *          initialized.
      *
-     * @dev The parameters _account and _amount should not be zero. This check
+     * @dev The parameter _amount should not be zero. This check
      *      is added in function increaseSupplyInternal.
      *
      * @param _account Account address for which the OST Prime balance will be
