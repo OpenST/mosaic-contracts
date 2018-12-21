@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const GatewayBase = artifacts.require("./MockGatewayBase.sol")
-  , Core = artifacts.require("./MockSafeCore.sol")
+  , MockAnchor = artifacts.require("./MockAnchor.sol")
   , BN = require('bn.js');
 
 const MockMembersManager = artifacts.require('MockMembersManager.sol');
@@ -44,7 +44,7 @@ contract('GatewayBase.sol', function (accounts) {
       let maxStateRoots = new BN(1000);
 
       let membersManager = await MockMembersManager.new(owner, worker);
-      let core = await Core.new(
+      let mockAnchor = await MockAnchor.new(
         1,
         0,
         stateRoot,
@@ -53,7 +53,7 @@ contract('GatewayBase.sol', function (accounts) {
       );
 
       gatewayBaseInstance = await GatewayBase.new(
-        core.address,
+        mockAnchor.address,
         bounty,
         membersManager.address
       );
