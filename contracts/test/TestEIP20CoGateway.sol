@@ -23,9 +23,10 @@ pragma solidity ^0.5.0;
 import "../gateway/EIP20CoGateway.sol";
 
 /**
- * @title TestEIP20CoGateway contract.
+ * @title The TestEIP20CoGateway contract allows to directly set certain
+ *        statuses and variables.
  *
- * @notice This is used for testing purpose.
+ * @notice This is only used for testing purposes.
  */
 contract TestEIP20CoGateway is EIP20CoGateway {
 
@@ -45,6 +46,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                staking process.
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
+     * @param _burner An address where tokens are sent when they should be burnt.
      */
     constructor(
         address _valueToken,
@@ -80,8 +82,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _hashLock Hash Lock provided by the facilitator.
      * @param _staker Staker address.
+     * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
@@ -90,29 +92,31 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         uint256 _stakerNonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        bytes32 _hashLock,
-        address _staker
+        address _staker,
+        bytes32 _hashLock
     )
         public
         returns (bytes32 messageHash_)
     {
-
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit
-        );
-
-        messages[messageHash_] = getMessage(
-            _staker,
             _stakerNonce,
             _gasPrice,
             _gasLimit,
-            _intentHash,
+            _staker,
             _hashLock
         );
+
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
+        );
+
+        messages[messageHash_] = message;
 
         return messageHash_;
 

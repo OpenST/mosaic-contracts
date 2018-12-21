@@ -78,8 +78,8 @@ contract TestEIP20Gateway is EIP20Gateway {
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _hashLock Hash Lock provided by the facilitator.
      * @param _staker Staker address.
+     * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
@@ -89,17 +89,17 @@ contract TestEIP20Gateway is EIP20Gateway {
         uint256 _stakerNonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        bytes32 _hashLock,
-        address _staker
+        address _staker,
+        bytes32 _hashLock
     )
         public
     {
         messages[_messageHash] = getMessage(
-            _staker,
+            _intentHash,
             _stakerNonce,
             _gasPrice,
             _gasLimit,
-            _intentHash,
+            _staker,
             _hashLock
         );
     }

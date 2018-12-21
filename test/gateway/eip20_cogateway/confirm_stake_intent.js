@@ -78,7 +78,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     gasPrice = new BN(data.gasPrice);
     gasLimit = new BN(data.gasLimit);
     blockHeight = new BN(data.blockNumber);
-    rlpParentNodes = data.proofData.storageProof[0].parentNodes;
+    rlpParentNodes = data.proofData.parentNodes;
     storageRoot = data.proofData.storageHash;
     hashLock = data.hashLock;
     unlockSecret = data.hashSecret;
@@ -175,18 +175,19 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     initializeData(TestData[0]);
 
+    organizationAddress = accounts[4];
+
     // Deploy mocked utility token.
     utilityToken = await Token.new(
       data.token,
       "",
       "",
       18,
-      data.organization,
+      organizationAddress,
       { from: accounts[0] }
     );
 
     coreAddress = accounts[3];
-    organizationAddress = accounts[4];
     burnerAddress = accounts[6];
 
     // Deploy CoGateway.

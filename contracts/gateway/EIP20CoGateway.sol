@@ -295,7 +295,6 @@ contract EIP20CoGateway is GatewayBase {
         // Progress inbox.
         MessageBus.progressInbox(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -366,7 +365,6 @@ contract EIP20CoGateway is GatewayBase {
 
         MessageBus.progressInboxWithProof(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -435,7 +433,6 @@ contract EIP20CoGateway is GatewayBase {
         // Confirm revocation.
         MessageBus.confirmRevocation(
             messageBox,
-            STAKE_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -498,7 +495,6 @@ contract EIP20CoGateway is GatewayBase {
         // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _unlockSecret
         );
@@ -563,7 +559,6 @@ contract EIP20CoGateway is GatewayBase {
 
         MessageBus.progressOutboxWithProof(
             messageBox,
-            REDEEM_TYPEHASH,
             message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -705,7 +700,6 @@ contract EIP20CoGateway is GatewayBase {
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
-            REDEEM_TYPEHASH,
             MESSAGE_BOX_OFFSET,
             _rlpParentNodes,
             storageRoot,
@@ -743,9 +737,6 @@ contract EIP20CoGateway is GatewayBase {
         );
     }
 
-
-    /* Public functions */
-
     /**
      * @notice Confirms the initiation of the stake process.
      *
@@ -775,9 +766,9 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _gasLimit,
         bytes32 _hashLock,
         uint256 _blockHeight,
-        bytes memory _rlpParentNodes
+        bytes calldata _rlpParentNodes
     )
-        public
+        external
         returns (bytes32 messageHash_)
     {
         // Get the initial gas amount.
@@ -800,29 +791,25 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
-        // Get the stake intent hash.
-        bytes32 intentHash = GatewayLib.hashStakeIntent(
+        bytes32 intentHash = hashStakeIntent(
             _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
+            _beneficiary
         );
-
-        // Get the messageHash.
-        messageHash_ = MessageBus.messageDigest(
-            STAKE_TYPEHASH,
+        
+        MessageBus.Message memory message = MessageBus.Message(
             intentHash,
             _stakerNonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            _staker,
+            _hashLock,
+            0 // Gas consumed will be updated at the end of this function.
         );
 
+        messageHash_ = storeMessage(message);
         registerInboxProcess(
-            _staker,
-            _stakerNonce,
+            message.sender,
+            message.nonce,
             messageHash_
         );
 
@@ -830,16 +817,7 @@ contract EIP20CoGateway is GatewayBase {
         mints[messageHash_] = Mint({
             amount : _amount,
             beneficiary : _beneficiary
-            });
-
-        // Create new message object.
-        messages[messageHash_] = getMessage(
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock);
+        });
 
         /*
          * Execute the confirm stake intent. This is done in separate
@@ -912,23 +890,20 @@ contract EIP20CoGateway is GatewayBase {
         bytes32 intentHash = GatewayLib.hashRedeemIntent(
             _amount,
             _beneficiary,
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
+            address(this)
         );
 
-        // Get the messageHash.
-        messageHash_ = MessageBus.messageDigest(
-            REDEEM_TYPEHASH,
+        MessageBus.Message memory message = getMessage(
             intentHash,
             _nonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            msg.sender,
+            _hashLock
         );
 
-        // Register new redeem process.
+        messageHash_ = storeMessage(message);
+
         registerOutboxProcess(
             msg.sender,
             _nonce,
@@ -941,20 +916,9 @@ contract EIP20CoGateway is GatewayBase {
             bounty : bounty
         });
 
-        // Create message object.
-        messages[messageHash_] = getMessage(
-            msg.sender,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            intentHash,
-            _hashLock
-        );
-
         // Declare message in outbox.
         MessageBus.declareMessage(
             messageBox,
-            REDEEM_TYPEHASH,
             messages[messageHash_]
         );
 
@@ -1008,7 +972,6 @@ contract EIP20CoGateway is GatewayBase {
         // Confirm message.
         MessageBus.confirmMessage(
             messageBox,
-            STAKE_TYPEHASH,
             _message,
             _rlpParentNodes,
             MESSAGE_BOX_OFFSET,
@@ -1016,6 +979,32 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         return true;
+    }
+
+    /**
+     * @notice private function to calculate stake intent hash.
+     *
+     * @dev This function is to avoid stack too deep error in
+     *      confirmStakeIntent function
+     *
+     * @param _amount stake amount
+     * @param _beneficiary minting account
+     *
+     * @return bytes32 stake intent hash
+     */
+    function hashStakeIntent(
+        uint256 _amount,
+        address _beneficiary
+    )
+        private
+        view
+        returns(bytes32)
+    {
+        return GatewayLib.hashStakeIntent(
+            _amount,
+            _beneficiary,
+            remoteGateway
+        );
     }
 
     /**

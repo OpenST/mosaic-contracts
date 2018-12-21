@@ -27,6 +27,7 @@ module.exports = function (deployer) {
 
     deployer.link(MerklePatriciaProof, MessageBus);
     deployer.deploy(MessageBus);
+    deployer.link(MessageBus, MockMessageBus);
 
     deployer.link(
         MerklePatriciaProof,
@@ -37,7 +38,7 @@ module.exports = function (deployer) {
     deployer.deploy(MockGatewayLib);
     deployer.deploy(MetaBlock);
     deployer.link(GatewayLib, [GatewayBase, EIP20Gateway, TestEIP20Gateway, EIP20CoGateway, TestEIP20CoGateway]);
-    deployer.link(MessageBus, [EIP20CoGateway, TestEIP20CoGateway, TestEIP20Gateway, EIP20Gateway] );
+    deployer.link(MessageBus, [EIP20CoGateway, TestEIP20CoGateway, TestEIP20Gateway, EIP20Gateway]);
     deployer.link(MockGatewayLib, [MockGatewayBase, TestEIP20Gateway]);
     deployer.link(MetaBlock, [BlockStore, AuxiliaryBlockStore]);
 
@@ -49,4 +50,3 @@ module.exports = function (deployer) {
     deployer.link(MerklePatriciaProof, MerklePatriciaProofTest);
 
 };
-

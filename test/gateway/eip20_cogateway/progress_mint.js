@@ -20,7 +20,7 @@
 
 const BN = require('bn.js'),
   Utils = require('../../test_lib/utils'),
-  EIP20CoGatewayHelper = require('./helpers/helper'),
+  coGatewayUtils = require('./helpers/co_gateway_utils.js'),
   TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
   TestUtilityToken = artifacts.require('TestUtilityToken');
 
@@ -28,14 +28,13 @@ let valueToken,
   burner,
   organization,
   dummyStateRootProvider,
-  coGateway,
+  gateway,
   testUtilityToken,
   bountyAmount,
   staker,
   symbol = 'OST',
   name = 'Simple Token',
-  decimals = 18,
-  helper;
+  decimals = 18;
 
 const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -48,13 +47,13 @@ let MessageStatusEnum = {
   Revoked: 4
 };
 
-async function _setup(accounts) {
+async function setup(accounts) {
 
   valueToken = accounts[0];
   burner = accounts[10];
   organization = accounts[2];
   dummyStateRootProvider = accounts[11];
-  coGateway = accounts[3];
+  gateway = accounts[3];
   owner = accounts[8];
   testUtilityToken = await TestUtilityToken.new(
     valueToken,
@@ -84,34 +83,30 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     unlockSecret,
     testEIP20CoGateway,
     messageHash;
-  helper = new EIP20CoGatewayHelper();
 
   beforeEach(async function () {
 
-    await _setup(accounts);
+    await setup(accounts);
     amount = new BN(200);
     hashLock = hashLockObj.l;
     unlockSecret = hashLockObj.s;
     gasPrice = new BN(10);
     gasLimit = new BN(10);
 
-    intentHash = await helper.hashRedeemIntent(
-      amount,
-      beneficiary,
-      facilitator,
-      nonce,
-      gasPrice,
-      gasLimit,
-      valueToken,
-    );
     testEIP20CoGateway = await TestEIP20CoGateway.new(
       valueToken,
       testUtilityToken.address,
       dummyStateRootProvider,
       bountyAmount,
       organization,
-      coGateway,
+      gateway,
       burner,
+    );
+
+    intentHash = coGatewayUtils.hashRedeemIntent(
+      amount,
+      beneficiary,
+      testEIP20CoGateway.address,
     );
 
     await testUtilityToken.setCoGatewayAddress(testEIP20CoGateway.address);
@@ -121,16 +116,16 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
     await testEIP20CoGateway.setStakeMessage(
       intentHash,
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
 
     await testEIP20CoGateway.setMints(messageHash, beneficiary, amount);
@@ -230,8 +225,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
 
     await testEIP20CoGateway.setStakeMessage(
@@ -239,8 +234,8 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       nonce,
       gasPrice,
       gasLimit,
-      hashLock,
       staker,
+      hashLock,
     );
     await testEIP20CoGateway.setInboxStatus(
       messageHash,

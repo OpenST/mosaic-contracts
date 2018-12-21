@@ -21,8 +21,8 @@
 
 const web3 = require('./web3.js');
 const hashLock = require("./hash_lock");
-const BN = require('bn.js');
 const Assert = require('assert');
+const BN = require('bn.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
@@ -259,22 +259,13 @@ Utils.prototype = {
         return hashLock.getHashLock();
     },
 
-    messageHash: (
-        typeHash,
-        intentHash,
-        nonce,
-        gasPrice,
-        gasLimit,
-    ) => {
-
-        let digest = web3.utils.soliditySha3(
-            {t: 'bytes32', v: typeHash},
-            {t: 'bytes32', v: intentHash},
-            {t: 'uint256', v: nonce},
-            {t: 'uint256', v: gasPrice},
-            {t: 'uint256', v: gasLimit}
+    getTypeHash: (structDescriptor) => {
+        return web3.utils.sha3(
+            web3.eth.abi.encodeParameter(
+                'string',
+                structDescriptor,
+            ),
         );
-        return digest
     },
 
     ResultType: ResultType

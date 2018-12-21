@@ -23,10 +23,11 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
 
 const BN = require('bn.js');
+const GatewayUtils = require('./helpers/gateway_utils.js');
+const EventDecoder = require('../../test_lib/event_decoder.js');
+const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
-const EventDecoder = require('../../test_lib/event_decoder.js');
-const GatewayHelper = require("./helpers/helper");
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 const ZeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -35,7 +36,6 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
   let gateway;
   let mockToken, baseToken;
   let bountyAmount = new BN(100);
-  let gatewayHelper = new GatewayHelper();
 
   let stakeRequest = {
     beneficiary: accounts[6],
@@ -57,6 +57,8 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
     DeclaredRevocation: 3,
     Revoked: 4,
   };
+
+  let gatewayUtils;
 
   beforeEach(async function () {
 
@@ -82,17 +84,19 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
     await mockToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
     await baseToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
 
+    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
+
     let hashLockObj = Utils.generateHashLock();
 
     stakeMessage.hashLock = hashLockObj.l;
     stakeMessage.unlockSecret = hashLockObj.s;
-    let stakeTypeHash = await gatewayHelper.stakeTypeHash();
-    stakeMessage.messageHash = Utils.messageHash(
-      stakeTypeHash,
+    stakeMessage.messageHash = messageBus.messageDigest(
       stakeMessage.intentHash,
       stakeMessage.stakerNonce,
       stakeMessage.gasPrice,
       stakeMessage.gasLimit,
+      stakeMessage.staker,
+      stakeMessage.hashLock,
     );
 
     await gateway.setStake(
@@ -106,8 +110,8 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       stakeMessage.stakerNonce,
       stakeMessage.gasPrice,
       stakeMessage.gasLimit,
-      stakeMessage.hashLock,
       stakeMessage.staker,
+      stakeMessage.hashLock,
     );
 
   });
