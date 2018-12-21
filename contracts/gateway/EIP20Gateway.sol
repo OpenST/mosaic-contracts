@@ -390,10 +390,10 @@ contract EIP20Gateway is GatewayBase {
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      staker while initiating the stake
+     *                      staker while initiating the stake.
      *
-     * @return staker_ Staker address
-     * @return stakeAmount_ Stake amount
+     * @return staker_ Staker address.
+     * @return stakeAmount_ Stake amount.
      */
     function progressStake(
         bytes32 _messageHash,
