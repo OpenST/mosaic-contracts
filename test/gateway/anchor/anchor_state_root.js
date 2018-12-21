@@ -70,7 +70,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       anchor.anchorStateRoot(
         blockHeight,
         stateRoot,
-        {from: worker},
+        {from: owner},
       ),
       'State root must not be zero.',
     );

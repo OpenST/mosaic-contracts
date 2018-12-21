@@ -1,5 +1,25 @@
 pragma solidity ^0.5.0;
 
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 import "./EIP20Interface.sol";
 import "../lib/MessageBus.sol";
 import "../StateRootInterface.sol";
@@ -7,7 +27,6 @@ import "../lib/GatewayLib.sol";
 import "../lib/IsMemberInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
-
 
 /**
  *  @title GatewayBase contract.
@@ -157,12 +176,13 @@ contract GatewayBase is Organized {
     /* External functions */
 
     /**
-     *  @notice proveGateway can be called by anyone to verify merkle proof of
+     *  @notice This can be called by anyone to verify merkle proof of
      *          gateway/co-gateway contract address. Trust factor is brought by
-     *          stateRoots mapping. It's important to note that in replay calls of
-     *          proveGateway bytes _rlpParentNodes variable is not validated. In
-     *          this case input storage root derived from merkle proof account
-     *          nodes is verified with stored storage root of given blockHeight.
+     *          state roots by the contract which implements StateRootInterface.
+     *          It's important to note that in replay calls of proveGateway
+     *          bytes  _rlpParentNodes variable is not validated. In this case
+     *          input storage root derived from merkle proof account nodes is
+     *          verified with stored storage root of given blockHeight.
      *          GatewayProven event has parameter wasAlreadyProved to
      *          differentiate between first call and replay calls.
      *
