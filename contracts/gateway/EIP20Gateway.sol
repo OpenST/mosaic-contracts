@@ -311,7 +311,7 @@ contract EIP20Gateway is GatewayBase {
             "Beneficiary address must not be zero"
         );
 
-        // Get the stake intent hash
+        // Get the stake intent hash.
         bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
@@ -322,7 +322,7 @@ contract EIP20Gateway is GatewayBase {
             address(token)
         );
 
-        // Get the messageHash
+        // Get the messageHash.
         messageHash_ = MessageBus.messageDigest(
             STAKE_TYPEHASH,
             intentHash,
@@ -331,15 +331,12 @@ contract EIP20Gateway is GatewayBase {
             _gasLimit
         );
 
-        // Get previousMessageHash
-        bytes32 previousMessageHash = registerOutboxProcess(
+        // Register for new stake process.
+        registerOutboxProcess(
             staker,
             _nonce,
             messageHash_
         );
-
-        // Delete the previous progressed/Revoked stake data
-        delete stakes[previousMessageHash];
 
         // New stake object
         stakes[messageHash_] = Stake({
@@ -686,7 +683,7 @@ contract EIP20Gateway is GatewayBase {
         public
         returns (bytes32 messageHash_)
     {
-        // Get the initial gas
+        // Get the initial gas.
         uint256 initialGas = gasleft();
 
         require(
@@ -706,7 +703,7 @@ contract EIP20Gateway is GatewayBase {
             "RLP encoded parent nodes must not be zero"
         );
 
-        // Get the redeem intent hash
+        // Get the redeem intent hash.
         bytes32 intentHash = hashRedeemIntent(
             _amount,
             _beneficiary,
@@ -716,7 +713,7 @@ contract EIP20Gateway is GatewayBase {
             _gasLimit
         );
 
-        // Get the message hash
+        // Get the message hash.
         messageHash_ = MessageBus.messageDigest(
             REDEEM_TYPEHASH,
             intentHash,

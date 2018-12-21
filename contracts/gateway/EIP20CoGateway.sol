@@ -300,11 +300,8 @@ contract EIP20CoGateway is GatewayBase {
             _unlockSecret
         );
 
-        (beneficiary_,
-        stakeAmount_,
-        mintedAmount_,
-        rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
+        (beneficiary_, stakeAmount_, mintedAmount_, rewardAmount_) =
+            progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
     }
 
     /**
@@ -804,13 +801,14 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         // Get the stake intent hash.
-        bytes32 intentHash = hashStakeIntent(
+        bytes32 intentHash = GatewayLib.hashStakeIntent(
             _amount,
             _beneficiary,
             _staker,
             _stakerNonce,
             _gasPrice,
-            _gasLimit
+            _gasLimit,
+            valueToken
         );
 
         // Get the messageHash.
@@ -842,7 +840,6 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit,
             intentHash,
             _hashLock);
-
 
         /*
          * Execute the confirm stake intent. This is done in separate
@@ -931,15 +928,12 @@ contract EIP20CoGateway is GatewayBase {
             _gasLimit
         );
 
-        // Get previousMessageHash.
-        bytes32 previousMessageHash = registerOutboxProcess(
+        // Register new redeem process.
+        registerOutboxProcess(
             msg.sender,
             _nonce,
             messageHash_
         );
-
-        // Delete the previous progressed/revoked redeem data.
-        delete redeems[previousMessageHash];
 
         redeems[messageHash_] = Redeem({
             amount : _amount,
@@ -1022,44 +1016,6 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         return true;
-    }
-
-    /**
-     * @notice private function to calculate stake intent hash.
-     *
-     * @dev This function is to avoid stack too deep error in
-     *      confirmStakeIntent function
-     *
-     * @param _amount stake amount
-     * @param _beneficiary minting account
-     * @param _staker stake account
-     * @param _stakerNonce nonce of staker
-     * @param _gasPrice price used for reward calculation
-     * @param _gasLimit max limit for reward calculation
-     *
-     * @return bytes32 stake intent hash
-     */
-    function hashStakeIntent(
-        uint256 _amount,
-        address _beneficiary,
-        address _staker,
-        uint256 _stakerNonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit
-    )
-        private
-        view
-        returns(bytes32)
-    {
-        return GatewayLib.hashStakeIntent(
-            _amount,
-            _beneficiary,
-            _staker,
-            _stakerNonce,
-            _gasPrice,
-            _gasLimit,
-            valueToken
-        );
     }
 
     /**
