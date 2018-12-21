@@ -173,14 +173,15 @@ contract GatewayBase is Organized {
         bounty = _bounty;
     }
 
+
     /* External functions */
 
     /**
      *  @notice This can be called by anyone to verify merkle proof of
      *          gateway/co-gateway contract address. Trust factor is brought by
-     *          state roots by the contract which implements StateRootInterface.
+     *          state roots of the contract which implements StateRootInterface.
      *          It's important to note that in replay calls of proveGateway
-     *          bytes  _rlpParentNodes variable is not validated. In this case
+     *          bytes _rlpParentNodes variable is not validated. In this case
      *          input storage root derived from merkle proof account nodes is
      *          verified with stored storage root of given blockHeight.
      *          GatewayProven event has parameter wasAlreadyProved to
