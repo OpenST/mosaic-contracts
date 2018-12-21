@@ -209,7 +209,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
-  it('should fail when stake address is zero.', async function () {
+  it('should fail when staker address is zero.', async function () {
 
     staker = NullAddress;
 
@@ -425,7 +425,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     );
 
   });
-  
+
   it('should pass with valid params.', async function () {
 
     await assertConfirmStakeIntent();
