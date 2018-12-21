@@ -114,13 +114,9 @@ contract('OSTPrime.wrap()', function (accounts) {
 
     await initialize();
 
-    let initialContractBalance = new BN(
-      await Utils.getBalance(ostPrime.address)
-    );
+    let initialContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let initialCallerBalance = new BN(
-      await Utils.getBalance(callerAddress)
-    );
+    let initialCallerBalance = await Utils.getBalance(callerAddress);
 
     let result = await ostPrime.wrap.call(
       {from: callerAddress, value: amount}
@@ -149,13 +145,9 @@ contract('OSTPrime.wrap()', function (accounts) {
       `The balance of OST prime contract should be zero.`,
     );
 
-    let finalContractBalance = new BN(
-      await Utils.getBalance(ostPrime.address)
-    );
+    let finalContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let finalCallerBalance = new BN(
-      await Utils.getBalance(callerAddress)
-    );
+    let finalCallerBalance = await Utils.getBalance(callerAddress);
 
     assert.strictEqual(
       finalContractBalance.eq(initialContractBalance.add(amount)),

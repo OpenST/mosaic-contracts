@@ -18,19 +18,19 @@
 //
 // ----------------------------------------------------------------------------
 
-const SafeCore = artifacts.require("./SafeCore.sol");
 const MockOrganization = artifacts.require('MockOrganization.sol');
+const Anchor = artifacts.require("./Anchor.sol");
 const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
 
-contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
+contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
 
   let remoteChainId,
     blockHeight,
     stateRoot,
     maxNumberOfStateRoots,
     organization,
-    safeCore,
+    anchor,
     owner,
     worker;
 
@@ -44,7 +44,7 @@ contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
     maxNumberOfStateRoots = new BN(10);
     organization = await MockOrganization.new(owner, worker);
 
-    safeCore = await SafeCore.new(
+    anchor = await Anchor.new(
       remoteChainId,
       blockHeight,
       stateRoot,
@@ -56,7 +56,7 @@ contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
 
   it('should return the state root that was set while deployment', async () => {
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
@@ -65,17 +65,17 @@ contract('SafeCore.getLatestStateRootBlockHeight()', function (accounts) {
 
   });
 
-  it('should return the latest committed state root block height', async () => {
+  it('should return the latest anchored state root block height', async () => {
 
     blockHeight = blockHeight.addn(50000);
 
-    await safeCore.commitStateRoot(
+    await anchor.anchorStateRoot(
       blockHeight,
       stateRoot,
-      { from: worker },
+      { from: owner },
     );
 
-    let latestBlockHeight = await safeCore.getLatestStateRootBlockHeight.call();
+    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,

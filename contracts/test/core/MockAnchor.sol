@@ -1,14 +1,13 @@
 pragma solidity ^0.5.0;
 
-import "../../gateway/SafeCore.sol";
+import "../../gateway/Anchor.sol";
 
 /**
- * @title MockSafeCore contract
+ * @title MockAnchor contract.
  *
- * @notice Used for test only
+ * @notice Used for test only.
  */
-contract MockSafeCore is SafeCore {
-
+contract MockAnchor is Anchor {
 
     /*  Public functions */
 
@@ -16,7 +15,7 @@ contract MockSafeCore is SafeCore {
      * @notice Contract constructor.
      *
      * @param _remoteChainId The chain id of the chain that is tracked by this
-     *                       core.
+     *                       anchor.
      * @param _blockHeight Block height at which _stateRoot needs to store.
      * @param _stateRoot State root hash of given _blockHeight.
      * @param _maxStateRoots The max number of state roots to store in the
@@ -30,7 +29,7 @@ contract MockSafeCore is SafeCore {
         uint256 _maxStateRoots,
         OrganizationInterface _organization
     )
-        SafeCore(
+        Anchor(
             _remoteChainId,
             _blockHeight,
             _stateRoot,
@@ -44,7 +43,7 @@ contract MockSafeCore is SafeCore {
      * @notice Get the mocked state root.
      *
      * @dev This is for testing only so the data is mocked here. Also please
-     *      note the Core contract has defined this function as view,
+     *      note the Anchor contract has defined this function as view,
      *      so to keep this overridden function as view, reading a storage
      *      variable.
      *

@@ -27,8 +27,9 @@ pragma solidity ^0.5.0;
  * Ether pays for gas on Ethereum mainnet) when sending a transaction on
  * the auxiliary chain.
  */
-import "./UtilityToken.sol";
 import "./OSTPrimeConfig.sol";
+import "./UtilityToken.sol";
+import "../lib/MutexAddress.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/SafeMath.sol";
 
@@ -42,7 +43,7 @@ import "../lib/SafeMath.sol";
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
  */
-contract OSTPrime is UtilityToken, OSTPrimeConfig {
+contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
 
     /* Usings */
 
@@ -217,21 +218,25 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
     }
 
     /**
-     * @notice Adds number of OST Prime tokens to account balance and increases
-     *         the total token supply. Can be called only when contract is
-     *         initialized and only by CoGateway address.
+     * @notice This method performs following operations:
+     *          - Adds number of OST Prime EIP20 tokens to this contract address.
+     *          - Increases the total token supply.
+     *          - Transfers base token to the beneficiary address.
+     *          It can be called by CoGateway address and when contract is
+     *          initialized.
      *
-     * @dev The parameters _account and _amount should not be zero. This check
+     * @dev The parameter _amount should not be zero. This check
      *      is added in function increaseSupplyInternal.
      *
      * @param _account Account address for which the OST Prime balance will be
-     *                 increased.
+     *                 increased. This is payable so that base token can be
+     *                 transferred to the account.
      * @param _amount Amount of tokens.
      *
      * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
-        address _account,
+        address payable _account,
         uint256 _amount
     )
         external
@@ -239,7 +244,21 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig {
         onlyCoGateway
         returns (bool success_)
     {
-        success_ = increaseSupplyInternal(_account, _amount);
+        require(
+            _account != address(0),
+            "Account address should not be zero."
+        );
+
+        /*
+         * Acquire lock for msg.sender so that this function can only be
+         * executed once in a transaction.
+         */
+        MutexAddress.acquire(msg.sender);
+
+        success_ = increaseSupplyInternal(address(this), _amount);
+        _account.transfer(_amount);
+
+        MutexAddress.release(msg.sender);
     }
 
     /**

@@ -143,12 +143,14 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      *      is added in function increaseSupplyInternal.
      *
      * @param _account Account address for which the balance will be increased.
+                       This is payable so that it provides flexibility of
+     *                 transferring base token to account on increase supply.
      * @param _amount Amount of tokens.
      *
      * @return success_ `true` if increase supply is successful, false otherwise.
      */
     function increaseSupply(
-        address _account,
+        address payable _account,
         uint256 _amount
     )
         external

@@ -39,7 +39,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _valueToken The value token contract address.
      * @param _utilityToken The utility token address that will be used for
      *                      minting the utility token.
-     * @param _core Core contract address.
+     * @param _stateRootProvider Contract address which implements
+     *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                staking process.
      * @param _organization Address of an organization contract.
@@ -48,7 +49,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     constructor(
         address _valueToken,
         address _utilityToken,
-        StateRootInterface _core,
+        StateRootInterface _stateRootProvider,
         uint256 _bounty,
         OrganizationInterface _organization,
         address _gateway,
@@ -57,7 +58,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         EIP20CoGateway(
             _valueToken,
             _utilityToken,
-            _core,
+            _stateRootProvider,
             _bounty,
             _organization,
             _gateway,
@@ -131,7 +132,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      */
     function setMints(
         bytes32 _messageHash,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount
     )
         public

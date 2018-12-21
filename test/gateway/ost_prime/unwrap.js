@@ -102,13 +102,9 @@ contract('OSTPrime.unwrap()', function (accounts) {
   it('should pass with correct parameters', async function () {
     await initialize();
 
-    let initialContractBalance = new BN(
-      await Utils.getBalance(ostPrime.address)
-    );
+    let initialContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let initialCallerBalance = new BN(
-      await Utils.getBalance(callerAddress)
-    );
+    let initialCallerBalance = await Utils.getBalance(callerAddress);
 
     amount = new BN(400);
 
@@ -136,13 +132,10 @@ contract('OSTPrime.unwrap()', function (accounts) {
       `The balance of OST prime contract should increase by ${amount}.`
     );
 
-    let finalContractBalance = new BN(
-      await Utils.getBalance(ostPrime.address)
-    );
+    let finalContractBalance = await Utils.getBalance(ostPrime.address);
+    
 
-    let finalCallerBalance = new BN(
-      await Utils.getBalance(callerAddress)
-    );
+    let finalCallerBalance = await Utils.getBalance(callerAddress);
 
     assert.strictEqual(
       finalContractBalance.eq(initialContractBalance.sub(amount)),
