@@ -63,4 +63,86 @@ contract TestEIP20Gateway is EIP20Gateway {
     {
         activated = true;
     }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice It is used to set the stake message.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash Message hash.
+     * @param _intentHash Intent hash.
+     * @param _stakerNonce Nonce of the staker address.
+     * @param _gasPrice Gas price that staker is ready to pay to get the stake
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
+     * @param _hashLock Hash Lock provided by the facilitator.
+     * @param _staker Staker address.
+     *
+     * @return messageHash_ Hash unique for every request.
+     */
+    function setStakeMessage(
+        bytes32 _messageHash,
+        bytes32 _intentHash,
+        uint256 _stakerNonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes32 _hashLock,
+        address _staker
+    )
+        public
+    {
+        messages[_messageHash] = getMessage(
+            _staker,
+            _stakerNonce,
+            _gasPrice,
+            _gasLimit,
+            _intentHash,
+            _hashLock
+        );
+    }
+
+    /**
+     * @notice It sets the stakes mapping with respect to the messageHash.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash Hash for which mints mapping is updated.
+     * @param _beneficiary Beneficiary  Address to which the utility tokens
+     *                     will be transferred after minting.
+     * @param _amount Total stake amount for which the stake is initiated.
+     */
+    function setStake(
+        bytes32 _messageHash,
+        address _beneficiary,
+        uint256 _amount
+    )
+        public
+    {
+        stakes[_messageHash] = Stake({
+            amount : _amount,
+            beneficiary : _beneficiary,
+            bounty : bounty
+        });
+    }
+
+    /**
+     * @notice It sets the status of outbox.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash MessageHash for which status is the be set.
+     * @param _status Status of the message to be set.
+     */
+    function setOutboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _status
+    )
+        public
+    {
+        messageBox.outbox[_messageHash] = _status;
+    }
+
 }
