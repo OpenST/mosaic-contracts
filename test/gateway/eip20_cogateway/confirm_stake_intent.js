@@ -358,6 +358,74 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
+  it('should fail to confirm stake intent if its already confirmed once',
+    async function () {
+
+      await coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      );
+
+      await Utils.expectRevert(
+        coGateway.confirmStakeIntent(
+          staker,
+          stakerNonce,
+          beneficiary,
+          amount,
+          gasPrice,
+          gasLimit,
+          hashLock,
+          blockHeight,
+          rlpParentNodes,
+        ),
+        "Invalid nonce.",
+      );
+
+    });
+
+  it('should fail to confirm new stake intent if status of previous ' +
+    'confirmed stake intent is declared', async function () {
+
+    await coGateway.confirmStakeIntent(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
+
+    initializeData(TestData[1]);
+
+    await coGateway.setStorageRoot(blockHeight, storageRoot);
+
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      "Previous process is not completed.",
+    );
+
+  });
+  
   it('should pass with valid params.', async function () {
 
     await assertConfirmStakeIntent();
@@ -431,73 +499,6 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
   });
 
-  it('should fail to confirm stake intent if its already confirmed once',
-    async function () {
-
-    await coGateway.confirmStakeIntent(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
-
-    await Utils.expectRevert(
-      coGateway.confirmStakeIntent(
-        staker,
-        stakerNonce,
-        beneficiary,
-        amount,
-        gasPrice,
-        gasLimit,
-        hashLock,
-        blockHeight,
-        rlpParentNodes,
-      ),
-      "Invalid nonce.",
-    );
-
-  });
-
-  it('should fail to confirm new stake intent if status of previous ' +
-    'confirmed stake intent is declared', async function () {
-
-    await coGateway.confirmStakeIntent(
-      staker,
-      stakerNonce,
-      beneficiary,
-      amount,
-      gasPrice,
-      gasLimit,
-      hashLock,
-      blockHeight,
-      rlpParentNodes,
-    );
-
-    initializeData(TestData[1]);
-
-    await coGateway.setStorageRoot(blockHeight, storageRoot);
-
-    await Utils.expectRevert(
-      coGateway.confirmStakeIntent(
-        staker,
-        stakerNonce,
-        beneficiary,
-        amount,
-        gasPrice,
-        gasLimit,
-        hashLock,
-        blockHeight,
-        rlpParentNodes,
-      ),
-      "Previous process is not completed.",
-    );
-
-  });
 
   it('should confirm new stake intent if status of previous ' +
     'confirmed stake intent is revoked', async function () {
