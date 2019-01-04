@@ -37,13 +37,7 @@ let eip20CoGateway,
   redeemer,
   redeemerBalance;
 
-let MessageStatusEnum = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4
-};
+let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20CoGateway.redeem() ', function (accounts) {
 

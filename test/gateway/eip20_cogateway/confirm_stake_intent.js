@@ -24,16 +24,11 @@ const BN = require('bn.js');
 const Utils = require("./../../test_lib/utils");
 const TestData = require("./test_data/confirm_stake_intent.json");
 const EventDecoder = require('../../test_lib/event_decoder.js');
+const messageBus = require('../../test_lib/message_bus.js');
 
 const NullAddress = "0x0000000000000000000000000000000000000000";
 
-let MessageStatusEnum = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4
-};
+let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 

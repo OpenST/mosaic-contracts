@@ -73,26 +73,26 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     /* Public Functions */
 
     /**
-     * @notice It is used to set the stake message.
+     * @notice It is used to set a message.
      *
      * @dev This is used for testing purpose.
      *
      * @param _intentHash Intent hash.
-     * @param _stakerNonce Nonce of the staker address.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done.
-     * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _staker Staker address.
+     * @param _nonce Nonce of the message sender address.
+     * @param _gasPrice Gas price that message sender is ready to pay to
+     *                  transfer message.
+     * @param _gasLimit Gas limit that message sender is ready to pay.
+     * @param _sender Message sender address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
-    function setStakeMessage(
+    function setMessage(
         bytes32 _intentHash,
-        uint256 _stakerNonce,
+        uint256 _nonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        address _staker,
+        address _sender,
         bytes32 _hashLock
     )
         public
@@ -100,10 +100,10 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     {
         MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
+            _nonce,
             _gasPrice,
             _gasLimit,
-            _staker,
+            _sender,
             _hashLock
         );
 
@@ -196,6 +196,38 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         public
     {
         storageRoots[_blockHeight] = _storageRoot;
+    }
+
+   /**
+    * @notice It sets the redeem mapping with respect to the messageHash.
+    *
+    * @dev This is used for testing purpose.
+    *
+    * @param _messageHash Hash for which redeem mapping is updated.
+    * @param _beneficiary Beneficiary  Address to which the branded tokens
+    *                     will be transferred after unstake.
+    * @param _amount Total amount for which the redeem was initiated.
+    */
+    function setRedeem(
+        bytes32 _messageHash,
+        address  _beneficiary,
+        uint256 _amount
+    )
+        public
+    {
+        redeems[_messageHash] = Redeem({
+            amount : _amount,
+            beneficiary : _beneficiary,
+            bounty : bounty
+        });
+    }
+
+    /** This is added to test progress redeem. Co-gateway should have facilitator
+     *  bounty which is in base token(ETH) as a pre-condition of unit test.
+     */
+    function () external payable
+    {
+
     }
 
 }

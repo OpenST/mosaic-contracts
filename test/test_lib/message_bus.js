@@ -76,6 +76,14 @@ MessageBus.prototype = {
 
         return digest;
     },
+
+  MessageStatusEnum: {
+    Undeclared: 0,
+    Declared: 1,
+    Progressed: 2,
+    DeclaredRevocation: 3,
+    Revoked: 4
+  }
 };
 
 module.exports = new MessageBus();

@@ -268,7 +268,9 @@ Utils.prototype = {
         );
     },
 
-    ResultType: ResultType
+    ResultType: ResultType,
+
+    ZERO_BYTES32: "0x0000000000000000000000000000000000000000000000000000000000000000",
 };
 
 module.exports = new Utils();

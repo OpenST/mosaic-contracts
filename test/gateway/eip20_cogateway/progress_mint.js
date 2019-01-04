@@ -24,6 +24,8 @@ const BN = require('bn.js'),
   TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
   TestUtilityToken = artifacts.require('TestUtilityToken');
 
+const messageBus = require('../../test_lib/message_bus.js');
+
 let valueToken,
   burner,
   organization,
@@ -39,13 +41,7 @@ let valueToken,
 const zeroBytes =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-let MessageStatusEnum = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4
-};
+let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 async function setup(accounts) {
 
@@ -111,7 +107,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
 
     await testUtilityToken.setCoGatewayAddress(testEIP20CoGateway.address);
 
-    messageHash = await testEIP20CoGateway.setStakeMessage.call(
+    messageHash = await testEIP20CoGateway.setMessage.call(
       intentHash,
       nonce,
       gasPrice,
@@ -119,7 +115,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       staker,
       hashLock,
     );
-    await testEIP20CoGateway.setStakeMessage(
+    await testEIP20CoGateway.setMessage(
       intentHash,
       nonce,
       gasPrice,
@@ -220,7 +216,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
 
     gasPrice = new BN(0);
 
-    let messageHash = await testEIP20CoGateway.setStakeMessage.call(
+    let messageHash = await testEIP20CoGateway.setMessage.call(
       intentHash,
       nonce,
       gasPrice,
@@ -229,7 +225,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       hashLock,
     );
 
-    await testEIP20CoGateway.setStakeMessage(
+    await testEIP20CoGateway.setMessage(
       intentHash,
       nonce,
       gasPrice,

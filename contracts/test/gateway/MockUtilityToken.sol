@@ -30,6 +30,10 @@ import "../../gateway/UtilityToken.sol";
  */
 contract MockUtilityToken is UtilityToken {
 
+    // Total initial balance of the deployer.
+    uint256 constant INITIAL_BALANCE  = 1000000000;
+
+
     /* Constructor */
 
     /**
@@ -52,7 +56,9 @@ contract MockUtilityToken is UtilityToken {
     )
         public
         UtilityToken(_token, _symbol, _name, _decimals, _organization)
-    {}
+    {
+        balances[msg.sender] = INITIAL_BALANCE;
+    }
 
     /**
      * @notice Set the CoGateway address for testing.
@@ -62,5 +68,4 @@ contract MockUtilityToken is UtilityToken {
     function setCoGatewayAddress(address _coGatewayAddress) external {
         coGateway = _coGatewayAddress;
     }
-
 }

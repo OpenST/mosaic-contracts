@@ -21,14 +21,9 @@
 const messageBusUtilsKlass = require('./messagebus_utils'),
     web3 = require('web3');
 const messageBusUtils = new messageBusUtilsKlass();
+const messageBus = require('../../test_lib/message_bus.js');
 
-let MessageStatusEnum = {
-    Undeclared: 0,
-    Declared: 1,
-    Progressed: 2,
-    DeclaredRevocation: 3,
-    Revoked: 4
-};
+let MessageStatusEnum = messageBus.MessageStatusEnum;
 contract('MessageBus.progressOutbox()', async (accounts) => {
     let params;
 
