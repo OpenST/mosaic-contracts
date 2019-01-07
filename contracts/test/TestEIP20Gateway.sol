@@ -110,7 +110,7 @@ contract TestEIP20Gateway is EIP20Gateway {
      * @dev This is used for testing purpose.
      *
      * @param _messageHash Hash for which mints mapping is updated.
-     * @param _beneficiary Beneficiary  Address to which the utility tokens
+     * @param _beneficiary Beneficiary address to which the utility tokens
      *                     will be transferred after minting.
      * @param _amount Total stake amount for which the stake is initiated.
      */
@@ -129,6 +129,29 @@ contract TestEIP20Gateway is EIP20Gateway {
     }
 
     /**
+     * @notice It sets the unstakes mapping with respect to the messageHash.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash Hash for which unstakes mapping is updated.
+     * @param _beneficiary Beneficiary address to which the staked tokens
+     *                     will be transferred.
+     * @param _amount Total redeem amount.
+     */
+    function setUnstake(
+        bytes32 _messageHash,
+        address _beneficiary,
+        uint256 _amount
+    )
+        public
+    {
+        unstakes[_messageHash] = Unstake({
+            amount : _amount,
+            beneficiary : _beneficiary
+        });
+    }
+
+    /**
      * @notice It sets the status of outbox.
      *
      * @dev This is used for testing purpose.
@@ -143,6 +166,23 @@ contract TestEIP20Gateway is EIP20Gateway {
         public
     {
         messageBox.outbox[_messageHash] = _status;
+    }
+
+    /**
+     * @notice It sets the status of inbox.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash MessageHash for which status is the be set.
+     * @param _status Status of the message to be set.
+     */
+    function setInboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _status
+    )
+        public
+    {
+        messageBox.inbox[_messageHash] = _status;
     }
 
 }
