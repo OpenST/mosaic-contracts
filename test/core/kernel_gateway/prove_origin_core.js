@@ -29,7 +29,7 @@ const Utils = require('../../test_lib/utils.js');
 
 contract('KernelGateway.proveMosaicCore()', async (accounts) => {
 
-    const zeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const zeroBytes = Utils.ZERO_BYTES32;
 
     let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
 

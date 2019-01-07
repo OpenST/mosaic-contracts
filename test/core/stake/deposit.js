@@ -139,7 +139,7 @@ contract('Stake.deposit()', async (accounts) => {
             StakeUtils.deposit(
                 token,
                 stake,
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 new BN('15'),
             )
         );

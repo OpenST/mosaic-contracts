@@ -65,7 +65,7 @@ contract('Organization.setWorker()', async (accounts) => {
 
     await Utils.expectRevert(
       organization.setWorker(
-        '0x0000000000000000000000000000000000000000',
+        Utils.NULL_ADDRESS,
         expirationHeight,
         { from: owner },
       ),

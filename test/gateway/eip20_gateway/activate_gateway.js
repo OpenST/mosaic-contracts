@@ -25,7 +25,7 @@ const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 contract('EIP20Gateway.activateGateway()', function (accounts) {
 
     let gateway;

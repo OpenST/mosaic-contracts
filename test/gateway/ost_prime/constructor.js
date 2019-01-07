@@ -24,7 +24,7 @@ const MockOrganization = artifacts.require('MockOrganization');
 
 const Utils = require('../../../test/test_lib/utils');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 contract('OSTPrime.constructor()', function (accounts) {
 
   const TOKEN_SYMBOL = "ST";

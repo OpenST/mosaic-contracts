@@ -26,9 +26,10 @@ const utils = require('../../test_lib/utils'),
   BN = require('bn.js'),
   GatewayUtils = require('./helpers/gateway_utils'),
   messageBus = require('../../test_lib/message_bus.js');
+  Utils = require('../../test_lib/utils.js');
 
 const PENALTY_PERCENT = 1.5;
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 
 let stakeAmount,
   beneficiary,
@@ -161,7 +162,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
   });
 
   it('should fail to stake when beneficiary address is 0', async function () {
-    beneficiary = "0x0000000000000000000000000000000000000000";
+    beneficiary = Utils.NULL_ADDRESS;
     errorMessage = "Beneficiary address must not be zero";
     await prepareData();
     await stake(utils.ResultType.FAIL);

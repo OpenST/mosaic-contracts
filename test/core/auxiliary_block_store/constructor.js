@@ -99,7 +99,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                  0,
                  new BN('21000'),
                  '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
-                 '0x0000000000000000000000000000000000000000000000000000000000000000'
+                 Utils.ZERO_BYTES32
             ),
             'Initial kernel hash must not be zero.'
         );
@@ -110,7 +110,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
             AuxiliaryBlockStore.new(
                 '0x0000000000000000000000000000000000000001',
                 10,
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 originBlockStore.address,
                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
@@ -129,7 +129,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 '0x0000000000000000000000000000000000000001',
                 10,
                 accounts[0],
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
                 0,
@@ -148,7 +148,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 10,
                 accounts[0],
                 originBlockStore.address,
-                '0x0000000000000000000000000000000000000000000000000000000000000000',
+                Utils.ZERO_BYTES32,
                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
                 0,
                 new BN('21000'),
@@ -167,7 +167,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
                 accounts[0],
                 originBlockStore.address,
                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
-                '0x0000000000000000000000000000000000000000000000000000000000000000',
+                Utils.ZERO_BYTES32,
                 0,
                 new BN('21000'),
                 '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',

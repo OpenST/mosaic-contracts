@@ -215,7 +215,7 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
     it('should not be able to propose meta-block if transaction root is' +
          ' not defined', async function () {
 
-        transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        transactionRoot = Utils.ZERO_BYTES32;
 
         await Utils.expectThrow(
              mosaicCore.proposeBlock(
@@ -236,7 +236,7 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
     it('should not be able to propose meta-block if origin BlockHash is' +
          ' not defined', async function () {
 
-        originBlockHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        originBlockHash = Utils.ZERO_BYTES32;
 
         await Utils.expectThrow(
              mosaicCore.proposeBlock(
@@ -277,7 +277,7 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
     it('should not be able to propose meta-block if kernel Hash is' +
          ' not defined', async function () {
 
-        kernelHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        kernelHash = Utils.ZERO_BYTES32;
 
         await Utils.expectThrow(
              mosaicCore.proposeBlock(
