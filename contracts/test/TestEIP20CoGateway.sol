@@ -204,7 +204,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     * @dev This is used for testing purpose.
     *
     * @param _messageHash Hash for which redeem mapping is updated.
-    * @param _beneficiary Beneficiary  Address to which the branded tokens
+    * @param _beneficiary Beneficiary address to which the branded tokens
     *                     will be transferred after unstake.
     * @param _amount Total amount for which the redeem was initiated.
     */

@@ -58,6 +58,8 @@ contract MockUtilityToken is UtilityToken {
         UtilityToken(_token, _symbol, _name, _decimals, _organization)
     {
         balances[msg.sender] = INITIAL_BALANCE;
+        totalTokenSupply = totalTokenSupply.add(INITIAL_BALANCE);
+
     }
 
     /**

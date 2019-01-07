@@ -125,32 +125,32 @@ contract('EIP20CoGateway.progressRedeem() ', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       messageHash,
-      `Actual message hash ${eventData._messageHash} is not equal to expected message hash ${messageHash}`,
+      `Actual message hash ${eventData._messageHash} from event is not equal to expected message hash ${messageHash}`,
     );
     assert.strictEqual(
       eventData._redeemer,
       sender,
-      `Actual redeemer ${eventData._redeemer} is not equal to expected redeemer ${sender}`,
+      `Actual redeemer ${eventData._redeemer} from event is not equal to expected redeemer ${sender}`,
     );
     assert.strictEqual(
       eventData._redeemerNonce.eq(nonce),
       true,
-      `Actual redeemer nonce ${eventData._redeemerNonce} is not equal to expected redeemer nonce ${nonce}`,
+      `Actual redeemer nonce ${eventData._redeemerNonce} from event is not equal to expected redeemer nonce ${nonce}`,
     );
     assert.strictEqual(
       eventData._amount.eq(amount),
       true,
-      `Actual amount ${eventData._amount} is not equal to expected amount ${amount}`,
+      `Actual amount ${eventData._amount} from event is not equal to expected amount ${amount}`,
     );
     assert.strictEqual(
       eventData._proofProgress,
       false,
-      `Proof progress flag should be false.`,
+      `Proof progress flag from event should be false.`,
     );
     assert.strictEqual(
       eventData._unlockSecret,
       unlockSecret,
-      `Actual unlockSecret ${eventData._unlockSecret} is not equal to expected unlockSecret ${unlockSecret}`,
+      `Actual unlockSecret ${eventData._unlockSecret} from event is not equal to expected unlockSecret ${unlockSecret}`,
     );
   });
 
@@ -183,7 +183,7 @@ contract('EIP20CoGateway.progressRedeem() ', function (accounts) {
 
   });
 
-  it('should decrease supply for utility token', async function () {
+  it('should decrease token supply for utility token', async function () {
 
     let initialTotalSupply = await utilityToken.totalSupply.call();
     let initialCoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
