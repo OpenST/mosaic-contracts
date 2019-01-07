@@ -67,7 +67,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _burner
     )
         public
-    { }
+    {}
 
 
     /* Public Functions */
