@@ -29,7 +29,7 @@ const BlockStore = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
-  const zeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const zeroBytes = Utils.ZERO_BYTES32;
   let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore, genesisKernelHash;
 
   let height,

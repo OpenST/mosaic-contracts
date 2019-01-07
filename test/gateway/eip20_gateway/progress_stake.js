@@ -29,8 +29,8 @@ const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
-const ZeroBytes = "0x0000000000000000000000000000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
+const ZeroBytes = Utils.ZERO_BYTES32;
 contract('EIP20Gateway.progressStake()', function (accounts) {
 
   let gateway;

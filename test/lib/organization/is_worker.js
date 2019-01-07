@@ -28,7 +28,7 @@ contract('Organization.isWorker()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    let admin = '0x0000000000000000000000000000000000000000';
+    let admin = Utils.NULL_ADDRESS;
     let workers = [];
     let expirationHeight = 0;
 

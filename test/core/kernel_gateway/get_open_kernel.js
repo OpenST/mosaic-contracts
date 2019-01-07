@@ -20,14 +20,14 @@
 
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
 
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const zeroBytes = Utils.ZERO_BYTES32;
 
   const hash =
     "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";

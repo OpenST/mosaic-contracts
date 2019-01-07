@@ -38,9 +38,7 @@ let valueToken,
   name = 'Simple Token',
   decimals = 18;
 
-const zeroBytes =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
-
+const zeroBytes = Utils.ZERO_BYTES32
 let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 async function setup(accounts) {

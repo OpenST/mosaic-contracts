@@ -21,10 +21,11 @@
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const Anchor = artifacts.require("./Anchor.sol");
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
+
 const BN = require('bn.js');
 
-const zeroBytes =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+const zeroBytes = Utils.ZERO_BYTES32;
 
 contract('Anchor.getStateRoot()', function (accounts) {
 

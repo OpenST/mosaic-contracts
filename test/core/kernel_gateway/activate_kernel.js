@@ -28,9 +28,7 @@ const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.activateKernel()', async (accounts) => {
 
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
-
+  const zeroBytes = Utils.ZERO_BYTES32;
   let hash =
     "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
 

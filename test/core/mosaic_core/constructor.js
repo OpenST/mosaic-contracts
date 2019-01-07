@@ -87,12 +87,12 @@ contract('MosaicCore.constructor()', async (accounts) => {
 
         let head = await mosaicCore.head.call();
 
-        assert(head !== '0x0000000000000000000000000000000000000000000000000000000000000000');
+        assert(head !== Utils.ZERO_BYTES32);
     });
 
     it('should not deploy mosaic core if transaction root is zero', async function () {
 
-        transactionRoot = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        transactionRoot = Utils.ZERO_BYTES32;
         await Utils.expectThrow(
             MosaicCore.new(
                 auxiliaryCoreIdentifier,

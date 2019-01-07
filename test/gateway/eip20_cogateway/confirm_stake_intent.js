@@ -26,8 +26,7 @@ const TestData = require("./test_data/confirm_stake_intent.json");
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
-
+const NullAddress = Utils.NULL_ADDRESS;
 let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
