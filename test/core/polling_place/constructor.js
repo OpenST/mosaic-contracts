@@ -140,7 +140,7 @@ contract('PollingPlace.constructor()', async (accounts) => {
     it('should not accept a zero origin block store', async () => {
         await Utils.expectRevert(
             PollingPlace.new(
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 auxiliaryBlockStore.address,
                 [
                     '0x0000000000000000000000000000000000000001',
@@ -159,7 +159,7 @@ contract('PollingPlace.constructor()', async (accounts) => {
         await Utils.expectRevert(
             PollingPlace.new(
                 originBlockStore.address,
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 [
                     '0x0000000000000000000000000000000000000001',
                     '0x0000000000000000000000000000000000000002',
@@ -241,7 +241,7 @@ contract('PollingPlace.constructor()', async (accounts) => {
                 auxiliaryBlockStore.address,
                 [
                     '0x0000000000000000000000000000000000000001',
-                    '0x0000000000000000000000000000000000000000',
+                    Utils.NULL_ADDRESS,
                 ],
                 [
                     new BN('1'),

@@ -30,7 +30,7 @@ contract('Organization.setAdmin()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    let zeroAdmin = '0x0000000000000000000000000000000000000000';
+    let zeroAdmin = Utils.NULL_ADDRESS;
     let workers = [];
     let expirationHeight = 0;
 
@@ -87,13 +87,13 @@ contract('Organization.setAdmin()', async (accounts) => {
 
   it('should pass when admin address is 0x', async () => {
     await organization.setAdmin(
-      '0x0000000000000000000000000000000000000000',
+      Utils.NULL_ADDRESS,
       { from: owner },
     );
 
     assert.strictEqual(
       await organization.admin.call(),
-      '0x0000000000000000000000000000000000000000',
+      Utils.NULL_ADDRESS,
       'The admin address must be set to 0x correctly.'
     );
   });

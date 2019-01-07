@@ -459,14 +459,15 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice Completes the redeem process.
+     * @notice Completes the redeem process. This decreases token supply
+     *         on successful redeem.
      *
-     * @param _messageHash Message hash.
+     * @param _messageHash Message hash for redeem message.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the redeem
+     *                      facilitator while initiating the redeem.
      *
-     * @return redeemer_ Redeemer address
-     * @return redeemAmount_ Redeem amount
+     * @return redeemer_ Redeemer address.
+     * @return redeemAmount_ Redeem amount.
      */
     function progressRedeem(
         bytes32 _messageHash,
@@ -480,28 +481,24 @@ contract EIP20CoGateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
-        // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
 
-        // Get the redeemer address
+        // Get the redeemer address.
         redeemer_ = message.sender;
 
-        // Get the redeem amount
         redeemAmount_ = redeems[_messageHash].amount;
 
-        // Progress outbox
         MessageBus.progressOutbox(
             messageBox,
             message,
             _unlockSecret
         );
 
-        (redeemer_,
-        redeemAmount_) =
-            progressRedeemInternal(_messageHash, false, _unlockSecret);
+        (redeemer_, redeemAmount_) =
+            progressRedeemInternal(_messageHash, message, false, _unlockSecret);
 
     }
 
@@ -566,9 +563,8 @@ contract EIP20CoGateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        (redeemer_,
-        redeemAmount_) =
-            progressRedeemInternal(_messageHash, true, bytes32(0));
+        (redeemer_, redeemAmount_) =
+            progressRedeemInternal(_messageHash, message, true, bytes32(0));
 
     }
 
@@ -1096,9 +1092,10 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice Internal method to progressRedeemInternal.
+     * @notice Internal method for progressRedeem. This is created to share
+     *         code between progressRedeem and progressRedeemWithProof.
      *
-     * @param _messageHash Message hash.
+     * @param _messageHash Message hash of redeem message.
      * @param _proofProgress True if progress with proof, false if progress
      *                       with hashlock.
      * @param _unlockSecret Unlock secret to progress, zero in case of progress
@@ -1109,18 +1106,17 @@ contract EIP20CoGateway is GatewayBase {
      */
     function progressRedeemInternal(
         bytes32 _messageHash,
+        MessageBus.Message storage _message,
         bool _proofProgress,
         bytes32 _unlockSecret
     )
-    private
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
+        private
+        returns (
+            address redeemer_,
+            uint256 redeemAmount_
+        )
     {
-        MessageBus.Message storage message = messages[_messageHash];
-
-        redeemer_ = message.sender;
+        redeemer_ = _message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
 
         // Decrease the token supply.
@@ -1132,11 +1128,10 @@ contract EIP20CoGateway is GatewayBase {
         // Delete the redeem data.
         delete redeems[_messageHash];
 
-        // Emit RedeemProgressed event.
         emit RedeemProgressed(
             _messageHash,
             redeemer_,
-            message.nonce,
+            _message.nonce,
             redeemAmount_,
             _proofProgress,
             _unlockSecret

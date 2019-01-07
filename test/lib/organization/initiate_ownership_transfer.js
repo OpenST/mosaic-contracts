@@ -30,7 +30,7 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    let admin = '0x0000000000000000000000000000000000000000';
+    let admin = Utils.NULL_ADDRESS;
     let workers = [];
     let expirationHeight = 0;
 
@@ -87,12 +87,12 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
 
   it('should pass when proposed address is 0', async () => {
     await organization.initiateOwnershipTransfer(
-      '0x0000000000000000000000000000000000000000',
+      Utils.NULL_ADDRESS,
       { from: owner },
     );
     assert.strictEqual(
       await organization.proposedOwner.call(),
-      '0x0000000000000000000000000000000000000000',
+      Utils.NULL_ADDRESS,
       'Proposed 0-address must be accepted.'
     );
   });

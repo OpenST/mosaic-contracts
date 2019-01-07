@@ -23,7 +23,7 @@ const OSTPrime = artifacts.require("TestOSTPrime")
 
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 
 contract('OSTPrime.increaseSupply()', function (accounts) {
 

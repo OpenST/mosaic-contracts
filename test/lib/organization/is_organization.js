@@ -13,6 +13,7 @@
 // limitations under the License.
 
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
 
 const Organization = artifacts.require('Organization');
@@ -25,7 +26,7 @@ contract('Organization.isOrganization()', async (accounts) => {
     let organization = null;
 
     beforeEach(async function () {
-        let zeroAdmin = '0x0000000000000000000000000000000000000000';
+        let zeroAdmin = Utils.NULL_ADDRESS;
         let workers = [];
         let expirationHeight = 0;
 

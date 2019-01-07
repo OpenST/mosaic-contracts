@@ -22,6 +22,7 @@ const AuxStoreUtils = require('./helpers/aux_store_utils.js');
 const BN = require('bn.js');
 const MetaBlock = require('../../test_lib/meta_block.js');
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
 
 const TestData = require('./helpers/data.js');
 
@@ -184,12 +185,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
         it('should not accept an unknown source hash', async () => {
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('1'),
                 auxiliaryBlockHash: unknownBlockHash,
                 gas: initialGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: initialTransactionRoot,
             };
 
@@ -207,12 +208,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
         it('should not accept an unknown target hash', async () => {
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('0'),
                 auxiliaryBlockHash: initialBlockHash,
                 gas: initialGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: initialTransactionRoot,
             };
 
@@ -230,12 +231,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
         it('should not accept a source checkpoint that is not justified', async () => {
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('1'),
                 auxiliaryBlockHash: testBlocks[3].hash,
                 gas: testBlocks[3].accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: testBlocks[3].accumulatedTransactionRoot,
             };
 
@@ -255,12 +256,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             async () => {
                 let transition = {
                     coreIdentifier: coreIdentifier,
-                    kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                    kernelHash: Utils.ZERO_BYTES32,
                     auxiliaryDynasty: new BN('0'),
                     auxiliaryBlockHash: initialBlockHash,
                     gas: initialGas,
                     originDynasty: new BN('0'),
-                    originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                    originBlockHash: Utils.ZERO_BYTES32,
                     transactionRoot: initialTransactionRoot,
                 };
 
@@ -295,12 +296,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('1'),
                 auxiliaryBlockHash: testBlocks[3].hash,
                 gas: testBlocks[3].accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: testBlocks[3].accumulatedTransactionRoot,
             };
 
@@ -323,7 +324,7 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
                 auxiliaryBlockHash: initialBlockHash,
                 gas: initialGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: initialTransactionRoot,
             };
 
@@ -346,12 +347,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             );
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('1'),
                 auxiliaryBlockHash: testBlocks[6].hash,
                 gas: testBlocks[6].accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: testBlocks[6].accumulatedTransactionRoot,
             };
 
@@ -385,12 +386,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('2'),
                 auxiliaryBlockHash: testBlocks[6].hash,
                 gas: testBlocks[6].accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: testBlocks[6].accumulatedTransactionRoot,
             };
 
@@ -472,12 +473,12 @@ contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
             );
             let transition = {
                 coreIdentifier: coreIdentifier,
-                kernelHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                kernelHash: Utils.ZERO_BYTES32,
                 auxiliaryDynasty: new BN('1'),
                 auxiliaryBlockHash: testBlocks[3].hash,
                 gas: testBlocks[3].accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: testBlocks[3].accumulatedTransactionRoot,
             };
 

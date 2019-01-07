@@ -30,7 +30,7 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
   let organization = null;
 
   beforeEach(async function () {
-    let admin = '0x0000000000000000000000000000000000000000';
+    let admin = Utils.NULL_ADDRESS;
     let workers = [];
     let expirationHeight = 0;
 
@@ -73,7 +73,7 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
     );
     assert.strictEqual(
       await organization.proposedOwner.call(),
-      '0x0000000000000000000000000000000000000000',
+      Utils.NULL_ADDRESS,
       'The proposed owner must be 0 after it became the owner.',
     );
   });

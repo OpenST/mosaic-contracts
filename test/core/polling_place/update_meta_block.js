@@ -23,7 +23,7 @@ const Utils = require('../../test_lib/utils.js');
 
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 const PollingPlace = artifacts.require('PollingPlace');
-const zeroAddress = "0x0000000000000000000000000000000000000000";
+const zeroAddress = Utils.NULL_ADDRESS;
 
 contract('PollingPlace.updateMetaBlock()', async (accounts) => {
 

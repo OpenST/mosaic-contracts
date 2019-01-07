@@ -26,7 +26,7 @@ const Organization = artifacts.require('Organization');
 
 contract('Organization.constructor()', async (accounts) => {
 
-  const zeroAddress = '0x0000000000000000000000000000000000000000';
+  const zeroAddress = Utils.NULL_ADDRESS;
 
   const owner = accounts[3];
   const admin = accounts[4];

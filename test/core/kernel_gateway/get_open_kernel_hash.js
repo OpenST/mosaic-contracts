@@ -19,14 +19,14 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
 const KernelGateway = artifacts.require('TestKernelGateway');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
 
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const zeroBytes = Utils.ZERO_BYTES32;
 
   let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
 

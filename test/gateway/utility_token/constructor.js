@@ -23,7 +23,7 @@ const MockOrganization = artifacts.require('MockOrganization');
 
 const Utils = require("./../../test_lib/utils");
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 
 const TOKEN_SYMBOL = "UT";
 const TOKEN_NAME = "Utility Token";

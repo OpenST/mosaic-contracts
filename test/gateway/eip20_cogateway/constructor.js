@@ -25,7 +25,7 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require("./../../test_lib/utils"),
   BN = require('bn.js');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 
 contract('EIP20CoGateway.constructor() ', function (accounts) {
 
