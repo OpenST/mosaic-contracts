@@ -24,7 +24,7 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const Utils = require('../../../test/test_lib/utils');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
+const NullAddress = Utils.NULL_ADDRESS;
 contract('EIP20Gateway.deactivateGateway()', function (accounts) {
 
   let gateway;

@@ -37,7 +37,7 @@ contract('Organization.unsetWorker()', async (accounts) => {
   beforeEach(async function () {
     expirationHeight = (await web3.eth.getBlockNumber()) + 10;
 
-    let zeroAdmin = '0x0000000000000000000000000000000000000000';
+    let zeroAdmin = Utils.NULL_ADDRESS;
     let workers = [];
     organization = await Organization.new(
       owner,

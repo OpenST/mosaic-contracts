@@ -25,9 +25,7 @@ const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-const zeroBytes =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
-
+const zeroBytes = Utils.ZERO_BYTES32;
 contract('Anchor.anchorStateRoot()', function (accounts) {
 
   let remoteChainId,
@@ -218,7 +216,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         );
         assert.strictEqual(
           storedStateRoot,
-          '0x0000000000000000000000000000000000000000000000000000000000000000',
+           Utils.ZERO_BYTES32,
           'There should not be any state root stored at a ' +
           'pruned height. It should have been reset by now.',
         );

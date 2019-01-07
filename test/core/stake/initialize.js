@@ -166,7 +166,7 @@ contract('Stake.initialize()', async (accounts) => {
     });
 
     it('should reject a zero validator address', async () => {
-        initialValidators[1] = '0x0000000000000000000000000000000000000000';
+        initialValidators[1] = Utils.NULL_ADDRESS;
         await Utils.expectRevert(
             stake.initialize(
                 initialDepositors,

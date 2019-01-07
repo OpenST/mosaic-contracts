@@ -27,7 +27,7 @@ contract('Stake.constructor()', async (accounts) => {
 
     let tokenAddress = accounts[3];
     let mosaicCoreAddress = accounts[4];
-    let zeroAddress = '0x0000000000000000000000000000000000000000';
+    let zeroAddress = Utils.NULL_ADDRESS;
 
     it('should accept a correct construction', async () => {
         await Stake.new(

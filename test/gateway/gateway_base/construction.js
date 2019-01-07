@@ -24,7 +24,7 @@ const GatewayBase = artifacts.require('./GatewayBase.sol')
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
-const NullAddress = '0x0000000000000000000000000000000000000000';
+const NullAddress = Utils.NULL_ADDRESS;
 contract('GatewayBase.sol', function (accounts) {
 
   describe('Construction', async () => {

@@ -29,7 +29,7 @@ contract('Organized.constructor()', async (accounts) => {
     let organization = null;
 
     beforeEach(async function () {
-        let admin = '0x0000000000000000000000000000000000000000';
+        let admin = Utils.NULL_ADDRESS;
         let workers = [];
         let expirationHeight = 0;
 
@@ -44,7 +44,7 @@ contract('Organized.constructor()', async (accounts) => {
     it('reverts when organization address is null', async () => {
         await Utils.expectRevert(
             Organized.new(
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 { from: owner },
             ),
             'Organization contract address must not be zero.',

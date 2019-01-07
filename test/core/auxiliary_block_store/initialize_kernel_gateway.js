@@ -25,7 +25,7 @@ const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 
 contract('AuxiliaryBlockStore.initialize()', async (accounts) => {
 
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const zeroAddress = Utils.NULL_ADDRESS;
 
   let auxiliaryBlockStore;
 

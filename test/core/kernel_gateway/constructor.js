@@ -26,9 +26,8 @@ const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.constructor()', async (accounts) => {
 
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  const zeroBytes =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const zeroAddress = Utils.NULL_ADDRESS;
+  const zeroBytes = Utils.ZERO_BYTES32;
   const originCoreIdentifier = '0x0000000000000000000000000000000000000001';
   const auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
   const kernelHashIndex = 5;

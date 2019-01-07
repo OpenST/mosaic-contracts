@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../../test_lib/web3.js');
+const Utils = require('../../../test_lib/utils.js');
 
 const BN = require('bn.js');
 const MetaBlock = require('../../../test_lib/meta_block.js');
@@ -87,7 +88,7 @@ AuxStoreUtils.prototype = {
                 auxiliaryBlockHash: vote.source,
                 gas: vote.accumulatedGas,
                 originDynasty: new BN('0'),
-                originBlockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                originBlockHash: Utils.ZERO_BYTES32,
                 transactionRoot: vote.accumulatedTransactionRoot,
             };
 

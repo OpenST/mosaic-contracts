@@ -72,7 +72,7 @@ contract('BlockStore.constructor()', async (accounts) => {
             BlockStore.new(
                 '0x0000000000000000000000000000000000000001',
                 10,
-                '0x0000000000000000000000000000000000000000',
+                Utils.NULL_ADDRESS,
                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
                 0
@@ -87,7 +87,7 @@ contract('BlockStore.constructor()', async (accounts) => {
                 '0x0000000000000000000000000000000000000001',
                 10,
                 accounts[0],
-                '0x0000000000000000000000000000000000000000000000000000000000000000',
+                Utils.ZERO_BYTES32,
                 '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
                 0
             ),
@@ -102,7 +102,7 @@ contract('BlockStore.constructor()', async (accounts) => {
                 10,
                 accounts[0],
                 '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
-                '0x0000000000000000000000000000000000000000000000000000000000000000',
+                 Utils.ZERO_BYTES32,
                 0
             ),
             'Initial state root must not be zero.'

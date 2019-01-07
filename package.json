@@ -16,7 +16,8 @@
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test"
+    "test": "truffle test",
+    "ganache" : "sh tools/runGanacheCli.sh"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"

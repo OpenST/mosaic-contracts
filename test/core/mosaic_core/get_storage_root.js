@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 const web3 = require('../../test_lib/web3.js');
+const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
 const MosaicCore = artifacts.require('TestMosaicCore');
 
@@ -29,8 +30,7 @@ const MosaicCore = artifacts.require('TestMosaicCore');
 contract('MosaicCore.getStorageRoot()', async (accounts) => {
 
     const coreIdentifier = '0x0000000000000000000000000000000000000001';
-    const zeroBytes =
-        "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const zeroBytes = Utils.ZERO_BYTES32;
 
     let gas = new BN('100');
     let maxAccumulateGasLimit = new BN('100');

@@ -19,15 +19,10 @@
 // ----------------------------------------------------------------------------
 
 const messageBusUtilsKlass = require('./messagebus_utils');
+const messageBus = require('../../test_lib/message_bus.js');
 const messageBusUtils = new messageBusUtilsKlass();
 
-let MessageStatusEnum = {
-    Undeclared: 0,
-    Declared: 1,
-    Progressed: 2,
-    DeclaredRevocation: 3,
-    Revoked: 4
-};
+let MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('MessageBus.declareRevocationMessage()', async (accounts) => {
     let params;
