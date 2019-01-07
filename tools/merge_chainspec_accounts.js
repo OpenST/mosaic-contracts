@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 // Called like this:
 // node merge_chainspec_accounts.js chainspec.json accounts.json
-const fs = require("fs");
+const fs = require('fs');
 
 const chainspecPath = process.argv[2];
 const accountsPath = process.argv[3];
@@ -17,4 +17,4 @@ Object.entries(accounts).forEach(([address, obj]) => {
 });
 
 // Pretty print as JSON
-console.log(JSON.stringify(chainspec, null, 4));
+process.stdout.write(JSON.stringify(chainspec, null, 4));

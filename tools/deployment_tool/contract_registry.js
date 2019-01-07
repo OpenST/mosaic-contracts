@@ -58,7 +58,7 @@ class ContractRegistry {
         // prepare contracts by ordering and generating addresses
         const { addressGenerator } = mergedOptions;
         this._orderContracts();
-        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
+        this.contracts.forEach(contract => contract.setGeneratedAddress(addressGenerator));
         this.contracts.forEach(contract => contract.instantiate());
 
         const genesisAccounts = {
@@ -95,7 +95,7 @@ class ContractRegistry {
         const addressGenerator = new IncrementingNonceAddressGenerator(fromAddress, startingNonce);
 
         this._orderContracts();
-        this.contracts.forEach(contract => contract.setAddress(addressGenerator));
+        this.contracts.forEach(contract => contract.setGeneratedAddress(addressGenerator));
         this.contracts.forEach(contract => contract.instantiate());
 
         const transactionObjects = [];
