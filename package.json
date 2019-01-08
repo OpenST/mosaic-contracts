@@ -6,8 +6,13 @@
     "abi-decoder": "1.2.0",
     "assert": "1.4.1",
     "bn.js": "4.11.8",
+    "chai": "4.2.0",
+    "eslint": "5.10.0",
+    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-plugin-import": "2.14.0",
     "ganache-cli": "6.1.8",
     "keccak": "1.4.0",
+    "mocha": "5.2.0",
     "rlp": "2.1.0",
     "solidity-coverage": "0.5.11",
     "solparse": "2.2.5",
@@ -17,7 +22,8 @@
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test",
-    "ganache" : "sh tools/runGanacheCli.sh"
+    "ganache": "sh tools/runGanacheCli.sh",
+    "test:deployment_tool": "mocha tools/deployment_tool/test"
   },
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
