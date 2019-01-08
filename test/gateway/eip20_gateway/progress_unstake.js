@@ -293,7 +293,7 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
     let errorMargin = result.rewardAmount_.sub(estimatedReward);
 
     assert.strictEqual(
-      errorMargin.abs().lten(10),
+      errorMargin.abs().lten(100), // The gas used varies, so kept 100 as buffer.
       true,
       `Reward amount ${result.rewardAmount_} must be equal to ${estimatedReward}`,
     );

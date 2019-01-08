@@ -26,5 +26,6 @@ before_script:
   - npm run compile
 script:
   - npm run test
+  - npm run test:deployment_tool
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
