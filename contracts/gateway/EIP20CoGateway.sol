@@ -613,9 +613,7 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         // Penalty charged to redeemer.
-        uint256 penalty = redeems[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penalty(redeems[_messageHash].bounty);
 
         require(
             msg.value == penalty,
