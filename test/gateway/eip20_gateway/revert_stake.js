@@ -305,7 +305,7 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
-      MessageStatusEnum.Revoked,
+      MessageStatusEnum.Declared,
     );
 
     await Utils.expectRevert(
