@@ -52,7 +52,6 @@ library GatewayLib {
      * @param _gasLimit maximum amount of gas can be used for reward.
      * @param _gasPrice price at which reward is calculated
      * @param _initialGas initial gas at the start of the process
-     * @param _estimatedAdditionalGasUsage Estimated gas that will be used
      *
      * @return fee amount
      * @return totalGasConsumed_ total gas consumed during message transfer
@@ -61,8 +60,7 @@ library GatewayLib {
         uint256 _gasConsumed,
         uint256 _gasLimit,
         uint256 _gasPrice,
-        uint256 _initialGas,
-        uint256 _estimatedAdditionalGasUsage
+        uint256 _initialGas
     )
         external
         view
@@ -74,8 +72,6 @@ library GatewayLib {
         totalGasConsumed_ = _initialGas.sub(
             gasleft()
 
-        ).add(
-            _estimatedAdditionalGasUsage
         ).add(
             _gasConsumed
         );

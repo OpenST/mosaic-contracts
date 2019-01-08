@@ -767,7 +767,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
@@ -1125,26 +1125,26 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-
         (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
-            _initialGas,
-            50000
+            _initialGas
+        );
+
+        require(
+            rewardAmount_ < redeemAmount_,
+            "Reward amount must be less than redeem amount."
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
         // Release the amount to beneficiary
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
-        //reward facilitator with the reward amount
-        stakeVault.releaseTo(msg.sender, rewardAmount_);
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
+        if (rewardAmount_ > 0) {
+            //reward facilitator with the reward amount
+            stakeVault.releaseTo(msg.sender, rewardAmount_);
+        }
 
         emit UnstakeProgressed(
             _messageHash,
@@ -1152,10 +1152,13 @@ contract EIP20Gateway is GatewayBase {
             unStake.beneficiary,
             redeemAmount_,
             unstakeAmount_,
-            redeemAmount_,
+            rewardAmount_,
             _proofProgress,
             _unlockSecret
         );
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
     }
 
     /**

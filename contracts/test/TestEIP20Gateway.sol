@@ -68,40 +68,53 @@ contract TestEIP20Gateway is EIP20Gateway {
     /* Public Functions */
 
     /**
-     * @notice It is used to set the stake message.
+     * @notice It is used to set a message.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash Message hash.
      * @param _intentHash Intent hash.
-     * @param _stakerNonce Nonce of the staker address.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done.
-     * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _staker Staker address.
+     * @param _nonce Nonce of the message sender address.
+     * @param _gasPrice Gas price that message sender is ready to pay to
+     *                  transfer message.
+     * @param _gasLimit Gas limit that message sender is ready to pay.
+     * @param _sender Message sender address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
-    function setStakeMessage(
-        bytes32 _messageHash,
+    function setMessage(
         bytes32 _intentHash,
-        uint256 _stakerNonce,
+        uint256 _nonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        address _staker,
+        address _sender,
         bytes32 _hashLock
     )
         public
+        returns (bytes32 messageHash_)
     {
-        messages[_messageHash] = getMessage(
+        MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
+            _nonce,
             _gasPrice,
             _gasLimit,
-            _staker,
+            _sender,
             _hashLock
         );
+
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
+        );
+
+        messages[messageHash_] = message;
+
+        return messageHash_;
+
     }
 
     /**

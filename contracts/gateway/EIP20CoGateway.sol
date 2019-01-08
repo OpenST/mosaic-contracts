@@ -1044,13 +1044,11 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
         (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
-            _initialGas,
-            50000  //21000 * 2 for transactions + approx buffer
+            _initialGas
         );
 
         require(
