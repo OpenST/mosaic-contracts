@@ -313,7 +313,7 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
         stakeMessage.messageHash,
         {from: stakeMessage.staker},
       ),
-      'Staker must approve gateway for penalty amount.'
+      'Underflow when subtracting.'
     );
 
   });
