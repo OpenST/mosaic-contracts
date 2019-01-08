@@ -1108,11 +1108,11 @@ contract EIP20CoGateway is GatewayBase {
         bool _proofProgress,
         bytes32 _unlockSecret
     )
-    private
-    returns (
-        address redeemer_,
-        uint256 redeemAmount_
-    )
+        private
+        returns (
+            address redeemer_,
+            uint256 redeemAmount_
+        )
     {
         redeemer_ = _message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
