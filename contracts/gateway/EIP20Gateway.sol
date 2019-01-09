@@ -491,7 +491,50 @@ contract EIP20Gateway is GatewayBase {
             bytes32(0),
             true
         );
+        // Return revert penalty to staker if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToStaker(
+            _messageHash,
+            staker_,
+            messageBox.outbox[_messageHash], // old message status
+            MessageBus.MessageStatus(_messageStatus) // new message status
+        );
+    }
 
+    /**
+     * @notice Return the revert penalty to the staker. Only valid for
+     *         a message transition from DeclaredRevocation -> Progressed.
+     *
+     * @dev Should only be called from progressStakeWithProof. This function
+     *      exists to avoid a stack too deep error.
+     *
+     * @param _messageHash Message hash.
+     * @param _staker Staker address.
+     * @param _oldMessageStatus Message status before progressing.
+     * @param _newMessageStatus Message status after progressing.
+     */
+    function tryReturnPenaltyToStaker(
+        bytes32 _messageHash,
+        address _staker,
+        MessageBus.MessageStatus _oldMessageStatus,
+        MessageBus.MessageStatus _newMessageStatus
+    )
+      private
+    {
+        if (_oldMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
+            return;
+        }
+        if (_newMessageStatus != MessageBus.MessageStatus.Progressed) {
+            return;
+        }
+
+        // Penalty charged to staker for revert stake.
+        uint256 penalty = stakes[_messageHash].bounty
+            .mul(REVOCATION_PENALTY)
+            .div(100);
+
+        // transfer the penalty amount
+        require(baseToken.transfer(_staker, penalty));
     }
 
     /**
