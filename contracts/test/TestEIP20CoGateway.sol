@@ -79,7 +79,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *
      * @param _intentHash Intent hash.
      * @param _nonce Nonce of the message sender address.
-     * @param _gasPrice Gas price that message sender  is ready to pay to
+     * @param _gasPrice Gas price that message sender is ready to pay to
      *                  transfer message.
      * @param _gasLimit Gas limit that message sender is ready to pay.
      * @param _sender Message sender address.
