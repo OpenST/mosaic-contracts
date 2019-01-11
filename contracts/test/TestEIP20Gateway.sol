@@ -145,4 +145,38 @@ contract TestEIP20Gateway is EIP20Gateway {
         messageBox.outbox[_messageHash] = _status;
     }
 
+    /**
+     * @notice It sets the status of inbox.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash It sets the status of the message.
+     * @param _status It sets the state of the message.
+     */
+    function setInboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _status
+    )
+        public
+    {
+        messageBox.inbox[_messageHash] = _status;
+    }
+
+    /**
+     * @notice It sets the storage root for given block height.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _blockHeight Mocked block height for testing.
+     * @param _storageRoot Mocked storage root for merkle proof testing.
+     */
+    function setStorageRoot(
+        uint256 _blockHeight,
+        bytes32 _storageRoot
+    )
+        public
+    {
+        storageRoots[_blockHeight] = _storageRoot;
+    }
+
 }
