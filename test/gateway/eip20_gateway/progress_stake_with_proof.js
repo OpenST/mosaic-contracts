@@ -123,6 +123,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     let burner = NullAddress;
 
     bountyAmount = new BN(proofData.gateway.constructor.bounty);
+    penaltyAmount = bountyAmount.mul(new BN(150)).div(new BN(100));
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -311,6 +312,9 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       stakeData.messageHash,
       MessageStatusEnum.DeclaredRevocation,
     );
+
+    // fund Gateway with enough tokens that it can return penalty
+    await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
 
     await setStorageRoot();
 
@@ -542,4 +546,76 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   });
 
+  it('should return penalty to staker when the message status in source is ' +
+    'declared revocation and in the target is progressed', async function () {
+
+    let stakeVault = await gateway.stakeVault.call();
+    let caller = accounts[0];
+    let staker = stakeData.staker;
+
+    await gateway.setOutboxStatus(
+      stakeData.messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
+
+    // fund Gateway with enough tokens that it can return penalty
+    await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
+
+    let callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
+    let stakerInitialBaseTokenBalance = await baseToken.balanceOf(staker);
+    let gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
+    let gatewayInitialBaseTokenBalance = await baseToken.balanceOf(gateway.address);
+    let stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    await setStorageRoot();
+
+    await gateway.progressStakeWithProof(
+      progressStakeParams.messageHash,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
+    );
+
+    let callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
+    let stakerFinalBaseTokenBalance = await baseToken.balanceOf(staker);
+    let gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
+    let gatewayFinalBaseTokenBalance = await baseToken.balanceOf(gateway.address);
+    let stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    assert.strictEqual(
+      callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
+      true,
+      "Bounty should be returned to caller.",
+    );
+
+    assert.strictEqual(
+      stakerFinalBaseTokenBalance.eq(stakerInitialBaseTokenBalance.add(penaltyAmount)),
+      true,
+      "Penalty should be returned to staker.",
+    );
+
+    assert.strictEqual(
+      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
+      true,
+      "Gateway token balance should reduced by stake amount on successful " +
+      "progress stake.",
+    );
+
+    assert.strictEqual(
+      gatewayFinalBaseTokenBalance.eq(
+        gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount)
+      ),
+      true,
+      "Gateway base balance should reduced by bounty amount and penalty amount " +
+      "on successful progress stake.",
+    );
+
+    assert.strictEqual(
+      stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeData.amount)),
+      true,
+      "Stake vault token balance should increase by stake amount on " +
+      "successful progress stake.",
+    );
+
+  });
 });

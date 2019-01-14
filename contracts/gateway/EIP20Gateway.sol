@@ -475,6 +475,14 @@ contract EIP20Gateway is GatewayBase {
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
+        // Return revert penalty to staker if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToStaker(
+            _messageHash,
+            message.sender,
+            messageBox.outbox[_messageHash], // old message status
+            MessageBus.MessageStatus(_messageStatus) // new message status
+        );
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -490,14 +498,6 @@ contract EIP20Gateway is GatewayBase {
             message,
             bytes32(0),
             true
-        );
-        // Return revert penalty to staker if message is already progressed
-        // and can't be reverted anymore.
-        tryReturnPenaltyToStaker(
-            _messageHash,
-            staker_,
-            messageBox.outbox[_messageHash], // old message status
-            MessageBus.MessageStatus(_messageStatus) // new message status
         );
     }
 
