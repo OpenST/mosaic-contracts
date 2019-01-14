@@ -591,20 +591,17 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         // Get the message object for the _messageHash.
         MessageBus.Message storage message = messages[_messageHash];
 
-        require(message.intentHash != bytes32(0));
-
         require(
             message.intentHash != bytes32(0),
-            "RedeemIntentHash must not be zero"
+            "RedeemIntentHash must not be zero."
         );
 
         require(
@@ -614,18 +611,18 @@ contract EIP20CoGateway is GatewayBase {
 
         // Penalty charged to redeemer.
         uint256 penalty = redeems[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+            .mul(REVOCATION_PENALTY)
+            .div(100);
 
         require(
             msg.value == penalty,
-            "msg.value must match the penalty amount"
+            "msg.value must match the penalty amount."
         );
 
         require(
             messageBox.outbox[_messageHash] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
+            MessageBus.MessageStatus.Declared,
+            "Message status must be Declared."
         );
         // Update the message outbox status to declared.
         messageBox.outbox[_messageHash] =
