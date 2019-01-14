@@ -347,18 +347,18 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -405,10 +405,7 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-        // Get the initial gas value.
-        uint256 initialGas = gasleft();
-
-        require(
+            require(
             _messageHash != bytes32(0),
             "Message hash must not be zero"
         );
@@ -445,17 +442,14 @@ contract EIP20CoGateway is GatewayBase {
         stakerNonce_ = message.nonce;
         amount_ = mint.amount;
 
-        // Delete the mint data.
-        delete mints[_messageHash];
-
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
             mint.amount
         );
-        // Update the gas consumed for this function.
-        message.gasConsumed = initialGas.sub(gasleft());
+        // Delete the mint data.
+        delete mints[_messageHash];
     }
 
     /**
