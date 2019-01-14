@@ -98,9 +98,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should emit event on success', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -145,14 +145,14 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   });
 
-  it('should charge/transfer panelty', async function () {
+  it('should charge/transfer penalty', async function () {
 
     let gatewayInitialBalance = await baseToken.balanceOf(gateway.address);
     let stakerInitialBalance = await baseToken.balanceOf(stakeMessage.staker);
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -167,13 +167,13 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     let stakerFinalBalance = await baseToken.balanceOf(stakeMessage.staker);
 
     assert.strictEqual(
-      gatewayFinalBalance.eq(gatewayInitialBalance.add(panelty)),
+      gatewayFinalBalance.eq(gatewayInitialBalance.add(penalty)),
       true,
       'Panelty must be transferred to gateway',
     );
 
     assert.strictEqual(
-      stakerFinalBalance.eq(stakerInitialBalance.sub(panelty)),
+      stakerFinalBalance.eq(stakerInitialBalance.sub(penalty)),
       true,
       'Panelty must be transferred from staker',
     );
@@ -181,10 +181,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail for zero message hash', async function () {
 
+    let penalty = new BN(150);
 
-    let panelty = new BN(150);
-
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -202,9 +201,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail if revocation is already declared', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -226,9 +225,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail for undeclared message', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Undeclared,
@@ -245,9 +244,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail for progressed message', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Progressed,
@@ -264,9 +263,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail for revoked message', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Revoked,
@@ -283,9 +282,9 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   it('should fail for non staker account', async function () {
 
-    let panelty = new BN(150);
+    let penalty = new BN(150);
 
-    await baseToken.approve(gateway.address, panelty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
 
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
@@ -301,7 +300,7 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     );
   });
 
-  it('should fail is gateway is not approved for panelty amount', async function () {
+  it('should fail if gateway is not approved for penalty amount', async function () {
 
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
