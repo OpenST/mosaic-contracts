@@ -41,7 +41,7 @@ let valueToken,
   testEIP20CoGateway,
   messageHash;
 
-async function assertProgressMintWithProof(stubData, progressMintValues) {
+async function assertProgressMintWithProof(stubData, progressMintValues, facilitator) {
 
   let expectedMintedToken = new BN(
     stubData.co_gateway.progress_mint.return_value.events.MintProgressed._mintedAmount,
@@ -214,7 +214,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestData, progressMintValues);
+    assertProgressMintWithProof(TestData, progressMintValues, facilitator);
 
   });
 
@@ -232,7 +232,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestData, progressMintValues);
+    assertProgressMintWithProof(TestData, progressMintValues, facilitator);
 
   });
 
@@ -278,7 +278,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let progressMintValues = await testEIP20CoGateway.progressMintWithProof(
+    let progressMintValues = await testEIP20CoGateway.progressMintWithProof.call(
       messageHash,
       TestDataWithZeroGasPrice.gateway.stake.proof_data.storageProof[0].serializedProof,
       new BN(TestDataWithZeroGasPrice.gateway.stake.return_value.block_number, 16),
@@ -286,7 +286,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestDataWithZeroGasPrice, progressMintValues);
+    assertProgressMintWithProof(TestDataWithZeroGasPrice, progressMintValues, facilitator);
 
   });
 
