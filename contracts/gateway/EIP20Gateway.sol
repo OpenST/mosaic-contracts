@@ -888,30 +888,28 @@ contract EIP20Gateway is GatewayBase {
             uint256 amount_
         )
     {
-        // Get the initial gas value
-        uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "RevertRedeem intent hash must not be zero"
+            "RevertRedeem intent hash must not be zero."
         );
 
         // Get the storage root
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Confirm revocation
@@ -923,23 +921,17 @@ contract EIP20Gateway is GatewayBase {
             storageRoot
         );
 
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = unstakes[_messageHash].amount;
 
-        // Emit RevertRedeemIntentConfirmed event
         emit RevertRedeemIntentConfirmed(
             _messageHash,
             redeemer_,
             redeemerNonce_,
             amount_
         );
-
-        // Update the gas consumed for this function.
-        message.gasConsumed = initialGas.sub(gasleft());
+        delete unstakes[_messageHash];
     }
 
     /**
