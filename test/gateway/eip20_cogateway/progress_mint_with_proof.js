@@ -54,7 +54,7 @@ async function assertProgressMintWithProof(stubData, progressMintValues) {
   assert.strictEqual(
     progressMintValues.beneficiary_,
     stubData.gateway.stake.params.beneficiary,
-    `Beneficiary address should be ${progressMintValues.beneficiary_}`,
+    `Beneficiary address should be ${stubData.gateway.stake.params.beneficiary}`,
   );
 
   amount = new BN(stubData.gateway.progress_stake.return_value.returned_value.stakeAmount_, 16);
