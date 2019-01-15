@@ -319,6 +319,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
 
     let initialFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
     let initialStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    let initialBeneficiaryBalance = await mockToken.balanceOf(unstakeRequest.beneficiary);
+
 
     await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
@@ -330,14 +332,14 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
 
     let finalFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
     let finalStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    let finalBeneficiaryBalance = await mockToken.balanceOf(unstakeRequest.beneficiary);
 
-    // This is diff of gas consumed by progressUnstake.
-    let reward = new BN(37791800000000);
+    let recievedReward = finalFacilitatorBalance.sub(initialFacilitatorBalance);
+    let unstakeToBeneficiary = finalBeneficiaryBalance.sub(initialBeneficiaryBalance);
     assert.strictEqual(
-      finalFacilitatorBalance.eq(initialFacilitatorBalance.add(reward)),
+      recievedReward.add(unstakeToBeneficiary).eq(unstakeRequest.amount),
       true,
-      `Facilitator balance ${finalFacilitatorBalance  }` +
-      `must be equal to ${initialFacilitatorBalance.add(reward)}.`,
+      `Facilitator reward plus unstake to beneficiary should be equal to total unstake amount`,
     );
 
     assert.strictEqual(
