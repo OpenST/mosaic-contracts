@@ -38,7 +38,8 @@ let valueToken,
   symbol = 'OST',
   name = 'Simple Token',
   decimals = 18,
-  testEIP20CoGateway;
+  testEIP20CoGateway,
+  messageHash;
 
 async function assertProgressMintWithProof(stubData, progressMintValues) {
 
@@ -153,8 +154,7 @@ async function setup(accounts) {
 contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
 
   let facilitator = accounts[5],
-    intentHash,
-    messageHash;
+    intentHash;
 
   beforeEach(async function () {
 
