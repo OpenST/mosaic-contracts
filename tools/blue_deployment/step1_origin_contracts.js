@@ -60,20 +60,26 @@ const getChainInfo = async (rpcEndpoint) => {
     };
 };
 
-const createCommonContracts = (remoteChainId, remoteBlockHeight, remoteStateRoot) => {
+const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeight, remoteStateRoot) => {
     const MerklePatriciaProof = Contract.loadTruffleContract('MerklePatriciaProof', null, { rootDir });
     const GatewayLib = Contract.loadTruffleContract('GatewayLib', null, { rootDir });
     GatewayLib.addLinkedDependency(MerklePatriciaProof);
     const MessageBus = Contract.loadTruffleContract('MessageBus', null, { rootDir });
     MessageBus.addLinkedDependency(MerklePatriciaProof);
 
-    const Organization = Contract.loadTruffleContract('Organization', [], { rootDir });
-    const SafeCore = Contract.loadTruffleContract(
-        'SafeCore',
+    const Organization = Contract.loadTruffleContract('Organization', [
+        organizationOwner, // TODO
+        organizationOwner, // TODO
+        [], // TODO
+        '100000000000', // TODO
+    ], { rootDir });
+    const Anchor = Contract.loadTruffleContract(
+        'Anchor',
         [
             remoteChainId,
             remoteBlockHeight,
             remoteStateRoot,
+            10, // TODO: maxStateroots
             Organization.reference(),
         ],
         { rootDir },
@@ -84,13 +90,13 @@ const createCommonContracts = (remoteChainId, remoteBlockHeight, remoteStateRoot
         GatewayLib,
         MessageBus,
         Organization,
-        SafeCore,
+        Anchor,
     };
 };
 
 // tokenAddress = Branded Token
 // baseTokenAddress = OST
-const deploySafeCoreAndGateway = async (
+const deployAnchorAndGateway = async (
     rpcEndpointOrigin,
     deployerAddress,
     tokenAddress,
@@ -108,17 +114,23 @@ const deploySafeCoreAndGateway = async (
         GatewayLib,
         MessageBus,
         Organization,
-        SafeCore,
-    } = createCommonContracts(chainIdAuxiliary, blockHeightAuxiliary, stateRootAuxiliary);
+        Anchor,
+    } = createCommonContracts(
+        deployerAddress, // TODO: organization owner
+        chainIdAuxiliary,
+        blockHeightAuxiliary,
+        stateRootAuxiliary,
+    );
 
     const EIP20Gateway = Contract.loadTruffleContract(
         'EIP20Gateway',
         [
             tokenAddress,
             baseTokenAddress,
-            SafeCore.reference(),
+            Anchor.reference(),
             bounty,
             Organization.reference(),
+            '0x0000000000000000000000000000000000000000', // TODO: burner address
         ],
         { rootDir },
     );
@@ -132,7 +144,7 @@ const deploySafeCoreAndGateway = async (
         MerklePatriciaProof,
         MessageBus,
         Organization,
-        SafeCore,
+        Anchor,
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
@@ -140,7 +152,7 @@ const deploySafeCoreAndGateway = async (
 };
 
 // deploy for Auxiliary
-const deploySafeCoreAndCoGateway = async (
+const deployAnchorAndCoGateway = async (
     rpcEndpointAuxiliary,
     deployerAddress,
     tokenAddressOrigin,
@@ -158,13 +170,19 @@ const deploySafeCoreAndCoGateway = async (
         GatewayLib,
         MessageBus,
         Organization,
-        SafeCore,
-    } = createCommonContracts(chainIdOrigin, blockHeightOrigin, stateRootOrigin);
+        Anchor,
+    } = createCommonContracts(
+        deployerAddress, // TODO: organization owner
+        chainIdOrigin,
+        blockHeightOrigin,
+        stateRootOrigin,
+    );
 
     const OSTPrime = Contract.loadTruffleContract(
         'OSTPrime',
         [
             tokenAddressOrigin,
+            Organization.reference(),
         ],
         { rootDir },
     );
@@ -174,10 +192,11 @@ const deploySafeCoreAndCoGateway = async (
         [
             tokenAddressOrigin,
             OSTPrime.reference(),
-            SafeCore.reference(),
+            Anchor.reference(),
             bounty,
             Organization.reference(),
             gatewayAddress,
+            '0x0000000000000000000000000000000000000000', // TODO: burner address
         ],
         { rootDir },
     );
@@ -192,7 +211,7 @@ const deploySafeCoreAndCoGateway = async (
         MerklePatriciaProof,
         MessageBus,
         Organization,
-        SafeCore,
+        Anchor,
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
@@ -234,7 +253,7 @@ const main = async () => {
     const auxiliaryInfo = await getChainInfo(rpcEndpointAuxiliary);
 
     printSign('DEPLOYING ORIGIN');
-    const originAddresses = await deploySafeCoreAndGateway(
+    const originAddresses = await deployAnchorAndGateway(
         rpcEndpointOrigin,
         deployerAddressOrigin,
         tokenAddressOrigin,
@@ -247,7 +266,7 @@ const main = async () => {
 
     printSign('DEPLOYING AUXILIARY');
     const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-    const auxiliaryAddresses = await deploySafeCoreAndCoGateway(
+    const auxiliaryAddresses = await deployAnchorAndCoGateway(
         rpcEndpointAuxiliary,
         deployerAddressAuxiliary,
         tokenAddressOrigin,
