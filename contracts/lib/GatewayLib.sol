@@ -71,7 +71,6 @@ library GatewayLib {
     {
         totalGasConsumed_ = _initialGas.sub(
             gasleft()
-
         ).add(
             _gasConsumed
         );
