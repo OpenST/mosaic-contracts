@@ -31,7 +31,7 @@ import "../../gateway/UtilityToken.sol";
 contract MockUtilityToken is UtilityToken {
 
     // Total initial balance of the deployer.
-    uint256 constant INITIAL_BALANCE  = 1000000000;
+    uint256 constant INITIAL_BALANCE  = 1000000000000000000;
 
 
     /* Constructor */

@@ -828,7 +828,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
