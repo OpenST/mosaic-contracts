@@ -169,13 +169,13 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     assert.strictEqual(
       gatewayFinalBalance.eq(gatewayInitialBalance.add(penalty)),
       true,
-      'Panelty must be transferred to gateway',
+      'Penalty must be transferred to gateway',
     );
 
     assert.strictEqual(
       stakerFinalBalance.eq(stakerInitialBalance.sub(penalty)),
       true,
-      'Panelty must be transferred from staker',
+      'Penalty must be transferred from staker',
     );
   });
 
