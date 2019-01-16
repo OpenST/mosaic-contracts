@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,35 +51,9 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   };
 
-  beforeEach(async function () {
-    mockToken = await MockToken.new({ from: accounts[0] });
-    baseToken = await MockToken.new({ from: accounts[0] });
+  let prepareTestData = async function(stubData) {
 
-    let owner = accounts[2];
-    let worker = accounts[7];
-    let organization = await MockOrganization.new(
-      owner,
-      worker,
-      { from: accounts[0] },
-    );
-
-    let coreAddress = accounts[5];
-    let burner = NullAddress;
-
-    bountyAmount = new BN(proofData.gateway.constructor.bounty);
-
-    gateway = await Gateway.new(
-      mockToken.address,
-      baseToken.address,
-      coreAddress,
-      bountyAmount,
-      organization.address,
-      burner,
-    );
-
-    let gatewayLib = await GatewayLib.deployed();
-
-    let stakeParams = proofData.gateway.stake.params;
+    let stakeParams = stubData.gateway.stake.params;
 
     stakeData = {
       amount: new BN(stakeParams.amount, 16),
@@ -88,14 +62,16 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       gasLimit: new BN(stakeParams.gasLimit, 16),
       nonce: new BN(stakeParams.nonce, 16),
       hashLock: stakeParams.hashLock,
-      messageHash: proofData.gateway.stake.return_value.returned_value.messageHash_,
+      messageHash: stubData.gateway.stake.return_value.returned_value.messageHash_,
       staker: stakeParams.staker,
     };
+
+    let gatewayLib = await GatewayLib.deployed();
 
     let stakeIntentHash = await gatewayLib.hashStakeIntent(
       stakeData.amount,
       stakeData.beneficiary,
-      proofData.contracts.gateway,
+      stubData.contracts.gateway,
     );
 
     stakeData.intentHash = stakeIntentHash;
@@ -123,13 +99,44 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
     progressStakeParams = {
       messageHash: stakeData.messageHash,
-      rlpParentNodes: proofData.co_gateway.confirm_stake_intent.proof_data.storageProof[0].serializedProof,
-      blockHeight: new BN(proofData.co_gateway.confirm_stake_intent.proof_data.block_number),
+      rlpParentNodes: stubData.co_gateway.confirm_stake_intent.proof_data.storageProof[0].serializedProof,
+      blockHeight: new BN(stubData.co_gateway.confirm_stake_intent.proof_data.block_number),
       messageStatus: MessageStatusEnum.Declared,
     };
 
     await mockToken.transfer(gateway.address, stakeData.amount, { from: accounts[0] });
     await baseToken.transfer(gateway.address, bountyAmount, { from: accounts[0] });
+
+  };
+
+
+  beforeEach(async function () {
+    mockToken = await MockToken.new({ from: accounts[0] });
+    baseToken = await MockToken.new({ from: accounts[0] });
+
+    let owner = accounts[2];
+    let worker = accounts[7];
+    let organization = await MockOrganization.new(
+      owner,
+      worker,
+      { from: accounts[0] },
+    );
+
+    let coreAddress = accounts[5];
+    let burner = NullAddress;
+
+    bountyAmount = new BN(proofData.gateway.constructor.bounty);
+
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      coreAddress,
+      bountyAmount,
+      organization.address,
+      burner,
+    );
+
+    await prepareTestData(proofData);
 
   });
 
@@ -167,10 +174,16 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
     await setStorageRoot();
 
+    /*
+     * Stake proof data is passed instead of confirm stake intent proof data.
+     * This makes the proof data incorrect.
+     */
+    let storageProof = proofData.gateway.stake.proof_data.storageProof[0].serializedProof;
+
     await Utils.expectRevert(
       gateway.progressStakeWithProof(
         progressStakeParams.messageHash,
-        proofData.gateway.stake.proof_data.storageProof[0].serializedProof,
+        storageProof,
         progressStakeParams.blockHeight,
         progressStakeParams.messageStatus,
       ),
@@ -197,6 +210,8 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   it('should fail when storage root is not committed for given block height',
     async function () {
+
+      // Here setStorageRoot() is not called, so the storage root will not be available.
 
       await Utils.expectRevert(
         gateway.progressStakeWithProof(
@@ -352,6 +367,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         stakeData.staker,
         `Staker address must be equal to ${stakeData.staker}.`,
       );
+
       assert.strictEqual(
         result.stakeAmount_.eq(stakeData.amount),
         true,
@@ -404,10 +420,10 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         MessageStatusEnum.Progressed,
       );
 
-      assert.equal(
+      assert.strictEqual(
         tx.receipt.status,
-        1,
-        "Receipt status is unsuccessful",
+        true,
+        "Receipt status is unsuccessful.",
       );
 
     });
@@ -427,7 +443,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     let eventData = event.StakeProgressed;
 
     assert.isDefined(
-      event.StakeProgressed,
+      eventData,
       'Event `StakeProgressed` must be emitted.',
     );
     assert.strictEqual(
@@ -443,12 +459,12 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeData.nonce),
       true,
-      `Staker nonce from the event must be equal to ${stakeData.nonce}.`,
+      `Staker nonce from the event must be equal to ${stakeData.nonce.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._amount.eq(stakeData.amount),
       true,
-      `Stake amount from event must be equal to ${stakeData.amount}.`,
+      `Stake amount from event must be equal to ${stakeData.amount.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._proofProgress,
