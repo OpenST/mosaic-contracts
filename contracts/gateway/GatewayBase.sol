@@ -530,7 +530,7 @@ contract GatewayBase is Organized {
      * @return penalty_ Amount of penalty needs to be paid by message initiator
      *                  to revert message transfers.
      */
-    function penalty(uint256 _bounty)
+    function penaltyFromBounty(uint256 _bounty)
         internal
         pure
         returns(uint256 penalty_)
