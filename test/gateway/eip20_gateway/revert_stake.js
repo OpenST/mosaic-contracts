@@ -145,6 +145,41 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
 
   });
 
+  it('should return correct values', async function () {
+
+    let penalty = new BN(150);
+
+    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await gateway.setOutboxStatus(
+      stakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+
+    let returnedValues = await gateway.revertStake.call(
+      stakeMessage.messageHash,
+      {from: stakeMessage.staker},
+    );
+
+    assert.strictEqual(
+      returnedValues.staker_,
+      stakeMessage.staker,
+      `Returned staker ${returnedValues.staker_} value is different from expected ${stakeMessage.staker} `,
+    );
+    assert.strictEqual(
+      returnedValues.stakerNonce_.eq(stakeMessage.stakerNonce),
+      true,
+      `Returned staker nonce ${returnedValues.stakerNonce_.toNumber(10)}`
+      + ` value is different from expected ${stakeMessage.stakerNonce.toNumber(10)} `,
+    );
+    assert.strictEqual(
+      returnedValues.amount_.eq(stakeRequest.stakeAmount),
+      true,
+      `Returned amount ${returnedValues.amount_.toNumber(10)}`
+      + ` value is different from expected ${stakeRequest.stakeAmount.toNumber(10)} `,
+    );
+
+  });
+
   it('should charge/transfer penalty', async function () {
 
     let gatewayInitialBalance = await baseToken.balanceOf(gateway.address);

@@ -612,9 +612,7 @@ contract EIP20Gateway is GatewayBase {
         // burn facilitator bounty
         baseToken.transfer(burner, bounty);
         //penalty charged to staker
-        uint256 penalty = stakes[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penalty(stakes[_messageHash].bounty);
 
         // burn staker penalty
         baseToken.transfer(burner, penalty);
