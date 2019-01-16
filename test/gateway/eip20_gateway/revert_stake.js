@@ -224,8 +224,8 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
         Utils.ZERO_BYTES32,
         {from: stakeMessage.staker},
       ),
-      'Message hash must not be zero.'
-      );
+      'Message hash must not be zero.',
+    );
 
   });
 

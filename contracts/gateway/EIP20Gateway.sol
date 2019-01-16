@@ -526,7 +526,7 @@ contract EIP20Gateway is GatewayBase {
         amount_ = stakes[_messageHash].amount;
 
         // Penalty charged to staker for revert stake.
-        uint256 penalty = penalty(stakes[_messageHash].bounty);
+        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
 
         // Transfer the penalty amount.
         require(
@@ -612,7 +612,7 @@ contract EIP20Gateway is GatewayBase {
         // burn facilitator bounty
         baseToken.transfer(burner, bounty);
         //penalty charged to staker
-        uint256 penalty = penalty(stakes[_messageHash].bounty);
+        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
 
         // burn staker penalty
         baseToken.transfer(burner, penalty);
