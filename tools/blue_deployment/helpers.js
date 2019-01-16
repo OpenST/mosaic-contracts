@@ -25,7 +25,7 @@ const getTransactionReceiptMined = (web3, txHash, interval) => {
     }
 };
 
-const deployContracts = async (web3, deploymentObjects) => {
+const deployContracts = async (signWeb3, sendWeb3, deploymentObjects) => {
     const asyncForEach = async (array, callback) => {
         for (let index = 0; index < array.length; index++) {
             await callback(array[index], index, array);
@@ -33,20 +33,22 @@ const deployContracts = async (web3, deploymentObjects) => {
     };
 
     const contractAddresses = {};
-    await asyncForEach(deploymentObjects, (deploymenObject) => {
-        return web3.eth.sendTransaction(Object.assign(deploymenObject.transactionObject, {
-          gasPrice: 1, gas: 8000000,
+    await asyncForEach(deploymentObjects, (deploymentObject) => {
+        return signWeb3.eth.signTransaction(Object.assign(deploymentObject.transactionObject, {
+            gasPrice: '1000000000',
+            gas: '8000000',
         }))
+            .then(signedTransaction => sendWeb3.eth.sendSignedTransaction(signedTransaction.raw))
             .then((receipt) => {
-                console.log(colors.dim(`Deploying ${deploymenObject.contractName} (tx ${receipt.transactionHash})`));
-                return getTransactionReceiptMined(web3, receipt.transactionHash, 10);
+                console.log(colors.dim(`Deploying ${deploymentObject.contractName} (tx ${receipt.transactionHash})`));
+                return getTransactionReceiptMined(sendWeb3, receipt.transactionHash, 10);
             })
             .then((receipt) => {
-                console.log(colors.green(`Deployed ${colors.underline.green(deploymenObject.contractName)} at ${receipt.contractAddress}`));
-                if (receipt.contractAddress.toLowerCase() !== deploymenObject.address) {
-                  console.warn(`"${deploymenObject.contractName}" was not deployed at the predicted address ${deploymenObject.address})`);
+                console.log(colors.green(`Deployed ${colors.underline.green(deploymentObject.contractName)} at ${receipt.contractAddress}`));
+                if (receipt.contractAddress.toLowerCase() !== deploymentObject.address) {
+                  console.warn(`"${deploymentObject.contractName}" was not deployed at the predicted address ${deploymentObject.address})`);
                 }
-                contractAddresses[deploymenObject.contractName] = receipt.contractAddress.toLowerCase();
+                contractAddresses[deploymentObject.contractName] = receipt.contractAddress.toLowerCase();
             });
     });
 
