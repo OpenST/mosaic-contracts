@@ -713,9 +713,7 @@ contract EIP20CoGateway is GatewayBase {
         burner.transfer(redeemProcess.bounty);
 
         // Penalty charged to redeemer.
-        uint256 penalty = redeemProcess.bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penalty(redeemProcess.bounty);
 
         // Burn penalty.
         burner.transfer(penalty);
