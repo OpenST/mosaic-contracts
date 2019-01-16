@@ -18,7 +18,7 @@
 * Message-based gateway ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
 * Ported repository to Truffle v5 ([#334](https://github.com/OpenSTFoundation/mosaic-contracts/pull/334)).
 * Ported repository to solidity 0.5.0 ([#480](https://github.com/OpenSTFoundation/mosaic-contracts/pull/480)).
-* Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399)).
+* Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399), [#566](https://github.com/OpenSTFoundation/mosaic-contracts/pull/566)).
 * Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
 * Contracts can now be `Organized` in line with [openst-contracts](https://github.com/OpenSTFoundation/openst-contracts) ([#513](https://github.com/OpenSTFoundation/mosaic-contracts/pull/513)).
   * Gateways are now `Organized` ([#515](https://github.com/OpenSTFoundation/mosaic-contracts/pull/515)).
@@ -26,11 +26,16 @@
 * CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
 * Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
 * Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
+* Only the organization can anchor state roots ([#560](https://github.com/OpenSTFoundation/mosaic-contracts/pull/560)).
+* Anchor now stores only recent state roots ([#546](https://github.com/OpenSTFoundation/mosaic-contracts/pull/546)).
 * Cogateway no more mints zero reward amount for facilitator ([#527](https://github.com/OpenSTFoundation/mosaic-contracts/pull/527)).
-* Mint and burn now changed to increase and decrease supply ([#529](https://github.com/OpenSTFoundation/mosaic-contracts/pull/529)).
+* Mint and burn now changed to increase and decrease supply ([#529](https://github.com/OpenSTFoundation/mosaic-contracts/pull/529), [#540](https://github.com/OpenSTFoundation/mosaic-contracts/pull/540)).
+* OST prime supply is now increased as base token ([#559](https://github.com/OpenSTFoundation/mosaic-contracts/pull/559)).
+* Claim and redeem are now called unwrap and wrap. Claim and redeem events are now called token unwrapped and token wrapped ([#533](https://github.com/OpenSTFoundation/mosaic-contracts/pull/533)).
 * The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
 * Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
-
+* Naming of RLP encoded parameters and variables is unified ([#528](https://github.com/OpenSTFoundation/mosaic-contracts/pull/528)).
+* Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458))
 
 ### Known Issues
 

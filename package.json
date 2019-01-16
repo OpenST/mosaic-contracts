@@ -1,6 +1,6 @@
 {
-  "name": "openst-protocol",
-  "version": "0.9.1",
+  "name": "mosaic-contracts",
+  "version": "0.9.4",
   "description": "",
   "devDependencies": {
     "abi-decoder": "1.2.0",
