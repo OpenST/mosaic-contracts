@@ -35,6 +35,7 @@
 * The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
 * Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
 * Naming of RLP encoded parameters and variables is unified ([#528](https://github.com/OpenSTFoundation/mosaic-contracts/pull/528)).
+* Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458))
 
 ### Known Issues
 
