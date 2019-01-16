@@ -54,6 +54,26 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     redeemRequest = stubData.gateway.confirm_redeem_intent.params;
 
+    let result = await eip20Gateway.confirmRedeemIntent.call(
+      redeemRequest.redeemer,
+      new BN(redeemRequest.nonce, 16),
+      redeemRequest.beneficiary,
+      new BN(redeemRequest.amount, 16),
+      new BN(redeemRequest.gasPrice, 16),
+      new BN(redeemRequest.gasLimit, 16),
+      new BN(redeemRequest.blockNumber, 16),
+      redeemRequest.hashLock,
+      redeemRequest.storageProof,
+    );
+
+    let messageHash = stubData.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
+
+    assert.strictEqual(
+      result,
+      messageHash,
+      `Message hash should be equal to ${messageHash}`,
+    );
+
     let tx = await eip20Gateway.confirmRedeemIntent(
       redeemRequest.redeemer,
       new BN(redeemRequest.nonce, 16),
@@ -66,67 +86,10 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       redeemRequest.storageProof,
     );
 
-    let event = EventDecoder.getEvents(tx, eip20Gateway);
-
     assert.strictEqual(
       tx.receipt.status,
       true,
       'Transaction should success.',
-    );
-
-    assert.isDefined(
-      event.RedeemIntentConfirmed,
-      'Event RedeemIntentConfirmed must be emitted.',
-    );
-
-    let eventData = event.RedeemIntentConfirmed;
-
-    let params = stubData.gateway.confirm_redeem_intent.params;
-    let messageHash = stubData.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
-
-    assert.strictEqual(
-      eventData._messageHash,
-      messageHash,
-      `Message hash from event must be equal to ${messageHash}.`,
-    );
-
-    assert.strictEqual(
-      eventData._redeemer,
-      params.redeemer,
-      `Staker address from event must be equal to ${params.redeemer}.`,
-    );
-
-    let nonce = new BN(params.nonce, 16);
-    assert.strictEqual(
-      nonce.eq(eventData._redeemerNonce),
-      true,
-      `Redeemer nonce from event must be equal to ${nonce.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      eventData._beneficiary,
-      params.beneficiary,
-      `Beneficiary address from event must be equal to ${params.beneficiary}.`,
-    );
-
-    let amount = new BN(params.amount, 16);
-    assert.strictEqual(
-      amount.eq(eventData._amount),
-      true,
-      `Amount from event must be equal to ${amount.toString(10)}.`,
-    );
-
-    let blockHeight = new BN(params.blockNumber, 16);
-    assert.strictEqual(
-      blockHeight.eq(eventData._blockHeight),
-      true,
-      `Block height from event must be equal to ${blockHeight.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      eventData._hashLock,
-      params.hashLock,
-      `Hash lock from event must be equal to ${params.hashLock}.`,
     );
 
   }
@@ -434,7 +397,81 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
   it('should emit `RedeemIntentConfirmed` event.', async function () {
 
-    await confirmRedeemIntent(TestDataJSON);
+
+    let tx = await eip20Gateway.confirmRedeemIntent(
+      redeemRequest.redeemer,
+      new BN(redeemRequest.nonce, 16),
+      redeemRequest.beneficiary,
+      new BN(redeemRequest.amount, 16),
+      new BN(redeemRequest.gasPrice, 16),
+      new BN(redeemRequest.gasLimit, 16),
+      new BN(redeemRequest.blockNumber, 16),
+      redeemRequest.hashLock,
+      redeemRequest.storageProof,
+    );
+
+    let event = EventDecoder.getEvents(tx, eip20Gateway);
+
+    assert.strictEqual(
+      tx.receipt.status,
+      true,
+      'Transaction should success.',
+    );
+
+    assert.isDefined(
+      event.RedeemIntentConfirmed,
+      'Event RedeemIntentConfirmed must be emitted.',
+    );
+
+    let eventData = event.RedeemIntentConfirmed;
+
+    let params = TestDataJSON.gateway.confirm_redeem_intent.params;
+    let messageHash = TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
+
+    assert.strictEqual(
+      eventData._messageHash,
+      messageHash,
+      `Message hash from event must be equal to ${messageHash}.`,
+    );
+
+    assert.strictEqual(
+      eventData._redeemer,
+      params.redeemer,
+      `Redeemer address from event must be equal to ${params.redeemer}.`,
+    );
+
+    let nonce = new BN(params.nonce, 16);
+    assert.strictEqual(
+      nonce.eq(eventData._redeemerNonce),
+      true,
+      `Redeemer nonce from event must be equal to ${nonce.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      eventData._beneficiary,
+      params.beneficiary,
+      `Beneficiary address from event must be equal to ${params.beneficiary}.`,
+    );
+
+    let amount = new BN(params.amount, 16);
+    assert.strictEqual(
+      amount.eq(eventData._amount),
+      true,
+      `Amount from event must be equal to ${amount.toString(10)}.`,
+    );
+
+    let blockHeight = new BN(params.blockNumber, 16);
+    assert.strictEqual(
+      blockHeight.eq(eventData._blockHeight),
+      true,
+      `Block height from event must be equal to ${blockHeight.toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      eventData._hashLock,
+      params.hashLock,
+      `Hash lock from event must be equal to ${params.hashLock}.`,
+    );
 
   });
 
