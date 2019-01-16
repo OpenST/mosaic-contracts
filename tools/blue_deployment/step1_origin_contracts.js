@@ -34,7 +34,7 @@ const tryDeployNewToken = async (rpcEndpoint, deployerAddress, eip20Address) => 
     registry.addContract(EIP20Token);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    const contracts = await deployContracts(web3, deploymentObjects);
+    const contracts = await deployContracts(web3, web3, deploymentObjects);
     return contracts.EIP20Token;
 };
 
@@ -148,7 +148,7 @@ const deployAnchorAndGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return await deployContracts(web3, deploymentObjects);
+    return await deployContracts(web3, web3,  deploymentObjects);
 };
 
 // deploy for Auxiliary
@@ -215,7 +215,7 @@ const deployAnchorAndCoGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return await deployContracts(web3, deploymentObjects);
+    return await deployContracts(web3, web3, deploymentObjects);
 };
 
 const printSign = (text) => {
