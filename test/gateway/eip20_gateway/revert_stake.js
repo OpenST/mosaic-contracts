@@ -112,31 +112,27 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     );
 
     let event = EventDecoder.getEvents(tx, gateway);
+    let eventData = event.RevertStakeIntentDeclared;
 
     assert.isDefined(
       event.RevertStakeIntentDeclared,
       'Event `RevertStakeIntentDeclared` must be emitted.',
     );
-
-    let eventData = event.RevertStakeIntentDeclared;
     assert.strictEqual(
       eventData._messageHash,
       stakeMessage.messageHash,
       `Expected message hash ${eventData._messageHash} is different from actual message hash ${stakeMessage.messageHash}`,
     );
-
     assert.strictEqual(
       eventData._staker,
       stakeMessage.staker,
       `Expected message hash ${eventData._staker} is different from actual message hash ${stakeMessage.staker}`,
     );
-
     assert.strictEqual(
       eventData._amount.eq(stakeRequest.stakeAmount),
       true,
       `Expected stake amount ${eventData._amount} is different from actual stake amount ${stakeRequest.stakeAmount}`,
     );
-
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeMessage.stakerNonce),
       true,
@@ -206,7 +202,6 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
       true,
       'Penalty must be transferred to gateway',
     );
-
     assert.strictEqual(
       stakerFinalBalance.eq(stakerInitialBalance.sub(penalty)),
       true,
@@ -243,7 +238,6 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
-
     await gateway.revertStake(
       stakeMessage.messageHash,
       {from: stakeMessage.staker},
@@ -320,7 +314,6 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     let penalty = new BN(150);
 
     await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
-
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
