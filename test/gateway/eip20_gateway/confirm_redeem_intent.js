@@ -1,3 +1,23 @@
+// Copyright 2018 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
+
 const EIP20Gateway = artifacts.require('TestEIP20Gateway.sol'),
   Token = artifacts.require("MockUtilityToken"),
   Utils = require('../../test_lib/utils'),
@@ -11,10 +31,10 @@ const EIP20Gateway = artifacts.require('TestEIP20Gateway.sol'),
   GatewayUtils = require('./helpers/gateway_utils.js');
 
 let MessageStatusEnum = messageBus.MessageStatusEnum;
+
 contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
-  let valueTokenAddress,
-    utilityToken,
+  let utilityToken,
     bountyAmount,
     coreAddress,
     owner,
@@ -48,6 +68,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     let event = EventDecoder.getEvents(tx, eip20Gateway);
 
+    assert.strictEqual(
+      tx.receipt.status,
+      true,
+      'Transaction should success.',
+    );
+
     assert.isDefined(
       event.RedeemIntentConfirmed,
       'Event RedeemIntentConfirmed must be emitted.',
@@ -55,21 +81,22 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     let eventData = event.RedeemIntentConfirmed;
 
-    let expectedEventValues = stubData.gateway.confirm_redeem_intent.return_value.events.RedeemIntentConfirmed;
+    let params = stubData.gateway.confirm_redeem_intent.params;
+    let messageHash = stubData.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
 
     assert.strictEqual(
       eventData._messageHash,
-      expectedEventValues._messageHash,
-      `Message hash from event must be equal to ${expectedEventValues._messageHash}.`,
+      messageHash,
+      `Message hash from event must be equal to ${messageHash}.`,
     );
 
     assert.strictEqual(
       eventData._redeemer,
-      expectedEventValues._redeemer,
-      `Staker address from event must be equal to ${expectedEventValues._redeemer}.`,
+      params.redeemer,
+      `Staker address from event must be equal to ${params.redeemer}.`,
     );
 
-    let nonce = new BN(expectedEventValues._redeemerNonce, 16);
+    let nonce = new BN(params.nonce, 16);
     assert.strictEqual(
       nonce.eq(eventData._redeemerNonce),
       true,
@@ -78,18 +105,18 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     assert.strictEqual(
       eventData._beneficiary,
-      expectedEventValues._beneficiary,
-      `Beneficiary address from event must be equal to ${expectedEventValues._beneficiary}.`,
+      params.beneficiary,
+      `Beneficiary address from event must be equal to ${params.beneficiary}.`,
     );
 
-    let amount = new BN(expectedEventValues._amount, 16);
+    let amount = new BN(params.amount, 16);
     assert.strictEqual(
       amount.eq(eventData._amount),
       true,
       `Amount from event must be equal to ${amount.toString(10)}.`,
     );
 
-    let blockHeight = new BN(redeemRequest.blockNumber, 16);
+    let blockHeight = new BN(params.blockNumber, 16);
     assert.strictEqual(
       blockHeight.eq(eventData._blockHeight),
       true,
@@ -98,19 +125,24 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     assert.strictEqual(
       eventData._hashLock,
-      expectedEventValues._hashLock,
-      `Hash lock from event must be equal to ${expectedEventValues._hashLock}.`,
+      params.hashLock,
+      `Hash lock from event must be equal to ${params.hashLock}.`,
     );
 
   }
 
   beforeEach(async function () {
 
-      valueTokenAddress = accounts[0];
       mockToken = await MockToken.new({from: accounts[0]});
       baseToken = await MockToken.new({from: accounts[0]});
 
       redeemRequest = TestDataJSON.gateway.confirm_redeem_intent.params;
+      redeemRequest.nonce = new BN(redeemRequest.nonce, 16);
+      redeemRequest.amount = new BN(redeemRequest.amount, 16);
+      redeemRequest.gasLimit = new BN(redeemRequest.gasLimit, 16);
+      redeemRequest.blockNumber = new BN(redeemRequest.blockNumber, 16);
+      redeemRequest.gasPrice = new BN(redeemRequest.gasPrice, 16);
+
       owner = accounts[4];
       worker = accounts[8];
 
@@ -130,6 +162,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       bountyAmount = new BN(100);
       gatewayAddress = testData;
       dummyStateRootProvider = accounts[2];
+
       eip20Gateway = await EIP20Gateway.new(
         mockToken.address,
         baseToken.address,
@@ -142,7 +175,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       gatewayUtils = new GatewayUtils(eip20Gateway, mockToken, baseToken);
       await eip20Gateway.activateGateway(TestDataJSON.contracts.coGateway, {from: owner});
       await eip20Gateway.setStorageRoot(
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.blockNumber,
         redeemRequest.storageRoot,
       );
 
@@ -153,12 +186,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
       let result = await eip20Gateway.confirmRedeemIntent.call(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
@@ -170,71 +203,38 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
         `Message hash from event must be equal to ${messageHash}.`,
       );
 
-      await eip20Gateway.confirmRedeemIntent(
+      let tx = await eip20Gateway.confirmRedeemIntent(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
 
-      let message = await eip20Gateway.messages(messageHash);
-
-      let nonce = new BN(redeemRequest.nonce, 16);
       assert.strictEqual(
-        nonce.eq(message.nonce),
+        tx.receipt.status,
         true,
-        `Nonce should be to ${nonce},`
+        'Transaction should success.',
       );
-
-      let gasPrice = new BN(redeemRequest.gasPrice, 16);
-      assert.strictEqual(
-        gasPrice.eq(message.gasPrice),
-        true,
-        `Gas Price should be to ${gasPrice},`
-      );
-
-      let gasLimit = new BN(redeemRequest.gasLimit, 16);
-      assert.strictEqual(
-        gasLimit.eq(message.gasLimit),
-        true,
-        `Gas Limit should be to ${gasLimit},`
-      );
-
-      let redeemer = new BN(redeemRequest.redeemer, 16);
-      assert.strictEqual(
-        redeemRequest.redeemer,
-        message.sender,
-        `Redeemer should be to ${redeemer},`
-      );
-
-      assert.strictEqual(
-        redeemRequest.hashLock,
-        (message.hashLock),
-        `Nonce should be to ${redeemer},`
-      );
-
-      // let intentHash = gatewayUtils.hashStakeIntent(new BN(redeemRequest.amount), redeemRequest.beneficiary, TestDataJSON.contracts.coGateway);
 
     }
   );
 
   it('should pass when redeemer address is zero', async function () {
 
-      let redeemerAddress = Utils.NULL_ADDRESS;
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
-          redeemerAddress,
-          new BN(redeemRequest.nonce, 16),
+          Utils.NULL_ADDRESS,
+          redeemRequest.nonce,
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -246,16 +246,15 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
   it('should pass when beneficiary address is zero', async function () {
 
-      let beneficiary = Utils.NULL_ADDRESS;
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
           redeemRequest.redeemer,
-          new BN(redeemRequest.nonce, 16),
-          beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.nonce,
+          Utils.NULL_ADDRESS,
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -271,12 +270,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
           redeemRequest.redeemer,
-          new BN(redeemRequest.nonce, 16),
+          redeemRequest.nonce,
           redeemRequest.beneficiary,
           amount,
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -292,12 +291,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     await Utils.expectRevert(
       eip20Gateway.confirmRedeemIntent(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         rlpParentNodes,
       ),
@@ -314,10 +313,10 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
           redeemRequest.redeemer,
           redeemerNonce,
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -333,11 +332,11 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
           redeemRequest.redeemer,
-          new BN(redeemRequest.nonce, 16),
+          redeemRequest.nonce,
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
           blockHeight,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
@@ -354,12 +353,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
           redeemRequest.redeemer,
-          new BN(redeemRequest.nonce, 16),
+          redeemRequest.nonce,
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           rlpParentNodes,
         ),
@@ -374,12 +373,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
       await eip20Gateway.confirmRedeemIntent(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
@@ -387,12 +386,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
           redeemRequest.redeemer,
-          new BN(redeemRequest.nonce, 16),
+          redeemRequest.nonce,
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -409,10 +408,10 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
         redeemRequest.redeemer,
         nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
@@ -421,10 +420,10 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
           redeemRequest.redeemer,
           nonce.addn(1),
           redeemRequest.beneficiary,
-          new BN(redeemRequest.amount, 16),
-          new BN(redeemRequest.gasPrice, 16),
-          new BN(redeemRequest.gasLimit, 16),
-          new BN(redeemRequest.blockNumber, 16),
+          redeemRequest.amount,
+          redeemRequest.gasPrice,
+          redeemRequest.gasLimit,
+          redeemRequest.blockNumber,
           redeemRequest.hashLock,
           redeemRequest.storageProof,
         ),
@@ -444,12 +443,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
       await eip20Gateway.confirmRedeemIntent(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
@@ -475,12 +474,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
       await eip20Gateway.confirmRedeemIntent(
         redeemRequest.redeemer,
-        new BN(redeemRequest.nonce, 16),
+        redeemRequest.nonce,
         redeemRequest.beneficiary,
-        new BN(redeemRequest.amount, 16),
-        new BN(redeemRequest.gasPrice, 16),
-        new BN(redeemRequest.gasLimit, 16),
-        new BN(redeemRequest.blockNumber, 16),
+        redeemRequest.amount,
+        redeemRequest.gasPrice,
+        redeemRequest.gasLimit,
+        redeemRequest.blockNumber,
         redeemRequest.hashLock,
         redeemRequest.storageProof,
       );
