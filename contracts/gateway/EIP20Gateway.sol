@@ -778,6 +778,20 @@ contract EIP20Gateway is GatewayBase {
 
     }
 
+    /**
+     * @notice Gets the penalty amount.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return penalty_ Penalty amount.
+     */
+    function penalty(bytes32 _messageHash)
+        external
+        view
+        returns (uint256 penalty_)
+    {
+        penalty_ = super.penaltyFromBounty(stakes[_messageHash].bounty);
+    }
 
     /* Public Functions */
 
