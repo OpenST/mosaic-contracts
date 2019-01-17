@@ -47,7 +47,7 @@ const deployContracts = async (
     await asyncForEach(deploymentObjects, (deploymentObject) => {
         return signWeb3.eth.signTransaction(Object.assign(deploymentObject.transactionObject, {
             gasPrice: '1000000000',
-            gas: '8000000',
+            gas: '7500000',
         }))
             .then(signedTransaction => sendWeb3.eth.sendSignedTransaction(signedTransaction.raw))
             .then((receipt) => {

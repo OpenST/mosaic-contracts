@@ -25,8 +25,9 @@
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test",
-    "ganache": "sh tools/runGanacheCli.sh",
+    "test:integration": "mocha --recursive --no-timeouts test_integration",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
+    "ganache": "sh tools/runGanacheCli.sh",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js"
   },
   "author": "OpenST Foundation Ltd.",

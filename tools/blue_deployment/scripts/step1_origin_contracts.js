@@ -83,7 +83,7 @@ const main = async () => {
     EIP20Gateway.methods.activateGateway(auxiliaryAddresses.EIP20CoGateway).send({
         from: deployerAddressOrigin,
         gasPrice: 1,
-        gas: 8000000,
+        gas: 7500000,
     }).then((receipt) => {
         console.log(`Activated Gateway (tx ${receipt.transactionHash})`);
     });
