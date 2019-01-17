@@ -124,8 +124,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', function (accounts) {
     assert.strictEqual(
       result.staker_,
       stakeRequest.staker,
-      `Expected staker ${stakeRequest.staker} is different from staker from 
-      event ${result.staker_}`,
+      `Expected staker is different from staker from the event.`,
     );
     assert.strictEqual(
       result.stakerNonce_.eq(expectedNonce),
@@ -171,14 +170,12 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       messageHash,
-      `Expected message hash ${messageHash} is different from message hash from 
-      event ${eventData._messageHash}`,
+      `Expected message hash is different from message hash from event.`,
     );
     assert.strictEqual(
       eventData._staker,
       stakeRequest.staker,
-      `Expected staker ${stakeRequest.staker} is different from staker from 
-      event ${eventData._staker}`,
+      `Expected staker is different from staker from event.`,
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(expectedNonce),
