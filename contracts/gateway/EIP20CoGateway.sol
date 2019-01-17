@@ -1040,7 +1040,7 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,

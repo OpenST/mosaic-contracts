@@ -1125,7 +1125,7 @@ contract EIP20Gateway is GatewayBase {
          *  - the gas consumed in target chain for confirmation and progress steps.
          *  - gas price and gas limit provided in the message.
          */
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,

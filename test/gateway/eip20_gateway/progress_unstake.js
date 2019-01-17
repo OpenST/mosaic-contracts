@@ -37,9 +37,6 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
   let facilitatorAddress = accounts[0];
   let MessageStatusEnum = messageBus.MessageStatusEnum;
 
-  // Got this by try and error. Suggest better way to find this value.
-  let estimatedGasUsed = new BN(199810);
-
   let setMessage = async function() {
 
     unstakeMessage.messageHash = messageBus.messageDigest(
@@ -266,32 +263,21 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let result = await gateway.progressUnstake.call(
+    let tx = await gateway.progressUnstake(
       unstakeMessage.messageHash,
       unstakeMessage.unlockSecret,
     );
 
-    let estimatedReward = estimatedGasUsed.mul(unstakeMessage.gasPrice);
-    let errorMargin = result.rewardAmount_.sub(estimatedReward);
+    let event = EventDecoder.getEvents(tx, gateway);
+    let eventData = event.UnstakeProgressed;
+
+    let gasUsed = new BN(tx.receipt.gasUsed);
+    let maxReward = gasUsed.mul(unstakeMessage.gasPrice);
 
     assert.strictEqual(
-      errorMargin.abs().lten(100), // The gas used varies, so kept 100 as buffer.
+      eventData._rewardAmount.lt(maxReward),
       true,
-      `Reward amount ${result.rewardAmount_.toString(10)} must be equal to ${estimatedReward.toString(10)}`,
-    );
-
-    let estimatedUnstakeAmount = unstakeRequest.amount.sub(estimatedReward).sub(errorMargin);
-
-    assert.strictEqual(
-      result.unstakeAmount_.eq(estimatedUnstakeAmount),
-      true,
-      `Unstake amount ${result.unstakeAmount_.toString(10)} must be equal to ${estimatedUnstakeAmount.toString(10)}`,
-    );
-
-    assert.strictEqual(
-      result.redeemAmount_.eq(unstakeRequest.amount),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
+      `Reward amount ${eventData._rewardAmount.toString(10)} must be less than ${maxReward.toString(10)}`,
     );
 
   });
@@ -334,6 +320,31 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       result.redeemAmount_.eq(unstakeRequest.amount),
       true,
       `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
+    );
+
+  });
+
+  it('redeem amount must be equal to reward amount plus unstake amount', async function () {
+
+    unstakeMessage.gasPrice = new BN(1);
+    unstakeMessage.gasLimit = new BN(10000000000);
+
+    await setMessage();
+
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+
+    let result = await gateway.progressUnstake.call(
+      unstakeMessage.messageHash,
+      unstakeMessage.unlockSecret,
+    );
+
+    assert.strictEqual(
+      result.redeemAmount_.eq(result.unstakeAmount_.add(result.rewardAmount_)),
+      true,
+      `Unstake amount ${result.redeemAmount_.toString(10)} must be equal to ${result.unstakeAmount_.add(result.rewardAmount_).toString(10)}`,
     );
 
   });
