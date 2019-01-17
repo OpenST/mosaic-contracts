@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
 const MessageStatusEnum = messageBus.MessageStatusEnum;
 
-contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
+contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   let gateway, mockToken, baseToken, revertStakeParams, bountyAmount, gatewayLib;
 
