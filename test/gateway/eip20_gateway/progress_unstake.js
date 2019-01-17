@@ -274,6 +274,12 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
     let gasUsed = new BN(tx.receipt.gasUsed);
     let maxReward = gasUsed.mul(unstakeMessage.gasPrice);
 
+    /*
+     * Reward is calculated as `gasPrice * gasConsumed`.
+     * The maximum reward possible is 'gasPrice * tx.gasUsed'.
+     * The gas used for fees calculations is always going to be less than
+     * the total transaction gas.
+     */
     assert.strictEqual(
       eventData._rewardAmount.lt(maxReward),
       true,
