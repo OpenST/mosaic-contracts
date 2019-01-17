@@ -521,6 +521,22 @@ contract GatewayBase is Organized {
         inboxActiveProcess[_account] = _messageHash;
     }
 
+    /**
+     * @notice Calculates the penalty amount for reverting a message transfer.
+     *
+     * @param _bounty The amount that facilitator has staked to initiate the
+     *                message transfers.
+     *
+     * @return penalty_ Amount of penalty needs to be paid by message initiator
+     *                  to revert message transfers.
+     */
+    function penaltyFromBounty(uint256 _bounty)
+        internal
+        pure
+        returns(uint256 penalty_)
+    {
+        penalty_ = _bounty.mul(REVOCATION_PENALTY).div(100);
+    }
 
     /* Private Functions */
 
