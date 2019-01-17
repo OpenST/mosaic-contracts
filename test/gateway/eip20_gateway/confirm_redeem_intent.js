@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -397,15 +397,14 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
   it('should emit `RedeemIntentConfirmed` event.', async function () {
 
-
     let tx = await eip20Gateway.confirmRedeemIntent(
       redeemRequest.redeemer,
-      new BN(redeemRequest.nonce, 16),
+      redeemRequest.nonce,
       redeemRequest.beneficiary,
-      new BN(redeemRequest.amount, 16),
-      new BN(redeemRequest.gasPrice, 16),
-      new BN(redeemRequest.gasLimit, 16),
-      new BN(redeemRequest.blockNumber, 16),
+      redeemRequest.amount,
+      redeemRequest.gasPrice,
+      redeemRequest.gasLimit,
+      redeemRequest.blockNumber,
       redeemRequest.hashLock,
       redeemRequest.storageProof,
     );
@@ -525,6 +524,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
         TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_,
         MessageStatusEnum.Revoked,
       );
+
       redeemRequest = TestDataJSON2.gateway.confirm_redeem_intent.params;
 
       await eip20Gateway.setStorageRoot(
