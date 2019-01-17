@@ -613,9 +613,7 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         // Penalty charged to redeemer.
-        uint256 penalty = redeems[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penaltyFromBounty(redeems[_messageHash].bounty);
 
         require(
             msg.value == penalty,
@@ -715,9 +713,7 @@ contract EIP20CoGateway is GatewayBase {
         burner.transfer(redeemProcess.bounty);
 
         // Penalty charged to redeemer.
-        uint256 penalty = redeemProcess.bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penaltyFromBounty(redeemProcess.bounty);
 
         // Burn penalty.
         burner.transfer(penalty);
