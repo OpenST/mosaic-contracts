@@ -873,9 +873,15 @@ contract EIP20CoGateway is GatewayBase {
             msg.value == bounty,
             "Payable amount should be equal to the bounty amount."
         );
+
         require(
             _amount > uint256(0),
             "Redeem amount must not be zero."
+        );
+
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than then the redeem amount."
         );
 
         // Get the redeem intent hash.

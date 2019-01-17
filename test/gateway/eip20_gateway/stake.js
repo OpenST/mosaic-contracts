@@ -156,18 +156,24 @@ contract('EIP20Gateway.stake() ', function (accounts) {
 
   it('should fail to stake when stake amount is 0', async function () {
     stakeAmount = new BN(0);
-    errorMessage = "Stake amount must not be zero";
+    errorMessage = "Stake amount must not be zero.";
     await prepareData();
     await stake(utils.ResultType.FAIL);
   });
 
   it('should fail to stake when beneficiary address is 0', async function () {
     beneficiary = Utils.NULL_ADDRESS;
-    errorMessage = "Beneficiary address must not be zero";
+    errorMessage = "Beneficiary address must not be zero.";
     await prepareData();
     await stake(utils.ResultType.FAIL);
   });
 
+  it('should fail to max reward amount is greater than the stake amount', async function () {
+    stakeAmount = new BN(200);
+    await prepareData();
+    errorMessage = "Maximum possible reward must be less than then the stake amount.";
+    await stake(utils.ResultType.FAIL);
+  });
 
   it('should fail to stake when staker has balance less than the stake amount', async function () {
     stakeAmount = new BN(200000000000);

@@ -304,11 +304,17 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _amount > uint256(0),
-            "Stake amount must not be zero"
+            "Stake amount must not be zero."
         );
+
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
+        );
+
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than then the stake amount."
         );
 
         // Get the stake intent hash.
