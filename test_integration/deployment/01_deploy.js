@@ -1,44 +1,17 @@
 const chai = require('chai');
 const Web3 = require('web3');
-const childProcess = require('child_process');
-const waitPort = require('wait-port');
+const {
+    dockerNodesSetup,
+    dockerNodesTeardown,
+} = require('../helpers');
 const {
     tryDeployNewToken,
     getChainInfo,
     deployAnchorAndGateway,
     deployAnchorAndCoGateway,
-} = require('../tools/blue_deployment/step1');
+} = require('../../tools/blue_deployment/step1');
 
 const { assert } = chai;
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const dockerNodesSetup = () => {
-    const dockerCompose = childProcess.spawn('docker-compose', ['-f', '/Users/hobofan/ost/chains-utils/docker-compose-testing.yml', 'up', '--force-recreate']);
-
-    if (process.env.TEST_STDOUT) {
-        dockerCompose.stdout.on('data', (data) => {
-            process.stdout.write(data);
-        });
-        dockerCompose.stderr.on('data', (data) => {
-            process.stderr.write(data);
-        });
-    }
-
-    const waitForOriginNode = waitPort({ port: 8545, output: 'silent' });
-    const waitForAuxiliaryNode = waitPort({ port: 8546, output: 'silent' });
-    return Promise.all([waitForOriginNode, waitForAuxiliaryNode]);
-};
-
-const dockerNodesTeardown = () => {
-    const dockerComposeDown = childProcess.spawnSync('docker-compose', ['-f', '/Users/hobofan/ost/chains-utils/docker-compose-testing.yml', 'down']);
-    if (process.env.TEST_STDOUT) {
-        process.stdout.write(dockerComposeDown.stdout);
-        process.stderr.write(dockerComposeDown.stderr);
-    }
-};
 
 describe('Deployer', () => {
     const rpcEndpointOrigin = 'http://localhost:8545';
@@ -51,8 +24,6 @@ describe('Deployer', () => {
 
     before(async () => {
         await dockerNodesSetup();
-        // wait for a little bit to allow the ethereum nodes to come online
-        await sleep(5000);
 
         web3Origin = new Web3(rpcEndpointOrigin);
         web3Auxiliary = new Web3(rpcEndpointAuxiliary);
