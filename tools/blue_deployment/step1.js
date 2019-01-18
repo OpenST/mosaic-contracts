@@ -2,7 +2,7 @@ const Web3 = require('web3');
 const colors = require('colors/safe');
 
 const { Contract, ContractRegistry } = require('../deployment_tool');
-const { deployContracts } = require('./helpers');
+const { deployContracts, UnlockedWeb3Signer } = require('./helpers');
 
 // root directory of npm project
 const rootDir = `${__dirname}/../../`;
@@ -29,7 +29,12 @@ const tryDeployNewToken = async (rpcEndpoint, deployerAddress, eip20Address, dep
     registry.addContract(EIP20Token);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    const contracts = await deployContracts(web3, web3, deploymentObjects, deployOptions);
+    const contracts = await deployContracts(
+        new UnlockedWeb3Signer(web3),
+        web3,
+        deploymentObjects,
+        deployOptions,
+    );
     return contracts.EIP20Token;
 };
 
@@ -147,7 +152,11 @@ const deployAnchorAndGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return deployContracts(web3, web3, deploymentObjects);
+    return deployContracts(
+        new UnlockedWeb3Signer(web3),
+        web3,
+        deploymentObjects,
+    );
 };
 
 
@@ -216,7 +225,11 @@ const deployAnchorAndCoGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return deployContracts(web3, web3, deploymentObjects);
+    return deployContracts(
+        new UnlockedWeb3Signer(web3),
+        web3,
+        deploymentObjects,
+    );
 };
 
 module.exports = {
