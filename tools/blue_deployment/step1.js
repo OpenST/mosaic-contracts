@@ -1,3 +1,24 @@
+/**
+ * @typedef {Object} ChainInfo
+ * @property {string} chainId The chain id.
+ * @property {string} blockHeight The height (= block number) of the the
+ *                    most recent block of the chain.
+ * @property {string} stateRoot The state root of the the most recent
+ *                    block of the chain.
+ */
+
+/**
+ * @typedef {Object} Contract
+ */
+
+/**
+ * @typedef {Object} ContractReference
+ */
+
+/**
+ * @typedef {string} Address
+ */
+
 const Web3 = require('web3');
 const colors = require('colors/safe');
 
@@ -7,9 +28,18 @@ const { deployContracts, UnlockedWeb3Signer } = require('./helpers');
 // root directory of npm project
 const rootDir = `${__dirname}/../../`;
 
-// TODO: document
-/** Returns the provided address as-is or or deploy a new EIP20Token and return its
+/**
+ * Returns the provided address as-is or or deploy a new EIP20Token and return its
  * address if the provided address is the special string "new".
+ *
+ * @param {string} rpcEndpoint RPC endpoint for the web3 instance to use.
+ * @param {Address} deployerAddress Address of the account to use for deployment.
+ * @param {Address|string} eip20Address Either an existing address of a EIP20Token,
+ *                 or the special string "new".
+ * @param {object} deployOptions See {@link deployContracts}.
+ *
+ * @returns {Address} The address of either the provided EIP20Token or the
+ *                   newly deployed one.
  */
 const tryDeployNewToken = async (rpcEndpoint, deployerAddress, eip20Address, deployOptions) => {
     if (eip20Address !== 'new') {
@@ -38,7 +68,10 @@ const tryDeployNewToken = async (rpcEndpoint, deployerAddress, eip20Address, dep
     return contracts.EIP20Token;
 };
 
-// TODO: document
+/**
+ * Check if the provided address contains a EIP20Token.
+ * For now only checks if the provided address contains code.
+ */
 const checkEip20Address = async (rpcEndpoint, eip20Address) => {
     const web3 = new Web3(rpcEndpoint);
 
@@ -48,7 +81,11 @@ const checkEip20Address = async (rpcEndpoint, eip20Address) => {
     }
 };
 
-// TODO: document
+/**
+ * Get information about the chain that is required for Gateway deployment.
+ *
+ * @returns {ChainInfo} The chain information of the most recent block on the chain.
+ */
 const getChainInfo = async (rpcEndpoint) => {
     const web3 = new Web3(rpcEndpoint);
 
@@ -62,42 +99,100 @@ const getChainInfo = async (rpcEndpoint) => {
     };
 };
 
-// TODO: document
-const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeight, remoteStateRoot) => {
+/**
+ * Create Contract instances for libraries MerklePatriciaProof, GatewayLib, MessageBus.
+ *
+ * @returns {Object.<string, Contract>} Map from contract names to contract instances.
+ */
+const createLibraryConracts = () => {
     const MerklePatriciaProof = Contract.loadTruffleContract('MerklePatriciaProof', null, { rootDir });
     const GatewayLib = Contract.loadTruffleContract('GatewayLib', null, { rootDir });
     GatewayLib.addLinkedDependency(MerklePatriciaProof);
     const MessageBus = Contract.loadTruffleContract('MessageBus', null, { rootDir });
     MessageBus.addLinkedDependency(MerklePatriciaProof);
 
-    const Organization = Contract.loadTruffleContract('Organization', [
-        organizationOwner, // TODO
-        organizationOwner, // TODO
-        [], // no organization workers for now
-        '100000000000', // there are no workers to kick out, so value doesn't matter much
+    return {
+        MerklePatriciaProof,
+        GatewayLib,
+        MessageBus,
+    };
+};
+
+/**
+ * Create an Organization Contract
+ *
+ * @param {Address} adminAddress Address of the organization admin.
+ * @param {Address} ownerAddress Address of the organization owner.
+ * @param {Array.<Address>} workerAddresses Addresses of the organization workers.
+ * @param {expirationHeight} expirationHeight Block height at which the
+ *                           workers will expire.
+ *
+ * @returns {Contract} The Organization contract instance.
+ */
+const createOrganization = (adminAddress, ownerAddress, workerAddresses, expirationHeight) =>  {
+    return Contract.loadTruffleContract('Organization', [
+        adminAddress,
+        ownerAddress,
+        workerAddresses,
+        expirationHeight,
     ], { rootDir });
-    const Anchor = Contract.loadTruffleContract(
+};
+
+/**
+ * Create an Anchor Contract
+ *
+ * @param {Address|ContractReference} organization The address of or reference
+ *                                    to the Organization contract for the anchor.
+ * @param {string} remoteChainId The chain id of the remote chain to anchor.
+ * @param {number} remoteBlockHeight The block height of the remote chain to anchor.
+ * @param {string} remoteStateRoot The state root of the remote chain to anchor.
+ * @param {number} maxStateroots The max number of state roots to store in
+ *                               thecircular buffer.
+ *
+ * @returns {Contract} The Anchor contract instance.
+ */
+const createAnchor = (
+    organization,
+    remoteChainId,
+    remoteBlockHeight,
+    remoteStateRoot,
+    maxStateroots = '10',
+) => {
+    return Contract.loadTruffleContract(
         'Anchor',
         [
             remoteChainId,
             remoteBlockHeight,
             remoteStateRoot,
-            '10', // TODO: maxStateroots
-            Organization.reference(),
+            maxStateroots,
+            organization,
         ],
         { rootDir },
     );
-
-    return {
-        MerklePatriciaProof,
-        GatewayLib,
-        MessageBus,
-        Organization,
-        Anchor,
-    };
 };
 
-// TODO: document
+const createEIP20Gateway = (
+    tokenAddress,
+    baseTokenAddress,
+    anchorAddress,
+    bounty,
+    organizationAddress,
+    burnerAddress = '0x0000000000000000000000000000000000000000',
+) => {
+    return Contract.loadTruffleContract(
+        'EIP20Gateway',
+        [
+            tokenAddress,
+            baseTokenAddress,
+            anchorAddress,
+            bounty,
+            organizationAddress,
+            burnerAddress,
+        ],
+        { rootDir },
+    );
+};
+
 // tokenAddress = Branded Token
 // baseTokenAddress = OST
 const deployAnchorAndGateway = async (
@@ -117,26 +212,28 @@ const deployAnchorAndGateway = async (
         MerklePatriciaProof,
         GatewayLib,
         MessageBus,
-        Organization,
-        Anchor,
-    } = createCommonContracts(
-        deployerAddress, // TODO: organization owner
+    } = createLibraryConracts();
+    const Organization = createOrganization(
+        deployerAddress, // TODO
+        deployerAddress, // TODO
+        [deployerAddress], // TODO
+        '100000000000', // TODO
+    );
+    const Anchor = createAnchor(
+        Organization.reference(),
         chainIdAuxiliary,
         blockHeightAuxiliary,
         stateRootAuxiliary,
+        '10', // TODO
     );
 
-    const EIP20Gateway = Contract.loadTruffleContract(
-        'EIP20Gateway',
-        [
-            tokenAddress,
-            baseTokenAddress,
-            Anchor.reference(),
-            bounty,
-            Organization.reference(),
-            '0x0000000000000000000000000000000000000000', // TODO: burner address
-        ],
-        { rootDir },
+    const EIP20Gateway = createEIP20Gateway(
+        tokenAddress,
+        baseTokenAddress,
+        Anchor.reference(),
+        bounty,
+        Organization.reference(),
+        '0x0000000000000000000000000000000000000000', // TODO: burner address
     );
     EIP20Gateway.addLinkedDependency(GatewayLib);
     EIP20Gateway.addLinkedDependency(MessageBus);
@@ -160,7 +257,6 @@ const deployAnchorAndGateway = async (
 };
 
 
-// TODO: document
 // deploy for Auxiliary
 const deployAnchorAndCoGateway = async (
     rpcEndpointAuxiliary,
@@ -179,13 +275,19 @@ const deployAnchorAndCoGateway = async (
         MerklePatriciaProof,
         GatewayLib,
         MessageBus,
-        Organization,
-        Anchor,
-    } = createCommonContracts(
-        deployerAddress, // TODO: organization owner
+    } = createLibraryConracts();
+    const Organization = createOrganization(
+        deployerAddress, // TODO
+        deployerAddress, // TODO
+        [deployerAddress], // TODO
+        '100000000000', // TODO
+    );
+    const Anchor = createAnchor(
+        Organization.reference(),
         chainIdOrigin,
         blockHeightOrigin,
         stateRootOrigin,
+        '10', // TODO
     );
 
     const OSTPrime = Contract.loadTruffleContract(
