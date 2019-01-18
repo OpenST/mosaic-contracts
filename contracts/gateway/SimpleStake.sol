@@ -117,7 +117,7 @@ contract SimpleStake {
     {
         require(
             _amount > 0,
-            "Amount must not be zero."
+            "Release amount must not be zero."
         );
         require(
             token.transfer(_to, _amount) == true,

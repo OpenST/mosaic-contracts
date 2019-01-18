@@ -106,8 +106,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       stakeData.amount,
     );
 
-    await gateway.setStakeMessage(
-      stakeData.messageHash,
+    await gateway.setMessage(
       stakeData.intentHash,
       stakeData.nonce,
       stakeData.gasPrice,
