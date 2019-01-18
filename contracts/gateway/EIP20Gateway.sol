@@ -483,7 +483,7 @@ contract EIP20Gateway is GatewayBase {
     /**
      * @notice Revert stake process and get the stake
      *         amount back. Only staker can revert stake by providing
-     *         penalty i.e. 1.5 times of bounty. On revert process
+     *         penalty i.e. 1.5 times of bounty amount. On progress revert stake
      *         penalty and facilitator bounty will be burned.
      *
      * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
@@ -506,17 +506,14 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
-        // get the message object for the _messageHash
         MessageBus.Message storage message = messages[_messageHash];
 
-        require(message.sender == msg.sender, "Only staker can revert stake.");
-
         require(
-            message.intentHash != bytes32(0),
-            "StakeIntentHash must not be zero"
+            message.sender == msg.sender,
+            "Only staker can revert stake."
         );
 
         // Declare stake revocation.
@@ -530,14 +527,14 @@ contract EIP20Gateway is GatewayBase {
         amount_ = stakes[_messageHash].amount;
 
         // Penalty charged to staker for revert stake.
-        uint256 penalty = stakes[_messageHash].bounty
-            .mul(REVOCATION_PENALTY)
-            .div(100);
+        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
 
-        // transfer the penalty amount
-        require(baseToken.transferFrom(msg.sender, address(this), penalty));
+        // Transfer the penalty amount.
+        require(
+            baseToken.transferFrom(msg.sender, address(this), penalty),
+            "Staker must approve gateway for penalty amount."
+        );
 
-        // Emit RevertStakeIntentDeclared event.
         emit RevertStakeIntentDeclared(
             _messageHash,
             staker_,
@@ -616,9 +613,7 @@ contract EIP20Gateway is GatewayBase {
         // burn facilitator bounty
         baseToken.transfer(burner, bounty);
         //penalty charged to staker
-        uint256 penalty = stakes[_messageHash].bounty
-        .mul(REVOCATION_PENALTY)
-        .div(100);
+        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
 
         // burn staker penalty
         baseToken.transfer(burner, penalty);
@@ -767,7 +762,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
@@ -1125,26 +1120,31 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        /*
+         * Reward calculation depends upon
+         *  - the gas consumed in target chain for confirmation and progress steps.
+         *  - gas price and gas limit provided in the message.
+         */
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
-            _initialGas,
-            50000
+            _initialGas
+        );
+
+        require(
+            rewardAmount_ < redeemAmount_,
+            "Reward amount must be less than redeem amount."
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
-        // Release the amount to beneficiary
+        // Release the amount to beneficiary.
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
-        //reward facilitator with the reward amount
-        stakeVault.releaseTo(msg.sender, rewardAmount_);
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
+        if (rewardAmount_ > 0) {
+            // Reward facilitator with the reward amount.
+            stakeVault.releaseTo(msg.sender, rewardAmount_);
+        }
 
         emit UnstakeProgressed(
             _messageHash,
@@ -1152,10 +1152,13 @@ contract EIP20Gateway is GatewayBase {
             unStake.beneficiary,
             redeemAmount_,
             unstakeAmount_,
-            redeemAmount_,
+            rewardAmount_,
             _proofProgress,
             _unlockSecret
         );
+
+        // Delete the unstake data.
+        delete unstakes[_messageHash];
     }
 
     /**
@@ -1185,6 +1188,3 @@ contract EIP20Gateway is GatewayBase {
     }
 
 }
-
-
-

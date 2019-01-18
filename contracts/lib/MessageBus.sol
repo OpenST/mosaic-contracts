@@ -282,6 +282,7 @@ library MessageBus {
                 _messageStatus == MessageStatus.Progressed,
                 "Message on target must be Progressed."
             );
+
         } else {
             revert("Status of message on source must be Declared or DeclareRevocation.");
         }
