@@ -20,8 +20,8 @@ const dockerNodesSetup = () => {
         });
     }
 
-    const waitForOriginNode = waitPort({ port: 8545, output: 'silent' });
-    const waitForAuxiliaryNode = waitPort({ port: 8546, output: 'silent' });
+    const waitForOriginNode = waitPort({ port: 8546, output: 'silent' });
+    const waitForAuxiliaryNode = waitPort({ port: 8547, output: 'silent' });
     return Promise.all([waitForOriginNode, waitForAuxiliaryNode]).then(() => {
         // even after the ports are available the nodes need a bit of time to get online
         return asyncSleep(5000);

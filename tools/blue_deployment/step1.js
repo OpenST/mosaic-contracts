@@ -7,6 +7,7 @@ const { deployContracts } = require('./helpers');
 // root directory of npm project
 const rootDir = `${__dirname}/../../`;
 
+// TODO: document
 /** Returns the provided address as-is or or deploy a new EIP20Token and return its
  * address if the provided address is the special string "new".
  */
@@ -32,6 +33,7 @@ const tryDeployNewToken = async (rpcEndpoint, deployerAddress, eip20Address, dep
     return contracts.EIP20Token;
 };
 
+// TODO: document
 const checkEip20Address = async (rpcEndpoint, eip20Address) => {
     const web3 = new Web3(rpcEndpoint);
 
@@ -41,6 +43,7 @@ const checkEip20Address = async (rpcEndpoint, eip20Address) => {
     }
 };
 
+// TODO: document
 const getChainInfo = async (rpcEndpoint) => {
     const web3 = new Web3(rpcEndpoint);
 
@@ -54,6 +57,7 @@ const getChainInfo = async (rpcEndpoint) => {
     };
 };
 
+// TODO: document
 const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeight, remoteStateRoot) => {
     const MerklePatriciaProof = Contract.loadTruffleContract('MerklePatriciaProof', null, { rootDir });
     const GatewayLib = Contract.loadTruffleContract('GatewayLib', null, { rootDir });
@@ -64,8 +68,8 @@ const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeig
     const Organization = Contract.loadTruffleContract('Organization', [
         organizationOwner, // TODO
         organizationOwner, // TODO
-        [], // TODO
-        '100000000000', // TODO
+        [], // no organization workers for now
+        '100000000000', // there are no workers to kick out, so value doesn't matter much
     ], { rootDir });
     const Anchor = Contract.loadTruffleContract(
         'Anchor',
@@ -73,7 +77,7 @@ const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeig
             remoteChainId,
             remoteBlockHeight,
             remoteStateRoot,
-            10, // TODO: maxStateroots
+            '10', // TODO: maxStateroots
             Organization.reference(),
         ],
         { rootDir },
@@ -88,6 +92,7 @@ const createCommonContracts = (organizationOwner, remoteChainId, remoteBlockHeig
     };
 };
 
+// TODO: document
 // tokenAddress = Branded Token
 // baseTokenAddress = OST
 const deployAnchorAndGateway = async (
@@ -142,9 +147,11 @@ const deployAnchorAndGateway = async (
     ]);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return deployContracts(web3, web3,  deploymentObjects);
+    return deployContracts(web3, web3, deploymentObjects);
 };
 
+
+// TODO: document
 // deploy for Auxiliary
 const deployAnchorAndCoGateway = async (
     rpcEndpointAuxiliary,
