@@ -338,6 +338,74 @@ contract GatewayBase is Organized {
         emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
+    /**
+     * @notice Method to get the outbox message status for the given message
+     *         hash.
+     *
+     * @dev If message hash do not exists then it will return undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getOutboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.outbox[_messageHash];
+    }
+
+    /**
+     * @notice Method to get the inbox message status for the given message
+     *         hash.
+     *
+     * @dev If message hash do not exists then it will return undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getInboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.outbox[_messageHash];
+    }
+
+    /**
+     * @notice Method to get the active message hash and its status from inbox
+     *         for the given account address.
+     *
+     * @dev If message hash do not exists for the given account address then
+     *      it will return zero hash and undeclared status.
+     *
+     * @param _account Account address
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getInboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+
+    }
+
+    function getOutboxActiveProcess() {
+
+    }
 
     /* Internal Functions */
 
