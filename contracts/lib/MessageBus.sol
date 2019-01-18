@@ -258,21 +258,34 @@ library MessageBus {
         external
         returns (bytes32 messageHash_)
     {
-        // The inbox message status must be either `Declared` or `Progressed`.
-        require(
-            _messageStatus == MessageStatus.Declared ||
-            _messageStatus == MessageStatus.Progressed,
-            "Message on target must be Declared or Progressed."
-        );
-
         messageHash_ = messageDigest(_message);
 
-        // The message status must be `Declared` or DeclaredRevocation`.
-        require(
-            _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
-            _messageBox.outbox[messageHash_] == MessageStatus.DeclaredRevocation,
-            "Message on source must be Declared."
-        );
+        if(_messageBox.outbox[messageHash_] == MessageStatus.Declared) {
+
+            /*
+             * The inbox message status of target must be either `Declared` or
+             * `Progressed` when outbox message status at source is `Declared`.
+             */
+            require(
+                _messageStatus == MessageStatus.Declared ||
+                _messageStatus == MessageStatus.Progressed,
+                "Message on target must be Declared or Progressed."
+            );
+
+        } else if (_messageBox.outbox[messageHash_] == MessageStatus.DeclaredRevocation) {
+
+            /*
+             * The inbox message status of target must be either `Progressed`
+             * when outbox message status at source is `DeclaredRevocation`.
+             */
+            require(
+                _messageStatus == MessageStatus.Progressed,
+                "Message on target must be Progressed."
+            );
+
+        } else {
+            revert("Status of message on source must be Declared or DeclareRevocation.");
+        }
 
         bytes memory storagePath = bytes32ToBytes(
             storageVariablePathForStruct(
