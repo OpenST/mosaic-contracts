@@ -445,29 +445,22 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            "RLP encoded parent nodes must not be zero."
         );
 
         bytes32 storageRoot = storageRoots[_blockHeight];
 
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
-
-        (staker_, stakeAmount_) = progressStakeInternal(
-            _messageHash,
-            message,
-            bytes32(0),
-            true
-        );
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -477,6 +470,14 @@ contract EIP20Gateway is GatewayBase {
             storageRoot,
             MessageBus.MessageStatus(_messageStatus)
         );
+
+        (staker_, stakeAmount_) = progressStakeInternal(
+            _messageHash,
+            message,
+            bytes32(0),
+            true
+        );
+
     }
 
     /**
@@ -737,7 +738,6 @@ contract EIP20Gateway is GatewayBase {
      *                      facilitator while initiating the redeem
      *
      * @return redeemer_ Redeemer address
-     * @return beneficiary_ Address to which the tokens will be transferred.
      * @return redeemAmount_ Total amount for which the redeem was
      *                       initiated. The reward amount is deducted from the
      *                       total redeem amount and is given to the
@@ -762,7 +762,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
@@ -932,12 +932,12 @@ contract EIP20Gateway is GatewayBase {
             storageRoot
         );
 
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = unstakes[_messageHash].amount;
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
 
         // Emit RevertRedeemIntentConfirmed event
         emit RevertRedeemIntentConfirmed(
@@ -1134,26 +1134,31 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        //21000 * 2 for transactions + approx buffer
-
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        /*
+         * Reward calculation depends upon
+         *  - the gas consumed in target chain for confirmation and progress steps.
+         *  - gas price and gas limit provided in the message.
+         */
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
-            _initialGas,
-            50000
+            _initialGas
+        );
+
+        require(
+            rewardAmount_ < redeemAmount_,
+            "Reward amount must be less than redeem amount."
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
-        // Release the amount to beneficiary
+        // Release the amount to beneficiary.
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
-        //reward facilitator with the reward amount
-        stakeVault.releaseTo(msg.sender, rewardAmount_);
-
-        // delete the unstake data
-        delete unstakes[_messageHash];
+        if (rewardAmount_ > 0) {
+            // Reward facilitator with the reward amount.
+            stakeVault.releaseTo(msg.sender, rewardAmount_);
+        }
 
         emit UnstakeProgressed(
             _messageHash,
@@ -1161,10 +1166,13 @@ contract EIP20Gateway is GatewayBase {
             unStake.beneficiary,
             redeemAmount_,
             unstakeAmount_,
-            redeemAmount_,
+            rewardAmount_,
             _proofProgress,
             _unlockSecret
         );
+
+        // Delete the unstake data.
+        delete unstakes[_messageHash];
     }
 
     /**
@@ -1194,6 +1202,3 @@ contract EIP20Gateway is GatewayBase {
     }
 
 }
-
-
-

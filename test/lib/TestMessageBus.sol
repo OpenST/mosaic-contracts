@@ -264,40 +264,7 @@ contract TestMessageBus is KeyValueStoreStub{
         );
 
     }
-
-    /**
-     * @notice it tests progress outbox with proof method of messageBus
-     *         if outbox status is declared revocation and inbox status is
-     *         declared.
-     */
-    function testProgressOutboxWithProofODRID()
-        public
-    {
-        bytes32 messageHash = getBytes32("MESSAGE_BUS_DIGEST");
-        messageBox.outbox[messageHash] = MockMessageBus.MessageStatus.DeclaredRevocation;
-        bytes32 messageHashFromOutboxWithProof = MockMessageBus.progressOutboxWithProof(
-            messageBox,
-            message,
-            getBytes("RLP_PARENT_NODES"),
-            uint8(getUint256("MESSAGEBOX_OFFSET")),
-            getBytes32("STORAGE_ROOT"),
-            MockMessageBus.MessageStatus.Declared
-        );
-
-        Assert.equal(
-            uint256(messageBox.outbox[messageHashFromOutboxWithProof]),
-            uint256(MockMessageBus.MessageStatus.Progressed),
-            "Status not changed to Progressed."
-        );
-
-        Assert.equal(
-            messageHash,
-            messageHashFromOutboxWithProof,
-            "Message hash not equal"
-        );
-
-    }
-
+    
     /**
      * @notice it tests progress outbox with proof method of messageBus
      *         if outbox status is declared and inbox status is progressed.
