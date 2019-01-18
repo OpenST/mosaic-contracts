@@ -345,7 +345,7 @@ contract GatewayBase is Organized {
      * @dev If message hash do not exists for the given account address then
      *      it will return zero hash and undeclared status.
      *
-     * @param _account Account address
+     * @param _account Account address.
      *
      * @return messageHash_ Message hash.
      * @return status_ Message status.
@@ -371,7 +371,7 @@ contract GatewayBase is Organized {
      * @dev If message hash do not exists for the given account address then
      *      it will return zero hash and undeclared status.
      *
-     * @param _account Account address
+     * @param _account Account address.
      *
      * @return messageHash_ Message hash.
      * @return status_ Message status.
@@ -396,13 +396,13 @@ contract GatewayBase is Organized {
      * @notice Calculate the fee amount which is rewarded to facilitator for
      *         performing message transfers.
      *
-     * @param _gasConsumed gas consumption during message confirmation.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated
-     * @param _initialGas initial gas at the start of the process
+     * @param _gasConsumed Gas consumption during message confirmation.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
+     * @param _initialGas Initial gas at the start of the process.
      *
-     * @return fee amount
-     * @return totalGasConsumed_ total gas consumed during message transfer
+     * @return fee_ Fee amount.
+     * @return totalGasConsumed_ Total gas consumed during message transfer.
      */
     function feeAmount(
         uint256 _gasConsumed,
