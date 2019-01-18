@@ -375,11 +375,11 @@ contract GatewayBase is Organized {
         view
         returns (MessageBus.MessageStatus status_)
     {
-        status_ = messageBox.outbox[_messageHash];
+        status_ = messageBox.inbox[_messageHash];
     }
 
     /**
-     * @notice Method to get the active message hash and its status from inbox
+     * @notice Method to get the active message hash and its status from outbox
      *         for the given account address.
      *
      * @dev If message hash do not exists for the given account address then
@@ -400,11 +400,34 @@ contract GatewayBase is Organized {
             MessageBus.MessageStatus status_
         )
     {
-
+        messageHash_ = inboxActiveProcess[_account];
+        status_ = messageBox.inbox[messageHash_];
     }
 
-    function getOutboxActiveProcess() {
-
+    /**
+     * @notice Method to get the active message hash and its status from outbox
+     *         for the given account address.
+     *
+     * @dev If message hash do not exists for the given account address then
+     *      it will return zero hash and undeclared status.
+     *
+     * @param _account Account address
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getOutboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+        messageHash_ = outboxActiveProcess[_account];
+        status_ = messageBox.outbox[messageHash_];
     }
 
     /* Internal Functions */
