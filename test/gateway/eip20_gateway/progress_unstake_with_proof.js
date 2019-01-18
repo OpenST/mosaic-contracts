@@ -32,6 +32,7 @@ const StubDataRedeemReward = require('../../data/redeem_progressed_reward_based_
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
+const MessageStatusEnum = messageBus.MessageStatusEnum;
 
 async function setStateRoot(gateway) {
   let blockHeight = new BN(StubData.co_gateway.redeem.proof_data.block_number, 16);
@@ -44,7 +45,6 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
 
   let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage, stakeVaultAddress;
   let bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
-  let MessageStatusEnum = messageBus.MessageStatusEnum;
   let redeemRequest = StubData.co_gateway.redeem.params;
 
   beforeEach(async function () {
@@ -191,7 +191,9 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     assert.strictEqual(
       eventData._rewardAmount.add(eventData._unstakeAmount).eq(unstakeRequest.amount),
       true,
-      `Total unstake amount should be equal to sum of reward amount plus unstaked amount to beneficiary`,
+      `Total unstake amount ${unstakeRequest.amount.toString(10)} should be equal to 
+      sum of reward amount ${eventData._rewardAmount.toString(10)} plus unstaked amount
+       to beneficiary ${eventData._unstakeAmount.toString(10)}`,
     );
     assert.strictEqual(
       eventData._proofProgress,
