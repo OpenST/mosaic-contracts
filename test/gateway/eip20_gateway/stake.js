@@ -168,7 +168,11 @@ contract('EIP20Gateway.stake() ', function (accounts) {
     await stake(utils.ResultType.FAIL);
   });
 
-  it('should fail to max reward amount is greater than the stake amount', async function () {
+  it('should fail when max reward amount is greater than the stake amount', async function () {
+    /*
+     * Max reward amount will be `gasPrice * gasLimit`.
+     * i.e. in this case its 180000000, which is higher than the stake amount.
+     */
     stakeAmount = new BN(200);
     await prepareData();
     errorMessage = "Maximum possible reward must be less than then the stake amount.";

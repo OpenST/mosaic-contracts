@@ -39,7 +39,7 @@ let eip20CoGateway,
 
 let MessageStatusEnum = messageBus.MessageStatusEnum;
 
-contract('EIP20CoGateway.redeem() ', function (accounts) {
+contract('EIP20CoGateway.redeem()', function (accounts) {
 
   let amount,
     beneficiary = accounts[4],
@@ -135,7 +135,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     );
   });
 
-  it('should fail to max reward amount is greater than the redeem amount', async function () {
+  it('should fail when max reward amount is greater than the redeem amount', async function () {
 
     amount = new BN(100);
     gasPrice = new BN(1);
@@ -213,6 +213,11 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
 
   it('should fail when cogateway is not approved with redeem amount', async function () {
 
+    /*
+     * CoGateway is approved to spend the redeem amount in beforeEach, so by
+     * adding 1 to the approved(redeem) amount, the transfer will fail for this
+     * test case.
+     */
     let redeemAmount = amount.addn(1);
 
     await Utils.expectRevert(
@@ -249,7 +254,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
 
   it('should fail when the redeemer\'s BT balance is less than the redeem amount', async function () {
 
-    let redeemAmount = amount.muln(2);
+    let redeemAmount = redeemerBalance.addn(1);
 
     await utilityToken.approve(
       eip20CoGateway.address,
@@ -504,11 +509,11 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     );
 
     let expectedBalance = redeemerBalance.sub(amount);
-
+    let redeemerTokenBalance = await utilityToken.balanceOf(redeemer);
     assert.strictEqual(
-      (await utilityToken.balanceOf(redeemer)).eq(expectedBalance),
+      redeemerTokenBalance.eq(expectedBalance),
       true,
-      `Redeemer EIP20 token balance ${await utilityToken} should be equal to ${expectedBalance}`,
+      `Redeemer's EIP20 token balance ${redeemerTokenBalance} should be equal to ${expectedBalance}`,
     );
 
     let expectedEvent = {
