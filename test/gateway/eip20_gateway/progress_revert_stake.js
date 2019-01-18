@@ -56,8 +56,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
       revertStakeParams.amount,
     );
 
-    await gateway.setStakeMessage(
-      revertStakeParams.messageHash,
+    await gateway.setMessage(
       revertStakeParams.intentHash,
       revertStakeParams.nonce,
       revertStakeParams.gasPrice,
