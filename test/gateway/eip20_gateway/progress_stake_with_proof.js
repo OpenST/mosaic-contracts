@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@
 const Gateway = artifacts.require("./TestEIP20Gateway.sol");
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
-const GatewayLib = artifacts.require("GatewayLib");
 
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
+const GatewayUtils = require('./helpers/gateway_utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
@@ -50,6 +50,62 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     await gateway.setStorageRoot(blockNumber, storageRoot);
 
   };
+
+  let prepareTestData = async function(stubData) {
+
+    let stakeParams = stubData.gateway.stake.params;
+
+    stakeData = {
+      amount: new BN(stakeParams.amount, 16),
+      beneficiary: stakeParams.beneficiary,
+      gasPrice: new BN(stakeParams.gasPrice, 16),
+      gasLimit: new BN(stakeParams.gasLimit, 16),
+      nonce: new BN(stakeParams.nonce, 16),
+      hashLock: stakeParams.hashLock,
+      messageHash: stubData.gateway.stake.return_value.returned_value.messageHash_,
+      staker: stakeParams.staker,
+    };
+
+    let gatewayUtils = new GatewayUtils();
+
+    stakeData.intentHash =  gatewayUtils.hashStakeIntent(
+      stakeData.amount,
+      stakeData.beneficiary,
+      stubData.contracts.gateway,
+    );
+
+    await gateway.setStake(
+      stakeData.messageHash,
+      stakeData.beneficiary,
+      stakeData.amount,
+    );
+
+    await gateway.setMessage(
+      stakeData.intentHash,
+      stakeData.nonce,
+      stakeData.gasPrice,
+      stakeData.gasLimit,
+      stakeData.staker,
+      stakeData.hashLock
+    );
+
+    await gateway.setOutboxStatus(
+      stakeData.messageHash,
+      MessageStatusEnum.Declared
+    );
+
+    progressStakeParams = {
+      messageHash: stakeData.messageHash,
+      rlpParentNodes: stubData.co_gateway.confirm_stake_intent.proof_data.storageProof[0].serializedProof,
+      blockHeight: new BN(stubData.co_gateway.confirm_stake_intent.proof_data.block_number),
+      messageStatus: MessageStatusEnum.Declared,
+    };
+
+    await mockToken.transfer(gateway.address, stakeData.amount, { from: accounts[0] });
+    await baseToken.transfer(gateway.address, bountyAmount, { from: accounts[0] });
+
+  };
+
 
   beforeEach(async function () {
     mockToken = await MockToken.new({ from: accounts[0] });
@@ -77,58 +133,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       burner,
     );
 
-    let gatewayLib = await GatewayLib.deployed();
-
-    let stakeParams = proofData.gateway.stake.params;
-
-    stakeData = {
-      amount: new BN(stakeParams.amount, 16),
-      beneficiary: stakeParams.beneficiary,
-      gasPrice: new BN(stakeParams.gasPrice, 16),
-      gasLimit: new BN(stakeParams.gasLimit, 16),
-      nonce: new BN(stakeParams.nonce, 16),
-      hashLock: stakeParams.hashLock,
-      messageHash: proofData.gateway.stake.return_value.returned_value.messageHash_,
-      staker: stakeParams.staker,
-    };
-
-    let stakeIntentHash = await gatewayLib.hashStakeIntent(
-      stakeData.amount,
-      stakeData.beneficiary,
-      proofData.contracts.gateway,
-    );
-
-    stakeData.intentHash = stakeIntentHash;
-
-    await gateway.setStake(
-      stakeData.messageHash,
-      stakeData.beneficiary,
-      stakeData.amount,
-    );
-
-    await gateway.setMessage(
-      stakeData.intentHash,
-      stakeData.nonce,
-      stakeData.gasPrice,
-      stakeData.gasLimit,
-      stakeData.staker,
-      stakeData.hashLock
-    );
-
-    await gateway.setOutboxStatus(
-      stakeData.messageHash,
-      MessageStatusEnum.Declared
-    );
-
-    progressStakeParams = {
-      messageHash: stakeData.messageHash,
-      rlpParentNodes: proofData.co_gateway.confirm_stake_intent.proof_data.storageProof[0].serializedProof,
-      blockHeight: new BN(proofData.co_gateway.confirm_stake_intent.proof_data.block_number),
-      messageStatus: MessageStatusEnum.Declared,
-    };
-
-    await mockToken.transfer(gateway.address, stakeData.amount, { from: accounts[0] });
-    await baseToken.transfer(gateway.address, bountyAmount, { from: accounts[0] });
+    await prepareTestData(proofData);
 
   });
 
@@ -166,10 +171,16 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
     await setStorageRoot();
 
+    /*
+     * Stake proof data is passed instead of confirm stake intent proof data.
+     * This makes the proof data incorrect.
+     */
+    let storageProof = proofData.gateway.stake.proof_data.storageProof[0].serializedProof;
+
     await Utils.expectRevert(
       gateway.progressStakeWithProof(
         progressStakeParams.messageHash,
-        proofData.gateway.stake.proof_data.storageProof[0].serializedProof,
+        storageProof,
         progressStakeParams.blockHeight,
         progressStakeParams.messageStatus,
       ),
@@ -196,6 +207,8 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   it('should fail when storage root is not committed for given block height',
     async function () {
+
+      // Here setStorageRoot() is not called, so the storage root will not be available.
 
       await Utils.expectRevert(
         gateway.progressStakeWithProof(
@@ -351,6 +364,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         stakeData.staker,
         `Staker address must be equal to ${stakeData.staker}.`,
       );
+
       assert.strictEqual(
         result.stakeAmount_.eq(stakeData.amount),
         true,
@@ -403,10 +417,10 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         MessageStatusEnum.Progressed,
       );
 
-      assert.equal(
+      assert.strictEqual(
         tx.receipt.status,
-        1,
-        "Receipt status is unsuccessful",
+        true,
+        "Receipt status is unsuccessful.",
       );
 
     });
@@ -426,28 +440,28 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     let eventData = event.StakeProgressed;
 
     assert.isDefined(
-      event.StakeProgressed,
+      eventData,
       'Event `StakeProgressed` must be emitted.',
     );
     assert.strictEqual(
       eventData._messageHash,
       progressStakeParams.messageHash,
-      `Message hash from the event must be equalt to ${progressStakeParams.messageHash}.`,
+      `Message hash ${eventData._messageHash} from the event must be equalt to ${progressStakeParams.messageHash}.`,
     );
     assert.strictEqual(
       eventData._staker,
       stakeData.staker,
-      `Staker address from the event must be equal to ${stakeData.staker}.`,
+      `Staker address ${eventData._staker} from the event must be equal to ${stakeData.staker}.`,
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeData.nonce),
       true,
-      `Staker nonce from the event must be equal to ${stakeData.nonce}.`,
+      `Staker nonce ${eventData._stakerNonce.toString(10)} from the event must be equal to ${stakeData.nonce.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._amount.eq(stakeData.amount),
       true,
-      `Stake amount from event must be equal to ${stakeData.amount}.`,
+      `Stake amount ${eventData._amount.toString(10)} from event must be equal to ${stakeData.amount.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._proofProgress,
@@ -462,16 +476,12 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   });
 
+  it('should return bounty to facilitator', async function () {
 
-  it('should have correct balances', async function () {
-
-    let stakeVault = await gateway.stakeVault.call();
     let caller = accounts[0];
 
     let callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
-    let gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
     let gatewayInitialBaseTokenBalance = await baseToken.balanceOf(gateway.address);
-    let stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
 
     await setStorageRoot();
 
@@ -483,35 +493,51 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     );
 
     let callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
-    let gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
     let gatewayFinalBaseTokenBalance = await baseToken.balanceOf(gateway.address);
-    let stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
 
     assert.strictEqual(
       callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
       true,
-      "Bounty should be returned to caller.",
-    );
-
-    assert.strictEqual(
-      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
-      true,
-      "Gateway token balance should reduced by stake amount on successful " +
-      "progress stake.",
+      `Facilitator balance ${callerFinalBaseTokenBalance.toString(10)} should be equal to ${callerInitialBaseTokenBalance.add(bountyAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
       gatewayFinalBaseTokenBalance.eq(gatewayInitialBaseTokenBalance.sub(bountyAmount)),
       true,
-      "Gateway base balance should reduced by bounty amount on successful " +
-      "progress stake.",
+      `Gateway base balance ${gatewayFinalBaseTokenBalance.toString(10)} should be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).toString(10)}.`,
+    );
+
+  });
+
+  it('Should lock staked token into stakeVault', async function () {
+
+    let stakeVault = await gateway.stakeVault.call();
+
+    let gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
+    let stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    await setStorageRoot();
+
+    await gateway.progressStakeWithProof(
+      progressStakeParams.messageHash,
+      progressStakeParams.rlpParentNodes,
+      progressStakeParams.blockHeight,
+      MessageStatusEnum.Declared,
+    );
+
+    let gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
+    let stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    assert.strictEqual(
+      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
+      true,
+      `Gateway token balance ${gatewayFinalTokenBalance.toString(10)} should be equal to ${gatewayInitialTokenBalance.sub(stakeData.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
       stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeData.amount)),
       true,
-      "Stake vault token balance should increase by stake amount on " +
-      "successful progress stake.",
+      `Stake vault token balance ${stakeVaultFinalTokenBalance.toString(10)} should be equal to ${stakeVaultInitialTokenBalance.add(stakeData.amount).toString(10)}.`,
     );
 
   });
