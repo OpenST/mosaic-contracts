@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -347,18 +347,18 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -405,29 +405,26 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-        // Get the initial gas value.
-        uint256 initialGas = gasleft();
-
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "Stake intent hash must not be zero"
+            "Stake intent hash must not be zero."
         );
 
         // Get the storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Confirm revocation.
@@ -445,17 +442,14 @@ contract EIP20CoGateway is GatewayBase {
         stakerNonce_ = message.nonce;
         amount_ = mint.amount;
 
-        // Delete the mint data.
-        delete mints[_messageHash];
-
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
             mint.amount
         );
-        // Update the gas consumed for this function.
-        message.gasConsumed = initialGas.sub(gasleft());
+
+        delete mints[_messageHash];
     }
 
     /**
@@ -1040,7 +1034,7 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
