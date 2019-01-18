@@ -339,46 +339,6 @@ contract GatewayBase is Organized {
     }
 
     /**
-     * @notice Method to get the outbox message status for the given message
-     *         hash.
-     *
-     * @dev If message hash do not exists then it will return undeclared status.
-     *
-     * @param _messageHash Message hash to get the status.
-     *
-     * @return status_ Message status.
-     */
-    function getOutboxMessageStatus(
-        bytes32 _messageHash
-    )
-        external
-        view
-        returns (MessageBus.MessageStatus status_)
-    {
-        status_ = messageBox.outbox[_messageHash];
-    }
-
-    /**
-     * @notice Method to get the inbox message status for the given message
-     *         hash.
-     *
-     * @dev If message hash do not exists then it will return undeclared status.
-     *
-     * @param _messageHash Message hash to get the status.
-     *
-     * @return status_ Message status.
-     */
-    function getInboxMessageStatus(
-        bytes32 _messageHash
-    )
-        external
-        view
-        returns (MessageBus.MessageStatus status_)
-    {
-        status_ = messageBox.inbox[_messageHash];
-    }
-
-    /**
      * @notice Method to get the active message hash and its status from outbox
      *         for the given account address.
      *
