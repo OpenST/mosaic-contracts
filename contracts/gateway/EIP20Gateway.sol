@@ -807,11 +807,11 @@ contract EIP20Gateway is GatewayBase {
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
-        bytes memory _rlpParentNodes,
+        bytes calldata _rlpParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-        public
+        external
         returns (
             uint256 redeemAmount_,
             uint256 unstakeAmount_,

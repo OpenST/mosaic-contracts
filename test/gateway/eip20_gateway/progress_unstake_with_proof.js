@@ -42,8 +42,7 @@ async function setStateRoot(gateway) {
 
 contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
 
-  let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage,
-    stakeVaultAddress;
+  let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage, stakeVaultAddress;
   let bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
   let MessageStatusEnum = messageBus.MessageStatusEnum;
   let redeemRequest = StubData.co_gateway.redeem.params;
@@ -105,7 +104,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     assert.strictEqual(
       tx.receipt.status,
       true,
-      'Transaction should success.',
+      'Transaction should succeed.',
     );
 
   });
@@ -245,7 +244,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
   });
 
   it('should reward token to the facilitator address with maximum' +
-    ' possible reward', async function () {
+    ' possible reward i.e. gasPrice * gasLimit', async function () {
 
     let facilitatorAddress = accounts[1];
 
@@ -412,7 +411,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     );
   });
 
-  it('should fail for revoked redeem(unstake) message', async function () {
+  it('should fail for revoked redeem (unstake) message', async function () {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Revoked);
     let blockHeight = await setStateRoot(gateway);
