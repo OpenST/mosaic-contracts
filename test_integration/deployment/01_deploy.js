@@ -14,8 +14,8 @@ const {
 const { assert } = chai;
 
 describe('Deployer', () => {
-    const rpcEndpointOrigin = 'http://localhost:8545';
-    const rpcEndpointAuxiliary = 'http://localhost:8546';
+    const rpcEndpointOrigin = 'http://localhost:8546';
+    const rpcEndpointAuxiliary = 'http://localhost:8547';
 
     let web3Origin;
     let accountsOrigin;
@@ -57,8 +57,8 @@ describe('Deployer', () => {
         const deployerAddressOrigin = accountsOrigin[0];
         const deployerAddressAuxiliary = accountsAuxiliary[0];
 
-        const bountyOrigin = '100'; // TODO
-        const bountyAuxiliary = '100'; // TODO
+        const bountyOrigin = '100';
+        const bountyAuxiliary = '100';
 
         const originInfo = await getChainInfo(rpcEndpointOrigin);
         const auxiliaryInfo = await getChainInfo(rpcEndpointAuxiliary);
