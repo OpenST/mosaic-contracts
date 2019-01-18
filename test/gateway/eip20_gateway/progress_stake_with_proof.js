@@ -476,7 +476,6 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   });
 
-
   it('should return bounty to facilitator', async function () {
 
     let caller = accounts[0];
@@ -499,14 +498,13 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     assert.strictEqual(
       callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
       true,
-      "Bounty should be returned to caller.",
+      `Facilitator balance ${callerFinalBaseTokenBalance.toString(10)} should be equal to ${callerInitialBaseTokenBalance.add(bountyAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
       gatewayFinalBaseTokenBalance.eq(gatewayInitialBaseTokenBalance.sub(bountyAmount)),
       true,
-      "Gateway base balance should reduced by bounty amount on successful " +
-      "progress stake.",
+      `Gateway base balance ${gatewayFinalBaseTokenBalance.toString(10)} should be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).toString(10)}.`,
     );
 
   });
@@ -533,15 +531,13 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
       true,
-      "Gateway token balance should reduced by stake amount on successful " +
-      "progress stake.",
+      `Gateway token balance ${gatewayFinalTokenBalance.toString(10)} should be equal to ${gatewayInitialTokenBalance.sub(stakeData.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
       stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeData.amount)),
       true,
-      "Stake vault token balance should increase by stake amount on " +
-      "successful progress stake.",
+      `Stake vault token balance ${stakeVaultFinalTokenBalance.toString(10)} should be equal to ${stakeVaultInitialTokenBalance.add(stakeData.amount).toString(10)}.`,
     );
 
   });
