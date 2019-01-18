@@ -21,8 +21,9 @@
 const Gateway = artifacts.require("TestEIP20Gateway");
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
+const PENALTY = 1.5;
 
-contract('EIP20Gateway.penalty() ', function (accounts) {
+contract('EIP20Gateway.penalty()', function (accounts) {
 
   let gateway, messageHash;
 
@@ -46,7 +47,7 @@ contract('EIP20Gateway.penalty() ', function (accounts) {
 
   };
 
-  it('should return zero penalty when bounty amount it zero', async function () {
+  it('should return zero penalty when bounty amount is zero', async function () {
 
     let bounty = new BN(0);
 
@@ -62,7 +63,7 @@ contract('EIP20Gateway.penalty() ', function (accounts) {
 
   });
 
-  it('penalty should be 1.5 times bounty amount', async function () {
+  it(`penalty should be ${PENALTY} times bounty amount`, async function () {
 
     let bounty = new BN(100);
 
@@ -71,9 +72,9 @@ contract('EIP20Gateway.penalty() ', function (accounts) {
     let penalty = await gateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(bounty.muln(1.5)),
+      penalty.eq(bounty.muln(PENALTY)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(1.5).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
     );
 
   });
@@ -108,9 +109,9 @@ contract('EIP20Gateway.penalty() ', function (accounts) {
     let penalty = await gateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(bounty.muln(1.5)),
+      penalty.eq(bounty.muln(PENALTY)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(1.5).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
     );
 
     // Set the new message hash after the bounty change.
@@ -125,9 +126,9 @@ contract('EIP20Gateway.penalty() ', function (accounts) {
     penalty = await gateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(changedBounty.muln(1.5)),
+      penalty.eq(changedBounty.muln(PENALTY)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(1.5).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
     );
 
   });
