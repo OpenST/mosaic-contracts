@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-
 
 const EIP20CoGateway = artifacts.require("TestEIP20CoGateway");
 const MockUtilityToken = artifacts.require("MockUtilityToken");
@@ -68,11 +67,11 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     };
 
     utilityToken = await MockUtilityToken.new(
-      accounts[9],
-      "",
-      "",
-      18,
-      accounts[2],
+      accounts[9], // Token address.
+      "DMY", // Symbol.
+      "Dummy token", // Token name.
+      18, // Token decimal.
+      accounts[2], // Organisation address.
     );
 
     bountyAmount = new BN(proofData.co_gateway.constructor.bounty);
@@ -322,7 +321,6 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-
   it('should pass when message inbox status at target is progressed and outbox ' +
     'status at source is declared', async function () {
 
@@ -446,13 +444,13 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       eventData._redeemerNonce.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce ${eventData._redeemerNonce} from event is not equal to expected redeemer nonce ${redeemParams.nonce}`,
+      `Redeemer nonce ${eventData._redeemerNonce.toString(10)} from event is not equal to expected redeemer nonce ${redeemParams.nonce.toString(10)}`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(redeemParams.amount),
       true,
-      `Redeem amount ${eventData._amount} from event is not equal to expected amount ${redeemParams.amount}`,
+      `Redeem amount ${eventData._amount.toString(10)} from event is not equal to expected amount ${redeemParams.amount.toString(10)}`,
     );
 
     assert.strictEqual(
