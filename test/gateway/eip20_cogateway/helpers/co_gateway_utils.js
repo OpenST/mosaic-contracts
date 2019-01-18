@@ -127,6 +127,45 @@ CoGatewayUtils.prototype = {
     return redeemIntent;
   },
 
+  /**
+   * Generate the stake intent hash
+   *
+   * @param {object} amount Staking amount.
+   * @param {string} beneficiary Beneficiary address.
+   * @param {string} gateway The address of the gateway where the staking was
+   *                         initiated.
+   *
+   * @return {string} stake intent hash.
+   */
+  hashStakeIntent: (
+    amount,
+    beneficiary,
+    gateway,
+  ) => {
+    let stakeIntentTypeHash = utils.getTypeHash(
+      'StakeIntent(uint256 amount,address beneficiary,address gateway)'
+    );
+
+    let stakeIntent = web3.utils.sha3(
+      web3.eth.abi.encodeParameters(
+        [
+          'bytes32',
+          'uint256',
+          'address',
+          'address',
+        ],
+        [
+          stakeIntentTypeHash,
+          amount.toNumber(),
+          beneficiary,
+          gateway,
+        ],
+      )
+    );
+
+    return stakeIntent;
+  },
+
 };
 
 module.exports = new CoGatewayUtils();

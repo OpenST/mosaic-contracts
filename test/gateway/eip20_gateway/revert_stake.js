@@ -84,8 +84,7 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
       stakeRequest.beneficiary,
       stakeRequest.stakeAmount,
     );
-    await gateway.setStakeMessage(
-      stakeMessage.messageHash,
+    await gateway.setMessage(
       stakeMessage.intentHash,
       stakeMessage.stakerNonce,
       stakeMessage.gasPrice,
