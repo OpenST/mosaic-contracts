@@ -312,6 +312,11 @@ contract EIP20Gateway is GatewayBase {
             "Beneficiary address must not be zero."
         );
 
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after minting of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
         require(
             _amount > _gasPrice.mul(_gasLimit),
             "Maximum possible reward must be less than then the stake amount."
