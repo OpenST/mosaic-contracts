@@ -45,49 +45,6 @@ library GatewayLib {
     /* External Functions */
 
     /**
-     * @notice Calculate the fee amount which is rewarded to facilitator for
-     *         performing message transfers.
-     *
-     * @param _gasConsumed gas consumption during message confirmation.
-     * @param _gasLimit maximum amount of gas can be used for reward.
-     * @param _gasPrice price at which reward is calculated
-     * @param _initialGas initial gas at the start of the process
-     * @param _estimatedAdditionalGasUsage Estimated gas that will be used
-     *
-     * @return fee amount
-     * @return totalGasConsumed_ total gas consumed during message transfer
-     */
-    function feeAmount(
-        uint256 _gasConsumed,
-        uint256 _gasLimit,
-        uint256 _gasPrice,
-        uint256 _initialGas,
-        uint256 _estimatedAdditionalGasUsage
-    )
-        external
-        view
-        returns (
-            uint256 fee_,
-            uint256 totalGasConsumed_
-        )
-    {
-        totalGasConsumed_ = _initialGas.sub(
-            gasleft()
-
-        ).add(
-            _estimatedAdditionalGasUsage
-        ).add(
-            _gasConsumed
-        );
-
-        if (totalGasConsumed_ < _gasLimit) {
-            fee_ = totalGasConsumed_.mul(_gasPrice);
-        } else {
-            fee_ = _gasLimit.mul(_gasPrice);
-        }
-    }
-
-    /**
      * @notice Get the storage path of the variable
      *
      * @param _index Index of variable

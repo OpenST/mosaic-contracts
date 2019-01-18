@@ -122,7 +122,7 @@ contract('SimpleStake.releaseTo()', function (accounts) {
 
         await Utils.expectRevert(
             simpleStake.releaseTo(beneficiary, releasedAmount, {from: gateway}),
-            'Amount must not be zero.'
+            'Release amount must not be zero.'
         );
     });
 

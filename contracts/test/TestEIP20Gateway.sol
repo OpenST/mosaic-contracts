@@ -68,40 +68,51 @@ contract TestEIP20Gateway is EIP20Gateway {
     /* Public Functions */
 
     /**
-     * @notice It is used to set the stake message.
+     * @notice It is used to set a message.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash Message hash.
      * @param _intentHash Intent hash.
-     * @param _stakerNonce Nonce of the staker address.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done.
-     * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _staker Staker address.
+     * @param _nonce Nonce of the message sender address.
+     * @param _gasPrice Gas price that message sender is ready to pay to
+     *                  transfer message.
+     * @param _gasLimit Gas limit that message sender is ready to pay.
+     * @param _sender Message sender address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for every request.
      */
-    function setStakeMessage(
-        bytes32 _messageHash,
+    function setMessage(
         bytes32 _intentHash,
-        uint256 _stakerNonce,
+        uint256 _nonce,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        address _staker,
+        address _sender,
         bytes32 _hashLock
     )
         public
+        returns (bytes32 messageHash_)
     {
-        messages[_messageHash] = getMessage(
+        MessageBus.Message memory message = getMessage(
             _intentHash,
-            _stakerNonce,
+            _nonce,
             _gasPrice,
             _gasLimit,
-            _staker,
+            _sender,
             _hashLock
         );
+
+        messageHash_ = MessageBus.messageDigest(
+            message.intentHash,
+            message.nonce,
+            message.gasPrice,
+            message.gasLimit,
+            message.sender,
+            message.hashLock
+        );
+
+        messages[messageHash_] = message;
+
     }
 
     /**
@@ -110,7 +121,7 @@ contract TestEIP20Gateway is EIP20Gateway {
      * @dev This is used for testing purpose.
      *
      * @param _messageHash Hash for which mints mapping is updated.
-     * @param _beneficiary Beneficiary  Address to which the utility tokens
+     * @param _beneficiary Beneficiary address to which the utility tokens
      *                     will be transferred after minting.
      * @param _amount Total stake amount for which the stake is initiated.
      */
@@ -125,6 +136,29 @@ contract TestEIP20Gateway is EIP20Gateway {
             amount : _amount,
             beneficiary : _beneficiary,
             bounty : bounty
+        });
+    }
+
+    /**
+     * @notice It sets the unstakes mapping with respect to the messageHash.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash Hash for which unstakes mapping is updated.
+     * @param _beneficiary Beneficiary address to which the staked tokens
+     *                     will be transferred.
+     * @param _amount Total redeem amount.
+     */
+    function setUnstake(
+        bytes32 _messageHash,
+        address _beneficiary,
+        uint256 _amount
+    )
+        public
+    {
+        unstakes[_messageHash] = Unstake({
+            amount : _amount,
+            beneficiary : _beneficiary
         });
     }
 
@@ -161,4 +195,22 @@ contract TestEIP20Gateway is EIP20Gateway {
     {
         storageRoots[_blockHeight] = _storageRoot;
     }
+
+    /**
+     * @notice It sets the status of inbox.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _messageHash MessageHash for which status is the be set.
+     * @param _status Status of the message to be set.
+     */
+    function setInboxStatus(
+        bytes32 _messageHash,
+        MessageBus.MessageStatus _status
+    )
+        public
+    {
+        messageBox.inbox[_messageHash] = _status;
+    }
+
 }
