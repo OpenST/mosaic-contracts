@@ -113,8 +113,6 @@ contract TestEIP20Gateway is EIP20Gateway {
 
         messages[messageHash_] = message;
 
-        return messageHash_;
-
     }
 
     /**

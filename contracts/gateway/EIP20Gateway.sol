@@ -918,12 +918,12 @@ contract EIP20Gateway is GatewayBase {
             storageRoot
         );
 
-        // delete the unstake data
-        delete unstakes[_messageHash];
-
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = unstakes[_messageHash].amount;
+
+        // delete the unstake data
+        delete unstakes[_messageHash];
 
         // Emit RevertRedeemIntentConfirmed event
         emit RevertRedeemIntentConfirmed(
@@ -1120,7 +1120,12 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        /*
+         * Reward calculation depends upon
+         *  - the gas consumed in target chain for confirmation and progress steps.
+         *  - gas price and gas limit provided in the message.
+         */
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
@@ -1133,11 +1138,11 @@ contract EIP20Gateway is GatewayBase {
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
-        // Release the amount to beneficiary
+        // Release the amount to beneficiary.
         stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
 
         if (rewardAmount_ > 0) {
-            //reward facilitator with the reward amount
+            // Reward facilitator with the reward amount.
             stakeVault.releaseTo(msg.sender, rewardAmount_);
         }
 
@@ -1152,7 +1157,7 @@ contract EIP20Gateway is GatewayBase {
             _unlockSecret
         );
 
-        // delete the unstake data
+        // Delete the unstake data.
         delete unstakes[_messageHash];
     }
 
@@ -1183,6 +1188,3 @@ contract EIP20Gateway is GatewayBase {
     }
 
 }
-
-
-
