@@ -39,7 +39,7 @@ contract TestGatewayBase is GatewayBase {
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                stake process.
+     *                message transfers.
      * @param _organization Address of a contract that manages workers.
      */
     constructor(
