@@ -936,6 +936,24 @@ contract EIP20CoGateway is GatewayBase {
         );
     }
 
+    /**
+     * @notice Gets the penalty amount. If the message hash does not exist in
+     *         redeems mapping it will return zero amount. If the message is
+     *         already progressed or revoked then the penalty amount will be
+     *         zero.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return penalty_ Penalty amount.
+     */
+    function penalty(bytes32 _messageHash)
+        external
+        view
+        returns (uint256 penalty_)
+    {
+        penalty_ = super.penaltyFromBounty(redeems[_messageHash].bounty);
+    }
+
 
     /* Private functions */
 
