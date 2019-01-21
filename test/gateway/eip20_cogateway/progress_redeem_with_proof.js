@@ -66,12 +66,18 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
       messageStatus: MessageStatusEnum.Declared
     };
 
+    let tokenAddress = accounts[9];
+    let symbol = "DMY";
+    let tokenName = "Dummy token";
+    let tokenDecimal = 18;
+    let organization = accounts[2];
+
     utilityToken = await MockUtilityToken.new(
-      accounts[9], // Token address.
-      "DMY", // Symbol.
-      "Dummy token", // Token name.
-      18, // Token decimal.
-      accounts[2], // Organisation address.
+      tokenAddress,
+      symbol,
+      tokenName,
+      tokenDecimal,
+      organization,
     );
 
     bountyAmount = new BN(proofData.co_gateway.constructor.bounty);
@@ -114,17 +120,28 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
     // Set co-gateway to owner so that increase supply can be called.
     await utilityToken.setCoGatewayAddress(owner);
+
     // Send redeem amount to co-gateway.
-    await  utilityToken.increaseSupply(eip20CoGateway.address, redeemParams.amount, {from: owner});
+    await  utilityToken.increaseSupply(
+      eip20CoGateway.address,
+      redeemParams.amount,
+      { from: owner }
+    );
+
     // Send bounty to co-gateway.
     await web3.eth.sendTransaction(
-      {to: eip20CoGateway.address, from: facilitator, value: bountyAmount}
+      {
+        to: eip20CoGateway.address,
+        from: facilitator,
+        value: bountyAmount,
+      }
     );
+
     await utilityToken.setCoGatewayAddress(eip20CoGateway.address);
 
   });
 
-  it('should fail when message hash is zero ', async function () {
+  it('should fail when message hash is zero', async function () {
 
     await Utils.expectRevert(
       eip20CoGateway.progressRedeemWithProof(
@@ -138,7 +155,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when storage proof is zero ', async function () {
+  it('should fail when storage proof is zero', async function () {
 
     await Utils.expectRevert(
       eip20CoGateway.progressRedeemWithProof(
@@ -152,7 +169,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when storage proof is incorrect ', async function () {
+  it('should fail when storage proof is incorrect', async function () {
 
     await setStorageRoot();
 
@@ -168,7 +185,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when storage proof is invalid ', async function () {
+  it('should fail when storage proof is invalid', async function () {
 
     await setStorageRoot();
 
@@ -184,7 +201,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when storage root is not committed for the given height ',
+  it('should fail when storage root is not committed for the given height',
     async function () {
 
       await Utils.expectRevert(
@@ -199,7 +216,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when message outbox status at source is undeclared ',
+  it('should fail when message outbox status at source is undeclared',
     async function () {
 
       await setStorageRoot();
@@ -216,7 +233,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when message outbox status at source is progressed ',
+  it('should fail when message outbox status at source is progressed',
     async function () {
 
       await eip20CoGateway.setOutboxStatus(
@@ -238,7 +255,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
   });
 
-  it('should fail when message outbox status at source is revoked ',
+  it('should fail when message outbox status at source is revoked',
     async function () {
 
       await eip20CoGateway.setOutboxStatus(
