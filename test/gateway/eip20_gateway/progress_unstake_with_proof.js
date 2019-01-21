@@ -94,17 +94,12 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     let blockHeight = await setStateRoot(gateway);
     let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
-    let tx = await gateway.progressUnstakeWithProof(
+    //  This will throw exception if fails.
+    await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
       MessageStatusEnum.Declared
-    );
-
-    assert.strictEqual(
-      tx.receipt.status,
-      true,
-      'Transaction should succeed.',
     );
 
   });
