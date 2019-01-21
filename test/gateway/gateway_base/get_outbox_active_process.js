@@ -43,7 +43,6 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
 
     await gatewayBase.setOutboxProcess(
       accountAddress,
-      new BN(1),
       messageHash
     );
 
@@ -106,6 +105,51 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
       result.messageHash_,
       zeroBytes,
       `Message hash ${result.messageHash_} must be equal to ${zeroBytes}`,
+    );
+
+  });
+
+  it('should return the most recent active process', async function () {
+
+    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Progressed);
+
+    let result = await gatewayBase.getOutboxActiveProcess(accountAddress);
+
+    assert.strictEqual(
+      result.status_.eqn(MessageStatusEnum.Progressed),
+      true,
+      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Progressed}`,
+    );
+
+    assert.strictEqual(
+      result.messageHash_,
+      messageHash,
+      `Message hash ${result.messageHash_} must be equal to ${messageHash}`,
+    );
+
+    // Get the new message hash.
+    messageHash = web3.utils.sha3("message_hash_1");
+
+    // Set the new message hash as active inbox process.
+    await gatewayBase.setOutboxProcess(
+      accountAddress,
+      messageHash
+    );
+
+    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Declared);
+
+    result = await gatewayBase.getOutboxActiveProcess(accountAddress);
+
+    assert.strictEqual(
+      result.status_.eqn(MessageStatusEnum.Declared),
+      true,
+      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Declared}`,
+    );
+
+    assert.strictEqual(
+      result.messageHash_,
+      messageHash,
+      `Message hash ${result.messageHash_} must be equal to ${messageHash}`,
     );
 
   });

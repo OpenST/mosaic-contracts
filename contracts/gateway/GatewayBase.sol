@@ -339,7 +339,7 @@ contract GatewayBase is Organized {
     }
 
     /**
-     * @notice Method to get the active message hash and its status from outbox
+     * @notice Method to get the active message hash and its status from inbox
      *         for the given account address.
      *
      * @dev If message hash do not exists for the given account address then
