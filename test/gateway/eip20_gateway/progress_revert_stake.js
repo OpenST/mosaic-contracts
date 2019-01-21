@@ -237,6 +237,43 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
+  it('should fail when message status of inbox at target is progressed', async function () {
+
+    let paramsData = progressedProofData.gateway.stake.params;
+
+    revertStakeParams = {
+      amount: new BN(paramsData.amount, 16),
+      beneficiary: paramsData.beneficiary,
+      gasPrice: new BN(paramsData.gasPrice, 16),
+      gasLimit: new BN(paramsData.gasLimit, 16),
+      nonce: new BN(paramsData.nonce, 16),
+      hashLock: paramsData.hashLock,
+      messageHash: progressedProofData.gateway.stake.return_value.returned_value.messageHash_,
+      staker: paramsData.staker,
+      rlpParentNodes: progressedProofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      blockHeight: new BN(progressedProofData.co_gateway.progress_mint.proof_data.block_number,16),
+      gatewayAddress: progressedProofData.contracts.gateway,
+      storageRoot: progressedProofData.co_gateway.progress_mint.proof_data.storageHash,
+    };
+
+    await setup(revertStakeParams);
+
+    await mockToken.transfer(gateway.address, revertStakeParams.amount, { from: accounts[0] });
+    await baseToken.transfer(gateway.address, bountyAmount.muln(2.5), { from: accounts[0] });
+
+    await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
+
+    await Utils.expectRevert(
+      gateway.progressRevertStake(
+        revertStakeParams.messageHash,
+        revertStakeParams.blockHeight,
+        revertStakeParams.rlpParentNodes,
+      ),
+      'Merkle proof verification failed.',
+    );
+
+  });
+  
   it('should pass when message status of inbox at target is revoked', async function () {
 
     await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
@@ -403,42 +440,4 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
-
-  it('should fail when message status of inbox at target is progressed', async function () {
-
-    let paramsData = progressedProofData.gateway.stake.params;
-
-    revertStakeParams = {
-      amount: new BN(paramsData.amount, 16),
-      beneficiary: paramsData.beneficiary,
-      gasPrice: new BN(paramsData.gasPrice, 16),
-      gasLimit: new BN(paramsData.gasLimit, 16),
-      nonce: new BN(paramsData.nonce, 16),
-      hashLock: paramsData.hashLock,
-      messageHash: progressedProofData.gateway.stake.return_value.returned_value.messageHash_,
-      staker: paramsData.staker,
-      rlpParentNodes: progressedProofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
-      blockHeight: new BN(progressedProofData.co_gateway.progress_mint.proof_data.block_number,16),
-      gatewayAddress: progressedProofData.contracts.gateway,
-      storageRoot: progressedProofData.co_gateway.progress_mint.proof_data.storageHash,
-    };
-
-    await setup(revertStakeParams);
-
-    await mockToken.transfer(gateway.address, revertStakeParams.amount, { from: accounts[0] });
-    await baseToken.transfer(gateway.address, bountyAmount.muln(2.5), { from: accounts[0] });
-
-    await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
-
-    await Utils.expectRevert(
-      gateway.progressRevertStake(
-        revertStakeParams.messageHash,
-        revertStakeParams.blockHeight,
-        revertStakeParams.rlpParentNodes,
-      ),
-      'Merkle proof verification failed.',
-    );
-
-  });
-  
 });
