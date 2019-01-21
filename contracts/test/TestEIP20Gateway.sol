@@ -197,7 +197,7 @@ contract TestEIP20Gateway is EIP20Gateway {
      *
      * @param _blockHeight Mocked block height for testing.
      * @param _storageRoot Mocked storage root for merkle proof testing.
-    */
+     */
     function setStorageRoot(
         uint256 _blockHeight,
         bytes32 _storageRoot
