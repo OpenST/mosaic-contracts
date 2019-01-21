@@ -529,18 +529,18 @@ contract EIP20CoGateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         bytes32 storageRoot = storageRoots[_blockHeight];
 
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -923,6 +923,24 @@ contract EIP20CoGateway is GatewayBase {
             _beneficiary,
             _amount
         );
+    }
+
+    /**
+     * @notice Gets the penalty amount. If the message hash does not exist in
+     *         redeems mapping it will return zero amount. If the message is
+     *         already progressed or revoked then the penalty amount will be
+     *         zero.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return penalty_ Penalty amount.
+     */
+    function penalty(bytes32 _messageHash)
+        external
+        view
+        returns (uint256 penalty_)
+    {
+        penalty_ = super.penaltyFromBounty(redeems[_messageHash].bounty);
     }
 
 
