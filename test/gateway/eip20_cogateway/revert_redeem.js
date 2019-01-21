@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ const web3 = require("../../test_lib/web3.js");
 const MessageStatusEnum = messageBus.MessageStatusEnum;
 const zeroAddress = Utils.NULL_ADDRESS;
 const zeroBytes = Utils.ZERO_BYTES32;
+const PENALTY = 1.5;
 
 contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
@@ -47,11 +48,11 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     };
 
     utilityToken = await MockUtilityToken.new(
-      constructorParams.valueToken,
-      "",
-      "",
-      18,
-      constructorParams.organization,
+      constructorParams.valueToken, // Token address.
+      "DMY", // Symbol.
+      "Dummy token", // Token name.
+      18, // Token decimal.
+      constructorParams.organization, // Organisation address.
       { from: constructorParams.owner },
     );
 
@@ -79,7 +80,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       unlockSecret: hashLockObj,
       redeemer: accounts[2],
       intentHash: web3.utils.sha3("dummy"),
-      penalty: constructorParams.bounty.muln(1.5),
+      penalty: constructorParams.bounty.muln(PENALTY),
     };
 
     redeemParams.messageHash = await eip20CoGateway.setMessage.call(
@@ -170,10 +171,11 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   it('should fail when msg.value is less than penalty amount', async function () {
 
+    // Send less than the penalty amount in msg.value.
     await Utils.expectRevert(
       eip20CoGateway.revertRedeem(
         redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(1.25) },
+        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY-0.1) },
       ),
       'msg.value must match the penalty amount.',
     );
@@ -182,10 +184,11 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   it('should fail when msg.value is greater than penalty amount ', async function () {
 
+    // Send greater than the penalty amount in msg.value.
     await Utils.expectRevert(
       eip20CoGateway.revertRedeem(
         redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(2.25) },
+        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY+0.1) },
       ),
       'msg.value must match the penalty amount.',
     );
@@ -226,6 +229,23 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   });
 
+  it('should fail when message status is Revoked', async function () {
+
+    await eip20CoGateway.setOutboxStatus(
+      redeemParams.messageHash,
+      MessageStatusEnum.Revoked,
+    );
+
+    await Utils.expectRevert(
+      eip20CoGateway.revertRedeem(
+        redeemParams.messageHash,
+        { from: redeemParams.redeemer, value: redeemParams.penalty },
+      ),
+      'Message status must be Declared.',
+    );
+
+  });
+
   it('should pass with correct params ', async function () {
 
     let result = await eip20CoGateway.revertRedeem.call(
@@ -242,13 +262,13 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       result.redeemerNonce_.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce must be equal to ${redeemParams.nonce.toString(10)}.`,
+      `Redeemer nonce ${result.redeemerNonce_.toString(10)} must be equal to ${redeemParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       result.amount_.eq(redeemParams.amount),
       true,
-      `Redeemer amount must be equal to ${redeemParams.amount.toString(10)}.`,
+      `Redeemer amount ${result.amount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}.`,
     );
 
     let tx = await eip20CoGateway.revertRedeem(
@@ -294,13 +314,13 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       eventData._redeemerNonce.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce from the event must be equal to ${redeemParams.nonce.toString(10)}.`,
+      `Redeemer nonce ${eventData._redeemerNonce.toString(10)} from the event must be equal to ${redeemParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(redeemParams.amount),
       true,
-      `Redeem amount from the event must be equal to ${redeemParams.amount.toString(10)}.`,
+      `Redeem amount ${eventData._amount.toString()} from the event must be equal to ${redeemParams.amount.toString(10)}.`,
     );
 
   });
@@ -337,25 +357,25 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       eip20CoGatewayBaseFinalBalance.eq(eip20CoGatewayBaseBalance.add(redeemParams.penalty)),
       true,
-      `CoGateway base token balance must increase by ${redeemParams.penalty.toString(10)}.`,
+      `CoGateway base token balance ${eip20CoGatewayBaseFinalBalance.toString(10)} must be equal to ${eip20CoGatewayBaseBalance.add(redeemParams.penalty).toString(10)}.`,
     );
 
     assert.strictEqual(
       redeemerBaseFinalBalance.eq(redeemerBaseBalance.sub(redeemParams.penalty).subn(tx.receipt.gasUsed)),
       true,
-      `Redeemer's base token balance must decrease by ${redeemParams.penalty.toString(10)}.`,
+      `Redeemer's base token balance ${redeemerBaseFinalBalance.toString(10)} must be equal to ${redeemerBaseBalance.sub(redeemParams.penalty).subn(tx.receipt.gasUsed).toString(10)}.`,
     );
 
     assert.strictEqual(
       redeemerFinalBalance.eq(redeemerBalance),
       true,
-      `Redeemer's token balance must not change.`,
+      `Redeemer's token balance ${redeemerFinalBalance.toString(10)} must be equal to ${redeemerBalance.toString(10)}.`,
     );
 
     assert.strictEqual(
       eip20CoGatewayFinalBalance.eq(eip20CoGatewayBalance),
       true,
-      `CoGateway's token balance must not change.`,
+      `CoGateway's token balance ${eip20CoGatewayFinalBalance.toString(10)} must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
     );
 
   });
