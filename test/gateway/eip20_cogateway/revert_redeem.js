@@ -83,7 +83,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       penalty: constructorParams.bounty.muln(PENALTY),
     };
 
-    redeemParams.messageHash = await eip20CoGateway.setMessage.call(
+    redeemParams.messageHash = messageBus.messageDigest(
       redeemParams.intentHash,
       redeemParams.nonce,
       redeemParams.gasPrice,
@@ -163,7 +163,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   });
 
-  it('should fail when msg.value is greater than penalty amount ', async function () {
+  it('should fail when msg.value is greater than penalty amount', async function () {
 
     // Send greater than the penalty amount in msg.value.
     await Utils.expectRevert(
@@ -227,7 +227,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   });
 
-  it('should pass with correct params ', async function () {
+  it('should pass with correct params', async function () {
 
     let result = await eip20CoGateway.revertRedeem.call(
       redeemParams.messageHash,
@@ -260,12 +260,12 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.equal(
       tx.receipt.status,
       1,
-      "Receipt status is unsuccessful",
+      "Receipt status is unsuccessful.",
     );
 
   });
 
-  it('should emit RevertRedeemDeclared event ', async function () {
+  it('should emit RevertRedeemDeclared event', async function () {
 
     let tx = await eip20CoGateway.revertRedeem(
       redeemParams.messageHash,
