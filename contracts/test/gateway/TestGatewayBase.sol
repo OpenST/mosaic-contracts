@@ -145,17 +145,15 @@ contract TestGatewayBase is GatewayBase {
      * @dev This is used for testing purpose.
      *
      * @param _account Account address.
-     * @param _nonce Nonce of account address.
      * @param _messageHash MessageHash for which status is the be set.
      */
     function setInboxProcess(
         address _account,
-        uint256 _nonce,
         bytes32 _messageHash
     )
         external
     {
-        super.registerInboxProcess(_account, _nonce, _messageHash);
+        super.registerInboxProcess(_account, 1, _messageHash);
     }
 
     /**
@@ -164,16 +162,14 @@ contract TestGatewayBase is GatewayBase {
      * @dev This is used for testing purpose.
      *
      * @param _account Account address.
-     * @param _nonce Nonce of account address.
      * @param _messageHash MessageHash for which status is the be set.
      */
     function setOutboxProcess(
         address _account,
-        uint256 _nonce,
         bytes32 _messageHash
     )
         external
     {
-        super.registerOutboxProcess(_account, _nonce, _messageHash);
+        super.registerOutboxProcess(_account, 1, _messageHash);
     }
 }
