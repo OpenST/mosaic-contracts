@@ -28,6 +28,7 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
+const GatewayUtils = require('./helpers/gateway_utils');
 
 const revokedProofData =  require("../../../test/data/stake_revoked_1.json");
 const progressedProofData =  require("../../../test/data/stake_progressed_1.json");
@@ -40,9 +41,11 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   let gateway, mockToken, baseToken, revertStakeParams, bountyAmount, gatewayLib;
 
+  let gatewayUtils = new GatewayUtils();
+
   let setup = async function(revertStakeParams){
 
-    let stakeIntentHash = await gatewayLib.hashStakeIntent(
+    let stakeIntentHash = await gatewayUtils.hashStakeIntent(
       revertStakeParams.amount,
       revertStakeParams.beneficiary,
       revertStakeParams.gatewayAddress,
@@ -120,12 +123,17 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     await setup(revertStakeParams);
 
     await mockToken.transfer(gateway.address, revertStakeParams.amount, { from: accounts[0] });
+
+    /*
+     * Gateway should have bounty amount when stake was done and penalty amount
+     * when revert stake was requested. So transfer bounty + penalty amount to
+     * gateway for testing. penalty is 1.5 of bounty so total amount to
+     * transfer is 2.5 the bounty amount.
+     */
     await baseToken.transfer(gateway.address, bountyAmount.muln(2.5), { from: accounts[0] });
   });
 
   it('should fail when message hash is zero', async function () {
-
-    await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
 
     await Utils.expectRevert(
       gateway.progressRevertStake(
@@ -139,8 +147,6 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
   });
 
   it('should fail when storage proof zero', async function () {
-
-    await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
 
     await Utils.expectRevert(
       gateway.progressRevertStake(
@@ -231,24 +237,6 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
-  it('should fail when message status of inbox at target is declared', async function () {
-
-    let blockHeight = new BN(revokedProofData.co_gateway.confirm_stake_intent.proof_data.block_number,16);
-    let storageRoot = revokedProofData.co_gateway.confirm_stake_intent.proof_data.storageHash;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
-
-    await Utils.expectRevert(
-      gateway.progressRevertStake(
-        revertStakeParams.messageHash,
-        blockHeight,
-        revokedProofData.co_gateway.confirm_stake_intent.proof_data.storageProof[0].serializedProof,
-      ),
-      'Merkle proof verification failed.',
-    );
-
-  });
-
   it('should pass when message status of inbox at target is revoked', async function () {
 
     await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
@@ -268,13 +256,13 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       result.amount_.eq(revertStakeParams.amount),
       true,
-      `Stake amount must be equal to ${revertStakeParams.amount.toString(10)}.`,
+      `Stake amount ${result.amount_.toString(10)} must be equal to ${revertStakeParams.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       result.stakerNonce_.eq(revertStakeParams.nonce),
       true,
-      `Staker nonce must be equal to ${revertStakeParams.nonce.toString(10)}.`,
+      `Staker nonce ${result.stakerNonce_.toString(10)} must be equal to ${revertStakeParams.nonce.toString(10)}.`,
     );
 
     let tx = await gateway.progressRevertStake(
@@ -324,13 +312,13 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       eventData._stakerNonce.eq(revertStakeParams.nonce),
       true,
-      `Staker nonce from the event must be equal to ${revertStakeParams.nonce}.`,
+      `Staker nonce ${eventData._stakerNonce.toString(10)} from the event must be equal to ${revertStakeParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(revertStakeParams.amount),
       true,
-      `Stake amount from the event must be equal to ${revertStakeParams.amount}.`,
+      `Stake amount ${eventData._amount.toString(10)} from the event must be equal to ${revertStakeParams.amount.toString(10)}.`,
     );
 
   });
@@ -358,19 +346,19 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(bountyAmount.muln(2.5))),
       true,
-      `Gateway balance must decrease by ${bountyAmount.muln(2.5).toString(10)}.`,
+      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${bountyAmount.muln(2.5).toString(10)}.`,
     );
 
     assert.strictEqual(
       stakerInitialTokenBalance.eq(stakerFinalTokenBalance),
       true,
-      `Staker balance must not change.`,
+      `Staker ${stakerInitialTokenBalance.toString(10)} balance must be equal to ${stakerFinalTokenBalance.toString(10)}.`,
     );
 
     assert.strictEqual(
       burnerFinalTokenBalance.eq(burnerInitialTokenBalance.add(bountyAmount.muln(2.5))),
       true,
-      `Burner balance must increase by ${bountyAmount.muln(2.5).toString(10)}.`,
+      `Burner balance ${burnerFinalTokenBalance.toString(10)} must be equal to ${bountyAmount.muln(2.5).toString(10)}.`,
     );
 
   });
@@ -398,19 +386,19 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(revertStakeParams.amount)),
       true,
-      `Gateway balance must decrease by ${revertStakeParams.amount.toString(10)}.`,
+      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${revertStakeParams.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       stakerFinalTokenBalance.eq(stakerInitialTokenBalance.add(revertStakeParams.amount)),
       true,
-      `Staker balance must increase by ${revertStakeParams.amount.toString(10)}.`,
+      `Staker balance ${stakerFinalTokenBalance.toString(10)} must be equal to ${revertStakeParams.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       burnerFinalTokenBalance.eq(burnerInitialTokenBalance),
       true,
-      `Burner balance must not change.`,
+      `Burner balance ${burnerFinalTokenBalance.toString(10)} must be equal to ${burnerInitialTokenBalance.toString(10)}.`,
     );
 
   });
