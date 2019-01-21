@@ -21,7 +21,7 @@
 const CoGateway = artifacts.require("TestEIP20CoGateway");
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
-const PENALTY = 1.5;
+const PENALTY_MULTIPLIER = 1.5;
 
 contract('EIP20CoGateway.penalty()', function (accounts) {
 
@@ -64,7 +64,7 @@ contract('EIP20CoGateway.penalty()', function (accounts) {
 
   });
 
-  it(`penalty should be ${PENALTY} times bounty amount`, async function () {
+  it(`penalty should be ${PENALTY_MULTIPLIER} times bounty amount`, async function () {
 
     let bounty = new BN(100);
 
@@ -73,9 +73,9 @@ contract('EIP20CoGateway.penalty()', function (accounts) {
     let penalty = await coGateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(bounty.muln(PENALTY)),
+      penalty.eq(bounty.muln(PENALTY_MULTIPLIER)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY_MULTIPLIER).toString(10)}`,
     );
 
   });
@@ -110,9 +110,9 @@ contract('EIP20CoGateway.penalty()', function (accounts) {
     let penalty = await coGateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(bounty.muln(PENALTY)),
+      penalty.eq(bounty.muln(PENALTY_MULTIPLIER)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY_MULTIPLIER).toString(10)}`,
     );
 
     // Set the new message hash after the bounty change.
@@ -127,9 +127,9 @@ contract('EIP20CoGateway.penalty()', function (accounts) {
     penalty = await coGateway.penalty(messageHash);
 
     assert.strictEqual(
-      penalty.eq(changedBounty.muln(PENALTY)),
+      penalty.eq(changedBounty.muln(PENALTY_MULTIPLIER)),
       true,
-      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY).toString(10)}`,
+      `Penalty ${penalty.toString(10)} must be equal to ${bounty.muln(PENALTY_MULTIPLIER).toString(10)}`,
     );
 
   });
