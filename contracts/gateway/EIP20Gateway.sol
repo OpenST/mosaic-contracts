@@ -779,7 +779,10 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Gets the penalty amount.
+     * @notice Gets the penalty amount. If the message hash does not exist in
+     *         stakes mapping it will return zero amount. If the message is
+     *         already progressed or revoked then the penalty amount will be
+     *         zero.
      *
      * @param _messageHash Message hash.
      *

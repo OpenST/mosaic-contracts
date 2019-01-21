@@ -97,7 +97,7 @@ contract('EIP20CoGateway.penalty()', function (accounts) {
   });
 
   it('should return correct penalty amount for message hash when bounty ' +
-    'amount is changed', async function () {
+    'amount is changed after redeem request is registered', async function () {
 
     let bounty = new BN(100);
     let changedBounty = new BN(500);
