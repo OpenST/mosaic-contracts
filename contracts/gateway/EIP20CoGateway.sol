@@ -594,11 +594,6 @@ contract EIP20CoGateway is GatewayBase {
         MessageBus.Message storage message = messages[_messageHash];
 
         require(
-            message.intentHash != bytes32(0),
-            "RedeemIntentHash must not be zero."
-        );
-
-        require(
             message.sender == msg.sender,
             "Only redeemer can revert redeem."
         );
@@ -611,20 +606,16 @@ contract EIP20CoGateway is GatewayBase {
             "msg.value must match the penalty amount."
         );
 
-        require(
-            messageBox.outbox[_messageHash] ==
-            MessageBus.MessageStatus.Declared,
-            "Message status must be Declared."
+        // Declare redeem revocation.
+        MessageBus.declareRevocationMessage(
+            messageBox,
+            message
         );
-        // Update the message outbox status to declared.
-        messageBox.outbox[_messageHash] =
-        MessageBus.MessageStatus.DeclaredRevocation;
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
-        // Emit RevertRedeemDeclared event.
         emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,

@@ -29,7 +29,7 @@ const web3 = require("../../test_lib/web3.js");
 const MessageStatusEnum = messageBus.MessageStatusEnum;
 const zeroAddress = Utils.NULL_ADDRESS;
 const zeroBytes = Utils.ZERO_BYTES32;
-const PENALTY = 1.5;
+const PENALTY_MULTIPLIER = 1.5;
 
 contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
@@ -80,7 +80,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       unlockSecret: hashLockObj,
       redeemer: accounts[2],
       intentHash: web3.utils.sha3("dummy"),
-      penalty: constructorParams.bounty.muln(PENALTY),
+      penalty: constructorParams.bounty.muln(PENALTY_MULTIPLIER),
     };
 
     redeemParams.messageHash = messageBus.messageDigest(
@@ -128,12 +128,17 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   it('should fail when message is not declared', async function () {
 
+    await eip20CoGateway.setOutboxStatus(
+      redeemParams.messageHash,
+      MessageStatusEnum.Undeclared,
+    );
+
     await Utils.expectRevert(
       eip20CoGateway.revertRedeem(
-        web3.utils.sha3("message_hash"),
+        redeemParams.messageHash,
         { from: redeemParams.redeemer, value: redeemParams.penalty },
       ),
-      'RedeemIntentHash must not be zero.',
+      'Message on source must be Declared.',
     );
 
   });
@@ -156,7 +161,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     await Utils.expectRevert(
       eip20CoGateway.revertRedeem(
         redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY-0.1) },
+        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY_MULTIPLIER-0.1) },
       ),
       'msg.value must match the penalty amount.',
     );
@@ -169,7 +174,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     await Utils.expectRevert(
       eip20CoGateway.revertRedeem(
         redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY+0.1) },
+        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY_MULTIPLIER+0.1) },
       ),
       'msg.value must match the penalty amount.',
     );
@@ -188,7 +193,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
         redeemParams.messageHash,
         { from: redeemParams.redeemer, value: redeemParams.penalty },
       ),
-      'Message status must be Declared.',
+      'Message on source must be Declared.',
     );
 
   });
@@ -205,7 +210,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
         redeemParams.messageHash,
         { from: redeemParams.redeemer, value: redeemParams.penalty },
       ),
-      'Message status must be Declared.',
+      'Message on source must be Declared.',
     );
 
   });
@@ -222,7 +227,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
         redeemParams.messageHash,
         { from: redeemParams.redeemer, value: redeemParams.penalty },
       ),
-      'Message status must be Declared.',
+      'Message on source must be Declared.',
     );
 
   });
@@ -308,13 +313,9 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
   it('redeemer should pay the penalty', async function () {
 
-    let eip20CoGatewayBaseBalance = new BN(
-      await web3.eth.getBalance(eip20CoGateway.address),
-    );
+    let eip20CoGatewayBaseBalance = await Utils.getBalance(eip20CoGateway.address);
 
-    let redeemerBaseBalance = new BN(
-      await web3.eth.getBalance(redeemParams.redeemer),
-    );
+    let redeemerBaseBalance = await Utils.getBalance(redeemParams.redeemer);
 
     let eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
     let redeemerBalance = await utilityToken.balanceOf(redeemParams.redeemer);
@@ -324,13 +325,9 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       { from: redeemParams.redeemer, value: redeemParams.penalty },
     );
 
-    let eip20CoGatewayBaseFinalBalance = new BN(
-      await web3.eth.getBalance(eip20CoGateway.address),
-    );
+    let eip20CoGatewayBaseFinalBalance = await Utils.getBalance(eip20CoGateway.address);
 
-    let redeemerBaseFinalBalance = new BN(
-      await web3.eth.getBalance(redeemParams.redeemer),
-    );
+    let redeemerBaseFinalBalance = await Utils.getBalance(redeemParams.redeemer);
 
     let eip20CoGatewayFinalBalance = await utilityToken.balanceOf(eip20CoGateway.address);
     let redeemerFinalBalance = await utilityToken.balanceOf(redeemParams.redeemer);
