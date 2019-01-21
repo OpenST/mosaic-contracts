@@ -112,25 +112,6 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    // Set co-gateway to owner so that increase supply can be called.
-    await utilityToken.setCoGatewayAddress(constructorParams.owner);
-
-    // Send redeem amount to co-gateway.
-    await  utilityToken.increaseSupply(
-      eip20CoGateway.address,
-      redeemParams.amount,
-      { from: constructorParams.owner },
-    );
-
-    // Send bounty to co-gateway.
-    await web3.eth.sendTransaction({
-      to: eip20CoGateway.address,
-      from: constructorParams.owner,
-      value: constructorParams.bounty,
-    });
-
-    await utilityToken.setCoGatewayAddress(eip20CoGateway.address);
-
   });
 
   it('should fail when message hash is zero', async function () {
