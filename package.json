@@ -21,7 +21,7 @@
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test test/gateway/eip20_cogateway/revert_redeem.js",
+    "test": "truffle test",
     "ganache": "sh tools/runGanacheCli.sh",
     "test:deployment_tool": "mocha tools/deployment_tool/test"
   },
