@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,52 +20,42 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../gateway/EIP20Gateway.sol";
-import "../lib/MessageBus.sol";
+import "../../StateRootInterface.sol";
+import "../../gateway/GatewayBase.sol";
+import "../../lib/OrganizationInterface.sol";
 
 /**
- * @title Test EIP20 gateway is an EIP20 gateway that is activated by default.
+ * @title TestGatewayBase contract.
+ *
+ * @notice Used for test only.
  */
-contract TestEIP20Gateway is EIP20Gateway {
+contract TestGatewayBase is GatewayBase {
+
+    /* Constructor */
 
     /**
-     * @notice Instantiate TestEIP20Gateway for unit testing.
+     * @notice This is used for testing.
      *
-     * @param _token The ERC20 token contract address that will be
-     *               staked and corresponding utility tokens will be minted
-     *               in auxiliary chain.
-     * @param _baseToken The ERC20 token address that will be used for
-     *                     staking bounty from the facilitators.
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
-     * @param _organization Address of an organization contract.
-     * @param _burner Address where tokens will be burned.
+     * @param _organization Address of a contract that manages workers.
      */
     constructor(
-        EIP20Interface _token,
-        EIP20Interface _baseToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization,
-        address payable _burner
+        OrganizationInterface _organization
     )
-        EIP20Gateway(
-            _token,
-            _baseToken,
+        public
+        GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization,
-            _burner
+            _organization
         )
-        public
-    {
-        activated = true;
-    }
+    {}
 
-
-    /* Public Functions */
+    /* external functions */
 
     /**
      * @notice It is used to set a message.
@@ -90,7 +80,7 @@ contract TestEIP20Gateway is EIP20Gateway {
         address _sender,
         bytes32 _hashLock
     )
-        public
+        external
         returns (bytes32 messageHash_)
     {
         MessageBus.Message memory message = getMessage(
@@ -116,50 +106,20 @@ contract TestEIP20Gateway is EIP20Gateway {
     }
 
     /**
-     * @notice It sets the stakes mapping with respect to the messageHash.
+     * @notice It sets the status of inbox.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash Hash for which mints mapping is updated.
-     * @param _beneficiary Beneficiary address to which the utility tokens
-     *                     will be transferred after minting.
-     * @param _amount Total stake amount for which the stake is initiated.
+     * @param _messageHash It sets the status of the message.
+     * @param _status It sets the state of the message.
      */
-    function setStake(
+    function setInboxStatus(
         bytes32 _messageHash,
-        address _beneficiary,
-        uint256 _amount
+        MessageBus.MessageStatus _status
     )
-        public
+        external
     {
-        stakes[_messageHash] = Stake({
-            amount : _amount,
-            beneficiary : _beneficiary,
-            bounty : bounty
-        });
-    }
-
-    /**
-     * @notice It sets the unstakes mapping with respect to the messageHash.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _messageHash Hash for which unstakes mapping is updated.
-     * @param _beneficiary Beneficiary address to which the staked tokens
-     *                     will be transferred.
-     * @param _amount Total redeem amount.
-     */
-    function setUnstake(
-        bytes32 _messageHash,
-        address _beneficiary,
-        uint256 _amount
-    )
-        public
-    {
-        unstakes[_messageHash] = Unstake({
-            amount : _amount,
-            beneficiary : _beneficiary
-        });
+        messageBox.inbox[_messageHash] = _status;
     }
 
     /**
@@ -174,54 +134,42 @@ contract TestEIP20Gateway is EIP20Gateway {
         bytes32 _messageHash,
         MessageBus.MessageStatus _status
     )
-        public
+        external
     {
         messageBox.outbox[_messageHash] = _status;
     }
 
     /**
-     * @notice It sets the bounty amount.
+     * @notice It sets the message hash for active inbox process.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _bounty Bounty amount to be set.
-     */
-    function setBounty(uint256 _bounty) external {
-        bounty = _bounty;
-    }
-
-    /**
-     * @notice It sets the storage root for given block height.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _blockHeight Mocked block height for testing.
-     * @param _storageRoot Mocked storage root for merkle proof testing.
-     */
-    function setStorageRoot(
-        uint256 _blockHeight,
-        bytes32 _storageRoot
-    )
-        public
-    {
-        storageRoots[_blockHeight] = _storageRoot;
-    }
-
-    /**
-     * @notice It sets the status of inbox.
-     *
-     * @dev This is used for testing purpose.
-     *
+     * @param _account Account address.
      * @param _messageHash MessageHash for which status is the be set.
-     * @param _status Status of the message to be set.
      */
-    function setInboxStatus(
-        bytes32 _messageHash,
-        MessageBus.MessageStatus _status
+    function setInboxProcess(
+        address _account,
+        bytes32 _messageHash
     )
-        public
+        external
     {
-        messageBox.inbox[_messageHash] = _status;
+        super.registerInboxProcess(_account, 1, _messageHash);
     }
 
+    /**
+     * @notice It sets the message hash for active outbox process.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _account Account address.
+     * @param _messageHash MessageHash for which status is the be set.
+     */
+    function setOutboxProcess(
+        address _account,
+        bytes32 _messageHash
+    )
+        external
+    {
+        super.registerOutboxProcess(_account, 1, _messageHash);
+    }
 }
