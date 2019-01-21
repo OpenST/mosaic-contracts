@@ -84,7 +84,14 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unlockSecret: redeemRequest.unlockSecret,
     };
 
-    stakeVaultAddress = await setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts);
+    stakeVaultAddress = await setup(
+      unstakeMessage,
+      gateway,
+      unstakeRequest,
+      stakeVaultAddress,
+      mockToken,
+      accounts
+    );
 
   });
 
