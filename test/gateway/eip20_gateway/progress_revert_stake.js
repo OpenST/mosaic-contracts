@@ -383,7 +383,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(bountyAmount.muln(2.5))),
       true,
-      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${bountyAmount.muln(2.5).toString(10)}.`,
+      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${gatewayInitialTokenBalance.sub(bountyAmount.muln(2.5)).toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -395,7 +395,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       burnerFinalTokenBalance.eq(burnerInitialTokenBalance.add(bountyAmount.muln(2.5))),
       true,
-      `Burner balance ${burnerFinalTokenBalance.toString(10)} must be equal to ${bountyAmount.muln(2.5).toString(10)}.`,
+      `Burner balance ${burnerFinalTokenBalance.toString(10)} must be equal to ${burnerInitialTokenBalance.add(bountyAmount.muln(2.5)).toString(10)}.`,
     );
 
   });
@@ -423,13 +423,13 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(revertStakeParams.amount)),
       true,
-      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${revertStakeParams.amount.toString(10)}.`,
+      `Gateway balance ${gatewayFinalTokenBalance.toString(10)} must be equal to ${gatewayInitialTokenBalance.sub(revertStakeParams.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
       stakerFinalTokenBalance.eq(stakerInitialTokenBalance.add(revertStakeParams.amount)),
       true,
-      `Staker balance ${stakerFinalTokenBalance.toString(10)} must be equal to ${revertStakeParams.amount.toString(10)}.`,
+      `Staker balance ${stakerFinalTokenBalance.toString(10)} must be equal to ${stakerInitialTokenBalance.add(revertStakeParams.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
