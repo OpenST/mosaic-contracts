@@ -306,7 +306,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       eventData._amount.eq(redeemParams.amount),
       true,
-      `Redeem amount ${eventData._amount.toString()} from the event must be equal to ${redeemParams.amount.toString(10)}.`,
+      `Redeem amount ${eventData._amount.toString(10)} from the event must be equal to ${redeemParams.amount.toString(10)}.`,
     );
 
   });
