@@ -257,15 +257,9 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       `Redeemer amount ${result.amount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}.`,
     );
 
-    let tx = await eip20CoGateway.revertRedeem(
+    await eip20CoGateway.revertRedeem(
       redeemParams.messageHash,
       { from: redeemParams.redeemer, value: redeemParams.penalty },
-    );
-
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful.",
     );
 
   });
