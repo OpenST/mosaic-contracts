@@ -340,9 +340,8 @@ contract GatewayBase is Organized {
 
     /**
      * @notice Method to get the outbox message status for the given message
-     *         hash.
-     *
-     * @dev If message hash do not exists then it will return undeclared status.
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
      *
      * @param _messageHash Message hash to get the status.
      *
@@ -360,9 +359,8 @@ contract GatewayBase is Organized {
 
     /**
      * @notice Method to get the inbox message status for the given message
-     *         hash.
-     *
-     * @dev If message hash do not exists then it will return undeclared status.
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
      *
      * @param _messageHash Message hash to get the status.
      *
