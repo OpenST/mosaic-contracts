@@ -340,10 +340,9 @@ contract GatewayBase is Organized {
 
     /**
      * @notice Method to get the active message hash and its status from inbox
-     *         for the given account address.
-     *
-     * @dev If message hash do not exists for the given account address then
-     *      it will return zero hash and undeclared status.
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
      *
      * @param _account Account address.
      *
@@ -366,10 +365,9 @@ contract GatewayBase is Organized {
 
     /**
      * @notice Method to get the active message hash and its status from outbox
-     *         for the given account address.
-     *
-     * @dev If message hash do not exists for the given account address then
-     *      it will return zero hash and undeclared status.
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
      *
      * @param _account Account address.
      *
