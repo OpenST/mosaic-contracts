@@ -320,7 +320,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       result.redeemAmount_.eq(redeemParams.amount),
       true,
-      `Redeem amount must be equal to ${redeemParams.amount.toString(10)}`,
+      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
     );
 
     let tx = await eip20CoGateway.progressRedeemWithProof(
@@ -359,7 +359,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       result.redeemAmount_.eq(redeemParams.amount),
       true,
-      `Redeem amount must be equal to ${redeemParams.amount.toString(10)}`,
+      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
     );
 
     let tx = await eip20CoGateway.progressRedeemWithProof(
@@ -403,7 +403,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       result.redeemAmount_.eq(redeemParams.amount),
       true,
-      `Redeem amount must be equal to ${redeemParams.amount.toString(10)}`,
+      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
     );
 
     let tx = await eip20CoGateway.progressRedeemWithProof(
@@ -510,13 +510,13 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       finalFacilitatorEthBalance.eq(expectedFinalFacilitatorETHBalance),
       true,
-      `Bounty should be return to facilitator.`,
+      `Facilitator's base token balance ${finalFacilitatorEthBalance.toString(10)} should be equal to ${expectedFinalFacilitatorETHBalance.toString(10)}`,
     );
 
     assert.strictEqual(
       finalCoGatewayEthBalance.eq(initialCoGatewayEthBalance.sub(bountyAmount)),
       true,
-      `Bounty should be transferred from co-gateway.`,
+      `CoGateway's base token balance ${finalCoGatewayEthBalance.toString(10)} should be equal to ${initialCoGatewayEthBalance.sub(bountyAmount)}.`,
     );
 
   });
@@ -542,13 +542,13 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       finalTotalSupply.eq(initialTotalSupply.sub(redeemParams.amount)),
       true,
-      `Total supply should be reduced after progressRedeem.`,
+      `Total supply ${finalTotalSupply.toString(10)} should be equal to ${initialTotalSupply.sub(redeemParams.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
       finalCoGatewayBalance.eq(initialCoGatewayBalance.sub(redeemParams.amount)),
       true,
-      `Co-gateway balance should be reduced.`,
+      `CoGateway's balance ${finalCoGatewayBalance.toString(10)} should be equal to ${initialCoGatewayBalance.sub(redeemParams.amount).toString(10)}.`,
     );
 
   });
