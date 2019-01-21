@@ -230,4 +230,15 @@ contract TestEIP20CoGateway is EIP20CoGateway {
 
     }
 
+    /**
+     * @notice It sets the bounty amount.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _bounty Bounty amount to be set.
+     */
+    function setBounty(uint256 _bounty) external {
+        bounty = _bounty;
+    }
+
 }
