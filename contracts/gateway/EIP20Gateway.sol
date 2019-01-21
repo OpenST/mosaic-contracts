@@ -319,7 +319,7 @@ contract EIP20Gateway is GatewayBase {
          */
         require(
             _amount > _gasPrice.mul(_gasLimit),
-            "Maximum possible reward must be less than then the stake amount."
+            "Maximum possible reward must be less than the stake amount."
         );
 
         // Get the stake intent hash.

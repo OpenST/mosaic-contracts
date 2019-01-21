@@ -880,7 +880,7 @@ contract EIP20CoGateway is GatewayBase {
          */
         require(
             _amount > _gasPrice.mul(_gasLimit),
-            "Maximum possible reward must be less than then the redeem amount."
+            "Maximum possible reward must be less than the redeem amount."
         );
 
         // Get the redeem intent hash.

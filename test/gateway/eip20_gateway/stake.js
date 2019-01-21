@@ -175,7 +175,7 @@ contract('EIP20Gateway.stake() ', function (accounts) {
      */
     stakeAmount = new BN(200);
     await prepareData();
-    errorMessage = "Maximum possible reward must be less than then the stake amount.";
+    errorMessage = "Maximum possible reward must be less than the stake amount.";
     await stake(utils.ResultType.FAIL);
   });
 

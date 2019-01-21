@@ -151,7 +151,7 @@ contract('EIP20CoGateway.redeem()', function (accounts) {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Maximum possible reward must be less than then the redeem amount.',
+      'Maximum possible reward must be less than the redeem amount.',
     );
 
   });
