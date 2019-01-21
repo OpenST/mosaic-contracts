@@ -590,7 +590,7 @@ contract EIP20Gateway is GatewayBase {
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Progress with revocation message

@@ -21,7 +21,6 @@
 const Gateway = artifacts.require("./TestEIP20Gateway.sol");
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require("MockToken");
-const GatewayLib = artifacts.require("GatewayLib");
 
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -39,7 +38,7 @@ const MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
-  let gateway, mockToken, baseToken, revertStakeParams, bountyAmount, gatewayLib;
+  let gateway, mockToken, baseToken, revertStakeParams, bountyAmount;
 
   let gatewayUtils = new GatewayUtils();
 
@@ -100,8 +99,6 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
       organization.address,
       burner,
     );
-
-    gatewayLib = await GatewayLib.deployed();
 
     let paramsData = revokedProofData.gateway.stake.params;
 
@@ -316,7 +313,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
-  it('should emit `StakeReverted` event ', async function () {
+  it('should emit `StakeReverted` event', async function () {
 
     await gateway.setStorageRoot(revertStakeParams.blockHeight, revertStakeParams.storageRoot);
 
@@ -360,7 +357,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
-  it('should burn bounty and penalty amount ', async function () {
+  it('should burn bounty and penalty amount', async function () {
 
     let burnerAddress = await gateway.burner.call();
 
@@ -400,7 +397,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
 
   });
 
-  it('should transfer stake amount to staker ', async function () {
+  it('should transfer stake amount to staker', async function () {
 
     let burnerAddress = await gateway.burner.call();
 
