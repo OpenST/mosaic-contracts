@@ -835,11 +835,11 @@ contract EIP20Gateway is GatewayBase {
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
-        bytes memory _rlpParentNodes,
+        bytes calldata _rlpParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-        public
+        external
         returns (
             uint256 redeemAmount_,
             uint256 unstakeAmount_,
@@ -851,7 +851,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
