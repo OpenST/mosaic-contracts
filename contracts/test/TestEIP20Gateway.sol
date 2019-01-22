@@ -191,23 +191,6 @@ contract TestEIP20Gateway is EIP20Gateway {
     }
 
     /**
-     * @notice It sets the storage root for given block height.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _blockHeight Mocked block height for testing.
-     * @param _storageRoot Mocked storage root for merkle proof testing.
-     */
-    function setStorageRoot(
-        uint256 _blockHeight,
-        bytes32 _storageRoot
-    )
-        public
-    {
-        storageRoots[_blockHeight] = _storageRoot;
-    }
-
-    /**
      * @notice It sets the status of inbox.
      *
      * @dev This is used for testing purpose.
@@ -222,5 +205,22 @@ contract TestEIP20Gateway is EIP20Gateway {
         public
     {
         messageBox.inbox[_messageHash] = _status;
+    }
+
+    /**
+     * @notice It sets the storage root for given block height.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _blockHeight Mocked block height for testing.
+     * @param _storageRoot Mocked storage root for merkle proof testing.
+     */
+    function setStorageRoot(
+        uint256 _blockHeight,
+        bytes32 _storageRoot
+    )
+        public
+    {
+        storageRoots[_blockHeight] = _storageRoot;
     }
 }
