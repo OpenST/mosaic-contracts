@@ -71,7 +71,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
-      StubData.contracts.coGateway
+      StubData.contracts.coGateway,
     );
 
     unstakeMessage = {
@@ -90,7 +90,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeRequest,
       stakeVaultAddress,
       mockToken,
-      accounts
+      accounts,
     );
 
   });
@@ -106,7 +106,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
-      MessageStatusEnum.Declared
+      MessageStatusEnum.Declared,
     );
 
   });
@@ -121,7 +121,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
-      MessageStatusEnum.Declared
+      MessageStatusEnum.Declared,
     );
 
     let estimatedReward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
@@ -155,7 +155,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
-      MessageStatusEnum.Declared
+      MessageStatusEnum.Declared,
     );
 
     let event = EventDecoder.getEvents(tx, gateway);
@@ -224,7 +224,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
-      MessageStatusEnum.Declared
+      MessageStatusEnum.Declared,
     );
 
     let finalBeneficiaryBalance = await mockToken.balanceOf(unstakeRequest.beneficiary);
@@ -297,7 +297,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
-      StubDataRedeemReward.contracts.coGateway
+      StubDataRedeemReward.contracts.coGateway,
     );
 
     unstakeMessage = {
@@ -367,9 +367,9 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         messageHash,
         storageProof,
         blockHeight,
-        MessageStatusEnum.Declared
+        MessageStatusEnum.Declared,
       ),
-      'Message hash must not be zero.'
+      'Message hash must not be zero.',
     );
 
   });
@@ -385,7 +385,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         unstakeMessage.messageHash,
         storageProof,
         blockHeight,
-        MessageStatusEnum.Declared
+        MessageStatusEnum.Declared,
       ),
       'Message on target must be Declared.',
     );
@@ -401,7 +401,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
-      MessageStatusEnum.Declared
+      MessageStatusEnum.Declared,
     );
 
     await Utils.expectRevert(
@@ -409,7 +409,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         unstakeMessage.messageHash,
         storageProof,
         blockHeight,
-        MessageStatusEnum.Declared
+        MessageStatusEnum.Declared,
       ),
       'Message on target must be Declared.',
     );
@@ -426,7 +426,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         unstakeMessage.messageHash,
         storageProof,
         blockHeight,
-        MessageStatusEnum.Declared
+        MessageStatusEnum.Declared,
       ),
       'Message on target must be Declared.',
     );
@@ -444,7 +444,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
-      StubDataRedeemFailure.contracts.coGateway
+      StubDataRedeemFailure.contracts.coGateway,
     );
 
     unstakeMessage = {
@@ -469,7 +469,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         unstakeMessage.messageHash,
         storageProof,
         blockHeight,
-        MessageStatusEnum.Declared
+        MessageStatusEnum.Declared,
       ),
       "Reward amount must be less than redeem amount.",
     );
@@ -508,7 +508,7 @@ async function setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress,
   await mockToken.transfer(
     stakeVaultAddress,
     unstakeRequest.amount,
-    {from: accounts[0]}
+    {from: accounts[0]},
   );
   return stakeVaultAddress;
 }
