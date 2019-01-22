@@ -585,21 +585,13 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         // Get the message object for the _messageHash.
         MessageBus.Message storage message = messages[_messageHash];
-
-        require(message.intentHash != bytes32(0));
-
-        require(
-            message.intentHash != bytes32(0),
-            "RedeemIntentHash must not be zero"
-        );
 
         require(
             message.sender == msg.sender,
@@ -611,23 +603,19 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             msg.value == penalty,
-            "msg.value must match the penalty amount"
+            "msg.value must match the penalty amount."
         );
 
-        require(
-            messageBox.outbox[_messageHash] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
+        // Declare redeem revocation.
+        MessageBus.declareRevocationMessage(
+            messageBox,
+            message
         );
-        // Update the message outbox status to declared.
-        messageBox.outbox[_messageHash] =
-        MessageBus.MessageStatus.DeclaredRevocation;
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
-        // Emit RevertRedeemDeclared event.
         emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,
@@ -867,9 +855,20 @@ contract EIP20CoGateway is GatewayBase {
             msg.value == bounty,
             "Payable amount should be equal to the bounty amount."
         );
+
         require(
             _amount > uint256(0),
             "Redeem amount must not be zero."
+        );
+
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after unstake of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the redeem amount."
         );
 
         // Get the redeem intent hash.
