@@ -154,7 +154,7 @@ contract GatewayBase is Organized {
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                stake process.
+     *                message transfers.
      * @param _organization Address of an organization contract.
      */
     constructor(
@@ -339,6 +339,44 @@ contract GatewayBase is Organized {
     }
 
     /**
+     * @notice Method to get the outbox message status for the given message
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getOutboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.outbox[_messageHash];
+    }
+
+    /**
+     * @notice Method to get the inbox message status for the given message
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getInboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.inbox[_messageHash];
+    }
+
+    /**
      * @notice Method to get the active message hash and its status from inbox
      *         for the given account address. If message hash does not exist
      *         for the given account address then it will return zero hash and
@@ -388,6 +426,7 @@ contract GatewayBase is Organized {
         status_ = messageBox.outbox[messageHash_];
     }
 
+
     /* Internal Functions */
 
     /**
@@ -396,7 +435,7 @@ contract GatewayBase is Organized {
      *
      * @param _gasConsumed Gas consumption during message confirmation.
      * @param _gasLimit Maximum amount of gas can be used for reward.
-     * @param _gasPrice Price at which reward is calculated.
+     * @param _gasPrice Gas price at which reward is calculated.
      * @param _initialGas Initial gas at the start of the process.
      *
      * @return fee_ Fee amount.
