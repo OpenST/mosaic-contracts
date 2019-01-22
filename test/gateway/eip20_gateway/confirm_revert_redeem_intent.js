@@ -92,17 +92,45 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
 
-    let tx = await gateway.confirmRevertRedeemIntent(
+    await gateway.confirmRevertRedeemIntent(
+      unstakeMessage.messageHash,
+      blockHeight,
+      storageProof,
+    );
+  });
+
+  it('should return correct response', async function () {
+
+    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
+
+    let blockHeight = await setStorageRoot(gateway);
+    let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
+
+    let response = await gateway.confirmRevertRedeemIntent.call(
       unstakeMessage.messageHash,
       blockHeight,
       storageProof,
     );
 
     assert.strictEqual(
-      tx.receipt.status,
-      true,
-      'Transaction should success.',
+      response.redeemer_,
+      unstakeMessage.unstakeAccount,
+      `Expected redeemer ${unstakeMessage.unstakeAccount} is different from redeemer from 
+      event ${response.redeemer_}`,
     );
+    assert.strictEqual(
+      response.redeemerNonce_.eq(unstakeMessage.nonce),
+      true,
+      `Expected stakerNonce ${unstakeMessage.nonce.toString(10)} is different from nonce from 
+      event ${response.redeemerNonce_.toString(10)}`,
+    );
+    assert.strictEqual(
+      response.amount_.eq(unstakeRequest.amount),
+      true,
+      `Expected amount ${unstakeRequest.amount.toString(10)} is different from amount from 
+      event ${response.amount_.toString(10)}`,
+    );
+
   });
 
   it('should emit RevertRedeemIntentConfirmed event', async function () {
@@ -123,46 +151,37 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       true,
       'Transaction should success.',
     );
-    assert.strictEqual(
-      tx.receipt.status,
-      true,
-      'Transaction should success.',
-    );
 
     let event = EventDecoder.getEvents(tx, gateway);
+    let eventData = event.RevertRedeemIntentConfirmed;
 
     assert.isDefined(
       event.RevertRedeemIntentConfirmed,
       'Event `RevertRedeemIntentConfirmed` must be emitted.',
     );
-
-    let eventData = event.RevertRedeemIntentConfirmed;
     assert.strictEqual(
       eventData._messageHash,
       unstakeMessage.messageHash,
       `Expected message hash ${unstakeMessage.messageHash} is different from message hash from 
       event ${eventData._messageHash}`,
     );
-
     assert.strictEqual(
       eventData._redeemer,
       unstakeMessage.unstakeAccount,
       `Expected redeemer ${unstakeMessage.unstakeAccount} is different from redeemer from 
       event ${eventData._redeemer}`,
     );
-
     assert.strictEqual(
       eventData._redeemerNonce.eq(unstakeMessage.nonce),
       true,
-      `Expected stakerNonce ${unstakeMessage.nonce.toNumber(16)} is different from nonce from 
-      event ${eventData._redeemerNonce.toNumber(16)}`,
+      `Expected stakerNonce ${unstakeMessage.nonce.toString(10)} is different from nonce from 
+      event ${eventData._redeemerNonce.toString(10)}`,
     );
-
     assert.strictEqual(
       eventData._amount.eq(unstakeRequest.amount),
       true,
-      `Expected amount ${unstakeRequest.amount.toNumber(16)} is different from amount from 
-      event ${eventData._amount.toNumber(16)}`,
+      `Expected amount ${unstakeRequest.amount.toString(10)} is different from amount from 
+      event ${eventData._amount.toString(10)}`,
     );
 
   });
