@@ -359,7 +359,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
         revertRedeemParams.blockHeight,
         revertRedeemParams.rlpParentNodes,
       ),
-      'Message on source must be DeclaredRevocation.',
+      'Message status on source must be DeclaredRevocation.',
     );
 
   });
