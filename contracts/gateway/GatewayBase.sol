@@ -338,8 +338,95 @@ contract GatewayBase is Organized {
         emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
+    /**
+     * @notice Method to get the active message hash and its status from inbox
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
+     *
+     * @param _account Account address.
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getInboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+        messageHash_ = inboxActiveProcess[_account];
+        status_ = messageBox.inbox[messageHash_];
+    }
+
+    /**
+     * @notice Method to get the active message hash and its status from outbox
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
+     *
+     * @param _account Account address.
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getOutboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+        messageHash_ = outboxActiveProcess[_account];
+        status_ = messageBox.outbox[messageHash_];
+    }
 
     /* Internal Functions */
+
+    /**
+     * @notice Calculate the fee amount which is rewarded to facilitator for
+     *         performing message transfers.
+     *
+     * @param _gasConsumed Gas consumption during message confirmation.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Price at which reward is calculated.
+     * @param _initialGas Initial gas at the start of the process.
+     *
+     * @return fee_ Fee amount.
+     * @return totalGasConsumed_ Total gas consumed during message transfer.
+     */
+    function feeAmount(
+        uint256 _gasConsumed,
+        uint256 _gasLimit,
+        uint256 _gasPrice,
+        uint256 _initialGas
+    )
+        internal
+        view
+        returns (
+            uint256 fee_,
+            uint256 totalGasConsumed_
+        )
+    {
+        totalGasConsumed_ = _initialGas.add(
+            _gasConsumed
+        ).sub(
+            gasleft()
+        );
+
+        if (totalGasConsumed_ < _gasLimit) {
+            fee_ = totalGasConsumed_.mul(_gasPrice);
+        } else {
+            fee_ = _gasLimit.mul(_gasPrice);
+        }
+    }
 
     /**
      * @notice Create and return Message object.

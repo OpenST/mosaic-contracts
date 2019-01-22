@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -347,18 +347,18 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -405,29 +405,26 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-        // Get the initial gas value.
-        uint256 initialGas = gasleft();
-
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "Stake intent hash must not be zero"
+            "Stake intent hash must not be zero."
         );
 
         // Get the storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Confirm revocation.
@@ -445,17 +442,14 @@ contract EIP20CoGateway is GatewayBase {
         stakerNonce_ = message.nonce;
         amount_ = mint.amount;
 
-        // Delete the mint data.
-        delete mints[_messageHash];
-
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
             mint.amount
         );
-        // Update the gas consumed for this function.
-        message.gasConsumed = initialGas.sub(gasleft());
+
+        delete mints[_messageHash];
     }
 
     /**
@@ -535,18 +529,18 @@ contract EIP20CoGateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         bytes32 storageRoot = storageRoots[_blockHeight];
 
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         MessageBus.Message storage message = messages[_messageHash];
@@ -591,21 +585,13 @@ contract EIP20CoGateway is GatewayBase {
             uint256 amount_
         )
     {
-
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
 
         // Get the message object for the _messageHash.
         MessageBus.Message storage message = messages[_messageHash];
-
-        require(message.intentHash != bytes32(0));
-
-        require(
-            message.intentHash != bytes32(0),
-            "RedeemIntentHash must not be zero"
-        );
 
         require(
             message.sender == msg.sender,
@@ -617,23 +603,19 @@ contract EIP20CoGateway is GatewayBase {
 
         require(
             msg.value == penalty,
-            "msg.value must match the penalty amount"
+            "msg.value must match the penalty amount."
         );
 
-        require(
-            messageBox.outbox[_messageHash] ==
-            MessageBus.MessageStatus.Undeclared,
-            "Message status must be Undeclared"
+        // Declare redeem revocation.
+        MessageBus.declareRevocationMessage(
+            messageBox,
+            message
         );
-        // Update the message outbox status to declared.
-        messageBox.outbox[_messageHash] =
-        MessageBus.MessageStatus.DeclaredRevocation;
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
-        // Emit RevertRedeemDeclared event.
         emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,
@@ -873,9 +855,20 @@ contract EIP20CoGateway is GatewayBase {
             msg.value == bounty,
             "Payable amount should be equal to the bounty amount."
         );
+
         require(
             _amount > uint256(0),
             "Redeem amount must not be zero."
+        );
+
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after unstake of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the redeem amount."
         );
 
         // Get the redeem intent hash.
@@ -929,6 +922,24 @@ contract EIP20CoGateway is GatewayBase {
             _beneficiary,
             _amount
         );
+    }
+
+    /**
+     * @notice Gets the penalty amount. If the message hash does not exist in
+     *         redeems mapping it will return zero amount. If the message is
+     *         already progressed or revoked then the penalty amount will be
+     *         zero.
+     *
+     * @param _messageHash Message hash.
+     *
+     * @return penalty_ Penalty amount.
+     */
+    function penalty(bytes32 _messageHash)
+        external
+        view
+        returns (uint256 penalty_)
+    {
+        penalty_ = super.penaltyFromBounty(redeems[_messageHash].bounty);
     }
 
 
@@ -1040,13 +1051,11 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        //TODO: Remove the hardcoded 50000. Discuss and implement it properly
-        (rewardAmount_, message.gasConsumed) = GatewayLib.feeAmount(
+        (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
             message.gasPrice,
-            _initialGas,
-            50000  //21000 * 2 for transactions + approx buffer
+            _initialGas
         );
 
         require(
