@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,13 @@ const cogatewayUtils = require('../../../test/gateway/eip20_cogateway/helpers/co
 const StubData = require('../../data/redeem_revoked_1.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
+
+async function setStorageRoot(gateway) {
+  let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
+  let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+  await gateway.setStorageRoot(blockHeight, storageRoot);
+  return blockHeight;
+}
 
 contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
@@ -82,11 +89,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     let tx = await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
@@ -105,11 +109,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     let tx = await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
@@ -170,11 +171,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
@@ -196,11 +194,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Undeclared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -216,11 +211,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Progressed);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -236,11 +228,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -256,11 +245,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+    let blockHeight = await setStorageRoot(gateway);
     let storageProof = '0x';
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -294,13 +280,9 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
-    let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-    let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
-
+    let blockHeight = await setStorageRoot(gateway);
     //Using revert proof instead of revert_redeem proof
     let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-
-    await gateway.setStorageRoot(blockHeight, storageRoot);
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
