@@ -45,11 +45,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     mockOrganization,
     worker,
     redeemRequest,
-    redeemRequestWithNonce2;
+    redeemRequestWithNonceTwo,
+    messageHash = TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
 
   async function confirmRedeemIntent(stubData) {
 
-    let tx = await eip20Gateway.confirmRedeemIntent(
+    await eip20Gateway.confirmRedeemIntent(
       stubData.redeemer,
       stubData.nonce,
       stubData.beneficiary,
@@ -60,13 +61,6 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       stubData.hashLock,
       stubData.storageProof,
     );
-
-    assert.strictEqual(
-      tx.receipt.status,
-      true,
-      'Transaction should success.',
-    );
-
   }
 
   beforeEach(async function () {
@@ -81,12 +75,12 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       redeemRequest.blockNumber = new BN(redeemRequest.blockNumber, 16);
       redeemRequest.gasPrice = new BN(redeemRequest.gasPrice, 16);
 
-      redeemRequestWithNonce2 = TestDataJSON2.gateway.confirm_redeem_intent.params;
-      redeemRequestWithNonce2.nonce = new BN(redeemRequestWithNonce2.nonce, 16);
-      redeemRequestWithNonce2.amount = new BN(redeemRequestWithNonce2.amount, 16);
-      redeemRequestWithNonce2.gasLimit = new BN(redeemRequestWithNonce2.gasLimit, 16);
-      redeemRequestWithNonce2.blockNumber = new BN(redeemRequestWithNonce2.blockNumber, 16);
-      redeemRequestWithNonce2.gasPrice = new BN(redeemRequestWithNonce2.gasPrice, 16);
+      redeemRequestWithNonceTwo = TestDataJSON2.gateway.confirm_redeem_intent.params;
+      redeemRequestWithNonceTwo.nonce = new BN(redeemRequestWithNonceTwo.nonce, 16);
+      redeemRequestWithNonceTwo.amount = new BN(redeemRequestWithNonceTwo.amount, 16);
+      redeemRequestWithNonceTwo.gasLimit = new BN(redeemRequestWithNonceTwo.gasLimit, 16);
+      redeemRequestWithNonceTwo.blockNumber = new BN(redeemRequestWithNonceTwo.blockNumber, 16);
+      redeemRequestWithNonceTwo.gasPrice = new BN(redeemRequestWithNonceTwo.gasPrice, 16);
 
       owner = accounts[4];
       worker = accounts[8];
@@ -96,6 +90,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       let symbol = "OST",
         name = "Simple Token",
         decimals = 18;
+
       utilityToken = await Token.new(
         accounts[3],
         symbol,
@@ -149,7 +144,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       redeemRequest.storageProof,
     );
 
-    let messageHash = TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
+    messageHash = TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
     assert.strictEqual(
       result,
       messageHash,
@@ -174,12 +169,6 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
     let event = EventDecoder.getEvents(tx, eip20Gateway);
 
-    assert.strictEqual(
-      tx.receipt.status,
-      true,
-      'Transaction should success.',
-    );
-
     assert.isDefined(
       event.RedeemIntentConfirmed,
       'Event RedeemIntentConfirmed must be emitted.',
@@ -188,7 +177,6 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     let eventData = event.RedeemIntentConfirmed;
 
     let params = TestDataJSON.gateway.confirm_redeem_intent.params;
-    let messageHash = TestDataJSON.gateway.confirm_redeem_intent.return_value.returned_value.messageHash_;
 
     assert.strictEqual(
       eventData._messageHash,
@@ -199,14 +187,14 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     assert.strictEqual(
       eventData._redeemer,
       params.redeemer,
-      `Redeemer address from event must be equal to ${params.redeemer}.`,
+      `Redeemer address ${eventData._redeemer} from event must be equal to ${params.redeemer}.`,
     );
 
     let nonce = new BN(params.nonce, 16);
     assert.strictEqual(
       nonce.eq(eventData._redeemerNonce),
       true,
-      `Redeemer nonce from event must be equal to ${nonce.toString(10)}.`,
+      `Nonce value ${eventData._redeemerNonce} from event must be equal to ${nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -219,14 +207,14 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     assert.strictEqual(
       amount.eq(eventData._amount),
       true,
-      `Amount from event must be equal to ${amount.toString(10)}.`,
+      `Amount ${eventData._amount} from event must be equal to ${amount.toString(10)}.`,
     );
 
     let blockHeight = new BN(params.blockNumber, 16);
     assert.strictEqual(
       blockHeight.eq(eventData._blockHeight),
       true,
-      `Block height from event must be equal to ${blockHeight.toString(10)}.`,
+      `Block height ${eventData._blockHeight} from event must be equal to ${blockHeight.toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -258,11 +246,11 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       );
 
       await eip20Gateway.setStorageRoot(
-        redeemRequestWithNonce2.blockNumber,
-        redeemRequestWithNonce2.storageRoot,
+        redeemRequestWithNonceTwo.blockNumber,
+        redeemRequestWithNonceTwo.storageRoot,
       );
 
-      await confirmRedeemIntent(redeemRequestWithNonce2);
+      await confirmRedeemIntent(redeemRequestWithNonceTwo);
     }
   );
 
@@ -287,11 +275,11 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       );
 
       await eip20Gateway.setStorageRoot(
-        redeemRequestWithNonce2.blockNumber,
-        redeemRequestWithNonce2.storageRoot
+        redeemRequestWithNonceTwo.blockNumber,
+        redeemRequestWithNonceTwo.storageRoot
       );
 
-      await confirmRedeemIntent(redeemRequestWithNonce2);
+      await confirmRedeemIntent(redeemRequestWithNonceTwo);
     }
   );
 
@@ -376,7 +364,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
 
   });
 
-  it('should fail when redeemer nonce is already consumed.', async function () {
+  it('should fail when redeemer nonce is already consumed', async function () {
 
       let redeemerNonce = new BN(0);
       await Utils.expectRevert(
@@ -396,7 +384,7 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
     }
   );
 
-  it('should fail when storage root for the block height is not available.',
+  it('should fail when storage root for the block height is not available',
     async function () {
 
       let blockHeight = new BN(1);
@@ -416,10 +404,10 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       );
     });
 
-  it('should fail when the rlp parent node is a incorrect proof data.',
+  it('should fail when the rlp parent nodes is incorrect',
     async function () {
 
-      let rlpParentNodes = "0xf901aaf9013180a00678c6ffdd48f06abd9e31fb6be2abb7dbcceb1ca9dc942b6e4f7a03cfb4133aa0f3f1b8e4525ee1553d7cf1041cada6e19411d7cfec59a4a98d92c97c6844bff280a00c7a9c73ecdd6aa28e7fef237ebbdf3785e090857bc91cc2398e9c3ed8b12bc38080a0b8f31bfe3ec0ebeeb4ff5f38ca7be942611c0799a56fe55d742630aaa9465556a08b05b46d725768c8ba2c8fb0dd65ad2f49d471c0651add5e30689c3fd5f71f418080a0d04be8555e36b14dff8792944f25727cb14758091f6bfbdba8fa279a1f9159dea0f12076080e30aa1220521f506ef9dcea4ce37b9ef1ae493c25ef2f9f318f49f9a03309ff3958cfcb2687b55254511815f79a10dcb806c14f0a3699f6ec5c61254080a0eff8cffd1895f4b09b18d3f87f0e32dff29770c6b50fa99c0d744c1fef53947580f8518080808080808080a04107c22ed07eb1c27134d4b5afdb9caa60e89c49eb1f9a0e1b0b59742f031e24a02b251156366e27fcc5e8b89b7455cbd0fed4ad1bdb7cd792688993fe36da548280808080808080e2a020382fd80a0d114e4a854ca7a543ae6322aa51600085c01d41683ff42f2c7f7a02";
+      let rlpParentNodes = TestDataJSON2.gateway.confirm_redeem_intent.params.storageProof;
 
       await Utils.expectRevert(
         eip20Gateway.confirmRedeemIntent(
@@ -502,6 +490,5 @@ contract('EIP20Gateway.confirmRedeemIntent() ', function (accounts) {
       );
     }
   );
-
 
 });

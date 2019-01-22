@@ -641,7 +641,7 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Declare redeem intent
+     * @notice Declare redeem intent.
      *
      * @param _redeemer Redeemer address.
      * @param _redeemerNonce Redeemer nonce.
@@ -649,7 +649,7 @@ contract EIP20Gateway is GatewayBase {
      *                     transferred.
      * @param _amount Redeem amount.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redeem and unstake process done
+     *                  redeem and unstake process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay.
      * @param _blockHeight Block number for which the proof is valid.
      * @param _hashLock Hash lock.
@@ -678,19 +678,19 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _redeemer != address(0),
-            "Redeemer address must not be zero"
+            "Redeemer address must not be zero."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
         );
         require(
             _amount != 0,
-            "Redeem amount must not be zero"
+            "Redeem amount must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            "RLP encoded parent nodes must not be zero."
         );
 
         bytes32 intentHash = hashRedeemIntent(
@@ -1023,16 +1023,16 @@ contract EIP20Gateway is GatewayBase {
     /* Private functions */
 
     /**
-     * @notice private function to execute confirm redeem intent.
+     * @notice Private function to execute confirm redeem intent.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmRedeemIntent function
+     *      confirmRedeemIntent function.
      *
-     * @param _message message object
-     * @param _blockHeight Block number for which the proof is valid
+     * @param _message Message object.
+     * @param _blockHeight Block number for which the proof is valid.
      * @param _rlpParentNodes RLP encoded parent nodes.
      *
-     * @return `true` if executed successfully
+     * @return `true` if executed successfully.
      */
     function confirmRedeemIntentInternal(
         MessageBus.Message storage _message,
@@ -1042,14 +1042,14 @@ contract EIP20Gateway is GatewayBase {
         private
         returns (bool)
     {
-        // Get storage root
+        // Get storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
-        // Confirm message
+        // Confirm message.
         MessageBus.confirmMessage(
             messageBox,
             _message,
@@ -1190,15 +1190,15 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice private function to calculate redeem intent hash.
+     * @notice Private function to calculate redeem intent hash.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmRedeemIntent function
+     *      confirmRedeemIntent function.
      *
-     * @param _amount redeem amount
-     * @param _beneficiary unstake account
+     * @param _amount Redeem amount.
+     * @param _beneficiary Unstake account.
      *
-     * @return bytes32 redeem intent hash
+     * @return bytes32 Redeem intent hash.
      */
     function hashRedeemIntent(
         uint256 _amount,
