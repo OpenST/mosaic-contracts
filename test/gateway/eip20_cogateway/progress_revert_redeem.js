@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,10 +32,15 @@ const StubData = require("../../../test/data/redeem_revoked_1.json");
 
 const ZeroBytes = Utils.ZERO_BYTES32;
 const MessageStatusEnum = messageBus.MessageStatusEnum;
+const PENALTY_MULTIPLIER = 1.5;
 
 contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
 
-  let utilityToken, cogateway, revertRedeemParams, bountyAmount, penaltyAmount,
+  let utilityToken,
+    cogateway,
+    revertRedeemParams,
+    bountyAmount,
+    penaltyAmount,
     owner,
     facilitator;
 
@@ -44,26 +49,34 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     owner = accounts[0];
     facilitator = accounts[1];
 
+    let redeemRequest = StubData.co_gateway.redeem.params;
+    let confirmRedeemRequest = StubData.gateway.confirm_revert_redeem_intent;
+
     revertRedeemParams = {
-      redeemer: StubData.co_gateway.redeem.params.redeemer,
-      amount: new BN(StubData.co_gateway.redeem.params.amount, 16),
-      beneficiary: StubData.co_gateway.redeem.params.beneficiary,
-      gasPrice: new BN(StubData.co_gateway.redeem.params.gasPrice, 16),
-      gasLimit: new BN(StubData.co_gateway.redeem.params.gasLimit, 16),
-      nonce: new BN(StubData.co_gateway.redeem.params.nonce, 16),
-      hashLock: StubData.co_gateway.redeem.params.hashLock,
-      rlpParentNodes: StubData.gateway.confirm_revert_redeem_intent.proof_data.storageProof[0].serializedProof,
-      blockHeight: new BN(StubData.gateway.confirm_revert_redeem_intent.proof_data.block_number, 16),
-      storageRoot: StubData.gateway.confirm_revert_redeem_intent.proof_data.storageHash,
+      redeemer: redeemRequest.redeemer,
+      amount: new BN(redeemRequest.amount, 16),
+      beneficiary: redeemRequest.beneficiary,
+      gasPrice: new BN(redeemRequest.gasPrice, 16),
+      gasLimit: new BN(redeemRequest.gasLimit, 16),
+      nonce: new BN(redeemRequest.nonce, 16),
+      hashLock: redeemRequest.hashLock,
+      rlpParentNodes: confirmRedeemRequest.proof_data.storageProof[0].serializedProof,
+      blockHeight: new BN(confirmRedeemRequest.proof_data.block_number, 16),
+      storageRoot: confirmRedeemRequest.proof_data.storageHash,
       messageStatus: MessageStatusEnum.Declared
     };
 
+    let decimal = 18;
+    let token = accounts[9];
+    let symbol = "DUM";
+    let name = "Dummy";
+    let organization = accounts[2];
     utilityToken = await MockUtilityToken.new(
-      accounts[9],
-      "",
-      "",
-      18,
-      accounts[2],
+      token,
+      symbol,
+      name,
+      decimal,
+      organization,
       {from: owner}
     );
 
@@ -80,54 +93,13 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       accounts[8] //burner,
     );
 
-    let redeemIntentHash = coGatewayUtils.hashRedeemIntent(
-      revertRedeemParams.amount,
-      revertRedeemParams.beneficiary,
-      StubData.contracts.coGateway,
-    );
-
-    let messageHash = await cogateway.setMessage.call(
-      redeemIntentHash,
-      revertRedeemParams.nonce,
-      revertRedeemParams.gasPrice,
-      revertRedeemParams.gasLimit,
-      revertRedeemParams.redeemer,
-      revertRedeemParams.hashLock,
-    );
-    await cogateway.setMessage(
-      redeemIntentHash,
-      revertRedeemParams.nonce,
-      revertRedeemParams.gasPrice,
-      revertRedeemParams.gasLimit,
-      revertRedeemParams.redeemer,
-      revertRedeemParams.hashLock,
-    );
-    revertRedeemParams.messageHash = messageHash;
-
-    await cogateway.setRedeem(
-      revertRedeemParams.messageHash,
-      revertRedeemParams.beneficiary,
-      revertRedeemParams.amount
-    );
-
-    // Set co-gateway to owner so that increase supply can be called.
-    await utilityToken.setCoGatewayAddress(owner);
-    // Send redeem amount to co-gateway.
-    await  utilityToken.increaseSupply(cogateway.address, revertRedeemParams.amount, {from: owner});
-
-    // Send penalty and bounty to co-gateway.
-    await web3.eth.sendTransaction(
-      {
-        to: cogateway.address,
-        from: accounts[0],
-        value: bountyAmount.add(penaltyAmount)
-      }
-    );
-    await utilityToken.setCoGatewayAddress(cogateway.address);
-
-    await cogateway.setOutboxStatus(
-      revertRedeemParams.messageHash,
-      MessageStatusEnum.DeclaredRevocation,
+    await setupContractPreCondition(revertRedeemParams,
+      cogateway,
+      accounts,
+      bountyAmount,
+      penaltyAmount,
+      utilityToken,
+      owner
     );
 
   });
@@ -136,21 +108,45 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
 
     await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
-    let tx = await cogateway.progressRevertRedeem(
+    await cogateway.progressRevertRedeem(
+      revertRedeemParams.messageHash,
+      revertRedeemParams.blockHeight,
+      revertRedeemParams.rlpParentNodes,
+    );
+  });
+
+  it('should return correct response', async function () {
+
+    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
+
+    let response = await cogateway.progressRevertRedeem.call(
       revertRedeemParams.messageHash,
       revertRedeemParams.blockHeight,
       revertRedeemParams.rlpParentNodes,
     );
 
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
+    assert.strictEqual(
+      response.redeemer_,
+      revertRedeemParams.redeemer,
+      `Expected redeemer ${revertRedeemParams.redeemer} is different from redeemer from 
+      event ${response.redeemer_}`,
+    );
+    assert.strictEqual(
+      response.redeemerNonce_.eq(revertRedeemParams.nonce),
+      true,
+      `Expected stakerNonce ${revertRedeemParams.nonce.toString(10)} is different from nonce from 
+      event ${response.redeemerNonce_.toString(10)}`,
+    );
+    assert.strictEqual(
+      response.amount_.eq(revertRedeemParams.amount),
+      true,
+      `Expected amount ${revertRedeemParams.amount.toString(10)} is different from amount from 
+      event ${response.amount_.toString(10)}`,
     );
 
   });
 
-  it('should emit `RedeemReverted` event ', async function () {
+  it('should emit `RedeemReverted` event', async function () {
 
     await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
@@ -194,7 +190,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
 
   });
 
-  it('should burn bounty and penalty amount ', async function () {
+  it('should burn bounty and penalty amount', async function () {
 
     let burnerAddress = await cogateway.burner.call();
 
@@ -214,10 +210,14 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     let redeemerFinalTokenBalance = await Utils.getBalance(revertRedeemParams.redeemer);
     let burnerFinalTokenBalance = await Utils.getBalance(burnerAddress);
 
+    // Penalty is paid by redeemer and it is burned with bounty on
+    // message revocation.
+    let penalty = bountyAmount.muln(PENALTY_MULTIPLIER);
+
     assert.strictEqual(
-      cogatewayFinalTokenBalance.eq(cogatewayInitialTokenBalance.sub(bountyAmount.muln(2.5))),
+      cogatewayFinalTokenBalance.eq(cogatewayInitialTokenBalance.sub(bountyAmount.add(penalty))),
       true,
-      `CoGateway balance must decrease by ${bountyAmount.muln(2.5).toString(10)}.`,
+      `CoGateway balance must decrease by ${bountyAmount.add(penalty).toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -227,14 +227,14 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     );
 
     assert.strictEqual(
-      burnerFinalTokenBalance.eq(burnerInitialTokenBalance.add(bountyAmount.muln(2.5))),
+      burnerFinalTokenBalance.eq(burnerInitialTokenBalance.add(bountyAmount.add(penalty))),
       true,
-      `Burner balance must increase by ${bountyAmount.muln(2.5).toString(10)}.`,
+      `Burner balance must increase by ${bountyAmount.add(penalty).toString(10)}.`,
     );
 
   });
 
-  it('should transfer redeem amount to redeemer ', async function () {
+  it('should transfer redeem amount to redeemer', async function () {
 
     let burnerAddress = await cogateway.burner.call();
 
@@ -383,3 +383,67 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
   });
 
 });
+
+async function setupContractPreCondition(
+  revertRedeemParams,
+  cogateway,
+  accounts,
+  bountyAmount,
+  penaltyAmount,
+  utilityToken,
+  owner) {
+  let redeemIntentHash = coGatewayUtils.hashRedeemIntent(
+    revertRedeemParams.amount,
+    revertRedeemParams.beneficiary,
+    StubData.contracts.coGateway,
+  );
+
+  let messageHash = messageBus.messageDigest(
+    redeemIntentHash,
+    revertRedeemParams.nonce,
+    revertRedeemParams.gasPrice,
+    revertRedeemParams.gasLimit,
+    revertRedeemParams.redeemer,
+    revertRedeemParams.hashLock,
+  );
+  await cogateway.setMessage(
+    redeemIntentHash,
+    revertRedeemParams.nonce,
+    revertRedeemParams.gasPrice,
+    revertRedeemParams.gasLimit,
+    revertRedeemParams.redeemer,
+    revertRedeemParams.hashLock,
+  );
+  revertRedeemParams.messageHash = messageHash;
+
+  await cogateway.setRedeem(
+    revertRedeemParams.messageHash,
+    revertRedeemParams.beneficiary,
+    revertRedeemParams.amount,
+  );
+
+  // Send penalty and bounty to co-gateway.
+  await web3.eth.sendTransaction(
+    {
+      to: cogateway.address,
+      from: accounts[0],
+      value: bountyAmount.add(penaltyAmount),
+    }
+  );
+
+  // Set co-gateway to owner so that increase supply can be called.
+  await utilityToken.setCoGatewayAddress(owner);
+  // Send redeem amount to co-gateway.
+  await  utilityToken.increaseSupply(
+    cogateway.address,
+    revertRedeemParams.amount,
+    {from: owner},
+  );
+
+  await utilityToken.setCoGatewayAddress(cogateway.address);
+
+  await cogateway.setOutboxStatus(
+    revertRedeemParams.messageHash,
+    MessageStatusEnum.DeclaredRevocation,
+  );
+}

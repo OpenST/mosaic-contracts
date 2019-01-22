@@ -67,7 +67,7 @@ CoGatewayUtils.prototype = {
         ],
         [
           redeemIntentTypeHash,
-          amount.toNumber(),
+          amount.toString(10),
           beneficiary,
           gateway,
         ],
