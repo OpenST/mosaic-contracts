@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,114 +41,12 @@ let valueToken,
   testEIP20CoGateway,
   messageHash;
 
-async function assertProgressMintWithProof(stubData, progressMintValues, facilitator) {
+async function getMaxReward(stubData) {
+  let gasPrice = new BN(stubData.gateway.stake.params.gasPrice, 16),
+    gasLimit = new BN(stubData.gateway.stake.params.gasLimit, 16),
+    maxReward = new BN(gasPrice * gasLimit);
 
-  let expectedMintedToken = new BN(
-    stubData.co_gateway.progress_mint.return_value.events.MintProgressed._mintedAmount,
-    16
-    ),
-    expectedReward = new BN(
-      stubData.co_gateway.progress_mint.return_value.events.MintProgressed._rewardAmount,
-      16
-    );
-
-  assert.strictEqual(
-    progressMintValues.beneficiary_,
-    stubData.gateway.stake.params.beneficiary,
-    `Beneficiary address should be ${stubData.gateway.stake.params.beneficiary}`,
-  );
-
-  amount = new BN(stubData.gateway.progress_stake.return_value.returned_value.stakeAmount_, 16);
-  assert.strictEqual(
-    amount.eq(progressMintValues.stakeAmount_),
-    true,
-    `Staked amount should be ${amount}.`,
-  );
-
-  assert.strictEqual(
-    expectedMintedToken.eq(progressMintValues.mintedAmount_),
-    true,
-    `Minted amount should be ${expectedMintedToken}.`,
-  );
-
-  assert.strictEqual(
-    expectedReward.eq(progressMintValues.rewardAmount_),
-    true,
-    `Reward to facilitator should be ${expectedReward}.`,
-  );
-
-  let response = await testEIP20CoGateway.progressMintWithProof(
-    messageHash,
-    stubData.gateway.stake.proof_data.storageProof[0].serializedProof,
-    new BN(stubData.gateway.stake.return_value.block_number, 16),
-    MessageStatusEnum.Declared,
-    {from: facilitator},
-  );
-
-  let facilitatorBalance = await testUtilityToken.balanceOf(facilitator);
-  let beneficiaryBalance = await testUtilityToken.balanceOf(stubData.gateway.stake.params.beneficiary);
-
-  assert.strictEqual(
-    facilitatorBalance.eq(expectedReward),
-    true,
-    `Facilitator reward should be ${expectedReward}.`,
-  );
-
-  assert.strictEqual(
-    beneficiaryBalance.eq(expectedMintedToken),
-    true,
-    `Beneficiary balance should be ${amount.sub(expectedMintedToken)}.`
-  );
-
-  let mintProgressed = stubData.co_gateway.progress_mint.return_value.events.MintProgressed._mintedAmount;
-  let expectedEvent = {
-    MintProgressed: {
-      _messageHash: mintProgressed._messageHash,
-      _staker: mintProgressed._staker,
-      _stakeAmount: mintProgressed._stakeAmount,
-      _mintedAmount: expectedMintedToken,
-      _rewardAmount: expectedReward,
-      _proofProgress: true,
-      _unlockSecret: mintProgressed._unlockSecret
-    }
-  };
-
-  assert.equal(
-    response.receipt.status,
-    1,
-    'Receipt status is unsuccessful.',
-  );
-
-  let eventData = response.logs;
-  Utils.validateEvents(eventData, expectedEvent);
-
-}
-
-async function setup(accounts) {
-
-  valueToken = accounts[0];
-  burner = accounts[10];
-  organization = accounts[2];
-  gateway = accounts[3];
-  testUtilityToken = await TestUtilityToken.new(
-    valueToken,
-    symbol,
-    name,
-    decimals,
-    organization
-  );
-
-  bountyAmount = new BN(100);
-
-  testEIP20CoGateway = await TestEIP20CoGateway.new(
-    testUtilityToken.address,// make it value token or mocktoken
-    testUtilityToken.address,
-    TestData.contracts.anchor,
-    bountyAmount,
-    organization,
-    TestData.contracts.gateway,
-    burner,
-  );
+  return maxReward;
 }
 
 contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
@@ -158,7 +56,29 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
 
   beforeEach(async function () {
 
-    await setup(accounts);
+    valueToken = accounts[0];
+    burner = accounts[10];
+    organization = accounts[2];
+    gateway = accounts[3];
+    testUtilityToken = await TestUtilityToken.new(
+      valueToken,
+      symbol,
+      name,
+      decimals,
+      organization,
+    );
+
+    bountyAmount = new BN(100);
+
+    testEIP20CoGateway = await TestEIP20CoGateway.new(
+      valueToken,
+      testUtilityToken.address,
+      TestData.contracts.anchor,
+      bountyAmount,
+      organization,
+      TestData.contracts.gateway,
+      burner,
+    );
 
     intentHash = coGatewayUtils.hashStakeIntent(
       new BN(TestData.gateway.stake.params.amount, 16),
@@ -204,9 +124,13 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
 
   });
 
-  it('should progress mint for non-zero facilitator reward when message status at source is declared', async function () {
+  it('should emit event MintProgressed', async function () {
 
-    let progressMintValues = await testEIP20CoGateway.progressMintWithProof.call(
+    let amount = new BN(TestData.gateway.stake.params.amount, 16);
+    let estimatedReward = await getMaxReward(TestData);
+    let estimatedStakeAmount = amount.sub(estimatedReward);
+
+    let response = await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       TestData.gateway.stake.proof_data.storageProof[0].serializedProof,
       new BN(TestData.gateway.stake.return_value.block_number, 16),
@@ -214,17 +138,97 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestData, progressMintValues, facilitator);
+    let expectedEvent = {
+      MintProgressed: {
+        _messageHash: messageHash,
+        _staker: TestData.gateway.stake.params.staker,
+        _stakeAmount: new BN(TestData.gateway.stake.params.amount, 16),
+        _mintedAmount: estimatedStakeAmount,
+        _rewardAmount: estimatedReward,
+        _proofProgress: true,
+        _unlockSecret: Utils.ZERO_BYTES32
+      }
+    };
+
+    let eventData = response.logs;
+    Utils.validateEvents(eventData, expectedEvent);
+
+  });
+
+  it('should return correct params', async function () {
+
+    let response = await testEIP20CoGateway.progressMintWithProof.call(
+      messageHash,
+      TestData.gateway.stake.proof_data.storageProof[0].serializedProof,
+      new BN(TestData.gateway.stake.return_value.block_number, 16),
+      MessageStatusEnum.Declared,
+      {from: facilitator},
+    );
+
+    assert.strictEqual(
+      response.beneficiary_,
+      TestData.gateway.stake.params.beneficiary,
+      `Beneficiary address is ${response.beneficiary_}. It should be ${TestData.gateway.stake.params.beneficiary}`,
+    );
+
+    let stakedAmount = new BN(TestData.gateway.stake.params.amount, 16);
+    assert.strictEqual(
+      stakedAmount.eq(response.stakeAmount_),
+      true,
+      `Staked amount should be ${stakedAmount}.`,
+    );
+
+    let expectedReward = await getMaxReward(TestData);
+    assert.strictEqual(
+      expectedReward.eq(response.rewardAmount_),
+      true,
+      `Reward to facilitator should be ${expectedReward}.`,
+    );
+
+    let expectedStakedAmount = stakedAmount.sub(expectedReward);
+    assert.strictEqual(
+      expectedStakedAmount.eq(response.mintedAmount_),
+      true,
+      `Minted amount should be ${expectedStakedAmount}.`,
+    );
+
+  });
+
+  it('should progress mint for non-zero facilitator reward when message status at source is declared', async function () {
+
+    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+
+    await testEIP20CoGateway.progressMintWithProof(
+      messageHash,
+      TestData.gateway.stake.proof_data.storageProof[0].serializedProof,
+      new BN(TestData.gateway.stake.return_value.block_number, 16),
+      MessageStatusEnum.Declared,
+      {from: facilitator},
+    );
+
+    let expectedRewardAmount = await getMaxReward(TestData);
+
+    let finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+
+    assert.strictEqual(
+      expectedRewardAmount.add(initialFacilitatorBalance).eq(finalFacilitatorBalance),
+      true,
+      `Facilitator reward should be ${expectedRewardAmount.add(initialFacilitatorBalance)}.`,
+    );
 
   });
 
   it('should progress mint for non-zero facilitator reward when message status at source is progressed', async function () {
 
+    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator),
+      initialBeneficiaryBalance = await testUtilityToken.balanceOf(TestData.gateway.stake.params.beneficiary);
+
     await testEIP20CoGateway.setStorageRoot(
       new BN(TestData.gateway.progress_stake.return_value.block_number, 16),
       TestData.gateway.progress_stake.proof_data.storageHash
     );
-    let progressMintValues = await testEIP20CoGateway.progressMintWithProof.call(
+
+    await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       TestData.gateway.progress_stake.proof_data.storageProof[0].serializedProof,
       new BN(TestData.gateway.progress_stake.return_value.block_number, 16),
@@ -232,7 +236,48 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestData, progressMintValues, facilitator);
+    let expectedRewardAmount = await getMaxReward(TestData),
+      finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator),
+      finalBeneficiaryBalance = await testUtilityToken.balanceOf(TestData.gateway.stake.params.beneficiary);
+
+    assert.strictEqual(
+      expectedRewardAmount.add(initialFacilitatorBalance).eq(finalFacilitatorBalance),
+      true,
+      `Facilitator reward should be ${expectedRewardAmount.add(initialFacilitatorBalance)}.`,
+    );
+
+    let stakedAmount = new BN(TestData.gateway.stake.params.amount, 16);
+
+    assert.strictEqual(
+      initialBeneficiaryBalance.add(stakedAmount.sub(expectedRewardAmount)).eq(finalBeneficiaryBalance),
+      true,
+      `Beneficiary balance should be ${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
+    );
+
+  });
+
+  it('should mint the tokens to beneficiary', async function () {
+
+    let initialBeneficiaryBalance = await testUtilityToken.balanceOf(TestData.gateway.stake.params.beneficiary);
+
+    await testEIP20CoGateway.progressMintWithProof(
+      messageHash,
+      TestData.gateway.stake.proof_data.storageProof[0].serializedProof,
+      new BN(TestData.gateway.stake.return_value.block_number, 16),
+      MessageStatusEnum.Declared,
+      {from: facilitator},
+    );
+
+    let expectedRewardAmount = await getMaxReward(TestData),
+      finalBeneficiaryBalance = await testUtilityToken.balanceOf(TestData.gateway.stake.params.beneficiary);
+
+    let stakedAmount = new BN(TestData.gateway.stake.params.amount, 16);
+
+    assert.strictEqual(
+      initialBeneficiaryBalance.add(stakedAmount.sub(expectedRewardAmount)).eq(finalBeneficiaryBalance),
+      true,
+      `Beneficiary balance should be ${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
+    );
 
   });
 
@@ -278,7 +323,11 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let progressMintValues = await testEIP20CoGateway.progressMintWithProof.call(
+    let gasPrice = new BN(TestDataWithZeroGasPrice.gateway.stake.params.gasPrice, 16);
+    let gasLimit = new BN(TestDataWithZeroGasPrice.gateway.stake.params.gasLimit, 16);
+    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+
+    await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       TestDataWithZeroGasPrice.gateway.stake.proof_data.storageProof[0].serializedProof,
       new BN(TestDataWithZeroGasPrice.gateway.stake.return_value.block_number, 16),
@@ -286,7 +335,14 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       {from: facilitator},
     );
 
-    assertProgressMintWithProof(TestDataWithZeroGasPrice, progressMintValues, facilitator);
+    let expectedRewardAmount = await getMaxReward(TestDataWithZeroGasPrice),
+      finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+
+    assert.strictEqual(
+      expectedRewardAmount.add(initialFacilitatorBalance).eq(finalFacilitatorBalance),
+      true,
+      `Facilitator reward should be ${expectedRewardAmount.add(initialFacilitatorBalance)}.`,
+    );
 
   });
 
@@ -463,7 +519,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       messageHash,
       TestData.gateway.stake.proof_data.storageProof[0].serializedProof,
       new BN(TestData.gateway.stake.return_value.block_number, 16),
-      MessageStatusEnum.Declared,
+      MessageStatusEnum.Progressed,
       {from: facilitator},
       ),
       'Message on target must be Declared.',
