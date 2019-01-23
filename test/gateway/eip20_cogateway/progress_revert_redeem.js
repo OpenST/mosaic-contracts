@@ -63,7 +63,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       rlpParentNodes: confirmRedeemRequest.proof_data.storageProof[0].serializedProof,
       blockHeight: new BN(confirmRedeemRequest.proof_data.block_number, 16),
       storageRoot: confirmRedeemRequest.proof_data.storageHash,
-      messageStatus: MessageStatusEnum.Declared
+      messageStatus: MessageStatusEnum.Declared,
     };
 
     let decimal = 18;
@@ -77,7 +77,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       name,
       decimal,
       organization,
-      {from: owner}
+      {from: owner},
     );
 
     bountyAmount = new BN(StubData.co_gateway.constructor.bounty);
@@ -90,7 +90,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       bountyAmount,
       StubData.co_gateway.constructor.organization,
       StubData.co_gateway.constructor.gateway,
-      accounts[8] //burner,
+      accounts[8], //burner
     );
 
     await setupContractPreCondition(revertRedeemParams,
@@ -99,7 +99,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       bountyAmount,
       penaltyAmount,
       utilityToken,
-      owner
+      owner,
     );
 
   });
@@ -392,6 +392,7 @@ async function setupContractPreCondition(
   penaltyAmount,
   utilityToken,
   owner) {
+
   let redeemIntentHash = coGatewayUtils.hashRedeemIntent(
     revertRedeemParams.amount,
     revertRedeemParams.beneficiary,
