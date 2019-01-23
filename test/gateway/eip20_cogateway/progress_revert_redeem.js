@@ -235,7 +235,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', function (accounts) {
 
   });
 
-  it('should transfer redeem amount to redeemer', async function () {
+  it('should transfer ERC20 redeem amount to redeemer', async function () {
 
     let burnerAddress = await cogateway.burner.call();
 
