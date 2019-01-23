@@ -229,7 +229,7 @@ contract('EIP20Gateway.progressRevertStake()', function (accounts) {
         revertStakeParams.blockHeight,
         revertStakeParams.rlpParentNodes,
       ),
-      'Message on source must be DeclaredRevocation.',
+      'Message status on source must be DeclaredRevocation.',
     );
 
   });
