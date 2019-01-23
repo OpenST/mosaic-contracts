@@ -954,6 +954,7 @@ contract EIP20Gateway is GatewayBase {
             redeemerNonce_,
             amount_
         );
+
         delete unstakes[_messageHash];
     }
 
