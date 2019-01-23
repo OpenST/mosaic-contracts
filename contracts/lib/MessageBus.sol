@@ -532,7 +532,7 @@ library MessageBus {
         require(
             _messageBox.outbox[messageHash_] ==
             MessageStatus.DeclaredRevocation,
-            "Message on source must be DeclaredRevocation."
+            "Message status on source must be DeclaredRevocation."
         );
 
         // The inbox is at location INBOX_OFFSET of the MessageBox struct.
