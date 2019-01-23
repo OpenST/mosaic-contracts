@@ -31,6 +31,7 @@ const StubData = require('../../data/redeem_revoked_1.json');
 const NullAddress = Utils.NULL_ADDRESS;
 
 async function setStorageRoot(gateway) {
+
   let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
   let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
   await gateway.setStorageRoot(blockHeight, storageRoot);
@@ -39,8 +40,13 @@ async function setStorageRoot(gateway) {
 
 contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
 
-  let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage,
+  let gateway,
+    mockToken,
+    baseToken,
+    unstakeRequest,
+    unstakeMessage,
     stakeVaultAddress;
+
   let bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
   let MessageStatusEnum = messageBus.MessageStatusEnum;
   let redeemRequest = StubData.co_gateway.redeem.params;
@@ -58,7 +64,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       coreAddress,
       bountyAmount,
       organizationAddress,
-      NullAddress //burner address,
+      NullAddress, //burner address
     );
 
     unstakeRequest = {
@@ -69,7 +75,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
-      StubData.contracts.coGateway
+      StubData.contracts.coGateway,
     );
 
     unstakeMessage = {
@@ -81,7 +87,14 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       hashLock: redeemRequest.hashLock,
       unlockSecret: redeemRequest.unlockSecret,
     };
-    stakeVaultAddress = await setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts);
+    stakeVaultAddress = await setup(
+      unstakeMessage,
+      gateway,
+      unstakeRequest,
+      stakeVaultAddress,
+      mockToken,
+      accounts,
+    );
 
   });
 
@@ -290,7 +303,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
         blockHeight,
         storageProof,
       ),
-      'Storage root must not be zero.'
+      'Storage root must not be zero.',
     );
 
   });
@@ -300,7 +313,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
 
     let blockHeight = await setStorageRoot(gateway);
-    //Using revert proof instead of revert_redeem proof
+    // Using revert proof instead of revert_redeem proof.
     let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
@@ -343,7 +356,7 @@ async function setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress,
   await mockToken.transfer(
     stakeVaultAddress,
     unstakeRequest.amount,
-    {from: accounts[0]}
+    {from: accounts[0]},
   );
   return stakeVaultAddress;
 }
