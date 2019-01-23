@@ -583,25 +583,25 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "StakeIntentHash must not be zero"
+            "StakeIntentHash must not be zero."
         );
 
         // Get the storageRoot for the given block height
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Progress with revocation message
