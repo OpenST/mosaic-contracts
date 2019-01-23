@@ -688,14 +688,18 @@ contract EIP20CoGateway is GatewayBase {
         redeemerNonce_ = message.nonce;
         amount_ = redeemProcess.amount;
 
+        uint256 bounty = redeemProcess.bounty;
+        // Delete the redeem data.
+        delete redeems[_messageHash];
+
         // Return the redeem amount back.
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
         // Burn bounty.
-        burner.transfer(redeemProcess.bounty);
+        burner.transfer(bounty);
 
         // Penalty charged to redeemer.
-        uint256 penalty = penaltyFromBounty(redeemProcess.bounty);
+        uint256 penalty = penaltyFromBounty(bounty);
 
         // Burn penalty.
         burner.transfer(penalty);
@@ -704,11 +708,9 @@ contract EIP20CoGateway is GatewayBase {
             _messageHash,
             message.sender,
             message.nonce,
-            redeemProcess.amount
+            amount_
         );
 
-        // Delete the redeem data.
-        delete redeems[_messageHash];
     }
 
     /**

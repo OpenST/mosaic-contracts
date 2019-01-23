@@ -34,7 +34,7 @@ const ZeroBytes = Utils.ZERO_BYTES32;
 const MessageStatusEnum = messageBus.MessageStatusEnum;
 const PENALTY_MULTIPLIER = 1.5;
 
-contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
+contract('EIP20CoGateway.progressRevertRedeem()', function (accounts) {
 
   let utilityToken,
     cogateway,
@@ -102,11 +102,11 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       owner,
     );
 
+    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
+
   });
 
   it('should progress revert redeem', async function () {
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     await cogateway.progressRevertRedeem(
       revertRedeemParams.messageHash,
@@ -116,8 +116,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
   });
 
   it('should return correct response', async function () {
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     let response = await cogateway.progressRevertRedeem.call(
       revertRedeemParams.messageHash,
@@ -148,8 +146,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
 
   it('should emit `RedeemReverted` event', async function () {
 
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
-
     let tx = await cogateway.progressRevertRedeem(
       revertRedeemParams.messageHash,
       revertRedeemParams.blockHeight,
@@ -179,13 +175,15 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     assert.strictEqual(
       eventData._redeemerNonce.eq(revertRedeemParams.nonce),
       true,
-      `Redeemer nonce from the event must be equal to ${revertRedeemParams.nonce}.`,
+      `Redeemer nonce from the event ${eventData._redeemerNonce.toString(10)}
+       must be equal to ${revertRedeemParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(revertRedeemParams.amount),
       true,
-      `Redeem amount from the event must be equal to ${revertRedeemParams.amount}.`,
+      `Redeem amount from the event ${eventData._amount.toString(10)} 
+      must be equal to ${revertRedeemParams.amount.toString(10)}.`,
     );
 
   });
@@ -197,8 +195,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     let cogatewayInitialTokenBalance = await Utils.getBalance(cogateway.address);
     let redeemerInitialTokenBalance = await Utils.getBalance(revertRedeemParams.redeemer);
     let burnerInitialTokenBalance = await Utils.getBalance(burnerAddress);
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     await cogateway.progressRevertRedeem(
       revertRedeemParams.messageHash,
@@ -214,22 +210,27 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     // message revocation.
     let penalty = bountyAmount.muln(PENALTY_MULTIPLIER);
 
+    let expectedCoGatewayBalance = cogatewayInitialTokenBalance.sub(bountyAmount.add(penalty));
     assert.strictEqual(
-      cogatewayFinalTokenBalance.eq(cogatewayInitialTokenBalance.sub(bountyAmount.add(penalty))),
+      cogatewayFinalTokenBalance.eq(expectedCoGatewayBalance),
       true,
-      `CoGateway balance must decrease by ${bountyAmount.add(penalty).toString(10)}.`,
+      `CoGateway final balance ${cogatewayFinalTokenBalance.toString(10)} 
+      must be equal to ${expectedCoGatewayBalance.toString(10)}.`,
     );
 
     assert.strictEqual(
-      redeemerInitialTokenBalance.eq(redeemerFinalTokenBalance),
+      redeemerFinalTokenBalance.eq(redeemerInitialTokenBalance),
       true,
-      `Redeemer balance must not change.`,
+      `Redeemer final balance ${redeemerFinalTokenBalance.toString(10)} must 
+      be equal to ${redeemerInitialTokenBalance.toString(10)}.`,
     );
 
+    let expectedBurnerBalance = burnerInitialTokenBalance.add(bountyAmount.add(penalty));
     assert.strictEqual(
-      burnerFinalTokenBalance.eq(burnerInitialTokenBalance.add(bountyAmount.add(penalty))),
+      burnerFinalTokenBalance.eq(expectedBurnerBalance),
       true,
-      `Burner balance must increase by ${bountyAmount.add(penalty).toString(10)}.`,
+      `Burner final balance ${burnerFinalTokenBalance.toString(10)} 
+      must be equal to ${expectedBurnerBalance.toString(10)}.`,
     );
 
   });
@@ -242,8 +243,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     let redeemerInitialTokenBalance = await utilityToken.balanceOf(revertRedeemParams.redeemer);
     let burnerInitialTokenBalance = await utilityToken.balanceOf(burnerAddress);
 
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
-
     await cogateway.progressRevertRedeem(
       revertRedeemParams.messageHash,
       revertRedeemParams.blockHeight,
@@ -254,29 +253,32 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     let redeemerFinalTokenBalance = await utilityToken.balanceOf(revertRedeemParams.redeemer);
     let burnerFinalTokenBalance = await utilityToken.balanceOf(burnerAddress);
 
+    let coGatewayExpectedBalance = cogatewayInitialTokenBalance.sub(revertRedeemParams.amount);
     assert.strictEqual(
-      cogatewayFinalTokenBalance.eq(cogatewayInitialTokenBalance.sub(revertRedeemParams.amount)),
+      cogatewayFinalTokenBalance.eq(coGatewayExpectedBalance),
       true,
-      `Gateway balance must decrease by ${revertRedeemParams.amount.toString(10)}.`,
+      `Gateway final balance ${cogatewayFinalTokenBalance.toString(10)} 
+      must be equal to ${coGatewayExpectedBalance.toString(10)}.`,
     );
 
+    let expectedRedeemerBalance = redeemerInitialTokenBalance.add(revertRedeemParams.amount);
     assert.strictEqual(
-      redeemerFinalTokenBalance.eq(redeemerInitialTokenBalance.add(revertRedeemParams.amount)),
+      redeemerFinalTokenBalance.eq(expectedRedeemerBalance),
       true,
-      `Redeemer balance must increase by ${revertRedeemParams.amount.toString(10)}.`,
+      `Redeemer final balance ${redeemerFinalTokenBalance.toString(10)} 
+      must be equal to ${expectedRedeemerBalance.toString(10)}.`,
     );
 
     assert.strictEqual(
       burnerFinalTokenBalance.eq(burnerInitialTokenBalance),
       true,
-      `Burner balance must not change.`,
+      `Burner final balance ${burnerFinalTokenBalance.toString(10)} 
+       must be equal to ${burnerInitialTokenBalance.toString(10)}.`,
     );
 
   });
 
   it('should fail when message hash is zero', async function () {
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
@@ -291,8 +293,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
 
   it('should fail when storage proof zero', async function () {
 
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
-
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
         revertRedeemParams.messageHash,
@@ -304,8 +304,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
   });
 
   it('should fail when storage proof is invalid', async function () {
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
@@ -323,7 +321,7 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
         revertRedeemParams.messageHash,
-        revertRedeemParams.blockHeight,
+        revertRedeemParams.blockHeight.addn(1),
         revertRedeemParams.rlpParentNodes,
       ),
       'Storage root must not be zero.',
@@ -350,8 +348,6 @@ contract('EIP20CoGateway.progressRevertRedeem() ', function (accounts) {
       revertRedeemParams.messageHash,
       MessageStatusEnum.Progressed,
     );
-
-    await cogateway.setStorageRoot(revertRedeemParams.blockHeight, revertRedeemParams.storageRoot);
 
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
