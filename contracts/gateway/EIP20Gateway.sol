@@ -304,11 +304,22 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _amount > uint256(0),
-            "Stake amount must not be zero"
+            "Stake amount must not be zero."
         );
+
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
+        );
+
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after minting of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the stake amount."
         );
 
         // Get the stake intent hash.
@@ -572,25 +583,25 @@ contract EIP20Gateway is GatewayBase {
     {
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP parent nodes must not be zero"
+            "RLP parent nodes must not be zero."
         );
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
-            "StakeIntentHash must not be zero"
+            "StakeIntentHash must not be zero."
         );
 
         // Get the storageRoot for the given block height
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
         // Progress with revocation message
@@ -824,11 +835,11 @@ contract EIP20Gateway is GatewayBase {
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
-        bytes memory _rlpParentNodes,
+        bytes calldata _rlpParentNodes,
         uint256 _blockHeight,
         uint256 _messageStatus
     )
-        public
+        external
         returns (
             uint256 redeemAmount_,
             uint256 unstakeAmount_,
@@ -840,7 +851,7 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _messageHash != bytes32(0),
-            "Message hash must not be zero"
+            "Message hash must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
