@@ -1,7 +1,7 @@
 {
   "name": "mosaic-contracts",
-  "version": "0.9.4",
-  "description": "",
+  "version": "0.10.0-alpha",
+  "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "devDependencies": {
     "abi-decoder": "1.2.0",
     "assert": "1.4.1",
@@ -22,9 +22,14 @@
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test",
+    "test:deployment_tool": "mocha tools/deployment_tool/test",
     "ganache": "sh tools/runGanacheCli.sh",
-    "test:deployment_tool": "mocha tools/deployment_tool/test"
+    "prepare": "truffle compile --all && tools/build_package.js"
   },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
 }
