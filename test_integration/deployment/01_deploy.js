@@ -1,9 +1,9 @@
 const chai = require('chai');
 const Web3 = require('web3');
 const {
-    dockerNodesSetup,
-    dockerNodesTeardown,
-} = require('../helpers');
+    dockerSetup,
+    dockerTeardown,
+} = require('../docker');
 const {
     tryDeployNewToken,
     getChainInfo,
@@ -14,16 +14,15 @@ const {
 const { assert } = chai;
 
 describe('Deployer', () => {
-    const rpcEndpointOrigin = 'http://localhost:8546';
-    const rpcEndpointAuxiliary = 'http://localhost:8547';
-
+    let rpcEndpointOrigin;
     let web3Origin;
     let accountsOrigin;
+    let rpcEndpointAuxiliary;
     let web3Auxiliary;
     let accountsAuxiliary;
 
     before(async () => {
-        await dockerNodesSetup();
+        ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await dockerSetup());
 
         web3Origin = new Web3(rpcEndpointOrigin);
         web3Auxiliary = new Web3(rpcEndpointAuxiliary);
@@ -32,7 +31,7 @@ describe('Deployer', () => {
     });
 
     after(() => {
-        dockerNodesTeardown();
+        dockerTeardown();
     });
 
     let tokenAddressOrigin;
