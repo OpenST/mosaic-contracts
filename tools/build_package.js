@@ -13,27 +13,21 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 
 const contractNames = [
     'Anchor',
-    'BytesLib',
-    'CircularBufferUint',
     'CoGatewayUtilityTokenInterface',
     'EIP20CoGateway',
     'EIP20Gateway',
     'EIP20Interface',
     'EIP20Token',
-    'GatewayBase',
     'GatewayLib',
     'MerklePatriciaProof',
     'MessageBus',
     'Organization',
     'OrganizationInterface',
     'Organized',
-    'RLP',
-    'RLPEncode',
-    'SafeMath',
-    'SimpleStake',
     'StateRootInterface',
     'UtilityToken',
     'UtilityTokenInterface',
@@ -42,7 +36,12 @@ const contractNames = [
 const contracts = {};
 
 contractNames.forEach((contract) => {
-    const contractFile = fs.readFileSync(`build/contracts/${contract}.json`);
+    const contractFile = fs.readFileSync(
+        path.join(
+            __dirname,
+            `../build/contracts/${contract}.json`,
+        ),
+    );
     const metaData = JSON.parse(contractFile);
 
     contracts[contract] = {};
