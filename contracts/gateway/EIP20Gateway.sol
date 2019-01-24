@@ -529,12 +529,12 @@ contract EIP20Gateway is GatewayBase {
         }
 
         // Penalty charged to staker for revert stake.
-        uint256 penalty = stakes[_messageHash].bounty
-            .mul(REVOCATION_PENALTY)
-            .div(100);
-
+        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
         // transfer the penalty amount
-        require(baseToken.transfer(_staker, penalty));
+        require(
+            baseToken.transfer(_staker, penalty),
+            "Penalty amount transfer to staker failed"
+        );
     }
 
     /**

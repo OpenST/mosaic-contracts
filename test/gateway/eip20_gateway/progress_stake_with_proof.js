@@ -37,7 +37,7 @@ const MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
-  let gateway, mockToken, baseToken, stakeData, progressStakeParams, bountyAmount;
+  let gateway, mockToken, baseToken, stakeData, progressStakeParams, bountyAmount, penaltyAmount;
 
   let setStorageRoot = async function() {
 
@@ -123,7 +123,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     let burner = NullAddress;
 
     bountyAmount = new BN(proofData.gateway.constructor.bounty);
-    penaltyAmount = bountyAmount.mul(new BN(150)).div(new BN(100));
+    penaltyAmount = bountyAmount.muln(1.5);
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -313,7 +313,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       MessageStatusEnum.DeclaredRevocation,
     );
 
-    // fund Gateway with enough tokens that it can return penalty
+    // Fund Gateway with enough tokens that it can return penalty.
     await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
 
     await setStorageRoot();
@@ -558,7 +558,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
       MessageStatusEnum.DeclaredRevocation,
     );
 
-    // fund Gateway with enough tokens that it can return penalty
+    // Fund Gateway with enough tokens that it can return penalty.
     await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
 
     let callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
@@ -591,7 +591,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     assert.strictEqual(
       stakerFinalBaseTokenBalance.eq(stakerInitialBaseTokenBalance.add(penaltyAmount)),
       true,
-      "Penalty should be returned to staker.",
+      `Staker's base token balance ${stakerFinalBaseTokenBalance} must be equal to ${stakerInitialBaseTokenBalance.add(penaltyAmount)}`,
     );
 
     assert.strictEqual(
@@ -606,8 +606,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount)
       ),
       true,
-      "Gateway base balance should reduced by bounty amount and penalty amount " +
-      "on successful progress stake.",
+      `Gateway's base token balance ${gatewayFinalBaseTokenBalance} must be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount)}.`,
     );
 
     assert.strictEqual(
