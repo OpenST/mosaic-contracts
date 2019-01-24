@@ -19,20 +19,15 @@
 // ----------------------------------------------------------------------------
 
 const GatewayLib = artifacts.require('GatewayLib');
+
 const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
 const BN = require('bn.js');
 
 contract('GatewayLib.hashStakeIntent()', async (accounts) => {
 
-  let gatewayLib;
-
-  beforeEach(async () => {
-    gatewayLib = await GatewayLib.deployed();
-
-  });
-
   it('should return correct stake intent', async function () {
 
+    let gatewayLib = await GatewayLib.deployed();
     let amount = new BN(1);
     let beneficiary = accounts[0];
     let gateway = accounts[1];

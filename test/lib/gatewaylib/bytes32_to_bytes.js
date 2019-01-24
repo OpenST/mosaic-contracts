@@ -19,20 +19,12 @@
 // ----------------------------------------------------------------------------
 
 const GatewayLib = artifacts.require('GatewayLib');
-const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
-const BN = require('bn.js');
 
 contract('GatewayLib.bytes32ToBytes()', async (accounts) => {
 
-  let gatewayLib;
-
-  beforeEach(async () => {
-    gatewayLib = await GatewayLib.deployed();
-
-  });
-
   it('should return correct values', async function () {
 
+    let gatewayLib = await GatewayLib.deployed();
     let bytes32Value = web3.utils.sha3("some data");
 
     let result = await gatewayLib.bytes32ToBytes(bytes32Value);
