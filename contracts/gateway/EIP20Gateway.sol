@@ -497,8 +497,6 @@ contract EIP20Gateway is GatewayBase {
      *         penalty i.e. 1.5 times of bounty amount. On progress revert stake
      *         penalty and facilitator bounty will be burned.
      *
-     * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
-     *
      * @param _messageHash Message hash.
      *
      * @return staker_ Staker address
@@ -590,21 +588,21 @@ contract EIP20Gateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
-        // Get the message object
+        // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
             "StakeIntentHash must not be zero."
         );
 
-        // Get the storageRoot for the given block height
+        // Get the storageRoot for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero."
         );
 
-        // Progress with revocation message
+        // Progress with revocation message.
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
@@ -617,20 +615,20 @@ contract EIP20Gateway is GatewayBase {
         staker_ = message.sender;
         stakerNonce_ = message.nonce;
         amount_ = stakes[_messageHash].amount;
+        uint256 stakeBounty = stakes[_messageHash].bounty;
 
-        // transfer the staked amount to the staker
+        delete stakes[_messageHash];
+
+        // Transfer the staked amount to the staker.
         token.transfer(message.sender, amount_);
 
-        // burn facilitator bounty
-        baseToken.transfer(burner, bounty);
-        //penalty charged to staker
-        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
+        // Burn facilitator bounty.
+        baseToken.transfer(burner, stakeBounty);
+        // Penalty charged to staker.
+        uint256 penalty = penaltyFromBounty(stakeBounty);
 
-        // burn staker penalty
+        // Burn staker penalty.
         baseToken.transfer(burner, penalty);
-
-        // delete the stake data
-        delete stakes[_messageHash];
 
         emit StakeReverted(
             _messageHash,
@@ -742,20 +740,20 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Complete unstake
+     * @notice Complete unstake.
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the redeem
+     *                      facilitator while initiating the redeem.
      *
-     * @return redeemer_ Redeemer address
+     * @return redeemer_ Redeemer address.
      * @return redeemAmount_ Total amount for which the redeem was
      *                       initiated. The reward amount is deducted from the
      *                       total redeem amount and is given to the
      *                       facilitator.
      * @return unstakeAmount_ Actual unstake amount, after deducting the reward
      *                        from the total redeem amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
     function progressUnstake(
         bytes32 _messageHash,
@@ -768,17 +766,16 @@ contract EIP20Gateway is GatewayBase {
             uint256 rewardAmount_
         )
     {
-        // Get the inital gas
+        // Get the inital gas.
         uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero."
         );
-        // Get the message object.
+
         MessageBus.Message storage message = messages[_messageHash];
 
-        // Progress inbox
         MessageBus.progressInbox(
             messageBox,
             message,
@@ -807,8 +804,6 @@ contract EIP20Gateway is GatewayBase {
         penalty_ = super.penaltyFromBounty(stakes[_messageHash].bounty);
     }
 
-    /* Public Functions */
-
     /**
      * @notice Completes the redeem process by providing the merkle proof
      *         instead of unlockSecret. In case the facilitator process is not
@@ -831,7 +826,7 @@ contract EIP20Gateway is GatewayBase {
      *                       facilitator.
      * @return unstakeAmount_ Actual unstake amount, after deducting the reward
      *                        from the total redeem amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
@@ -858,14 +853,13 @@ contract EIP20Gateway is GatewayBase {
             "RLP parent nodes must not be zero"
         );
 
-        // Get the storage root for the given block height
+        // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-        // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
 
         MessageBus.progressInboxWithProof(
@@ -880,9 +874,6 @@ contract EIP20Gateway is GatewayBase {
         (redeemAmount_, unstakeAmount_, rewardAmount_) =
         progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
-
-
-    /** External methods */
 
     /**
      * @notice Declare redeem revert intent.
@@ -1084,13 +1075,14 @@ contract EIP20Gateway is GatewayBase {
         //Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
 
+        uint256 stakedBounty = stakes[_messageHash].bounty;
+
+        delete stakes[_messageHash];
+
         // Transfer the staked amount to stakeVault.
         token.transfer(address(stakeVault), stakeAmount_);
 
-        baseToken.transfer(msg.sender, stakes[_messageHash].bounty);
-
-        // Delete the stake entry.
-        delete stakes[_messageHash];
+        baseToken.transfer(msg.sender, stakedBounty);
 
         emit StakeProgressed(
             _messageHash,
@@ -1159,8 +1151,13 @@ contract EIP20Gateway is GatewayBase {
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
+
+        address beneficiary = unstakes[_messageHash].beneficiary;
+
+        delete unstakes[_messageHash];
+
         // Release the amount to beneficiary.
-        stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
+        stakeVault.releaseTo(beneficiary, unstakeAmount_);
 
         if (rewardAmount_ > 0) {
             // Reward facilitator with the reward amount.
@@ -1170,7 +1167,7 @@ contract EIP20Gateway is GatewayBase {
         emit UnstakeProgressed(
             _messageHash,
             message.sender,
-            unStake.beneficiary,
+            beneficiary,
             redeemAmount_,
             unstakeAmount_,
             rewardAmount_,
@@ -1178,8 +1175,6 @@ contract EIP20Gateway is GatewayBase {
             _unlockSecret
         );
 
-        // Delete the unstake data.
-        delete unstakes[_messageHash];
     }
 
     /**

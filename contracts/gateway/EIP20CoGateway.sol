@@ -255,20 +255,20 @@ contract EIP20CoGateway is GatewayBase {
     /* External functions */
 
     /**
-     * @notice Complete mint process by minting the utility tokens
+     * @notice Complete mint process by minting the utility tokens.
      *
      * @param _messageHash Message hash.
-     * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the stake
+     * @param _unlockSecret Unlock secret for the hashLock provided by the
+     *                      facilitator while initiating the stake.
      *
      * @return beneficiary_ Address to which the utility tokens will be
-     *                      transferred after minting
+     *                      transferred after minting.
      * @return stakeAmount_ Total amount for which the stake was
      *                      initiated. The reward amount is deducted from the
      *                      this amount and is given to the facilitator.
      * @return mintedAmount_ Actual minted amount, after deducting the reward
      *                       from the total (stake) amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
     function progressMint(
         bytes32 _messageHash,
@@ -313,8 +313,9 @@ contract EIP20CoGateway is GatewayBase {
      *      Gateway is either declared or progressed.
      *
      * @param _messageHash Message hash.
-     * @param _rlpParentNodes RLP encoded parent node data to prove in
-     *                        messageBox inbox of Gateway.
+     * @param _rlpParentNodes RLP encoded storage proof of the messageBox inbox
+     *                        in the Gateway.
+     *
      * @param _blockHeight Block number for which the proof is valid.
      * @param _messageStatus Message status i.e. Declared or Progressed that
      *                       will be proved.
@@ -630,7 +631,7 @@ contract EIP20CoGateway is GatewayBase {
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
-     * @param _rlpParentNodes RLP encoded parent node data to prove
+     * @param _rlpParentNodes RLP encoded storage proof to prove
      *                        DeclaredRevocation in messageBox inbox of Gateway.
      *
      * @return redeemer_ Redeemer address
@@ -689,17 +690,17 @@ contract EIP20CoGateway is GatewayBase {
         amount_ = redeemProcess.amount;
 
         uint256 bounty = redeemProcess.bounty;
-        // Delete the redeem data.
+
         delete redeems[_messageHash];
 
         // Return the redeem amount back.
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
-        // Burn bounty.
-        burner.transfer(bounty);
-
         // Penalty charged to redeemer.
         uint256 penalty = penaltyFromBounty(bounty);
+
+        // Burn bounty.
+        burner.transfer(bounty);
 
         // Burn penalty.
         burner.transfer(penalty);
@@ -725,11 +726,11 @@ contract EIP20CoGateway is GatewayBase {
      * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
-     * @param _gasLimit Gas limit that staker is ready to pay
+     * @param _gasLimit Gas limit that staker is ready to pay.
      * @param _hashLock Hash Lock provided by the facilitator.
      * @param _blockHeight Block number for which the proof is valid
      * @param _rlpParentNodes RLP encoded parent node data to prove in
-     *                        messageBox outbox of Gateway
+     *                        messageBox outbox of Gateway.
      *
      * @return messageHash_ which is unique for each request.
      */
@@ -797,7 +798,7 @@ contract EIP20CoGateway is GatewayBase {
 
         /*
          * Execute the confirm stake intent. This is done in separate
-         * function to avoid stack too deep error
+         * function to avoid stack too deep error.
          */
         confirmStakeIntentInternal(
             messages[messageHash_],
@@ -1053,6 +1054,8 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
+        address payable beneficiary = mint.beneficiary;
+
         (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
             message.gasLimit,
@@ -1067,9 +1070,11 @@ contract EIP20CoGateway is GatewayBase {
 
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
+        delete mints[_messageHash];
+
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
-            mint.beneficiary,
+            beneficiary,
             mintedAmount_
         );
 
@@ -1081,14 +1086,11 @@ contract EIP20CoGateway is GatewayBase {
             );
         }
 
-        // Delete the mint data.
-        delete mints[_messageHash];
-
         // Emit MintProgressed event.
         emit MintProgressed(
             _messageHash,
             message.sender,
-            mint.beneficiary,
+            beneficiary_,
             stakeAmount_,
             mintedAmount_,
             rewardAmount_,
@@ -1126,14 +1128,15 @@ contract EIP20CoGateway is GatewayBase {
         redeemer_ = _message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
 
+        uint256 stakedBounty = redeems[_messageHash].bounty;
+
+        delete redeems[_messageHash];
+
         // Decrease the token supply.
         UtilityTokenInterface(utilityToken).decreaseSupply(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator.
-        msg.sender.transfer(redeems[_messageHash].bounty);
-
-        // Delete the redeem data.
-        delete redeems[_messageHash];
+        msg.sender.transfer(stakedBounty);
 
         emit RedeemProgressed(
             _messageHash,
