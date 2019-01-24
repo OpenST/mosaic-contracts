@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,46 +29,17 @@ library GatewayLib {
 
     /* Constants */
 
-    bytes32 constant STAKE_INTENT_TYPEHASH = keccak256(
+        bytes32 constant public STAKE_INTENT_TYPEHASH = keccak256(
         abi.encode(
             "StakeIntent(uint256 amount,address beneficiary,address gateway)"
         )
     );
 
-    bytes32 constant REDEEM_INTENT_TYPEHASH = keccak256(
+    bytes32 constant public REDEEM_INTENT_TYPEHASH = keccak256(
         abi.encode(
             "RedeemIntent(uint256 amount,address beneficiary,address gateway)"
         )
     );
-
-
-    /* External Functions */
-
-    /**
-     * @notice Get the storage path of the variable
-     *
-     * @param _index Index of variable
-     * @param _key Key of variable incase of mapping
-     *
-     * @return bytes32 Storage path of the variable
-     */
-    function storageVariablePath(
-        uint8 _index,
-        bytes32 _key
-    )
-        external
-        pure
-        returns (bytes32 /* storage path */)
-    {
-        bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(
-                bytes32(uint256(_index))
-            )
-        );
-        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
-        bytes memory path = BytesLib.concat(keyBytes, indexBytes);
-        return keccak256(abi.encodePacked(keccak256(abi.encodePacked(path))));
-    }
 
     /**
      * @notice Merkle proof verification of account.
@@ -90,13 +61,16 @@ library GatewayLib {
         pure
         returns (bytes32 storageRoot_)
     {
-        // Decode RLP encoded account value
+        // Decode RLP encoded account value.
         RLP.RLPItem memory accountItem = RLP.toRLPItem(_rlpAccount);
-        // Convert to list
+
+        // Convert to list.
         RLP.RLPItem[] memory accountArray = RLP.toList(accountItem);
-        // Array 3rd position is storage root
+
+        // Array 3rd position is storage root.
         storageRoot_ = RLP.toBytes32(accountArray[2]);
-        // Hash the rlpValue value
+
+        // Hash the rlpValue value.
         bytes32 hashedAccount = keccak256(
             abi.encodePacked(_rlpAccount)
         );
@@ -105,8 +79,15 @@ library GatewayLib {
          * Verify the remote OpenST contract against the committed state
          * root with the state trie Merkle proof.
          */
-        require(MerklePatriciaProof.verify(hashedAccount, _encodedPath,
-            _rlpParentNodes, _stateRoot), "Account proof is not verified.");
+        require(
+            MerklePatriciaProof.verify(
+                hashedAccount,
+                _encodedPath,
+                _rlpParentNodes,
+                _stateRoot
+            ),
+            "Account proof is not verified."
+        );
 
         return storageRoot_;
     }
