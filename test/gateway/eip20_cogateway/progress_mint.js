@@ -191,6 +191,7 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
       MintProgressed: {
         _messageHash: messageHash,
         _staker: staker,
+        _beneficiary: beneficiary,
         _stakeAmount: amount,
         _mintedAmount: expectedMintedToken,
         _rewardAmount: expectedReward,

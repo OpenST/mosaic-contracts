@@ -28,17 +28,6 @@ const CoGatewayUtils = function () { };
 CoGatewayUtils.prototype = {
 
   /**
-   * Generate the redeem type hash. This is as per EIP-712.
-   *
-   * @return {string} message type hash.
-   */
-  redeemTypeHash: function () {
-    return utils.getTypeHash(
-      'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
-    );
-  },
-
-  /**
    * Generate the redeem intent hash
    *
    * @param {object} amount Redeem amount.
