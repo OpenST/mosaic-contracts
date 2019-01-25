@@ -29,16 +29,22 @@ const {
     inquireEIP20BaseTokenAddress,
     inquireRpcEndpointAuxiliary,
     inquireRpcEndpointOrigin,
-} = require('../prompts');
+} = require('../cli/prompts');
 const {
-    tryDeployNewToken,
     checkEip20Address,
+} = require('../cli/utils');
+const {
+    deployAuxiliary,
+    deployOrigin,
+    deployedToken,
     getChainInfo,
-    deployAnchorAndGateway,
-    deployAnchorAndCoGateway,
 } = require('../step1');
 
-// TODO: document
+/**
+ * Print a fancy sign with a message on the console to be used as a delimiter.
+ *
+ * @param {string} text The text message to use.
+ */
 const printSign = (text) => {
     const mainLine = '===== ' + text + ' =====';
     const delimiter = '='.repeat(mainLine.length);
@@ -53,29 +59,31 @@ const printSign = (text) => {
 const main = async () => {
     printSign('QUESTIONS ORIGIN');
     const rpcEndpointOrigin = await inquireRpcEndpointOrigin();
-    const deployerAddressOrigin = await inquireDeployerAddressOrigin(rpcEndpointOrigin);
+    const web3Origin = new Web3(rpcEndpointOrigin);
+    const deployerAddressOrigin = await inquireDeployerAddressOrigin(web3Origin);
 
-    let tokenAddressOrigin = await inquireEIP20TokenAddress(rpcEndpointOrigin);
-    tokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, tokenAddressOrigin);
-    checkEip20Address(rpcEndpointOrigin, tokenAddressOrigin);
+    let tokenAddressOrigin = await inquireEIP20TokenAddress(web3Origin);
+    tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin);
+    checkEip20Address(web3Origin, tokenAddressOrigin);
 
-    let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress(rpcEndpointOrigin);
-    baseTokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, baseTokenAddressOrigin);
-    checkEip20Address(rpcEndpointOrigin, baseTokenAddressOrigin);
+    let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress();
+    baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin);
+    checkEip20Address(web3Origin, baseTokenAddressOrigin);
 
     printSign('QUESTIONS AUXILIARY');
     const rpcEndpointAuxiliary = await inquireRpcEndpointAuxiliary();
-    const deployerAddressAuxiliary = await inquireDeployerAddressAuxiliary(rpcEndpointAuxiliary);
+    const web3Auxiliary = new Web3(rpcEndpointAuxiliary);
+    const deployerAddressAuxiliary = await inquireDeployerAddressAuxiliary(web3Auxiliary);
 
-    const bountyOrigin = '100'; // TODO: inquire bounty
-    const bountyAuxiliary = '100'; // TODO: inquire bounty
+    const bountyOrigin = '100'; // FIXME #623; inquire bounty
+    const bountyAuxiliary = '100'; // FIXME #623; inquire bounty
 
-    const originInfo = await getChainInfo(rpcEndpointOrigin);
-    const auxiliaryInfo = await getChainInfo(rpcEndpointAuxiliary);
+    const originInfo = await getChainInfo(web3Origin);
+    const auxiliaryInfo = await getChainInfo(web3Auxiliary);
 
     printSign('DEPLOYING ORIGIN');
-    const originAddresses = await deployAnchorAndGateway(
-        rpcEndpointOrigin,
+    const originAddresses = await deployOrigin(
+        web3Origin,
         deployerAddressOrigin,
         tokenAddressOrigin,
         baseTokenAddressOrigin,
@@ -87,8 +95,8 @@ const main = async () => {
 
     printSign('DEPLOYING AUXILIARY');
     const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-    const _auxiliaryAddresses = await deployAnchorAndCoGateway(
-        rpcEndpointAuxiliary,
+    const _auxiliaryAddresses = await deployAuxiliary(
+        web3Auxiliary,
         deployerAddressAuxiliary,
         tokenAddressOrigin,
         gatewayAddressOrigin,

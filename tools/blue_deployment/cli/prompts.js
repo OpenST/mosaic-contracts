@@ -18,7 +18,11 @@
 //
 // ----------------------------------------------------------------------------
 
-const Web3 = require('web3');
+/**
+ * This module provides CLI inquiries that you would want to use to collect the
+ * configuration for a deployment.
+ */
+
 const inquirer = require('inquirer');
 
 const inquireRpcEndpoint = (systemName) => {
@@ -55,8 +59,7 @@ const inquireRpcEndpointAuxiliary = () => {
     return inquireRpcEndpoint('Auxiliary');
 };
 
-const inquireDeployerAddress = async (rpcEndpoint, systemName) => {
-    const web3 = new Web3(rpcEndpoint);
+const inquireDeployerAddress = async (web3, systemName) => {
     const accounts = await web3.eth.getAccounts();
 
     const deployerAddressPrompt = [
@@ -70,12 +73,12 @@ const inquireDeployerAddress = async (rpcEndpoint, systemName) => {
     return inquirer.prompt(deployerAddressPrompt).then(n => n.deployerAddress);
 };
 
-const inquireDeployerAddressOrigin = async (rpcEndpointOrigin) => {
-    return inquireDeployerAddress(rpcEndpointOrigin, 'Origin');
+const inquireDeployerAddressOrigin = async (web3Origin) => {
+    return inquireDeployerAddress(web3Origin, 'Origin');
 };
 
-const inquireDeployerAddressAuxiliary = async (rpcEndpointAuxiliary) => {
-    return inquireDeployerAddress(rpcEndpointAuxiliary, 'Auxiliary');
+const inquireDeployerAddressAuxiliary = async (web3Auxiliary) => {
+    return inquireDeployerAddress(web3Auxiliary, 'Auxiliary');
 };
 
 const inquireEIP20Address = async (message) => {

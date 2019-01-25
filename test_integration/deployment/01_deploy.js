@@ -25,10 +25,10 @@ const {
     dockerTeardown,
 } = require('../docker');
 const {
-    tryDeployNewToken,
+    deployedToken,
     getChainInfo,
-    deployAnchorAndGateway,
-    deployAnchorAndCoGateway,
+    deployOrigin,
+    deployAuxiliary,
 } = require('../../tools/blue_deployment/step1');
 
 const { assert } = chai;
@@ -59,13 +59,13 @@ describe('Deployer', () => {
     it('correctly deploys token and base token on Origin', async () => {
         const deployerAddressOrigin = accountsOrigin[0];
 
-        tokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, 'new');
+        tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
         assert(
             Web3.utils.isAddress(tokenAddressOrigin),
             'Did not correctly deploy token on Origin.',
         );
 
-        baseTokenAddressOrigin = await tryDeployNewToken(rpcEndpointOrigin, deployerAddressOrigin, 'new');
+        baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
         assert(
             Web3.utils.isAddress(baseTokenAddressOrigin),
             'Did not correctly deploy base token on Origin.',
@@ -79,11 +79,11 @@ describe('Deployer', () => {
         const bountyOrigin = '100';
         const bountyAuxiliary = '100';
 
-        const originInfo = await getChainInfo(rpcEndpointOrigin);
-        const auxiliaryInfo = await getChainInfo(rpcEndpointAuxiliary);
+        const originInfo = await getChainInfo(web3Origin);
+        const auxiliaryInfo = await getChainInfo(web3Auxiliary);
 
-        const originAddresses = await deployAnchorAndGateway(
-            rpcEndpointOrigin,
+        const originAddresses = await deployOrigin(
+            web3Origin,
             deployerAddressOrigin,
             tokenAddressOrigin,
             baseTokenAddressOrigin,
@@ -94,8 +94,8 @@ describe('Deployer', () => {
         );
 
         const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-        const auxiliaryAddresses = await deployAnchorAndCoGateway(
-            rpcEndpointAuxiliary,
+        const auxiliaryAddresses = await deployAuxiliary(
+            web3Auxiliary,
             deployerAddressAuxiliary,
             tokenAddressOrigin,
             gatewayAddressOrigin,
