@@ -25,7 +25,7 @@
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test",
-    "test:integration": "mocha --recursive --no-timeouts test_integration",
+    "test:integration": "cd test_integration && ./main.sh",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
     "ganache": "sh tools/runGanacheCli.sh",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js"
