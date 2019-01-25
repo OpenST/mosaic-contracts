@@ -29,7 +29,7 @@ library GatewayLib {
 
     /* Constants */
 
-        bytes32 constant public STAKE_INTENT_TYPEHASH = keccak256(
+    bytes32 constant public STAKE_INTENT_TYPEHASH = keccak256(
         abi.encode(
             "StakeIntent(uint256 amount,address beneficiary,address gateway)"
         )
@@ -41,15 +41,18 @@ library GatewayLib {
         )
     );
 
+
+    /* External Functions */
+
     /**
      * @notice Merkle proof verification of account.
      *
-     * @param _rlpAccount rlp encoded data of account.
-     * @param _rlpParentNodes path from root node to leaf in merkle tree.
-     * @param _encodedPath encoded path to search account node in merkle tree.
-     * @param _stateRoot state root for given block height.
+     * @param _rlpAccount RLP encoded data of account.
+     * @param _rlpParentNodes Path from root node to leaf in merkle tree.
+     * @param _encodedPath Encoded path to search account node in merkle tree.
+     * @param _stateRoot State root for given block height.
      *
-     * @return bytes32 Storage path of the variable
+     * @return bytes32 Storage path of the variable.
      */
     function proveAccount(
         bytes calldata _rlpAccount,
@@ -75,7 +78,7 @@ library GatewayLib {
             abi.encodePacked(_rlpAccount)
         );
 
-        /**
+        /*
          * Verify the remote OpenST contract against the committed state
          * root with the state trie Merkle proof.
          */
@@ -89,7 +92,6 @@ library GatewayLib {
             "Account proof is not verified."
         );
 
-        return storageRoot_;
     }
 
     /**
@@ -152,19 +154,19 @@ library GatewayLib {
     /* Public Functions */
 
     /**
-     * @notice Convert bytes32 to bytes
+     * @notice Convert bytes32 to bytes.
      *
-     * @param _inBytes32 bytes32 value
+     * @param _inBytes32 Bytes32 value.
      *
-     * @return bytes value
+     * @return bytesValue_ Bytes value.
      */
     function bytes32ToBytes(
         bytes32 _inBytes32
     )
-        public
+        external
         pure
-        returns (bytes memory)
+        returns (bytes memory bytesValue_)
     {
-        return BytesLib.bytes32ToBytes(_inBytes32);
+        bytesValue_ = BytesLib.bytes32ToBytes(_inBytes32);
     }
 }

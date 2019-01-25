@@ -19,8 +19,8 @@
 // ----------------------------------------------------------------------------
 
 const GatewayLib = artifacts.require('GatewayLib');
-const StubData = require('../../data/proof.json');
 
+const StubData = require('../../data/proof.json');
 const Utils = require('../../test_lib/utils.js');
 
 contract('GatewayLib.proveAccount()', async (accounts) => {
