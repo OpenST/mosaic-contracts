@@ -32,17 +32,21 @@
  */
 
 /**
- * @typedef {Object} Chain
- * @property {Web3} web3
- * @property {string[]} addresses
- * @property {Object[]} contracts
+ * @typedef {Object} Chain Contains all relevant data on a chain.
+ * @property {Web3} web3 A web3 object to access the chain.
+ * @property {Object} addresses All addresses in sting format, indexed by the
+ *     contract name, as written in the solidity source file.
+ * @property {Object} contracts Instances of TruffleContracts. Indexed by their
+ *     instance name, e.g. `gateway` or `anchor`.
  */
 
 /**
- * @typedef {Object} Shared
+ * @typedef {Object} Shared An object that is shared across modules.
  * @property {Chain} origin The origin chain.
  * @property {Chain} auxiliary The auxiliary chain.
- * @property {Object[]} artifacts
+ * @property {Object} artifacts The truffle artifacts of the contracts. Indexed
+ *     by the contract name, as written in the solidity source
+ *     file.
  */
 
 /**
