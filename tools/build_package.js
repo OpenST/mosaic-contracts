@@ -74,7 +74,10 @@ contractNames.forEach((contract) => {
 
     contracts[contract] = {};
     contracts[contract].abi = metaData.abi;
-    contracts[contract].bin = metaData.bytecode;
+
+    if (metaData.bytecode !== '0x') {
+        contracts[contract].bin = metaData.bytecode;
+    }
 });
 
 fs.writeFileSync('dist/contracts.json', JSON.stringify(contracts));
