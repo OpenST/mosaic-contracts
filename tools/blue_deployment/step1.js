@@ -22,8 +22,12 @@
 const Web3 = require('web3');
 const colors = require('colors/safe');
 
-const { Contract, ContractRegistry } = require('../deployment_tool');
-const { deployContracts, UnlockedWeb3Signer } = require('./helpers');
+const {
+    Contract,
+    ContractRegistry,
+    UnlockedWeb3Signer,
+    deployContracts,
+} = require('../deployment_tool');
 
 // root directory of npm project
 const rootDir = `${__dirname}/../../`;

@@ -59,12 +59,48 @@ class UnlockedWeb3Signer {
 }
 
 /**
+ * Send a signed transaction and wait for it to be mined,
+ * and optionally log the progress.
+ *
+ * @param {object} web3 The web3 used to send the transaction.
+ * @param {object} deploymentObject The deploymentObject for which the signed
+ *                 transaction was generated.
+ * @param {string} rawTransaction The signed raw transaction to send.
+ * @param {bool} loggingActive Whether to log the progress of the deployment.
+ *
+ * @returns {Promise.<string>} The address of the deployed contract.
+ */
+const sendDeploymentTransaction = (
+    web3,
+    deploymentObject,
+    rawTransaction,
+    loggingActive,
+) => {
+    return web3.eth.sendSignedTransaction(rawTransaction)
+        .then((receipt) => {
+            if (loggingActive) {
+                console.log(colors.dim(`Deploying ${deploymentObject.contractName} (tx ${receipt.transactionHash})`));
+            }
+            return waitForTransactionReceiptMined(web3, receipt.transactionHash, 10);
+        })
+        .then((receipt) => {
+            if (loggingActive) {
+                console.log(colors.green(`Deployed ${colors.underline.green(deploymentObject.contractName)} at ${receipt.contractAddress}`));
+                if (receipt.contractAddress.toLowerCase() !== deploymentObject.address) {
+                    console.warn(`"${deploymentObject.contractName}" was not deployed at the predicted address ${deploymentObject.address})`);
+                }
+            }
+            return receipt.contractAddress.toLowerCase();
+        });
+};
+
+/**
  * Deploy the provided deployment objects, as provided by
  * {@link ContractRegistry#toLiveTransactionObjects}, in sequence.
  *
  * @param {object} signer The signer used to sign the transactions.
  *                 See {@link UnlockedWeb3Signer}.
- * @param {object} sendWeb3 The web3 instance used to send the deployment transactions.
+ * @param {object} web3 The web3 instance used to send the deployment transactions.
  * @param {Array.<object>} deploymentObjects The deployment objects to deploy.
  * @param {bool} options.log Whether to log the progress of the deployment.
  * @param {string} options.gas The amount of gas to use for the deployment transactions.
@@ -74,7 +110,7 @@ class UnlockedWeb3Signer {
  */
 const deployContracts = async (
     signer,
-    sendWeb3,
+    web3,
     deploymentObjects,
     options = {
         log: false,
@@ -95,10 +131,10 @@ const deployContracts = async (
     await asyncForEach(deploymentObjects, async (deploymentObject) => {
         let { gas, gasPrice } = _options;
         if (!gas) {
-            gas = await sendWeb3.eth.estimateGas(deploymentObject.transactionObject);
+            gas = await web3.eth.estimateGas(deploymentObject.transactionObject);
         }
         if (!gasPrice) {
-            gasPrice = await sendWeb3.eth.getGasPrice();
+            gasPrice = await web3.eth.getGasPrice();
         }
 
         return signer.signTransaction(Object.assign(
@@ -109,21 +145,14 @@ const deployContracts = async (
                 gasPrice,
             },
         ))
-            .then(signedTransaction => sendWeb3.eth.sendSignedTransaction(signedTransaction.raw))
-            .then((receipt) => {
-                if (loggingActive) {
-                    console.log(colors.dim(`Deploying ${deploymentObject.contractName} (tx ${receipt.transactionHash})`));
-                }
-                return waitForTransactionReceiptMined(sendWeb3, receipt.transactionHash, 10);
-            })
-            .then((receipt) => {
-                if (loggingActive) {
-                    console.log(colors.green(`Deployed ${colors.underline.green(deploymentObject.contractName)} at ${receipt.contractAddress}`));
-                    if (receipt.contractAddress.toLowerCase() !== deploymentObject.address) {
-                        console.warn(`"${deploymentObject.contractName}" was not deployed at the predicted address ${deploymentObject.address})`);
-                    }
-                }
-                contractAddresses[deploymentObject.contractName] = receipt.contractAddress.toLowerCase();
+            .then(signedTransaction => sendDeploymentTransaction(
+                web3,
+                deploymentObject,
+                signedTransaction.raw,
+                loggingActive,
+            ))
+            .then((contractAddress) => {
+                contractAddresses[deploymentObject.contractName] = contractAddress;
             });
     });
 
