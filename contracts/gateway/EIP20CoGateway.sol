@@ -690,7 +690,7 @@ contract EIP20CoGateway is GatewayBase {
         amount_ = redeemProcess.amount;
 
         uint256 bounty = redeemProcess.bounty;
-
+        // Delete the redeem data.
         delete redeems[_messageHash];
 
         // Return the redeem amount back.
@@ -699,11 +699,10 @@ contract EIP20CoGateway is GatewayBase {
         // Penalty charged to redeemer.
         uint256 penalty = penaltyFromBounty(bounty);
 
-        // Burn bounty.
-        burner.transfer(bounty);
+        uint256 amountToBurn = bounty.add(penalty);
 
-        // Burn penalty.
-        burner.transfer(penalty);
+        // Burn bounty and penalty.
+        burner.transfer(amountToBurn);
 
         emit RedeemReverted(
             _messageHash,
