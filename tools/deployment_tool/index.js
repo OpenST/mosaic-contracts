@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const { Contract } = require('./contract');
-const { ContractRegistry } = require('./contract_registry');
+const { Contract } = require('./Contract');
+const { ContractRegistry } = require('./ContractRegistry');
 const {
     IncrementingAddressGenerator,
     IncrementingNonceAddressGenerator,
