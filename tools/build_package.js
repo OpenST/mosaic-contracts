@@ -20,8 +20,8 @@
 //
 // ----------------------------------------------------------------------------
 
-/*
- * This file runs as part of the npm packaging process.
+/**
+ * @file This file runs as part of the npm packaging process.
  *
  * It reads a set number of contracts from the truffle build directory and
  * extracts ABI and BIN of each contract. The extracted information is added to
@@ -56,12 +56,20 @@ const contractNames = [
 const contracts = {};
 
 contractNames.forEach((contract) => {
-    const contractFile = fs.readFileSync(
-        path.join(
-            __dirname,
-            `../build/contracts/${contract}.json`,
-        ),
+    const contractPath = path.join(
+        __dirname,
+        `../build/contracts/${contract}.json`,
     );
+
+    if (!fs.existsSync(contractPath)) {
+        throw new Error(
+            `Cannot read file ${contractPath}.`
+            + 'Truffle compile must be run before building the package.'
+            + 'That should be done automatically when running `npm publish`.',
+        );
+    }
+
+    const contractFile = fs.readFileSync(contractPath);
     const metaData = JSON.parse(contractFile);
 
     contracts[contract] = {};
