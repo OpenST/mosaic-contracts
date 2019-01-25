@@ -17,15 +17,8 @@ pragma solidity ^0.5.0;
 
 import "./BytesLib.sol";
 import "./MerklePatriciaProof.sol";
-import "./RLPEncode.sol";
-import "./SafeMath.sol";
 
 library GatewayLib {
-
-    /* Usings */
-
-    using SafeMath for uint256;
-
 
     /* Constants */
 
