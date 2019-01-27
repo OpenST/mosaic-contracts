@@ -59,7 +59,7 @@ contract('MessageBus.progressOutboxRevocation()', async (accounts) => {
 
 
     it('should fail when source message status is declared ', async () => {
-        let message = 'Message on source must be DeclaredRevocation.';
+        let message = 'Message status on source must be DeclaredRevocation.';
         params.message = message;
 
         await messageBusUtils.declareMessage(params, true);
@@ -69,7 +69,7 @@ contract('MessageBus.progressOutboxRevocation()', async (accounts) => {
     });
 
     it('should fail when source message status is progressed ', async () => {
-        let message = 'Message on source must be DeclaredRevocation.';
+        let message = 'Message status on source must be DeclaredRevocation.';
         params.message = message;
 
         await messageBusUtils.declareMessage(params, true);
@@ -80,7 +80,7 @@ contract('MessageBus.progressOutboxRevocation()', async (accounts) => {
     });
 
     it('should fail when source message status is revoked', async () => {
-        let message = 'Message on source must be DeclaredRevocation.';
+        let message = 'Message status on source must be DeclaredRevocation.';
         params.message = message;
 
         await messageBusUtils.declareMessage(params, true);
