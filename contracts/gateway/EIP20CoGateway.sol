@@ -1011,8 +1011,8 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice This is internal method containing common logic for increasing
-     *         the supply. It doesn't mint reward if reward is 0.
+     * @notice This is internal method for process minting contains common
+     *         logic. It doesn't mint reward if reward is 0.
      *
      * @param _messageHash Message hash.
      * @param _initialGas Initial gas during progress process.
@@ -1024,7 +1024,7 @@ contract EIP20CoGateway is GatewayBase {
      * @param _message Message object.
      *
      * @return  beneficiary_ Address to which the utility tokens will be
-     *                      transferred after increasing the supply.
+     *                      transferred after minting.
      * @return stakeAmount_ Total amount for which the stake was initiated. The
      *                      reward amount is deducted from the total amount and
      *                      is given to the facilitator.

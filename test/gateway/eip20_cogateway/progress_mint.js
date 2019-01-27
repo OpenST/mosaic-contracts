@@ -151,19 +151,19 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     assert.strictEqual(
       amount.eq(progressMintValues.stakeAmount_),
       true,
-      `Staked amount should be ${amount}.`,
+      `Staked amount is ${progressMintValues.stakeAmount_.toString(10)} and expected is ${amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedMintedToken.eq(progressMintValues.mintedAmount_),
       true,
-      `Minted amount should be ${expectedMintedToken}.`,
+      `Minted amount is ${progressMintValues.mintedAmount_.toString(10)} and expected is ${expectedMintedToken.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedReward.eq(progressMintValues.rewardAmount_),
       true,
-      `Reward to facilitator should be ${expectedReward}.`,
+      `Reward to facilitator is ${progressMintValues.rewardAmount_.toString(10)} and expected is ${expectedReward.toString(10)}.`,
     );
 
     let response = await testEIP20CoGateway.progressMint(
@@ -178,13 +178,13 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     assert.strictEqual(
       facilitatorBalance.eq(expectedReward),
       true,
-      `Facilitator reward should be ${expectedReward}.`,
+      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is ${expectedReward.toString(10)}.`,
     );
 
     assert.strictEqual(
       beneficiaryBalance.eq(amount.sub(expectedReward)),
       true,
-      `Beneficiary balance should be ${amount.sub(expectedReward)}.`
+      `Beneficiary balance is ${beneficiaryBalance.toString(10)} and expected is ${amount.sub(expectedReward).toString(10)}.`
     );
 
     let expectedEvent = {
@@ -250,19 +250,20 @@ contract('EIP20CoGateway.progressMint() ', function (accounts) {
     assert.strictEqual(
       beneficiaryBalance.eq(amount),
       true,
-      `Balance for beneficiary should be ${amount}`,
+      `Beneficiary balance is ${beneficiaryBalance.toString(10)} and expected is ${amount}`,
     );
 
     assert.strictEqual(
       facilitatorBalance.eq(new BN(0)),
       true,
-      'Facilitator reward should be zero',
+      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is zero`,
     );
 
     let expectedEvent = {
       MintProgressed: {
         _messageHash: messageHash,
         _staker: staker,
+        _beneficiary: beneficiary,
         _stakeAmount: amount,
         _mintedAmount: amount,
         _rewardAmount: new BN(0),
