@@ -1064,7 +1064,7 @@ contract EIP20CoGateway is GatewayBase {
         beneficiary_ = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        address payable beneficiary = mint.beneficiary;
+        address payable payableBeneficiary = mint.beneficiary;
 
         (rewardAmount_, message.gasConsumed) = feeAmount(
             message.gasConsumed,
@@ -1084,7 +1084,7 @@ contract EIP20CoGateway is GatewayBase {
 
         // Mint token after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
-            beneficiary,
+            payableBeneficiary,
             mintedAmount_
         );
 
