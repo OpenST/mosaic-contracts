@@ -23,11 +23,11 @@ const Web3 = require('web3');
 const docker = require('../docker');
 const shared = require('../shared');
 const {
-    tryDeployNewToken,
+    deployedToken,
     getChainInfo,
-    deployAnchorAndGateway,
-    deployAnchorAndCoGateway,
-} = require('../../tools/blue_deployment/step1');
+    deployOrigin,
+    deployAuxiliary,
+} = require('../../tools/blue_deployment');
 
 const { assert } = chai;
 
@@ -83,8 +83,8 @@ describe('Deploy', async () => {
     it('correctly deploys token and base token on Origin', async () => {
         const deployerAddressOrigin = accountsOrigin[0];
 
-        tokenAddressOrigin = await tryDeployNewToken(
-            rpcEndpointOrigin,
+        tokenAddressOrigin = await deployedToken(
+            web3Origin,
             deployerAddressOrigin,
             'new',
         );
@@ -93,8 +93,8 @@ describe('Deploy', async () => {
             'Did not correctly deploy token on Origin.',
         );
 
-        baseTokenAddressOrigin = await tryDeployNewToken(
-            rpcEndpointOrigin,
+        baseTokenAddressOrigin = await deployedToken(
+            web3Origin,
             deployerAddressOrigin,
             'new',
         );
@@ -111,11 +111,11 @@ describe('Deploy', async () => {
         const bountyOrigin = '100';
         const bountyAuxiliary = '100';
 
-        const originInfo = await getChainInfo(rpcEndpointOrigin);
-        const auxiliaryInfo = await getChainInfo(rpcEndpointAuxiliary);
+        const originInfo = await getChainInfo(web3Origin);
+        const auxiliaryInfo = await getChainInfo(web3Auxiliary);
 
-        const originAddresses = await deployAnchorAndGateway(
-            rpcEndpointOrigin,
+        const originAddresses = await deployOrigin(
+            web3Origin,
             deployerAddressOrigin,
             tokenAddressOrigin,
             baseTokenAddressOrigin,
@@ -126,8 +126,8 @@ describe('Deploy', async () => {
         );
 
         const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-        const auxiliaryAddresses = await deployAnchorAndCoGateway(
-            rpcEndpointAuxiliary,
+        const auxiliaryAddresses = await deployAuxiliary(
+            web3Auxiliary,
             deployerAddressAuxiliary,
             tokenAddressOrigin,
             gatewayAddressOrigin,

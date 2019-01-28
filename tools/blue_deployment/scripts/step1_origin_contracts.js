@@ -38,7 +38,7 @@ const {
     deployOrigin,
     deployedToken,
     getChainInfo,
-} = require('../step1');
+} = require('../index');
 
 /**
  * Print a fancy sign with a message on the console to be used as a delimiter.
