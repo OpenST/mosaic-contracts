@@ -18,22 +18,22 @@
 //
 // ----------------------------------------------------------------------------
 
-const { Contract } = require('./Contract');
-const { ContractRegistry } = require('./ContractRegistry');
-const {
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
-} = require('./address_generators');
-const {
-    deployContracts,
-    UnlockedWeb3Signer,
-} = require('./utils');
+const colors = require('colors/safe');
+
+/**
+ * Check if the provided address contains code.
+ *
+ * @param {object} web3 The web3 instance to use.
+ * @param {string} address The address to check whether it contains
+ *                 contract code.
+ */
+const checkAddressForCode = async (web3, address) => {
+    const contractCode = await web3.eth.getCode(address);
+    if (!contractCode) {
+        console.warn(colors.red('There is no contract present at the specified address!'));
+    }
+};
 
 module.exports = {
-    Contract,
-    ContractRegistry,
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
-    UnlockedWeb3Signer,
-    deployContracts,
+    checkAddressForCode,
 };

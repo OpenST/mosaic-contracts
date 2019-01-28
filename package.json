@@ -1,7 +1,18 @@
 {
   "name": "mosaic-contracts",
-  "version": "0.9.4",
-  "description": "",
+  "version": "0.10.0-alpha.0",
+  "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
+  "keywords": [
+    "ethereum",
+    "mosaic",
+    "gateway",
+    "anchor"
+  ],
+  "homepage": "https://openst.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenSTFoundation/mosaic-contracts"
+  },
   "devDependencies": {
     "abi-decoder": "1.2.0",
     "assert": "1.4.1",
@@ -24,12 +35,19 @@
   },
   "scripts": {
     "compile": "truffle compile",
+    "compile-all": "truffle compile --all",
     "test": "truffle test",
-    "test:integration": "cd test_integration && ./main.sh",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
+    "test:integration": "cd test_integration && ./main.sh",
     "ganache": "sh tools/runGanacheCli.sh",
+    "build-package": "node tools/build_package.js",
+    "prepare": "npm run compile-all && npm run build-package",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js"
   },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "author": "OpenST Foundation Ltd.",
   "license": "Apache v2.0"
 }
