@@ -25,29 +25,29 @@ const BN = require('bn.js');
 
 contract('GatewayLib.hashStakeIntent()', async (accounts) => {
 
-  it('should return correct stake intent', async function () {
+  it('should return correct stake intent hash', async function () {
 
     let gatewayLib = await GatewayLib.deployed();
     let amount = new BN(1);
     let beneficiary = accounts[0];
     let gateway = accounts[1];
 
-    let stakeIntent = await gatewayLib.hashStakeIntent(
+    let stakeIntentHash = await gatewayLib.hashStakeIntent(
       amount,
       beneficiary,
       gateway,
     );
 
-    let expectedStakeIntent = Utils.hashStakeIntent(
+    let expectedStakeIntentHash = Utils.hashStakeIntent(
       amount,
       beneficiary,
       gateway,
     );
 
     assert.strictEqual(
-      expectedStakeIntent,
-      stakeIntent,
-      "Expected stake intent should be equal to actual.",
+      expectedStakeIntentHash,
+      stakeIntentHash,
+      "The library did not hash the stake intent as expected.",
     );
 
   });

@@ -59,7 +59,7 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
     );
   });
 
-  it('should fail for wrong storage root', async function () {
+  it('should fail for wrong state root', async function () {
 
     stateRoot = web3.utils.sha3("dummy state root");
 

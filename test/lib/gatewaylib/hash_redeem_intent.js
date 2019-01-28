@@ -25,29 +25,29 @@ const BN = require('bn.js');
 
 contract('GatewayLib.hashRedeemIntent()', async (accounts) => {
 
-  it('should return correct redeem intent', async function () {
+  it('should return correct redeem intent hash', async function () {
 
     let gatewayLib = await GatewayLib.deployed();
     let amount = new BN(1);
     let beneficiary = accounts[0];
     let gateway = accounts[1];
 
-    let redeemIntent = await gatewayLib.hashRedeemIntent(
+    let redeemIntentHash = await gatewayLib.hashRedeemIntent(
       amount,
       beneficiary,
       gateway,
     );
 
-    let expectedRedeemIntent = Utils.hashRedeemIntent(
+    let expectedRedeemIntentHash = Utils.hashRedeemIntent(
       amount,
       beneficiary,
       gateway,
     );
 
     assert.strictEqual(
-      expectedRedeemIntent,
-      redeemIntent,
-      "Expected redeem intent should be equal to actual.",
+      expectedRedeemIntentHash,
+      redeemIntentHash,
+      "The library did not hash the redeem intent as expected.",
     );
 
   });
