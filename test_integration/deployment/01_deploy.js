@@ -29,7 +29,7 @@ const {
     getChainInfo,
     deployOrigin,
     deployAuxiliary,
-} = require('../../tools/blue_deployment/step1');
+} = require('../../tools/blue_deployment');
 
 const { assert } = chai;
 
