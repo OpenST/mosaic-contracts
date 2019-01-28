@@ -18,22 +18,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const { Contract } = require('./Contract');
-const { ContractRegistry } = require('./ContractRegistry');
-const {
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
-} = require('./address_generators');
-const {
-    deployContracts,
-    UnlockedWeb3Signer,
-} = require('./utils');
+const contracts = require('./contracts.json');
 
-module.exports = {
-    Contract,
-    ContractRegistry,
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
-    UnlockedWeb3Signer,
-    deployContracts,
-};
+module.exports = contracts;
