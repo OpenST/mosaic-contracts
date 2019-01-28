@@ -475,14 +475,8 @@ contract EIP20Gateway is GatewayBase {
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
-        // Return revert penalty to staker if message is already progressed
-        // and can't be reverted anymore.
-        tryReturnPenaltyToStaker(
-            _messageHash,
-            message.sender,
-            messageBox.outbox[_messageHash], // old message status
-            MessageBus.MessageStatus(_messageStatus) // new message status
-        );
+        MessageBus.MessageStatus outboxMessageStatus =
+          messageBox.outbox[_messageHash];
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -493,11 +487,21 @@ contract EIP20Gateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
+        uint256 bountyAmount = stakes[_messageHash].bounty;
         (staker_, stakeAmount_) = progressStakeInternal(
             _messageHash,
             message,
             bytes32(0),
             true
+        );
+
+        // Return revert penalty to staker if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToStaker(
+            message.sender,
+            outboxMessageStatus,
+            MessageBus.MessageStatus(_messageStatus), // inbox message status
+            bountyAmount
         );
     }
 
@@ -508,28 +512,28 @@ contract EIP20Gateway is GatewayBase {
      * @dev Should only be called from progressStakeWithProof. This function
      *      exists to avoid a stack too deep error.
      *
-     * @param _messageHash Message hash.
      * @param _staker Staker address.
-     * @param _oldMessageStatus Message status before progressing.
-     * @param _newMessageStatus Message status after progressing.
+     * @param _outboxMessageStatus Message status before progressing.
+     * @param _inboxMessageStatus Message status after progressing.
+     * @param _bountyAmount Bounty amount to use for calculating penalty.
      */
     function tryReturnPenaltyToStaker(
-        bytes32 _messageHash,
         address _staker,
-        MessageBus.MessageStatus _oldMessageStatus,
-        MessageBus.MessageStatus _newMessageStatus
+        MessageBus.MessageStatus _outboxMessageStatus,
+        MessageBus.MessageStatus _inboxMessageStatus,
+        uint256 _bountyAmount
     )
       private
     {
-        if (_oldMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
+        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
             return;
         }
-        if (_newMessageStatus != MessageBus.MessageStatus.Progressed) {
+        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
             return;
         }
 
         // Penalty charged to staker for revert stake.
-        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
+        uint256 penalty = penaltyFromBounty(_bountyAmount);
         // transfer the penalty amount
         require(
             baseToken.transfer(_staker, penalty),
@@ -1130,7 +1134,7 @@ contract EIP20Gateway is GatewayBase {
         // Get the staker address
         staker_ = _message.sender;
 
-        //Get the stake amount.
+        // Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
 
         require(

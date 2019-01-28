@@ -38,6 +38,7 @@ const MessageStatusEnum = messageBus.MessageStatusEnum;
 contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
 
   let gateway, mockToken, baseToken, stakeData, progressStakeParams, bountyAmount, penaltyAmount;
+  const PENALTY_MULTIPLIER = 1.5;
 
   let setStorageRoot = async function() {
 
@@ -123,7 +124,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     let burner = NullAddress;
 
     bountyAmount = new BN(proofData.gateway.constructor.bounty);
-    penaltyAmount = bountyAmount.muln(1.5);
+    penaltyAmount = bountyAmount.muln(PENALTY_MULTIPLIER);
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -591,7 +592,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
     assert.strictEqual(
       stakerFinalBaseTokenBalance.eq(stakerInitialBaseTokenBalance.add(penaltyAmount)),
       true,
-      `Staker's base token balance ${stakerFinalBaseTokenBalance} must be equal to ${stakerInitialBaseTokenBalance.add(penaltyAmount)}`,
+      `Staker's base token balance ${stakerFinalBaseTokenBalance.toString(10)} must be equal to ${stakerInitialBaseTokenBalance.add(penaltyAmount).toString(10)}`,
     );
 
     assert.strictEqual(
@@ -606,7 +607,7 @@ contract('EIP20Gateway.progressStakeWithProof()', function (accounts) {
         gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount)
       ),
       true,
-      `Gateway's base token balance ${gatewayFinalBaseTokenBalance} must be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount)}.`,
+      `Gateway's base token balance ${gatewayFinalBaseTokenBalance.toString(10)} must be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
