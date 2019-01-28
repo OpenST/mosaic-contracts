@@ -163,14 +163,15 @@ contract KernelGateway is KernelGatewayInterface {
         originCoreIdentifier = originBlockStore.getCoreIdentifier();
         auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
-        address[] memory updatedValidators;
-        uint256[] memory updatedWeights;
+        // There are no validators or weights at construction.
+        address[] memory emptyValidators = new address[](0);
+        uint256[] memory emptyWeights = new uint256[](0);
 
         kernels[activeKernelHash] = MetaBlock.Kernel(
             1,
             bytes32(0),
-            updatedValidators,
-            updatedWeights
+            emptyValidators,
+            emptyWeights
         );
 
         bytes memory indexBytes = BytesLib.leftPad(
