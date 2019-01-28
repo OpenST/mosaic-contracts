@@ -19,13 +19,18 @@ package-lock.json
 # Do not track builds
 build/
 
-# Do not track intelliJ files
+# Do not track IDE files
 .idea/
+.vscode/
 *.iml
 
 # LaTeX auxiliary files
 *.aux
 *.log
+
+# NPM package generated files:
+dist/contracts.json
+
 ## Build tool auxiliary files:
 *.synctex
 *.synctex(busy)
