@@ -31,8 +31,8 @@ const {
     inquireRpcEndpointOrigin,
 } = require('../cli/prompts');
 const {
-    checkEip20Address,
-} = require('../cli/utils');
+    checkAddressForCode,
+} = require('../cli/checks');
 const {
     deployAuxiliary,
     deployOrigin,
@@ -64,11 +64,11 @@ const main = async () => {
 
     let tokenAddressOrigin = await inquireEIP20TokenAddress(web3Origin);
     tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin);
-    checkEip20Address(web3Origin, tokenAddressOrigin);
+    checkAddressForCode(web3Origin, tokenAddressOrigin);
 
     let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress();
     baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin);
-    checkEip20Address(web3Origin, baseTokenAddressOrigin);
+    checkAddressForCode(web3Origin, baseTokenAddressOrigin);
 
     printSign('QUESTIONS AUXILIARY');
     const rpcEndpointAuxiliary = await inquireRpcEndpointAuxiliary();

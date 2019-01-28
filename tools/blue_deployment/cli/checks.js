@@ -21,21 +21,19 @@
 const colors = require('colors/safe');
 
 /**
- * Check if the provided address contains a EIP20Token.
- *
- * Only checks if the provided address contains code.
+ * Check if the provided address contains code.
  *
  * @param {object} web3 The web3 instance to use.
- * @param {string} eip20Address The address to check whether it contains
- *                 an EIP20Token.
+ * @param {string} address The address to check whether it contains
+ *                 contract code.
  */
-const checkEip20Address = async (web3, eip20Address) => {
-    const contractCode = await web3.eth.getCode(eip20Address);
+const checkAddressForCode = async (web3, address) => {
+    const contractCode = await web3.eth.getCode(address);
     if (!contractCode) {
         console.warn(colors.red('There is no contract present at the specified address!'));
     }
 };
 
 module.exports = {
-    checkEip20Address,
+    checkAddressForCode,
 };
