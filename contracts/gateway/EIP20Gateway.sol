@@ -602,6 +602,17 @@ contract EIP20Gateway is GatewayBase {
             "Storage root must not be zero."
         );
 
+        amount_ = stakes[_messageHash].amount;
+
+        require(
+            amount_ > 0,
+            "Stake request must exist."
+        );
+
+        staker_ = message.sender;
+        stakerNonce_ = message.nonce;
+        uint256 stakeBounty = stakes[_messageHash].bounty;
+
         // Progress with revocation message.
         MessageBus.progressOutboxRevocation(
             messageBox,
@@ -611,11 +622,6 @@ contract EIP20Gateway is GatewayBase {
             storageRoot,
             MessageBus.MessageStatus.Revoked
         );
-
-        staker_ = message.sender;
-        stakerNonce_ = message.nonce;
-        amount_ = stakes[_messageHash].amount;
-        uint256 stakeBounty = stakes[_messageHash].bounty;
 
         delete stakes[_messageHash];
 
@@ -1075,6 +1081,11 @@ contract EIP20Gateway is GatewayBase {
         //Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
 
+        require(
+            stakeAmount_ > 0,
+            "Stake request must exist."
+        );
+
         uint256 stakedBounty = stakes[_messageHash].bounty;
 
         delete stakes[_messageHash];
@@ -1133,6 +1144,10 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
+        require(
+            redeemAmount_ > 0,
+            "Unstake request must exist."
+        );
         /*
          * Reward calculation depends upon
          *  - the gas consumed in target chain for confirmation and progress steps.

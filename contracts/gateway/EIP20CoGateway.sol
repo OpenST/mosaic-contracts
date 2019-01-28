@@ -673,6 +673,17 @@ contract EIP20CoGateway is GatewayBase {
             "Storage root must not be zero."
         );
 
+        Redeem storage redeemProcess = redeems[_messageHash];
+
+        redeemer_ = message.sender;
+        redeemerNonce_ = message.nonce;
+        amount_ = redeemProcess.amount;
+
+        require(
+            amount_ > 0,
+            "Redeem request must exist."
+        );
+
         // Progress with revocation message.
         MessageBus.progressOutboxRevocation(
             messageBox,
@@ -682,12 +693,6 @@ contract EIP20CoGateway is GatewayBase {
             storageRoot,
             MessageBus.MessageStatus.Revoked
         );
-
-        Redeem storage redeemProcess = redeems[_messageHash];
-
-        redeemer_ = message.sender;
-        redeemerNonce_ = message.nonce;
-        amount_ = redeemProcess.amount;
 
         uint256 bounty = redeemProcess.bounty;
         // Delete the redeem data.
@@ -1048,6 +1053,12 @@ contract EIP20CoGateway is GatewayBase {
         )
     {
         Mint storage mint = mints[_messageHash];
+
+        require(
+            mint.amount > 0,
+            "Mint request must exist."
+        );
+
         MessageBus.Message storage message = messages[_messageHash];
 
         beneficiary_ = mint.beneficiary;
@@ -1124,8 +1135,14 @@ contract EIP20CoGateway is GatewayBase {
             uint256 redeemAmount_
         )
     {
-        redeemer_ = _message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
+
+        require(
+            redeemAmount_ > 0,
+            "Redeem request must exist."
+        );
+
+        redeemer_ = _message.sender;
 
         uint256 stakedBounty = redeems[_messageHash].bounty;
 
