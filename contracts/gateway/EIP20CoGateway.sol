@@ -304,10 +304,10 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice Completes the increase supply process by providing the merkle
-     *         proof instead of unlockSecret. In case the facilitator process
-     *         is not able to complete the stake and mint process then this is
-     *         an alternative approach to complete the process.
+     * @notice Completes the minting process by providing the merkle proof
+     *         instead of unlockSecret. In case the facilitator process is not
+     *         able to complete the stake and mint process then this is an
+     *         alternative approach to complete the process.
      *
      * @dev This can be called to prove that the outbox status of messageBox on
      *      Gateway is either declared or progressed.
