@@ -59,41 +59,17 @@ describe('Deploy', async () => {
     });
 
     after(async () => {
-        const networkId = '*';
-        const EIP20Gateway = shared.artifacts.EIP20Gateway.clone(networkId);
-        EIP20Gateway.setProvider(shared.origin.web3.currentProvider);
-        shared.origin.contracts.EIP20Gateway = await EIP20Gateway.at(
-            shared.origin.contractAddresses.EIP20Gateway,
-        );
+        await shared.origin.addContract('EIP20Gateway');
+        await shared.origin.addContract('Anchor');
+        await shared.origin.addContract('EIP20StandardToken', 'BrandedToken');
 
-        const EIP20CoGateway = shared.artifacts.EIP20CoGateway.clone(networkId);
-        EIP20CoGateway.setProvider(shared.auxiliary.web3.currentProvider);
-        shared.auxiliary.contracts.EIP20CoGateway = await EIP20CoGateway.at(
-            shared.auxiliary.contractAddresses.EIP20CoGateway,
-        );
-
-        const AnchorOrigin = shared.artifacts.Anchor.clone(networkId);
-        AnchorOrigin.setProvider(shared.origin.web3.currentProvider);
-        shared.origin.contracts.Anchor = await AnchorOrigin.at(
-            shared.origin.contractAddresses.Anchor,
-        );
-
-        const AnchorAuxiliary = shared.artifacts.Anchor.clone(networkId);
-        AnchorAuxiliary.setProvider(shared.auxiliary.web3.currentProvider);
-        shared.auxiliary.contracts.Anchor = await AnchorAuxiliary.at(
-            shared.auxiliary.contractAddresses.Anchor,
-        );
-
-        const BrandedToken = shared.artifacts.EIP20StandardToken.clone(networkId);
-        BrandedToken.setProvider(shared.origin.web3.currentProvider);
-        shared.origin.contracts.BrandedToken = await BrandedToken.at(
-            shared.origin.contractAddresses.BrandedToken,
-        );
+        await shared.auxiliary.addContract('EIP20CoGateway');
+        await shared.auxiliary.addContract('Anchor');
     });
 
     let tokenAddressOrigin;
     let baseTokenAddressOrigin;
-    it('correctly deploys token and base token on Origin', async () => {
+    it('correctly deploys branded token and base token on Origin', async () => {
         tokenAddressOrigin = await deployedToken(
             web3Origin,
             deployerAddressOrigin,
@@ -114,6 +90,7 @@ describe('Deploy', async () => {
             'Did not correctly deploy base token on Origin.',
         );
 
+        /* Note that they are called BrandedToken and BaseToken! */
         shared.origin.contractAddresses.BrandedToken = tokenAddressOrigin;
         shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
     });
