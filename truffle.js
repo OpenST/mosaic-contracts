@@ -11,15 +11,11 @@ module.exports = {
             host: 'localhost',
             network_id: '*',
             port: 8546,
-            gas: 9000000,
-            gasPrice: 0x3B9ACA00,
         },
         integration_auxiliary: {
             host: 'localhost',
             network_id: '*',
             port: 8547,
-            gas: 9000000,
-            gasPrice: 0x3B9ACA00,
         },
         coverage: {
             host: 'localhost',

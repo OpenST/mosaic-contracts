@@ -38,6 +38,8 @@ describe('Deploy', async () => {
     let rpcEndpointAuxiliary;
     let web3Auxiliary;
     let accountsAuxiliary;
+    let deployerAddressOrigin;
+    let deployerAddressAuxiliary;
 
     before(async () => {
         ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await docker());
@@ -47,42 +49,51 @@ describe('Deploy', async () => {
         accountsOrigin = await web3Origin.eth.getAccounts();
         accountsAuxiliary = await web3Auxiliary.eth.getAccounts();
 
+        [deployerAddressOrigin] = accountsOrigin;
+        [deployerAddressAuxiliary] = accountsAuxiliary;
+
         shared.origin.web3 = web3Origin;
         shared.auxiliary.web3 = web3Auxiliary;
+        shared.origin.deployerAddress = deployerAddressOrigin;
+        shared.auxiliary.deployerAddress = deployerAddressAuxiliary;
     });
 
     after(async () => {
         const networkId = '*';
-        const Gateway = shared.artifacts.Gateway.clone(networkId);
-        Gateway.setProvider(shared.origin.web3.currentProvider);
-        shared.origin.contracts.gateway = await Gateway.at(
+        const EIP20Gateway = shared.artifacts.EIP20Gateway.clone(networkId);
+        EIP20Gateway.setProvider(shared.origin.web3.currentProvider);
+        shared.origin.contracts.EIP20Gateway = await EIP20Gateway.at(
             shared.origin.addresses.EIP20Gateway,
         );
 
-        const CoGateway = shared.artifacts.CoGateway.clone(networkId);
-        CoGateway.setProvider(shared.auxiliary.web3.currentProvider);
-        shared.auxiliary.contracts.coGateway = await CoGateway.at(
+        const EIP20CoGateway = shared.artifacts.EIP20CoGateway.clone(networkId);
+        EIP20CoGateway.setProvider(shared.auxiliary.web3.currentProvider);
+        shared.auxiliary.contracts.EIP20CoGateway = await EIP20CoGateway.at(
             shared.auxiliary.addresses.EIP20CoGateway,
         );
 
         const AnchorOrigin = shared.artifacts.Anchor.clone(networkId);
         AnchorOrigin.setProvider(shared.origin.web3.currentProvider);
-        shared.origin.contracts.anchor = await AnchorOrigin.at(
+        shared.origin.contracts.Anchor = await AnchorOrigin.at(
             shared.origin.addresses.Anchor,
         );
 
         const AnchorAuxiliary = shared.artifacts.Anchor.clone(networkId);
         AnchorAuxiliary.setProvider(shared.auxiliary.web3.currentProvider);
-        shared.auxiliary.contracts.anchor = await AnchorAuxiliary.at(
+        shared.auxiliary.contracts.Anchor = await AnchorAuxiliary.at(
             shared.auxiliary.addresses.Anchor,
+        );
+
+        const BrandedToken = shared.artifacts.EIP20StandardToken.clone(networkId);
+        BrandedToken.setProvider(shared.origin.web3.currentProvider);
+        shared.origin.contracts.BrandedToken = await BrandedToken.at(
+            shared.origin.addresses.BrandedToken,
         );
     });
 
     let tokenAddressOrigin;
     let baseTokenAddressOrigin;
     it('correctly deploys token and base token on Origin', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
-
         tokenAddressOrigin = await deployedToken(
             web3Origin,
             deployerAddressOrigin,
@@ -102,12 +113,12 @@ describe('Deploy', async () => {
             Web3.utils.isAddress(baseTokenAddressOrigin),
             'Did not correctly deploy base token on Origin.',
         );
+
+        shared.origin.addresses.BrandedToken = tokenAddressOrigin;
+        shared.origin.addresses.BaseToken = baseTokenAddressOrigin;
     });
 
     it('correctly deploys Gateway and CoGateway', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
-        const deployerAddressAuxiliary = accountsAuxiliary[0];
-
         const bountyOrigin = '100';
         const bountyAuxiliary = '100';
 
@@ -137,7 +148,13 @@ describe('Deploy', async () => {
             originInfo.stateRoot,
         );
 
-        shared.origin.addresses = originAddresses;
-        shared.auxiliary.addresses = auxiliaryAddresses;
+        shared.origin.addresses = {
+            ...shared.origin.addresses,
+            ...originAddresses,
+        };
+        shared.auxiliary.addresses = {
+            ...shared.auxiliary.addresses,
+            ...auxiliaryAddresses,
+        };
     });
 });

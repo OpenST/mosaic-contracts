@@ -18,11 +18,25 @@
 //
 // ----------------------------------------------------------------------------
 
+const { assert } = require('chai');
 const shared = require('../shared');
 
-// Dummy to show that it can access the contracts.
+// Dummy to show that it can access the contracts and make transactions.
 describe('Stake', async () => {
     it('stakes', async () => {
-        console.log(shared.origin.contracts.gateway);
+        const brandedToken = shared.origin.contracts.BrandedToken;
+        const sender = shared.origin.deployerAddress;
+        const accounts = await shared.origin.web3.eth.getAccounts();
+        const receiver = accounts[2];
+        const amount = '1000000';
+
+        await brandedToken.transfer(receiver, amount, { from: sender });
+        const balanceOfReceiver = await brandedToken.balanceOf.call(receiver);
+
+        assert.strictEqual(
+            amount,
+            balanceOfReceiver.toString(10),
+            'Could not transfer EIP20 tokens.',
+        );
     });
 });

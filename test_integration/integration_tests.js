@@ -26,14 +26,17 @@ const Mocha = require('mocha');
 const shared = require('./shared');
 
 const Anchor = artifacts.require('Anchor');
-const Gateway = artifacts.require('EIP20Gateway');
-const CoGateway = artifacts.require('EIP20CoGateway');
-
+const EIP20Gateway = artifacts.require('EIP20Gateway');
+const EIP20CoGateway = artifacts.require('EIP20CoGateway');
+const EIP20StandardToken = artifacts.require('EIP20StandardToken');
 
 const setupArtifacts = () => {
-    shared.artifacts.Anchor = Anchor;
-    shared.artifacts.Gateway = Gateway;
-    shared.artifacts.CoGateway = CoGateway;
+    shared.artifacts = {
+        Anchor,
+        EIP20Gateway,
+        EIP20CoGateway,
+        EIP20StandardToken,
+    };
 };
 
 const runTests = (callback) => {

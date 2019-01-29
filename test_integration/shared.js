@@ -37,7 +37,10 @@
  * @property {Object} addresses All addresses in sting format, indexed by the
  *     contract name, as written in the solidity source file.
  * @property {Object} contracts Instances of TruffleContracts. Indexed by their
- *     instance name, e.g. `gateway` or `anchor`.
+ *     contract name, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
+ *     and `BrandedToken`.
+ * @property {string} deployerAddress The address of the account that deployed
+ *     the contracts in the deployment phase.
  */
 
 /**
