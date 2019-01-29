@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const colors = require('colors/safe');
 
 /**
@@ -154,7 +155,8 @@ const deployContracts = async (
             gas = await web3.eth.estimateGas(deploymentObject.transactionObject);
         }
         if (!gasPrice) {
-            gasPrice = await web3.eth.getGasPrice();
+            gasPrice = new BN(await web3.eth.getGasPrice());
+            gasPrice = gasPrice.muln(10).toString(10);
         }
 
         return signer.signTransaction(Object.assign(

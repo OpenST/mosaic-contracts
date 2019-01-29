@@ -55,7 +55,7 @@ class Chain {
      * Adds a new contract instance to the chain.
      *
      * @param {string} contractName The name of the contract to add.
-     * @param {string} identifier Optionally an identifier that differs from the
+     * @param {string} [identifier] Optionally an identifier that differs from the
      *     contract name. The property on the `contractAddresses` that holds
      *     this contract.
      */
