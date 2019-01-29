@@ -132,6 +132,7 @@ const getChainInfo = async (web3) => {
  * @param {string} blockHeightAuxiliary The block height at wich Anchor starts
  *                                      tracking Auxiliary.
  * @param {string} stateRootAuxiliary The state root at `blockHeightAuxiliary`.
+ * @param {bool} options.log Whether to log the progress of the deployment.
  *
  * @returns {Promise.<object>} A promise resolving to a mapping of contract
  *                             names to their deployed addresses.
@@ -145,6 +146,9 @@ const deployOrigin = async (
     chainIdAuxiliary,
     blockHeightAuxiliary,
     stateRootAuxiliary,
+    options = {
+        log: false,
+    },
 ) => {
     const startingNonce = await web3Origin.eth.getTransactionCount(deployerAddress);
 
@@ -193,6 +197,7 @@ const deployOrigin = async (
         new UnlockedWeb3Signer(web3Origin),
         web3Origin,
         deploymentObjects,
+        options,
     );
 };
 
@@ -211,6 +216,7 @@ const deployOrigin = async (
  * @param {string} blockHeightOrigin The block height at wich Anchor starts
  *                                      tracking Origin.
  * @param {string} stateRootOrigin The state root at `blockHeightOrigin`.
+ * @param {bool} options.log Whether to log the progress of the deployment.
  *
  * @returns {Promise.<object>} A promise resolving to a mapping of contract
  *                             names to their deployed addresses.
@@ -224,6 +230,9 @@ const deployAuxiliary = async (
     chainIdOrigin,
     blockHeightOrigin,
     stateRootOrigin,
+    options = {
+        log: false,
+    },
 ) => {
     const startingNonce = await web3Auxiliary.eth.getTransactionCount(deployerAddress);
 
@@ -279,6 +288,7 @@ const deployAuxiliary = async (
         new UnlockedWeb3Signer(web3Auxiliary),
         web3Auxiliary,
         deploymentObjects,
+        options,
     );
 };
 
