@@ -34,8 +34,8 @@
 /**
  * @typedef {Object} Chain Contains all relevant data on a chain.
  * @property {Web3} web3 A web3 object to access the chain.
- * @property {Object} addresses All addresses in sting format, indexed by the
- *     contract name, as written in the solidity source file.
+ * @property {Object} contractAddresses All addresses in sting format, indexed
+ *     by the contract name, as written in the solidity source file.
  * @property {Object} contracts Instances of TruffleContracts. Indexed by their
  *     contract name, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
  *     and `BrandedToken`.
@@ -58,12 +58,12 @@
 module.exports = {
     origin: {
         web3: {},
-        addresses: [],
+        contractAddresses: [],
         contracts: [],
     },
     auxiliary: {
         web3: {},
-        addresses: [],
+        contractAddresses: [],
         contracts: [],
     },
     artifacts: [],

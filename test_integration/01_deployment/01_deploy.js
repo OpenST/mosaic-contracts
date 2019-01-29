@@ -63,31 +63,31 @@ describe('Deploy', async () => {
         const EIP20Gateway = shared.artifacts.EIP20Gateway.clone(networkId);
         EIP20Gateway.setProvider(shared.origin.web3.currentProvider);
         shared.origin.contracts.EIP20Gateway = await EIP20Gateway.at(
-            shared.origin.addresses.EIP20Gateway,
+            shared.origin.contractAddresses.EIP20Gateway,
         );
 
         const EIP20CoGateway = shared.artifacts.EIP20CoGateway.clone(networkId);
         EIP20CoGateway.setProvider(shared.auxiliary.web3.currentProvider);
         shared.auxiliary.contracts.EIP20CoGateway = await EIP20CoGateway.at(
-            shared.auxiliary.addresses.EIP20CoGateway,
+            shared.auxiliary.contractAddresses.EIP20CoGateway,
         );
 
         const AnchorOrigin = shared.artifacts.Anchor.clone(networkId);
         AnchorOrigin.setProvider(shared.origin.web3.currentProvider);
         shared.origin.contracts.Anchor = await AnchorOrigin.at(
-            shared.origin.addresses.Anchor,
+            shared.origin.contractAddresses.Anchor,
         );
 
         const AnchorAuxiliary = shared.artifacts.Anchor.clone(networkId);
         AnchorAuxiliary.setProvider(shared.auxiliary.web3.currentProvider);
         shared.auxiliary.contracts.Anchor = await AnchorAuxiliary.at(
-            shared.auxiliary.addresses.Anchor,
+            shared.auxiliary.contractAddresses.Anchor,
         );
 
         const BrandedToken = shared.artifacts.EIP20StandardToken.clone(networkId);
         BrandedToken.setProvider(shared.origin.web3.currentProvider);
         shared.origin.contracts.BrandedToken = await BrandedToken.at(
-            shared.origin.addresses.BrandedToken,
+            shared.origin.contractAddresses.BrandedToken,
         );
     });
 
@@ -114,8 +114,8 @@ describe('Deploy', async () => {
             'Did not correctly deploy base token on Origin.',
         );
 
-        shared.origin.addresses.BrandedToken = tokenAddressOrigin;
-        shared.origin.addresses.BaseToken = baseTokenAddressOrigin;
+        shared.origin.contractAddresses.BrandedToken = tokenAddressOrigin;
+        shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
     });
 
     it('correctly deploys Gateway and CoGateway', async () => {
@@ -148,12 +148,12 @@ describe('Deploy', async () => {
             originInfo.stateRoot,
         );
 
-        shared.origin.addresses = {
-            ...shared.origin.addresses,
+        shared.origin.contractAddresses = {
+            ...shared.origin.contractAddresses,
             ...originAddresses,
         };
-        shared.auxiliary.addresses = {
-            ...shared.auxiliary.addresses,
+        shared.auxiliary.contractAddresses = {
+            ...shared.auxiliary.contractAddresses,
             ...auxiliaryAddresses,
         };
     });
