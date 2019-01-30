@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ describe('Deploy', async () => {
         await shared.origin.addContract('EIP20Gateway');
         await shared.origin.addContract('Anchor');
         await shared.origin.addContract('EIP20StandardToken', 'BrandedToken');
+        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
 
         await shared.auxiliary.addContract('EIP20CoGateway');
         await shared.auxiliary.addContract('Anchor');

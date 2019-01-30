@@ -25,7 +25,7 @@ import "../gateway/EIP20Token.sol";
 /**
  * @title EIP20StandardToken is a standard implementation of an ERC20 token.
  *
- * @notice It is required for integration tests..
+ * @notice It is required for integration tests.
  */
 contract EIP20StandardToken is EIP20Token {
 

@@ -155,8 +155,7 @@ const deployContracts = async (
             gas = await web3.eth.estimateGas(deploymentObject.transactionObject);
         }
         if (!gasPrice) {
-            gasPrice = new BN(await web3.eth.getGasPrice());
-            gasPrice = gasPrice.muln(10).toString(10);
+            gasPrice = await web3.eth.getGasPrice();
         }
 
         return signer.signTransaction(Object.assign(
