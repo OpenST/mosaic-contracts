@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 import "truffle/Assert.sol";
 import "../../../contracts/core/Stake.sol";
-import "../../../contracts/gateway/MockToken.sol";
+import "../../../contracts/test/gateway/MockToken.sol";
 
 /**
  * @title Testing the functions of the Stake contract that will be invoked by
