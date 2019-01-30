@@ -36,7 +36,7 @@ class AssertProgressStake {
     }
 
     /**
-     *  This verifies event and balances.
+     *  This verifies event and balances of staker, gateway and stakeVault.
      *
      * @param event Event object after decoding.
      * @param stakeRequest Stake request. {amount: *, gasPrice: *,gasLimit:*
@@ -52,7 +52,7 @@ class AssertProgressStake {
     }
 
     /**
-     * This capture basetoken and token balance of gateway and staker.
+     * This capture base token and token balance of gateway and staker.
      *
      * @param staker
      * @return {Promise<{baseToken: {gateway: *, staker: *}, token: {gateway: *, staker: *}}>}

@@ -24,6 +24,12 @@ const assert = require('assert');
  *  Class to assert anchor state root.
  */
 class AssertAnchorStateRoot {
+    /**
+     * This asserts StateRootAvailable event.
+     * @param event  Deserialize event.
+     * @param blockHeight Block Height at which state root is anchored.
+     * @param stateRoot State root which is anchored.
+     */
     static verify(event, blockHeight, stateRoot) {
         const eventData = event.StateRootAvailable;
 

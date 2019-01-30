@@ -24,6 +24,13 @@ const assert = require('assert');
  *  Class to assert prove gateway.
  */
 class AssertProveGateway {
+    /**
+     *
+     * @param event Decoded event.
+     * @param blockHeight Block height at which prove gateway is done.
+     * @param storageRoot Storage root of gateway account at give height.
+     * @param gateway Gateway address
+     */
     static verify(event, blockHeight, storageRoot, gateway) {
         const eventData = event.GatewayProven;
 

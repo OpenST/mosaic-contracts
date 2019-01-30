@@ -28,8 +28,8 @@ class AssertProgressMint {
     /**
      *
      * @param web3 Auxiliary web3
-     * @param coGateway
-     * @param ostPrime
+     * @param coGateway CoGateway contract instance.
+     * @param ostPrime OSTPrime contract instace.
      */
     constructor(web3, coGateway, ostPrime) {
         this.web3 = web3;
@@ -45,7 +45,8 @@ class AssertProgressMint {
      * , hashLock: *, unlockSecret:*, staker:*, bounty:*, nonce:*,
       * beneficiary:*}
      *
-     * @param initialBalances Initial baseToken and token balances
+     * @param initialBalances Initial baseToken and token balances of
+     * beneficiary, ostPrime and coGateway.
      */
     async verify(event, stakeRequest, initialBalances) {
         AssertProgressMint._assertProgressMintEvent(event, stakeRequest);
@@ -53,7 +54,11 @@ class AssertProgressMint {
         await this._assertBalancesForMint(stakeRequest, initialBalances);
     }
 
-
+    /**
+     * This captures ERC20 OSTPrime and base token(ETH) balances.
+     * @param beneficiary
+     * @return {Promise<{ostPrime: {cogateway: *, beneficiary: *, ostPrime: *}, baseToken: {cogateway: *, beneficiary: *, ostPrime: *}}>}
+     */
     async captureBalances(beneficiary) {
         return {
             ostPrime: {
@@ -190,6 +195,12 @@ class AssertProgressMint {
         );
     }
 
+    /**
+     * Returns ETH balance wrapped in BN.
+     * @param address
+     * @return {Promise<BN>} ETH Balance.
+     * @private
+     */
     async _getEthBalance(address) {
         const balance = await this.web3.eth.getBalance(address);
         return new BN(balance);

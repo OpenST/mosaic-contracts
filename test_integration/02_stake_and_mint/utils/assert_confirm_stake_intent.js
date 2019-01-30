@@ -21,7 +21,7 @@
 const assert = require('assert');
 
 /**
- *  Class to assert anchor state root.
+ *  Class to assert confirm stake intent.
  */
 class AssertConfirmStakeIntent {
     /**

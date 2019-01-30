@@ -25,11 +25,11 @@ const EventDecoder = require('../../test/test_lib/event_decoder');
 
 const AssertStake = require('./utils/assert_stake');
 const AssertProveGateway = require('./utils/assert_prove_gateway');
-const AssertAnchorStateRoot = require('./utils/assert_anchor_stateroot');
 const AssertConfirmStakeIntent = require('./utils/assert_confirm_stake_intent');
 const AssertProgressStake = require('./utils/assert_progress_stake');
 const AssertProgressMint = require('./utils/assert_progress_mint');
 const ProofUtils = require('./utils/proof_utils');
+const Anchor = require('./utils/anchor');
 
 describe('Stake and mint', async () => {
     let assertStake;
@@ -48,18 +48,7 @@ describe('Stake and mint', async () => {
     let baseToken;
     let auxiliaryAnchor;
     let ostPrime;
-
-    let messageHash;
-    let initialBalances;
-    const hasher = Utils.generateHashLock();
-
-    const stakeRequest = {
-        amount: new BN(200),
-        gasPrice: new BN(1),
-        gasLimit: new BN(100),
-        hashLock: hasher.l,
-        unlockSecret: hasher.s,
-    };
+    let stakeRequest;
 
     before(async () => {
         originWeb3 = shared.origin.web3;
@@ -70,22 +59,34 @@ describe('Stake and mint', async () => {
         baseToken = shared.origin.contracts.BaseToken;
         gateway = shared.origin.contracts.EIP20Gateway;
         cogateway = shared.auxiliary.contracts.EIP20CoGateway;
-        auxiliaryAnchor = shared.auxiliary.contracts.Anchor;
         ostPrime = shared.auxiliary.contracts.OSTPrime;
 
-        [stakeRequest.staker] = originAccounts;
-        stakeRequest.bounty = await gateway.bounty.call();
-        stakeRequest.nonce = await gateway.getNonce.call(stakeRequest.staker);
-        stakeRequest.beneficiary = auxiliaryAccounts[2];
+        const hasher = Utils.generateHashLock();
+        stakeRequest = {
+            amount: new BN(200),
+            gasPrice: new BN(1),
+            gasLimit: new BN(100),
+            staker: originAccounts[0],
+            bounty: await gateway.bounty.call(),
+            nonce: await gateway.getNonce.call(originAccounts[0]),
+            beneficiary: auxiliaryAccounts[2],
+            hashLock: hasher.l,
+            unlockSecret: hasher.s,
+        };
 
         assertStake = new AssertStake(gateway, token, baseToken);
         assertProgressStake = new AssertProgressStake(gateway, token, baseToken);
         assertProgressMint = new AssertProgressMint(auxiliaryWeb3, cogateway, ostPrime);
-        initialBalances = await assertStake.captureBalances(stakeRequest.staker);
         proofUtils = new ProofUtils(originWeb3, auxiliaryWeb3);
+        auxiliaryAnchor = new Anchor(
+            originWeb3,
+            shared.auxiliary.contracts.Anchor,
+        );
     });
 
     it('stake', async () => {
+        // Capture initial token and base token balance of staker and gateway.
+        const initialBalances = await assertStake.captureBalances(stakeRequest.staker);
         // Approve gateway for stake amount.
         await token.approve(
             gateway.address,
@@ -110,48 +111,39 @@ describe('Stake and mint', async () => {
         );
 
         const event = EventDecoder.getEvents(tx, gateway);
+        // Assert event and balances.
         await assertStake.verify(event, stakeRequest, initialBalances);
 
-        messageHash = event.StakeIntentDeclared._messageHash;
-        stakeRequest.messageHash = messageHash;
+        stakeRequest.messageHash = event.StakeIntentDeclared._messageHash;
     });
 
     it('confirm stake', async () => {
-        const block = await originWeb3.eth.getBlock('latest');
-        const blockHeight = originWeb3.utils.toHex(block.number);
-        const stateRoot = block.stateRoot;
+        // Anchor state root.
+        const blockNumber = await auxiliaryAnchor.anchorStateRoot(
+            'latest',
+            auxiliaryAccounts[0],
+        );
+        // Generate outbox proof for block height for which state root is
+        // anchored.
         const outboxProof = await proofUtils.getOutboxProof(
             gateway.address,
-            [messageHash],
-            blockHeight,
+            [stakeRequest.messageHash],
+            originWeb3.utils.toHex(blockNumber),
         );
 
-        let tx = await auxiliaryAnchor.anchorStateRoot(
-            blockHeight,
-            stateRoot,
-            { from: auxiliaryAccounts[0] },
-        );
-
-        let event = EventDecoder.getEvents(tx, auxiliaryAnchor);
-        const expectedBlockHeight = new BN(blockHeight.substring(2), 16);
-        stakeRequest.blockHeight = expectedBlockHeight;
-        AssertAnchorStateRoot.verify(
-            event,
-            expectedBlockHeight,
-            stateRoot,
-        );
-
-        tx = await cogateway.proveGateway(
-            blockHeight,
+        stakeRequest.blockHeight = new BN(blockNumber);
+        // Prove gateway.
+        let tx = await cogateway.proveGateway(
+            stakeRequest.blockHeight,
             outboxProof.encodedAccountValue,
             outboxProof.serializedAccountProof,
             { from: auxiliaryAccounts[0] },
         );
 
-        event = EventDecoder.getEvents(tx, cogateway);
+        let event = EventDecoder.getEvents(tx, cogateway);
         AssertProveGateway.verify(
             event,
-            expectedBlockHeight,
+            stakeRequest.blockHeight,
             outboxProof.storageHash,
             gateway.address,
         );
@@ -164,16 +156,18 @@ describe('Stake and mint', async () => {
             stakeRequest.gasPrice,
             stakeRequest.gasLimit,
             stakeRequest.hashLock,
-            blockHeight,
+            stakeRequest.blockHeight,
             outboxProof.storageProof[0].serializedProof,
             { from: auxiliaryAccounts[0] },
         );
 
         event = EventDecoder.getEvents(tx, cogateway);
+        // Assert event.
         AssertConfirmStakeIntent.verify(event, stakeRequest);
     });
 
     it('progress stake', async () => {
+        // Capture initial token and base token balance of staker and gateway.
         const initialBalancesBeforeProgress = await assertProgressStake.captureBalances(
             stakeRequest.staker,
         );
@@ -185,13 +179,16 @@ describe('Stake and mint', async () => {
         );
 
         const event = EventDecoder.getEvents(tx, gateway);
-
+        // Assert event and balances.
         await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress);
     });
 
     it('progress mint', async () => {
-        const initialBalancesBeforeMint = await
-        assertProgressMint.captureBalances(stakeRequest.beneficiary);
+        // Capture initial OST prime ERC20 and base token balance of
+        // beneficiary, OST prime contract address and gateway.
+        const initialBalancesBeforeMint = await assertProgressMint.captureBalances(
+            stakeRequest.beneficiary,
+        );
 
         const tx = await cogateway.progressMint(
             stakeRequest.messageHash,
@@ -200,6 +197,7 @@ describe('Stake and mint', async () => {
         );
         const event = EventDecoder.getEvents(tx, cogateway);
 
+        // Assert event and balances.
         await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint);
     });
 });

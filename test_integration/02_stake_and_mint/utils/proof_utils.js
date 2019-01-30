@@ -26,7 +26,9 @@ const MESSAGE_OUTBOX_OFFSET = '7';
 // This is the position of message inbox defined in GatewayBase.sol
 const MESSAGE_INBOX_OFFSET = '8';
 
-
+/**
+ * Utils class to generate inbox and outbox proof.
+ */
 class ProofUtils {
     /**
      *
@@ -83,6 +85,7 @@ class ProofUtils {
     /**
      * Get proof data
      *
+     * @param web3 web3 instance of chain from which proof is generated.
      * @param index Storage index.
      * @param address Address of ethereum account for which proof needs to be
      *                generated.
@@ -116,6 +119,7 @@ class ProofUtils {
     }
 
     /**
+     * @param web3 web3 instance of chain from which proof is generated.
      * @param address Address of ethereum account for which proof needs to be
      *                generated.
      * @param storageKeys Array of keys for a mapping in solidity.
@@ -136,7 +140,7 @@ class ProofUtils {
                     const storageProofs = response.result.storageProof;
 
                     response.result.serializedAccountProof = this._serializeProof(accountProof);
-                    response.result.encodedAccountValue = this._encodedAccountValue(
+                    response.result.encodedAccountValue = ProofUtils._encodedAccountValue(
                         response.result.serializedAccountProof,
                     );
 
@@ -150,6 +154,14 @@ class ProofUtils {
         }));
     }
 
+    /**
+     *
+     * @param web3 web3 instance of chain from which proof is generated.
+     * @param storageIndex Position of storage in the contract.
+     * @param mappings  list of keys in case storage is mapping.
+     * @return {*|string} Storage path.
+     * @private
+     */
     _storagePath(web3, storageIndex, mappings) {
         let path = '';
 
@@ -183,7 +195,7 @@ class ProofUtils {
      * @return {string}
      * @private
      */
-    _encodedAccountValue(accountProof) {
+    static _encodedAccountValue(accountProof) {
         const decodedProof = rlp.decode(accountProof);
         const leafElement = decodedProof[decodedProof.length - 1];
         return `0x${leafElement[leafElement.length - 1].toString('hex')}`;
