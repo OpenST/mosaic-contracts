@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../gateway/Anchor.sol";
+import "../../anchor/Anchor.sol";
 
 /**
  * @title MockAnchor contract.
