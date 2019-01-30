@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./EIP20Token.sol";
+import "../../gateway/EIP20Token.sol";
 
 /**
  *  @title MockEIP20Token contract.

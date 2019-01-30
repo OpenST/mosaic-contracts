@@ -25,7 +25,7 @@ pragma solidity ^0.5.0;
 // The MIT License.
 // ----------------------------------------------------------------------------
 
-import "./SafeMath.sol";
+import "../../lib/SafeMath.sol";
 
 /**
  *  @title MockSafeMath library.

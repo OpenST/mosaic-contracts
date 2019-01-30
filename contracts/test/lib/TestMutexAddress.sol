@@ -20,7 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../lib/MutexAddress.sol";
+import "../../lib/MutexAddress.sol";
 
 /** @title TestMutexAddress contract to test Mutex. */
 contract TestMutexAddress is MutexAddress {

@@ -20,49 +20,54 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../gateway/EIP20Gateway.sol";
-import "../lib/MessageBus.sol";
+import "../../gateway/EIP20CoGateway.sol";
 
 /**
- * @title Test EIP20 gateway is an EIP20 gateway that is activated by default.
+ * @title The TestEIP20CoGateway contract allows to directly set certain
+ *        statuses and variables.
+ *
+ * @notice This is only used for testing purposes.
  */
-contract TestEIP20Gateway is EIP20Gateway {
+contract TestEIP20CoGateway is EIP20CoGateway {
+
+    /* Constructor */
 
     /**
-     * @notice Instantiate TestEIP20Gateway for unit testing.
+     * @notice Initialize the contract by providing the Gateway contract
+     *         address for which the CoGateway will enable facilitation of
+     *         minting and redeeming.This is used for testing purpose.
      *
-     * @param _token The ERC20 token contract address that will be
-     *               staked and corresponding utility tokens will be minted
-     *               in auxiliary chain.
-     * @param _baseToken The ERC20 token address that will be used for
-     *                     staking bounty from the facilitators.
+     * @param _valueToken The value token contract address.
+     * @param _utilityToken The utility token address that will be used for
+     *                      minting the utility token.
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                stake process.
+     *                staking process.
      * @param _organization Address of an organization contract.
-     * @param _burner Address where tokens will be burned.
+     * @param _gateway Gateway contract address.
+     * @param _burner An address where tokens are sent when they should be burnt.
      */
     constructor(
-        EIP20Interface _token,
-        EIP20Interface _baseToken,
+        address _valueToken,
+        address _utilityToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
         OrganizationInterface _organization,
+        address _gateway,
         address payable _burner
     )
-        EIP20Gateway(
-            _token,
-            _baseToken,
+        EIP20CoGateway(
+            _valueToken,
+            _utilityToken,
             _stateRootProvider,
             _bounty,
             _organization,
+            _gateway,
             _burner
-        )
+    )
         public
-    {
-        activated = true;
-    }
+    {}
 
 
     /* Public Functions */
@@ -113,53 +118,50 @@ contract TestEIP20Gateway is EIP20Gateway {
 
         messages[messageHash_] = message;
 
+        return messageHash_;
+
     }
 
     /**
-     * @notice It sets the stakes mapping with respect to the messageHash.
+     * @notice It sets the mints mapping with respect to the messageHash.
      *
      * @dev This is used for testing purpose.
      *
      * @param _messageHash Hash for which mints mapping is updated.
-     * @param _beneficiary Beneficiary address to which the utility tokens
+     * @param _beneficiary Beneficiary  Address to which the utility tokens
      *                     will be transferred after minting.
-     * @param _amount Total stake amount for which the stake is initiated.
+     * @param _amount Total amount for which the stake was initiated. The
+     *                reward amount is deducted from the total amount and
+     *                is given to the facilitator.
      */
-    function setStake(
+    function setMints(
         bytes32 _messageHash,
-        address _beneficiary,
+        address payable _beneficiary,
         uint256 _amount
     )
         public
     {
-        stakes[_messageHash] = Stake({
+        mints[_messageHash] = Mint({
             amount : _amount,
-            beneficiary : _beneficiary,
-            bounty : bounty
+            beneficiary : _beneficiary
         });
     }
 
     /**
-     * @notice It sets the unstakes mapping with respect to the messageHash.
+     * @notice It sets the status of inbox.
      *
      * @dev This is used for testing purpose.
      *
-     * @param _messageHash Hash for which unstakes mapping is updated.
-     * @param _beneficiary Beneficiary address to which the staked tokens
-     *                     will be transferred.
-     * @param _amount Total redeem amount.
+     * @param _messageHash It sets the status of the message.
+     * @param _status It sets the state of the message.
      */
-    function setUnstake(
+    function setInboxStatus(
         bytes32 _messageHash,
-        address _beneficiary,
-        uint256 _amount
+        MessageBus.MessageStatus _status
     )
         public
     {
-        unstakes[_messageHash] = Unstake({
-            amount : _amount,
-            beneficiary : _beneficiary
-        });
+        messageBox.inbox[_messageHash] = _status;
     }
 
     /**
@@ -180,34 +182,6 @@ contract TestEIP20Gateway is EIP20Gateway {
     }
 
     /**
-     * @notice It sets the bounty amount.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _bounty Bounty amount to be set.
-     */
-    function setBounty(uint256 _bounty) external {
-        bounty = _bounty;
-    }
-
-    /**
-     * @notice It sets the status of inbox.
-     *
-     * @dev This is used for testing purpose.
-     *
-     * @param _messageHash MessageHash for which status is the be set.
-     * @param _status Status of the message to be set.
-     */
-    function setInboxStatus(
-        bytes32 _messageHash,
-        MessageBus.MessageStatus _status
-    )
-        public
-    {
-        messageBox.inbox[_messageHash] = _status;
-    }
-
-    /**
      * @notice It sets the storage root for given block height.
      *
      * @dev This is used for testing purpose.
@@ -223,4 +197,48 @@ contract TestEIP20Gateway is EIP20Gateway {
     {
         storageRoots[_blockHeight] = _storageRoot;
     }
+
+   /**
+    * @notice It sets the redeem mapping with respect to the messageHash.
+    *
+    * @dev This is used for testing purpose.
+    *
+    * @param _messageHash Hash for which redeem mapping is updated.
+    * @param _beneficiary Beneficiary address to which the branded tokens
+    *                     will be transferred after unstake.
+    * @param _amount Total amount for which the redeem was initiated.
+    */
+    function setRedeem(
+        bytes32 _messageHash,
+        address  _beneficiary,
+        uint256 _amount
+    )
+        public
+    {
+        redeems[_messageHash] = Redeem({
+            amount : _amount,
+            beneficiary : _beneficiary,
+            bounty : bounty
+        });
+    }
+
+    /** This is added to test progress redeem. Co-gateway should have facilitator
+     *  bounty which is in base token(ETH) as a pre-condition of unit test.
+     */
+    function () external payable
+    {
+
+    }
+
+    /**
+     * @notice It sets the bounty amount.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _bounty Bounty amount to be set.
+     */
+    function setBounty(uint256 _bounty) external {
+        bounty = _bounty;
+    }
+
 }
