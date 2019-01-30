@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,25 +18,29 @@
 //
 // ----------------------------------------------------------------------------
 
-const { assert } = require('chai');
-const shared = require('../shared');
+const assert = require('assert');
 
-// Dummy to show that it can access the contracts and make transactions.
-describe('Stake', async () => {
-    it('stakes', async () => {
-        const brandedToken = shared.origin.contracts.BrandedToken;
-        const sender = shared.origin.deployerAddress;
-        const accounts = await shared.origin.web3.eth.getAccounts();
-        const receiver = accounts[2];
-        const amount = '1000000';
-
-        await brandedToken.transfer(receiver, amount, { from: sender });
-        const balanceOfReceiver = await brandedToken.balanceOf.call(receiver);
+/**
+ *  Class to assert anchor state root.
+ */
+class AssertAnchorStateRoot {
+    static verify(event, blockHeight, stateRoot) {
+        const eventData = event.StateRootAvailable;
 
         assert.strictEqual(
-            amount,
-            balanceOfReceiver.toString(10),
-            'Could not transfer EIP20 tokens.',
+            eventData._blockHeight.eq(blockHeight),
+            true,
+            `Block height from event ${eventData._blockHeight} 
+            is different from expected ${blockHeight} `,
         );
-    });
-});
+
+        assert.strictEqual(
+            eventData._stateRoot,
+            stateRoot,
+            `State root from event ${eventData._stateRoot} 
+            is different from expected ${stateRoot} `,
+        );
+    }
+}
+
+module.exports = AssertAnchorStateRoot;

@@ -1088,7 +1088,7 @@ contract EIP20CoGateway is GatewayBase {
         emit MintProgressed(
             _messageHash,
             message.sender,
-            mint.beneficiary,
+            beneficiary_,
             stakeAmount_,
             mintedAmount_,
             rewardAmount_,
