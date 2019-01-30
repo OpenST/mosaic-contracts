@@ -29,6 +29,7 @@ const Anchor = artifacts.require('Anchor');
 const EIP20Gateway = artifacts.require('EIP20Gateway');
 const EIP20CoGateway = artifacts.require('EIP20CoGateway');
 const EIP20StandardToken = artifacts.require('EIP20StandardToken');
+const OSTPrime = artifacts.require('OSTPrime');
 
 const setupArtifacts = () => {
     shared.artifacts = {
@@ -36,6 +37,7 @@ const setupArtifacts = () => {
         EIP20Gateway,
         EIP20CoGateway,
         EIP20StandardToken,
+        OSTPrime,
     };
 };
 

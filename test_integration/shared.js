@@ -49,6 +49,7 @@ class Chain {
         this.contractAddresses = {};
         this.contracts = {};
         this.networkId = '*';
+        this.accounts = [];
     }
 
     /**
