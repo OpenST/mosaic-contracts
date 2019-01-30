@@ -23,19 +23,13 @@ const Utils = require('../../test_lib/utils.js');
 const MutexAddress = artifacts.require('TestMutexAddress');
 
 contract('MutexAddress.acquire()', async (accounts) => {
-
   it('should acquire lock for an address', async () => {
+    const mutex = await MutexAddress.new();
 
-    let mutex = await MutexAddress.new();
+    const address = accounts[0];
+    const result = await mutex.acquireExternal.call(address);
 
-    let address = accounts[0];
-    let result = await mutex.acquireExternal.call(address);
-
-    assert.strictEqual(
-      result,
-      true,
-      'Lock acquire should succeed.',
-    );
+    assert.strictEqual(result, true, 'Lock acquire should succeed.');
 
     await mutex.acquireExternal(address);
 
@@ -46,10 +40,9 @@ contract('MutexAddress.acquire()', async (accounts) => {
   });
 
   it('should not acquire lock for an address if already acquired', async () => {
+    const mutex = await MutexAddress.new();
 
-    let mutex = await MutexAddress.new();
-
-    let address = accounts[0];
+    const address = accounts[0];
     await mutex.acquireExternal(address);
 
     await Utils.expectRevert(
@@ -59,29 +52,20 @@ contract('MutexAddress.acquire()', async (accounts) => {
   });
 
   it('should allow lock acquisition for more than one account', async () => {
-    let mutex = await MutexAddress.new();
+    const mutex = await MutexAddress.new();
 
-    let firstAddress = accounts[0];
+    const firstAddress = accounts[0];
     let result = await mutex.acquireExternal.call(firstAddress);
 
-    assert.strictEqual(
-      result,
-      true,
-      'Lock acquire should succeed.',
-    );
+    assert.strictEqual(result, true, 'Lock acquire should succeed.');
 
     await mutex.acquireExternal(firstAddress);
 
-    let secondAddress = accounts[1];
+    const secondAddress = accounts[1];
     result = await mutex.acquireExternal.call(secondAddress);
 
-    assert.strictEqual(
-      result,
-      true,
-      'Lock acquire should succeed.',
-    );
+    assert.strictEqual(result, true, 'Lock acquire should succeed.');
 
     await mutex.acquireExternal(secondAddress);
   });
-
 });

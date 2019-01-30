@@ -39,8 +39,6 @@
  * @typedef {string} Address
  */
 
-const colors = require('colors/safe');
-
 const {
     Contract,
     ContractRegistry,

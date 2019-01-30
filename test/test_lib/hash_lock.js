@@ -19,14 +19,17 @@
 //
 // ----------------------------------------------------------------------------
 
-const crypto = require('crypto'),
-	keccak256 = require('keccak');
+const crypto = require('crypto');
 
-/// for testing purposes produce a random secret and its hash
+const keccak256 = require('keccak');
+
+// / for testing purposes produce a random secret and its hash
 module.exports.getHashLock = () => {
-	// NOTE: for openst-platform encrypt secret
-	var secretBytes = crypto.randomBytes(32);
-	var lock = "0x" + keccak256('keccak256').update(secretBytes).digest('hex');
-	var unlockSecret = "0x" + secretBytes.toString('hex');
-	return { s: unlockSecret, l: lock };
-}
+  // NOTE: for openst-platform encrypt secret
+  const secretBytes = crypto.randomBytes(32);
+  const lock = `0x${keccak256('keccak256')
+    .update(secretBytes)
+    .digest('hex')}`;
+  const unlockSecret = `0x${secretBytes.toString('hex')}`;
+  return { s: unlockSecret, l: lock };
+};

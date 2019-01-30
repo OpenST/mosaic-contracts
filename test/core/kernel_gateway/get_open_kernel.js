@@ -26,21 +26,22 @@ const KernelGateway = artifacts.require('TestKernelGateway');
 const BlockStoreMock = artifacts.require('BlockStoreMock');
 
 contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
-
   const zeroBytes = Utils.ZERO_BYTES32;
 
   const hash =
-    "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
+    '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
   const randomHash =
-    "0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67";
+    '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
 
-  let activationHeight = new BN(1234);
+  const activationHeight = new BN(1234);
 
-  let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
+  let initialKernelHash;
 
-  beforeEach(async function() {
-
+  beforeEach(async () => {
     initialKernelHash = web3.utils.sha3('kernelHash');
     originBlockStore = await BlockStoreMock.new();
     auxiliaryBlockStore = await BlockStoreMock.new();
@@ -53,12 +54,10 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
     );
 
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
-
   });
 
   it('should return zero data', async () => {
-
-    let result = await kernelGateway.getOpenKernel.call();
+    const result = await kernelGateway.getOpenKernel.call();
 
     assert.strictEqual(
       result.kernelHash_,
@@ -83,14 +82,12 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
       0,
       `updated validator weights must be blank`,
     );
-
   });
 
   it('should return correct kernel data', async () => {
-
-    let validatorAddresses = [accounts[1], accounts[2]];
-    let validatorWeights = [new BN(100), new BN(150)];
-    let hash1 = web3.utils.sha3('hash1');
+    const validatorAddresses = [accounts[1], accounts[2]];
+    const validatorWeights = [new BN(100), new BN(150)];
+    const hash1 = web3.utils.sha3('hash1');
 
     await kernelGateway.setKernel(
       new BN(12),
@@ -103,7 +100,7 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
     await kernelGateway.setOpenKernelHash(hash1);
     await kernelGateway.setOpenKernelActivationHeight(activationHeight);
 
-    let result = await kernelGateway.getOpenKernel.call();
+    const result = await kernelGateway.getOpenKernel.call();
 
     assert.strictEqual(
       result.kernelHash_,
@@ -143,7 +140,5 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
         `Validator weights from contract must be ${validatorWeights[i]}`,
       );
     }
-
   });
-
 });

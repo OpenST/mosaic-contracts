@@ -18,52 +18,46 @@
 //
 // ----------------------------------------------------------------------------
 
-const GatewayBase = artifacts.require("./GatewayBase.sol")
-  , BN = require('bn.js');
+const GatewayBase = artifacts.require('./GatewayBase.sol');
+
+const BN = require('bn.js');
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
-contract('GatewayBase.sol', function (accounts) {
-
+contract('GatewayBase.sol', (accounts) => {
   describe('get nonce', async () => {
     let gatewayBaseInstance;
 
+    beforeEach(async () => {
+      const owner = accounts[2];
 
-    beforeEach(async function () {
+      const worker = accounts[3];
 
-      let owner = accounts[2]
-        , worker = accounts[3]
-        , dummyStateRootProviderAddress = accounts[0]
-        , bounty = new BN(100);
+      const dummyStateRootProviderAddress = accounts[0];
 
-      let organization = await MockOrganization.new(owner, worker);
+      const bounty = new BN(100);
+
+      const organization = await MockOrganization.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
       );
-
     });
 
-    it('should return 1 nonce if there is no active process', async function () {
-
-      let expectedNonce = new BN(1);
-      let nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
+    it('should return 1 nonce if there is no active process', async () => {
+      const expectedNonce = new BN(1);
+      const nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
       assert(nonce.eq(expectedNonce));
-
     });
 
-    it('should return nonce incremented by 1 if stake process is initiated', async function () {
-
-      //todo implement this when stake unit tests are done
+    it('should return nonce incremented by 1 if stake process is initiated', async () => {
+      // todo implement this when stake unit tests are done
     });
 
-    it('should return nonce incremented by 1 if linking process is initiated', async function () {
-
-      //todo implement this when linking unit tests are done
+    it('should return nonce incremented by 1 if linking process is initiated', async () => {
+      // todo implement this when linking unit tests are done
     });
-
-
   });
 });

@@ -94,7 +94,7 @@ describe('Deployer', () => {
         );
 
         const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-        const auxiliaryAddresses = await deployAuxiliary(
+        await deployAuxiliary(
             web3Auxiliary,
             deployerAddressAuxiliary,
             tokenAddressOrigin,

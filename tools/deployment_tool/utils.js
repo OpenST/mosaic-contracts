@@ -52,7 +52,7 @@ const waitForTransactionReceiptMined = (web3, txHash, interval = 500) => {
     if (typeof txHash === 'string') {
         return new Promise(transactionReceiptAsync);
     }
-    throw new Error('Invalid Type: ' + txHash);
+    throw new Error(`Invalid Type: ${  txHash}`);
 };
 
 /**

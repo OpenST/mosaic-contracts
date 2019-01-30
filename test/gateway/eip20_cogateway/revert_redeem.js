@@ -20,23 +20,25 @@
 
 const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const BN = require('bn.js');
+
 const MockUtilityToken = artifacts.require('MockUtilityToken');
 const messageBus = require('../../test_lib/message_bus.js');
-const Utils = require("../../test_lib/utils.js");
+const Utils = require('../../test_lib/utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
-const web3 = require("../../test_lib/web3.js");
+const web3 = require('../../test_lib/web3.js');
 
-const MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 const zeroAddress = Utils.NULL_ADDRESS;
 const zeroBytes = Utils.ZERO_BYTES32;
 const PENALTY_MULTIPLIER = 1.5;
 
-contract('EIP20CoGateway.revertRedeem()', function (accounts) {
+contract('EIP20CoGateway.revertRedeem()', (accounts) => {
+  let constructorParams;
+  let redeemParams;
+  let utilityToken;
+  let eip20CoGateway;
 
-  let constructorParams, redeemParams, utilityToken, eip20CoGateway;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     constructorParams = {
       valueToken: accounts[9],
       stateRootProvider: accounts[3],
@@ -49,8 +51,8 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
 
     utilityToken = await MockUtilityToken.new(
       constructorParams.valueToken, // Token address.
-      "DMY", // Symbol.
-      "Dummy token", // Token name.
+      'DMY', // Symbol.
+      'Dummy token', // Token name.
       18, // Token decimal.
       constructorParams.organization, // Organisation address.
       { from: constructorParams.owner },
@@ -68,7 +70,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       constructorParams.burner,
     );
 
-    let hashLockObj = Utils.generateHashLock();
+    const hashLockObj = Utils.generateHashLock();
 
     redeemParams = {
       amount: new BN(10000),
@@ -79,7 +81,7 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       hashLock: hashLockObj.l,
       unlockSecret: hashLockObj,
       redeemer: accounts[2],
-      intentHash: web3.utils.sha3("dummy"),
+      intentHash: web3.utils.sha3('dummy'),
       penalty: constructorParams.bounty.muln(PENALTY_MULTIPLIER),
     };
 
@@ -111,130 +113,112 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
       redeemParams.messageHash,
       MessageStatusEnum.Declared,
     );
-
   });
 
-  it('should fail when message hash is zero', async function () {
-
+  it('should fail when message hash is zero', async () => {
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        zeroBytes,
-        { from: redeemParams.redeemer, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(zeroBytes, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      }),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail when message is not declared', async function () {
-
+  it('should fail when message is not declared', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
       MessageStatusEnum.Undeclared,
     );
 
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      }),
       'Message on source must be Declared.',
     );
-
   });
 
-  it('should fail when msg.sender is not redeemer address', async function () {
-
+  it('should fail when msg.sender is not redeemer address', async () => {
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: constructorParams.owner, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: constructorParams.owner,
+        value: redeemParams.penalty,
+      }),
       'Only redeemer can revert redeem.',
     );
-
   });
 
-  it('should fail when msg.value is less than penalty amount', async function () {
-
+  it('should fail when msg.value is less than penalty amount', async () => {
     // Send less than the penalty amount in msg.value.
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY_MULTIPLIER-0.1) },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: constructorParams.bounty.muln(PENALTY_MULTIPLIER - 0.1),
+      }),
       'msg.value must match the penalty amount.',
     );
-
   });
 
-  it('should fail when msg.value is greater than penalty amount', async function () {
-
+  it('should fail when msg.value is greater than penalty amount', async () => {
     // Send greater than the penalty amount in msg.value.
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: constructorParams.bounty.muln(PENALTY_MULTIPLIER+0.1) },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: constructorParams.bounty.muln(PENALTY_MULTIPLIER + 0.1),
+      }),
       'msg.value must match the penalty amount.',
     );
-
   });
 
-  it('should fail when message status is progressed', async function () {
-
+  it('should fail when message status is progressed', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
       MessageStatusEnum.Progressed,
     );
 
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      }),
       'Message on source must be Declared.',
     );
-
   });
 
-  it('should fail when message status is Declared revocation', async function () {
-
+  it('should fail when message status is Declared revocation', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
       MessageStatusEnum.DeclaredRevocation,
     );
 
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      }),
       'Message on source must be Declared.',
     );
-
   });
 
-  it('should fail when message status is Revoked', async function () {
-
+  it('should fail when message status is Revoked', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
       MessageStatusEnum.Revoked,
     );
 
     await Utils.expectRevert(
-      eip20CoGateway.revertRedeem(
-        redeemParams.messageHash,
-        { from: redeemParams.redeemer, value: redeemParams.penalty },
-      ),
+      eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      }),
       'Message on source must be Declared.',
     );
-
   });
 
-  it('should pass with correct params', async function () {
-
-    let result = await eip20CoGateway.revertRedeem.call(
+  it('should pass with correct params', async () => {
+    const result = await eip20CoGateway.revertRedeem.call(
       redeemParams.messageHash,
       { from: redeemParams.redeemer, value: redeemParams.penalty },
     );
@@ -248,31 +232,33 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       result.redeemerNonce_.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce ${result.redeemerNonce_.toString(10)} must be equal to ${redeemParams.nonce.toString(10)}.`,
+      `Redeemer nonce ${result.redeemerNonce_.toString(
+        10,
+      )} must be equal to ${redeemParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       result.amount_.eq(redeemParams.amount),
       true,
-      `Redeemer amount ${result.amount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}.`,
+      `Redeemer amount ${result.amount_.toString(
+        10,
+      )} must be equal to ${redeemParams.amount.toString(10)}.`,
     );
 
-    await eip20CoGateway.revertRedeem(
-      redeemParams.messageHash,
-      { from: redeemParams.redeemer, value: redeemParams.penalty },
-    );
-
+    await eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+      from: redeemParams.redeemer,
+      value: redeemParams.penalty,
+    });
   });
 
-  it('should emit RevertRedeemDeclared event', async function () {
+  it('should emit RevertRedeemDeclared event', async () => {
+    const tx = await eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+      from: redeemParams.redeemer,
+      value: redeemParams.penalty,
+    });
 
-    let tx = await eip20CoGateway.revertRedeem(
-      redeemParams.messageHash,
-      { from: redeemParams.redeemer, value: redeemParams.penalty },
-    );
-
-    let event = EventDecoder.getEvents(tx, eip20CoGateway);
-    let eventData = event.RevertRedeemDeclared;
+    const event = EventDecoder.getEvents(tx, eip20CoGateway);
+    const eventData = event.RevertRedeemDeclared;
 
     assert.isDefined(
       event.RevertRedeemDeclared,
@@ -282,74 +268,109 @@ contract('EIP20CoGateway.revertRedeem()', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       redeemParams.messageHash,
-      `Message hash from the event must be equal to ${redeemParams.messageHash}.`,
+      `Message hash from the event must be equal to ${
+        redeemParams.messageHash
+      }.`,
     );
 
     assert.strictEqual(
       eventData._redeemer,
       redeemParams.redeemer,
-      `Redeemer address from the event must be equal to ${redeemParams.redeemer}.`,
+      `Redeemer address from the event must be equal to ${
+        redeemParams.redeemer
+      }.`,
     );
 
     assert.strictEqual(
       eventData._redeemerNonce.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce ${eventData._redeemerNonce.toString(10)} from the event must be equal to ${redeemParams.nonce.toString(10)}.`,
+      `Redeemer nonce ${eventData._redeemerNonce.toString(
+        10,
+      )} from the event must be equal to ${redeemParams.nonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(redeemParams.amount),
       true,
-      `Redeem amount ${eventData._amount.toString(10)} from the event must be equal to ${redeemParams.amount.toString(10)}.`,
+      `Redeem amount ${eventData._amount.toString(
+        10,
+      )} from the event must be equal to ${redeemParams.amount.toString(10)}.`,
     );
-
   });
 
-  it('redeemer should pay the penalty', async function () {
-
-    let eip20CoGatewayBaseBalance = await Utils.getBalance(eip20CoGateway.address);
-
-    let redeemerBaseBalance = await Utils.getBalance(redeemParams.redeemer);
-
-    let eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
-    let redeemerBalance = await utilityToken.balanceOf(redeemParams.redeemer);
-
-    let tx = await eip20CoGateway.revertRedeem(
-      redeemParams.messageHash,
-      { from: redeemParams.redeemer, value: redeemParams.penalty },
+  it('redeemer should pay the penalty', async () => {
+    const eip20CoGatewayBaseBalance = await Utils.getBalance(
+      eip20CoGateway.address,
     );
 
-    let eip20CoGatewayBaseFinalBalance = await Utils.getBalance(eip20CoGateway.address);
+    const redeemerBaseBalance = await Utils.getBalance(redeemParams.redeemer);
 
-    let redeemerBaseFinalBalance = await Utils.getBalance(redeemParams.redeemer);
+    const eip20CoGatewayBalance = await utilityToken.balanceOf(
+      eip20CoGateway.address,
+    );
+    const redeemerBalance = await utilityToken.balanceOf(
+      redeemParams.redeemer,
+    );
 
-    let eip20CoGatewayFinalBalance = await utilityToken.balanceOf(eip20CoGateway.address);
-    let redeemerFinalBalance = await utilityToken.balanceOf(redeemParams.redeemer);
+    const tx = await eip20CoGateway.revertRedeem(redeemParams.messageHash, {
+      from: redeemParams.redeemer,
+      value: redeemParams.penalty,
+    });
 
-    assert.strictEqual(
-      eip20CoGatewayBaseFinalBalance.eq(eip20CoGatewayBaseBalance.add(redeemParams.penalty)),
-      true,
-      `CoGateway base token balance ${eip20CoGatewayBaseFinalBalance.toString(10)} must be equal to ${eip20CoGatewayBaseBalance.add(redeemParams.penalty).toString(10)}.`,
+    const eip20CoGatewayBaseFinalBalance = await Utils.getBalance(
+      eip20CoGateway.address,
+    );
+
+    const redeemerBaseFinalBalance = await Utils.getBalance(
+      redeemParams.redeemer,
+    );
+
+    const eip20CoGatewayFinalBalance = await utilityToken.balanceOf(
+      eip20CoGateway.address,
+    );
+    const redeemerFinalBalance = await utilityToken.balanceOf(
+      redeemParams.redeemer,
     );
 
     assert.strictEqual(
-      redeemerBaseFinalBalance.eq(redeemerBaseBalance.sub(redeemParams.penalty).subn(tx.receipt.gasUsed)),
+      eip20CoGatewayBaseFinalBalance.eq(
+        eip20CoGatewayBaseBalance.add(redeemParams.penalty),
+      ),
       true,
-      `Redeemer's base token balance ${redeemerBaseFinalBalance.toString(10)} must be equal to ${redeemerBaseBalance.sub(redeemParams.penalty).subn(tx.receipt.gasUsed).toString(10)}.`,
+      `CoGateway base token balance ${eip20CoGatewayBaseFinalBalance.toString(
+        10,
+      )} must be equal to ${eip20CoGatewayBaseBalance
+        .add(redeemParams.penalty)
+        .toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      redeemerBaseFinalBalance.eq(
+        redeemerBaseBalance.sub(redeemParams.penalty).subn(tx.receipt.gasUsed),
+      ),
+      true,
+      `Redeemer's base token balance ${redeemerBaseFinalBalance.toString(
+        10,
+      )} must be equal to ${redeemerBaseBalance
+        .sub(redeemParams.penalty)
+        .subn(tx.receipt.gasUsed)
+        .toString(10)}.`,
     );
 
     assert.strictEqual(
       redeemerFinalBalance.eq(redeemerBalance),
       true,
-      `Redeemer's token balance ${redeemerFinalBalance.toString(10)} must be equal to ${redeemerBalance.toString(10)}.`,
+      `Redeemer's token balance ${redeemerFinalBalance.toString(
+        10,
+      )} must be equal to ${redeemerBalance.toString(10)}.`,
     );
 
     assert.strictEqual(
       eip20CoGatewayFinalBalance.eq(eip20CoGatewayBalance),
       true,
-      `CoGateway's token balance ${eip20CoGatewayFinalBalance.toString(10)} must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
+      `CoGateway's token balance ${eip20CoGatewayFinalBalance.toString(
+        10,
+      )} must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
     );
-
   });
-  
 });

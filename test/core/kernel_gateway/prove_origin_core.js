@@ -20,6 +20,7 @@
 
 const web3 = require('../../test_lib/web3.js');
 const testData = require('../../data/proof');
+
 const KernelGateway = artifacts.require('TestKernelGateway');
 const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const BlockStore = artifacts.require('BlockStoreMock');
@@ -28,206 +29,206 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
 contract('KernelGateway.proveMosaicCore()', async (accounts) => {
+  const zeroBytes = Utils.ZERO_BYTES32;
 
-    const zeroBytes = Utils.ZERO_BYTES32;
+  let mosaicCore;
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
 
-    let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore;
+  const accountRlp = testData.account.rlpAccount;
+  const accountBranchRlp = testData.account.rlpParentNodes;
+  const stateRoot = testData.account.stateRoot;
+  const originBlockHeight = new BN(100);
 
-    let accountRlp = testData.account.rlpAccount;
-    let accountBranchRlp = testData.account.rlpParentNodes;
-    let stateRoot = testData.account.stateRoot;
-    let originBlockHeight = new BN(100);
+  async function deploy(KernelGateway) {
+    // deploy the kernel gateway
+    mosaicCore = accounts[1];
+    originBlockStore = await BlockStore.new();
+    auxiliaryBlockStore = await BlockStore.new();
 
-    async function deploy(KernelGateway) {
-        // deploy the kernel gateway
-        mosaicCore = accounts[1];
-        originBlockStore = await BlockStore.new();
-        auxiliaryBlockStore = await BlockStore.new();
+    kernelGateway = await KernelGateway.new(
+      mosaicCore,
+      originBlockStore.address,
+      auxiliaryBlockStore.address,
+      web3.utils.sha3('genesisKernelHash'),
+    );
 
-        kernelGateway = await KernelGateway.new(
-            mosaicCore,
-            originBlockStore.address,
-            auxiliaryBlockStore.address,
-            web3.utils.sha3('genesisKernelHash'),
-        );
+    await originBlockStore.setStateRoot(stateRoot);
+  }
 
-        await originBlockStore.setStateRoot(stateRoot);
-    }
+  beforeEach(async () => {
+    await deploy(KernelGateway);
+  });
 
-    beforeEach(async function () {
-        await deploy(KernelGateway);
-    });
+  it('should fail when rlp account is zero', async () => {
+    await Utils.expectRevert(
+      kernelGateway.proveMosaicCore.call(
+        '0x',
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      'The RLP encoded account must not be zero.',
+    );
+  });
 
-    it('should fail when rlp account is zero', async () => {
+  it('should fail when rlp account branch nodes is zero', async () => {
+    await Utils.expectRevert(
+      kernelGateway.proveMosaicCore.call(accountRlp, '0x', originBlockHeight),
+      'The RLP encoded account node path must not be zero.',
+    );
+  });
 
-        await Utils.expectRevert(
-            kernelGateway.proveMosaicCore.call(
-                "0x",
-                accountBranchRlp,
-                originBlockHeight,
-            ),
-            "The RLP encoded account must not be zero.",
-        );
-    });
+  it('should fail when state root for the given height is zero', async () => {
+    await originBlockStore.setStateRoot(zeroBytes);
 
-    it('should fail when rlp account branch nodes is zero', async () => {
+    await Utils.expectRevert(
+      kernelGateway.proveMosaicCore.call(
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      'The State root must not be zero.',
+    );
+  });
 
-        await Utils.expectRevert(
-            kernelGateway.proveMosaicCore.call(
-                accountRlp,
-                "0x",
-                originBlockHeight,
-            ),
-            "The RLP encoded account node path must not be zero.",
-        );
-    });
+  it('should fail when merkle proof fails', async () => {
+    await deploy(KernelGatewayFail);
 
-    it('should fail when state root for the given height is zero', async () => {
+    await Utils.expectRevert(
+      kernelGateway.proveMosaicCore.call(
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      'Account is not verified.',
+    );
+  });
 
-        await originBlockStore.setStateRoot(zeroBytes);
+  it('should fail when account RLP is not valid RLP encoded data', async () => {
+    await Utils.expectRevert(
+      kernelGateway.proveMosaicCore.call(
+        web3.utils.sha3('random'),
+        accountBranchRlp,
+        originBlockHeight,
+      ),
+      'VM Exception while processing transaction: revert',
+    );
+  });
 
-        await Utils.expectRevert(
-            kernelGateway.proveMosaicCore.call(
-                accountRlp,
-                accountBranchRlp,
-                originBlockHeight,
-            ),
-            "The State root must not be zero.",
-        );
-    });
+  it('should pass with valid data', async () => {
+    const result = await kernelGateway.proveMosaicCore.call(
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
 
-    it('should fail when merkle proof fails', async () => {
+    assert(result, 'Account proof must pass for valid data');
 
-        await deploy(KernelGatewayFail);
+    const tx = await kernelGateway.proveMosaicCore(
+      accountRlp,
+      accountBranchRlp,
+      originBlockHeight,
+    );
 
-        await Utils.expectRevert(
-            kernelGateway.proveMosaicCore.call(
-                accountRlp,
-                accountBranchRlp,
-                originBlockHeight,
-            ),
-            "Account is not verified.",
-        );
-    });
+    const event = EventDecoder.getEvents(tx, kernelGateway);
 
-    it('should fail when account RLP is not valid RLP encoded data', async () => {
+    assert(
+      event.MosaicCoreProven !== undefined,
+      'Event `MosaicCoreProven` must be emitted.',
+    );
 
-        await Utils.expectRevert(
-            kernelGateway.proveMosaicCore.call(
-                web3.utils.sha3('random'),
-                accountBranchRlp,
-                originBlockHeight,
-            ),
-            "VM Exception while processing transaction: revert",
-        );
-    });
+    const eventData = event.MosaicCoreProven;
 
-    it('should pass with valid data', async () => {
+    assert.strictEqual(
+      web3.utils.toChecksumAddress(eventData._mosaicCore),
+      mosaicCore,
+      `Mosaic core address from event must be equal to ${mosaicCore}`,
+    );
 
-        let result = await kernelGateway.proveMosaicCore.call(
-            accountRlp,
-            accountBranchRlp,
-            originBlockHeight,
-        );
+    assert(
+      eventData._blockHeight.eq(originBlockHeight),
+      `Block height from event must be equal to ${originBlockHeight}`,
+    );
 
-        assert(result, "Account proof must pass for valid data");
+    assert.strictEqual(
+      eventData._storageRoot,
+      testData.account.storageRoot,
+      `Storage root from event must be equal to ${
+        testData.account.storageRoot
+      }`,
+    );
 
-        let tx = await kernelGateway.proveMosaicCore(
-            accountRlp,
-            accountBranchRlp,
-            originBlockHeight,
-        );
+    assert.strictEqual(
+      eventData._wasAlreadyProved,
+      false,
+      `Storage root from event must be false`,
+    );
 
-        let event = EventDecoder.getEvents(tx, kernelGateway);
+    const storageRoot = await kernelGateway.storageRoots.call(
+      originBlockHeight,
+    );
 
-        assert(
-            event.MosaicCoreProven !== undefined,
-            "Event `MosaicCoreProven` must be emitted.",
-        );
+    assert.strictEqual(
+      storageRoot,
+      testData.account.storageRoot,
+      `Storage root from contract must be equal to ${
+        testData.account.storageRoot
+      }`,
+    );
+  });
 
-        let eventData = event.MosaicCoreProven;
+  it(
+    'should pass when the account is already proved for a given block ' +
+      'height',
+    async () => {
+      const originBlockHeight = new BN(100);
 
-        assert.strictEqual(
-            web3.utils.toChecksumAddress(eventData._mosaicCore),
-            mosaicCore,
-            `Mosaic core address from event must be equal to ${mosaicCore}`,
-        );
+      await kernelGateway.proveMosaicCore(
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      );
 
-        assert(
-            eventData._blockHeight.eq(originBlockHeight),
-            `Block height from event must be equal to ${originBlockHeight}`,
-        );
+      const tx = await kernelGateway.proveMosaicCore(
+        accountRlp,
+        accountBranchRlp,
+        originBlockHeight,
+      );
 
-        assert.strictEqual(
-            eventData._storageRoot,
-            testData.account.storageRoot,
-            `Storage root from event must be equal to ${testData.account.storageRoot}`,
-        );
+      const event = EventDecoder.getEvents(tx, kernelGateway);
 
-        assert.strictEqual(
-            eventData._wasAlreadyProved,
-            false,
-            `Storage root from event must be false`,
-        );
+      assert(
+        event.MosaicCoreProven !== undefined,
+        'Event `MosaicCoreProven` must be emitted.',
+      );
 
-        let storageRoot = await kernelGateway.storageRoots.call(originBlockHeight);
+      const eventData = event.MosaicCoreProven;
 
-        assert.strictEqual(
-            storageRoot,
-            testData.account.storageRoot,
-            `Storage root from contract must be equal to ${testData.account.storageRoot}`,
-        );
+      assert.strictEqual(
+        web3.utils.toChecksumAddress(eventData._mosaicCore),
+        mosaicCore,
+        `Mosaic core address from event must be equal to ${mosaicCore}`,
+      );
 
-    });
+      assert(
+        eventData._blockHeight.eq(originBlockHeight),
+        `Block height from event must be equal to ${originBlockHeight}`,
+      );
 
-    it('should pass when the account is already proved for a given block ' +
-        'height', async () => {
+      assert.strictEqual(
+        eventData._storageRoot,
+        testData.account.storageRoot,
+        `Storage root from event must be equal to ${
+          testData.account.storageRoot
+        }`,
+      );
 
-            let originBlockHeight = new BN(100);
-
-            await kernelGateway.proveMosaicCore(
-                accountRlp,
-                accountBranchRlp,
-                originBlockHeight,
-            );
-
-            let tx = await kernelGateway.proveMosaicCore(
-                accountRlp,
-                accountBranchRlp,
-                originBlockHeight,
-            );
-
-            let event = EventDecoder.getEvents(tx, kernelGateway);
-
-            assert(
-                event.MosaicCoreProven !== undefined,
-                "Event `MosaicCoreProven` must be emitted.",
-            );
-
-            let eventData = event.MosaicCoreProven;
-
-            assert.strictEqual(
-                web3.utils.toChecksumAddress(eventData._mosaicCore),
-                mosaicCore,
-                `Mosaic core address from event must be equal to ${mosaicCore}`,
-            );
-
-            assert(
-                eventData._blockHeight.eq(originBlockHeight),
-                `Block height from event must be equal to ${originBlockHeight}`,
-            );
-
-            assert.strictEqual(
-                eventData._storageRoot,
-                testData.account.storageRoot,
-                `Storage root from event must be equal to ${testData.account.storageRoot}`,
-            );
-
-            assert.strictEqual(
-                eventData._wasAlreadyProved,
-                true,
-                `Storage root from event must be false`,
-            );
-        });
-
+      assert.strictEqual(
+        eventData._wasAlreadyProved,
+        true,
+        `Storage root from event must be false`,
+      );
+    },
+  );
 });

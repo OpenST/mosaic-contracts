@@ -1,29 +1,30 @@
-"use strict";
-
-const web3EventsDecoder = function () { };
+const web3EventsDecoder = function() {};
 
 web3EventsDecoder.prototype = {
+  getFormattedEvents(eventsData) {
+    const formattedEvents = {};
 
-  getFormattedEvents: function (eventsData) {
-    var formattedEvents = {};
+    for (let i = 0; i < eventsData.length; i++) {
+      const currEvent = eventsData[i];
 
-    for (var i = 0; i < eventsData.length; i++) {
-      var currEvent = eventsData[i]
-        , currEventName = currEvent.name ? currEvent.name : currEvent.event
-        , currEventAddr = currEvent.address
-        , currEventParams = currEvent.events ? currEvent.events : currEvent.args;
+      const currEventName = currEvent.name ? currEvent.name : currEvent.event;
+
+      const currEventAddr = currEvent.address;
+
+      const currEventParams = currEvent.events
+        ? currEvent.events
+        : currEvent.args;
 
       formattedEvents[currEventName] = { address: currEventAddr };
 
       if (Array.isArray(currEventParams)) {
-        for (var j = 0; j < currEventParams.length; j++) {
-          var p = currEventParams[j];
+        for (let j = 0; j < currEventParams.length; j++) {
+          const p = currEventParams[j];
           formattedEvents[currEventName][p.name] = p.value;
         }
       } else {
         formattedEvents[currEventName] = currEventParams;
       }
-
     }
 
     return formattedEvents;
@@ -38,27 +39,27 @@ web3EventsDecoder.prototype = {
    *
    * @returns {Object} The events, if any.
    */
-  getEvents: function (transaction, contract) {
+  getEvents(transaction, contract) {
     return this.perform(transaction.receipt, contract.address, contract.abi);
   },
 
   // decode logs from a transaction receipt
-  perform: function (txReceipt, contractAddr, contractAbi) {
-    var decodedEvents = [];
+  perform(txReceipt, contractAddr, contractAbi) {
+    let decodedEvents = [];
 
     // Transaction receipt not found
     if (!txReceipt) {
-      console.error(" Transaction receipt was not found.");
+      console.error(' Transaction receipt was not found.');
       return;
     }
 
     // Block not yet mined
     if (!txReceipt.blockNumber) {
-      console.error(" Transaction not yet mined. Please try after some time. ");
+      console.error(
+        ' Transaction not yet mined. Please try after some time. ',
+      );
       return;
     }
-
-    const toAddr = txReceipt.to;
 
     let logs = [];
 
@@ -70,13 +71,13 @@ web3EventsDecoder.prototype = {
     }
 
     if (logs.length > 0) {
-      var abiDecoder = require('abi-decoder')
-        , relevantLogs = [];
+      const abiDecoder = require('abi-decoder');
 
-      for (var i = 0; i < logs.length; i++) {
+      const relevantLogs = [];
 
-        var log = logs[i];
-        var currContractAddrFromReceipt = log.address;
+      for (let i = 0; i < logs.length; i++) {
+        const log = logs[i];
+        const currContractAddrFromReceipt = log.address;
 
         if (!currContractAddrFromReceipt) {
           // No contract found for contract address.
@@ -91,7 +92,7 @@ web3EventsDecoder.prototype = {
         if (log.topics === undefined || log.topics.length === 0) {
           // Logs that have an event already don't need to be encoded.
           if (log.event !== undefined) {
-            decodedEvents.push(log)
+            decodedEvents.push(log);
           }
           continue;
         }
@@ -107,14 +108,13 @@ web3EventsDecoder.prototype = {
 
       if (relevantLogs.length > 0) {
         decodedEvents = decodedEvents.concat(
-          abiDecoder.decodeLogs(relevantLogs)
+          abiDecoder.decodeLogs(relevantLogs),
         );
       }
-
     }
 
     return this.getFormattedEvents(decodedEvents);
-  }
+  },
 };
 
 module.exports = new web3EventsDecoder();

@@ -24,15 +24,14 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Organization = artifacts.require('Organization');
 
 contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
-
-  let owner = accounts[0];
-  let proposedOwner = accounts[1];
+  const owner = accounts[0];
+  const proposedOwner = accounts[1];
   let organization = null;
 
-  beforeEach(async function () {
-    let admin = Utils.NULL_ADDRESS;
-    let workers = [];
-    let expirationHeight = 0;
+  beforeEach(async () => {
+    const admin = Utils.NULL_ADDRESS;
+    const workers = [];
+    const expirationHeight = 0;
 
     organization = await Organization.new(
       owner,
@@ -44,26 +43,22 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
 
   it('reverts when caller is not owner', async () => {
     await Utils.expectRevert(
-      organization.initiateOwnershipTransfer(
-        proposedOwner,
-        { from: proposedOwner },
-      ),
+      organization.initiateOwnershipTransfer(proposedOwner, {
+        from: proposedOwner,
+      }),
       'Only owner is allowed to call.',
     );
   });
 
   it('reverts when proposed owner is same as owner', async () => {
     await Utils.expectRevert(
-      organization.initiateOwnershipTransfer(
-        owner,
-        { from: owner },
-      ),
-      'Proposed owner address can\'t be current owner address.',
+      organization.initiateOwnershipTransfer(owner, { from: owner }),
+      "Proposed owner address can't be current owner address.",
     );
   });
 
   it('should pass when valid proposed owner is passed', async () => {
-    let response = await organization.initiateOwnershipTransfer.call(
+    const response = await organization.initiateOwnershipTransfer.call(
       proposedOwner,
       { from: owner },
     );
@@ -73,10 +68,9 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
       'The ownership initiation should return true.',
     );
 
-    await organization.initiateOwnershipTransfer(
-      proposedOwner,
-      { from: owner },
-    );
+    await organization.initiateOwnershipTransfer(proposedOwner, {
+      from: owner,
+    });
 
     assert.strictEqual(
       await organization.proposedOwner.call(),
@@ -86,14 +80,13 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when proposed address is 0', async () => {
-    await organization.initiateOwnershipTransfer(
-      Utils.NULL_ADDRESS,
-      { from: owner },
-    );
+    await organization.initiateOwnershipTransfer(Utils.NULL_ADDRESS, {
+      from: owner,
+    });
     assert.strictEqual(
       await organization.proposedOwner.call(),
       Utils.NULL_ADDRESS,
-      'Proposed 0-address must be accepted.'
+      'Proposed 0-address must be accepted.',
     );
   });
 
@@ -102,10 +95,7 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
       proposedOwner,
       { from: owner },
     );
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.OwnershipTransferInitiated.proposedOwner,
@@ -117,7 +107,5 @@ contract('Organization.initiateOwnershipTransfer()', async (accounts) => {
       owner,
       'The event does not emit the correct current owner.',
     );
-
   });
-
 });

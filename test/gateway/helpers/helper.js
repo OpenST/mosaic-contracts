@@ -1,92 +1,89 @@
-'use strict';
-
 const web3 = require('../../test_lib/web3.js');
 
-const GatewayHelper = function (gateway) {
-    const oThis = this;
-    oThis.gateway = gateway;
+const GatewayHelper = function(gateway) {
+  const oThis = this;
+  oThis.gateway = gateway;
 };
 GatewayHelper.prototype = {
+  // Utils
+  async isAddress(address) {
+    return await web3.utils.isAddress(address);
+  },
 
+  // Deployment functions
+  async deployGateway(params, resultType) {
+    const valueTokenAddress = params.token;
 
-    // Utils
-    isAddress: async function (address) {
-        return await web3.utils.isAddress(address);
-    },
+    const bountyToken = params.bountyToken;
 
-    //Deployment functions
-    deployGateway: async function (params, resultType) {
+    const stateRootProviderAddress = params.stateRootProviderAddress;
 
-        let valueTokenAddress = params.token,
-            bountyToken = params.bountyToken,
-            stateRootProviderAddress = params.stateRootProviderAddress,
-            bountyAmount = params.bounty,
-            organizationAddress = params.organization;
+    const bountyAmount = params.bounty;
 
-        if (resultType === utils.ResultType.FAIL) {
-            await utils.expectThrow(Gateway.new(
-                valueTokenAddress,
-                bountyToken,
-                stateRootProviderAddress,
-                bountyAmount,
-                organizationAddress
-            ));
-        } else {
-            this.gateway = await Gateway.new(
-                valueTokenAddress,
-                bountyToken,
-                stateRootProviderAddress,
-                bountyAmount,
-                organizationAddress
-            );
+    const organizationAddress = params.organization;
 
-            let addressValidationResult = await this.isAddress(
-                this.gateway.address
-            );
+    if (resultType === utils.ResultType.FAIL) {
+      await utils.expectThrow(
+        Gateway.new(
+          valueTokenAddress,
+          bountyToken,
+          stateRootProviderAddress,
+          bountyAmount,
+          organizationAddress,
+        ),
+      );
+    } else {
+      this.gateway = await Gateway.new(
+        valueTokenAddress,
+        bountyToken,
+        stateRootProviderAddress,
+        bountyAmount,
+        organizationAddress,
+      );
 
-            assert.equal(
-                addressValidationResult,
-                true,
-                "Invalid gateway address"
-            );
+      const addressValidationResult = await this.isAddress(
+        this.gateway.address,
+      );
 
-            let tokenAdd = await this.gateway.token.call();
-            assert.equal(
-                tokenAdd,
-                valueTokenAddress,
-                "Invalid valueTokenAddress address from contract"
-            );
+      assert.equal(addressValidationResult, true, 'Invalid gateway address');
 
-            let bountyTokenAdd = await this.gateway.baseToken.call();
-            assert.equal(
-                bountyTokenAdd,
-                bountyToken,
-                "Invalid bounty token address from contract"
-            );
+      const tokenAdd = await this.gateway.token.call();
+      assert.equal(
+        tokenAdd,
+        valueTokenAddress,
+        'Invalid valueTokenAddress address from contract',
+      );
 
-            let stateRootProviderAdd = await this.gateway.stateRootProvider.call();
-            assert.equal(
-                stateRootProviderAdd,
-                stateRootProviderAddress,
-                "Invalid state root provider address from contract"
-            );
+      const bountyTokenAdd = await this.gateway.baseToken.call();
+      assert.equal(
+        bountyTokenAdd,
+        bountyToken,
+        'Invalid bounty token address from contract',
+      );
 
-            let bounty = await this.gateway.bounty.call();
-            assert.equal(
-                bounty.toString(10),
-                bountyAmount.toString(10),
-                "Invalid bounty amount from contract"
-            );
+      const stateRootProviderAdd = await this.gateway.stateRootProvider.call();
+      assert.equal(
+        stateRootProviderAdd,
+        stateRootProviderAddress,
+        'Invalid state root provider address from contract',
+      );
 
-            let orgAdd = await this.gateway.organization.call();
-            assert.equal(
-                orgAdd,
-                organizationAddress,
-                "Invalid organizationAddress address from contract"
-            );
-        }
+      const bounty = await this.gateway.bounty.call();
+      assert.equal(
+        bounty.toString(10),
+        bountyAmount.toString(10),
+        'Invalid bounty amount from contract',
+      );
 
-        return this.gateway;
+      const orgAdd = await this.gateway.organization.call();
+      assert.equal(
+        orgAdd,
+        organizationAddress,
+        'Invalid organizationAddress address from contract',
+      );
     }
+
+    return this.gateway;
+  },
 };
 module.exports = GatewayHelper;

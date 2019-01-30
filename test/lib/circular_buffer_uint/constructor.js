@@ -18,21 +18,20 @@
 //
 // ----------------------------------------------------------------------------
 
-const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
+const Utils = require('../../test_lib/utils.js');
 
 const CircularBufferUint = artifacts.require('CircularBufferUint');
 
 contract('CircularBufferUint.constructor()', async (accounts) => {
+  it('deploys given accepted arguments', async () => {
+    await CircularBufferUint.new(new BN(100));
+  });
 
-    it('deploys given accepted arguments', async () => {
-        await CircularBufferUint.new(new BN(100));
-    });
-
-    it('reverts if the given buffer length is 0', async () => {
-        await Utils.expectRevert(
-            CircularBufferUint.new(new BN(0)),
-            'The max number of items to store in a circular buffer must be greater than 0.',
-        );
-    });
+  it('reverts if the given buffer length is 0', async () => {
+    await Utils.expectRevert(
+      CircularBufferUint.new(new BN(0)),
+      'The max number of items to store in a circular buffer must be greater than 0.',
+    );
+  });
 });

@@ -18,22 +18,28 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("EIP20Gateway");
-const MockToken = artifacts.require("MockToken");
+const Gateway = artifacts.require('EIP20Gateway');
+const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
-const Utils = require("./../../test_lib/utils"),
-  BN = require('bn.js');
+const BN = require('bn.js');
+const Utils = require('./../../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-contract('EIP20Gateway.constructor() ', function (accounts) {
+contract('EIP20Gateway.constructor() ', (accounts) => {
+  let mockToken;
+  let baseToken;
+  let bountyAmount;
+  let dummyRootProviderAddress;
+  let mockOrganization;
+  let gateway;
+  let owner;
+  let worker;
 
-  let mockToken, baseToken, bountyAmount, dummyRootProviderAddress,
-    mockOrganization, gateway, owner, worker, burner = NullAddress;
+  const burner = NullAddress;
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     mockToken = await MockToken.new();
     baseToken = await MockToken.new();
     dummyRootProviderAddress = accounts[1];
@@ -44,72 +50,63 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
     mockOrganization = await MockOrganization.new(owner, worker);
   });
 
-  it('should able to deploy contract with correct parameters.', async function () {
-    gateway = await
-      Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        dummyRootProviderAddress,
-        bountyAmount,
-        mockOrganization.address,
-        burner
-      );
+  it('should able to deploy contract with correct parameters.', async () => {
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      dummyRootProviderAddress,
+      bountyAmount,
+      mockOrganization.address,
+      burner,
+    );
 
     assert(
       web3.utils.isAddress(gateway.address),
-      "Returned value is not a valid address."
+      'Returned value is not a valid address.',
     );
   });
 
-  it('should initialize gateway contract with correct parameters.', async function () {
-    gateway = await
-      Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        dummyRootProviderAddress,
-        bountyAmount,
-        mockOrganization.address,
-        burner
-      );
+  it('should initialize gateway contract with correct parameters.', async () => {
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      dummyRootProviderAddress,
+      bountyAmount,
+      mockOrganization.address,
+      burner,
+    );
 
-    let tokenAddress = await gateway.token.call();
+    const tokenAddress = await gateway.token.call();
 
     assert.equal(
       tokenAddress,
       mockToken.address,
-      "Invalid valueTokenAddress address from contract."
+      'Invalid valueTokenAddress address from contract.',
     );
 
-    let bountyTokenAdd = await gateway.baseToken.call();
+    const bountyTokenAdd = await gateway.baseToken.call();
     assert.equal(
       bountyTokenAdd,
       baseToken.address,
-      "Invalid bounty token address from contract."
+      'Invalid bounty token address from contract.',
     );
 
-    let stateRootProviderAdd = await gateway.stateRootProvider.call();
+    const stateRootProviderAdd = await gateway.stateRootProvider.call();
     assert.equal(
       stateRootProviderAdd,
       dummyRootProviderAddress,
-      "Invalid stateRootProvider address from contract"
+      'Invalid stateRootProvider address from contract',
     );
 
-    let bounty = await gateway.bounty.call();
-    assert(
-      bounty.eq(bountyAmount),
-      "Invalid bounty amount from contract"
-    );
+    const bounty = await gateway.bounty.call();
+    assert(bounty.eq(bountyAmount), 'Invalid bounty amount from contract');
 
-    let isActivated = await gateway.activated.call();
-    assert(
-      !isActivated,
-      "Gateway is not deactivated by default."
-    );
-
+    const isActivated = await gateway.activated.call();
+    assert(!isActivated, 'Gateway is not deactivated by default.');
   });
 
-  it('should not deploy contract if token is passed as zero.', async function () {
-    let mockToken = NullAddress;
+  it('should not deploy contract if token is passed as zero.', async () => {
+    const mockToken = NullAddress;
 
     await Utils.expectRevert(
       Gateway.new(
@@ -118,14 +115,14 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
         dummyRootProviderAddress,
         bountyAmount,
         mockOrganization.address,
-        burner
+        burner,
       ),
-      "Token contract address must not be zero."
+      'Token contract address must not be zero.',
     );
   });
 
-  it('should not deploy contract if base token is passed as zero.', async function () {
-    let baseTokenAddress = NullAddress;
+  it('should not deploy contract if base token is passed as zero.', async () => {
+    const baseTokenAddress = NullAddress;
 
     await Utils.expectRevert(
       Gateway.new(
@@ -134,14 +131,14 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
         dummyRootProviderAddress,
         bountyAmount,
         mockOrganization.address,
-        burner
+        burner,
       ),
-      "Base token contract address for bounty must not be zero."
+      'Base token contract address for bounty must not be zero.',
     );
   });
 
-  it('should not deploy contract if state root provider contract address is passed as zero.', async function () {
-    let stateRootProvider = NullAddress;
+  it('should not deploy contract if state root provider contract address is passed as zero.', async () => {
+    const stateRootProvider = NullAddress;
 
     await Utils.expectRevert(
       Gateway.new(
@@ -150,15 +147,14 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
         stateRootProvider,
         bountyAmount,
         mockOrganization.address,
-        burner
+        burner,
       ),
-      "State root provider contract address must not be zero."
+      'State root provider contract address must not be zero.',
     );
-
   });
 
-  it('should fail when organization address is passed as zero', async function () {
-    let organization = NullAddress;
+  it('should fail when organization address is passed as zero', async () => {
+    const organization = NullAddress;
 
     await Utils.expectRevert(
       Gateway.new(
@@ -167,29 +163,27 @@ contract('EIP20Gateway.constructor() ', function (accounts) {
         dummyRootProviderAddress,
         bountyAmount,
         organization,
-        burner
+        burner,
       ),
-      "Organization contract address must not be zero."
+      'Organization contract address must not be zero.',
     );
-
   });
 
-  it('should able to deploy contract with zero bounty.', async function () {
-    let bountyAmount = new BN(0);
+  it('should able to deploy contract with zero bounty.', async () => {
+    const bountyAmount = new BN(0);
 
-    gateway = await
-      Gateway.new(
-        mockToken.address,
-        baseToken.address,
-        dummyRootProviderAddress,
-        bountyAmount,
-        mockOrganization.address,
-        burner
-      );
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      dummyRootProviderAddress,
+      bountyAmount,
+      mockOrganization.address,
+      burner,
+    );
 
     assert(
       web3.utils.isAddress(gateway.address),
-      "Returned value is not a valid address."
+      'Returned value is not a valid address.',
     );
   });
 });

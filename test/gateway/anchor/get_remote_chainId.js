@@ -18,24 +18,22 @@
 //
 // ----------------------------------------------------------------------------
 
-const Anchor = artifacts.require("./Anchor.sol");
-const web3 = require('../../test_lib/web3.js');
+const Anchor = artifacts.require('./Anchor.sol');
 const BN = require('bn.js');
+const web3 = require('../../test_lib/web3.js');
 
-contract('Anchor.getRemoteChainId()', function (accounts) {
+contract('Anchor.getRemoteChainId()', (accounts) => {
+  let remoteChainId;
+  let blockHeight;
+  let stateRoot;
+  let maxNumberOfStateRoots;
+  let organization;
+  let anchor;
 
-  let remoteChainId,
-    blockHeight,
-    stateRoot,
-    maxNumberOfStateRoots,
-    organization,
-    anchor;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
-    stateRoot = web3.utils.sha3("dummy_state_root");
+    stateRoot = web3.utils.sha3('dummy_state_root');
     maxNumberOfStateRoots = new BN(10);
     organization = accounts[1];
 
@@ -46,18 +44,14 @@ contract('Anchor.getRemoteChainId()', function (accounts) {
       maxNumberOfStateRoots,
       organization,
     );
-
   });
 
   it('should return correct remote chain id', async () => {
-
-    let chainId = await anchor.getRemoteChainId.call();
+    const chainId = await anchor.getRemoteChainId.call();
     assert.strictEqual(
       remoteChainId.eq(chainId),
       true,
       `Remote chain id from the contract must be ${remoteChainId}.`,
     );
-
   });
-
 });

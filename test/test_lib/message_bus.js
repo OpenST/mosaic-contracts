@@ -25,11 +25,9 @@ const messageTypeHash = utils.getTypeHash(
   'Message(bytes32 intentHash,uint256 nonce,uint256 gasPrice,uint256 gasLimit,address sender,bytes32 hashLock)',
 );
 
-function MessageBus() {
-}
+function MessageBus() {}
 
 MessageBus.prototype = {
-
   /**
    * Creates an EIP-712 conform hash of the message that is equal to the hash
    * generated in solidity.
@@ -44,15 +42,8 @@ MessageBus.prototype = {
    * @returns The hash of the given parameters, according to the specification
    *          of a message hash.
    */
-  messageDigest: (
-    intentHash,
-    nonce,
-    gasPrice,
-    gasLimit,
-    sender,
-    hashLock,
-  ) => {
-    let digest = web3.utils.sha3(
+  messageDigest: (intentHash, nonce, gasPrice, gasLimit, sender, hashLock) => {
+    const digest = web3.utils.sha3(
       web3.eth.abi.encodeParameters(
         [
           'bytes32',
@@ -72,7 +63,7 @@ MessageBus.prototype = {
           sender,
           hashLock,
         ],
-      )
+      ),
     );
 
     return digest;
@@ -83,8 +74,8 @@ MessageBus.prototype = {
     Declared: 1,
     Progressed: 2,
     DeclaredRevocation: 3,
-    Revoked: 4
-  }
+    Revoked: 4,
+  },
 };
 
 module.exports = new MessageBus();

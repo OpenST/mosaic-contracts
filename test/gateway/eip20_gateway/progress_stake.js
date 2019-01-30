@@ -18,9 +18,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./TestEIP20Gateway.sol");
+const Gateway = artifacts.require('./TestEIP20Gateway.sol');
 const MockOrganization = artifacts.require('MockOrganization.sol');
-const MockToken = artifacts.require("MockToken");
+const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
 const GatewayUtils = require('./helpers/gateway_utils.js');
@@ -31,40 +31,39 @@ const web3 = require('../../../test/test_lib/web3.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
-contract('EIP20Gateway.progressStake()', function (accounts) {
-
+contract('EIP20Gateway.progressStake()', (accounts) => {
   let gateway;
-  let mockToken, baseToken;
-  let bountyAmount = new BN(100);
+  let mockToken;
+  let baseToken;
+  const bountyAmount = new BN(100);
 
-  let stakeRequest = {
+  const stakeRequest = {
     beneficiary: accounts[6],
     stakeAmount: new BN(100),
   };
 
-  let stakeMessage = {
-    intentHash: web3.utils.sha3("dummy"),
+  const stakeMessage = {
+    intentHash: web3.utils.sha3('dummy'),
     stakerNonce: new BN(1),
     gasPrice: new BN(1),
     gasLimit: new BN(2),
     staker: accounts[8],
   };
 
-  let MessageStatusEnum = messageBus.MessageStatusEnum;
+  const { MessageStatusEnum } = messageBus;
 
   let gatewayUtils;
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     mockToken = await MockToken.new({ from: accounts[0] });
     baseToken = await MockToken.new({ from: accounts[0] });
 
-    let owner = accounts[2];
-    let worker = accounts[7];
-    let organization = await MockOrganization.new(owner, worker);
+    const owner = accounts[2];
+    const worker = accounts[7];
+    const organization = await MockOrganization.new(owner, worker);
 
-    let coreAddress = accounts[5];
-    let burner = NullAddress;
+    const coreAddress = accounts[5];
+    const burner = NullAddress;
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -75,12 +74,16 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       burner,
     );
 
-    await mockToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
-    await baseToken.transfer(gateway.address, new BN(10000), { from: accounts[0] });
+    await mockToken.transfer(gateway.address, new BN(10000), {
+      from: accounts[0],
+    });
+    await baseToken.transfer(gateway.address, new BN(10000), {
+      from: accounts[0],
+    });
 
     gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
 
-    let hashLockObj = Utils.generateHashLock();
+    const hashLockObj = Utils.generateHashLock();
 
     stakeMessage.hashLock = hashLockObj.l;
     stakeMessage.unlockSecret = hashLockObj.s;
@@ -106,39 +109,27 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       stakeMessage.staker,
       stakeMessage.hashLock,
     );
-
   });
 
-  it('should fail when messagehash is zero', async function () {
-
-    let messageHash = ZeroBytes;
+  it('should fail when messagehash is zero', async () => {
+    const messageHash = ZeroBytes;
 
     await Utils.expectRevert(
-      gateway.progressStake(
-        messageHash,
-        stakeMessage.unlockSecret,
-      ),
+      gateway.progressStake(messageHash, stakeMessage.unlockSecret),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail for wrong unlock secret ', async function () {
-
-    let unlockSecret = ZeroBytes;
+  it('should fail for wrong unlock secret ', async () => {
+    const unlockSecret = ZeroBytes;
 
     await Utils.expectRevert(
-      gateway.progressStake(
-        stakeMessage.messageHash,
-        unlockSecret,
-      ),
+      gateway.progressStake(stakeMessage.messageHash, unlockSecret),
       'Invalid unlock secret.',
     );
-
   });
 
-  it('should fail for undeclared message', async function () {
-
+  it('should fail for undeclared message', async () => {
     await Utils.expectRevert(
       gateway.progressStake(
         stakeMessage.messageHash,
@@ -146,11 +137,9 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       ),
       'Message on source must be Declared',
     );
-
   });
 
-  it('should fail for revoked message', async function () {
-
+  it('should fail for revoked message', async () => {
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Revoked,
@@ -163,11 +152,9 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       ),
       'Message on source must be Declared',
     );
-
   });
 
-  it('should fail for message with declared revocation status', async function () {
-
+  it('should fail for message with declared revocation status', async () => {
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.DeclaredRevocation,
@@ -180,11 +167,9 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       ),
       'Message on source must be Declared',
     );
-
   });
 
-  it('should fail for already progressed message', async function () {
-
+  it('should fail for already progressed message', async () => {
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -203,22 +188,27 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
     );
   });
 
-  it('should progress stake with correct param', async function () {
+  it('should progress stake with correct param', async () => {
+    const stakeVault = await gateway.stakeVault.call();
+    const caller = accounts[6];
 
-    let stakeVault = await gateway.stakeVault.call();
-    let caller = accounts[6];
-
-    let callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
-    let gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
-    let gatewayInitialBaseTokenBalance = await baseToken.balanceOf(gateway.address);
-    let stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
+    const callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
+    const gatewayInitialTokenBalance = await mockToken.balanceOf(
+      gateway.address,
+    );
+    const gatewayInitialBaseTokenBalance = await baseToken.balanceOf(
+      gateway.address,
+    );
+    const stakeVaultInitialTokenBalance = await mockToken.balanceOf(
+      stakeVault,
+    );
 
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
-    let result = await gateway.progressStake.call(
+    const result = await gateway.progressStake.call(
       stakeMessage.messageHash,
       stakeMessage.unlockSecret,
     );
@@ -234,20 +224,16 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       `Stake amount must match.`,
     );
 
-    let tx = await gateway.progressStake(
+    const tx = await gateway.progressStake(
       stakeMessage.messageHash,
       stakeMessage.unlockSecret,
-      { from: caller }
+      { from: caller },
     );
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.StakeProgressed;
+    const event = EventDecoder.getEvents(tx, gateway);
+    const eventData = event.StakeProgressed;
 
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
+    assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
     assert.isDefined(
       event.StakeProgressed,
       'Event `StakeProgressed` must be emitted.',
@@ -283,34 +269,45 @@ contract('EIP20Gateway.progressStake()', function (accounts) {
       `Unlock secret must match.`,
     );
 
-    let callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
-    let gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
-    let gatewayFinalBaseTokenBalance = await baseToken.balanceOf(gateway.address);
-    let stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
+    const callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
+    const gatewayFinalTokenBalance = await mockToken.balanceOf(
+      gateway.address,
+    );
+    const gatewayFinalBaseTokenBalance = await baseToken.balanceOf(
+      gateway.address,
+    );
+    const stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
 
     assert.strictEqual(
-      callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
+      callerFinalBaseTokenBalance.eq(
+        callerInitialBaseTokenBalance.add(bountyAmount),
+      ),
       true,
-      "Bounty should be returned to caller.",
+      'Bounty should be returned to caller.',
     );
     assert.strictEqual(
-      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeRequest.stakeAmount)),
+      gatewayFinalTokenBalance.eq(
+        gatewayInitialTokenBalance.sub(stakeRequest.stakeAmount),
+      ),
       true,
-      "Gateway token balance should reduced by stake amount on successful" +
-      " progress stake.",
+      'Gateway token balance should reduced by stake amount on successful' +
+        ' progress stake.',
     );
     assert.strictEqual(
-      gatewayFinalBaseTokenBalance.eq(gatewayInitialBaseTokenBalance.sub(bountyAmount)),
+      gatewayFinalBaseTokenBalance.eq(
+        gatewayInitialBaseTokenBalance.sub(bountyAmount),
+      ),
       true,
-      "Gateway base balance should reduced by bounty amount on successful" +
-      " progress stake.",
+      'Gateway base balance should reduced by bounty amount on successful' +
+        ' progress stake.',
     );
     assert.strictEqual(
-      stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeRequest.stakeAmount)),
+      stakeVaultFinalTokenBalance.eq(
+        stakeVaultInitialTokenBalance.add(stakeRequest.stakeAmount),
+      ),
       true,
-      "Stake vault token balance should increase by stake amount on" +
-      " successful progress stake.",
+      'Stake vault token balance should increase by stake amount on' +
+        ' successful progress stake.',
     );
   });
-
 });

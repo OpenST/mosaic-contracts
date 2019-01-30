@@ -19,18 +19,18 @@
 // ----------------------------------------------------------------------------
 
 const Utils = require('../../test_lib/utils.js');
+
 const Organization = artifacts.require('Organization');
 
 contract('Organization.isWorker()', async (accounts) => {
-
-  let owner = accounts[0];
-  let worker = accounts[1];
+  const owner = accounts[0];
+  const worker = accounts[1];
   let organization = null;
 
-  beforeEach(async function () {
-    let admin = Utils.NULL_ADDRESS;
-    let workers = [];
-    let expirationHeight = 0;
+  beforeEach(async () => {
+    const admin = Utils.NULL_ADDRESS;
+    const workers = [];
+    const expirationHeight = 0;
 
     organization = await Organization.new(
       owner,
@@ -40,7 +40,7 @@ contract('Organization.isWorker()', async (accounts) => {
     );
   });
 
-  it('should return false if the worker wasn\'t set', async () => {
+  it("should return false if the worker wasn't set", async () => {
     assert.strictEqual(
       await organization.isWorker.call(worker),
       false,
@@ -49,9 +49,9 @@ contract('Organization.isWorker()', async (accounts) => {
   });
 
   it('should return false if the worker has expired', async () => {
-    let deltaExpirationHeight = 2;
-    let blockNumber = await web3.eth.getBlockNumber();
-    let expirationHeight = blockNumber + deltaExpirationHeight;
+    const deltaExpirationHeight = 2;
+    const blockNumber = await web3.eth.getBlockNumber();
+    const expirationHeight = blockNumber + deltaExpirationHeight;
     await organization.setWorker(worker, expirationHeight, { from: owner });
 
     // Dummy Transaction to increase block number.
@@ -66,17 +66,17 @@ contract('Organization.isWorker()', async (accounts) => {
   });
 
   it('Checks for added worker, isWorker returns true.', async () => {
-    let deltaExpirationHeight = 15;
-    let blockNumber = await web3.eth.getBlockNumber();
+    const deltaExpirationHeight = 15;
+    const blockNumber = await web3.eth.getBlockNumber();
     // `+ 1` as we are now one block further then what getBlockNumber returned.
-    let expirationHeight = blockNumber + deltaExpirationHeight + 1;
+    const expirationHeight = blockNumber + deltaExpirationHeight + 1;
     await organization.setWorker(worker, expirationHeight, { from: owner });
 
     /*
      * Check for all relevant blocks. Minus one, because expiration must be
      * less than current block height.
      */
-    for (let i = 0; i < (deltaExpirationHeight - 1); i++) {
+    for (let i = 0; i < deltaExpirationHeight - 1; i++) {
       assert.strictEqual(
         await organization.isWorker.call(worker),
         true,
@@ -91,5 +91,4 @@ contract('Organization.isWorker()', async (accounts) => {
       'The worker should now be expired.',
     );
   });
-
 });

@@ -18,37 +18,47 @@
 //
 // ----------------------------------------------------------------------------
 
-const EIP20CoGateway = artifacts.require("TestEIP20CoGateway");
-const MockUtilityToken = artifacts.require("MockUtilityToken");
-const BN = require("bn.js");
+const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
+const MockUtilityToken = artifacts.require('MockUtilityToken');
+const BN = require('bn.js');
 
 const messageBus = require('../../test_lib/message_bus.js');
-const Utils = require("../../test_lib/utils.js");
-const web3 = require("../../test_lib/web3.js");
-const EventDecoder = require("../../test_lib/event_decoder");
+const Utils = require('../../test_lib/utils.js');
+const web3 = require('../../test_lib/web3.js');
+const EventDecoder = require('../../test_lib/event_decoder');
 const coGatewayUtils = require('./helpers/co_gateway_utils.js');
-const proofData =  require("../../../test/data/redeem_progressed_1.json");
+const proofData = require('../../../test/data/redeem_progressed_1.json');
 
 const ZeroBytes = Utils.ZERO_BYTES32;
-const MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 
-contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
+contract('EIP20CoGateway.progressRedeemWithProof() ', (accounts) => {
+  let utilityToken;
+  let eip20CoGateway;
+  let redeemParams;
+  let bountyAmount;
+  let owner;
+  let facilitator;
 
-  let utilityToken, eip20CoGateway, redeemParams, bountyAmount, owner, facilitator;
-
-  let setStorageRoot = async function() {
-
-    let blockNumber = new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16);
-    let storageRoot = proofData.gateway.progress_unstake.proof_data.storageHash;
+  const setStorageRoot = async () => {
+    let blockNumber = new BN(
+      proofData.gateway.progress_unstake.proof_data.block_number,
+      16,
+    );
+    let storageRoot =
+      proofData.gateway.progress_unstake.proof_data.storageHash;
     await eip20CoGateway.setStorageRoot(blockNumber, storageRoot);
 
-    blockNumber = new BN(proofData.gateway.confirm_redeem_intent.proof_data.block_number, 16);
-    storageRoot = proofData.gateway.confirm_redeem_intent.proof_data.storageHash;
+    blockNumber = new BN(
+      proofData.gateway.confirm_redeem_intent.proof_data.block_number,
+      16,
+    );
+    storageRoot =
+      proofData.gateway.confirm_redeem_intent.proof_data.storageHash;
     await eip20CoGateway.setStorageRoot(blockNumber, storageRoot);
   };
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     owner = accounts[0];
     facilitator = accounts[1];
 
@@ -61,16 +71,21 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
       nonce: new BN(proofData.co_gateway.redeem.params.nonce, 16),
       hashLock: proofData.co_gateway.redeem.params.hashLock,
       messageHash: proofData.co_gateway.progress_redeem.params.messageHash,
-      rlpParentNodes: proofData.gateway.confirm_redeem_intent.proof_data.storageProof[0].serializedProof,
-      blockHeight: new BN(proofData.gateway.confirm_redeem_intent.proof_data.block_number, 16),
-      messageStatus: MessageStatusEnum.Declared
+      rlpParentNodes:
+        proofData.gateway.confirm_redeem_intent.proof_data.storageProof[0]
+          .serializedProof,
+      blockHeight: new BN(
+        proofData.gateway.confirm_redeem_intent.proof_data.block_number,
+        16,
+      ),
+      messageStatus: MessageStatusEnum.Declared,
     };
 
-    let tokenAddress = accounts[9];
-    let symbol = "DMY";
-    let tokenName = "Dummy token";
-    let tokenDecimal = 18;
-    let organization = accounts[2];
+    const tokenAddress = accounts[9];
+    const symbol = 'DMY';
+    const tokenName = 'Dummy token';
+    const tokenDecimal = 18;
+    const organization = accounts[2];
 
     utilityToken = await MockUtilityToken.new(
       tokenAddress,
@@ -92,7 +107,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
       proofData.co_gateway.constructor.burner,
     );
 
-    let redeemIntentHash = coGatewayUtils.hashRedeemIntent(
+    const redeemIntentHash = coGatewayUtils.hashRedeemIntent(
       redeemParams.amount,
       redeemParams.beneficiary,
       proofData.contracts.coGateway,
@@ -110,7 +125,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     await eip20CoGateway.setRedeem(
       redeemParams.messageHash,
       redeemParams.beneficiary,
-      redeemParams.amount
+      redeemParams.amount,
     );
 
     await eip20CoGateway.setOutboxStatus(
@@ -122,55 +137,47 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     await utilityToken.setCoGatewayAddress(owner);
 
     // Send redeem amount to co-gateway.
-    await  utilityToken.increaseSupply(
+    await utilityToken.increaseSupply(
       eip20CoGateway.address,
       redeemParams.amount,
-      { from: owner }
+      { from: owner },
     );
 
     // Send bounty to co-gateway.
-    await web3.eth.sendTransaction(
-      {
-        to: eip20CoGateway.address,
-        from: facilitator,
-        value: bountyAmount,
-      }
-    );
+    await web3.eth.sendTransaction({
+      to: eip20CoGateway.address,
+      from: facilitator,
+      value: bountyAmount,
+    });
 
     await utilityToken.setCoGatewayAddress(eip20CoGateway.address);
-
   });
 
-  it('should fail when message hash is zero', async function () {
-
+  it('should fail when message hash is zero', async () => {
     await Utils.expectRevert(
       eip20CoGateway.progressRedeemWithProof(
         ZeroBytes,
         redeemParams.rlpParentNodes,
         redeemParams.blockHeight,
-        redeemParams.messageStatus
+        redeemParams.messageStatus,
       ),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail when storage proof is zero', async function () {
-
+  it('should fail when storage proof is zero', async () => {
     await Utils.expectRevert(
       eip20CoGateway.progressRedeemWithProof(
         redeemParams.messageHash,
         '0x',
         redeemParams.blockHeight,
-        redeemParams.messageStatus
+        redeemParams.messageStatus,
       ),
       'RLP parent nodes must not be zero.',
     );
-
   });
 
-  it('should fail when storage proof is incorrect', async function () {
-
+  it('should fail when storage proof is incorrect', async () => {
     await setStorageRoot();
 
     await Utils.expectRevert(
@@ -178,111 +185,56 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
         redeemParams.messageHash,
         proofData.co_gateway.redeem.proof_data.storageProof[0].serializedProof,
         redeemParams.blockHeight,
-        redeemParams.messageStatus
+        redeemParams.messageStatus,
       ),
       'Merkle proof verification failed.',
     );
-
   });
 
-  it('should fail when storage proof is invalid', async function () {
-
+  it('should fail when storage proof is invalid', async () => {
     await setStorageRoot();
 
     await Utils.expectRevert(
       eip20CoGateway.progressRedeemWithProof(
         redeemParams.messageHash,
-        "0x1234",
+        '0x1234',
         redeemParams.blockHeight,
-        redeemParams.messageStatus
+        redeemParams.messageStatus,
       ),
       'VM Exception while processing transaction: revert',
     );
-
   });
 
-  it('should fail when storage root is not committed for the given height',
-    async function () {
-
-      await Utils.expectRevert(
-        eip20CoGateway.progressRedeemWithProof(
-          redeemParams.messageHash,
-          redeemParams.rlpParentNodes,
-          redeemParams.blockHeight,
-          redeemParams.messageStatus
-        ),
-        'Storage root must not be zero.',
-      );
-
-  });
-
-  it('should fail when message outbox status at source is undeclared',
-    async function () {
-
-      await setStorageRoot();
-
-      await Utils.expectRevert(
-        eip20CoGateway.progressRedeemWithProof(
-          web3.utils.sha3("dummy"),
-          redeemParams.rlpParentNodes,
-          redeemParams.blockHeight,
-          redeemParams.messageStatus
-        ),
-        'Status of message on source must be Declared or DeclareRevocation.',
-      );
-
-  });
-
-  it('should fail when message outbox status at source is progressed',
-    async function () {
-
-      await eip20CoGateway.setOutboxStatus(
+  it('should fail when storage root is not committed for the given height', async () => {
+    await Utils.expectRevert(
+      eip20CoGateway.progressRedeemWithProof(
         redeemParams.messageHash,
-        MessageStatusEnum.Progressed,
-      );
-
-      await setStorageRoot();
-
-      await Utils.expectRevert(
-        eip20CoGateway.progressRedeemWithProof(
-          redeemParams.messageHash,
-          redeemParams.rlpParentNodes,
-          redeemParams.blockHeight,
-          redeemParams.messageStatus
-        ),
-        'Status of message on source must be Declared or DeclareRevocation.',
-      );
-
+        redeemParams.rlpParentNodes,
+        redeemParams.blockHeight,
+        redeemParams.messageStatus,
+      ),
+      'Storage root must not be zero.',
+    );
   });
 
-  it('should fail when message outbox status at source is revoked',
-    async function () {
+  it('should fail when message outbox status at source is undeclared', async () => {
+    await setStorageRoot();
 
-      await eip20CoGateway.setOutboxStatus(
-        redeemParams.messageHash,
-        MessageStatusEnum.Revoked,
-      );
-
-      await setStorageRoot();
-
-      await Utils.expectRevert(
-        eip20CoGateway.progressRedeemWithProof(
-          redeemParams.messageHash,
-          redeemParams.rlpParentNodes,
-          redeemParams.blockHeight,
-          redeemParams.messageStatus,
-        ),
-        'Status of message on source must be Declared or DeclareRevocation.',
-      );
-
+    await Utils.expectRevert(
+      eip20CoGateway.progressRedeemWithProof(
+        web3.utils.sha3('dummy'),
+        redeemParams.rlpParentNodes,
+        redeemParams.blockHeight,
+        redeemParams.messageStatus,
+      ),
+      'Status of message on source must be Declared or DeclareRevocation.',
+    );
   });
 
-  it('should fail when message inbox status at target is declared and outbox ' +
-    'status at source is revocation declared', async function () {
-
+  it('should fail when message outbox status at source is progressed', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
-      MessageStatusEnum.DeclaredRevocation,
+      MessageStatusEnum.Progressed,
     );
 
     await setStorageRoot();
@@ -292,154 +244,192 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
         redeemParams.messageHash,
         redeemParams.rlpParentNodes,
         redeemParams.blockHeight,
-        MessageStatusEnum.Declared,
+        redeemParams.messageStatus,
       ),
-      'Message on target must be Progressed.',
+      'Status of message on source must be Declared or DeclareRevocation.',
     );
-
   });
 
-  it('should pass when message inbox status at target and outbox ' +
-    'status at source is declared', async function () {
-
-    await setStorageRoot();
-
-    let result = await eip20CoGateway.progressRedeemWithProof.call(
-      redeemParams.messageHash,
-      redeemParams.rlpParentNodes,
-      redeemParams.blockHeight,
-      redeemParams.messageStatus,
-    );
-
-    assert.strictEqual(
-      result.redeemer_,
-      redeemParams.redeemer,
-      `Redeemer address must be equal to ${redeemParams.redeemer}`,
-    );
-
-    assert.strictEqual(
-      result.redeemAmount_.eq(redeemParams.amount),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
-    );
-
-    let tx = await eip20CoGateway.progressRedeemWithProof(
-      redeemParams.messageHash,
-      redeemParams.rlpParentNodes,
-      redeemParams.blockHeight,
-      redeemParams.messageStatus,
-    );
-
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
-
-  });
-
-  it('should pass when message inbox status at target is progressed and outbox ' +
-    'status at source is declared', async function () {
-
-    await setStorageRoot();
-
-    let result = await eip20CoGateway.progressRedeemWithProof.call(
-      redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
-      new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
-      MessageStatusEnum.Progressed,
-    );
-
-    assert.strictEqual(
-      result.redeemer_,
-      redeemParams.redeemer,
-      `Redeemer address must be equal to ${redeemParams.redeemer}`,
-    );
-
-    assert.strictEqual(
-      result.redeemAmount_.eq(redeemParams.amount),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
-    );
-
-    let tx = await eip20CoGateway.progressRedeemWithProof(
-      redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
-      new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
-      MessageStatusEnum.Progressed,
-    );
-
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
-
-  });
-
-  it('should pass when message inbox status at target is progressed and outbox' +
-    ' status at source is revocation declared', async function () {
-
+  it('should fail when message outbox status at source is revoked', async () => {
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
-      MessageStatusEnum.DeclaredRevocation,
+      MessageStatusEnum.Revoked,
     );
 
     await setStorageRoot();
 
-    let result = await eip20CoGateway.progressRedeemWithProof.call(
-      redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
-      new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
-      MessageStatusEnum.Progressed,
+    await Utils.expectRevert(
+      eip20CoGateway.progressRedeemWithProof(
+        redeemParams.messageHash,
+        redeemParams.rlpParentNodes,
+        redeemParams.blockHeight,
+        redeemParams.messageStatus,
+      ),
+      'Status of message on source must be Declared or DeclareRevocation.',
     );
-
-    assert.strictEqual(
-      result.redeemer_,
-      redeemParams.redeemer,
-      `Redeemer address must be equal to ${redeemParams.redeemer}`,
-    );
-
-    assert.strictEqual(
-      result.redeemAmount_.eq(redeemParams.amount),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${redeemParams.amount.toString(10)}`,
-    );
-
-    let tx = await eip20CoGateway.progressRedeemWithProof(
-      redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
-      new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
-      MessageStatusEnum.Progressed,
-    );
-
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
-
   });
 
-  it('should emit RedeemProgressed event', async function () {
+  it(
+    'should fail when message inbox status at target is declared and outbox ' +
+      'status at source is revocation declared',
+    async () => {
+      await eip20CoGateway.setOutboxStatus(
+        redeemParams.messageHash,
+        MessageStatusEnum.DeclaredRevocation,
+      );
 
+      await setStorageRoot();
+
+      await Utils.expectRevert(
+        eip20CoGateway.progressRedeemWithProof(
+          redeemParams.messageHash,
+          redeemParams.rlpParentNodes,
+          redeemParams.blockHeight,
+          MessageStatusEnum.Declared,
+        ),
+        'Message on target must be Progressed.',
+      );
+    },
+  );
+
+  it(
+    'should pass when message inbox status at target and outbox ' +
+      'status at source is declared',
+    async () => {
+      await setStorageRoot();
+
+      const result = await eip20CoGateway.progressRedeemWithProof.call(
+        redeemParams.messageHash,
+        redeemParams.rlpParentNodes,
+        redeemParams.blockHeight,
+        redeemParams.messageStatus,
+      );
+
+      assert.strictEqual(
+        result.redeemer_,
+        redeemParams.redeemer,
+        `Redeemer address must be equal to ${redeemParams.redeemer}`,
+      );
+
+      assert.strictEqual(
+        result.redeemAmount_.eq(redeemParams.amount),
+        true,
+        `Redeem amount ${result.redeemAmount_.toString(
+          10,
+        )} must be equal to ${redeemParams.amount.toString(10)}`,
+      );
+
+      const tx = await eip20CoGateway.progressRedeemWithProof(
+        redeemParams.messageHash,
+        redeemParams.rlpParentNodes,
+        redeemParams.blockHeight,
+        redeemParams.messageStatus,
+      );
+
+      assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
+    },
+  );
+
+  it(
+    'should pass when message inbox status at target is progressed and outbox ' +
+      'status at source is declared',
+    async () => {
+      await setStorageRoot();
+
+      const result = await eip20CoGateway.progressRedeemWithProof.call(
+        redeemParams.messageHash,
+        proofData.gateway.progress_unstake.proof_data.storageProof[0]
+          .serializedProof,
+        new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
+        MessageStatusEnum.Progressed,
+      );
+
+      assert.strictEqual(
+        result.redeemer_,
+        redeemParams.redeemer,
+        `Redeemer address must be equal to ${redeemParams.redeemer}`,
+      );
+
+      assert.strictEqual(
+        result.redeemAmount_.eq(redeemParams.amount),
+        true,
+        `Redeem amount ${result.redeemAmount_.toString(
+          10,
+        )} must be equal to ${redeemParams.amount.toString(10)}`,
+      );
+
+      const tx = await eip20CoGateway.progressRedeemWithProof(
+        redeemParams.messageHash,
+        proofData.gateway.progress_unstake.proof_data.storageProof[0]
+          .serializedProof,
+        new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
+        MessageStatusEnum.Progressed,
+      );
+
+      assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
+    },
+  );
+
+  it(
+    'should pass when message inbox status at target is progressed and outbox' +
+      ' status at source is revocation declared',
+    async () => {
+      await eip20CoGateway.setOutboxStatus(
+        redeemParams.messageHash,
+        MessageStatusEnum.DeclaredRevocation,
+      );
+
+      await setStorageRoot();
+
+      const result = await eip20CoGateway.progressRedeemWithProof.call(
+        redeemParams.messageHash,
+        proofData.gateway.progress_unstake.proof_data.storageProof[0]
+          .serializedProof,
+        new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
+        MessageStatusEnum.Progressed,
+      );
+
+      assert.strictEqual(
+        result.redeemer_,
+        redeemParams.redeemer,
+        `Redeemer address must be equal to ${redeemParams.redeemer}`,
+      );
+
+      assert.strictEqual(
+        result.redeemAmount_.eq(redeemParams.amount),
+        true,
+        `Redeem amount ${result.redeemAmount_.toString(
+          10,
+        )} must be equal to ${redeemParams.amount.toString(10)}`,
+      );
+
+      const tx = await eip20CoGateway.progressRedeemWithProof(
+        redeemParams.messageHash,
+        proofData.gateway.progress_unstake.proof_data.storageProof[0]
+          .serializedProof,
+        new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
+        MessageStatusEnum.Progressed,
+      );
+
+      assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
+    },
+  );
+
+  it('should emit RedeemProgressed event', async () => {
     await setStorageRoot();
 
-    let tx = await eip20CoGateway.progressRedeemWithProof(
+    const tx = await eip20CoGateway.progressRedeemWithProof(
       redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
+      proofData.gateway.progress_unstake.proof_data.storageProof[0]
+        .serializedProof,
       new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
       MessageStatusEnum.Progressed,
     );
 
-    let event = EventDecoder.getEvents(tx, eip20CoGateway);
-    let eventData = event.RedeemProgressed;
+    const event = EventDecoder.getEvents(tx, eip20CoGateway);
+    const eventData = event.RedeemProgressed;
 
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
+    assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
 
     assert.isDefined(
       event.RedeemProgressed,
@@ -449,25 +439,41 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       redeemParams.messageHash,
-      `Message hash ${eventData._messageHash} from event is not equal to expected message hash ${redeemParams.messageHash}`,
+      `Message hash ${
+        eventData._messageHash
+      } from event is not equal to expected message hash ${
+        redeemParams.messageHash
+      }`,
     );
 
     assert.strictEqual(
       eventData._redeemer,
       redeemParams.redeemer,
-      `Redeemer address ${eventData._redeemer} from event is not equal to expected redeemer address ${redeemParams.redeemer}`,
+      `Redeemer address ${
+        eventData._redeemer
+      } from event is not equal to expected redeemer address ${
+        redeemParams.redeemer
+      }`,
     );
 
     assert.strictEqual(
       eventData._redeemerNonce.eq(redeemParams.nonce),
       true,
-      `Redeemer nonce ${eventData._redeemerNonce.toString(10)} from event is not equal to expected redeemer nonce ${redeemParams.nonce.toString(10)}`,
+      `Redeemer nonce ${eventData._redeemerNonce.toString(
+        10,
+      )} from event is not equal to expected redeemer nonce ${redeemParams.nonce.toString(
+        10,
+      )}`,
     );
 
     assert.strictEqual(
       eventData._amount.eq(redeemParams.amount),
       true,
-      `Redeem amount ${eventData._amount.toString(10)} from event is not equal to expected amount ${redeemParams.amount.toString(10)}`,
+      `Redeem amount ${eventData._amount.toString(
+        10,
+      )} from event is not equal to expected amount ${redeemParams.amount.toString(
+        10,
+      )}`,
     );
 
     assert.strictEqual(
@@ -479,78 +485,102 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     assert.strictEqual(
       eventData._unlockSecret,
       ZeroBytes,
-      `Actual unlockSecret ${eventData._unlockSecret} from event is not equal to expected unlockSecret ${ZeroBytes}`,
+      `Actual unlockSecret ${
+        eventData._unlockSecret
+      } from event is not equal to expected unlockSecret ${ZeroBytes}`,
     );
-
   });
 
-  it('should return bounty to the facilitator', async function () {
-
-    let facilitator = accounts[8];
-    let initialFacilitatorEthBalance = await Utils.getBalance(facilitator);
-    let initialCoGatewayEthBalance = await Utils.getBalance(eip20CoGateway.address);
+  it('should return bounty to the facilitator', async () => {
+    const facilitator = accounts[8];
+    const initialFacilitatorEthBalance = await Utils.getBalance(facilitator);
+    const initialCoGatewayEthBalance = await Utils.getBalance(
+      eip20CoGateway.address,
+    );
 
     await setStorageRoot();
 
-    let tx = await eip20CoGateway.progressRedeemWithProof(
+    const tx = await eip20CoGateway.progressRedeemWithProof(
       redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
+      proofData.gateway.progress_unstake.proof_data.storageProof[0]
+        .serializedProof,
       new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
       MessageStatusEnum.Progressed,
       { from: facilitator },
     );
 
-    let finalFacilitatorEthBalance = await Utils.getBalance(facilitator);
-    let finalCoGatewayEthBalance = await Utils.getBalance(eip20CoGateway.address);
+    const finalFacilitatorEthBalance = await Utils.getBalance(facilitator);
+    const finalCoGatewayEthBalance = await Utils.getBalance(
+      eip20CoGateway.address,
+    );
 
-    let expectedFinalFacilitatorETHBalance = initialFacilitatorEthBalance
+    const expectedFinalFacilitatorETHBalance = initialFacilitatorEthBalance
       .add(bountyAmount)
       .subn(tx.receipt.gasUsed);
 
     assert.strictEqual(
       finalFacilitatorEthBalance.eq(expectedFinalFacilitatorETHBalance),
       true,
-      `Facilitator's base token balance ${finalFacilitatorEthBalance.toString(10)} should be equal to ${expectedFinalFacilitatorETHBalance.toString(10)}`,
+      `Facilitator's base token balance ${finalFacilitatorEthBalance.toString(
+        10,
+      )} should be equal to ${expectedFinalFacilitatorETHBalance.toString(
+        10,
+      )}`,
     );
 
     assert.strictEqual(
-      finalCoGatewayEthBalance.eq(initialCoGatewayEthBalance.sub(bountyAmount)),
+      finalCoGatewayEthBalance.eq(
+        initialCoGatewayEthBalance.sub(bountyAmount),
+      ),
       true,
-      `CoGateway's base token balance ${finalCoGatewayEthBalance.toString(10)} should be equal to ${initialCoGatewayEthBalance.sub(bountyAmount)}.`,
+      `CoGateway's base token balance ${finalCoGatewayEthBalance.toString(
+        10,
+      )} should be equal to ${initialCoGatewayEthBalance.sub(bountyAmount)}.`,
     );
-
   });
 
-  it('should decrease token supply for utility token', async function () {
-
-    let initialTotalSupply = await utilityToken.totalSupply.call();
-    let initialCoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
+  it('should decrease token supply for utility token', async () => {
+    const initialTotalSupply = await utilityToken.totalSupply.call();
+    const initialCoGatewayBalance = await utilityToken.balanceOf(
+      eip20CoGateway.address,
+    );
 
     await setStorageRoot();
 
     await eip20CoGateway.progressRedeemWithProof(
       redeemParams.messageHash,
-      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
+      proofData.gateway.progress_unstake.proof_data.storageProof[0]
+        .serializedProof,
       new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
       MessageStatusEnum.Progressed,
       { from: facilitator },
     );
 
-    let finalTotalSupply = await utilityToken.totalSupply.call();
-    let finalCoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
+    const finalTotalSupply = await utilityToken.totalSupply.call();
+    const finalCoGatewayBalance = await utilityToken.balanceOf(
+      eip20CoGateway.address,
+    );
 
     assert.strictEqual(
       finalTotalSupply.eq(initialTotalSupply.sub(redeemParams.amount)),
       true,
-      `Total supply ${finalTotalSupply.toString(10)} should be equal to ${initialTotalSupply.sub(redeemParams.amount).toString(10)}.`,
+      `Total supply ${finalTotalSupply.toString(
+        10,
+      )} should be equal to ${initialTotalSupply
+        .sub(redeemParams.amount)
+        .toString(10)}.`,
     );
 
     assert.strictEqual(
-      finalCoGatewayBalance.eq(initialCoGatewayBalance.sub(redeemParams.amount)),
+      finalCoGatewayBalance.eq(
+        initialCoGatewayBalance.sub(redeemParams.amount),
+      ),
       true,
-      `CoGateway's balance ${finalCoGatewayBalance.toString(10)} should be equal to ${initialCoGatewayBalance.sub(redeemParams.amount).toString(10)}.`,
+      `CoGateway's balance ${finalCoGatewayBalance.toString(
+        10,
+      )} should be equal to ${initialCoGatewayBalance
+        .sub(redeemParams.amount)
+        .toString(10)}.`,
     );
-
   });
-
 });

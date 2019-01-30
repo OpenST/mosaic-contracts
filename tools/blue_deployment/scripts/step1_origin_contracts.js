@@ -19,7 +19,6 @@
 // ----------------------------------------------------------------------------
 
 const Web3 = require('web3');
-const inquirer = require('inquirer');
 const colors = require('colors/safe');
 
 const {
@@ -46,7 +45,7 @@ const {
  * @param {string} text The text message to use.
  */
 const printSign = (text) => {
-    const mainLine = '===== ' + text + ' =====';
+    const mainLine = `===== ${  text  } =====`;
     const delimiter = '='.repeat(mainLine.length);
 
     console.log();
@@ -96,7 +95,7 @@ const main = async () => {
 
     printSign('DEPLOYING AUXILIARY');
     const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-    const _auxiliaryAddresses = await deployAuxiliary(
+    await deployAuxiliary(
         web3Auxiliary,
         deployerAddressAuxiliary,
         tokenAddressOrigin,

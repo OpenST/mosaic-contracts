@@ -19,14 +19,13 @@
 //
 // ----------------------------------------------------------------------------
 
-var MockToken = artifacts.require("./MockToken.sol");
+const MockToken = artifacts.require('./MockToken.sol');
 
-/// @dev Deploy 
+// / @dev Deploy
 module.exports.deployMockToken = async (artifacts, accounts) => {
+  const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
 
-   const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
-
-   return {
-      token : token
-   }
-}
+  return {
+    token,
+  };
+};

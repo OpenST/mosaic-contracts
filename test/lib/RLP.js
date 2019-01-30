@@ -1,149 +1,166 @@
-const RLPTest = artifacts.require("./RLPTest.sol"),
-	RLP = require("rlp"),
-	Utils = require('../test_lib/utils.js');
+const RLPTest = artifacts.require('./RLPTest.sol');
 
-contract('RLP', function (accounts) {
-	let rlpTest;
-	before(async () => {
-		rlpTest = await RLPTest.new();
+const RLP = require('rlp');
 
-	});
-	describe('ToRLPItem', async () => {
+const Utils = require('../test_lib/utils.js');
 
-		it('should pass when input is RLP encoded list', async () => {
-			let dataArray = ['2', '5', '6', '86735']
-				, hexDataArray = RLP.encode(dataArray).toString('hex')
-				, result = await rlpTest.toRLPItem.call('0x' + hexDataArray);
-			//result[0] is memory pointer and result[1] is length
-			// memory pointer should be greater than 0
-			assert.equal((result[0].toString(10) > 0), true);
+contract('RLP', () => {
+  let rlpTest;
+  before(async () => {
+    rlpTest = await RLPTest.new();
+  });
+  describe('ToRLPItem', async () => {
+    it('should pass when input is RLP encoded list', async () => {
+      const dataArray = ['2', '5', '6', '86735'];
 
-			// length should be greater than 0
-			assert.equal((result[1].toString(10) > 0), true);
-		});
+      const hexDataArray = RLP.encode(dataArray).toString('hex');
 
-		it('should pass when input is RLP encoding of number', async () => {
-			let data = 1234
-				, hexData = RLP.encode(data).toString('hex')
-				, result = await rlpTest.toRLPItem.call('0x' + hexData);
-			//result[0] is memory pointer and result[1] is length
-			// memory pointer should be greater than 0
-			assert.equal((result[0].toString(10) > 0), true);
+      const result = await rlpTest.toRLPItem.call(`0x${hexDataArray}`);
+      // result[0] is memory pointer and result[1] is length
+      // memory pointer should be greater than 0
+      assert.equal(result[0].toString(10) > 0, true);
 
-			// length should be greater than 0
-			assert.equal((result[1].toString(10) > 0), true);
-		});
+      // length should be greater than 0
+      assert.equal(result[1].toString(10) > 0, true);
+    });
 
-		it('should pass when input is blank or 0x (NOT RLP encoded)', async () => {
-			let result = await rlpTest.toRLPItem.call("0x");
-			//result[0] is memory pointer and result[1] is length
-			// memory pointer should be 0
-			assert.equal(result[0].toString(10), 0);
+    it('should pass when input is RLP encoding of number', async () => {
+      const data = 1234;
 
-			// length should be 0
-			assert.equal((result[1].toString(10)), 0);
-		});
+      const hexData = RLP.encode(data).toString('hex');
 
-	});
+      const result = await rlpTest.toRLPItem.call(`0x${hexData}`);
+      // result[0] is memory pointer and result[1] is length
+      // memory pointer should be greater than 0
+      assert.equal(result[0].toString(10) > 0, true);
 
+      // length should be greater than 0
+      assert.equal(result[1].toString(10) > 0, true);
+    });
 
-	describe('ToList', async () => {
+    it('should pass when input is blank or 0x (NOT RLP encoded)', async () => {
+      const result = await rlpTest.toRLPItem.call('0x');
+      // result[0] is memory pointer and result[1] is length
+      // memory pointer should be 0
+      assert.equal(result[0].toString(10), 0);
 
-		it('should pass when list is RLP encoded of length one', async () => {
-			let rlpItem = RLP.encode('5')
-				, items = [rlpItem]
-				, rlpArray = RLP.encode(items).toString('hex')
-				, index = 0;
-			let result = await rlpTest.toList.call('0x' + rlpArray, index)
-				, itemAtIndex = result[0];
-			assert.equal('0x' + rlpItem.toString('hex'), itemAtIndex);
+      // length should be 0
+      assert.equal(result[1].toString(10), 0);
+    });
+  });
 
-		});
-		it('should pass when list is RLP encoded', async () => {
-			let rlpItemOne = RLP.encode('5')
-				, rlpItemTwo = RLP.encode('6')
-				, items = [rlpItemOne, rlpItemTwo]
-				, rlpArray = RLP.encode(items).toString('hex');
+  describe('ToList', async () => {
+    it('should pass when list is RLP encoded of length one', async () => {
+      const rlpItem = RLP.encode('5');
 
-			for (let index = 0; index < items.length; index++) {
-				let result = await rlpTest.toList.call('0x' + rlpArray, index)
-					, itemAtIndex = result[0];
-				assert.equal('0x' + items[index].toString('hex'), itemAtIndex);
-			}
-		});
+      const items = [rlpItem];
 
-		it('should pass when input RLP encoding of empty list', async () => {
-			let dataArray = []
-				, hexDataArray = RLP.encode(dataArray).toString('hex')
-				, result = await rlpTest.toList.call('0x' + hexDataArray, 0)
-			length = result[1].toNumber();
-			assert.equal(dataArray.length, length);
-		});
+      const rlpArray = RLP.encode(items).toString('hex');
 
-		it('should fail when input is non-list', async () => {
-			let data = 1234
-				, hexDataArray = RLP.encode(data).toString('hex');
-			await Utils.expectThrow(rlpTest.toList.call('0x' + hexDataArray, 0));
-		});
+      const index = 0;
+      const result = await rlpTest.toList.call(`0x${rlpArray}`, index);
 
-		it('should fail when input is empty ', async () => {
-			let data = '';
-			await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
-		});
+      const itemAtIndex = result[0];
+      assert.equal(`0x${rlpItem.toString('hex')}`, itemAtIndex);
+    });
+    it('should pass when list is RLP encoded', async () => {
+      const rlpItemOne = RLP.encode('5');
 
-		it('should fail when input is not RLP encoded ', async () => {
-			let data = '1234';
-			await Utils.expectThrow(rlpTest.toList.call('0x' + data, 0));
-		});
+      const rlpItemTwo = RLP.encode('6');
 
-	});
+      const items = [rlpItemOne, rlpItemTwo];
 
-	describe('ToBytes', async () => {
+      const rlpArray = RLP.encode(items).toString('hex');
 
-		it('should pass when input is list', async () => {
-			let dataArray = ['2', '5', '6', '86735']
-				, hexDataArray = RLP.encode(dataArray).toString('hex')
-				, result = await rlpTest.toBytes.call('0x' + hexDataArray);
-			assert.equal(result.replace("0x", ""), hexDataArray);
-		})
+      for (let index = 0; index < items.length; index++) {
+        const result = await rlpTest.toList.call(`0x${rlpArray}`, index);
 
-		it('should pass when input is non-list', async () => {
-			let data = 1234
-				, hexData = RLP.encode(data).toString('hex')
-				, result = await rlpTest.toBytes.call('0x' + hexData);
-			assert.equal(result.replace("0x", ""), hexData);
-		})
+        const itemAtIndex = result[0];
+        assert.equal(`0x${items[index].toString('hex')}`, itemAtIndex);
+      }
+    });
 
-		it('should pass when input is empty', async () => {
-			let data = ""
-				, result = await rlpTest.toBytes.call('0x' + data);
-			assert.isNull(result);
-		})
-	})
+    it('should pass when input RLP encoding of empty list', async () => {
+      const dataArray = [];
 
-	describe('ToData', async () => {
+      const hexDataArray = RLP.encode(dataArray).toString('hex');
 
-		it('should pass when input is non-list', async () => {
-			let data = "1234"
-				, hexDataArray = RLP.encode(data).toString('hex')
-				, result = await rlpTest.toData.call('0x' + hexDataArray);
-			assert.equal(result.replace("0x", ""), Buffer.from(data).toString('hex'))
-		})
+      const result = await rlpTest.toList.call(`0x${hexDataArray}`, 0);
+      length = result[1].toNumber();
+      assert.equal(dataArray.length, length);
+    });
 
-		it('should fail when input is in list form and encoded', async () => {
-			let data = ['2', '5', '6', '86735']
-				, hexDataArray = RLP.encode(data).toString('hex');
-			await Utils.expectThrow(rlpTest.toData.call('0x' + hexDataArray));
-		})
+    it('should fail when input is non-list', async () => {
+      const data = 1234;
 
-		it('should fail when input is in list form', async () => {
-			let dataArray = ['2', '5', '6'];
-			await Utils.expectThrow(
-				rlpTest.toData.call('0x' + dataArray),
-				"invalid bytes value"
-			);
-		})
-	})
-})
+      const hexDataArray = RLP.encode(data).toString('hex');
+      await Utils.expectThrow(rlpTest.toList.call(`0x${hexDataArray}`, 0));
+    });
 
+    it('should fail when input is empty ', async () => {
+      const data = '';
+      await Utils.expectThrow(rlpTest.toList.call(`0x${data}`, 0));
+    });
 
+    it('should fail when input is not RLP encoded ', async () => {
+      const data = '1234';
+      await Utils.expectThrow(rlpTest.toList.call(`0x${data}`, 0));
+    });
+  });
+
+  describe('ToBytes', async () => {
+    it('should pass when input is list', async () => {
+      const dataArray = ['2', '5', '6', '86735'];
+
+      const hexDataArray = RLP.encode(dataArray).toString('hex');
+
+      const result = await rlpTest.toBytes.call(`0x${hexDataArray}`);
+      assert.equal(result.replace('0x', ''), hexDataArray);
+    });
+
+    it('should pass when input is non-list', async () => {
+      const data = 1234;
+
+      const hexData = RLP.encode(data).toString('hex');
+
+      const result = await rlpTest.toBytes.call(`0x${hexData}`);
+      assert.equal(result.replace('0x', ''), hexData);
+    });
+
+    it('should pass when input is empty', async () => {
+      const data = '';
+
+      const result = await rlpTest.toBytes.call(`0x${data}`);
+      assert.isNull(result);
+    });
+  });
+
+  describe('ToData', async () => {
+    it('should pass when input is non-list', async () => {
+      const data = '1234';
+
+      const hexDataArray = RLP.encode(data).toString('hex');
+
+      const result = await rlpTest.toData.call(`0x${hexDataArray}`);
+      assert.equal(
+        result.replace('0x', ''),
+        Buffer.from(data).toString('hex'),
+      );
+    });
+
+    it('should fail when input is in list form and encoded', async () => {
+      const data = ['2', '5', '6', '86735'];
+
+      const hexDataArray = RLP.encode(data).toString('hex');
+      await Utils.expectThrow(rlpTest.toData.call(`0x${hexDataArray}`));
+    });
+
+    it('should fail when input is in list form', async () => {
+      const dataArray = ['2', '5', '6'];
+      await Utils.expectThrow(
+        rlpTest.toData.call(`0x${dataArray}`),
+        'invalid bytes value',
+      );
+    });
+  });
+});

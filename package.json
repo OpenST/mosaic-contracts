@@ -21,7 +21,10 @@
     "colors": "1.3.3",
     "eslint": "5.10.0",
     "eslint-config-airbnb-base": "13.1.0",
+    "eslint-config-prettier": "4.0.0",
     "eslint-plugin-import": "2.14.0",
+    "eslint-plugin-prettier": "3.0.1",
+    "prettier": "1.16.2",
     "ganache-cli": "6.1.8",
     "inquirer": "6.2.1",
     "keccak": "1.4.0",
@@ -42,7 +45,8 @@
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
     "prepare": "npm run compile-all && npm run build-package",
-    "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js"
+    "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
+    "lint": "eslint {migrations,test,test_integration,tools} -c .eslintrc.json --ext js"
   },
   "main": "dist/index.js",
   "files": [

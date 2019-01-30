@@ -1,4 +1,4 @@
-const SolidityParser = require("solparse");
+const SolidityParser = require('solparse');
 /*
 
 //todo We can extend this test for all the solidity contracts. But it's out of scope for now

@@ -24,15 +24,14 @@ const EventsDecoder = require('../../test_lib/event_decoder');
 const Organization = artifacts.require('Organization');
 
 contract('Organization.setAdmin()', async (accounts) => {
-
-  let owner = accounts[0];
-  let admin = accounts[1];
+  const owner = accounts[0];
+  const admin = accounts[1];
   let organization = null;
 
-  beforeEach(async function () {
-    let zeroAdmin = Utils.NULL_ADDRESS;
-    let workers = [];
-    let expirationHeight = 0;
+  beforeEach(async () => {
+    const zeroAdmin = Utils.NULL_ADDRESS;
+    const workers = [];
+    const expirationHeight = 0;
 
     organization = await Organization.new(
       owner,
@@ -43,22 +42,15 @@ contract('Organization.setAdmin()', async (accounts) => {
   });
 
   it('reverts when caller is not owner/admin', async () => {
-
     await Utils.expectRevert(
-      organization.setAdmin(
-        admin,
-        { from: accounts[2] },
-      ),
+      organization.setAdmin(admin, { from: accounts[2] }),
       'Only owner and admin are allowed to call this method.',
     );
   });
 
   it('should pass when valid admin is passed by owner', async () => {
     const admin = accounts[2];
-    await organization.setAdmin(
-      admin,
-      { from: owner },
-    );
+    await organization.setAdmin(admin, { from: owner });
 
     assert.strictEqual(
       await organization.admin.call(),
@@ -68,15 +60,9 @@ contract('Organization.setAdmin()', async (accounts) => {
   });
 
   it('should pass when valid admin is passed by admin', async () => {
-    await organization.setAdmin(
-      admin,
-      { from: owner },
-    );
-    let newAdmin = accounts[3];
-    await organization.setAdmin(
-      newAdmin,
-      { from: admin },
-    );
+    await organization.setAdmin(admin, { from: owner });
+    const newAdmin = accounts[3];
+    await organization.setAdmin(newAdmin, { from: admin });
 
     assert.strictEqual(
       await organization.admin.call(),
@@ -86,41 +72,31 @@ contract('Organization.setAdmin()', async (accounts) => {
   });
 
   it('should pass when admin address is 0x', async () => {
-    await organization.setAdmin(
-      Utils.NULL_ADDRESS,
-      { from: owner },
-    );
+    await organization.setAdmin(Utils.NULL_ADDRESS, { from: owner });
 
     assert.strictEqual(
       await organization.admin.call(),
       Utils.NULL_ADDRESS,
-      'The admin address must be set to 0x correctly.'
+      'The admin address must be set to 0x correctly.',
     );
   });
 
   it('verifies emitting of AdminAddressChanged event', async () => {
     const previousAdmin = await organization.admin.call();
-    const transaction = await organization.setAdmin(
-      admin,
-      { from: owner },
-    );
+    const transaction = await organization.setAdmin(admin, { from: owner });
 
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.AdminAddressChanged.newAdmin,
       admin,
-      'The event should emit the correct admin address.'
+      'The event should emit the correct admin address.',
     );
     assert.strictEqual(
       events.AdminAddressChanged.previousAdmin,
       previousAdmin,
-      'The event should emit the correct address of the previous admin.'
+      'The event should emit the correct address of the previous admin.',
     );
-
   });
 
   it('Should not emit an event when the address did not change', async () => {
@@ -130,22 +106,14 @@ contract('Organization.setAdmin()', async (accounts) => {
      * The address was already set before. This should pass, but not emit an
      * event.
      */
-    const transaction = await organization.setAdmin(
-      admin,
-      { from: owner },
-    );
+    const transaction = await organization.setAdmin(admin, { from: owner });
 
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.AdminAddressChanged,
       undefined,
-      'The event should not be emitted when the address does not change.'
+      'The event should not be emitted when the address does not change.',
     );
-
   });
-
 });

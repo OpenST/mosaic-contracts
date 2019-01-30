@@ -24,13 +24,12 @@ const Utils = require('../../test_lib/utils.js');
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 
 contract('AuxiliaryBlockStore.initialize()', async (accounts) => {
-
   const zeroAddress = Utils.NULL_ADDRESS;
 
   let auxiliaryBlockStore;
 
   beforeEach(async () => {
-    let initialKernelHash = web3.utils.sha3('kernelHash');
+    const initialKernelHash = web3.utils.sha3('kernelHash');
     auxiliaryBlockStore = await AuxiliaryBlockStore.new(
       '0x0000000000000000000000000000000000000001',
       10,
@@ -46,37 +45,30 @@ contract('AuxiliaryBlockStore.initialize()', async (accounts) => {
   });
 
   it('should fail when gateway address is zero', async () => {
-
     await Utils.expectRevert(
       auxiliaryBlockStore.initialize.call(zeroAddress),
-      "Kernel gateway address must not be zero.",
+      'Kernel gateway address must not be zero.',
     );
-
   });
 
   it('should set kernel gateway address its not already set', async () => {
-
     await auxiliaryBlockStore.initialize(accounts[2]);
 
-    let gatewayKernelAddress = await auxiliaryBlockStore.kernelGateway.call();
+    const gatewayKernelAddress = await auxiliaryBlockStore.kernelGateway.call();
 
     assert.strictEqual(
       gatewayKernelAddress,
       accounts[2],
       `Kernel gateway address must be ${accounts[2]}.`,
     );
-
   });
 
   it('should fail when gateway address is already initialized', async () => {
-
     await auxiliaryBlockStore.initialize(accounts[2]);
 
     await Utils.expectRevert(
       auxiliaryBlockStore.initialize.call(accounts[2]),
-      "Kernel gateway must not be already initialized.",
+      'Kernel gateway must not be already initialized.',
     );
-
   });
-
 });

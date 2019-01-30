@@ -19,35 +19,31 @@
 // ----------------------------------------------------------------------------
 
 const GatewayBase = artifacts.require('./TestGatewayBase.sol');
-const BN = require("bn.js");
+const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 const messageBus = require('../../test_lib/message_bus.js');
-const MessageStatusEnum = messageBus.MessageStatusEnum;
 
-contract('GatewayBase.getOutboxMessageStatus()', function (accounts) {
+const { MessageStatusEnum } = messageBus;
 
-  let gatewayBase, messageHash;
+contract('GatewayBase.getOutboxMessageStatus()', (accounts) => {
+  let gatewayBase;
+  let messageHash;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
+    gatewayBase = await GatewayBase.new(accounts[0], new BN(100), accounts[1]);
 
-    gatewayBase = await GatewayBase.new(
-      accounts[0],
-      new BN(100),
-      accounts[1],
-    );
-
-    messageHash = web3.utils.sha3("message_hash");
-
+    messageHash = web3.utils.sha3('message_hash');
   });
 
-  it('should return correct message status', async function () {
-
+  it('should return correct message status', async () => {
     let status = await gatewayBase.getOutboxMessageStatus(messageHash);
 
     assert.strictEqual(
       status.eqn(MessageStatusEnum.Undeclared),
       true,
-      `Message status ${status.toString(10)} must be equal to ${MessageStatusEnum.Undeclared}`,
+      `Message status ${status.toString(10)} must be equal to ${
+        MessageStatusEnum.Undeclared
+      }`,
     );
 
     await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Declared);
@@ -56,25 +52,37 @@ contract('GatewayBase.getOutboxMessageStatus()', function (accounts) {
     assert.strictEqual(
       status.eqn(MessageStatusEnum.Declared),
       true,
-      `Message status ${status.toString(10)} must be equal to ${MessageStatusEnum.Declared}`,
+      `Message status ${status.toString(10)} must be equal to ${
+        MessageStatusEnum.Declared
+      }`,
     );
 
-    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Progressed);
+    await gatewayBase.setOutboxStatus(
+      messageHash,
+      MessageStatusEnum.Progressed,
+    );
     status = await gatewayBase.getOutboxMessageStatus(messageHash);
 
     assert.strictEqual(
       status.eqn(MessageStatusEnum.Progressed),
       true,
-      `Message status ${status.toString(10)} must be equal to ${MessageStatusEnum.Progressed}`,
+      `Message status ${status.toString(10)} must be equal to ${
+        MessageStatusEnum.Progressed
+      }`,
     );
 
-    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.DeclaredRevocation);
+    await gatewayBase.setOutboxStatus(
+      messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
     status = await gatewayBase.getOutboxMessageStatus(messageHash);
 
     assert.strictEqual(
       status.eqn(MessageStatusEnum.DeclaredRevocation),
       true,
-      `Message status ${status.toString(10)} must be equal to ${MessageStatusEnum.DeclaredRevocation}`,
+      `Message status ${status.toString(10)} must be equal to ${
+        MessageStatusEnum.DeclaredRevocation
+      }`,
     );
 
     await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Revoked);
@@ -83,9 +91,9 @@ contract('GatewayBase.getOutboxMessageStatus()', function (accounts) {
     assert.strictEqual(
       status.eqn(MessageStatusEnum.Revoked),
       true,
-      `Message status ${status.toString(10)} must be equal to ${MessageStatusEnum.Revoked}`,
+      `Message status ${status.toString(10)} must be equal to ${
+        MessageStatusEnum.Revoked
+      }`,
     );
-
   });
-
 });

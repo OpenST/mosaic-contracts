@@ -18,48 +18,43 @@
 //
 // ----------------------------------------------------------------------------
 //
-const messageBusUtilsKlass = require('./messagebus_utils'),
-    messageBusUtils = new messageBusUtilsKlass();
+const messageBusUtilsKlass = require('./messagebus_utils');
+
+const messageBusUtils = new messageBusUtilsKlass();
 
 contract('MessageBus.confirmMessage()', async (accounts) => {
-     let params;
+  let params;
 
-    beforeEach(async function () {
+  beforeEach(async () => {
+    await messageBusUtils.deployedMessageBus();
+    params = messageBusUtils.defaultParams(accounts);
+  });
 
-        await messageBusUtils.deployedMessageBus();
-        params = messageBusUtils.defaultParams(accounts);
-    });
+  it('should fail when message status is declared ', async () => {
+    const message = 'Message on target must be Undeclared.';
+    params.message = message;
 
-    it('should fail when message status is declared ', async () => {
-        let message = 'Message on target must be Undeclared.';
-        params.message = message;
+    await messageBusUtils.confirmMessage(params, true);
 
-        await messageBusUtils.confirmMessage(params, true);
+    await messageBusUtils.confirmMessage(params, false);
+  });
 
-        await messageBusUtils.confirmMessage(params, false);
+  it('should fail when message status is progressed ', async () => {
+    const message = 'Message on target must be Undeclared.';
+    params.message = message;
 
-    });
+    await messageBusUtils.confirmMessage(params, true);
+    await messageBusUtils.progressInbox(params, true);
 
-    it('should fail when message status is progressed ', async () => {
-        let message = 'Message on target must be Undeclared.';
-        params.message = message;
+    await messageBusUtils.confirmMessage(params, false);
+  });
 
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.progressInbox(params, true);
+  it('should fail when message status is revoked ', async () => {
+    const message = 'Message on target must be Undeclared.';
+    params.message = message;
+    await messageBusUtils.confirmMessage(params, true);
+    await messageBusUtils.confirmRevocation(params, true);
 
-        await messageBusUtils.confirmMessage(params, false);
-
-    });
-
-    it('should fail when message status is revoked ', async () => {
-        let message = 'Message on target must be Undeclared.';
-        params.message = message;
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.confirmRevocation(params, true);
-
-        await messageBusUtils.confirmMessage(params, false);
-
-    });
+    await messageBusUtils.confirmMessage(params, false);
+  });
 });
-
-
