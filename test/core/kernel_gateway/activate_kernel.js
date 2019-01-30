@@ -24,7 +24,7 @@ const web3 = require('../../test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.activateKernel()', async (accounts) => {
 
@@ -49,8 +49,8 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   beforeEach(async function () {
 
     initialKernelHash = web3.utils.sha3('kernelHash');
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     await originBlockStore.setCoreIdentifier(originCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);

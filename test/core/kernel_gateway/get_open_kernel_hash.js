@@ -22,7 +22,7 @@ const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const BN = require('bn.js');
 const KernelGateway = artifacts.require('TestKernelGateway');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
 
@@ -32,8 +32,8 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
 
   beforeEach(async function() {
 
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     initialKernelHash = web3.utils.sha3('kernelHash');
 

@@ -22,14 +22,14 @@ const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
 
     let originBlockStore;
 
     beforeEach(async () => {
-        originBlockStore = await BlockStoreMock.new();
+        originBlockStore = await MockBlockStore.new();
     });
 
     it('should accept a valid construction', async () => {

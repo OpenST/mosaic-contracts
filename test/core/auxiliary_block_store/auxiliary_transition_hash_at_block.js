@@ -25,7 +25,7 @@ const MetaBlockUtils = require('../../test_lib/meta_block.js');
 const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts) => {
 
@@ -43,7 +43,7 @@ contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts
     let blockStore;
 
     beforeEach(async () => {
-        originBlockStore = await BlockStoreMock.new();
+        originBlockStore = await MockBlockStore.new();
 
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,

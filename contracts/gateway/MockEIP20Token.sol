@@ -15,7 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: EIP20TokenMock.sol
+// Utility chain: MockEIP20Token.sol
 //
 // http://www.simpletoken.org/
 //
@@ -24,12 +24,12 @@ pragma solidity ^0.5.0;
 import "./EIP20Token.sol";
 
 /**
- *  @title EIP20TokenMock contract.
+ *  @title MockEIP20Token contract.
  *
  *  @notice Implements mock totalSupply function and wraps internal 
  *          functions to enable testing EIP20Token.
  */
-contract EIP20TokenMock is EIP20Token {
+contract MockEIP20Token is EIP20Token {
 
     /* Public functions */
 

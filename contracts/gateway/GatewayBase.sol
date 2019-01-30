@@ -21,12 +21,12 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "./EIP20Interface.sol";
-import "../lib/MessageBus.sol";
-import "../StateRootInterface.sol";
 import "../lib/GatewayLib.sol";
+import "../lib/MessageBus.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.

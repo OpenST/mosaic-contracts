@@ -24,7 +24,7 @@ const BN = require('bn.js');
 const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const KernelGateway = artifacts.require('TestKernelGateway');
 
 contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
@@ -46,7 +46,7 @@ contract('AuxiliaryBlockStore.latestBlockHeight()', async (accounts) => {
     let testBlocks = AuxStoreUtils.getSubset(4, 12, TestData.blocks);
 
     beforeEach(async () => {
-        originBlockStore = await BlockStoreMock.new();
+        originBlockStore = await MockBlockStore.new();
 
         blockStore = await AuxiliaryBlockStore.new(
             coreIdentifier,

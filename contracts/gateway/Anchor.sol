@@ -20,13 +20,13 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../StateRootInterface.sol";
 import "../lib/CircularBufferUint.sol";
-import "../lib/OrganizationInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
+import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/RLP.sol";
 import "../lib/SafeMath.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  * @title Anchor contract which implements StateRootInterface.

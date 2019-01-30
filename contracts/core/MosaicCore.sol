@@ -20,13 +20,13 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../OstInterface.sol";
 import "./MosaicCoreConfig.sol";
 import "./MosaicCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
+import "../lib/OstInterface.sol";
 import "../lib/SafeMath.sol";
-import "../StateRootInterface.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  * @title MosaicCore is a meta-blockchain with staked validators on Ethereum.

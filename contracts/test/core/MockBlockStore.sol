@@ -25,10 +25,10 @@ import "../../core/PollingPlaceInterface.sol";
 import "../../core/KernelGatewayInterface.sol";
 
 /**
- * @notice BlockStoreMock implements the BlockStoreInterface. It returns pre-
+ * @notice MockBlockStore implements the BlockStoreInterface. It returns pre-
  *         determined values for all methods.
  */
-contract BlockStoreMock is BlockStoreInterface {
+contract MockBlockStore is BlockStoreInterface {
 
     /* Events */
 

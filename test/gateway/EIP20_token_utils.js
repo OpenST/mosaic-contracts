@@ -24,7 +24,7 @@ const web3 = require('../test_lib/web3.js');
 const Assert = require('assert');
 const BN = require('bn.js');
 
-var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
+var EIP20Token = artifacts.require("./MockEIP20Token.sol");
 
 /// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {

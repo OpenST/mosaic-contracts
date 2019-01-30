@@ -21,7 +21,7 @@
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const PollingPlace = artifacts.require('PollingPlace');
 const zeroAddress = Utils.NULL_ADDRESS;
 
@@ -75,8 +75,8 @@ contract('PollingPlace.updateMetaBlock()', async (accounts) => {
 
   beforeEach(async () => {
 
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     await originBlockStore.setCoreIdentifier(originCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
