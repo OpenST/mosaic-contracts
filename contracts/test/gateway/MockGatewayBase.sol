@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
 import "../lib/MockGatewayLib.sol";
-import "../../StateRootInterface.sol";
 import "../../gateway/GatewayBase.sol";
 import "../../lib/OrganizationInterface.sol";
+import "../../lib/StateRootInterface.sol";
 
 /**
  * @title MockGatewayBase contract.

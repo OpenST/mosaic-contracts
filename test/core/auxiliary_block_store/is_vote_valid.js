@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ const Utils = require('../../test_lib/utils.js');
 const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const KernelGateway = artifacts.require('TestKernelGateway');
 const MockPollingPlace = artifacts.require('MockPollingPlace');
 
@@ -50,7 +50,7 @@ let blockStore, kernelGateway;
 contract('AuxiliaryBlockStore.isVoteValid()', async (accounts) => {
 
     async function setUp(){
-      originBlockStore = await BlockStoreMock.new();
+      originBlockStore = await MockBlockStore.new();
 
       blockStore = await AuxiliaryBlockStore.new(
         coreIdentifier,

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 import "truffle/Assert.sol";
 import "../../../contracts/core/Stake.sol";
-import "../../../contracts/gateway/MockToken.sol";
+import "../../../contracts/test/gateway/MockToken.sol";
 
 /**
  * @title Testing the functions of the Stake contract that will be invoked by

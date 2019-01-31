@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./EIP20Interface.sol";
-import "../lib/MessageBus.sol";
-import "../StateRootInterface.sol";
+import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
+import "../lib/MessageBus.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
