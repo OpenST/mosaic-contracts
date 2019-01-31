@@ -216,7 +216,7 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
         );
         assert.strictEqual(
           storedStateRoot,
-           Utils.ZERO_BYTES32,
+          Utils.ZERO_BYTES32,
           'There should not be any state root stored at a ' +
           'pruned height. It should have been reset by now.',
         );
