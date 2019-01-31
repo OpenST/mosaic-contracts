@@ -457,6 +457,9 @@ contract EIP20CoGateway is GatewayBase {
      * @notice Completes the redeem process. This decreases token supply
      *         on successful redeem.
      *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
+     *
      * @param _messageHash Message hash for redeem message.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
      *                      facilitator while initiating the redeem.
@@ -628,6 +631,9 @@ contract EIP20CoGateway is GatewayBase {
     /**
      * @notice Complete revert redeem by providing the merkle proof.
      *         It will burn facilitator bounty and redeemer penalty.
+     *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -1020,6 +1026,9 @@ contract EIP20CoGateway is GatewayBase {
     /**
      * @notice This is internal method for process minting contains common logic.
      *         It doesn't mint reward if reward is 0.
+     *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
      *
      * @param _messageHash Message hash.
      * @param _initialGas Initial gas during progress process.

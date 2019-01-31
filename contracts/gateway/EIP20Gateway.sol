@@ -383,6 +383,9 @@ contract EIP20Gateway is GatewayBase {
     /**
      * @notice Completes the stake process.
      *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
+     *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
      *                      staker while initiating the stake.
@@ -556,6 +559,9 @@ contract EIP20Gateway is GatewayBase {
      * @notice Complete revert stake by providing the merkle proof.
      *         This method will return stake amount to staker and burn
      *         facilitator bounty and staker penalty.
+     *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
      *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
@@ -747,6 +753,9 @@ contract EIP20Gateway is GatewayBase {
 
     /**
      * @notice Complete unstake.
+     *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
