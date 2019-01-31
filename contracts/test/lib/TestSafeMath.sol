@@ -28,12 +28,12 @@ pragma solidity ^0.5.0;
 import "../../lib/SafeMath.sol";
 
 /**
- *  @title MockSafeMath library.
+ *  @title TestSafeMath library.
  *
  *  @notice Based on the SafeMath library by the OpenZeppelin team.
  *          Mock used for testing.
  */
-contract MockSafeMath {
+contract TestSafeMath {
 
   /** Storage */
   

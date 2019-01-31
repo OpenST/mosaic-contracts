@@ -26,13 +26,13 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 
-var MockSafeMath = artifacts.require('./MockSafeMath.sol');
+var TestSafeMath = artifacts.require('./TestSafeMath.sol');
 
 contract('SafeMath', function (accounts) {
   let safeMath;
 
   before(async function () {
-    safeMath = await MockSafeMath.new();
+    safeMath = await TestSafeMath.new();
   });
 
   it('multiplies correctly', async function () {
