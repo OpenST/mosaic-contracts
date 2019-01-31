@@ -1068,8 +1068,6 @@ contract EIP20CoGateway is GatewayBase {
             "Mint request must exist."
         );
 
-        MessageBus.Message storage message = messages[_messageHash];
-
         beneficiary_ = mint.beneficiary;
         address payable payableBeneficiary = mint.beneficiary;
         stakeAmount_ = mint.amount;
