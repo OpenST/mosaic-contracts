@@ -302,7 +302,7 @@ library RLP {
         uint numItems = items(self);
         list_ = new RLPItem[](numItems);
         Iterator memory it = iterator(self);
-        uint idx;
+        uint idx = 0;
         while(hasNext(it)) {
             list_[idx] = next(it);
             idx++;

@@ -34,10 +34,11 @@
 * Claim and redeem are now called unwrap and wrap. Claim and redeem events are now called token unwrapped and token wrapped ([#533](https://github.com/OpenSTFoundation/mosaic-contracts/pull/533)).
 * The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
 * Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
-* Gateway and CoGateway now check that the stake/redeem amount covers at least the potential reward  ([#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600)).
+* Gateway and CoGateway now check that the stake/redeem amount covers at least the potential reward ([#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600)).
 * Added getter functions for easier interaction ([#598](https://github.com/OpenSTFoundation/mosaic-contracts/pull/598), [#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600), [#601](https://github.com/OpenSTFoundation/mosaic-contracts/pull/601), [#602](https://github.com/OpenSTFoundation/mosaic-contracts/pull/602))
 * Naming of RLP encoded parameters and variables is unified ([#528](https://github.com/OpenSTFoundation/mosaic-contracts/pull/528)).
-* Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458))
+* Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458), [#550](https://github.com/OpenSTFoundation/mosaic-contracts/pull/550))
+* Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619)).
 
 ### Known Issues
 

@@ -448,7 +448,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     assert.isDefined(
       event.StakeIntentConfirmed,
-      'Event Transfer must be emitted.',
+      'Event StakeIntentConfirmed must be emitted.',
     );
 
     let eventData = event.StakeIntentConfirmed;

@@ -38,7 +38,7 @@ const {
     deployOrigin,
     deployedToken,
     getChainInfo,
-} = require('../step1');
+} = require('../index');
 
 /**
  * Print a fancy sign with a message on the console to be used as a delimiter.
@@ -63,11 +63,11 @@ const main = async () => {
     const deployerAddressOrigin = await inquireDeployerAddressOrigin(web3Origin);
 
     let tokenAddressOrigin = await inquireEIP20TokenAddress(web3Origin);
-    tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin);
+    tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin, { log: true });
     checkAddressForCode(web3Origin, tokenAddressOrigin);
 
     let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress();
-    baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin);
+    baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin, { log: true });
     checkAddressForCode(web3Origin, baseTokenAddressOrigin);
 
     printSign('QUESTIONS AUXILIARY');
@@ -91,6 +91,7 @@ const main = async () => {
         auxiliaryInfo.chainId,
         auxiliaryInfo.blockHeight,
         auxiliaryInfo.stateRoot,
+        { log: true },
     );
 
     printSign('DEPLOYING AUXILIARY');
@@ -104,6 +105,7 @@ const main = async () => {
         originInfo.chainId,
         originInfo.blockHeight,
         originInfo.stateRoot,
+        { log: true },
     );
 };
 

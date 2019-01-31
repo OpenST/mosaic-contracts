@@ -73,7 +73,7 @@ library RLPEncode {
             prefix_[0] = byte(uint8(L + offset));
         } else {
             // lenLen is the length of the hex representation of the data length
-            uint lenLen;
+            uint lenLen = 0;
             uint i = 0x1;
             while(L/i != 0) {
                 lenLen++;
