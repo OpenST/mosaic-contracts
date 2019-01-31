@@ -1,6 +1,6 @@
 {
-  "name": "mosaic-contracts",
-  "version": "0.10.0-alpha.0",
+  "name": "@openstfoundation/mosaic-contracts",
+  "version": "0.10.0-alpha.1",
   "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "keywords": [
     "ethereum",
@@ -38,7 +38,7 @@
     "compile-all": "truffle compile --all",
     "test": "truffle test",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
-    "test:integration": "mocha --recursive --no-timeouts test_integration",
+    "test:integration": "cd test_integration && ./main.sh",
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
     "prepare": "npm run compile-all && npm run build-package",

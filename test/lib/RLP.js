@@ -1,11 +1,11 @@
-const RLPTest = artifacts.require("./RLPTest.sol"),
+const TestRLP = artifacts.require("./TestRLP.sol"),
 	RLP = require("rlp"),
 	Utils = require('../test_lib/utils.js');
 
 contract('RLP', function (accounts) {
 	let rlpTest;
 	before(async () => {
-		rlpTest = await RLPTest.new();
+		rlpTest = await TestRLP.new();
 
 	});
 	describe('ToRLPItem', async () => {

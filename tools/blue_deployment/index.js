@@ -39,8 +39,6 @@
  * @typedef {string} Address
  */
 
-const colors = require('colors/safe');
-
 const {
     Contract,
     ContractRegistry,
@@ -79,14 +77,19 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
 
     const startingNonce = await web3.eth.getTransactionCount(deployerAddress);
 
-    const EIP20Token = Contract.loadTruffleContract(
-        'EIP20Token',
-        ['MYT', 'MyToken', 18],
+    /*
+     * Deploys the EIP20StandardToken that is provided in `contracts/test`.
+     * It is a simple ERC20 token which transfers the entire initial balance to
+     * the account that deploys the token. In this case the `deployerAddress`.
+     */
+    const EIP20StandardToken = Contract.loadTruffleContract(
+        'EIP20StandardToken',
+        ['MYT', 'MyToken', 800000000, 18],
         { rootDir },
     );
 
     const registry = new ContractRegistry();
-    registry.addContract(EIP20Token);
+    registry.addContract(EIP20StandardToken);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
     const contracts = await deployContracts(
@@ -95,7 +98,7 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
         deploymentObjects,
         deployOptions,
     );
-    return contracts.EIP20Token;
+    return contracts.EIP20StandardToken;
 };
 
 /**
@@ -132,6 +135,7 @@ const getChainInfo = async (web3) => {
  * @param {string} blockHeightAuxiliary The block height at wich Anchor starts
  *                                      tracking Auxiliary.
  * @param {string} stateRootAuxiliary The state root at `blockHeightAuxiliary`.
+ * @param {bool} options.log Whether to log the progress of the deployment.
  *
  * @returns {Promise.<object>} A promise resolving to a mapping of contract
  *                             names to their deployed addresses.
@@ -145,6 +149,9 @@ const deployOrigin = async (
     chainIdAuxiliary,
     blockHeightAuxiliary,
     stateRootAuxiliary,
+    options = {
+        log: false,
+    },
 ) => {
     const startingNonce = await web3Origin.eth.getTransactionCount(deployerAddress);
 
@@ -193,6 +200,7 @@ const deployOrigin = async (
         new UnlockedWeb3Signer(web3Origin),
         web3Origin,
         deploymentObjects,
+        options,
     );
 };
 
@@ -211,6 +219,7 @@ const deployOrigin = async (
  * @param {string} blockHeightOrigin The block height at wich Anchor starts
  *                                      tracking Origin.
  * @param {string} stateRootOrigin The state root at `blockHeightOrigin`.
+ * @param {bool} options.log Whether to log the progress of the deployment.
  *
  * @returns {Promise.<object>} A promise resolving to a mapping of contract
  *                             names to their deployed addresses.
@@ -224,6 +233,9 @@ const deployAuxiliary = async (
     chainIdOrigin,
     blockHeightOrigin,
     stateRootOrigin,
+    options = {
+        log: false,
+    },
 ) => {
     const startingNonce = await web3Auxiliary.eth.getTransactionCount(deployerAddress);
 
@@ -279,6 +291,7 @@ const deployAuxiliary = async (
         new UnlockedWeb3Signer(web3Auxiliary),
         web3Auxiliary,
         deploymentObjects,
+        options,
     );
 };
 

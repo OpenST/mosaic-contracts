@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,14 +163,15 @@ contract KernelGateway is KernelGatewayInterface {
         originCoreIdentifier = originBlockStore.getCoreIdentifier();
         auxiliaryCoreIdentifier = auxiliaryBlockStore.getCoreIdentifier();
 
-        address[] memory updatedValidators;
-        uint256[] memory updatedWeights;
+        // There are no validators or weights at construction.
+        address[] memory emptyValidators = new address[](0);
+        uint256[] memory emptyWeights = new uint256[](0);
 
         kernels[activeKernelHash] = MetaBlock.Kernel(
             1,
             bytes32(0),
-            updatedValidators,
-            updatedWeights
+            emptyValidators,
+            emptyWeights
         );
 
         bytes memory indexBytes = BytesLib.leftPad(

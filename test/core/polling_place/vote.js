@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const MetaBlockUtils = require('../../test_lib/meta_block.js');
 const Utils = require('../../test_lib/utils.js');
 
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const PollingPlace = artifacts.require('PollingPlace');
 
 const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
@@ -44,8 +44,8 @@ contract('PollingPlace.vote()', async (accounts) => {
     let vote;
 
     beforeEach(async () => {
-        originBlockStore = await BlockStoreMock.new();
-        auxiliaryBlockStore = await BlockStoreMock.new();
+        originBlockStore = await MockBlockStore.new();
+        auxiliaryBlockStore = await MockBlockStore.new();
 
         await originBlockStore.setVoteValid(true);
         await auxiliaryBlockStore.setVoteValid(true);
