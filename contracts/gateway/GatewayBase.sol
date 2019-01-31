@@ -171,8 +171,12 @@ contract GatewayBase is Organized {
         );
 
         stateRootProvider = _stateRootProvider;
-
         bounty = _bounty;
+
+        // The following variables are not known at construction:
+        messageBox = MessageBus.MessageBox();
+        encodedGatewayPath = '';
+        remoteGateway = address(0);
     }
 
 

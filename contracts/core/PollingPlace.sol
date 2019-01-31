@@ -406,7 +406,7 @@ contract PollingPlace is PollingPlaceInterface {
             "The lengths of the addresses and weights arrays must be identical."
         );
 
-        for (uint256 i; i < _auxiliaryAddresses.length; i++) {
+        for (uint256 i = 0; i < _auxiliaryAddresses.length; i++) {
             address auxiliaryAddress = _auxiliaryAddresses[i];
             uint256 weight = _weights[i];
 

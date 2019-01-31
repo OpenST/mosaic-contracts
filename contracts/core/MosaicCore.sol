@@ -181,6 +181,9 @@ contract MosaicCore is
         Ost = OstInterface(_ost);
         maxAccumulateGasLimit = _maxAccumulateGasLimit;
 
+        // Height is not known until the first opening is proven.
+        height = 0;
+
         // deploy stake contract
         stake = new Stake(
             _ost,
@@ -511,8 +514,8 @@ contract MosaicCore is
         private
         returns (bytes32 metaBlockHash_)
     {
-        address[] memory emptyValidatorSet;
-        uint256[] memory emptyValidatorsWeights;
+        address[] memory emptyValidatorSet = new address[](0);
+        uint256[] memory emptyValidatorsWeights = new uint256[](0);
 
         /*
          * Kernel for genesis block with height 0, no parent block and
