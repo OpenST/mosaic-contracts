@@ -47,7 +47,7 @@ const runTests = (callback) => {
     Mocha.utils.lookupFiles(__dirname, ['js'], true)
         .filter(
             // Skipping this file so that artifacts are not loaded.
-            file => file.substr(-20) !== 'integration_tests.js',
+            file => file !== __filename,
         )
         .forEach((file) => {
             mocha.addFile(file);

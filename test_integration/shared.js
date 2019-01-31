@@ -35,11 +35,12 @@
  * Contains all relevant data on a chain.
  *
  * @property {Web3} web3 A web3 object to access the chain.
- * @property {Object} contractAddresses All addresses in sting format, indexed
+ * @property {Object} contractAddresses All addresses in string format, indexed
  *     by the contract name, as written in the solidity source file.
  * @property {Object} contracts Instances of TruffleContracts. Indexed by their
- *     contract name, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
- *     and `BrandedToken`.
+ *     identifier, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
+ *     and `BrandedToken` are not called EIP20StandardToken to differentiate
+ *     the two.
  * @property {string} deployerAddress The address of the account that deployed
  *     the contracts in the deployment phase.
  */
