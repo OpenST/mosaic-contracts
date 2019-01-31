@@ -23,11 +23,11 @@ pragma solidity ^0.5.0;
 import "../../lib/RLP.sol";
 
 /**
- *  @title RLPTest contract is for RLP library contract
+ *  @title TestRLP contract is for RLP library contract
  *
  *  @notice It is used to test methods in RLP library contract
  */
-contract RLPTest  {
+contract TestRLP  {
 
     /**
       * @notice Creates an RLPItem from an array of RLP encoded bytes.
