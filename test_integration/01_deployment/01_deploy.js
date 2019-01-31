@@ -20,10 +20,8 @@
 
 const chai = require('chai');
 const Web3 = require('web3');
-const {
-    dockerSetup,
-    dockerTeardown,
-} = require('../docker');
+const docker = require('../docker');
+const shared = require('../shared');
 const {
     deployedToken,
     getChainInfo,
@@ -33,49 +31,76 @@ const {
 
 const { assert } = chai;
 
-describe('Deployer', () => {
+describe('Deploy', async () => {
     let rpcEndpointOrigin;
     let web3Origin;
     let accountsOrigin;
     let rpcEndpointAuxiliary;
     let web3Auxiliary;
     let accountsAuxiliary;
+    let deployerAddressOrigin;
+    let deployerAddressAuxiliary;
 
     before(async () => {
-        ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await dockerSetup());
+        ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await docker());
 
         web3Origin = new Web3(rpcEndpointOrigin);
         web3Auxiliary = new Web3(rpcEndpointAuxiliary);
         accountsOrigin = await web3Origin.eth.getAccounts();
         accountsAuxiliary = await web3Auxiliary.eth.getAccounts();
+
+        [deployerAddressOrigin] = accountsOrigin;
+        [deployerAddressAuxiliary] = accountsAuxiliary;
+
+        shared.origin.web3 = web3Origin;
+        shared.auxiliary.web3 = web3Auxiliary;
+        shared.origin.deployerAddress = deployerAddressOrigin;
+        shared.auxiliary.deployerAddress = deployerAddressAuxiliary;
+
+        // FIXME: #623
+        shared.origin.organizationAddress = deployerAddressOrigin;
+        shared.auxiliary.organizationAddress = deployerAddressAuxiliary;
     });
 
-    after(() => {
-        dockerTeardown();
+    after(async () => {
+        await shared.origin.addContract('EIP20Gateway');
+        await shared.origin.addContract('Anchor');
+        await shared.origin.addContract('EIP20StandardToken', 'Token');
+        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
+
+        await shared.auxiliary.addContract('EIP20CoGateway');
+        await shared.auxiliary.addContract('Anchor');
     });
 
     let tokenAddressOrigin;
     let baseTokenAddressOrigin;
-    it('correctly deploys token and base token on Origin', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
-
-        tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
+    it('correctly deploys branded token and base token on Origin', async () => {
+        tokenAddressOrigin = await deployedToken(
+            web3Origin,
+            deployerAddressOrigin,
+            'new',
+        );
         assert(
             Web3.utils.isAddress(tokenAddressOrigin),
             'Did not correctly deploy token on Origin.',
         );
 
-        baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
+        baseTokenAddressOrigin = await deployedToken(
+            web3Origin,
+            deployerAddressOrigin,
+            'new',
+        );
         assert(
             Web3.utils.isAddress(baseTokenAddressOrigin),
             'Did not correctly deploy base token on Origin.',
         );
+
+        /* Note that they are called Token and BaseToken! */
+        shared.origin.contractAddresses.Token = tokenAddressOrigin;
+        shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
     });
 
     it('correctly deploys Gateway and CoGateway', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
-        const deployerAddressAuxiliary = accountsAuxiliary[0];
-
         const bountyOrigin = '100';
         const bountyAuxiliary = '100';
 
@@ -104,5 +129,14 @@ describe('Deployer', () => {
             originInfo.blockHeight,
             originInfo.stateRoot,
         );
+
+        shared.origin.contractAddresses = {
+            ...shared.origin.contractAddresses,
+            ...originAddresses,
+        };
+        shared.auxiliary.contractAddresses = {
+            ...shared.auxiliary.contractAddresses,
+            ...auxiliaryAddresses,
+        };
     });
 });

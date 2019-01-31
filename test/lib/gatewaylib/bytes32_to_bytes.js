@@ -18,23 +18,23 @@
 //
 // ----------------------------------------------------------------------------
 
-const waitPort = require('wait-port');
+const GatewayLib = artifacts.require('GatewayLib');
 
-const originPort = 8546;
-const auxiliaryPort = 8547;
+contract('GatewayLib.bytes32ToBytes()', async (accounts) => {
 
-const asyncSleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  it('should return correct values', async function () {
 
-const docker = () => {
-    const waitForOriginNode = waitPort({ port: originPort, output: 'silent' });
-    const waitForAuxiliaryNode = waitPort({ port: auxiliaryPort, output: 'silent' });
-    return Promise.all([waitForOriginNode, waitForAuxiliaryNode]).then(
-        // even after the ports are available the nodes need a bit of time to get online
-        () => asyncSleep(5000),
-    ).then(() => ({
-        rpcEndpointOrigin: `http://localhost:${originPort}`,
-        rpcEndpointAuxiliary: `http://localhost:${auxiliaryPort}`,
-    }));
-};
+    let gatewayLib = await GatewayLib.deployed();
+    let bytes32Value = web3.utils.sha3("some data");
 
-module.exports = docker;
+    let result = await gatewayLib.bytes32ToBytes(bytes32Value);
+
+    assert.strictEqual(
+      bytes32Value,
+      result,
+      "Expected value should be equal to actual.",
+    );
+
+  });
+
+});

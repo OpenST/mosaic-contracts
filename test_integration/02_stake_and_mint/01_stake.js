@@ -18,23 +18,25 @@
 //
 // ----------------------------------------------------------------------------
 
-const waitPort = require('wait-port');
+const { assert } = require('chai');
+const shared = require('../shared');
 
-const originPort = 8546;
-const auxiliaryPort = 8547;
+// Dummy to show that it can access the contracts and make transactions.
+describe('Stake', async () => {
+    it('stakes', async () => {
+        const brandedToken = shared.origin.contracts.Token;
+        const sender = shared.origin.deployerAddress;
+        const accounts = await shared.origin.web3.eth.getAccounts();
+        const receiver = accounts[2];
+        const amount = '1000000';
 
-const asyncSleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        await brandedToken.transfer(receiver, amount, { from: sender });
+        const balanceOfReceiver = await brandedToken.balanceOf.call(receiver);
 
-const docker = () => {
-    const waitForOriginNode = waitPort({ port: originPort, output: 'silent' });
-    const waitForAuxiliaryNode = waitPort({ port: auxiliaryPort, output: 'silent' });
-    return Promise.all([waitForOriginNode, waitForAuxiliaryNode]).then(
-        // even after the ports are available the nodes need a bit of time to get online
-        () => asyncSleep(5000),
-    ).then(() => ({
-        rpcEndpointOrigin: `http://localhost:${originPort}`,
-        rpcEndpointAuxiliary: `http://localhost:${auxiliaryPort}`,
-    }));
-};
-
-module.exports = docker;
+        assert.strictEqual(
+            amount,
+            balanceOfReceiver.toString(10),
+            'Could not transfer EIP20 tokens.',
+        );
+    });
+});

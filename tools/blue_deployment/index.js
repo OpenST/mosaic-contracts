@@ -39,8 +39,6 @@
  * @typedef {string} Address
  */
 
-const colors = require('colors/safe');
-
 const {
     Contract,
     ContractRegistry,
@@ -79,14 +77,19 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
 
     const startingNonce = await web3.eth.getTransactionCount(deployerAddress);
 
-    const EIP20Token = Contract.loadTruffleContract(
-        'EIP20Token',
-        ['MYT', 'MyToken', 18],
+    /*
+     * Deploys the EIP20StandardToken that is provided in `contracts/test`.
+     * It is a simple ERC20 token which transfers the entire initial balance to
+     * the account that deploys the token. In this case the `deployerAddress`.
+     */
+    const EIP20StandardToken = Contract.loadTruffleContract(
+        'EIP20StandardToken',
+        ['MYT', 'MyToken', 800000000, 18],
         { rootDir },
     );
 
     const registry = new ContractRegistry();
-    registry.addContract(EIP20Token);
+    registry.addContract(EIP20StandardToken);
 
     const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
     const contracts = await deployContracts(
@@ -95,7 +98,7 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
         deploymentObjects,
         deployOptions,
     );
-    return contracts.EIP20Token;
+    return contracts.EIP20StandardToken;
 };
 
 /**
