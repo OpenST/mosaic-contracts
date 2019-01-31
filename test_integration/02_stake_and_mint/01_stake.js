@@ -24,7 +24,7 @@ const shared = require('../shared');
 // Dummy to show that it can access the contracts and make transactions.
 describe('Stake', async () => {
     it('stakes', async () => {
-        const brandedToken = shared.origin.contracts.BrandedToken;
+        const brandedToken = shared.origin.contracts.Token;
         const sender = shared.origin.deployerAddress;
         const accounts = await shared.origin.web3.eth.getAccounts();
         const receiver = accounts[2];

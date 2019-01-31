@@ -39,7 +39,7 @@
  *     by the contract name, as written in the solidity source file.
  * @property {Object} contracts Instances of TruffleContracts. Indexed by their
  *     identifier, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
- *     and `BrandedToken` are not called EIP20StandardToken to differentiate
+ *     and `Token` are not called EIP20StandardToken to differentiate
  *     the two.
  * @property {string} deployerAddress The address of the account that deployed
  *     the contracts in the deployment phase.
