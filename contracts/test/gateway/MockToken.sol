@@ -23,7 +23,7 @@ pragma solidity ^0.5.0;
 
 
 import "./MockTokenConfig.sol";
-import "../../gateway/EIP20Interface.sol";
+import "../../lib/EIP20Interface.sol";
 import "../../lib/SafeMath.sol";
 
 contract MockToken is EIP20Interface, MockTokenConfig {
