@@ -56,6 +56,10 @@ describe('Deploy', async () => {
         shared.auxiliary.web3 = web3Auxiliary;
         shared.origin.deployerAddress = deployerAddressOrigin;
         shared.auxiliary.deployerAddress = deployerAddressAuxiliary;
+
+        // FIXME: #623
+        shared.origin.organizationAddress = deployerAddressOrigin;
+        shared.auxiliary.organizationAddress = deployerAddressAuxiliary;
     });
 
     after(async () => {

@@ -43,12 +43,16 @@
  *     the two.
  * @property {string} deployerAddress The address of the account that deployed
  *     the contracts in the deployment phase.
+ * @property {string} organizationAddress The address of the organization.
+ * @property {string} networkId The network ID of this chain.
  */
 class Chain {
     constructor() {
         this.web3 = {};
         this.contractAddresses = {};
         this.contracts = {};
+        this.deployerAddress = '';
+        this.organizationAddress = '';
         this.networkId = '*';
     }
 
