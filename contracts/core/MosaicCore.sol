@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../OstInterface.sol";
 import "./MosaicCoreConfig.sol";
 import "./MosaicCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
+import "../lib/OstInterface.sol";
 import "../lib/SafeMath.sol";
-import "../StateRootInterface.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  * @title MosaicCore is a meta-blockchain with staked validators on Ethereum.
@@ -180,6 +180,9 @@ contract MosaicCore is
         auxiliaryCoreIdentifier = _auxiliaryCoreIdentifier;
         Ost = OstInterface(_ost);
         maxAccumulateGasLimit = _maxAccumulateGasLimit;
+
+        // Height is not known until the first opening is proven.
+        height = 0;
 
         // deploy stake contract
         stake = new Stake(
@@ -511,8 +514,8 @@ contract MosaicCore is
         private
         returns (bytes32 metaBlockHash_)
     {
-        address[] memory emptyValidatorSet;
-        uint256[] memory emptyValidatorsWeights;
+        address[] memory emptyValidatorSet = new address[](0);
+        uint256[] memory emptyValidatorsWeights = new uint256[](0);
 
         /*
          * Kernel for genesis block with height 0, no parent block and

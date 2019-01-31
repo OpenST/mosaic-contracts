@@ -48,6 +48,7 @@ const contractNames = [
     'Organization',
     'OrganizationInterface',
     'Organized',
+    'OSTPrime',
     'StateRootInterface',
     'UtilityToken',
     'UtilityTokenInterface',

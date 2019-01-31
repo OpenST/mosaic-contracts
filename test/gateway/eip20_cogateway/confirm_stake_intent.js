@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -448,7 +448,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     assert.isDefined(
       event.StakeIntentConfirmed,
-      'Event Transfer must be emitted.',
+      'Event StakeIntentConfirmed must be emitted.',
     );
 
     let eventData = event.StakeIntentConfirmed;

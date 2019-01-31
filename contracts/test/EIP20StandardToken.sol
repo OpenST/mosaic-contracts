@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import "../gateway/EIP20Token.sol";
 /**
  * @title EIP20StandardToken is a standard implementation of an ERC20 token.
  *
- * @notice It is required for integration tests..
+ * @notice It is required for integration tests.
  */
 contract EIP20StandardToken is EIP20Token {
 
@@ -36,7 +36,7 @@ contract EIP20StandardToken is EIP20Token {
      *
      * @param _symbol Symbol of the token.
      * @param _name Name of the token.
-     * @param _totalSupply Total supply of the tokens at creation. Without
+     * @param _totalSupply Total supply of the tokens at creation. Including
      *                     decimals.
      * @param _decimals Decimal places of the token.
      */
@@ -53,7 +53,7 @@ contract EIP20StandardToken is EIP20Token {
             _decimals
         )
     {
-        totalTokenSupply = _totalSupply * 10**uint256(_decimals);
+        totalTokenSupply = _totalSupply;
         balances[msg.sender] = totalTokenSupply;
 
         emit Transfer(address(0), msg.sender, totalTokenSupply);

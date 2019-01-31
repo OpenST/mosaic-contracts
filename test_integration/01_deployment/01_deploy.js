@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,12 +62,16 @@ describe('Deploy', async () => {
         shared.auxiliary.deployerAddress = deployerAddressAuxiliary;
         shared.origin.accounts = accountsOrigin;
         shared.auxiliary.accounts = accountsAuxiliary;
+
+        // FIXME: #623
+        shared.origin.organizationAddress = deployerAddressOrigin;
+        shared.auxiliary.organizationAddress = deployerAddressAuxiliary;
     });
 
     after(async () => {
         await shared.origin.addContract('EIP20Gateway');
         await shared.origin.addContract('Anchor');
-        await shared.origin.addContract('EIP20StandardToken', 'BrandedToken');
+        await shared.origin.addContract('EIP20StandardToken', 'Token');
         await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
 
         await shared.auxiliary.addContract('EIP20CoGateway');
@@ -98,8 +102,8 @@ describe('Deploy', async () => {
             'Did not correctly deploy base token on Origin.',
         );
 
-        /* Note that they are called BrandedToken and BaseToken! */
-        shared.origin.contractAddresses.BrandedToken = tokenAddressOrigin;
+        /* Note that they are called Token and BaseToken! */
+        shared.origin.contractAddresses.Token = tokenAddressOrigin;
         shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
     });
 

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,19 +35,24 @@
  * Contains all relevant data on a chain.
  *
  * @property {Web3} web3 A web3 object to access the chain.
- * @property {Object} contractAddresses All addresses in sting format, indexed
+ * @property {Object} contractAddresses All addresses in string format, indexed
  *     by the contract name, as written in the solidity source file.
  * @property {Object} contracts Instances of TruffleContracts. Indexed by their
- *     contract name, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
- *     and `BrandedToken`.
+ *     identifier, e.g. `EIP20Gateway` or `Anchor`. Exception: `BaseToken`
+ *     and `Token` are not called EIP20StandardToken to differentiate
+ *     the two.
  * @property {string} deployerAddress The address of the account that deployed
  *     the contracts in the deployment phase.
+ * @property {string} organizationAddress The address of the organization.
+ * @property {string} networkId The network ID of this chain.
  */
 class Chain {
     constructor() {
         this.web3 = {};
         this.contractAddresses = {};
         this.contracts = {};
+        this.deployerAddress = '';
+        this.organizationAddress = '';
         this.networkId = '*';
         this.accounts = [];
     }

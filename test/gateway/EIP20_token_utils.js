@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ const web3 = require('../test_lib/web3.js');
 const Assert = require('assert');
 const BN = require('bn.js');
 
-var EIP20Token = artifacts.require("./EIP20TokenMock.sol");
+var EIP20Token = artifacts.require("./MockEIP20Token.sol");
 
 /// @dev Deploy 
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
