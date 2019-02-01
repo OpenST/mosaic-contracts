@@ -36,15 +36,15 @@ class AnchorStateRootAssertion {
         assert.strictEqual(
             eventData._blockHeight.eq(blockHeight),
             true,
-            `Block height from event ${eventData._blockHeight} 
-            is different from expected ${blockHeight} `,
+            `Block height from event ${eventData._blockHeight}`
+            + ` is different from expected ${blockHeight} `,
         );
 
         assert.strictEqual(
             eventData._stateRoot,
             stateRoot,
-            `State root from event ${eventData._stateRoot} 
-            is different from expected ${stateRoot} `,
+            `State root from event ${eventData._stateRoot}`
+            + ` is different from expected ${stateRoot} `,
         );
     }
 }

@@ -31,7 +31,8 @@ class Anchor {
      * @param sourceWeb3 Web3 of source chain for which this anchor tracks
      * state root.
      * @param anchor Contract instance of anchor contract.
-     * @param organization Address of organization.
+     * @param organization Organization address of the organization that is
+     *                     responsible for anchoring the state root.
      */
     constructor(sourceWeb3, anchor, organization) {
         this.sourceWeb3 = sourceWeb3;

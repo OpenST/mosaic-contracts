@@ -88,8 +88,8 @@ class StakeAssertion {
         assert.strictEqual(
             expectedGatewayBaseTokenBalance.eq(finalBalances.baseToken.gateway),
             true,
-            `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.baseToken.gateway.toString(10)}`,
+            `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.baseToken.gateway.toString(10)}`,
         );
 
         const expectedGatewayTokenBalance = initialBalances.token.gateway
@@ -99,8 +99,8 @@ class StakeAssertion {
         assert.strictEqual(
             expectedGatewayTokenBalance.eq(finalBalances.token.gateway),
             true,
-            `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.token.gateway.toString(10)}`,
+            `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.token.gateway.toString(10)}`,
         );
 
         // Assert staker balance
@@ -111,8 +111,8 @@ class StakeAssertion {
         assert.strictEqual(
             expectedStakerBaseTokenBalance.eq(finalBalances.baseToken.staker),
             true,
-            `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.baseToken.staker.toString(10)}`,
+            `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.baseToken.staker.toString(10)}`,
         );
 
         const expectedStakerTokenBalance = initialBalances.token.staker
@@ -122,8 +122,8 @@ class StakeAssertion {
         assert.strictEqual(
             expectedStakerTokenBalance.eq(finalBalances.token.staker),
             true,
-            `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}
-           instead of ${finalBalances.token.staker.toString(10)}`,
+            `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.token.staker.toString(10)}`,
         );
     }
 

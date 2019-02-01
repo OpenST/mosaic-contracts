@@ -93,8 +93,8 @@ class ProgressMintAssertion {
         assert.strictEqual(
             expectedBeneficiaryBalance.eq(finalBalances.baseToken.beneficiary),
             true,
-            `Expected beneficiary base token balance ${expectedBeneficiaryBalance}
-           instead found ${finalBalances.baseToken.beneficiary} `,
+            `Expected beneficiary base token balance ${expectedBeneficiaryBalance}`
+           + ` instead found ${finalBalances.baseToken.beneficiary} `,
         );
 
         assert.strictEqual(
@@ -110,8 +110,8 @@ class ProgressMintAssertion {
         assert.strictEqual(
             expectedBaseTokenOSTPrimeBalance.eq(finalBalances.baseToken.ostPrime),
             true,
-            `Extend ost prime base token balance ${expectedBaseTokenOSTPrimeBalance}
-           instead found ${finalBalances.baseToken.ostPrime} `,
+            `Extend ost prime base token balance ${expectedBaseTokenOSTPrimeBalance}`
+           + ` instead found ${finalBalances.baseToken.ostPrime} `,
         );
 
         const expectedOSTPrimeContractERC20Balance = initialBalances.ostPrime.ostPrime
@@ -120,23 +120,23 @@ class ProgressMintAssertion {
         assert.strictEqual(
             expectedOSTPrimeContractERC20Balance.eq(finalBalances.ostPrime.ostPrime),
             true,
-            `Expected OST Prime contract ERC20 balance is ${expectedOSTPrimeContractERC20Balance}
-            instead found ${finalBalances.ostPrime.ostPrime}`,
+            `Expected OST Prime contract ERC20 balance is ${expectedOSTPrimeContractERC20Balance}`
+            + ` instead found ${finalBalances.ostPrime.ostPrime}`,
         );
 
         // Assert CoGateway balance
         assert.strictEqual(
             initialBalances.baseToken.cogateway.eq(finalBalances.baseToken.cogateway),
             true,
-            `CoGateway initial base token balance ${initialBalances.baseToken.cogateway}
-          should be equal to final balance ${finalBalances.baseToken.cogateway}`,
+            `CoGateway initial base token balance ${initialBalances.baseToken.cogateway}`
+          + ` should be equal to final balance ${finalBalances.baseToken.cogateway}`,
         );
 
         assert.strictEqual(
             initialBalances.ostPrime.cogateway.eq(finalBalances.ostPrime.cogateway),
             true,
-            `CoGateway initial ost prime ERC20 token balance ${initialBalances.ostPrime.cogateway}
-          should be equal to final balance ${finalBalances.ostPrime.cogateway}`,
+            `CoGateway initial ost prime ERC20 token balance ${initialBalances.ostPrime.cogateway}`
+          + ` should be equal to final balance ${finalBalances.ostPrime.cogateway}`,
         );
     }
 

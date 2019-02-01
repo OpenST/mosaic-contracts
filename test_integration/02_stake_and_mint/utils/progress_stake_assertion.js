@@ -92,8 +92,8 @@ class ProgressStakeAssertion {
         assert.strictEqual(
             expectedGatewayBaseTokenBalance.eq(finalBalances.baseToken.gateway),
             true,
-            `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.baseToken.gateway.toString(10)}`,
+            `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.baseToken.gateway.toString(10)}`,
         );
 
         const expectedGatewayTokenBalance = initialBalances.token.gateway
@@ -103,8 +103,8 @@ class ProgressStakeAssertion {
         assert.strictEqual(
             expectedGatewayTokenBalance.eq(finalBalances.token.gateway),
             true,
-            `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.token.gateway.toString(10)}`,
+            `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.token.gateway.toString(10)}`,
         );
 
         // Assert staker balance
@@ -115,8 +115,8 @@ class ProgressStakeAssertion {
         assert.strictEqual(
             expectedStakerBaseTokenBalance.eq(finalBalances.baseToken.staker),
             true,
-            `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}
-           instead of ${finalBalances.baseToken.staker.toString(10)}`,
+            `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.baseToken.staker.toString(10)}`,
         );
 
         const expectedStakerTokenBalance = initialBalances.token.staker;
@@ -125,20 +125,19 @@ class ProgressStakeAssertion {
         assert.strictEqual(
             expectedStakerTokenBalance.eq(finalBalances.token.staker),
             true,
-            `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}
-           instead of ${finalBalances.token.staker.toString(10)}`,
+            `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.token.staker.toString(10)}`,
         );
 
         // Assert stake valult balance.
-
         const expectedStakeVaultTokenBalance = initialBalances.token.stakeVault
             .add(stakeRequest.amount);
 
         assert.strictEqual(
             expectedStakeVaultTokenBalance.eq(finalBalances.token.stakeVault),
             true,
-            `Stake value token balance must be ${expectedStakeVaultTokenBalance} instead
-          of ${finalBalances.token.stakeVault}`,
+            `Stake value token balance must be ${expectedStakeVaultTokenBalance} instead`
+          + ` of ${finalBalances.token.stakeVault}`,
         );
 
         const expectedStakeVaultBaseTokenBalance = initialBalances.baseToken.stakeVault;
@@ -146,8 +145,8 @@ class ProgressStakeAssertion {
         assert.strictEqual(
             expectedStakeVaultBaseTokenBalance.eq(finalBalances.baseToken.stakeVault),
             true,
-            `Stake vault base token balance must be ${expectedStakeVaultTokenBalance} instead
-          of ${finalBalances.baseToken.stakeVault}`,
+            `Stake vault base token balance must be ${expectedStakeVaultTokenBalance} instead`
+          + ` of ${finalBalances.baseToken.stakeVault}`,
         );
     }
 
