@@ -1,26 +1,17 @@
 {
   "extends": [
-    "airbnb-base",
-    "prettier"
-  ],
-  "plugins": [
-    "prettier"
+    "airbnb-base"
   ],
   "rules": {
     "no-console": "off",
     "no-underscore-dangle": "off",
-    "no-plusplus": "off",
-    "no-await-in-loop": "off",
     "import/no-extraneous-dependencies": "off",
-    "max-len": [
-      "error",
-      79
-    ]
+    "strict": "off"
   },
   "env": {
     "mocha": true,
     "node": true,
-    "es6": true
+    "es6": false
   },
   "globals": {
     "artifacts": false,
