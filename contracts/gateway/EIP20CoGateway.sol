@@ -300,14 +300,14 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         (beneficiary_, stakeAmount_, mintedAmount_, rewardAmount_) =
-            progressMintInternal(_messageHash, initialGas, false, _unlockSecret);
+            progressMintInternal(_messageHash, initialGas, false, _unlockSecret, message);
     }
 
     /**
      * @notice Completes the mint process by providing the merkle proof
      *         instead of unlockSecret. In case the facilitator process is not
      *         able to complete the stake and mint process then this is an
-     *         alternative approach to complete the process
+     *         alternative approach to complete the process.
      *
      * @dev This can be called to prove that the outbox status of messageBox on
      *      Gateway is either declared or progressed.
@@ -373,11 +373,9 @@ contract EIP20CoGateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        (beneficiary_,
-        stakeAmount_,
-        mintedAmount_,
-        rewardAmount_) =
-        progressMintInternal(_messageHash, initialGas, true, bytes32(0));
+        (beneficiary_, stakeAmount_, mintedAmount_, rewardAmount_) =
+            progressMintInternal(_messageHash, initialGas, true, bytes32(0), message);
+
     }
 
     /**
@@ -1024,8 +1022,8 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice This is internal method for process minting contains common logic.
-     *         It doesn't mint reward if reward is 0.
+     * @notice This is internal method for process minting contains common
+     *         logic. It doesn't mint reward if reward is 0.
      *
      * @dev Message bus ensures correct execution sequence of methods and also
      *      provides safety mechanism for any possible re-entrancy attack.
@@ -1037,6 +1035,7 @@ contract EIP20CoGateway is GatewayBase {
      *                       with hashlock.
      * @param _unlockSecret Unlock secret to progress, zero in case of progress
      *                      with proof.
+     * @param _message Message object.
      *
      * @return  beneficiary_ Address to which the utility tokens will be
      *                      transferred after minting.
@@ -1051,7 +1050,8 @@ contract EIP20CoGateway is GatewayBase {
         bytes32 _messageHash,
         uint256 _initialGas,
         bool _proofProgress,
-        bytes32 _unlockSecret
+        bytes32 _unlockSecret,
+        MessageBus.Message storage _message
     )
         private
         returns (
@@ -1068,17 +1068,14 @@ contract EIP20CoGateway is GatewayBase {
             "Mint request must exist."
         );
 
-        MessageBus.Message storage message = messages[_messageHash];
-
         beneficiary_ = mint.beneficiary;
+        address payable payableBeneficiary = mint.beneficiary;
         stakeAmount_ = mint.amount;
 
-        address payable payableBeneficiary = mint.beneficiary;
-
-        (rewardAmount_, message.gasConsumed) = feeAmount(
-            message.gasConsumed,
-            message.gasLimit,
-            message.gasPrice,
+        (rewardAmount_, _message.gasConsumed) = feeAmount(
+            _message.gasConsumed,
+            _message.gasLimit,
+            _message.gasPrice,
             _initialGas
         );
 
@@ -1091,7 +1088,7 @@ contract EIP20CoGateway is GatewayBase {
 
         delete mints[_messageHash];
 
-        // Mint token after subtracting reward amount.
+        // Increase token supply after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             payableBeneficiary,
             mintedAmount_
@@ -1108,7 +1105,7 @@ contract EIP20CoGateway is GatewayBase {
         // Emit MintProgressed event.
         emit MintProgressed(
             _messageHash,
-            message.sender,
+            _message.sender,
             beneficiary_,
             stakeAmount_,
             mintedAmount_,
@@ -1124,6 +1121,7 @@ contract EIP20CoGateway is GatewayBase {
      *         code between progressRedeem and progressRedeemWithProof.
      *
      * @param _messageHash Message hash of redeem message.
+     * @param _message Message object.
      * @param _proofProgress True if progress with proof, false if progress
      *                       with hashlock.
      * @param _unlockSecret Unlock secret to progress, zero in case of progress
