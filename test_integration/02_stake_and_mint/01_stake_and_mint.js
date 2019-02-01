@@ -195,9 +195,9 @@ describe('Stake and mint', async () => {
 
 /**
  * Approve Gateway for stake amount.
- * @param token Token contract instance.
- * @param gateway Gateway contract instance.
- * @param stakeRequest stake request.
+ * @param {Object }token Token contract instance.
+ * @param {Object} gateway Gateway contract instance.
+ * @param {Object} stakeRequest stake request.
  * @return {Promise<void>}
  */
 async function approveGatewayForStakeAmount(token, gateway, stakeRequest) {
@@ -210,9 +210,9 @@ async function approveGatewayForStakeAmount(token, gateway, stakeRequest) {
 
 /**
  * Approve gateway for bounty.
- * @param baseToken Base token contract instance.
- * @param gateway Gateway contract instance.
- * @param stakeRequest stake request.
+ * @param {Object} baseToken Base token contract instance.
+ * @param {Object} gateway Gateway contract instance.
+ * @param {Object} stakeRequest stake request.
  * @return {Promise<void>}
  */
 async function approveGatewayForBounty(baseToken, gateway, stakeRequest) {
