@@ -28,9 +28,9 @@ class ProveGatewayAssertion {
      *
      * @param {Object} event Decoded event for Gateway Proven.
      * @param {BN} blockHeight Block height at which prove gateway is done.
-     * @param {String} storageRoot Storage root of gateway account at give
+     * @param {string} storageRoot Storage root of gateway account at give
      *                             height.
-     * @param {String}gateway Gateway address
+     * @param {string}gateway Gateway address
      */
     static verify(event, blockHeight, storageRoot, gateway) {
         const eventData = event.GatewayProven;

@@ -42,7 +42,7 @@ class ProofUtils {
 
     /**
      * Get proof for inbox
-     * @param {String} address Address of ethereum account for which proof needs
+     * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {String[]}keys Array of keys for a mapping in solidity.
      * @param {String }blockNumber Block number in hex.
@@ -85,11 +85,11 @@ class ProofUtils {
      * Get proof data
      *
      * @param {Web3} web3 web3 instance of chain from which proof is generated.
-     * @param {String} index Storage index.
-     * @param {String} address Address of ethereum account for which proof needs
+     * @param {string} index Storage index.
+     * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {String[]} keys Array of keys for a mapping in solidity.
-     * @param {String} blockNumber Block number in hex.
+     * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
@@ -119,10 +119,10 @@ class ProofUtils {
 
     /**
      * @param {Web3} web3 web3 instance of chain from which proof is generated.
-     * @param {String} address Address of ethereum account for which proof needs
+     * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {String[]} storageKeys Array of keys for a mapping in solidity.
-     * @param {String} blockNumber Block number in hex.
+     * @param {string} blockNumber Block number in hex.
      * @return {Promise<Proof>}
      */
     async _fetchProof(web3, address, storageKeys = [], blockNumber = 'latest') {
@@ -156,9 +156,9 @@ class ProofUtils {
     /**
      * Provides storage path.
      * @param {Web3} web3 web3 instance of chain from which proof is generated.
-     * @param {String} storageIndex Position of storage in the contract.
+     * @param {string} storageIndex Position of storage in the contract.
      * @param {String[]}mappings  list of keys in case storage is mapping.
-     * @return {String} Storage path.
+     * @return {string} Storage path.
      * @private
      */
     _storagePath(web3, storageIndex, mappings) {
@@ -190,7 +190,7 @@ class ProofUtils {
 
     /**
      *  Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
-     * @param {String} accountProof Account proof.
+     * @param {string} accountProof Account proof.
      * @return {string}
      * @private
      */

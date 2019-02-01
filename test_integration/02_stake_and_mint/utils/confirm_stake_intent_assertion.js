@@ -27,14 +27,14 @@ const assert = require('assert');
  * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
  *                  and mint process done.
  * @property {BN} gasLimit Gas limit that staker is ready to pay.
- * @property {String} staker Address of stake.
+ * @property {string} staker Address of stake.
  * @property {BN} bounty Bounty amount paid for stake and mint message
  *                       transfers.
  * @property {BN} nonce Stake nonce.
- * @property {String} beneficiary Address of beneficiary on auxiliary chain.
- * @property {String} hashLock Hash Lock provided by the staker.
- * @property {String} unlockSecret Unlock secret to unlock hash lock.
- * @property {String} messageHash Identifier for stake and mint process.
+ * @property {string} beneficiary Address of beneficiary on auxiliary chain.
+ * @property {string} hashLock Hash Lock provided by the staker.
+ * @property {string} unlockSecret Unlock secret to unlock hash lock.
+ * @property {string} messageHash Identifier for stake and mint process.
  * @property {BN} blockHeight Height at which anchor state root is done.
  */
 

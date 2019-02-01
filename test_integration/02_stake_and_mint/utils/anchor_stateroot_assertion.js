@@ -28,7 +28,7 @@ class AnchorStateRootAssertion {
      * This asserts StateRootAvailable event.
      * @param {Object} event  Deserialize event.
      * @param {Number} blockHeight Block Height at which state root is anchored.
-     * @param {String} stateRoot State root which is anchored.
+     * @param {string} stateRoot State root which is anchored.
      */
     static verify(event, blockHeight, stateRoot) {
         const eventData = event.StateRootAvailable;

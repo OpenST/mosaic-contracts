@@ -68,17 +68,6 @@ describe('Deploy', async () => {
         shared.auxiliary.organizationAddress = deployerAddressAuxiliary;
     });
 
-    after(async () => {
-        await shared.origin.addContract('EIP20Gateway');
-        await shared.origin.addContract('Anchor');
-        await shared.origin.addContract('EIP20StandardToken', 'Token');
-        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
-
-        await shared.auxiliary.addContract('EIP20CoGateway');
-        await shared.auxiliary.addContract('Anchor');
-        await shared.auxiliary.addContract('OSTPrime');
-    });
-
     let tokenAddressOrigin;
     let baseTokenAddressOrigin;
     it('correctly deploys branded token and base token on Origin', async () => {
@@ -105,6 +94,8 @@ describe('Deploy', async () => {
         /* Note that they are called Token and BaseToken! */
         shared.origin.contractAddresses.Token = tokenAddressOrigin;
         shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
+        await shared.origin.addContract('EIP20StandardToken', 'Token');
+        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
     });
 
     it('correctly deploys Gateway and CoGateway', async () => {
@@ -145,10 +136,16 @@ describe('Deploy', async () => {
             ...shared.auxiliary.contractAddresses,
             ...auxiliaryAddresses,
         };
+
+        await shared.origin.addContract('EIP20Gateway');
+        await shared.origin.addContract('Anchor');
+
+        await shared.auxiliary.addContract('EIP20CoGateway');
+        await shared.auxiliary.addContract('Anchor');
+        await shared.auxiliary.addContract('OSTPrime');
     });
 
-    it('activate gateway ', async () => {
-        await shared.origin.addContract('EIP20Gateway');
+    it('activates the gateway ', async () => {
         const gateway = shared.origin.contracts.EIP20Gateway;
 
         await gateway.activateGateway(
@@ -158,7 +155,6 @@ describe('Deploy', async () => {
     });
 
     it('initializes and sets co-gateway in ost prime', async () => {
-        await shared.auxiliary.addContract('OSTPrime');
         const ostPrime = shared.auxiliary.contracts.OSTPrime;
 
         await ostPrime.initialize({

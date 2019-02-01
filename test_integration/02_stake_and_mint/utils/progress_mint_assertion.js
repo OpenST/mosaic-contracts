@@ -28,14 +28,14 @@ const BN = require('bn.js');
  * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
  *                  and mint process done.
  * @property {BN} gasLimit Gas limit that staker is ready to pay.
- * @property {String} staker Address of stake.
+ * @property {string} staker Address of stake.
  * @property {BN} bounty Bounty amount paid for stake and mint message
  *                       transfers.
  * @property {BN} nonce Stake nonce.
- * @property {String} beneficiary Address of beneficiary on auxiliary chain.
- * @property {String} hashLock Hash Lock provided by the staker.
- * @property {String} unlockSecret Unlock secret to unlock hash lock.
- * @property {String} messageHash Identifier for stake and mint process.
+ * @property {string} beneficiary Address of beneficiary on auxiliary chain.
+ * @property {string} hashLock Hash Lock provided by the staker.
+ * @property {string} unlockSecret Unlock secret to unlock hash lock.
+ * @property {string} messageHash Identifier for stake and mint process.
  * @property {BN} blockHeight Height at which anchor state root is done.
  */
 
@@ -43,11 +43,11 @@ const BN = require('bn.js');
  * BaseToken(ETH) and OST Prime ERC20  balance of beneficiary, ostPrime and
  * coGateway.
  * @typedef {Object} balances
- * @property  balances.ostPrime.cogateway OST Prime ERC20 balance of
+ * @property balances.ostPrime.cogateway OST Prime ERC20 balance of
  *                                      cogateway contract.
- * @property  balances.ostPrime.beneficiary OST Prime ERC20 balance of
+ * @property balances.ostPrime.beneficiary OST Prime ERC20 balance of
  *                                      beneficiary.
- * @property  balances.ostPrime.ostPrime OST Prime ERC20 balance of
+ * @property balances.ostPrime.ostPrime OST Prime ERC20 balance of
  *                                      ostPrime contract.
  * @property balances.baseToken.cogateway Base token(ETH) balance of
  *                                      cogateway.
@@ -89,7 +89,7 @@ class ProgressMintAssertion {
 
     /**
      * This captures ERC20 OSTPrime and base token(ETH) balances.
-     * @param {String} beneficiary
+     * @param {string} beneficiary
      * @return {Promise<balances>} Balances before progress mint.
      */
     async captureBalances(beneficiary) {
@@ -230,7 +230,7 @@ class ProgressMintAssertion {
 
     /**
      * Returns ETH balance wrapped in BN.
-     * @param {String} address Address for which balance is requested.
+     * @param {string} address Address for which balance is requested.
      * @return {Promise<BN>} ETH Balance.
      * @private
      */

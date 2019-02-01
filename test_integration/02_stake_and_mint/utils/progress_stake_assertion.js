@@ -27,14 +27,14 @@ const assert = require('assert');
  * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
  *                  and mint process done.
  * @property {BN} gasLimit Gas limit that staker is ready to pay.
- * @property {String} staker Address of stake.
+ * @property {string} staker Address of stake.
  * @property {BN} bounty Bounty amount paid for stake and mint message
  *                       transfers.
  * @property {BN} nonce Stake nonce.
- * @property {String} beneficiary Address of beneficiary on auxiliary chain.
- * @property {String} hashLock Hash Lock provided by the staker.
- * @property {String} unlockSecret Unlock secret to unlock hash lock.
- * @property {String} messageHash Identifier for stake and mint process.
+ * @property {string} beneficiary Address of beneficiary on auxiliary chain.
+ * @property {string} hashLock Hash Lock provided by the staker.
+ * @property {string} unlockSecret Unlock secret to unlock hash lock.
+ * @property {string} messageHash Identifier for stake and mint process.
  * @property {BN} blockHeight Height at which anchor state root is done.
  */
 
@@ -42,9 +42,9 @@ const assert = require('assert');
  * BaseToken(ETH) and token ERC20 balance of gateway, staker and
  * stakeVault.
  * @typedef {Object} Balances
- * @property  balances.token.gateway ERC20 balance of gateway contract.
- * @property  balances.token.staker  ERC20 balance of beneficiary.
- * @property  balances.token.stakeVault ERC20 balance of stakeVault contract.
+ * @property balances.token.gateway ERC20 balance of gateway contract.
+ * @property balances.token.staker  ERC20 balance of beneficiary.
+ * @property balances.token.stakeVault ERC20 balance of stakeVault contract.
  * @property balances.baseToken.gateway Base token(ETH) balance of gateway.
  * @property balances.baseToken.staker Base token(ETH) balance of staker.
  * @property balances.baseToken.stakeVault Base token(ETH) balance of stakeVault
@@ -81,7 +81,7 @@ class ProgressStakeAssertion {
     /**
      * This capture base token and token balance of gateway, staker and
      * stakeVault.
-     * @param {String} staker Address of staker.
+     * @param {string} staker Address of staker.
      * @return {Promise<{Balances}>} Base token and token balances.
      */
     async captureBalances(staker) {

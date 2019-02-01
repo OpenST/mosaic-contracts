@@ -29,10 +29,9 @@ class Anchor {
     /**
      * Constructor
      * @param {Web3} sourceWeb3 Web3 of source chain for which this anchor
-     * tracks
-     * state root.
+     *                          tracks state root.
      * @param {Object} anchor Contract instance of anchor contract.
-     * @param {String} organization Organization address of the organization
+     * @param {string} organization Organization address of the organization
      *                 that is responsible for anchoring the state root.
      */
     constructor(sourceWeb3, anchor, organization) {
@@ -43,7 +42,7 @@ class Anchor {
 
     /**
      * This anchors stateroot at a given block height.
-     * @param {Number | String} atBlock Block at which state root needs to
+     * @param {number | string} atBlock Block at which state root needs to
      *                           anchor. Default
      * value is latest.
      * @return {Promise<blockHeight>} Returns blockHeight at which state
