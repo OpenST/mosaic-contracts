@@ -23,11 +23,11 @@ const shared = require('../shared');
 const Utils = require('../../test/test_lib/utils');
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
-const AssertStake = require('./utils/assert_stake');
-const AssertProveGateway = require('./utils/assert_prove_gateway');
-const AssertConfirmStakeIntent = require('./utils/assert_confirm_stake_intent');
-const AssertProgressStake = require('./utils/assert_progress_stake');
-const AssertProgressMint = require('./utils/assert_progress_mint');
+const StakeAssertion = require('./utils/stake_assertion');
+const ProveGatewayAssertion = require('./utils/prove_gateway_assertion');
+const ConfirmStakeIntentAssertion = require('./utils/confirm_stake_intent_assertion');
+const ProgressStakeAssertion = require('./utils/progress_stake_assertion');
+const ProgressMintAssertion = require('./utils/progress_mint_assertion');
 const ProofUtils = require('./utils/proof_utils');
 const Anchor = require('./utils/anchor');
 
@@ -74,9 +74,9 @@ describe('Stake and mint', async () => {
             unlockSecret: hasher.s,
         };
 
-        assertStake = new AssertStake(gateway, token, baseToken);
-        assertProgressStake = new AssertProgressStake(gateway, token, baseToken);
-        assertProgressMint = new AssertProgressMint(auxiliaryWeb3, cogateway, ostPrime);
+        assertStake = new StakeAssertion(gateway, token, baseToken);
+        assertProgressStake = new ProgressStakeAssertion(gateway, token, baseToken);
+        assertProgressMint = new ProgressMintAssertion(auxiliaryWeb3, cogateway, ostPrime);
         proofUtils = new ProofUtils(originWeb3, auxiliaryWeb3);
         auxiliaryAnchor = new Anchor(
             originWeb3,
@@ -88,19 +88,10 @@ describe('Stake and mint', async () => {
     it('stakes', async () => {
         // Capture initial token and base token balance of staker and gateway.
         const initialBalances = await assertStake.captureBalances(stakeRequest.staker);
-        // Approve gateway for stake amount.
-        await token.approve(
-            gateway.address,
-            stakeRequest.amount,
-            { from: stakeRequest.staker },
-        );
 
-        // Approve gateway for bounty.
-        await baseToken.approve(
-            gateway.address,
-            stakeRequest.bounty,
-            { from: stakeRequest.staker },
-        );
+        await approveGatewayForStakeAmount(token, gateway, stakeRequest);
+        await approveGatewayForBounty(baseToken, gateway, stakeRequest);
+
         const tx = await gateway.stake(
             stakeRequest.amount,
             stakeRequest.beneficiary,
@@ -141,7 +132,7 @@ describe('Stake and mint', async () => {
         );
 
         let event = EventDecoder.getEvents(tx, cogateway);
-        AssertProveGateway.verify(
+        ProveGatewayAssertion.verify(
             event,
             stakeRequest.blockHeight,
             outboxProof.storageHash,
@@ -163,7 +154,7 @@ describe('Stake and mint', async () => {
 
         event = EventDecoder.getEvents(tx, cogateway);
         // Assert event.
-        AssertConfirmStakeIntent.verify(event, stakeRequest);
+        ConfirmStakeIntentAssertion.verify(event, stakeRequest);
     });
 
     it('progresses stake', async () => {
@@ -201,3 +192,33 @@ describe('Stake and mint', async () => {
         await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint);
     });
 });
+
+/**
+ * Approve Gateway for stake amount.
+ * @param token Token contract instance.
+ * @param gateway Gateway contract instance.
+ * @param stakeRequest stake request.
+ * @return {Promise<void>}
+ */
+async function approveGatewayForStakeAmount(token, gateway, stakeRequest) {
+    await token.approve(
+        gateway.address,
+        stakeRequest.amount,
+        { from: stakeRequest.staker },
+    );
+}
+
+/**
+ * Approve gateway for bounty.
+ * @param baseToken Base token contract instance.
+ * @param gateway Gateway contract instance.
+ * @param stakeRequest stake request.
+ * @return {Promise<void>}
+ */
+async function approveGatewayForBounty(baseToken, gateway, stakeRequest) {
+    await baseToken.approve(
+        gateway.address,
+        stakeRequest.bounty,
+        { from: stakeRequest.staker },
+    );
+}

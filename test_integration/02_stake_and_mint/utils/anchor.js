@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
-const AssertAnchorStateRoot = require('./assert_anchor_stateroot');
+const AnchorStateRootAssertion = require('./anchor_stateroot_assertion');
 const EventDecoder = require('../../../test/test_lib/event_decoder');
 
 /**
@@ -57,7 +57,7 @@ class Anchor {
         );
 
         const event = EventDecoder.getEvents(tx, this.anchor);
-        AssertAnchorStateRoot.verify(
+        AnchorStateRootAssertion.verify(
             event,
             blockHeight,
             stateRoot,

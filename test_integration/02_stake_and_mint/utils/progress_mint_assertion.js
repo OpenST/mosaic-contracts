@@ -24,7 +24,7 @@ const BN = require('bn.js');
 /**
  *  Class to assert event and balances after progress mint
  */
-class AssertProgressMint {
+class ProgressMintAssertion {
     /**
      *
      * @param web3 Auxiliary web3
@@ -49,7 +49,7 @@ class AssertProgressMint {
      * beneficiary, ostPrime and coGateway.
      */
     async verify(event, stakeRequest, initialBalances) {
-        AssertProgressMint._assertProgressMintEvent(event, stakeRequest);
+        ProgressMintAssertion._assertProgressMintEvent(event, stakeRequest);
 
         await this._assertBalancesForMint(stakeRequest, initialBalances);
     }
@@ -207,4 +207,4 @@ class AssertProgressMint {
     }
 }
 
-module.exports = AssertProgressMint;
+module.exports = ProgressMintAssertion;

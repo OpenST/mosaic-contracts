@@ -23,7 +23,7 @@ const assert = require('assert');
 /**
  *  Class to assert confirm stake intent.
  */
-class AssertConfirmStakeIntent {
+class ConfirmStakeIntentAssertion {
     /**
      *  This verifies event.
      *
@@ -80,4 +80,4 @@ class AssertConfirmStakeIntent {
     }
 }
 
-module.exports = AssertConfirmStakeIntent;
+module.exports = ConfirmStakeIntentAssertion;

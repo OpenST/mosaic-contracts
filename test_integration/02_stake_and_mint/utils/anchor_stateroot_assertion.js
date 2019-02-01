@@ -21,45 +21,32 @@
 const assert = require('assert');
 
 /**
- *  Class to assert prove gateway.
+ *  Class to assert anchor state root.
  */
-class AssertProveGateway {
+class AnchorStateRootAssertion {
     /**
-     *
-     * @param event Decoded event.
-     * @param blockHeight Block height at which prove gateway is done.
-     * @param storageRoot Storage root of gateway account at give height.
-     * @param gateway Gateway address
+     * This asserts StateRootAvailable event.
+     * @param event  Deserialize event.
+     * @param blockHeight Block Height at which state root is anchored.
+     * @param stateRoot State root which is anchored.
      */
-    static verify(event, blockHeight, storageRoot, gateway) {
-        const eventData = event.GatewayProven;
+    static verify(event, blockHeight, stateRoot) {
+        const eventData = event.StateRootAvailable;
 
         assert.strictEqual(
             eventData._blockHeight.eq(blockHeight),
             true,
-            `Block height from event ${eventData._blockHeight.toString(10)} 
+            `Block height from event ${eventData._blockHeight} 
             is different from expected ${blockHeight} `,
         );
 
         assert.strictEqual(
-            eventData._storageRoot,
-            storageRoot,
-            `Storage root from event ${eventData._storageRoot} 
-            is different from expected ${storageRoot} `,
-        );
-
-        assert.strictEqual(
-            eventData._wasAlreadyProved,
-            false,
-            'Already proven should be false',
-        );
-
-        assert.strictEqual(
-            eventData._gateway,
-            gateway,
-            'Proven gateway must match.',
+            eventData._stateRoot,
+            stateRoot,
+            `State root from event ${eventData._stateRoot} 
+            is different from expected ${stateRoot} `,
         );
     }
 }
 
-module.exports = AssertProveGateway;
+module.exports = AnchorStateRootAssertion;
