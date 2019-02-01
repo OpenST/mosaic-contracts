@@ -147,28 +147,28 @@ describe('Deploy', async () => {
         };
     });
 
-    it('active gateway ', async () => {
+    it('activate gateway ', async () => {
         await shared.origin.addContract('EIP20Gateway');
         const gateway = shared.origin.contracts.EIP20Gateway;
 
         await gateway.activateGateway(
             shared.auxiliary.contractAddresses.EIP20CoGateway,
-            { from: deployerAddressOrigin },
+            { from: shared.origin.organizationAddress },
         );
     });
 
-    it('initialize and set co-gateway in ost prime', async () => {
+    it('initializes and sets co-gateway in ost prime', async () => {
         await shared.auxiliary.addContract('OSTPrime');
         const ostPrime = shared.auxiliary.contracts.OSTPrime;
 
         await ostPrime.initialize({
-            from: deployerAddressAuxiliary,
+            from: shared.auxiliary.organizationAddress,
             value: TOKENS_MAX,
         });
 
         await ostPrime.setCoGateway(
             shared.auxiliary.contractAddresses.EIP20CoGateway,
-            { from: deployerAddressAuxiliary },
+            { from: shared.auxiliary.organizationAddress },
         );
     });
 });

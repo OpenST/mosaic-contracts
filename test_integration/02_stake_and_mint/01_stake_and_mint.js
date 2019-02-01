@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,10 +81,11 @@ describe('Stake and mint', async () => {
         auxiliaryAnchor = new Anchor(
             originWeb3,
             shared.auxiliary.contracts.Anchor,
+            shared.auxiliary.organizationAddress,
         );
     });
 
-    it('stake', async () => {
+    it('stakes', async () => {
         // Capture initial token and base token balance of staker and gateway.
         const initialBalances = await assertStake.captureBalances(stakeRequest.staker);
         // Approve gateway for stake amount.
@@ -117,11 +118,10 @@ describe('Stake and mint', async () => {
         stakeRequest.messageHash = event.StakeIntentDeclared._messageHash;
     });
 
-    it('confirm stake', async () => {
+    it('confirms stake', async () => {
         // Anchor state root.
         const blockNumber = await auxiliaryAnchor.anchorStateRoot(
             'latest',
-            auxiliaryAccounts[0],
         );
         // Generate outbox proof for block height for which state root is
         // anchored.
@@ -166,7 +166,7 @@ describe('Stake and mint', async () => {
         AssertConfirmStakeIntent.verify(event, stakeRequest);
     });
 
-    it('progress stake', async () => {
+    it('progresses stake', async () => {
         // Capture initial token and base token balance of staker and gateway.
         const initialBalancesBeforeProgress = await assertProgressStake.captureBalances(
             stakeRequest.staker,
@@ -183,7 +183,7 @@ describe('Stake and mint', async () => {
         await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress);
     });
 
-    it('progress mint', async () => {
+    it('progresses mint', async () => {
         // Capture initial OST prime ERC20 and base token balance of
         // beneficiary, OST prime contract address and gateway.
         const initialBalancesBeforeMint = await assertProgressMint.captureBalances(

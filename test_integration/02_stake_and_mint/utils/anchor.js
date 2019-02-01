@@ -31,29 +31,29 @@ class Anchor {
      * @param sourceWeb3 Web3 of source chain for which this anchor tracks
      * state root.
      * @param anchor Contract instance of anchor contract.
+     * @param organization Address of organization.
      */
-    constructor(sourceWeb3, anchor) {
+    constructor(sourceWeb3, anchor, organization) {
         this.sourceWeb3 = sourceWeb3;
         this.anchor = anchor;
+        this.organization = organization;
     }
 
     /**
      *
      * @param atBlock Block at which state root needs to anchor. Default
      * value is latest.
-     * @param owner Address of owner, reponsible for anchor state root.
      * @return {Promise<blockHeight>} returns blockHeight at which state
      * root is anchored.
      */
-    async anchorStateRoot(atBlock = 'latest', owner) {
+    async anchorStateRoot(atBlock = 'latest') {
         const block = await this.sourceWeb3.eth.getBlock(atBlock);
         const blockHeight = new BN(block.number);
         const stateRoot = block.stateRoot;
-
         const tx = await this.anchor.anchorStateRoot(
             blockHeight,
             stateRoot,
-            { from: owner },
+            { from: this.organization },
         );
 
         const event = EventDecoder.getEvents(tx, this.anchor);
