@@ -546,8 +546,9 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.MessageStatus outboxMessageStatus =
+          messageBox.outbox[_messageHash];
 
-        redeemer_ = message.sender;
         redeemAmount_ = redeems[_messageHash].amount;
 
         MessageBus.progressOutboxWithProof(
@@ -559,9 +560,50 @@ contract EIP20CoGateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
+        uint256 bountyAmount = redeems[_messageHash].bounty;
         (redeemer_, redeemAmount_) =
             progressRedeemInternal(_messageHash, message, true, bytes32(0));
 
+        // Return revert penalty to redeemer if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToRedeemer(
+            address(uint160(redeemer_)), // cast to address payable
+            outboxMessageStatus,
+            MessageBus.MessageStatus(_messageStatus),
+            bountyAmount
+        );
+    }
+
+    /**
+     * @notice Return the revert penalty to the redeemer. Only valid for
+     *         a message transition from DeclaredRevocation -> Progressed.
+     *
+     * @dev Should only be called from progressRedeemWithProof. This function
+     *      exists to avoid a stack too deep error.
+     *
+     * @param _redeemer Redeemer address.
+     * @param _outboxMessageStatus Message status before progressing.
+     * @param _inboxMessageStatus Message status after progressing.
+     * @param _bountyAmount Bounty amount to use for calculating penalty.
+     */
+    function tryReturnPenaltyToRedeemer(
+        address payable _redeemer,
+        MessageBus.MessageStatus _outboxMessageStatus,
+        MessageBus.MessageStatus _inboxMessageStatus,
+        uint256 _bountyAmount
+    )
+      private
+    {
+        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
+            return;
+        }
+        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
+            return;
+        }
+
+        // Penalty charged to staker for revert redeem.
+        uint256 penalty = penaltyFromBounty(_bountyAmount);
+        _redeemer.transfer(penalty);
     }
 
     /**

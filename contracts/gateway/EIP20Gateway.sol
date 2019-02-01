@@ -498,9 +498,9 @@ contract EIP20Gateway is GatewayBase {
         // Return revert penalty to staker if message is already progressed
         // and can't be reverted anymore.
         tryReturnPenaltyToStaker(
-            message.sender,
+            staker_,
             outboxMessageStatus,
-            MessageBus.MessageStatus(_messageStatus), // inbox message status
+            MessageBus.MessageStatus(_messageStatus),
             bountyAmount
         );
     }
