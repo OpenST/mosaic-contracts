@@ -32,8 +32,8 @@ const MESSAGE_INBOX_OFFSET = '8';
 class ProofUtils {
     /**
      *
-     * @param sourceWeb3 Web3 instance connected to source chain.
-     * @param targetWeb3 Web3 instance connected to target chain.
+     * @param {Web3} sourceWeb3 Web3 instance connected to source chain.
+     * @param {Web3} targetWeb3 Web3 instance connected to target chain.
      */
     constructor(sourceWeb3, targetWeb3) {
         this.sourceWeb3 = sourceWeb3;
@@ -42,11 +42,10 @@ class ProofUtils {
 
     /**
      * Get proof for inbox
-     *
-     * @param address Address of ethereum account for which proof needs to be
-     *                generated.
-     * @param keys Array of keys for a mapping in solidity.
-     * @param blockNumber Block number.
+     * @param {String} address Address of ethereum account for which proof needs
+     *                         to be generated.
+     * @param {String[]}keys Array of keys for a mapping in solidity.
+     * @param {String }blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
@@ -85,12 +84,12 @@ class ProofUtils {
     /**
      * Get proof data
      *
-     * @param web3 web3 instance of chain from which proof is generated.
-     * @param index Storage index.
-     * @param address Address of ethereum account for which proof needs to be
-     *                generated.
-     * @param keys Array of keys for a mapping in solidity.
-     * @param blockNumber Block number.
+     * @param {Web3} web3 web3 instance of chain from which proof is generated.
+     * @param {String} index Storage index.
+     * @param {String} address Address of ethereum account for which proof needs
+     *                         to be generated.
+     * @param {String[]} keys Array of keys for a mapping in solidity.
+     * @param {String} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
@@ -119,11 +118,11 @@ class ProofUtils {
     }
 
     /**
-     * @param web3 web3 instance of chain from which proof is generated.
-     * @param address Address of ethereum account for which proof needs to be
-     *                generated.
-     * @param storageKeys Array of keys for a mapping in solidity.
-     * @param blockNumber Block number.
+     * @param {Web3} web3 web3 instance of chain from which proof is generated.
+     * @param {String} address Address of ethereum account for which proof needs
+     *                         to be generated.
+     * @param {String[]} storageKeys Array of keys for a mapping in solidity.
+     * @param {String} blockNumber Block number in hex.
      * @return {Promise<Proof>}
      */
     async _fetchProof(web3, address, storageKeys = [], blockNumber = 'latest') {
@@ -155,11 +154,11 @@ class ProofUtils {
     }
 
     /**
-     *
-     * @param web3 web3 instance of chain from which proof is generated.
-     * @param storageIndex Position of storage in the contract.
-     * @param mappings  list of keys in case storage is mapping.
-     * @return {*|string} Storage path.
+     * Provides storage path.
+     * @param {Web3} web3 web3 instance of chain from which proof is generated.
+     * @param {String} storageIndex Position of storage in the contract.
+     * @param {String[]}mappings  list of keys in case storage is mapping.
+     * @return {String} Storage path.
      * @private
      */
     _storagePath(web3, storageIndex, mappings) {
@@ -178,9 +177,9 @@ class ProofUtils {
     }
 
     /**
-     *
-     * @param proof Array of nodes representing merkel proof.
-     * @return {string | *} Serialized proof.
+     * Flatten the array of nodes.
+     * @param {Object} proof Array of nodes representing merkel proof.
+     * @return {string} Serialized proof.
      * @private
      */
     _serializeProof(proof) {
@@ -191,7 +190,7 @@ class ProofUtils {
 
     /**
      *  Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
-     * @param accountProof
+     * @param {String} accountProof Account proof.
      * @return {string}
      * @private
      */

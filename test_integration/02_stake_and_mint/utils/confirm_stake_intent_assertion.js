@@ -21,17 +21,31 @@
 const assert = require('assert');
 
 /**
+ * Stake Request object contains all the properties for stake and mint flow.
+ * @typedef {Object} StakeRequest
+ * @property {BN} amount Stake amount.
+ * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
+ *                  and mint process done.
+ * @property {BN} gasLimit Gas limit that staker is ready to pay.
+ * @property {String} staker Address of stake.
+ * @property {BN} bounty Bounty amount paid for stake and mint message
+ *                       transfers.
+ * @property {BN} nonce Stake nonce.
+ * @property {String} beneficiary Address of beneficiary on auxiliary chain.
+ * @property {String} hashLock Hash Lock provided by the staker.
+ * @property {String} unlockSecret Unlock secret to unlock hash lock.
+ * @property {String} messageHash Identifier for stake and mint process.
+ * @property {BN} blockHeight Height at which anchor state root is done.
+ */
+
+/**
  *  Class to assert confirm stake intent.
  */
 class ConfirmStakeIntentAssertion {
     /**
      *  This verifies event.
-     *
-     * @param event Event object after decoding.
-     * @param stakeRequest Stake request. {amount: *, gasPrice: *,gasLimit:*
-     * , hashLock: *, unlockSecret:*, staker:*, bounty:*, nonce:*,
-      * beneficiary:*}
-     *
+     * @param {Object} event Event object after decoding.
+     * @param {StakeRequest} stakeRequest Stake request parameters.
      */
     static verify(event, stakeRequest) {
         const eventData = event.StakeIntentConfirmed;

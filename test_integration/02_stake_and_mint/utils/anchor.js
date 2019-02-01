@@ -27,12 +27,13 @@ const EventDecoder = require('../../../test/test_lib/event_decoder');
  */
 class Anchor {
     /**
-     *
-     * @param sourceWeb3 Web3 of source chain for which this anchor tracks
+     * Constructor
+     * @param {Web3} sourceWeb3 Web3 of source chain for which this anchor
+     * tracks
      * state root.
-     * @param anchor Contract instance of anchor contract.
-     * @param organization Organization address of the organization that is
-     *                     responsible for anchoring the state root.
+     * @param {Object} anchor Contract instance of anchor contract.
+     * @param {String} organization Organization address of the organization
+     *                 that is responsible for anchoring the state root.
      */
     constructor(sourceWeb3, anchor, organization) {
         this.sourceWeb3 = sourceWeb3;
@@ -41,11 +42,12 @@ class Anchor {
     }
 
     /**
-     *
-     * @param atBlock Block at which state root needs to anchor. Default
+     * This anchors stateroot at a given block height.
+     * @param {Number | String} atBlock Block at which state root needs to
+     *                           anchor. Default
      * value is latest.
-     * @return {Promise<blockHeight>} returns blockHeight at which state
-     * root is anchored.
+     * @return {Promise<blockHeight>} Returns blockHeight at which state
+     *                                root is anchored.
      */
     async anchorStateRoot(atBlock = 'latest') {
         const block = await this.sourceWeb3.eth.getBlock(atBlock);
