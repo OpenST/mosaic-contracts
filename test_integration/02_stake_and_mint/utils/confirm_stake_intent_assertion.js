@@ -25,7 +25,7 @@ const assert = require('assert');
  * @typedef {Object} StakeRequest
  * @property {BN} amount Stake amount.
  * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
- *                  and mint process done.
+ *                         and mint process done.
  * @property {BN} gasLimit Gas limit that staker is ready to pay.
  * @property {string} staker Address of stake.
  * @property {BN} bounty Bounty amount paid for stake and mint message

@@ -26,7 +26,7 @@ const BN = require('bn.js');
  * @typedef {Object} StakeRequest
  * @property {BN} amount Stake amount.
  * @property {BN} gasPrice Gas price that staker is ready to pay to get the stake
- *                  and mint process done.
+ *                         and mint process done.
  * @property {BN} gasLimit Gas limit that staker is ready to pay.
  * @property {string} staker Address of stake.
  * @property {BN} bounty Bounty amount paid for stake and mint message
@@ -44,17 +44,17 @@ const BN = require('bn.js');
  * coGateway.
  * @typedef {Object} balances
  * @property balances.ostPrime.cogateway OST Prime ERC20 balance of
- *                                      cogateway contract.
+ *                                       cogateway contract.
  * @property balances.ostPrime.beneficiary OST Prime ERC20 balance of
- *                                      beneficiary.
+ *                                         beneficiary.
  * @property balances.ostPrime.ostPrime OST Prime ERC20 balance of
  *                                      ostPrime contract.
  * @property balances.baseToken.cogateway Base token(ETH) balance of
- *                                      cogateway.
+ *                                        cogateway.
  * @property balances.baseToken.beneficiary Base token(ETH) balance of
- *                                      beneficiary.
+ *                                          beneficiary.
  * @property balances.baseToken.ostPrime Base token(ETH) balance of ostPrime
- *                                      contract.
+ *                                       contract.
  */
 
 /**
@@ -79,7 +79,7 @@ class ProgressMintAssertion {
      * @param {Object} event Event object after decoding.
      * @param {StakeRequest} stakeRequest Stake request.
      * @param {balance} initialBalances Initial baseToken and token balances of
-     * beneficiary, ostPrime and coGateway.
+     *                                  beneficiary, ostPrime and coGateway.
      */
     async verify(event, stakeRequest, initialBalances) {
         ProgressMintAssertion._assertProgressMintEvent(event, stakeRequest);
@@ -111,8 +111,8 @@ class ProgressMintAssertion {
      * This asserts balances of beneficiary, ostPrime and coGateway after
      * progress mint.
      * @param {StakeRequest} stakeRequest Stake request parameters.
-     * @param {balances} initialBalances Balances of beneficiary,
-     *                   ostPrime and coGateway before progress mint.
+     * @param {balances} initialBalances Balances of beneficiary, ostPrime and
+     *                                   coGateway before progress mint.
      * @private
      */
     async _assertBalancesForMint(stakeRequest, initialBalances) {
