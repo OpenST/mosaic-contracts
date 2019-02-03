@@ -44,8 +44,8 @@ class ProofUtils {
      * Get proof for inbox
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
-     * @param {String[]}keys Array of keys for a mapping in solidity.
-     * @param {String }blockNumber Block number in hex.
+     * @param {string[]} keys Array of keys for a mapping in solidity.
+     * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
@@ -63,10 +63,10 @@ class ProofUtils {
     /**
      * Get proof for outbox
      *
-     * @param address Address of ethereum account for which proof needs to be
-     *                generated.
-     * @param keys Array of keys for a mapping in solidity.
-     * @param blockNumber Block number.
+     * @param {string} address Address of ethereum account for which proof needs
+     *                         to be generated.
+     * @param {string[]} keys Array of keys for a mapping in solidity.
+     * @param {string} blockNumber Block number.
      *
      * @return {Object} Proof data.
      */
@@ -88,7 +88,7 @@ class ProofUtils {
      * @param {string} index Storage index.
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
-     * @param {String[]} keys Array of keys for a mapping in solidity.
+     * @param {string[]} keys Array of keys for a mapping in solidity.
      * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
@@ -121,7 +121,7 @@ class ProofUtils {
      * @param {Web3} web3 web3 instance of chain from which proof is generated.
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
-     * @param {String[]} storageKeys Array of keys for a mapping in solidity.
+     * @param {string[]} storageKeys Array of keys for a mapping in solidity.
      * @param {string} blockNumber Block number in hex.
      * @return {Promise<Proof>}
      */
@@ -157,7 +157,7 @@ class ProofUtils {
      * Provides storage path.
      * @param {Web3} web3 web3 instance of chain from which proof is generated.
      * @param {string} storageIndex Position of storage in the contract.
-     * @param {String[]}mappings  list of keys in case storage is mapping.
+     * @param {string[]} mappings  list of keys in case storage is mapping.
      * @return {string} Storage path.
      * @private
      */

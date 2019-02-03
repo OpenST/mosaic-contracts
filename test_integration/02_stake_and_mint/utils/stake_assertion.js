@@ -57,7 +57,7 @@ class StakeAssertion {
     /**
      * Constructor.
      * @param {Object} gateway Truffle gateway instance.
-     * @param {Object}token Truffle token instance.
+     * @param {Object} token Truffle token instance.
      * @param {Object} baseToken Truffle baseToken instance.
      */
     constructor(gateway, token, baseToken) {
