@@ -26,6 +26,8 @@ const ProofUtils = require('../lib/proof_utils');
 const Anchor = require('../lib/anchor');
 const RedeemAssertion = require('./utils/redeem_assertion');
 const ConfirmRedeemIntentAssertion = require('./utils/confirm_redeem_intent_assertion');
+const ProgressRedeemAssertion = require('./utils/progress_redeem_assertion');
+const ProgressUnstakeAssertion = require('./utils/progress_unstake_assertion');
 const ProveGatewayAssertion = require('../lib/prove_gateway_assertion');
 
 describe('Redeem and Unstake', async () => {
@@ -44,6 +46,8 @@ describe('Redeem and Unstake', async () => {
     let redeemRequest;
 
     let redeemAssertion;
+    let progressRedeemAssertion;
+    let progressUnstakeAssertion;
     let proofUtils;
 
     before(async () => {
@@ -78,6 +82,16 @@ describe('Redeem and Unstake', async () => {
         );
 
         redeemAssertion = new RedeemAssertion(cogateway, ostPrime, auxiliaryWeb3);
+        progressRedeemAssertion = new ProgressRedeemAssertion(
+            cogateway,
+            ostPrime,
+            auxiliaryWeb3,
+        );
+        progressUnstakeAssertion = new ProgressUnstakeAssertion(
+            gateway,
+            token,
+            baseToken,
+        );
         proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
     });
 
@@ -105,14 +119,12 @@ describe('Redeem and Unstake', async () => {
             },
         );
 
-        const transactionHash = response.tx;
-        const transaction = await auxiliaryWeb3.eth.getTransaction(transactionHash);
+        const gasConsumptionInRedeem = await getTransactionGasConsumption(
+            response,
+            auxiliaryWeb3,
+        );
 
         const event = EventDecoder.getEvents(response, cogateway);
-
-        const gasUsed = new BN(response.receipt.gasUsed);
-        const gasPrice = new BN(transaction.gasPrice);
-        const gasConsumptionInRedeem = gasUsed.mul(gasPrice);
 
         await redeemAssertion.verify(
             event,
@@ -172,16 +184,57 @@ describe('Redeem and Unstake', async () => {
     });
 
     it('progresses redeem', async () => {
+        const initialBalanceBeforeProgress = await progressRedeemAssertion.captureBalances(
+            redeemRequest.redeemer,
+        );
 
+        const response = await cogateway.progressRedeem(
+            redeemRequest.messageHash,
+            redeemRequest.unlockSecret,
+            { from: redeemRequest.redeemer },
+        );
+
+        const gasConsumptionInProgress = await getTransactionGasConsumption(
+            response,
+            auxiliaryWeb3,
+        );
+        const event = EventDecoder.getEvents(response, cogateway);
+
+        await progressRedeemAssertion.verify(
+            event,
+            redeemRequest,
+            gasConsumptionInProgress,
+            initialBalanceBeforeProgress,
+        );
     });
 
     it('progresses unstake', async () => {
 
+        const facilitator = originAccounts[0];
+        const initialBalancesBeforeProgress = await progressUnstakeAssertion.captureBalances(
+            redeemRequest.beneficiary,
+            facilitator,
+        );
+
+        const tx = await gateway.progressUnstake(
+            redeemRequest.messageHash,
+            redeemRequest.unlockSecret,
+            { from: facilitator },
+        );
+
+        const event = EventDecoder.getEvents(tx, gateway);
+
+        await progressUnstakeAssertion.verify(
+            event,
+            redeemRequest,
+            initialBalancesBeforeProgress,
+            facilitator,
+        );
     });
 });
 
 /**
- *
+ * This approve cogateway for redeem amount by unwraping base token.
  * @param {Object} ostPrime OSTPrime contract instance.
  * @param {Object} redeemRequest Redeem request object.
  * @param {Object }cogateway CoGateway contract instance.
@@ -200,4 +253,17 @@ async function approveCogatewayForRedeemAmount(ostPrime, redeemRequest, cogatewa
         redeemRequest.amount,
         { from: redeemRequest.redeemer },
     );
+}
+
+/**
+ * This returns gas consumption in a transaction.
+ * @param {Object} response Transaction object by truffle.
+ * @param {Web3 } web3
+ * @return {Promise<BN>} gas consumption
+ */
+async function getTransactionGasConsumption(response, web3) {
+    const transaction = await web3.eth.getTransaction(response.tx);
+    const gasUsed = new BN(response.receipt.gasUsed);
+    const gasPrice = new BN(transaction.gasPrice);
+    return gasUsed.mul(gasPrice);
 }

@@ -21,11 +21,11 @@
 const assert = require('assert');
 
 /**
- * Redeem Request object contains all the properties for redeem and unRedeem.
+ * Redeem Request object contains all the properties for redeem and unStake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unRedeem process done.
+ *                         redeem and unStake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message
