@@ -20,7 +20,7 @@
 
 const BN = require('bn.js');
 const AnchorStateRootAssertion = require('./anchor_stateroot_assertion');
-const EventDecoder = require('../../../test/test_lib/event_decoder');
+const EventDecoder = require('../../test/test_lib/event_decoder');
 
 /**
  * This class represents anchor contract on a chain.
