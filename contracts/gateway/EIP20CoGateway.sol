@@ -547,7 +547,7 @@ contract EIP20CoGateway is GatewayBase {
 
         MessageBus.Message storage message = messages[_messageHash];
         MessageBus.MessageStatus outboxMessageStatus =
-          messageBox.outbox[_messageHash];
+            messageBox.outbox[_messageHash];
 
         redeemAmount_ = redeems[_messageHash].amount;
 
@@ -601,7 +601,7 @@ contract EIP20CoGateway is GatewayBase {
             return;
         }
 
-        // Penalty charged to staker for revert redeem.
+        // Penalty charged to redeemer for revert redeem.
         uint256 penalty = penaltyFromBounty(_bountyAmount);
         _redeemer.transfer(penalty);
     }
