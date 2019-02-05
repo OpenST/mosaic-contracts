@@ -95,7 +95,7 @@ describe('Redeem and Unstake', async () => {
         proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
     });
 
-    it('redeem', async () => {
+    it('redeems', async () => {
         await approveCogatewayForRedeemAmount(
             ostPrime,
             redeemRequest,
@@ -119,7 +119,7 @@ describe('Redeem and Unstake', async () => {
             },
         );
 
-        const gasConsumptionInRedeem = await getTransactionGasConsumption(
+        const transactionFeeInRedeem = await getTransactionFee(
             response,
             auxiliaryWeb3,
         );
@@ -129,7 +129,7 @@ describe('Redeem and Unstake', async () => {
         await redeemAssertion.verify(
             event,
             redeemRequest,
-            gasConsumptionInRedeem,
+            transactionFeeInRedeem,
             initialBalancesBeforeRedeem,
         );
         redeemRequest.messageHash = event.RedeemIntentDeclared._messageHash;
@@ -194,7 +194,7 @@ describe('Redeem and Unstake', async () => {
             { from: redeemRequest.redeemer },
         );
 
-        const gasConsumptionInProgress = await getTransactionGasConsumption(
+        const transactionFeeInProgress = await getTransactionFee(
             response,
             auxiliaryWeb3,
         );
@@ -203,7 +203,7 @@ describe('Redeem and Unstake', async () => {
         await progressRedeemAssertion.verify(
             event,
             redeemRequest,
-            gasConsumptionInProgress,
+            transactionFeeInProgress,
             initialBalanceBeforeProgress,
         );
     });
@@ -234,10 +234,10 @@ describe('Redeem and Unstake', async () => {
 });
 
 /**
- * This approve cogateway for redeem amount by unwraping base token.
+ * This approves the cogateway for redeem amount by unwrapping the base token.
  * @param {Object} ostPrime OSTPrime contract instance.
  * @param {Object} redeemRequest Redeem request object.
- * @param {Object }cogateway CoGateway contract instance.
+ * @param {Object} cogateway CoGateway contract instance.
  * @return {Promise<void>}
  */
 async function approveCogatewayForRedeemAmount(ostPrime, redeemRequest, cogateway) {
@@ -256,12 +256,12 @@ async function approveCogatewayForRedeemAmount(ostPrime, redeemRequest, cogatewa
 }
 
 /**
- * This returns gas consumption in a transaction.
+ * This returns transaction fee.
  * @param {Object} response Transaction object by truffle.
- * @param {Web3 } web3
- * @return {Promise<BN>} gas consumption
+ * @param {Web3} web3
+ * @return {Promise<BN>} transaction fee.
  */
-async function getTransactionGasConsumption(response, web3) {
+async function getTransactionFee(response, web3) {
     const transaction = await web3.eth.getTransaction(response.tx);
     const gasUsed = new BN(response.receipt.gasUsed);
     const gasPrice = new BN(transaction.gasPrice);
