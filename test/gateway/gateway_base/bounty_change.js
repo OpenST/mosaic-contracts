@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,8 +45,7 @@ async function proposeBountyChange(
     { from: organization },
   );
 
-  const expectedUnlockHeight =
-    response.receipt.blockNumber + unlockTimeInBlocks;
+  const expectedUnlockHeight = response.receipt.blockNumber + unlockTimeInBlocks;
 
   const expectedEvent = {
     BountyChangeInitiated: {

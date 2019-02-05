@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,16 +171,16 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
     assert.strictEqual(
       returnedValues.stakerNonce_.eq(stakeMessage.stakerNonce),
       true,
-      `Returned staker nonce ${returnedValues.stakerNonce_.toNumber(10)}` +
-        ` value is different from expected ${stakeMessage.stakerNonce.toNumber(
+      `Returned staker nonce ${returnedValues.stakerNonce_.toNumber(10)}`
+        + ` value is different from expected ${stakeMessage.stakerNonce.toNumber(
           10,
         )} `,
     );
     assert.strictEqual(
       returnedValues.amount_.eq(stakeRequest.stakeAmount),
       true,
-      `Returned amount ${returnedValues.amount_.toNumber(10)}` +
-        ` value is different from expected ${stakeRequest.stakeAmount.toNumber(
+      `Returned amount ${returnedValues.amount_.toNumber(10)}`
+        + ` value is different from expected ${stakeRequest.stakeAmount.toNumber(
           10,
         )} `,
     );

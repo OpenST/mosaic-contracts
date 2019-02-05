@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -216,12 +216,12 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
     assert.strictEqual(
       result.staker_,
       stakeMessage.staker,
-      `Staker address must match.`,
+      'Staker address must match.',
     );
     assert.strictEqual(
       result.stakeAmount_.eq(stakeRequest.stakeAmount),
       true,
-      `Stake amount must match.`,
+      'Stake amount must match.',
     );
 
     const tx = await gateway.progressStake(
@@ -241,32 +241,32 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
     assert.strictEqual(
       eventData._messageHash,
       stakeMessage.messageHash,
-      `Message hash must match.`,
+      'Message hash must match.',
     );
     assert.strictEqual(
       eventData._staker,
       stakeMessage.staker,
-      `Staker address must match.`,
+      'Staker address must match.',
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeMessage.stakerNonce),
       true,
-      `Staker nonce must match.`,
+      'Staker nonce must match.',
     );
     assert.strictEqual(
       eventData._amount.eq(stakeRequest.stakeAmount),
       true,
-      `Stake amount must match.`,
+      'Stake amount must match.',
     );
     assert.strictEqual(
       eventData._proofProgress,
       false,
-      `Proof progress flag should be false.`,
+      'Proof progress flag should be false.',
     );
     assert.strictEqual(
       eventData._unlockSecret,
       stakeMessage.unlockSecret,
-      `Unlock secret must match.`,
+      'Unlock secret must match.',
     );
 
     const callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
@@ -290,24 +290,24 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
         gatewayInitialTokenBalance.sub(stakeRequest.stakeAmount),
       ),
       true,
-      'Gateway token balance should reduced by stake amount on successful' +
-        ' progress stake.',
+      'Gateway token balance should reduced by stake amount on successful'
+        + ' progress stake.',
     );
     assert.strictEqual(
       gatewayFinalBaseTokenBalance.eq(
         gatewayInitialBaseTokenBalance.sub(bountyAmount),
       ),
       true,
-      'Gateway base balance should reduced by bounty amount on successful' +
-        ' progress stake.',
+      'Gateway base balance should reduced by bounty amount on successful'
+        + ' progress stake.',
     );
     assert.strictEqual(
       stakeVaultFinalTokenBalance.eq(
         stakeVaultInitialTokenBalance.add(stakeRequest.stakeAmount),
       ),
       true,
-      'Stake vault token balance should increase by stake amount on' +
-        ' successful progress stake.',
+      'Stake vault token balance should increase by stake amount on'
+        + ' successful progress stake.',
     );
   });
 });

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ const Utils = require('../../test_lib/utils.js');
 const TestData = require('./helpers/data.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const KernelGateway = artifacts.require('TestKernelGateway');
 
 contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
@@ -46,7 +46,7 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
   const testBlocks = AuxStoreUtils.getSubset(4, 12, TestData.blocks);
 
   beforeEach(async () => {
-    originBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
 
     blockStore = await AuxiliaryBlockStore.new(
       coreIdentifier,
@@ -83,16 +83,14 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
     ];
 
     const count = testStateRoots.length;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i += 1) {
       const testStateRoot = testStateRoots[i];
 
       const stateRoot = await blockStore.stateRoot.call(testStateRoot.height);
       assert.strictEqual(
         stateRoot,
         testStateRoot.expectedStateRoot,
-        `The state root was not returned as expected at height ${
-          testStateRoot.height
-        }`,
+        `The state root was not returned as expected at height ${testStateRoot.height}`,
       );
     }
   });
@@ -104,15 +102,15 @@ contract('AuxiliaryBlockStore.stateRoot()', async (accounts) => {
     // Height 12 is justified, but not finalised.
     await Utils.expectRevert(
       blockStore.stateRoot.call(new BN('12')),
-      'The state root is only known up to the height of the last ' +
-        'finalised checkpoint.',
+      'The state root is only known up to the height of the last '
+      + 'finalised checkpoint.',
     );
 
     // Height 15 was never reported.
     await Utils.expectRevert(
       blockStore.stateRoot.call(new BN('15')),
-      'The state root is only known up to the height of the last ' +
-        'finalised checkpoint.',
+      'The state root is only known up to the height of the last '
+      + 'finalised checkpoint.',
     );
   });
 

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ contract('UtilityToken.constructor()', (accounts) => {
     assert.strictEqual(
       totalSupply.eqn(0),
       true,
-      `Token total supply from contract must be equal to zero.`,
+      'Token total supply from contract must be equal to zero.',
     );
 
     const organizationAddress = await utilityToken.organization();

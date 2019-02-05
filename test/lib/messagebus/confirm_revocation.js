@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
   });
 
   it(
-    'should fail when message status of the message hash in inbox is' +
-      ' undeclared ',
+    'should fail when message status of the message hash in inbox is'
+      + ' undeclared ',
     async () => {
       const message = 'Message on target must be Declared.';
       params.message = message;
@@ -42,8 +42,8 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
   );
 
   it(
-    'should fail when message status of the message hash in inbox is' +
-      ' progressed ',
+    'should fail when message status of the message hash in inbox is'
+      + ' progressed ',
     async () => {
       const message = 'Message on target must be Declared.';
       params.message = message;
@@ -56,8 +56,8 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
   );
 
   it(
-    'should fail when message status of the message hash in inbox is' +
-      ' revoked',
+    'should fail when message status of the message hash in inbox is'
+      + ' revoked',
     async () => {
       const message = 'Message on target must be Declared.';
       params.message = message;

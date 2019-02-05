@@ -108,8 +108,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     //  This will throw exception if fails.
     await gateway.progressUnstakeWithProof(
@@ -126,8 +125,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     const response = await gateway.progressUnstakeWithProof.call(
       unstakeMessage.messageHash,
@@ -170,8 +168,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     const tx = await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
@@ -225,8 +222,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
         10,
       )} should be equal to 
       sum of reward amount ${eventData._rewardAmount.toString(
-        10,
-      )} plus unstaked amount
+    10,
+  )} plus unstaked amount
        to beneficiary ${eventData._unstakeAmount.toString(10)}`,
     );
     assert.strictEqual(
@@ -249,8 +246,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     stakeVaultAddress = await setup(
       unstakeMessage,
@@ -286,8 +282,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
     assert.strictEqual(
       finalBeneficiaryBalance.eq(expectedBeneficiaryBalance),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toNumber(10)}` +
-        `must be equal to ${initialBeneficiaryBalance
+      `Beneficiary balance ${finalBeneficiaryBalance.toNumber(10)}`
+        + `must be equal to ${initialBeneficiaryBalance
           .add(expectedBeneficiaryBalance)
           .toNumber(10)}.`,
     );
@@ -296,16 +292,16 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
         initialStakeVaultBalance.sub(unstakeRequest.amount),
       ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} ` +
-        `must be equal to ${initialStakeVaultBalance
+      `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} `
+        + `must be equal to ${initialStakeVaultBalance
           .sub(unstakeRequest.amount)
           .toNumber(10)}.`,
     );
   });
 
   it(
-    'should reward token to the facilitator address with maximum' +
-      ' possible reward i.e. gasPrice * gasLimit',
+    'should reward token to the facilitator address with maximum'
+      + ' possible reward i.e. gasPrice * gasLimit',
     async () => {
       const facilitatorAddress = accounts[1];
 
@@ -319,8 +315,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
         unstakeMessage.messageHash,
         MessageStatusEnum.Declared,
       );
-      const storageProof =
-        StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+      const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
       const blockHeight = await setStateRoot(gateway);
 
       await gateway.progressUnstakeWithProof(
@@ -342,8 +337,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       assert.strictEqual(
         finalFacilitatorBalance.eq(initialFacilitatorBalance.add(reward)),
         true,
-        `Facilitator balance ${finalFacilitatorBalance.toNumber(10)}` +
-          `must be equal to ${initialFacilitatorBalance
+        `Facilitator balance ${finalFacilitatorBalance.toNumber(10)}`
+          + `must be equal to ${initialFacilitatorBalance
             .add(reward)
             .toNumber(10)}.`,
       );
@@ -352,8 +347,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
           initialStakeVaultBalance.sub(unstakeRequest.amount),
         ),
         true,
-        `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} ` +
-          `must be equal to ${initialStakeVaultBalance
+        `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} `
+          + `must be equal to ${initialStakeVaultBalance
             .sub(unstakeRequest.amount)
             .toNumber(10)}.`,
       );
@@ -361,8 +356,8 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
   );
 
   it(
-    'should reward token to the facilitator address based on gas' +
-      ' consumption',
+    'should reward token to the facilitator address based on gas'
+      + ' consumption',
     async () => {
       redeemRequest = StubDataRedeemReward.co_gateway.redeem.params;
       unstakeRequest = {
@@ -403,11 +398,9 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
         StubDataRedeemReward.co_gateway.redeem.proof_data.block_number,
         16,
       );
-      const storageRoot =
-        StubDataRedeemReward.co_gateway.redeem.proof_data.storageHash;
-      const storageProof =
-        StubDataRedeemReward.co_gateway.redeem.proof_data.storageProof[0]
-          .serializedProof;
+      const storageRoot = StubDataRedeemReward.co_gateway.redeem.proof_data.storageHash;
+      const storageProof = StubDataRedeemReward.co_gateway.redeem.proof_data.storageProof[0]
+        .serializedProof;
       await gateway.setStorageRoot(blockHeight, storageRoot);
 
       const initialFacilitatorBalance = await mockToken.balanceOf(
@@ -464,8 +457,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -484,8 +476,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Undeclared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -504,8 +495,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
@@ -531,8 +521,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       MessageStatusEnum.Revoked,
     );
     const blockHeight = await setStateRoot(gateway);
-    const storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -584,12 +573,10 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       StubDataRedeemFailure.co_gateway.redeem.proof_data.block_number,
       16,
     );
-    const storageRoot =
-      StubDataRedeemFailure.co_gateway.redeem.proof_data.storageHash;
+    const storageRoot = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageHash;
     await gateway.setStorageRoot(blockHeight, storageRoot);
-    const storageProof =
-      StubDataRedeemFailure.co_gateway.redeem.proof_data.storageProof[0]
-        .serializedProof;
+    const storageProof = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageProof[0]
+      .serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(

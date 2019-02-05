@@ -88,8 +88,8 @@ contract('EIP20Gateway.penalty()', (accounts) => {
   });
 
   it(
-    'should return correct penalty amount for message hash when bounty ' +
-      'amount is changed after stake request is registered',
+    'should return correct penalty amount for message hash when bounty '
+      + 'amount is changed after stake request is registered',
     async () => {
       const bounty = new BN(100);
       const changedBounty = new BN(500);

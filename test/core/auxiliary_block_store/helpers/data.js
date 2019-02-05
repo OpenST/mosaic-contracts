@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ const blocks = {
  *
  * @returns {BN} The new accumulated gas that includes the new gas.
  */
-const accumulateGas = function(oldAccumulatedGos, newGas) {
+const accumulateGas = function (oldAccumulatedGos, newGas) {
   return oldAccumulatedGos.add(newGas);
 };
 
@@ -174,7 +174,7 @@ const accumulateGas = function(oldAccumulatedGos, newGas) {
  * root, based on the accumulated gas and transaction root of the previous item
  * in the list.
  */
-const calculateAccumulatedValues = function() {
+const calculateAccumulatedValues = function () {
   blocks[1].accumulatedGas = accumulateGas(initialBlock.gas, blocks[1].gas);
   blocks[1].accumulatedTransactionRoot = AuxStoreUtils.accumulateTransactionRoot(
     initialBlock.transactionRoot,

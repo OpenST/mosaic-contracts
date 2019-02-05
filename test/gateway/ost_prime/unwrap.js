@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,8 +80,8 @@ contract('OSTPrime.unwrap()', (accounts) => {
   });
 
   it(
-    "should fail when the amount is greater than the contract's base " +
-      'token balance',
+    "should fail when the amount is greater than the contract's base "
+      + 'token balance',
     async () => {
       await initialize();
 
@@ -106,7 +106,7 @@ contract('OSTPrime.unwrap()', (accounts) => {
     const result = await ostPrime.unwrap.call(amount, {
       from: callerAddress,
     });
-    assert.strictEqual(result, true, `The contract should return true.`);
+    assert.strictEqual(result, true, 'The contract should return true.');
 
     const tx = await ostPrime.unwrap(amount, { from: callerAddress });
     const gasUsed = new BN(tx.receipt.gasUsed);

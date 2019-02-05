@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
 const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
-const BlockStore = artifacts.require('BlockStoreMock');
+const BlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   const zeroBytes = Utils.ZERO_BYTES32;
@@ -57,16 +57,14 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   let transitionHash;
 
-  const storageRoot =
-    '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
+  const storageRoot = '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
 
   async function deploy(KernelGateway) {
     // deploy the kernel gateway
     mosaicCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
-    genesisKernelHash =
-      '0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e';
+    genesisKernelHash = '0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e';
     kernelGateway = await KernelGateway.new(
       mosaicCore,
       originBlockStore.address,
@@ -75,16 +73,14 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     );
 
     height = new BN(2);
-    parent =
-      '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
+    parent = '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
     storageBranchRlp = web3.utils.sha3('storageBranchRlp');
     originBlockHeight = 2;
 
-    kernelHash =
-      '0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4';
+    kernelHash = '0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4';
     transitionHash = web3.utils.sha3('transitionHash');
 
     await kernelGateway.setStorageRoot(storageRoot, originBlockHeight);
@@ -101,8 +97,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     await kernelGateway.setOpenKernelHash(web3.utils.sha3('random'));
 
     height = new BN(2);
-    parent =
-      '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
+    parent = '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
@@ -192,8 +187,8 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it(
-    'should fail when validators count and validator weight count is' +
-      ' not same',
+    'should fail when validators count and validator weight count is'
+      + ' not same',
     async () => {
       updatedValidators.push(accounts[5]);
 

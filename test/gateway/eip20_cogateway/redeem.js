@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,19 @@
 //
 // ----------------------------------------------------------------------------
 
-const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const BN = require('bn.js');
-
-const MockToken = artifacts.require('MockToken');
-const Utils = require('../../test_lib/utils.js');
+const Utils = require('../../test_lib/utils');
 const messageBus = require('../../test_lib/message_bus.js');
-const coGatewayUtils = require('./helpers/co_gateway_utils.js');
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
+
+const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
+const MockToken = artifacts.require('MockToken');
+
+const { MessageStatusEnum } = messageBus;
+
+const nonce = new BN(1);
+const hashLockObj = Utils.generateHashLock();
+const hashLock = hashLockObj.l;
 
 let eip20CoGateway;
 let burner;
@@ -36,36 +42,28 @@ let utilityToken;
 let bountyAmount;
 let owner;
 let redeemer;
+let beneficiary;
 let redeemerBalance;
-
-const { MessageStatusEnum } = messageBus;
+let amount;
+let gasPrice = new BN(1);
+let gasLimit = new BN(1000);
 
 contract('EIP20CoGateway.redeem()', (accounts) => {
-  let amount;
-
-  const beneficiary = accounts[4];
-
-  let gasPrice = new BN(1);
-
-  let gasLimit = new BN(1000);
-
-  const nonce = new BN(1);
-
-  const hashLockObj = Utils.generateHashLock();
-
-  const hashLock = hashLockObj.l;
-
   beforeEach(async () => {
-    valueToken = accounts[0];
-    dummyStateRootProvider = accounts[1];
-    organization = accounts[2];
-    gateway = accounts[3];
-    owner = accounts[8];
+    [
+      valueToken,
+      dummyStateRootProvider,
+      organization,
+      gateway,
+      beneficiary,
+      redeemer,
+      owner,
+      burner,
+    ] = accounts;
+
     utilityToken = await MockToken.new({ from: owner });
     bountyAmount = new BN(100);
-    redeemer = accounts[7];
     redeemerBalance = new BN(100000);
-    burner = accounts[10];
 
     eip20CoGateway = await EIP20CoGateway.new(
       valueToken,
@@ -79,9 +77,11 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
 
     await utilityToken.transfer(redeemer, redeemerBalance, { from: owner });
 
-    await utilityToken.approve(eip20CoGateway.address, redeemerBalance, {
-      from: redeemer,
-    });
+    await utilityToken.approve(
+      eip20CoGateway.address,
+      redeemerBalance,
+      { from: redeemer },
+    );
     amount = redeemerBalance;
   });
 
@@ -206,10 +206,10 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
 
   it('should fail when cogateway is not approved with redeem amount', async () => {
     /*
-     * CoGateway is approved to spend the redeem amount in beforeEach, so by
-     * adding 1 to the approved(redeem) amount, the transfer will fail for this
-     * test case.
-     */
+         * CoGateway is approved to spend the redeem amount in beforeEach, so by
+         * adding 1 to the approved(redeem) amount, the transfer will fail for this
+         * test case.
+         */
     const redeemAmount = amount.addn(1);
 
     await Utils.expectRevert(
@@ -226,7 +226,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
     );
   });
 
-  it("should fail when the redeemer's base token balance is less than the bounty amount", async () => {
+  it('should fail when the redeemer\'s base token balance is less than the bounty amount', async () => {
     bountyAmount = new BN(10);
     await Utils.expectRevert(
       eip20CoGateway.redeem(
@@ -242,12 +242,14 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
     );
   });
 
-  it("should fail when the redeemer's BT balance is less than the redeem amount", async () => {
+  it('should fail when the redeemer\'s BT balance is less than the redeem amount', async () => {
     const redeemAmount = redeemerBalance.addn(1);
 
-    await utilityToken.approve(eip20CoGateway.address, redeemAmount, {
-      from: redeemer,
-    });
+    await utilityToken.approve(
+      eip20CoGateway.address,
+      redeemAmount,
+      { from: redeemer },
+    );
 
     await Utils.expectRevert(
       eip20CoGateway.redeem(
@@ -289,7 +291,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Message on source must be Undeclared.',
+      'Message on source must be Undeclared',
     );
   });
 
@@ -424,7 +426,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
   });
 
   it('should successfully redeem', async () => {
-    const intentHash = coGatewayUtils.hashRedeemIntent(
+    const intentHash = CoGatewayUtils.hashRedeemIntent(
       amount,
       beneficiary,
       eip20CoGateway.address,
@@ -475,9 +477,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       'Bounty is not transferred to CoGateway',
     );
 
-    const eip20CoGatewayBalance = await utilityToken.balanceOf(
-      eip20CoGateway.address,
-    );
+    const eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
 
     assert.strictEqual(
       eip20CoGatewayBalance.eq(amount),
@@ -503,9 +503,34 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       },
     };
 
-    assert.equal(response.receipt.status, 1, 'Receipt status is unsuccessful');
+    assert.equal(
+      response.receipt.status,
+      1,
+      'Receipt status is unsuccessful',
+    );
 
     const eventData = response.logs;
     await Utils.validateEvents(eventData, expectedEvent);
+  });
+
+  it('should increase the nonce by 1 when redeeming', async () => {
+    const nonceBefore = await eip20CoGateway.getNonce.call(redeemer);
+    await eip20CoGateway.redeem(
+      amount,
+      beneficiary,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+      { from: redeemer, value: bountyAmount },
+    );
+    const nonceAfter = await eip20CoGateway.getNonce.call(redeemer);
+
+    assert.strictEqual(
+      nonceBefore.addn(1).eq(nonceAfter),
+      true,
+      'The nonce should increase by one when redeeming. '
+            + `Instead, it is ${nonceBefore.toString(10)} before and ${nonceAfter.toString(10)} after.`,
+    );
   });
 });

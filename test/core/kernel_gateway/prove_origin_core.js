@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const testData = require('../../data/proof');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
 const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
-const BlockStore = artifacts.require('BlockStoreMock');
+const BlockStore = artifacts.require('MockBlockStore');
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
@@ -162,7 +162,7 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
     assert.strictEqual(
       eventData._wasAlreadyProved,
       false,
-      `Storage root from event must be false`,
+      'Storage root from event must be false',
     );
 
     const storageRoot = await kernelGateway.storageRoots.call(
@@ -179,8 +179,8 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
   });
 
   it(
-    'should pass when the account is already proved for a given block ' +
-      'height',
+    'should pass when the account is already proved for a given block '
+      + 'height',
     async () => {
       const originBlockHeight = new BN(100);
 
@@ -227,7 +227,7 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
       assert.strictEqual(
         eventData._wasAlreadyProved,
         true,
-        `Storage root from event must be false`,
+        'Storage root from event must be false',
       );
     },
   );

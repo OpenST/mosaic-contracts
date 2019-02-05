@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,7 +155,7 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
     assert.strictEqual(
       eventData._proofProgress,
       false,
-      `Proof progress flag from event should be false.`,
+      'Proof progress flag from event should be false.',
     );
     assert.strictEqual(
       eventData._unlockSecret,
@@ -193,14 +193,14 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
     assert.strictEqual(
       finalFacilitatorEthBalance.eq(expectedFinalFacilitatorETHBalance),
       true,
-      `Bounty should be return to facilitator.`,
+      'Bounty should be return to facilitator.',
     );
     assert.strictEqual(
       finalCoGatewayEthBalance.eq(
         initialCoGatewayEthBalance.sub(bountyAmount),
       ),
       true,
-      `Bounty should be transferred from co-gateway.`,
+      'Bounty should be transferred from co-gateway.',
     );
   });
 
@@ -224,13 +224,13 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
     assert.strictEqual(
       finalTotalSupply.eq(initialTotalSupply.sub(amount)),
       true,
-      `Total supply should be reduced after progressRedeem.`,
+      'Total supply should be reduced after progressRedeem.',
     );
 
     assert.strictEqual(
       finalCoGatewayBalance.eq(initialCoGatewayBalance.sub(amount)),
       true,
-      `Co-gateway balance should be reduced.`,
+      'Co-gateway balance should be reduced.',
     );
   });
 

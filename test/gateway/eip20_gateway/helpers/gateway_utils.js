@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+'use strict';
+
 const web3 = require('../../../test_lib/web3.js');
 const utils = require('../../../test_lib/utils.js');
 
@@ -28,13 +30,13 @@ const utils = require('../../../test_lib/utils.js');
  * @param {Object} token EIP20 token contract object.
  * @param {Object} baseToken EIP20 token contract object. This is the base token.
  */
-const GatewayUtils = function(gateway, token, baseToken) {
-  this.gateway = gateway;
-  this.token = token;
-  this.baseToken = baseToken;
-};
+class GatewayUtils {
+  constructor(gateway, token, baseToken) {
+    this.gateway = gateway;
+    this.token = token;
+    this.baseToken = baseToken;
+  }
 
-GatewayUtils.prototype = {
   /**
    * Generate the stake type hash. This is as per EIP-712
    *
@@ -44,7 +46,7 @@ GatewayUtils.prototype = {
     return utils.getTypeHash(
       'Stake(uint256 amount,address beneficiary,MessageBus.Message message)',
     );
-  },
+  }
 
   /**
    * Generate the stake intent hash
@@ -56,7 +58,7 @@ GatewayUtils.prototype = {
    *
    * @return {string} stake intent hash.
    */
-  hashStakeIntent: (amount, beneficiary, gateway) => {
+  hashStakeIntent(amount, beneficiary, gateway) {
     const stakeIntentTypeHash = utils.getTypeHash(
       'StakeIntent(uint256 amount,address beneficiary,address gateway)',
     );
@@ -69,7 +71,7 @@ GatewayUtils.prototype = {
     );
 
     return stakeIntent;
-  },
+  }
 
   /**
    * Get a nonce for an address as currently registered in the gateway.
@@ -79,8 +81,8 @@ GatewayUtils.prototype = {
    * @returns {BN} The current nonce of the given address.
    */
   async getNonce(address) {
-    return await this.gateway.getNonce.call(address);
-  },
+    return this.gateway.getNonce.call(address);
+  }
 
   /**
    * Asserts all the conditions for stake
@@ -93,20 +95,15 @@ GatewayUtils.prototype = {
    *
    */
   async stake(params, resultType, expectedResults, txOptions) {
-    const amount = params.amount;
-
-    const beneficiary = params.beneficiary;
-
-    const staker = params.staker;
-
-    const gasPrice = params.gasPrice;
-
-    const gasLimit = params.gasLimit;
-
-    const nonce = params.nonce;
-
-    const hashLock = params.hashLock;
-
+    const {
+      amount,
+      beneficiary,
+      staker,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+    } = params;
     const initialBalance = await this._getBalances(
       staker,
       this.gateway.address,
@@ -173,7 +170,7 @@ GatewayUtils.prototype = {
       bounty,
       resultType,
     );
-  },
+  }
 
   /**
    * Gets the token balance and base token balance for all the address
@@ -207,7 +204,7 @@ GatewayUtils.prototype = {
       token: tokenBalance,
       baseToken: baseTokenBalance,
     };
-  },
+  }
 
   /**
    * Asserts the balances of staker, and gateway
@@ -278,7 +275,7 @@ GatewayUtils.prototype = {
         `Staker base token balance must decrease by ${bountyAmount}`,
       );
     }
-  },
-};
+  }
+}
 
 module.exports = GatewayUtils;

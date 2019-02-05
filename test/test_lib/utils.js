@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -180,30 +180,26 @@ Utils.prototype = {
   },
 
   /** Get account balance. */
-  getBalance: (address) => {
-    return new Promise((resolve, reject) => {
-      web3.eth.getBalance(address, (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(new BN(result));
-        }
-      });
+  getBalance: address => new Promise((resolve, reject) => {
+    web3.eth.getBalance(address, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(new BN(result));
+      }
     });
-  },
+  }),
 
   /** Get gas price. */
-  getGasPrice: () => {
-    return new Promise((resolve, reject) => {
-      web3.eth.getGasPrice((error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      });
+  getGasPrice: () => new Promise((resolve, reject) => {
+    web3.eth.getGasPrice((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
     });
-  },
+  }),
 
   validateEvents: (eventLogs, expectedData) => {
     assert.equal(
@@ -256,15 +252,11 @@ Utils.prototype = {
   },
 
   /** Get latest hash. */
-  generateHashLock: () => {
-    return hashLock.getHashLock();
-  },
+  generateHashLock: () => hashLock.getHashLock(),
 
-  getTypeHash: (structDescriptor) => {
-    return web3.utils.sha3(
-      web3.eth.abi.encodeParameter('string', structDescriptor),
-    );
-  },
+  getTypeHash: structDescriptor => web3.utils.sha3(
+    web3.eth.abi.encodeParameter('string', structDescriptor),
+  ),
 
   ResultType,
 

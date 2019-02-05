@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,8 +147,8 @@ contract('Organization.constructor()', async (accounts) => {
   });
 
   it(
-    'should not deploy if the expiration height is not in the future for ' +
-      'any workers',
+    'should not deploy if the expiration height is not in the future for '
+      + 'any workers',
     async () => {
       const currentBlockHeight = await web3.eth.getBlockNumber();
       const pastBlockHeight = currentBlockHeight - 1;

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -195,8 +195,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
   });
 
   it(
-    'should return correct "redeemAmount", "unstakeAmount" and ' +
-      '"rewardAmount" when gas price is zero',
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when gas price is zero',
     async () => {
       unstakeMessage.gasPrice = new BN(0);
 
@@ -239,8 +239,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
   );
 
   it(
-    'should return correct "redeemAmount", "unstakeAmount" and ' +
-      '"rewardAmount" when gas price is greater than zero',
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when gas price is greater than zero',
     async () => {
       unstakeMessage.gasPrice = new BN(1);
       unstakeMessage.gasLimit = new BN(1000000000);
@@ -280,8 +280,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
   );
 
   it(
-    'should return correct "redeemAmount", "unstakeAmount" and ' +
-      '"rewardAmount" when reward is restricted to gasLimit',
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when reward is restricted to gasLimit',
     async () => {
       unstakeMessage.gasPrice = new BN(1);
       unstakeMessage.gasLimit = new BN(100);

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+'use strict';
+
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 
@@ -25,12 +27,8 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const MetaBlockUtils = require('../../test_lib/meta_block.js');
 const Utils = require('../../test_lib/utils.js');
 
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const PollingPlace = artifacts.require('PollingPlace');
-
-const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
-  'VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)',
-);
 
 contract('PollingPlace.vote()', async (accounts) => {
   let pollingPlace;
@@ -43,8 +41,8 @@ contract('PollingPlace.vote()', async (accounts) => {
   let vote;
 
   beforeEach(async () => {
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     await originBlockStore.setVoteValid(true);
     await auxiliaryBlockStore.setVoteValid(true);
@@ -162,31 +160,16 @@ contract('PollingPlace.vote()', async (accounts) => {
     await originBlockStore.setVoteValid(true);
     await auxiliaryBlockStore.setVoteValid(false);
 
-    const pollingPlace = await PollingPlace.new(
+    pollingPlace = await PollingPlace.new(
       originBlockStore.address,
       auxiliaryBlockStore.address,
       [accounts[0]],
       [new BN('12')],
     );
 
-    // Origin block store should pass.
-    vote.coreIdentifier = originCoreIdentifier;
-    let signature = await MetaBlockUtils.signVote(accounts[0], vote);
-    await pollingPlace.vote(
-      vote.coreIdentifier,
-      vote.transitionHash,
-      vote.source,
-      vote.target,
-      vote.sourceHeight,
-      vote.targetHeight,
-      signature.v,
-      signature.r,
-      signature.s,
-    );
-
     // Auxiliary block store should fail.
     vote.coreIdentifier = auxiliaryCoreIdentifier;
-    signature = await MetaBlockUtils.signVote(accounts[0], vote);
+    const signature = await MetaBlockUtils.signVote(accounts[0], vote);
     await Utils.expectRevert(
       pollingPlace.vote(
         vote.coreIdentifier,
@@ -235,7 +218,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       ],
     };
 
-    const pollingPlace = await PollingPlace.new(
+    pollingPlace = await PollingPlace.new(
       originBlockStore.address,
       auxiliaryBlockStore.address,
       expectedWeights.addresses,
@@ -246,7 +229,7 @@ contract('PollingPlace.vote()', async (accounts) => {
      * All first 8 validators must vote to achieve a 2/3 majority. So
      * for the first 7 there should not be a justification event.
      */
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i += 1) {
       const signature = await MetaBlockUtils.signVote(
         expectedWeights.addresses[i],
         vote,
@@ -272,8 +255,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the origin ' +
-          'block store.',
+        'There should not be a Justify event emitted by the origin block store.',
       );
       events = EventsDecoder.perform(
         tx.receipt,
@@ -284,8 +266,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the auxiliary' +
-          ' block store.',
+        'There should not be a Justify event emitted by the auxiliary block store.',
       );
     }
 
@@ -318,14 +299,12 @@ contract('PollingPlace.vote()', async (accounts) => {
     assert.strictEqual(
       events.Justified._source,
       vote.source,
-      'There should be a Justify event with the source emitted by the ' +
-        'origin block store.',
+      'There should be a Justify event with the source emitted by the origin block store.',
     );
     assert.strictEqual(
       events.Justified._target,
       vote.target,
-      'There should be a Justify event with the target emitted by the ' +
-        'origin block store.',
+      'There should be a Justify event with the target emitted by the origin block store.',
     );
     // The auxiliary block store should still not emit an event.
     events = EventsDecoder.perform(
@@ -337,8 +316,7 @@ contract('PollingPlace.vote()', async (accounts) => {
     assert.strictEqual(
       events.Justified,
       undefined,
-      'There should not be a Justify event emitted by the auxiliary ' +
-        'block store.',
+      'There should not be a Justify event emitted by the auxiliary block store.',
     );
   });
 
@@ -374,7 +352,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       ],
     };
 
-    const pollingPlace = await PollingPlace.new(
+    pollingPlace = await PollingPlace.new(
       originBlockStore.address,
       auxiliaryBlockStore.address,
       expectedWeights.addresses,
@@ -386,7 +364,7 @@ contract('PollingPlace.vote()', async (accounts) => {
      * block stores, a >=2/3 majority should not be reached on either.
      */
     const coreIdentifiers = [originCoreIdentifier, auxiliaryCoreIdentifier];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i += 1) {
       // Alternate core identifiers to split the votes
       const coreIdentifier = coreIdentifiers[i % 2];
       vote.coreIdentifier = coreIdentifier;
@@ -416,8 +394,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the origin ' +
-          'block store.',
+        'There should not be a Justify event emitted by the origin block store.',
       );
 
       events = EventsDecoder.perform(
@@ -429,15 +406,13 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the auxiliary' +
-          ' block store.',
+        'There should not be a Justify event emitted by the auxiliary block store.',
       );
     }
   });
 
   it(
-    'should not achieve a majority by combining different source or ' +
-      'target hashes',
+    'should not achieve a majority by combining different source or target hashes',
     async () => {
       /*
        * There is a total weight of 60. That means a voting weight of
@@ -470,17 +445,17 @@ contract('PollingPlace.vote()', async (accounts) => {
         ],
       };
 
-      const pollingPlace = await PollingPlace.new(
+      pollingPlace = await PollingPlace.new(
         originBlockStore.address,
         auxiliaryBlockStore.address,
         expectedWeights.addresses,
         expectedWeights.values,
       );
 
-      for (var i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i += 1) {
         // Incrementing source hashes to split the votes
-        vote.source = `${'0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f9' +
-          '83e593ac4302d38a112'}${i.toString(16)}`;
+        vote.source = `${'0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f9'
+          + '83e593ac4302d38a112'}${i.toString(16)}`;
 
         const signature = await MetaBlockUtils.signVote(
           expectedWeights.addresses[i],
@@ -506,8 +481,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         assert.strictEqual(
           events.Justified,
           undefined,
-          'There should not be a Justify event emitted by the ' +
-            'origin block store.',
+          'There should not be a Justify event emitted by the origin block store.',
         );
 
         events = EventsDecoder.perform(
@@ -518,19 +492,19 @@ contract('PollingPlace.vote()', async (accounts) => {
         assert.strictEqual(
           events.Justified,
           undefined,
-          'There should not be a Justify event emitted by the ' +
-            'auxiliary block store.',
+          'There should not be a Justify event emitted by the auxiliary block store.',
         );
       }
-      for (var i = 0; i < 10; i++) {
+
+      for (let i = 0; i < 10; i += 1) {
         /*
          * New target height as validators are not allowed to vote on
          * the same height from the previous loop again.
          */
         vote.targetHeight = new BN('999');
         // Incrementing target hashes to split the votes
-        vote.target = `${'0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f' +
-          '772893618943ea2dab9c'}${i.toString(16)}`;
+        vote.target = `${'0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9c'}`
+          + `${i.toString(16)}`;
 
         const signature = await MetaBlockUtils.signVote(
           expectedWeights.addresses[i],
@@ -556,8 +530,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         assert.strictEqual(
           events.Justified,
           undefined,
-          'There should not be a Justify event emitted by the ' +
-            'origin block store.',
+          'There should not be a Justify event emitted by the origin block store.',
         );
 
         events = EventsDecoder.perform(
@@ -568,8 +541,7 @@ contract('PollingPlace.vote()', async (accounts) => {
         assert.strictEqual(
           events.Justified,
           undefined,
-          'There should not be a Justify event emitted by the ' +
-            'auxiliary block store.',
+          'There should not be a Justify event emitted by the auxiliary block store.',
         );
       }
     },
@@ -609,7 +581,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       ],
     };
 
-    const pollingPlace = await PollingPlace.new(
+    pollingPlace = await PollingPlace.new(
       originBlockStore.address,
       auxiliaryBlockStore.address,
       expectedWeights.addresses,
@@ -617,7 +589,7 @@ contract('PollingPlace.vote()', async (accounts) => {
     );
 
     // The first 8 validators will validate 40 of 61 weight.
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 8; i += 1) {
       const signature = await MetaBlockUtils.signVote(
         expectedWeights.addresses[i],
         vote,
@@ -642,8 +614,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the origin ' +
-          'block store.',
+        'There should not be a Justify event emitted by the origin block store.',
       );
 
       events = EventsDecoder.perform(
@@ -654,8 +625,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       assert.strictEqual(
         events.Justified,
         undefined,
-        'There should not be a Justify event emitted by the auxiliary' +
-          ' block store.',
+        'There should not be a Justify event emitted by the auxiliary block store.',
       );
     }
   });
@@ -666,7 +636,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       values: [new BN('1'), new BN('9')],
     };
 
-    const pollingPlace = await PollingPlace.new(
+    pollingPlace = await PollingPlace.new(
       originBlockStore.address,
       auxiliaryBlockStore.address,
       expectedWeights.addresses,

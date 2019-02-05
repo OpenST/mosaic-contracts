@@ -33,17 +33,17 @@ const rootDir = `${__dirname}/../../`;
  * @returns {Object.<string, Contract>} Map from contract names to contract instances.
  */
 const createLibraryConracts = () => {
-    const MerklePatriciaProof = Contract.loadTruffleContract('MerklePatriciaProof', null, { rootDir });
-    const GatewayLib = Contract.loadTruffleContract('GatewayLib', null, { rootDir });
-    GatewayLib.addLinkedDependency(MerklePatriciaProof);
-    const MessageBus = Contract.loadTruffleContract('MessageBus', null, { rootDir });
-    MessageBus.addLinkedDependency(MerklePatriciaProof);
+  const MerklePatriciaProof = Contract.loadTruffleContract('MerklePatriciaProof', null, { rootDir });
+  const GatewayLib = Contract.loadTruffleContract('GatewayLib', null, { rootDir });
+  GatewayLib.addLinkedDependency(MerklePatriciaProof);
+  const MessageBus = Contract.loadTruffleContract('MessageBus', null, { rootDir });
+  MessageBus.addLinkedDependency(MerklePatriciaProof);
 
-    return {
-        MerklePatriciaProof,
-        GatewayLib,
-        MessageBus,
-    };
+  return {
+    MerklePatriciaProof,
+    GatewayLib,
+    MessageBus,
+  };
 };
 
 /**
@@ -57,14 +57,12 @@ const createLibraryConracts = () => {
  *
  * @returns {Contract} The Organization contract instance.
  */
-const createOrganization = (adminAddress, ownerAddress, workerAddresses, expirationHeight) =>  {
-    return Contract.loadTruffleContract('Organization', [
-        adminAddress,
-        ownerAddress,
-        workerAddresses,
-        expirationHeight,
-    ], { rootDir });
-};
+const createOrganization = (adminAddress, ownerAddress, workerAddresses, expirationHeight) => Contract.loadTruffleContract('Organization', [
+  adminAddress,
+  ownerAddress,
+  workerAddresses,
+  expirationHeight,
+], { rootDir });
 
 /**
  * Create an Anchor Contract
@@ -80,90 +78,82 @@ const createOrganization = (adminAddress, ownerAddress, workerAddresses, expirat
  * @returns {Contract} The Anchor contract instance.
  */
 const createAnchor = (
-    organization,
+  organization,
+  remoteChainId,
+  remoteBlockHeight,
+  remoteStateRoot,
+  maxStateroots = '10',
+) => Contract.loadTruffleContract(
+  'Anchor',
+  [
     remoteChainId,
     remoteBlockHeight,
     remoteStateRoot,
-    maxStateroots = '10',
-) => {
-    return Contract.loadTruffleContract(
-        'Anchor',
-        [
-            remoteChainId,
-            remoteBlockHeight,
-            remoteStateRoot,
-            maxStateroots,
-            organization,
-        ],
-        { rootDir },
-    );
-};
+    maxStateroots,
+    organization,
+  ],
+  { rootDir },
+);
 
 const createOSTPrime = (
+  tokenAddressOrigin,
+  organizationAddress,
+) => Contract.loadTruffleContract(
+  'OSTPrime',
+  [
     tokenAddressOrigin,
     organizationAddress,
-) => {
-    return Contract.loadTruffleContract(
-        'OSTPrime',
-        [
-            tokenAddressOrigin,
-            organizationAddress,
-        ],
-        { rootDir },
-    );
-};
+  ],
+  { rootDir },
+);
 
 const createEIP20Gateway = (
+  tokenAddress,
+  baseTokenAddress,
+  anchorAddress,
+  bounty,
+  organizationAddress,
+  burnerAddress = '0x0000000000000000000000000000000000000000',
+) => Contract.loadTruffleContract(
+  'EIP20Gateway',
+  [
     tokenAddress,
     baseTokenAddress,
     anchorAddress,
     bounty,
     organizationAddress,
-    burnerAddress = '0x0000000000000000000000000000000000000000',
-) => {
-    return Contract.loadTruffleContract(
-        'EIP20Gateway',
-        [
-            tokenAddress,
-            baseTokenAddress,
-            anchorAddress,
-            bounty,
-            organizationAddress,
-            burnerAddress,
-        ],
-        { rootDir },
-    );
-};
+    burnerAddress,
+  ],
+  { rootDir },
+);
 
 const createEIP20CoGateway = (
+  tokenAddressOrigin,
+  ostPrimeAddress,
+  anchorAddress,
+  bounty,
+  organizationAddress,
+  gatewayAddress,
+  burnerAddress = '0x0000000000000000000000000000000000000000',
+) => Contract.loadTruffleContract(
+  'EIP20CoGateway',
+  [
     tokenAddressOrigin,
     ostPrimeAddress,
     anchorAddress,
     bounty,
     organizationAddress,
     gatewayAddress,
-    burnerAddress = '0x0000000000000000000000000000000000000000',
-) => {
-    return Contract.loadTruffleContract(
-        'EIP20CoGateway',
-        [
-            tokenAddressOrigin,
-            ostPrimeAddress,
-            anchorAddress,
-            bounty,
-            organizationAddress,
-            gatewayAddress,
-            burnerAddress,
-        ],
-        { rootDir },
-    );
-};
+    burnerAddress,
+  ],
+  { rootDir },
+);
 
 module.exports = {
-    createAnchor,
-    createEIP20CoGateway,
-    createEIP20Gateway,
-    createLibraryConracts,
-    createOSTPrime,
-    createOrganization,
+  createAnchor,
+  createEIP20CoGateway,
+  createEIP20Gateway,
+  createLibraryConracts,
+  createOSTPrime,
+  createOrganization,
 };

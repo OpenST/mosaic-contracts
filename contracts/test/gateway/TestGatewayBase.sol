@@ -20,9 +20,9 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../../StateRootInterface.sol";
 import "../../gateway/GatewayBase.sol";
 import "../../lib/OrganizationInterface.sol";
+import "../../lib/StateRootInterface.sol";
 
 /**
  * @title TestGatewayBase contract.

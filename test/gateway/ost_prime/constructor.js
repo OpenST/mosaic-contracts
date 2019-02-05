@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ contract('OSTPrime.constructor()', (accounts) => {
     assert.strictEqual(
       initialized,
       false,
-      `initialized value from contract should be false.`,
+      'initialized value from contract should be false.',
     );
 
     const organizationAddress = await ostPrime.organization();

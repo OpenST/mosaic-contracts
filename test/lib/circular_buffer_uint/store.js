@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,8 +80,8 @@ contract('CircularBufferUint.store()', async (accounts) => {
       const expectedPreviousItem = data[i - bufferLength];
       assert(
         previousItem.eq(expectedPreviousItem),
-        'The contract did not return the expected item that should ' +
-          'have been overwritten.',
+        'The contract did not return the expected item that should '
+          + 'have been overwritten.',
       );
 
       await buffer.storeExternal(data[i]);

@@ -1,8 +1,7 @@
-const RLPTest = artifacts.require('./RLPTest.sol');
-
 const RLP = require('rlp');
-
 const Utils = require('../test_lib/utils.js');
+
+const RLPTest = artifacts.require('TestRLP');
 
 contract('RLP', () => {
   let rlpTest;
@@ -72,7 +71,7 @@ contract('RLP', () => {
 
       const rlpArray = RLP.encode(items).toString('hex');
 
-      for (let index = 0; index < items.length; index++) {
+      for (let index = 0; index < items.length; index += 1) {
         const result = await rlpTest.toList.call(`0x${rlpArray}`, index);
 
         const itemAtIndex = result[0];
@@ -86,7 +85,7 @@ contract('RLP', () => {
       const hexDataArray = RLP.encode(dataArray).toString('hex');
 
       const result = await rlpTest.toList.call(`0x${hexDataArray}`, 0);
-      length = result[1].toNumber();
+      const length = result[1].toNumber();
       assert.equal(dataArray.length, length);
     });
 

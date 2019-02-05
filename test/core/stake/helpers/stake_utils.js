@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const StakeUtils = function() {};
+const StakeUtils = function () {};
 
 /**
  * Approves all transfers from the given senders of the given amounts to
@@ -33,7 +33,7 @@ const StakeUtils = function() {};
  * @param {array} senders An array of addresses that will deposit stake.
  * @param {array} amounts An array of amounts that the senders will deposit.
  */
-StakeUtils.prototype.approveTransfers = async function(
+StakeUtils.prototype.approveTransfers = async function (
   receiver,
   token,
   treasury,
@@ -61,7 +61,7 @@ StakeUtils.prototype.approveTransfers = async function(
  * @param {array} senders An array of addresses that will deposit stake.
  * @param {array} amounts An array of amounts that the senders will deposit.
  */
-StakeUtils.prototype.initializeStake = async function(
+StakeUtils.prototype.initializeStake = async function (
   stake,
   token,
   treasury,
@@ -90,7 +90,7 @@ StakeUtils.prototype.initializeStake = async function(
  * @param {string} address The address of the validator.
  * @param {BN} amount The amount to deposit.
  */
-StakeUtils.prototype.deposit = async function(erc20, stake, address, amount) {
+StakeUtils.prototype.deposit = async function (erc20, stake, address, amount) {
   await erc20.approve(stake.address, amount);
   const tx = await stake.deposit(address, amount);
 

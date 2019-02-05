@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,14 +32,14 @@ contract('GatewayBase.sol', (accounts) => {
     let bounty;
     let worker;
     let organization;
+    let gatewayBaseInstance;
 
     beforeEach(async () => {
-      (owner = accounts[2]),
-        (worker = accounts[3]),
-        (dummyStateRootProvider = accounts[0]),
-        (bounty = new BN(100));
+      [organization, worker, dummyStateRootProvider] = accounts;
 
-      organization = await MockOrganization.new(owner, worker);
+      bounty = new BN(100);
+
+      organization = await MockOrganization.new(organization, worker);
     });
 
     it('should pass with right set of parameters', async () => {

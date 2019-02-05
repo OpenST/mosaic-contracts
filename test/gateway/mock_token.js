@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
 
 const Utils = require('../test_lib/utils.js');
-const EIP20Token_utils = require('./EIP20_token_utils.js');
+const EIP20TokenUtils = require('./EIP20_token_utils.js');
 const web3EventsDecoder = require('../test_lib/event_decoder.js');
 
 const MockToken = artifacts.require('./MockToken.sol');
@@ -75,12 +75,8 @@ contract('MockToken', (accounts) => {
   const ST10 = web3.utils.toWei(new BN('10'), 'ether');
   const ST1 = web3.utils.toWei(new BN('1'), 'ether');
 
-  const owner = accounts[0];
-  const admin = accounts[1];
-  const ops = accounts[2];
-
   async function createToken() {
-    return await MockToken.new();
+    return MockToken.new();
   }
 
   describe('Basic properties', async () => {
@@ -120,7 +116,7 @@ contract('MockToken', (accounts) => {
         token.address,
         token.abi,
       );
-      EIP20Token_utils.checkTransferEventAbiDecoder(
+      EIP20TokenUtils.checkTransferEventAbiDecoder(
         logs,
         0,
         accounts[0],
@@ -156,8 +152,8 @@ contract('MockToken', (accounts) => {
     });
 
     it('transfer tokens from owner to other', async () => {
-      const res = await token.transfer(accounts[1], ST1000);
-      EIP20Token_utils.checkTransferEventGroup(
+      await token.transfer(accounts[1], ST1000);
+      EIP20TokenUtils.checkTransferEventGroup(
         await token.transfer(accounts[1], ST1000),
         accounts[0],
         accounts[1],
@@ -170,7 +166,7 @@ contract('MockToken', (accounts) => {
         await token.transfer.call(accounts[2], 0, { from: accounts[1] }),
         true,
       );
-      EIP20Token_utils.checkTransferEventGroup(
+      EIP20TokenUtils.checkTransferEventGroup(
         await token.transfer(accounts[2], 0, { from: accounts[1] }),
         accounts[1],
         accounts[2],
@@ -213,7 +209,6 @@ contract('MockToken', (accounts) => {
     });
 
     it('transfer 1 token', async () => {
-      const balance1Before = await token.balanceOf.call(accounts[1]);
       const balance2Before = await token.balanceOf.call(accounts[2]);
 
       assert.equal(

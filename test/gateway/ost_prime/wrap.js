@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,8 +71,8 @@ contract('OSTPrime.wrap()', (accounts) => {
   });
 
   it(
-    'should fail when the payable amount sent is less than the available ' +
-      'balance',
+    'should fail when the payable amount sent is less than the available '
+      + 'balance',
     async () => {
       await initialize();
 
@@ -119,7 +119,7 @@ contract('OSTPrime.wrap()', (accounts) => {
       value: amount,
     });
 
-    assert.strictEqual(result, true, `The contract should return true.`);
+    assert.strictEqual(result, true, 'The contract should return true.');
 
     const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
     const gasUsed = new BN(tx.receipt.gasUsed);
@@ -139,7 +139,7 @@ contract('OSTPrime.wrap()', (accounts) => {
     assert.strictEqual(
       contractEIP20Tokenbalance.eq(new BN(0)),
       true,
-      `The balance of OST prime contract should be zero.`,
+      'The balance of OST prime contract should be zero.',
     );
 
     const finalContractBalance = await Utils.getBalance(ostPrime.address);

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,12 @@ const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
-  const hash =
-    '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
+  const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
-  const randomHash =
-    '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
+  const randomHash = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
 
   const activationHeight = new BN(1234);
 
@@ -40,8 +38,8 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
 
   beforeEach(async () => {
     initialKernelHash = web3.utils.sha3('kernelHash');
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     kernelGateway = await KernelGateway.new(
       accounts[1],
@@ -56,8 +54,8 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
   });
 
   it(
-    'should return blank array of validator addresses and weights when ' +
-      'kernel hash is not open kernel hash',
+    'should return blank array of validator addresses and weights when '
+      + 'kernel hash is not open kernel hash',
     async () => {
       const result = await kernelGateway.getUpdatedValidators.call(randomHash);
 
@@ -121,9 +119,9 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
   });
 
   it(
-    'should return blank array for validator addresses and weights for the ' +
-      'old active kernel hash when the active kernel hash is' +
-      ' updated',
+    'should return blank array for validator addresses and weights for the '
+      + 'old active kernel hash when the active kernel hash is'
+      + ' updated',
     async () => {
       const validatorAddresses = [accounts[1], accounts[2]];
       const validatorWeights = [new BN(100), new BN(150)];

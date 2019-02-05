@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,8 +73,8 @@ contract('UtilityToken.setCoGateway() ', (accounts) => {
   });
 
   it(
-    'should fail when cogateway address is not linked with current ' +
-      'utility token',
+    'should fail when cogateway address is not linked with current '
+      + 'utility token',
     async () => {
       await coGateway.setUtilityToken(NullAddress);
 

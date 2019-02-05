@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
   const zeroBytes = Utils.ZERO_BYTES32;
@@ -34,8 +34,8 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
   let initialKernelHash;
 
   beforeEach(async () => {
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     initialKernelHash = web3.utils.sha3('kernelHash');
 
@@ -50,25 +50,24 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
   });
 
   it(
-    'should return zero hash when height is not the activation ' +
-      'kernel hash',
+    'should return zero hash when height is not the activation '
+    + 'kernel hash',
     async () => {
       const openKernelHash = await kernelGateway.getOpenKernelHash.call(2);
 
       assert.strictEqual(
         openKernelHash,
         zeroBytes,
-        `Open kernel hash must be zero.`,
+        'Open kernel hash must be zero.',
       );
     },
   );
 
   it(
-    'should return correct hash when height is the activation ' +
-      'kernel hash and open kernel exists',
+    'should return correct hash when height is the activation '
+    + 'kernel hash and open kernel exists',
     async () => {
-      const hash =
-        '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
+      const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
       const activationHeight = new BN(1234);
 
@@ -88,11 +87,10 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
   );
 
   it(
-    'should return zero hash for the activation height once the kernel ' +
-      'hash is activated',
+    'should return zero hash for the activation height once the kernel '
+    + 'hash is activated',
     async () => {
-      const hash =
-        '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
+      const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
       const activationHeight = new BN(1234);
 
@@ -118,7 +116,7 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
       assert.strictEqual(
         openKernelHash,
         zeroBytes,
-        `Open kernel hash must be zero.`,
+        'Open kernel hash must be zero.',
       );
     },
   );

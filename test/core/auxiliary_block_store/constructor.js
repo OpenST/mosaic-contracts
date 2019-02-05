@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
   let originBlockStore;
 
   beforeEach(async () => {
-    originBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
   });
 
   it('should accept a valid construction', async () => {
@@ -185,7 +185,7 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
     ];
 
     const count = testData.length;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i += 1) {
       const testDate = testData[i];
 
       await Utils.expectRevert(
@@ -201,8 +201,8 @@ contract('AuxiliaryBlockStore.constructor()', async (accounts) => {
           '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67',
           '0x7f1034f3d32a11c606f8ae8265344d2ab06d71500289df6f9cac2e013990830c',
         ),
-        'The initial block height is incompatible to the epoch ' +
-          'length. Must be a multiple.',
+        'The initial block height is incompatible to the epoch '
+        + 'length. Must be a multiple.',
       );
     }
   });

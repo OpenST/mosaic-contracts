@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,28 @@ const Assert = require('assert');
 const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
 
-const EIP20Token = artifacts.require('./EIP20TokenMock.sol');
+const EIP20Token = artifacts.require('MockEIP20Token');
+
+const assertTransferEvent = (
+  eventType,
+  actualFrom,
+  actualTo,
+  actualValue,
+  expectedFrom,
+  expectedTo,
+  expectedValue,
+) => {
+  const actualValue_ = new BN(actualValue);
+  const expectedValue_ = new BN(expectedValue);
+
+  Assert.equal(eventType, 'Transfer');
+  Assert.equal(actualFrom, expectedFrom);
+  Assert.equal(
+    web3.utils.toChecksumAddress(actualTo),
+    web3.utils.toChecksumAddress(expectedTo),
+  );
+  Assert(expectedValue_.eq(actualValue_));
+};
 
 // / @dev Deploy
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
@@ -72,26 +93,6 @@ module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
   );
 };
 
-assertTransferEvent = (
-  eventType,
-  actualFrom,
-  actualTo,
-  actualValue,
-  expectedFrom,
-  expectedTo,
-  expectedValue,
-) => {
-  actualValue = new BN(actualValue);
-  expectedValue = new BN(expectedValue);
-
-  Assert.equal(eventType, 'Transfer');
-  Assert.equal(actualFrom, expectedFrom);
-  Assert.equal(
-    web3.utils.toChecksumAddress(actualTo),
-    web3.utils.toChecksumAddress(expectedTo),
-  );
-  Assert(expectedValue.eq(actualValue));
-};
 
 module.exports.checkApprovalEventGroup = (
   result,
@@ -103,12 +104,15 @@ module.exports.checkApprovalEventGroup = (
 
   const event = result.logs[0];
 
+  let value;
   if (Number.isInteger(_value)) {
-    _value = new BN(_value);
+    value = new BN(_value);
+  } else {
+    value = _value;
   }
 
   assert.equal(event.event, 'Approval');
   assert.equal(event.args._owner, _owner);
   assert.equal(event.args._spender, _spender);
-  assert(event.args._value.eq(_value));
+  assert(event.args._value.eq(value));
 };

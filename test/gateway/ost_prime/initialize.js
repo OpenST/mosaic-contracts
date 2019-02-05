@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,13 @@ contract('OSTPrime.initialize()', (accounts) => {
     assert.strictEqual(
       balance.eqn(0),
       true,
-      `The balance of contract must be zero.`,
+      'The balance of contract must be zero.',
     );
   });
 
   it(
-    'should fail if initialize is called with payable amount not equal ' +
-      'to TOKENS_MAX ost prime base token',
+    'should fail if initialize is called with payable amount not equal '
+      + 'to TOKENS_MAX ost prime base token',
     async () => {
       const tokenAmount = new BN(1);
 
@@ -68,15 +68,15 @@ contract('OSTPrime.initialize()', (accounts) => {
   );
 
   it(
-    'should pass if initialize is called with value equal to ' +
-      'TOKENS_MAX ost prime base token',
+    'should pass if initialize is called with value equal to '
+      + 'TOKENS_MAX ost prime base token',
     async () => {
       const result = await ostPrime.initialize.call({
         from: accounts[2],
         value: TOKENS_MAX,
       });
 
-      assert.strictEqual(result, true, `The result should be true.`);
+      assert.strictEqual(result, true, 'The result should be true.');
 
       await ostPrime.initialize({ from: accounts[2], value: TOKENS_MAX });
 
@@ -88,7 +88,7 @@ contract('OSTPrime.initialize()', (accounts) => {
       );
 
       const initialized = await ostPrime.initialized.call();
-      assert.strictEqual(initialized, true, `Contract should be initialized.`);
+      assert.strictEqual(initialized, true, 'Contract should be initialized.');
     },
   );
 

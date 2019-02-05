@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,8 +75,8 @@ contract('UtilityToken.decreaseSupply()', (accounts) => {
   });
 
   it(
-    'should fail when decrease supply amount is greater than the available' +
-      ' balance',
+    'should fail when decrease supply amount is greater than the available'
+      + ' balance',
     async () => {
       amount = new BN(2000);
 

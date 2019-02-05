@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ const Utils = require('../../../test_lib/utils.js');
 
 const MetaBlock = require('../../../test_lib/meta_block.js');
 
-const AuxStoreUtils = function() {};
+const AuxStoreUtils = function () {};
 
 AuxStoreUtils.prototype = {
   /**
@@ -38,14 +38,12 @@ AuxStoreUtils.prototype = {
    * @returns {string} The new accumulated transaction root that includes the
    *                   new transaction root.
    */
-  accumulateTransactionRoot: (oldAccumulatedTxRoot, newTxRoot) => {
-    return web3.utils.sha3(
-      web3.eth.abi.encodeParameters(
-        ['bytes32', 'bytes32'],
-        [oldAccumulatedTxRoot, newTxRoot],
-      ),
-    );
-  },
+  accumulateTransactionRoot: (oldAccumulatedTxRoot, newTxRoot) => web3.utils.sha3(
+    web3.eth.abi.encodeParameters(
+      ['bytes32', 'bytes32'],
+      [oldAccumulatedTxRoot, newTxRoot],
+    ),
+  ),
 
   /**
    * Reports all given blocks on the given block store.

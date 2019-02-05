@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,15 +24,13 @@ const web3 = require('../../test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.activateKernel()', async (accounts) => {
   const zeroBytes = Utils.ZERO_BYTES32;
-  const hash =
-    '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
+  const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
-  const randomHash =
-    '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
+  const randomHash = '0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67';
 
   const originCoreIdentifier = '0x0000000000000000000000000000000000000001';
 
@@ -47,8 +45,8 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
   beforeEach(async () => {
     initialKernelHash = web3.utils.sha3('kernelHash');
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     await originBlockStore.setCoreIdentifier(originCoreIdentifier);
     await auxiliaryBlockStore.setCoreIdentifier(auxiliaryCoreIdentifier);
@@ -86,7 +84,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   it('should return success for correct open kernel hash', async () => {
     const result = await auxiliaryBlockStore.activateKernel.call(hash);
 
-    assert.strictEqual(result, true, `The contract must result true.`);
+    assert.strictEqual(result, true, 'The contract must result true.');
   });
 
   it('should change the open kernel hash to zero on success', async () => {
@@ -160,13 +158,13 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
     let kernelObject = await kernelGateway.kernels.call(hash1);
     assert(
       kernelObject.height.eq(new BN(12)),
-      `Initial active kernel object must exists`,
+      'Initial active kernel object must exists',
     );
 
     kernelObject = await kernelGateway.kernels.call(hash2);
     assert(
       kernelObject.height.eq(new BN(13)),
-      `Initial open kernel object must exists`,
+      'Initial open kernel object must exists',
     );
 
     await kernelGateway.setOpenKernelHash(hash2);
@@ -176,14 +174,14 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
     assert(
       kernelObject.height.eq(new BN(0)),
-      `Initial open kernel object must exists`,
+      'Initial open kernel object must exists',
     );
 
     kernelObject = await kernelGateway.kernels.call(hash2);
 
     assert(
       kernelObject.height.eq(new BN(13)),
-      `Initial open kernel object must exists`,
+      'Initial open kernel object must exists',
     );
 
     await kernelGateway.setOpenKernelHash(randomHash);
@@ -193,7 +191,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
 
     assert(
       kernelObject.height.eq(new BN(0)),
-      `Initial open kernel object must exists`,
+      'Initial open kernel object must exists',
     );
   });
 });

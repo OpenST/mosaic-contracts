@@ -169,8 +169,7 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
       revokedProofData.co_gateway.confirm_stake_intent.proof_data.block_number,
       16,
     );
-    const storageRoot =
-      revokedProofData.co_gateway.confirm_stake_intent.proof_data.storageHash;
+    const storageRoot = revokedProofData.co_gateway.confirm_stake_intent.proof_data.storageHash;
 
     await gateway.setStorageRoot(blockHeight, storageRoot);
 

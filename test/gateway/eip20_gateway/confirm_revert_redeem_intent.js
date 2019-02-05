@@ -99,9 +99,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
       accounts,
     );
 
-    storageProof =
-      StubData.co_gateway.revert_redeem.proof_data.storageProof[0]
-        .serializedProof;
+    storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0]
+      .serializedProof;
     blockHeight = await setStorageRoot(gateway);
     await gateway.setInboxStatus(
       unstakeMessage.messageHash,
@@ -284,8 +283,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
 
   it('should fail for wrong merkle proof', async () => {
     // Using revert proof instead of revert_redeem proof.
-    storageProof =
-      StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(

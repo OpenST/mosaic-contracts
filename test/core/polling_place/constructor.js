@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const web3 = require('../../test_lib/web3.js');
 
 const Utils = require('../../test_lib/utils.js');
 
-const BlockStoreMock = artifacts.require('BlockStoreMock');
+const MockBlockStore = artifacts.require('MockBlockStore');
 const PollingPlace = artifacts.require('PollingPlace');
 
 const ValidatorIndexAuxiliaryAddress = 0;
@@ -32,15 +32,15 @@ const ValidatorIndexEnded = 2;
 const ValidatorIndexStartHeight = 3;
 const ValidatorIndexEndHeight = 4;
 
-contract('PollingPlace.constructor()', async (accounts) => {
+contract('PollingPlace.constructor()', async () => {
   const originCoreIdentifier = '0x0000000000000000000000000000000000000001';
   let originBlockStore;
   const auxiliaryCoreIdentifier = '0x0000000000000000000000000000000000000002';
   let auxiliaryBlockStore;
 
   beforeEach(async () => {
-    originBlockStore = await BlockStoreMock.new();
-    auxiliaryBlockStore = await BlockStoreMock.new();
+    originBlockStore = await MockBlockStore.new();
+    auxiliaryBlockStore = await MockBlockStore.new();
 
     await originBlockStore.setVoteValid(true);
     await auxiliaryBlockStore.setVoteValid(true);
@@ -114,7 +114,7 @@ contract('PollingPlace.constructor()', async (accounts) => {
     );
 
     // Check for all individual weights to be recorded
-    for (let i = 0; i < 19; i++) {
+    for (let i = 0; i < 19; i += 1) {
       const validator = await pollingPlace.validators.call(
         expectedWeights.addresses[i],
       );

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -383,6 +383,9 @@ contract EIP20Gateway is GatewayBase {
     /**
      * @notice Completes the stake process.
      *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
+     *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
      *                      staker while initiating the stake.
@@ -472,6 +475,8 @@ contract EIP20Gateway is GatewayBase {
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.MessageStatus outboxMessageStatus =
+          messageBox.outbox[_messageHash];
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -482,6 +487,7 @@ contract EIP20Gateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
+        uint256 bountyAmount = stakes[_messageHash].bounty;
         (staker_, stakeAmount_) = progressStakeInternal(
             _messageHash,
             message,
@@ -489,6 +495,50 @@ contract EIP20Gateway is GatewayBase {
             true
         );
 
+        // Return revert penalty to staker if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToStaker(
+            staker_,
+            outboxMessageStatus,
+            MessageBus.MessageStatus(_messageStatus),
+            bountyAmount
+        );
+    }
+
+    /**
+     * @notice Return the revert penalty to the staker. Only valid for
+     *         a message transition from DeclaredRevocation -> Progressed.
+     *
+     * @dev Should only be called from progressStakeWithProof. This function
+     *      exists to avoid a stack too deep error.
+     *
+     * @param _staker Staker address.
+     * @param _outboxMessageStatus Message status before progressing.
+     * @param _inboxMessageStatus Message status after progressing.
+     * @param _bountyAmount Bounty amount to use for calculating penalty.
+     */
+    function tryReturnPenaltyToStaker(
+        address _staker,
+        MessageBus.MessageStatus _outboxMessageStatus,
+        MessageBus.MessageStatus _inboxMessageStatus,
+        uint256 _bountyAmount
+    )
+      private
+    {
+        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
+            return;
+        }
+        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
+            return;
+        }
+
+        // Penalty charged to staker for revert stake.
+        uint256 penalty = penaltyFromBounty(_bountyAmount);
+        // transfer the penalty amount
+        require(
+            baseToken.transfer(_staker, penalty),
+            "Penalty amount transfer to staker failed"
+        );
     }
 
     /**
@@ -496,8 +546,6 @@ contract EIP20Gateway is GatewayBase {
      *         amount back. Only staker can revert stake by providing
      *         penalty i.e. 1.5 times of bounty amount. On progress revert stake
      *         penalty and facilitator bounty will be burned.
-     *
-     * @dev To revert the the sender must sign the sha3(messageHash, nonce+1)
      *
      * @param _messageHash Message hash.
      *
@@ -559,6 +607,9 @@ contract EIP20Gateway is GatewayBase {
      *         This method will return stake amount to staker and burn
      *         facilitator bounty and staker penalty.
      *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
+     *
      * @param _messageHash Message hash.
      * @param _blockHeight Block number for which the proof is valid
      * @param _rlpParentNodes RLP encoded parent node data to prove
@@ -590,21 +641,32 @@ contract EIP20Gateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
-        // Get the message object
+        // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
             "StakeIntentHash must not be zero."
         );
 
-        // Get the storageRoot for the given block height
+        // Get the storageRoot for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero."
         );
 
-        // Progress with revocation message
+        amount_ = stakes[_messageHash].amount;
+
+        require(
+            amount_ > 0,
+            "Stake request must exist."
+        );
+
+        staker_ = message.sender;
+        stakerNonce_ = message.nonce;
+        uint256 stakeBounty = stakes[_messageHash].bounty;
+
+        // Progress with revocation message.
         MessageBus.progressOutboxRevocation(
             messageBox,
             message,
@@ -614,23 +676,18 @@ contract EIP20Gateway is GatewayBase {
             MessageBus.MessageStatus.Revoked
         );
 
-        staker_ = message.sender;
-        stakerNonce_ = message.nonce;
-        amount_ = stakes[_messageHash].amount;
+        delete stakes[_messageHash];
 
-        // transfer the staked amount to the staker
+        // Transfer the staked amount to the staker.
         token.transfer(message.sender, amount_);
 
-        // burn facilitator bounty
-        baseToken.transfer(burner, bounty);
-        //penalty charged to staker
-        uint256 penalty = penaltyFromBounty(stakes[_messageHash].bounty);
+        // Burn facilitator bounty.
+        baseToken.transfer(burner, stakeBounty);
+        // Penalty charged to staker.
+        uint256 penalty = penaltyFromBounty(stakeBounty);
 
-        // burn staker penalty
+        // Burn staker penalty.
         baseToken.transfer(burner, penalty);
-
-        // delete the stake data
-        delete stakes[_messageHash];
 
         emit StakeReverted(
             _messageHash,
@@ -641,7 +698,7 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Declare redeem intent
+     * @notice Declare redeem intent.
      *
      * @param _redeemer Redeemer address.
      * @param _redeemerNonce Redeemer nonce.
@@ -649,7 +706,7 @@ contract EIP20Gateway is GatewayBase {
      *                     transferred.
      * @param _amount Redeem amount.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
-     *                  redeem and unstake process done
+     *                  redeem and unstake process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay.
      * @param _blockHeight Block number for which the proof is valid.
      * @param _hashLock Hash lock.
@@ -678,19 +735,19 @@ contract EIP20Gateway is GatewayBase {
 
         require(
             _redeemer != address(0),
-            "Redeemer address must not be zero"
+            "Redeemer address must not be zero."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be zero"
+            "Beneficiary address must not be zero."
         );
         require(
             _amount != 0,
-            "Redeem amount must not be zero"
+            "Redeem amount must not be zero."
         );
         require(
             _rlpParentNodes.length > 0,
-            "RLP encoded parent nodes must not be zero"
+            "RLP encoded parent nodes must not be zero."
         );
 
         bytes32 intentHash = hashRedeemIntent(
@@ -742,20 +799,23 @@ contract EIP20Gateway is GatewayBase {
     }
 
     /**
-     * @notice Complete unstake
+     * @notice Complete unstake.
+     *
+     * @dev Message bus ensures correct execution sequence of methods and also
+     *      provides safety mechanism for any possible re-entrancy attack.
      *
      * @param _messageHash Message hash.
      * @param _unlockSecret Unlock secret for the hashLock provide by the
-     *                      facilitator while initiating the redeem
+     *                      facilitator while initiating the redeem.
      *
-     * @return redeemer_ Redeemer address
+     * @return redeemer_ Redeemer address.
      * @return redeemAmount_ Total amount for which the redeem was
      *                       initiated. The reward amount is deducted from the
      *                       total redeem amount and is given to the
      *                       facilitator.
      * @return unstakeAmount_ Actual unstake amount, after deducting the reward
      *                        from the total redeem amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
     function progressUnstake(
         bytes32 _messageHash,
@@ -768,17 +828,16 @@ contract EIP20Gateway is GatewayBase {
             uint256 rewardAmount_
         )
     {
-        // Get the inital gas
+        // Get the inital gas.
         uint256 initialGas = gasleft();
 
         require(
             _messageHash != bytes32(0),
             "Message hash must not be zero."
         );
-        // Get the message object.
+
         MessageBus.Message storage message = messages[_messageHash];
 
-        // Progress inbox
         MessageBus.progressInbox(
             messageBox,
             message,
@@ -807,8 +866,6 @@ contract EIP20Gateway is GatewayBase {
         penalty_ = super.penaltyFromBounty(stakes[_messageHash].bounty);
     }
 
-    /* Public Functions */
-
     /**
      * @notice Completes the redeem process by providing the merkle proof
      *         instead of unlockSecret. In case the facilitator process is not
@@ -831,7 +888,7 @@ contract EIP20Gateway is GatewayBase {
      *                       facilitator.
      * @return unstakeAmount_ Actual unstake amount, after deducting the reward
      *                        from the total redeem amount.
-     * @return rewardAmount_ Reward amount that is transferred to facilitator
+     * @return rewardAmount_ Reward amount that is transferred to facilitator.
      */
     function progressUnstakeWithProof(
         bytes32 _messageHash,
@@ -858,14 +915,13 @@ contract EIP20Gateway is GatewayBase {
             "RLP parent nodes must not be zero"
         );
 
-        // Get the storage root for the given block height
+        // Get the storage root for the given block height.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
             "Storage root must not be zero"
         );
 
-        // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
 
         MessageBus.progressInboxWithProof(
@@ -880,9 +936,6 @@ contract EIP20Gateway is GatewayBase {
         (redeemAmount_, unstakeAmount_, rewardAmount_) =
         progressUnstakeInternal(_messageHash, initialGas, bytes32(0), true);
     }
-
-
-    /** External methods */
 
     /**
      * @notice Declare redeem revert intent.
@@ -1016,16 +1069,16 @@ contract EIP20Gateway is GatewayBase {
     /* Private functions */
 
     /**
-     * @notice private function to execute confirm redeem intent.
+     * @notice Private function to execute confirm redeem intent.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmRedeemIntent function
+     *      confirmRedeemIntent function.
      *
-     * @param _message message object
-     * @param _blockHeight Block number for which the proof is valid
+     * @param _message Message object.
+     * @param _blockHeight Block number for which the proof is valid.
      * @param _rlpParentNodes RLP encoded parent nodes.
      *
-     * @return `true` if executed successfully
+     * @return `true` if executed successfully.
      */
     function confirmRedeemIntentInternal(
         MessageBus.Message storage _message,
@@ -1035,14 +1088,14 @@ contract EIP20Gateway is GatewayBase {
         private
         returns (bool)
     {
-        // Get storage root
+        // Get storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(
             storageRoot != bytes32(0),
-            "Storage root must not be zero"
+            "Storage root must not be zero."
         );
 
-        // Confirm message
+        // Confirm message.
         MessageBus.confirmMessage(
             messageBox,
             _message,
@@ -1081,16 +1134,22 @@ contract EIP20Gateway is GatewayBase {
         // Get the staker address
         staker_ = _message.sender;
 
-        //Get the stake amount.
+        // Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
+
+        require(
+            stakeAmount_ > 0,
+            "Stake request must exist."
+        );
+
+        uint256 stakedBounty = stakes[_messageHash].bounty;
+
+        delete stakes[_messageHash];
 
         // Transfer the staked amount to stakeVault.
         token.transfer(address(stakeVault), stakeAmount_);
 
-        baseToken.transfer(msg.sender, stakes[_messageHash].bounty);
-
-        // Delete the stake entry.
-        delete stakes[_messageHash];
+        baseToken.transfer(msg.sender, stakedBounty);
 
         emit StakeProgressed(
             _messageHash,
@@ -1141,6 +1200,10 @@ contract EIP20Gateway is GatewayBase {
 
         redeemAmount_ = unStake.amount;
 
+        require(
+            redeemAmount_ > 0,
+            "Unstake request must exist."
+        );
         /*
          * Reward calculation depends upon
          *  - the gas consumed in target chain for confirmation and progress steps.
@@ -1159,8 +1222,13 @@ contract EIP20Gateway is GatewayBase {
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
+
+        address beneficiary = unstakes[_messageHash].beneficiary;
+
+        delete unstakes[_messageHash];
+
         // Release the amount to beneficiary.
-        stakeVault.releaseTo(unStake.beneficiary, unstakeAmount_);
+        stakeVault.releaseTo(beneficiary, unstakeAmount_);
 
         if (rewardAmount_ > 0) {
             // Reward facilitator with the reward amount.
@@ -1170,7 +1238,7 @@ contract EIP20Gateway is GatewayBase {
         emit UnstakeProgressed(
             _messageHash,
             message.sender,
-            unStake.beneficiary,
+            beneficiary,
             redeemAmount_,
             unstakeAmount_,
             rewardAmount_,
@@ -1178,20 +1246,18 @@ contract EIP20Gateway is GatewayBase {
             _unlockSecret
         );
 
-        // Delete the unstake data.
-        delete unstakes[_messageHash];
     }
 
     /**
-     * @notice private function to calculate redeem intent hash.
+     * @notice Private function to calculate redeem intent hash.
      *
      * @dev This function is to avoid stack too deep error in
-     *      confirmRedeemIntent function
+     *      confirmRedeemIntent function.
      *
-     * @param _amount redeem amount
-     * @param _beneficiary unstake account
+     * @param _amount Redeem amount.
+     * @param _beneficiary Unstake account.
      *
-     * @return bytes32 redeem intent hash
+     * @return bytes32 Redeem intent hash.
      */
     function hashRedeemIntent(
         uint256 _amount,

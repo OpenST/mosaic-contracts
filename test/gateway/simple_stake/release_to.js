@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,15 +98,15 @@ contract('SimpleStake.releaseTo()', (accounts) => {
     assert.strictEqual(
       latestBeneficiaryBalance.eq(expectedBeneficiaryBalance),
       true,
-      'Expected balance of beneficiary after release is not equal to' +
-        ' actual balance',
+      'Expected balance of beneficiary after release is not equal to'
+        + ' actual balance',
     );
 
     assert.strictEqual(
       latestSimpleStakeBalance.eq(expectedSimpleStakeBalance),
       true,
-      'Expected balance of simple stake after release is not equal to' +
-        ' actual balance',
+      'Expected balance of simple stake after release is not equal to'
+        + ' actual balance',
     );
   });
 

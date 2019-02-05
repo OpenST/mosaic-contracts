@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
   });
 
   it(
-    'should fail when target message is progressed and source message is' +
-      ' declared',
+    'should fail when target message is progressed and source message is'
+      + ' declared',
     async () => {
       const message = 'Message on target must be Declared.';
       params.message = message;
@@ -80,8 +80,8 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
   );
 
   it(
-    'should fail when target message is progressed and source message is' +
-      ' progressed',
+    'should fail when target message is progressed and source message is'
+      + ' progressed',
     async () => {
       const message = 'Message on target must be Declared.';
       params.message = message;

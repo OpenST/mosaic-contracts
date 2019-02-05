@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
-const coGatewayUtils = require('./helpers/co_gateway_utils.js');
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 
 const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const TestUtilityToken = artifacts.require('TestUtilityToken');
@@ -42,12 +42,7 @@ const zeroBytes = Utils.ZERO_BYTES32;
 const { MessageStatusEnum } = messageBus;
 
 async function setup(accounts) {
-  valueToken = accounts[0];
-  burner = accounts[10];
-  organization = accounts[2];
-  dummyStateRootProvider = accounts[11];
-  gateway = accounts[3];
-  owner = accounts[8];
+  [valueToken, organization, gateway, staker, burner, dummyStateRootProvider] = accounts;
   testUtilityToken = await TestUtilityToken.new(
     valueToken,
     symbol,
@@ -56,9 +51,6 @@ async function setup(accounts) {
     organization,
   );
   bountyAmount = new BN(100);
-  staker = accounts[7];
-  stakerBalance = new BN(1000000);
-  rewardAmount = new BN(100);
 }
 
 contract('EIP20CoGateway.progressMint() ', (accounts) => {
@@ -104,7 +96,7 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
       burner,
     );
 
-    intentHash = coGatewayUtils.hashRedeemIntent(
+    intentHash = CoGatewayUtils.hashRedeemIntent(
       amount,
       beneficiary,
       testEIP20CoGateway.address,
@@ -157,19 +149,19 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
     assert.strictEqual(
       amount.eq(progressMintValues.stakeAmount_),
       true,
-      `Staked amount should be ${amount}.`,
+      `Staked amount is ${progressMintValues.stakeAmount_.toString(10)} and expected is ${amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedMintedToken.eq(progressMintValues.mintedAmount_),
       true,
-      `Minted amount should be ${expectedMintedToken}.`,
+      `Minted amount is ${progressMintValues.mintedAmount_.toString(10)} and expected is ${expectedMintedToken.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedReward.eq(progressMintValues.rewardAmount_),
       true,
-      `Reward to facilitator should be ${expectedReward}.`,
+      `Reward to facilitator is ${progressMintValues.rewardAmount_.toString(10)} and expected is ${expectedReward.toString(10)}.`,
     );
 
     const response = await testEIP20CoGateway.progressMint(
@@ -184,19 +176,21 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
     assert.strictEqual(
       facilitatorBalance.eq(expectedReward),
       true,
-      `Facilitator reward should be ${expectedReward}.`,
+      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is ${expectedReward.toString(10)}.`,
     );
 
     assert.strictEqual(
       beneficiaryBalance.eq(amount.sub(expectedReward)),
       true,
-      `Beneficiary balance should be ${amount.sub(expectedReward)}.`,
+      `Beneficiary balance is ${beneficiaryBalance.toString(10)} and expected is `
+      + `${amount.sub(expectedReward).toString(10)}.`,
     );
 
     const expectedEvent = {
       MintProgressed: {
         _messageHash: messageHash,
         _staker: staker,
+        _beneficiary: beneficiary,
         _stakeAmount: amount,
         _mintedAmount: expectedMintedToken,
         _rewardAmount: expectedReward,
@@ -218,7 +212,7 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
   it('should progress mint for zero facilitator reward', async () => {
     gasPrice = new BN(0);
 
-    const messageHash = await testEIP20CoGateway.setMessage.call(
+    messageHash = await testEIP20CoGateway.setMessage.call(
       intentHash,
       nonce,
       gasPrice,
@@ -253,19 +247,20 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
     assert.strictEqual(
       beneficiaryBalance.eq(amount),
       true,
-      `Balance for beneficiary should be ${amount}`,
+      `Beneficiary balance is ${beneficiaryBalance.toString(10)} and expected is ${amount}`,
     );
 
     assert.strictEqual(
       facilitatorBalance.eq(new BN(0)),
       true,
-      'Facilitator reward should be zero',
+      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is zero`,
     );
 
     const expectedEvent = {
       MintProgressed: {
         _messageHash: messageHash,
         _staker: staker,
+        _beneficiary: beneficiary,
         _stakeAmount: amount,
         _mintedAmount: amount,
         _rewardAmount: new BN(0),

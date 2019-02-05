@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const UtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 const Utils = require('./../../test_lib/utils');
-const coGatewayUtils = require('./helpers/co_gateway_utils.js');
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const StubData = require('../../data/stake_revoked_1.json');
@@ -72,7 +72,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
 
     amount = new BN(stakeRequest.amount, 16);
 
-    const intentHash = coGatewayUtils.hashStakeIntent(
+    const intentHash = CoGatewayUtils.hashStakeIntent(
       amount,
       stakeRequest.beneficiary,
       StubData.contracts.gateway,
@@ -80,8 +80,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
 
     await utilityToken.setCoGatewayAddress(coGateway.address);
 
-    messageHash =
-      StubData.gateway.stake.return_value.returned_value.messageHash_;
+    messageHash = StubData.gateway.stake.return_value.returned_value.messageHash_;
 
     await coGateway.setMessage(
       intentHash,
@@ -98,8 +97,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should confirm revert stake intent', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Declared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     const tx = await coGateway.confirmRevertStakeIntent(
       messageHash,
@@ -113,8 +111,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should return correct values ', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Declared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     const result = await coGateway.confirmRevertStakeIntent.call(
       messageHash,
@@ -126,7 +123,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
     assert.strictEqual(
       result.staker_,
       stakeRequest.staker,
-      `Expected staker is different from staker from the event.`,
+      'Expected staker is different from staker from the event.',
     );
     assert.strictEqual(
       result.stakerNonce_.eq(expectedNonce),
@@ -147,8 +144,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should emit RevertStakeIntentConfirmed event', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Declared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     const tx = await coGateway.confirmRevertStakeIntent(
       messageHash,
@@ -169,12 +165,12 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
     assert.strictEqual(
       eventData._messageHash,
       messageHash,
-      `Expected message hash is different from message hash from event.`,
+      'Expected message hash is different from message hash from event.',
     );
     assert.strictEqual(
       eventData._staker,
       stakeRequest.staker,
-      `Expected staker is different from staker from event.`,
+      'Expected staker is different from staker from event.',
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(expectedNonce),
@@ -195,8 +191,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should fail if revert stake intent is already confirmed', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Declared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     await coGateway.confirmRevertStakeIntent(
       messageHash,
@@ -217,8 +212,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should fail for undeclared message', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Undeclared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       coGateway.confirmRevertStakeIntent(
@@ -233,8 +227,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should fail for progressed message', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Progressed);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       coGateway.confirmRevertStakeIntent(
@@ -249,8 +242,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
   it('should fail for zero message hash', async () => {
     await coGateway.setInboxStatus(messageHash, MessageStatusEnum.Declared);
     const blockHeight = await setStateRoot(coGateway);
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       coGateway.confirmRevertStakeIntent(
@@ -278,8 +270,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
       StubData.gateway.revert_stake.proof_data.block_number,
       16,
     );
-    const storageProof =
-      StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.revert_stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       coGateway.confirmRevertStakeIntent(
@@ -296,8 +287,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
     const blockHeight = await setStateRoot(coGateway);
 
     // Using stake proof instead of revertStake.
-    const storageProof =
-      StubData.gateway.stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubData.gateway.stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       coGateway.confirmRevertStakeIntent(

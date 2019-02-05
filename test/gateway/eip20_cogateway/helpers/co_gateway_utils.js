@@ -1,4 +1,6 @@
-// Copyright 2018 OpenST Ltd.
+'use strict';
+
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,20 +23,7 @@
 const web3 = require('../../../test_lib/web3.js');
 const utils = require('../../../test_lib/utils.js');
 
-const CoGatewayUtils = function() {};
-
-CoGatewayUtils.prototype = {
-  /**
-   * Generate the redeem type hash. This is as per EIP-712.
-   *
-   * @return {string} message type hash.
-   */
-  redeemTypeHash() {
-    return utils.getTypeHash(
-      'RedeemIntent(uint256 amount,address beneficiary,address gateway)',
-    );
-  },
-
+class CoGatewayUtils {
   /**
    * Generate the redeem intent hash
    *
@@ -45,7 +34,7 @@ CoGatewayUtils.prototype = {
    *
    * @return {string} redeem intent hash.
    */
-  hashRedeemIntent(amount, beneficiary, gateway) {
+  static hashRedeemIntent(amount, beneficiary, gateway) {
     const redeemIntentTypeHash = utils.getTypeHash(
       'RedeemIntent(uint256 amount,address beneficiary,address gateway)',
     );
@@ -58,7 +47,7 @@ CoGatewayUtils.prototype = {
     );
 
     return redeemIntent;
-  },
+  }
 
   /**
    * Generate the stake intent hash
@@ -70,7 +59,7 @@ CoGatewayUtils.prototype = {
    *
    * @return {string} stake intent hash.
    */
-  hashStakeIntent: (amount, beneficiary, gateway) => {
+  static hashStakeIntent(amount, beneficiary, gateway) {
     const stakeIntentTypeHash = utils.getTypeHash(
       'StakeIntent(uint256 amount,address beneficiary,address gateway)',
     );
@@ -83,7 +72,7 @@ CoGatewayUtils.prototype = {
     );
 
     return stakeIntent;
-  },
-};
+  }
+}
 
-module.exports = new CoGatewayUtils();
+module.exports = CoGatewayUtils;

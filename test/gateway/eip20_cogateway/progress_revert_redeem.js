@@ -26,7 +26,7 @@ const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder');
-const coGatewayUtils = require('./helpers/co_gateway_utils.js');
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 const StubData = require('../../../test/data/redeem_revoked_1.json');
 
 const ZeroBytes = Utils.ZERO_BYTES32;
@@ -408,7 +408,7 @@ async function setupContractPreCondition(
   utilityToken,
   owner,
 ) {
-  const redeemIntentHash = coGatewayUtils.hashRedeemIntent(
+  const redeemIntentHash = CoGatewayUtils.hashRedeemIntent(
     revertRedeemParams.amount,
     revertRedeemParams.beneficiary,
     StubData.contracts.coGateway,

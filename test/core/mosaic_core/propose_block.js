@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,8 +91,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   });
 
   it(
-    'should not be able to propose meta-block with same height as previous' +
-      ' meta-block',
+    'should not be able to propose meta-block with same height as previous'
+      + ' meta-block',
     async () => {
       height = 0;
 
@@ -114,8 +114,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block with the same gas as parent' +
-      ' meta-block',
+    'should not be able to propose meta-block with the same gas as parent'
+      + ' meta-block',
     async () => {
       gas = 0;
 
@@ -137,8 +137,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block for same height and same' +
-      ' transition object which is already proposed',
+    'should not be able to propose meta-block for same height and same'
+      + ' transition object which is already proposed',
     async () => {
       const tx = await mosaicCore.proposeBlock(
         height,
@@ -182,8 +182,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block for same auxiliary dynasty' +
-      ' as parent meta-block',
+    'should not be able to propose meta-block for same auxiliary dynasty'
+      + ' as parent meta-block',
     async () => {
       auxiliaryDynasty = 0;
 
@@ -205,8 +205,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block for wrong auxiliary' +
-      ' block chain',
+    'should not be able to propose meta-block for wrong auxiliary'
+      + ' block chain',
     async () => {
       auxiliaryCoreIdentifier = web3.utils.sha3('2');
 
@@ -230,8 +230,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block if transaction root is' +
-      ' not defined',
+    'should not be able to propose meta-block if transaction root is'
+      + ' not defined',
     async () => {
       transactionRoot = Utils.ZERO_BYTES32;
 
@@ -253,8 +253,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   );
 
   it(
-    'should not be able to propose meta-block if origin BlockHash is' +
-      ' not defined',
+    'should not be able to propose meta-block if origin BlockHash is'
+      + ' not defined',
     async () => {
       originBlockHash = Utils.ZERO_BYTES32;
 
@@ -295,8 +295,8 @@ contract('MosaicCore.proposeBlock()', async (accounts) => {
   });
 
   it(
-    'should not be able to propose meta-block if kernel Hash is' +
-      ' not defined',
+    'should not be able to propose meta-block if kernel Hash is'
+      + ' not defined',
     async () => {
       kernelHash = Utils.ZERO_BYTES32;
 

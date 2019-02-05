@@ -83,8 +83,8 @@ contract('GatewayBase.getInboxActiveProcess()', (accounts) => {
   });
 
   it(
-    'should return zero message hash and undeclared message status when the ' +
-      'account address does not have active inbox process',
+    'should return zero message hash and undeclared message status when the '
+      + 'account address does not have active inbox process',
     async () => {
       await gatewayBase.setInboxStatus(
         messageHash,

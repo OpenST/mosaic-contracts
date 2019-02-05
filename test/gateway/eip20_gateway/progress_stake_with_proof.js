@@ -43,18 +43,16 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
   let stakeData;
   let progressStakeParams;
   let bountyAmount;
+  let penaltyAmount;
+
+  const PENALTY_MULTIPLIER = 1.5;
 
   const setStorageRoot = async () => {
-    let blockNumber = new BN(
-      proofData.co_gateway.confirm_stake_intent.proof_data.block_number,
-    );
-    let storageRoot =
-      proofData.co_gateway.confirm_stake_intent.proof_data.storageHash;
+    let blockNumber = new BN(proofData.co_gateway.confirm_stake_intent.proof_data.block_number);
+    let storageRoot = proofData.co_gateway.confirm_stake_intent.proof_data.storageHash;
     await gateway.setStorageRoot(blockNumber, storageRoot);
 
-    blockNumber = new BN(
-      proofData.co_gateway.progress_mint.proof_data.block_number,
-    );
+    blockNumber = new BN(proofData.co_gateway.progress_mint.proof_data.block_number);
     storageRoot = proofData.co_gateway.progress_mint.proof_data.storageHash;
     await gateway.setStorageRoot(blockNumber, storageRoot);
   };
@@ -69,8 +67,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
       gasLimit: new BN(stakeParams.gasLimit, 16),
       nonce: new BN(stakeParams.nonce, 16),
       hashLock: stakeParams.hashLock,
-      messageHash:
-        stubData.gateway.stake.return_value.returned_value.messageHash_,
+      messageHash: stubData.gateway.stake.return_value.returned_value.messageHash_,
       staker: stakeParams.staker,
     };
 
@@ -104,22 +101,20 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
 
     progressStakeParams = {
       messageHash: stakeData.messageHash,
-      rlpParentNodes:
-        stubData.co_gateway.confirm_stake_intent.proof_data.storageProof[0]
-          .serializedProof,
-      blockHeight: new BN(
-        stubData.co_gateway.confirm_stake_intent.proof_data.block_number,
-      ),
+      rlpParentNodes: stubData
+        .co_gateway
+        .confirm_stake_intent
+        .proof_data
+        .storageProof[0]
+        .serializedProof,
+      blockHeight: new BN(stubData.co_gateway.confirm_stake_intent.proof_data.block_number),
       messageStatus: MessageStatusEnum.Declared,
     };
 
-    await mockToken.transfer(gateway.address, stakeData.amount, {
-      from: accounts[0],
-    });
-    await baseToken.transfer(gateway.address, bountyAmount, {
-      from: accounts[0],
-    });
+    await mockToken.transfer(gateway.address, stakeData.amount, { from: accounts[0] });
+    await baseToken.transfer(gateway.address, bountyAmount, { from: accounts[0] });
   };
+
 
   beforeEach(async () => {
     mockToken = await MockToken.new({ from: accounts[0] });
@@ -127,14 +122,17 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
 
     const owner = accounts[2];
     const worker = accounts[7];
-    const organization = await MockOrganization.new(owner, worker, {
-      from: accounts[0],
-    });
+    const organization = await MockOrganization.new(
+      owner,
+      worker,
+      { from: accounts[0] },
+    );
 
     const coreAddress = accounts[5];
     const burner = NullAddress;
 
     bountyAmount = new BN(proofData.gateway.constructor.bounty);
+    penaltyAmount = bountyAmount.muln(PENALTY_MULTIPLIER);
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -181,8 +179,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
      * Stake proof data is passed instead of confirm stake intent proof data.
      * This makes the proof data incorrect.
      */
-    const storageProof =
-      proofData.gateway.stake.proof_data.storageProof[0].serializedProof;
+    const storageProof = proofData.gateway.stake.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressStakeWithProof(
@@ -209,19 +206,20 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
     );
   });
 
-  it('should fail when storage root is not committed for given block height', async () => {
-    // Here setStorageRoot() is not called, so the storage root will not be available.
+  it('should fail when storage root is not committed for given block height',
+    async () => {
+      // Here setStorageRoot() is not called, so the storage root will not be available.
 
-    await Utils.expectRevert(
-      gateway.progressStakeWithProof(
-        progressStakeParams.messageHash,
-        progressStakeParams.rlpParentNodes,
-        progressStakeParams.blockHeight,
-        progressStakeParams.messageStatus,
-      ),
-      'Storage root must not be zero.',
-    );
-  });
+      await Utils.expectRevert(
+        gateway.progressStakeWithProof(
+          progressStakeParams.messageHash,
+          progressStakeParams.rlpParentNodes,
+          progressStakeParams.blockHeight,
+          progressStakeParams.messageStatus,
+        ),
+        'Storage root must not be zero.',
+      );
+    });
 
   it('should fail for undeclared message', async () => {
     await setStorageRoot();
@@ -277,79 +275,43 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
     );
   });
 
-  it(
-    'should fail when the message status in source is declared revocation ' +
-      'and in the target is declared',
-    async () => {
-      await gateway.setOutboxStatus(
-        stakeData.messageHash,
-        MessageStatusEnum.DeclaredRevocation,
-      );
+  it('should fail when the message status in source is declared revocation '
+    + 'and in the target is declared', async () => {
+    await gateway.setOutboxStatus(
+      stakeData.messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
 
-      await setStorageRoot();
+    await setStorageRoot();
 
-      await Utils.expectRevert(
-        gateway.progressStakeWithProof(
-          progressStakeParams.messageHash,
-          progressStakeParams.rlpParentNodes,
-          progressStakeParams.blockHeight,
-          progressStakeParams.messageStatus,
-        ),
-        'Message on target must be Progressed.',
-      );
-    },
-  );
-
-  it(
-    'should pass when the message status in source is declared revocation ' +
-      'and in the target is progressed',
-    async () => {
-      await gateway.setOutboxStatus(
-        stakeData.messageHash,
-        MessageStatusEnum.DeclaredRevocation,
-      );
-
-      await setStorageRoot();
-
-      const result = await gateway.progressStakeWithProof.call(
+    await Utils.expectRevert(
+      gateway.progressStakeWithProof(
         progressStakeParams.messageHash,
-        proofData.co_gateway.progress_mint.proof_data.storageProof[0]
-          .serializedProof,
-        new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
-        MessageStatusEnum.Progressed,
-      );
+        progressStakeParams.rlpParentNodes,
+        progressStakeParams.blockHeight,
+        progressStakeParams.messageStatus,
+      ),
+      'Message on target must be Progressed.',
+    );
+  });
 
-      assert.strictEqual(
-        result.staker_,
-        stakeData.staker,
-        `Staker address must be equal to ${stakeData.staker}.`,
-      );
-      assert.strictEqual(
-        result.stakeAmount_.eq(stakeData.amount),
-        true,
-        `Stake amount must be equal to ${stakeData.amount.toString(10)}.`,
-      );
+  it('should pass when the message status in source is declared revocation '
+    + 'and in the target is progressed', async () => {
+    await gateway.setOutboxStatus(
+      stakeData.messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
 
-      const tx = await gateway.progressStakeWithProof(
-        progressStakeParams.messageHash,
-        proofData.co_gateway.progress_mint.proof_data.storageProof[0]
-          .serializedProof,
-        new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
-        MessageStatusEnum.Progressed,
-      );
+    // Fund Gateway with enough tokens that it can return penalty.
+    await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
 
-      assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
-    },
-  );
-
-  it('should pass when the message status at source and target is declared', async () => {
     await setStorageRoot();
 
     const result = await gateway.progressStakeWithProof.call(
       progressStakeParams.messageHash,
-      progressStakeParams.rlpParentNodes,
-      progressStakeParams.blockHeight,
-      MessageStatusEnum.Declared,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
     );
 
     assert.strictEqual(
@@ -357,7 +319,6 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
       stakeData.staker,
       `Staker address must be equal to ${stakeData.staker}.`,
     );
-
     assert.strictEqual(
       result.stakeAmount_.eq(stakeData.amount),
       true,
@@ -366,26 +327,27 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
 
     const tx = await gateway.progressStakeWithProof(
       progressStakeParams.messageHash,
-      progressStakeParams.rlpParentNodes,
-      progressStakeParams.blockHeight,
-      MessageStatusEnum.Declared,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
     );
 
-    assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
+    assert.equal(
+      tx.receipt.status,
+      1,
+      'Receipt status is unsuccessful',
+    );
   });
 
-  it(
-    'should pass when the message status at source is declared and at target ' +
-      'is progressed',
+  it('should pass when the message status at source and target is declared',
     async () => {
       await setStorageRoot();
 
       const result = await gateway.progressStakeWithProof.call(
         progressStakeParams.messageHash,
-        proofData.co_gateway.progress_mint.proof_data.storageProof[0]
-          .serializedProof,
-        new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
-        MessageStatusEnum.Progressed,
+        progressStakeParams.rlpParentNodes,
+        progressStakeParams.blockHeight,
+        MessageStatusEnum.Declared,
       );
 
       assert.strictEqual(
@@ -393,6 +355,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
         stakeData.staker,
         `Staker address must be equal to ${stakeData.staker}.`,
       );
+
       assert.strictEqual(
         result.stakeAmount_.eq(stakeData.amount),
         true,
@@ -401,19 +364,54 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
 
       const tx = await gateway.progressStakeWithProof(
         progressStakeParams.messageHash,
-        proofData.co_gateway.progress_mint.proof_data.storageProof[0]
-          .serializedProof,
-        new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
-        MessageStatusEnum.Progressed,
+        progressStakeParams.rlpParentNodes,
+        progressStakeParams.blockHeight,
+        MessageStatusEnum.Declared,
       );
 
-      assert.strictEqual(
+      assert.equal(
         tx.receipt.status,
-        true,
-        'Receipt status is unsuccessful.',
+        1,
+        'Receipt status is unsuccessful',
       );
-    },
-  );
+    });
+
+  it('should pass when the message status at source is declared and at target '
+    + 'is progressed',
+  async () => {
+    await setStorageRoot();
+
+    const result = await gateway.progressStakeWithProof.call(
+      progressStakeParams.messageHash,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
+    );
+
+    assert.strictEqual(
+      result.staker_,
+      stakeData.staker,
+      `Staker address must be equal to ${stakeData.staker}.`,
+    );
+    assert.strictEqual(
+      result.stakeAmount_.eq(stakeData.amount),
+      true,
+      `Stake amount must be equal to ${stakeData.amount.toString(10)}.`,
+    );
+
+    const tx = await gateway.progressStakeWithProof(
+      progressStakeParams.messageHash,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
+    );
+
+    assert.strictEqual(
+      tx.receipt.status,
+      true,
+      'Receipt status is unsuccessful.',
+    );
+  });
 
   it('should emit StakeProgressed event', async () => {
     await setStorageRoot();
@@ -428,34 +426,29 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
     const event = EventDecoder.getEvents(tx, gateway);
     const eventData = event.StakeProgressed;
 
-    assert.isDefined(eventData, 'Event `StakeProgressed` must be emitted.');
+    assert.isDefined(
+      eventData,
+      'Event `StakeProgressed` must be emitted.',
+    );
     assert.strictEqual(
       eventData._messageHash,
       progressStakeParams.messageHash,
-      `Message hash ${
-        eventData._messageHash
-      } from the event must be equalt to ${progressStakeParams.messageHash}.`,
+      `Message hash ${eventData._messageHash} from the event must be equalt to ${progressStakeParams.messageHash}.`,
     );
     assert.strictEqual(
       eventData._staker,
       stakeData.staker,
-      `Staker address ${eventData._staker} from the event must be equal to ${
-        stakeData.staker
-      }.`,
+      `Staker address ${eventData._staker} from the event must be equal to ${stakeData.staker}.`,
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeData.nonce),
       true,
-      `Staker nonce ${eventData._stakerNonce.toString(
-        10,
-      )} from the event must be equal to ${stakeData.nonce.toString(10)}.`,
+      `Staker nonce ${eventData._stakerNonce.toString(10)} from the event must be equal to ${stakeData.nonce.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._amount.eq(stakeData.amount),
       true,
-      `Stake amount ${eventData._amount.toString(
-        10,
-      )} from event must be equal to ${stakeData.amount.toString(10)}.`,
+      `Stake amount ${eventData._amount.toString(10)} from event must be equal to ${stakeData.amount.toString(10)}.`,
     );
     assert.strictEqual(
       eventData._proofProgress,
@@ -473,9 +466,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
     const caller = accounts[0];
 
     const callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
-    const gatewayInitialBaseTokenBalance = await baseToken.balanceOf(
-      gateway.address,
-    );
+    const gatewayInitialBaseTokenBalance = await baseToken.balanceOf(gateway.address);
 
     await setStorageRoot();
 
@@ -487,44 +478,26 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
     );
 
     const callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
-    const gatewayFinalBaseTokenBalance = await baseToken.balanceOf(
-      gateway.address,
+    const gatewayFinalBaseTokenBalance = await baseToken.balanceOf(gateway.address);
+
+    assert.strictEqual(
+      callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
+      true,
+      `Facilitator balance ${callerFinalBaseTokenBalance.toString(10)} should be equal to ${callerInitialBaseTokenBalance.add(bountyAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
-      callerFinalBaseTokenBalance.eq(
-        callerInitialBaseTokenBalance.add(bountyAmount),
-      ),
+      gatewayFinalBaseTokenBalance.eq(gatewayInitialBaseTokenBalance.sub(bountyAmount)),
       true,
-      `Facilitator balance ${callerFinalBaseTokenBalance.toString(
-        10,
-      )} should be equal to ${callerInitialBaseTokenBalance
-        .add(bountyAmount)
-        .toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      gatewayFinalBaseTokenBalance.eq(
-        gatewayInitialBaseTokenBalance.sub(bountyAmount),
-      ),
-      true,
-      `Gateway base balance ${gatewayFinalBaseTokenBalance.toString(
-        10,
-      )} should be equal to ${gatewayInitialBaseTokenBalance
-        .sub(bountyAmount)
-        .toString(10)}.`,
+      `Gateway base balance ${gatewayFinalBaseTokenBalance.toString(10)} should be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).toString(10)}.`,
     );
   });
 
   it('Should lock staked token into stakeVault', async () => {
     const stakeVault = await gateway.stakeVault.call();
 
-    const gatewayInitialTokenBalance = await mockToken.balanceOf(
-      gateway.address,
-    );
-    const stakeVaultInitialTokenBalance = await mockToken.balanceOf(
-      stakeVault,
-    );
+    const gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
+    const stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
 
     await setStorageRoot();
 
@@ -535,33 +508,89 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
       MessageStatusEnum.Declared,
     );
 
-    const gatewayFinalTokenBalance = await mockToken.balanceOf(
-      gateway.address,
-    );
+    const gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
     const stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
 
     assert.strictEqual(
-      gatewayFinalTokenBalance.eq(
-        gatewayInitialTokenBalance.sub(stakeData.amount),
-      ),
+      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
       true,
-      `Gateway token balance ${gatewayFinalTokenBalance.toString(
-        10,
-      )} should be equal to ${gatewayInitialTokenBalance
-        .sub(stakeData.amount)
-        .toString(10)}.`,
+      `Gateway token balance ${gatewayFinalTokenBalance.toString(10)} should be equal to ${gatewayInitialTokenBalance.sub(stakeData.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
-      stakeVaultFinalTokenBalance.eq(
-        stakeVaultInitialTokenBalance.add(stakeData.amount),
+      stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeData.amount)),
+      true,
+      `Stake vault token balance ${stakeVaultFinalTokenBalance.toString(10)} should be equal to ${stakeVaultInitialTokenBalance.add(stakeData.amount).toString(10)}.`,
+    );
+  });
+
+  it('should return penalty to staker when the message status in source is '
+    + 'declared revocation and in the target is progressed', async () => {
+    const stakeVault = await gateway.stakeVault.call();
+    const caller = accounts[0];
+    const { staker } = stakeData;
+
+    await gateway.setOutboxStatus(
+      stakeData.messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
+
+    // Fund Gateway with enough tokens that it can return penalty.
+    await baseToken.transfer(gateway.address, penaltyAmount, { from: accounts[0] });
+
+    const callerInitialBaseTokenBalance = await baseToken.balanceOf(caller);
+    const stakerInitialBaseTokenBalance = await baseToken.balanceOf(staker);
+    const gatewayInitialTokenBalance = await mockToken.balanceOf(gateway.address);
+    const gatewayInitialBaseTokenBalance = await baseToken.balanceOf(gateway.address);
+    const stakeVaultInitialTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    await setStorageRoot();
+
+    await gateway.progressStakeWithProof(
+      progressStakeParams.messageHash,
+      proofData.co_gateway.progress_mint.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.co_gateway.progress_mint.proof_data.block_number),
+      MessageStatusEnum.Progressed,
+    );
+
+    const callerFinalBaseTokenBalance = await baseToken.balanceOf(caller);
+    const stakerFinalBaseTokenBalance = await baseToken.balanceOf(staker);
+    const gatewayFinalTokenBalance = await mockToken.balanceOf(gateway.address);
+    const gatewayFinalBaseTokenBalance = await baseToken.balanceOf(gateway.address);
+    const stakeVaultFinalTokenBalance = await mockToken.balanceOf(stakeVault);
+
+    assert.strictEqual(
+      callerFinalBaseTokenBalance.eq(callerInitialBaseTokenBalance.add(bountyAmount)),
+      true,
+      'Bounty should be returned to caller.',
+    );
+
+    assert.strictEqual(
+      stakerFinalBaseTokenBalance.eq(stakerInitialBaseTokenBalance.add(penaltyAmount)),
+      true,
+      `Staker's base token balance ${stakerFinalBaseTokenBalance.toString(10)} must be equal to ${stakerInitialBaseTokenBalance.add(penaltyAmount).toString(10)}`,
+    );
+
+    assert.strictEqual(
+      gatewayFinalTokenBalance.eq(gatewayInitialTokenBalance.sub(stakeData.amount)),
+      true,
+      'Gateway token balance should reduced by stake amount on successful '
+        + 'progress stake.',
+    );
+
+    assert.strictEqual(
+      gatewayFinalBaseTokenBalance.eq(
+        gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount),
       ),
       true,
-      `Stake vault token balance ${stakeVaultFinalTokenBalance.toString(
-        10,
-      )} should be equal to ${stakeVaultInitialTokenBalance
-        .add(stakeData.amount)
-        .toString(10)}.`,
+      `Gateway's base token balance ${gatewayFinalBaseTokenBalance.toString(10)} must be equal to ${gatewayInitialBaseTokenBalance.sub(bountyAmount).sub(penaltyAmount).toString(10)}.`,
+    );
+
+    assert.strictEqual(
+      stakeVaultFinalTokenBalance.eq(stakeVaultInitialTokenBalance.add(stakeData.amount)),
+      true,
+      'Stake vault token balance should increase by stake amount on '
+        + 'successful progress stake.',
     );
   });
 });

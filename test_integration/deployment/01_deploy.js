@@ -21,88 +21,88 @@
 const chai = require('chai');
 const Web3 = require('web3');
 const {
-    dockerSetup,
-    dockerTeardown,
+  dockerSetup,
+  dockerTeardown,
 } = require('../docker');
 const {
-    deployedToken,
-    getChainInfo,
-    deployOrigin,
-    deployAuxiliary,
+  deployedToken,
+  getChainInfo,
+  deployOrigin,
+  deployAuxiliary,
 } = require('../../tools/blue_deployment');
 
 const { assert } = chai;
 
 describe('Deployer', () => {
-    let rpcEndpointOrigin;
-    let web3Origin;
-    let accountsOrigin;
-    let rpcEndpointAuxiliary;
-    let web3Auxiliary;
-    let accountsAuxiliary;
+  let rpcEndpointOrigin;
+  let web3Origin;
+  let accountsOrigin;
+  let rpcEndpointAuxiliary;
+  let web3Auxiliary;
+  let accountsAuxiliary;
 
-    before(async () => {
-        ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await dockerSetup());
+  before(async () => {
+    ({ rpcEndpointOrigin, rpcEndpointAuxiliary } = await dockerSetup());
 
-        web3Origin = new Web3(rpcEndpointOrigin);
-        web3Auxiliary = new Web3(rpcEndpointAuxiliary);
-        accountsOrigin = await web3Origin.eth.getAccounts();
-        accountsAuxiliary = await web3Auxiliary.eth.getAccounts();
-    });
+    web3Origin = new Web3(rpcEndpointOrigin);
+    web3Auxiliary = new Web3(rpcEndpointAuxiliary);
+    accountsOrigin = await web3Origin.eth.getAccounts();
+    accountsAuxiliary = await web3Auxiliary.eth.getAccounts();
+  });
 
-    after(() => {
-        dockerTeardown();
-    });
+  after(() => {
+    dockerTeardown();
+  });
 
-    let tokenAddressOrigin;
-    let baseTokenAddressOrigin;
-    it('correctly deploys token and base token on Origin', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
+  let tokenAddressOrigin;
+  let baseTokenAddressOrigin;
+  it('correctly deploys token and base token on Origin', async () => {
+    const deployerAddressOrigin = accountsOrigin[0];
 
-        tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
-        assert(
-            Web3.utils.isAddress(tokenAddressOrigin),
-            'Did not correctly deploy token on Origin.',
-        );
+    tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
+    assert(
+      Web3.utils.isAddress(tokenAddressOrigin),
+      'Did not correctly deploy token on Origin.',
+    );
 
-        baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
-        assert(
-            Web3.utils.isAddress(baseTokenAddressOrigin),
-            'Did not correctly deploy base token on Origin.',
-        );
-    });
+    baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, 'new');
+    assert(
+      Web3.utils.isAddress(baseTokenAddressOrigin),
+      'Did not correctly deploy base token on Origin.',
+    );
+  });
 
-    it('correctly deploys Gateway and CoGateway', async () => {
-        const deployerAddressOrigin = accountsOrigin[0];
-        const deployerAddressAuxiliary = accountsAuxiliary[0];
+  it('correctly deploys Gateway and CoGateway', async () => {
+    const deployerAddressOrigin = accountsOrigin[0];
+    const deployerAddressAuxiliary = accountsAuxiliary[0];
 
-        const bountyOrigin = '100';
-        const bountyAuxiliary = '100';
+    const bountyOrigin = '100';
+    const bountyAuxiliary = '100';
 
-        const originInfo = await getChainInfo(web3Origin);
-        const auxiliaryInfo = await getChainInfo(web3Auxiliary);
+    const originInfo = await getChainInfo(web3Origin);
+    const auxiliaryInfo = await getChainInfo(web3Auxiliary);
 
-        const originAddresses = await deployOrigin(
-            web3Origin,
-            deployerAddressOrigin,
-            tokenAddressOrigin,
-            baseTokenAddressOrigin,
-            bountyOrigin,
-            auxiliaryInfo.chainId,
-            auxiliaryInfo.blockHeight,
-            auxiliaryInfo.stateRoot,
-        );
+    const originAddresses = await deployOrigin(
+      web3Origin,
+      deployerAddressOrigin,
+      tokenAddressOrigin,
+      baseTokenAddressOrigin,
+      bountyOrigin,
+      auxiliaryInfo.chainId,
+      auxiliaryInfo.blockHeight,
+      auxiliaryInfo.stateRoot,
+    );
 
-        const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-        await deployAuxiliary(
-            web3Auxiliary,
-            deployerAddressAuxiliary,
-            tokenAddressOrigin,
-            gatewayAddressOrigin,
-            bountyAuxiliary,
-            originInfo.chainId,
-            originInfo.blockHeight,
-            originInfo.stateRoot,
-        );
-    });
+    const gatewayAddressOrigin = originAddresses.EIP20Gateway;
+    await deployAuxiliary(
+      web3Auxiliary,
+      deployerAddressAuxiliary,
+      tokenAddressOrigin,
+      gatewayAddressOrigin,
+      bountyAuxiliary,
+      originInfo.chainId,
+      originInfo.blockHeight,
+      originInfo.stateRoot,
+    );
+  });
 });

@@ -1,4 +1,4 @@
-const web3EventsDecoder = function() {};
+const web3EventsDecoder = function () {};
 
 web3EventsDecoder.prototype = {
   getFormattedEvents(eventsData) {

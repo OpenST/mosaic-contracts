@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,8 +129,8 @@ contract('BlockStore.constructor()', async (accounts) => {
           '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca',
           testDate.initialBlockHeight,
         ),
-        'The initial block height is incompatible to the epoch ' +
-          'length. Must be a multiple.',
+        'The initial block height is incompatible to the epoch '
+          + 'length. Must be a multiple.',
       );
     }
   });

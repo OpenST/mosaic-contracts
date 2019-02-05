@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 
-const SafeMathMock = artifacts.require('./SafeMathMock.sol');
+const TestSafeMath = artifacts.require('TestSafeMath');
 
 contract('SafeMath', () => {
   let safeMath;
 
   before(async () => {
-    safeMath = await SafeMathMock.new();
+    safeMath = await TestSafeMath.new();
   });
 
   it('multiplies correctly', async () => {
