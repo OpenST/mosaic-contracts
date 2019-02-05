@@ -146,7 +146,6 @@ class ProgressUnStakeAssertion {
            + ` instead of ${finalBalances.token.gateway.toString(10)}`,
         );
 
-
         const expectedbeneficiaryBaseTokenBalance = initialBalances.baseToken.beneficiary;
 
         // Assert beneficiary base token balance must not change.
