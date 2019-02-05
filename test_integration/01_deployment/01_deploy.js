@@ -20,6 +20,7 @@
 
 const chai = require('chai');
 const Web3 = require('web3');
+const BN = require('bn.js');
 const docker = require('../docker');
 const shared = require('../shared');
 const {
@@ -30,6 +31,9 @@ const {
 } = require('../../tools/blue_deployment');
 
 const { assert } = chai;
+
+// Max ost prime supply.
+const TOKENS_MAX = new BN('800000000000000000000000000');
 
 describe('Deploy', async () => {
     let rpcEndpointOrigin;
@@ -56,20 +60,12 @@ describe('Deploy', async () => {
         shared.auxiliary.web3 = web3Auxiliary;
         shared.origin.deployerAddress = deployerAddressOrigin;
         shared.auxiliary.deployerAddress = deployerAddressAuxiliary;
+        shared.origin.accounts = accountsOrigin;
+        shared.auxiliary.accounts = accountsAuxiliary;
 
         // FIXME: #623
         shared.origin.organizationAddress = deployerAddressOrigin;
         shared.auxiliary.organizationAddress = deployerAddressAuxiliary;
-    });
-
-    after(async () => {
-        await shared.origin.addContract('EIP20Gateway');
-        await shared.origin.addContract('Anchor');
-        await shared.origin.addContract('EIP20StandardToken', 'Token');
-        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
-
-        await shared.auxiliary.addContract('EIP20CoGateway');
-        await shared.auxiliary.addContract('Anchor');
     });
 
     let tokenAddressOrigin;
@@ -98,6 +94,8 @@ describe('Deploy', async () => {
         /* Note that they are called Token and BaseToken! */
         shared.origin.contractAddresses.Token = tokenAddressOrigin;
         shared.origin.contractAddresses.BaseToken = baseTokenAddressOrigin;
+        await shared.origin.addContract('EIP20StandardToken', 'Token');
+        await shared.origin.addContract('EIP20StandardToken', 'BaseToken');
     });
 
     it('correctly deploys Gateway and CoGateway', async () => {
@@ -138,5 +136,35 @@ describe('Deploy', async () => {
             ...shared.auxiliary.contractAddresses,
             ...auxiliaryAddresses,
         };
+
+        await shared.origin.addContract('EIP20Gateway');
+        await shared.origin.addContract('Anchor');
+
+        await shared.auxiliary.addContract('EIP20CoGateway');
+        await shared.auxiliary.addContract('Anchor');
+        await shared.auxiliary.addContract('OSTPrime');
+    });
+
+    it('activates the gateway ', async () => {
+        const gateway = shared.origin.contracts.EIP20Gateway;
+
+        await gateway.activateGateway(
+            shared.auxiliary.contractAddresses.EIP20CoGateway,
+            { from: shared.origin.organizationAddress },
+        );
+    });
+
+    it('initializes and sets co-gateway in ost prime', async () => {
+        const ostPrime = shared.auxiliary.contracts.OSTPrime;
+
+        await ostPrime.initialize({
+            from: shared.auxiliary.organizationAddress,
+            value: TOKENS_MAX,
+        });
+
+        await ostPrime.setCoGateway(
+            shared.auxiliary.contractAddresses.EIP20CoGateway,
+            { from: shared.auxiliary.organizationAddress },
+        );
     });
 });

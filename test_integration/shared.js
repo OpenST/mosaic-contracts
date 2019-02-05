@@ -45,6 +45,7 @@
  *     the contracts in the deployment phase.
  * @property {string} organizationAddress The address of the organization.
  * @property {string} networkId The network ID of this chain.
+ * @property {string []} accounts List of external accounts of this chain.
  */
 class Chain {
     constructor() {
@@ -54,6 +55,7 @@ class Chain {
         this.deployerAddress = '';
         this.organizationAddress = '';
         this.networkId = '*';
+        this.accounts = [];
     }
 
     /**
