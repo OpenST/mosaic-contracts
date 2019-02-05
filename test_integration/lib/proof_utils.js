@@ -66,7 +66,7 @@ class ProofUtils {
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
-     * @param {string} blockNumber Block number.
+     * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
@@ -189,7 +189,7 @@ class ProofUtils {
     }
 
     /**
-     *  Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
+     * Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
      * @param {string} accountProof Account proof.
      * @return {string}
      * @private

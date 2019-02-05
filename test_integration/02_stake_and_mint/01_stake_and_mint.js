@@ -24,12 +24,12 @@ const Utils = require('../../test/test_lib/utils');
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 const StakeAssertion = require('./utils/stake_assertion');
-const ProveGatewayAssertion = require('./utils/prove_gateway_assertion');
+const ProveGatewayAssertion = require('../lib/prove_gateway_assertion');
 const ConfirmStakeIntentAssertion = require('./utils/confirm_stake_intent_assertion');
 const ProgressStakeAssertion = require('./utils/progress_stake_assertion');
 const ProgressMintAssertion = require('./utils/progress_mint_assertion');
-const ProofUtils = require('./utils/proof_utils');
-const Anchor = require('./utils/anchor');
+const ProofUtils = require('../lib/proof_utils');
+const Anchor = require('../lib/anchor');
 
 describe('Stake and mint', async () => {
     let assertStake;

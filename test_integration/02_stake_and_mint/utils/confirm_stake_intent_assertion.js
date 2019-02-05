@@ -39,11 +39,11 @@ const assert = require('assert');
  */
 
 /**
- *  Class to assert confirm stake intent.
+ * Class to assert confirm stake intent.
  */
 class ConfirmStakeIntentAssertion {
     /**
-     *  This verifies event.
+     * This verifies event.
      * @param {Object} event Event object after decoding.
      * @param {StakeRequest} stakeRequest Stake request parameters.
      */
