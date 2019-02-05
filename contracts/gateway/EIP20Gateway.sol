@@ -475,6 +475,8 @@ contract EIP20Gateway is GatewayBase {
 
         // Get the message object
         MessageBus.Message storage message = messages[_messageHash];
+        MessageBus.MessageStatus outboxMessageStatus =
+          messageBox.outbox[_messageHash];
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -485,6 +487,7 @@ contract EIP20Gateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
+        uint256 bountyAmount = stakes[_messageHash].bounty;
         (staker_, stakeAmount_) = progressStakeInternal(
             _messageHash,
             message,
@@ -492,6 +495,50 @@ contract EIP20Gateway is GatewayBase {
             true
         );
 
+        // Return revert penalty to staker if message is already progressed
+        // and can't be reverted anymore.
+        tryReturnPenaltyToStaker(
+            staker_,
+            outboxMessageStatus,
+            MessageBus.MessageStatus(_messageStatus),
+            bountyAmount
+        );
+    }
+
+    /**
+     * @notice Return the revert penalty to the staker. Only valid for
+     *         a message transition from DeclaredRevocation -> Progressed.
+     *
+     * @dev Should only be called from progressStakeWithProof. This function
+     *      exists to avoid a stack too deep error.
+     *
+     * @param _staker Staker address.
+     * @param _outboxMessageStatus Message status before progressing.
+     * @param _inboxMessageStatus Message status after progressing.
+     * @param _bountyAmount Bounty amount to use for calculating penalty.
+     */
+    function tryReturnPenaltyToStaker(
+        address _staker,
+        MessageBus.MessageStatus _outboxMessageStatus,
+        MessageBus.MessageStatus _inboxMessageStatus,
+        uint256 _bountyAmount
+    )
+      private
+    {
+        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
+            return;
+        }
+        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
+            return;
+        }
+
+        // Penalty charged to staker for revert stake.
+        uint256 penalty = penaltyFromBounty(_bountyAmount);
+        // transfer the penalty amount
+        require(
+            baseToken.transfer(_staker, penalty),
+            "Penalty amount transfer to staker failed"
+        );
     }
 
     /**
@@ -1087,7 +1134,7 @@ contract EIP20Gateway is GatewayBase {
         // Get the staker address
         staker_ = _message.sender;
 
-        //Get the stake amount.
+        // Get the stake amount.
         stakeAmount_ = stakes[_messageHash].amount;
 
         require(

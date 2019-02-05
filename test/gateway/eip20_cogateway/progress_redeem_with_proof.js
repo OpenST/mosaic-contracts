@@ -34,7 +34,8 @@ const MessageStatusEnum = messageBus.MessageStatusEnum;
 
 contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
 
-  let utilityToken, eip20CoGateway, redeemParams, bountyAmount, owner, facilitator;
+  let utilityToken, eip20CoGateway, redeemParams, bountyAmount, penaltyAmount, owner, facilitator;
+  const PENALTY_MULTIPLIER = 1.5;
 
   let setStorageRoot = async function() {
 
@@ -81,6 +82,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
     );
 
     bountyAmount = new BN(proofData.co_gateway.constructor.bounty);
+    penaltyAmount = bountyAmount.muln(PENALTY_MULTIPLIER);
 
     eip20CoGateway = await EIP20CoGateway.new(
       proofData.co_gateway.constructor.valueToken,
@@ -380,6 +382,14 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
   it('should pass when message inbox status at target is progressed and outbox' +
     ' status at source is revocation declared', async function () {
 
+    await web3.eth.sendTransaction(
+      {
+        to: eip20CoGateway.address,
+        from: facilitator,
+        value: penaltyAmount,
+      }
+    );
+
     await eip20CoGateway.setOutboxStatus(
       redeemParams.messageHash,
       MessageStatusEnum.DeclaredRevocation,
@@ -517,6 +527,69 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', function (accounts) {
       finalCoGatewayEthBalance.eq(initialCoGatewayEthBalance.sub(bountyAmount)),
       true,
       `CoGateway's base token balance ${finalCoGatewayEthBalance.toString(10)} should be equal to ${initialCoGatewayEthBalance.sub(bountyAmount)}.`,
+    );
+
+  });
+
+  it('should return penalty to redeemer when the message status in source is ' +
+    'declared revocation and in the target is progressed', async function () {
+    const facilitator = accounts[8];
+    const redeemer = redeemParams.redeemer;
+
+    await web3.eth.sendTransaction(
+      {
+        to: eip20CoGateway.address,
+        from: facilitator,
+        value: penaltyAmount,
+      }
+    );
+
+    await eip20CoGateway.setOutboxStatus(
+      redeemParams.messageHash,
+      MessageStatusEnum.DeclaredRevocation,
+    );
+
+    const initialFacilitatorEthBalance = await Utils.getBalance(facilitator);
+    const initialRedeemerEthBalance = await Utils.getBalance(redeemer);
+    const initialCoGatewayEthBalance = await Utils.getBalance(eip20CoGateway.address);
+
+    await setStorageRoot();
+
+    const tx = await eip20CoGateway.progressRedeemWithProof(
+      redeemParams.messageHash,
+      proofData.gateway.progress_unstake.proof_data.storageProof[0].serializedProof,
+      new BN(proofData.gateway.progress_unstake.proof_data.block_number, 16),
+      MessageStatusEnum.Progressed,
+      { from: facilitator },
+    );
+
+    const finalFacilitatorEthBalance = await Utils.getBalance(facilitator);
+    const finalRedeemerEthBalance = await Utils.getBalance(redeemer);
+    const finalCoGatewayEthBalance = await Utils.getBalance(eip20CoGateway.address);
+
+    const expectedFinalFacilitatorETHBalance = initialFacilitatorEthBalance
+      .add(bountyAmount)
+      .subn(tx.receipt.gasUsed);
+
+    const expectedFinalRedeemerETHBalance = initialRedeemerEthBalance
+      .add(penaltyAmount);
+
+    assert.strictEqual(
+      finalFacilitatorEthBalance.eq(expectedFinalFacilitatorETHBalance),
+      true,
+      `Facilitator's base token balance ${finalFacilitatorEthBalance.toString(10)} should be equal to ${expectedFinalFacilitatorETHBalance.toString(10)}`,
+    );
+
+    assert.strictEqual(
+      finalRedeemerEthBalance.eq(expectedFinalRedeemerETHBalance),
+      true,
+      `Redeemer's base token balance ${finalRedeemerEthBalance.toString(10)} should be equal to ${expectedFinalRedeemerETHBalance.toString(10)}`,
+    );
+
+    assert.strictEqual(
+      finalCoGatewayEthBalance.eq(initialCoGatewayEthBalance.sub(bountyAmount).sub(penaltyAmount)),
+      true,
+      `CoGateway's base token balance ${finalCoGatewayEthBalance.toString(10)} should be equal to ${initialCoGatewayEthBalance.sub(bountyAmount).sub(penaltyAmount)}.`,
     );
 
   });
