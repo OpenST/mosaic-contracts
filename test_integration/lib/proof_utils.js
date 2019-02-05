@@ -139,15 +139,16 @@ class ProofUtils {
       }, (err, response) => {
         if (response) {
           const { accountProof } = response.result;
+          const { storageProof } = response.result;
 
           response.result.serializedAccountProof = this._serializeProof(accountProof);
           response.result.encodedAccountValue = ProofUtils._encodedAccountValue(
             response.result.serializedAccountProof,
           );
-          response.result.storageProof.map(storageProof => ({
-            serializedProof: this._serializeProof(storageProof.proof),
-            ...storageProof,
-          }));
+
+          storageProof.forEach((sp) => {
+            sp.serializedProof = this._serializeProof(sp.proof);
+          });
 
           resolve(response);
         }

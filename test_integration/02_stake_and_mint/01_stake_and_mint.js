@@ -18,6 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
+'use strict';
+
 const BN = require('bn.js');
 const shared = require('../shared');
 const Utils = require('../../test/test_lib/utils');
@@ -30,6 +32,36 @@ const ProgressStakeAssertion = require('./utils/progress_stake_assertion');
 const ProgressMintAssertion = require('./utils/progress_mint_assertion');
 const ProofUtils = require('../lib/proof_utils');
 const Anchor = require('../lib/anchor');
+
+/**
+ * Approve Gateway for stake amount.
+ * @param {Object }token Token contract instance.
+ * @param {Object} gateway Gateway contract instance.
+ * @param {Object} stakeRequest stake request.
+ * @return {Promise<void>}
+ */
+async function approveGatewayForStakeAmount(token, gateway, stakeRequest) {
+  await token.approve(
+    gateway.address,
+    stakeRequest.amount,
+    { from: stakeRequest.staker },
+  );
+}
+
+/**
+ * Approve gateway for bounty.
+ * @param {Object} baseToken Base token contract instance.
+ * @param {Object} gateway Gateway contract instance.
+ * @param {Object} stakeRequest stake request.
+ * @return {Promise<void>}
+ */
+async function approveGatewayForBounty(baseToken, gateway, stakeRequest) {
+  await baseToken.approve(
+    gateway.address,
+    stakeRequest.bounty,
+    { from: stakeRequest.staker },
+  );
+}
 
 describe('Stake and mint', async () => {
   let assertStake;
@@ -192,33 +224,3 @@ describe('Stake and mint', async () => {
     await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint);
   });
 });
-
-/**
- * Approve Gateway for stake amount.
- * @param {Object }token Token contract instance.
- * @param {Object} gateway Gateway contract instance.
- * @param {Object} stakeRequest stake request.
- * @return {Promise<void>}
- */
-async function approveGatewayForStakeAmount(token, gateway, stakeRequest) {
-  await token.approve(
-    gateway.address,
-    stakeRequest.amount,
-    { from: stakeRequest.staker },
-  );
-}
-
-/**
- * Approve gateway for bounty.
- * @param {Object} baseToken Base token contract instance.
- * @param {Object} gateway Gateway contract instance.
- * @param {Object} stakeRequest stake request.
- * @return {Promise<void>}
- */
-async function approveGatewayForBounty(baseToken, gateway, stakeRequest) {
-  await baseToken.approve(
-    gateway.address,
-    stakeRequest.bounty,
-    { from: stakeRequest.staker },
-  );
-}
