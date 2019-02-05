@@ -234,7 +234,7 @@ describe('Redeem and Unstake', async () => {
 });
 
 /**
- * This approves the cogateway for redeem amount by unwrapping the base token.
+ * This approves the cogateway for redeem amount by wrapping the base token.
  * @param {Object} ostPrime OSTPrime contract instance.
  * @param {Object} redeemRequest Redeem request object.
  * @param {Object} cogateway CoGateway contract instance.

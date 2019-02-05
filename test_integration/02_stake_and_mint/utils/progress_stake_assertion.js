@@ -51,7 +51,7 @@ const assert = require('assert');
  */
 
 /**
- *  Class to assert event and balances after progress stake
+ * Class to assert event and balances after progress stake
  */
 class ProgressStakeAssertion {
     /** Constructor
@@ -66,7 +66,7 @@ class ProgressStakeAssertion {
     }
 
     /**
-     *  This verifies event and balances of staker, gateway and stakeVault.
+     * This verifies event and balances of staker, gateway and stakeVault.
      * @param {Object} event Event object after decoding.
      * @param  {StakeRequest} stakeRequest Stake request parameters.
      * @param {Balances} initialBalances Initial baseToken and token
@@ -79,7 +79,7 @@ class ProgressStakeAssertion {
     }
 
     /**
-     * This capture base token and token balance of gateway, staker and
+     * This captures base token and token balance of gateway, staker and
      * stakeVault.
      * @param {string} staker Address of staker.
      * @return {Promise<{Balances}>} Base token and token balances.

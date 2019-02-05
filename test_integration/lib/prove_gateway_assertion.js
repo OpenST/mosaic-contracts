@@ -21,7 +21,7 @@
 const assert = require('assert');
 
 /**
- *  Class to assert prove gateway.
+ * Class to assert prove gateway.
  */
 class ProveGatewayAssertion {
     /**

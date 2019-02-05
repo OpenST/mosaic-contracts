@@ -49,7 +49,7 @@ const BN = require('bn.js');
  */
 
 /**
- *  Class to assert event and balances after progress redeem.
+ * Class to assert event and balances after progress redeem.
  */
 class ProgressRedeemAssertion {
     /**
@@ -156,7 +156,7 @@ class ProgressRedeemAssertion {
     }
 
     /**
-     * This assert event after Redeem method.
+     * Assert event after Redeem method.
      * @param {Object} event Event object after decoding.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @private

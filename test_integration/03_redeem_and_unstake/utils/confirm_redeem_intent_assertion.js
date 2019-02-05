@@ -39,11 +39,11 @@ const assert = require('assert');
  */
 
 /**
- *  Class to assert confirm redeem intent.
+ * Class to assert confirm redeem intent.
  */
 class ConfirmRedeemIntentAssertion {
     /**
-     *  This verifies event.
+     * This verifies event.
      * @param {Object} event Event object after decoding.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      */

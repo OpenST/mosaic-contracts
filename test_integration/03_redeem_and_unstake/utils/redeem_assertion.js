@@ -49,7 +49,7 @@ const BN = require('bn.js');
  */
 
 /**
- *  Class to assert event and balances after Redeem.
+ * Class to assert event and balances after Redeem.
  */
 class RedeemAssertion {
     /**
@@ -65,7 +65,7 @@ class RedeemAssertion {
     }
 
     /**
-     *  This verifies event and balances.
+     * This verifies event and balances.
      * @param {Object} event Event object after decoding.
      * @param {Object} event Event object after decoding.
      * @param {number} transactionFees Transaction fees in redeem request.
@@ -82,7 +82,7 @@ class RedeemAssertion {
     }
 
     /**
-     * This capture base token and token balance of cogateway and redeemer
+     * This captures base token and token balance of cogateway and redeemer
      * @param {string} redeemer Redeemer address.
      * @return {Promise<Balances>}
      */
@@ -133,7 +133,7 @@ class RedeemAssertion {
            + ` instead of ${finalBalances.token.cogateway.toString(10)}`,
         );
 
-        // Assert redeemer balance
+        // Assert redeemer balance.
         const expectedRedeemerBaseTokenBalance = initialBalances.baseToken.redeemer
             .sub(redeemRequest.bounty).sub(transactionFees);
 
@@ -158,7 +158,7 @@ class RedeemAssertion {
     }
 
     /**
-     * This assert event after Redeem method.
+     * This asserts event after Redeem method.
      * @param {Object} event Event object after decoding.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @private

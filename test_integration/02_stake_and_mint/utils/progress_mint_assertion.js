@@ -58,7 +58,7 @@ const BN = require('bn.js');
  */
 
 /**
- *  Class to assert event and balances after progress mint
+ * Class to assert event and balances after progress mint
  */
 class ProgressMintAssertion {
     /**
@@ -74,7 +74,7 @@ class ProgressMintAssertion {
     }
 
     /**
-     *  This verifies event and balances.
+     * This verifies event and balances.
      *
      * @param {Object} event Event object after decoding.
      * @param {StakeRequest} stakeRequest Stake request.

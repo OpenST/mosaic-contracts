@@ -189,7 +189,7 @@ class ProofUtils {
     }
 
     /**
-     *  Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
+     * Fetch rlp encoded account value (nonce, balance, codehash, storageRoot)
      * @param {string} accountProof Account proof.
      * @return {string}
      * @private

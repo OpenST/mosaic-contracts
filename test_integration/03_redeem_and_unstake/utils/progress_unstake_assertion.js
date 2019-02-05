@@ -51,7 +51,7 @@ const assert = require('assert');
  */
 
 /**
- *  Class to assert event and balances after progress un-stake
+ * Class to assert event and balances after progress un-stake
  */
 class ProgressUnStakeAssertion {
     /** Constructor
@@ -66,9 +66,9 @@ class ProgressUnStakeAssertion {
     }
 
     /**
-     *  This verifies event and balances of beneficiary, gateway and stakeVault.
+     * This verifies event and balances of beneficiary, gateway and stakeVault.
      * @param {Object} event Event object after decoding.
-     * @param  {RedeemRequest} redeemRequest Redeem request parameters.
+     * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @param {Balances} initialBalances Initial baseToken and token
      *                                   balances before progress unstake.
      * @param {string} facilitator Address of facilitator.
@@ -80,11 +80,11 @@ class ProgressUnStakeAssertion {
             facilitator,
         );
 
-        ProgressUnStakeAssertion.__assertProgressUnStakeEvent(event, redeemRequest);
+        ProgressUnStakeAssertion._assertProgressUnStakeEvent(event, redeemRequest);
     }
 
     /**
-     * This capture base token and token balance of gateway, beneficiary and
+     * This captures base token and token balance of gateway, beneficiary and
      * stakeVault.
      * @param {string} beneficiary Address of beneficiary.
      * @param {string} facilitator Address of facilitator.
@@ -126,7 +126,7 @@ class ProgressUnStakeAssertion {
         const reward = redeemRequest.gasPrice.mul(redeemRequest.gasLimit);
         const unstakeAmount = redeemRequest.amount.sub(reward);
 
-        // Assert gateway balance
+        // Assert gateway balance.
         const expectedGatewayBaseTokenBalance = initialBalances.baseToken.gateway;
         // Gateway base token balance must not change.
         assert.strictEqual(
@@ -211,12 +211,12 @@ class ProgressUnStakeAssertion {
     }
 
     /**
-     * This assert event after progress unstake method.
+     * Assert event after progress unstake method.
      * @param {Object} event Object representing unstake progressed event.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @private
      */
-    static __assertProgressUnStakeEvent(event, redeemRequest) {
+    static _assertProgressUnStakeEvent(event, redeemRequest) {
         const eventData = event.UnstakeProgressed;
 
         const reward = redeemRequest.gasPrice.mul(redeemRequest.gasLimit);
