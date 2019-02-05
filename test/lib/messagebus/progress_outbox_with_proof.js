@@ -19,9 +19,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils');
+const MessageBusUtils = require('./messagebus_utils');
 
-const messageBusUtils = new messageBusUtilsKlass();
+const messageBusUtils = new MessageBusUtils();
 const messageBus = require('../../test_lib/message_bus.js');
 
 const MessageStatusEnum = messageBus.MessageStatusEnum;
@@ -40,7 +40,8 @@ contract('MessageBus.progressOutboxWithProof()', async (accounts) => {
         await messageBusUtils.progressOutboxWithProof(params, false);
     });
 
-    it('should fail when message status at target is revoked and message status at source is declared', async () => {
+    it('should fail when message status at target is revoked and message'
+      + ' status at source is declared', async () => {
         await messageBusUtils.declareMessage(params, true);
 
         params.messageStatus = MessageStatusEnum.Revoked;
@@ -57,7 +58,7 @@ contract('MessageBus.progressOutboxWithProof()', async (accounts) => {
         await messageBusUtils.progressOutboxWithProof(params, false);
     });
 
-    it('should fail when message status at target  is revoked and message status at source is'
+    it('should fail when message status at target is revoked and message status at source is'
       + ' revoked', async () => {
         await messageBusUtils.declareMessage(params, true);
         await messageBusUtils.declareRevocationMessage(params, true);
@@ -68,15 +69,14 @@ contract('MessageBus.progressOutboxWithProof()', async (accounts) => {
         await messageBusUtils.progressOutboxWithProof(params, false);
     });
 
-
-    it('should fail when message status at target is empty and message status at '
-      + 'source is undeclared', async () => {
+    it('should fail when message status at target is undeclared and message'
+      + ' status at source is undeclared', async () => {
         params.messageStatus = '';
         await messageBusUtils.progressOutboxWithProof(params, false);
     });
 
-    it('should fail when message status at target  is empty and message status is'
-      + 'at source  progressed', async () => {
+    it('should fail when message status at target is undeclared and message'
+      + ' status is at source  progressed', async () => {
         await messageBusUtils.declareMessage(params, true);
         await messageBusUtils.progressOutboxWithProof(params, true);
 
@@ -84,7 +84,7 @@ contract('MessageBus.progressOutboxWithProof()', async (accounts) => {
         await messageBusUtils.progressOutboxWithProof(params, false);
     });
 
-    it('should fail when message status at target is empty and message'
+    it('should fail when message status at target is undeclared and message'
       + ' status at source is revoked', async () => {
         await messageBusUtils.declareMessage(params, true);
         await messageBusUtils.declareRevocationMessage(params, true);
