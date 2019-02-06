@@ -18,44 +18,77 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require('bn.js'),
-  Utils = require('../../test_lib/utils'),
-  coGatewayUtils = require('./helpers/co_gateway_utils.js'),
-  TestData = require('./test_data/stake_progressed_1'),
-  TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-  TestUtilityToken = artifacts.require('TestUtilityToken'),
-  TestDataWithZeroGasPrice = require('./test_data/stake_progressed_3'),
-  messageBus = require('../../test_lib/message_bus.js');
+const BN = require('bn.js');
 
-let MessageStatusEnum = messageBus.MessageStatusEnum;
+
+const Utils = require('../../test_lib/utils');
+
+
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
+
+
+const TestData = require('./test_data/stake_progressed_1');
+
+
+const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway');
+
+
+const TestUtilityToken = artifacts.require('TestUtilityToken');
+
+
+const TestDataWithZeroGasPrice = require('./test_data/stake_progressed_3');
+
+
+const messageBus = require('../../test_lib/message_bus.js');
+
+const MessageStatusEnum = messageBus.MessageStatusEnum;
 
 async function getMaxReward(stubData) {
+  const gasPrice = new BN(stubData.gateway.stake.params.gasPrice, 16);
 
-  let gasPrice = new BN(stubData.gateway.stake.params.gasPrice, 16),
-    gasLimit = new BN(stubData.gateway.stake.params.gasLimit, 16),
-    maxReward = new BN(gasPrice * gasLimit);
+
+  const gasLimit = new BN(stubData.gateway.stake.params.gasLimit, 16);
+
+
+  const maxReward = new BN(gasPrice * gasLimit);
 
   return maxReward;
 }
 
-contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
+contract('EIP20CoGateway.progressMintWithProof() ', (accounts) => {
+  const facilitator = accounts[5];
 
-  let facilitator = accounts[5],
-    intentHash,
-    params = {},
-    testUtilityToken,
-    testEIP20CoGateway,
-    messageHash;
 
-  beforeEach(async function () {
+  let intentHash;
 
-    let valueToken = accounts[0],
-      burner = accounts[10],
-      bountyAmount = new BN(100);
 
-    let symbol = 'OST',
-      name = 'Simple Token',
-      decimals = 18;
+  let params = {};
+
+
+  let testUtilityToken;
+
+
+  let testEIP20CoGateway;
+
+
+  let messageHash;
+
+  beforeEach(async () => {
+    const valueToken = accounts[0];
+
+
+    const burner = accounts[10];
+
+
+    const bountyAmount = new BN(100);
+
+    const symbol = 'OST';
+
+
+    const name = 'Simple Token';
+
+
+    const decimals = 18;
 
     testUtilityToken = await TestUtilityToken.new(
       TestData.contracts.mockToken,
@@ -84,7 +117,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       burner,
     );
 
-    intentHash = coGatewayUtils.hashStakeIntent(
+    intentHash = CoGatewayUtils.hashStakeIntent(
       params.amount,
       params.beneficiary,
       TestData.contracts.gateway,
@@ -125,23 +158,21 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       params.blockNumber,
       params.storageHash,
     );
-
   });
 
-  it('should emit event MintProgressed', async function () {
+  it('should emit event MintProgressed', async () => {
+    const estimatedReward = await getMaxReward(TestData);
+    const estimatedStakeAmount = params.amount.sub(estimatedReward);
 
-    let estimatedReward = await getMaxReward(TestData);
-    let estimatedStakeAmount = params.amount.sub(estimatedReward);
-
-    let response = await testEIP20CoGateway.progressMintWithProof(
+    const response = await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let expectedEvent = {
+    const expectedEvent = {
       MintProgressed: {
         _messageHash: messageHash,
         _staker: params.staker,
@@ -150,23 +181,21 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
         _mintedAmount: estimatedStakeAmount,
         _rewardAmount: estimatedReward,
         _proofProgress: true,
-        _unlockSecret: Utils.ZERO_BYTES32
-      }
+        _unlockSecret: Utils.ZERO_BYTES32,
+      },
     };
 
-    let eventData = response.logs;
+    const eventData = response.logs;
     Utils.validateEvents(eventData, expectedEvent);
-
   });
 
-  it('should return correct params', async function () {
-
-    let response = await testEIP20CoGateway.progressMintWithProof.call(
+  it('should return correct params', async () => {
+    const response = await testEIP20CoGateway.progressMintWithProof.call(
       messageHash,
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     assert.strictEqual(
@@ -181,51 +210,49 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       `Staked amount from response is ${response.stakeAmount_} and expected value is ${params.amount.toString(10)}.`,
     );
 
-    let expectedReward = await getMaxReward(TestData);
+    const expectedReward = await getMaxReward(TestData);
     assert.strictEqual(
       expectedReward.eq(response.rewardAmount_),
       true,
       `Reward to facilitator from response is ${response.rewardAmount_} and expected value is ${expectedReward.toString(10)}.`,
     );
 
-    let expectedStakedAmount = params.amount.sub(expectedReward);
+    const expectedStakedAmount = params.amount.sub(expectedReward);
     assert.strictEqual(
       expectedStakedAmount.eq(response.mintedAmount_),
       true,
       `Minted amount from response is ${response.mintedAmount_} and expected value is ${expectedStakedAmount.toString(10)}.`,
     );
-
   });
 
-  it('should progress mint for non-zero facilitator reward when message status at source is declared', async function () {
-
-    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+  it('should progress mint for non-zero facilitator reward when message status at source is declared', async () => {
+    const initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
 
     await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let expectedRewardAmount = await getMaxReward(TestData);
+    const expectedRewardAmount = await getMaxReward(TestData);
 
-    let finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+    const finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
 
     assert.strictEqual(
       finalFacilitatorBalance.sub(initialFacilitatorBalance).eq(expectedRewardAmount),
       true,
-      `Facilitator got the reward ${(finalFacilitatorBalance.sub(initialFacilitatorBalance)).toString(10)} `+
-      `and expected is ${expectedRewardAmount.toString(10)}.`,
+      `Facilitator got the reward ${(finalFacilitatorBalance.sub(initialFacilitatorBalance)).toString(10)} `
+      + `and expected is ${expectedRewardAmount.toString(10)}.`,
     );
-
   });
 
-  it('should progress mint for non-zero facilitator reward when message status at source is progressed', async function () {
+  it('should progress mint for non-zero facilitator reward when message status at source is progressed', async () => {
+    const initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
 
-    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator),
-      initialBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
+
+    const initialBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
 
     await testEIP20CoGateway.setStorageRoot(
       new BN(TestData.gateway.progress_stake.return_value.block_number, 16),
@@ -237,60 +264,62 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       TestData.gateway.progress_stake.proof_data.storageProof[0].serializedProof,
       new BN(TestData.gateway.progress_stake.return_value.block_number, 16),
       MessageStatusEnum.Progressed,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let expectedRewardAmount = await getMaxReward(TestData),
-      finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator),
-      finalBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
+    const expectedRewardAmount = await getMaxReward(TestData);
+
+
+    const finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+
+
+    const finalBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
 
     assert.strictEqual(
       finalFacilitatorBalance.sub(initialFacilitatorBalance).eq(expectedRewardAmount),
       true,
-      `Facilitator got the reward ${finalFacilitatorBalance.sub(initialFacilitatorBalance).toString(10)} ` +
-      `and expected is ${expectedRewardAmount.add(initialFacilitatorBalance).toString(10)}.`,
+      `Facilitator got the reward ${finalFacilitatorBalance.sub(initialFacilitatorBalance).toString(10)} `
+      + `and expected is ${expectedRewardAmount.add(initialFacilitatorBalance).toString(10)}.`,
     );
 
-    let stakedAmount = new BN(params.amount, 16);
+    const stakedAmount = new BN(params.amount, 16);
 
     assert.strictEqual(
       initialBeneficiaryBalance.add(stakedAmount.sub(expectedRewardAmount)).eq(finalBeneficiaryBalance),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance} must be equal to `+
-      `${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance} must be equal to `
+      + `${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
     );
-
   });
 
-  it('should mint tokens to beneficiary', async function () {
-
-    let initialBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
+  it('should mint tokens to beneficiary', async () => {
+    const initialBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
 
     await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let expectedRewardAmount = await getMaxReward(TestData),
-      finalBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
+    const expectedRewardAmount = await getMaxReward(TestData);
 
-    let stakedAmount = new BN(params.amount, 16);
+
+    const finalBeneficiaryBalance = await testUtilityToken.balanceOf(params.beneficiary);
+
+    const stakedAmount = new BN(params.amount, 16);
 
     assert.strictEqual(
       initialBeneficiaryBalance.add(stakedAmount.sub(expectedRewardAmount)).eq(finalBeneficiaryBalance),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to` +
-      `${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to`
+      + `${initialBeneficiaryBalance.add(stakedAmount).sub(expectedRewardAmount)}.`,
     );
-
   });
 
-  it('should progress mint for zero facilitator reward', async function () {
-
-    intentHash = coGatewayUtils.hashStakeIntent(
+  it('should progress mint for zero facilitator reward', async () => {
+    intentHash = CoGatewayUtils.hashStakeIntent(
       new BN(TestDataWithZeroGasPrice.gateway.stake.params.amount, 16),
       TestDataWithZeroGasPrice.gateway.stake.params.beneficiary,
       TestDataWithZeroGasPrice.contracts.gateway,
@@ -330,77 +359,71 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+    const initialFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
 
     await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       TestDataWithZeroGasPrice.gateway.stake.proof_data.storageProof[0].serializedProof,
       new BN(TestDataWithZeroGasPrice.gateway.stake.return_value.block_number, 16),
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let expectedRewardAmount = await getMaxReward(TestDataWithZeroGasPrice),
-      finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
+    const expectedRewardAmount = await getMaxReward(TestDataWithZeroGasPrice);
+
+
+    const finalFacilitatorBalance = await testUtilityToken.balanceOf(facilitator);
 
     assert.strictEqual(
       finalFacilitatorBalance.add(initialFacilitatorBalance).eq(expectedRewardAmount),
       true,
-      `Facilitator got the reward ${finalFacilitatorBalance.sub(initialFacilitatorBalance).toString(10)}`+
-      ` and expected is ${expectedRewardAmount.add(initialFacilitatorBalance).toString(10)}.`,
+      `Facilitator got the reward ${finalFacilitatorBalance.sub(initialFacilitatorBalance).toString(10)}`
+      + ` and expected is ${expectedRewardAmount.add(initialFacilitatorBalance).toString(10)}.`,
     );
-
   });
 
-  it('should fail when messagehash is zero', async function () {
-
+  it('should fail when messagehash is zero', async () => {
     await Utils.expectRevert(
       testEIP20CoGateway.progressMintWithProof(
         Utils.NULL_ADDRESS,
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message hash must not be zero',
     );
-
   });
 
-  it('should fail when rlp of parent nodes is zero', async function () {
-
-    let rlpParentNodes = "0x";
+  it('should fail when rlp of parent nodes is zero', async () => {
+    const rlpParentNodes = '0x';
     await Utils.expectRevert(
       testEIP20CoGateway.progressMintWithProof(
         messageHash,
         rlpParentNodes,
         params.blockNumber,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'RLP parent nodes must not be zero',
     );
-
   });
 
-  it('should fail when storage root for block height is not set', async function () {
-
-    let blockHeight = new BN(1);
+  it('should fail when storage root for block height is not set', async () => {
+    const blockHeight = new BN(1);
     await Utils.expectRevert(
       testEIP20CoGateway.progressMintWithProof(
         messageHash,
         params.serializedProof,
         blockHeight,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Storage root must not be zero',
     );
-
   });
 
-  it('should fail when message status is declared revocation', async function () {
-
+  it('should fail when message status is declared revocation', async () => {
     await testEIP20CoGateway.setInboxStatus(
       messageHash,
       MessageStatusEnum.DeclaredRevocation,
@@ -412,15 +435,13 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target must be Declared.',
     );
-
   });
 
-  it('should fail when message status is revoked', async function () {
-
+  it('should fail when message status is revoked', async () => {
     await testEIP20CoGateway.setInboxStatus(
       messageHash,
       MessageStatusEnum.Revoked,
@@ -432,15 +453,13 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target must be Declared.',
     );
-
   });
 
-  it('should fail when message status is undeclared', async function () {
-
+  it('should fail when message status is undeclared', async () => {
     await testEIP20CoGateway.setInboxStatus(
       messageHash,
       MessageStatusEnum.Undeclared,
@@ -452,51 +471,45 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.Declared,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on target must be Declared.',
     );
-
   });
 
-  it('should fail when message status at source is DeclaredRevocation', async function () {
-
+  it('should fail when message status at source is DeclaredRevocation', async () => {
     await Utils.expectRevert(
       testEIP20CoGateway.progressMintWithProof(
         messageHash,
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.DeclaredRevocation,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on source must be Declared or Progressed.',
     );
-
   });
 
-  it('should fail when message status at source is Revoked', async function () {
-
+  it('should fail when message status at source is Revoked', async () => {
     await Utils.expectRevert(
       testEIP20CoGateway.progressMintWithProof(
         messageHash,
         params.serializedProof,
         params.blockNumber,
         MessageStatusEnum.Revoked,
-        {from: facilitator},
+        { from: facilitator },
       ),
       'Message on source must be Declared or Progressed.',
     );
-
   });
 
-  it('should fail when message status is already progressed', async function () {
-
+  it('should fail when message status is already progressed', async () => {
     await testEIP20CoGateway.progressMintWithProof(
       messageHash,
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Declared,
-      {from: facilitator},
+      { from: facilitator },
     );
 
     await Utils.expectRevert(testEIP20CoGateway.progressMintWithProof(
@@ -504,11 +517,8 @@ contract('EIP20CoGateway.progressMintWithProof() ', function (accounts) {
       params.serializedProof,
       params.blockNumber,
       MessageStatusEnum.Progressed,
-      {from: facilitator},
-      ),
-      'Message on target must be Declared.',
-    );
-
+      { from: facilitator },
+    ),
+    'Message on target must be Declared.');
   });
-
 });

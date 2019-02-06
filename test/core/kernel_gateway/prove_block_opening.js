@@ -18,40 +18,45 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
-const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
+
 const KernelGateway = artifacts.require('TestKernelGateway');
 const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const BlockStore = artifacts.require('MockBlockStore');
 
-
 contract('KernelGateway.proveBlockOpening()', async (accounts) => {
-
   const zeroBytes = Utils.ZERO_BYTES32;
-  let mosaicCore, kernelGateway, originBlockStore, auxiliaryBlockStore, genesisKernelHash;
+  const storageRoot = '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
 
-  let height,
-    parent,
-    updatedValidators,
-    updatedWeights,
-    auxiliaryBlockHash,
-    storageBranchRlp,
-    originBlockHeight,
-    kernelHash,
-    transitionHash;
+  let mosaicCore;
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
+  let genesisKernelHash;
+  let height;
+  let parent;
+  let updatedValidators;
+  let updatedWeights;
+  let auxiliaryBlockHash;
+  let storageBranchRlp;
+  let originBlockHeight;
+  let kernelHash;
+  let transitionHash;
 
-  let storageRoot = '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
-
-  async function deploy(KernelGateway) {
+  /**
+   *
+   * @param {Object} Gateway A gateway class, e.g. KernelGateway or KernelGatewayFail.
+   */
+  const deploy = async (Gateway) => {
     // deploy the kernel gateway
     mosaicCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
-    genesisKernelHash =
-      "0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e";
-    kernelGateway = await KernelGateway.new(
+    genesisKernelHash = '0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e';
+    kernelGateway = await Gateway.new(
       mosaicCore,
       originBlockStore.address,
       auxiliaryBlockStore.address,
@@ -59,33 +64,31 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     );
 
     height = new BN(2);
-    parent = "0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4";
+    parent = '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
     storageBranchRlp = web3.utils.sha3('storageBranchRlp');
     originBlockHeight = 2;
 
-    kernelHash = "0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4";
+    kernelHash = '0xcb185f95ece0856d2cad7fef058dfe79c3d5df301c28e2618a7b01247c001fa4';
     transitionHash = web3.utils.sha3('transitionHash');
 
     await kernelGateway.setStorageRoot(storageRoot, originBlockHeight);
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
     await auxiliaryBlockStore.setAuxiliaryTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
+  };
 
-  }
-
-  beforeEach(async function () {
+  beforeEach(async () => {
     await deploy(KernelGateway);
   });
 
   it('should fail when existing open kernel is present', async () => {
-
     await kernelGateway.setOpenKernelHash(web3.utils.sha3('random'));
 
     height = new BN(2);
-    parent = "0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4";
+    parent = '0xd07d3b2988d7b7b6a7e44e43ef34fefd5e8a69d58685fddb56b48eef844a7bb4';
     updatedValidators = [accounts[3], accounts[4]];
     updatedWeights = [new BN(3), new BN(4)];
     auxiliaryBlockHash = web3.utils.sha3('auxiliaryBlockHash');
@@ -102,13 +105,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Existing open kernel is not activated.",
+      'Existing open kernel is not activated.',
     );
-
   });
 
   it('should fail when parent hash is zero', async () => {
-
     parent = zeroBytes;
 
     await Utils.expectRevert(
@@ -121,13 +122,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Parent hash must not be zero.",
+      'Parent hash must not be zero.',
     );
-
   });
 
   it('should fail when parent hash do not match the meta-block hash', async () => {
-
     parent = web3.utils.sha3('random');
 
     await Utils.expectRevert(
@@ -140,13 +139,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Parent hash must be equal to previous meta-block hash.",
+      'Parent hash must be equal to previous meta-block hash.',
     );
-
   });
 
   it('should fail when height is not equal to +1', async () => {
-
     height = new BN(5);
 
     await Utils.expectRevert(
@@ -159,13 +156,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Kernel height must be equal to open kernel height plus 1.",
+      'Kernel height must be equal to open kernel height plus 1.',
     );
-
   });
 
   it('should fail when auxiliary block hash is zero', async () => {
-
     auxiliaryBlockHash = zeroBytes;
 
     await Utils.expectRevert(
@@ -178,14 +173,14 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Auxiliary block hash must not be zero.",
+      'Auxiliary block hash must not be zero.',
     );
-
   });
 
-  it('should fail when validators count and validator weight count is' +
-    ' not same', async () => {
-
+  it(
+    'should fail when validators count and validator weight count is'
+    + ' not same',
+    async () => {
       updatedValidators.push(accounts[5]);
 
       await Utils.expectRevert(
@@ -198,14 +193,13 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
           storageBranchRlp,
           originBlockHeight,
         ),
-        "The lengths of the addresses and weights arrays must be identical.",
+        'The lengths of the addresses and weights arrays must be identical.',
       );
-
-    });
+    },
+  );
 
   it('should fail when rlp encoded storage branch is zero', async () => {
-
-    storageBranchRlp = "0x";
+    storageBranchRlp = '0x';
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(
@@ -217,14 +211,13 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "The storage branch rlp must not be zero.",
+      'The storage branch rlp must not be zero.',
     );
-
   });
 
-  it('should fail when block containing the state root is not ' +
-    'finalized', async () => {
-
+  it(
+    'should fail when block containing the state root is not finalized',
+    async () => {
       originBlockHeight = 4;
 
       await Utils.expectRevert(
@@ -237,13 +230,12 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
           storageBranchRlp,
           originBlockHeight,
         ),
-        "The block containing the state root must be finalized.",
+        'The block containing the state root must be finalized.',
       );
-
-    });
+    },
+  );
 
   it('should fail when storage root is zero', async () => {
-
     originBlockHeight = new BN(1);
 
     await Utils.expectRevert(
@@ -256,13 +248,12 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "The storage root must not be zero.",
+      'The storage root must not be zero.',
     );
   });
 
   it('should fail when storage proof is invalid', async () => {
-
-    await await deploy(KernelGatewayFail);
+    await deploy(KernelGatewayFail);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(
@@ -274,13 +265,11 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Storage proof must be verified.",
+      'Storage proof must be verified.',
     );
-
   });
 
   it('should fail when auxiliary block hash is not valid', async () => {
-
     await auxiliaryBlockStore.setAuxiliaryTransitionHash(zeroBytes);
 
     await Utils.expectRevert(
@@ -293,14 +282,12 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
         storageBranchRlp,
         originBlockHeight,
       ),
-      "Parent hash must be equal to previous meta-block hash.",
+      'Parent hash must be equal to previous meta-block hash.',
     );
-
   });
 
   it('should pass for valid input data', async () => {
-
-    let result = await kernelGateway.proveBlockOpening.call(
+    const result = await kernelGateway.proveBlockOpening.call(
       height,
       parent,
       updatedValidators,
@@ -310,15 +297,13 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
       originBlockHeight,
     );
 
-    assert(result, "Proof of kernel opening failed");
-
+    assert(result, 'Proof of kernel opening failed');
   });
 
   it('should emit event', async () => {
-
     await auxiliaryBlockStore.setCurrentDynasty(5);
 
-    let tx = await kernelGateway.proveBlockOpening(
+    const tx = await kernelGateway.proveBlockOpening(
       height,
       parent,
       updatedValidators,
@@ -328,23 +313,23 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
       originBlockHeight,
     );
 
-    let event = EventDecoder.getEvents(tx, kernelGateway);
+    const event = EventDecoder.getEvents(tx, kernelGateway);
 
     assert(
       event.OpenKernelProven !== undefined,
-      "Event `OpenKernelProven` must be emitted.",
+      'Event `OpenKernelProven` must be emitted.',
     );
 
-    let eventData = event.OpenKernelProven;
+    const eventData = event.OpenKernelProven;
 
-    let originCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
+    const originCoreIdentifier = await originBlockStore.getCoreIdentifier.call();
     assert.strictEqual(
       eventData._originCoreIdentifier,
       originCoreIdentifier,
       `Origin block store core identifier must be equal to ${originCoreIdentifier}`,
     );
 
-    let auxiliaryCoreIdentifier = await auxiliaryBlockStore.getCoreIdentifier.call();
+    const auxiliaryCoreIdentifier = await auxiliaryBlockStore.getCoreIdentifier.call();
     assert.strictEqual(
       eventData._auxiliaryCoreIdentifier,
       auxiliaryCoreIdentifier,
@@ -370,9 +355,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
     assert(
       eventData._activationDynasty.eqn(7),
-      "Activation dynasty must be equal to 7",
+      'Activation dynasty must be equal to 7',
     );
-
   });
-
 });

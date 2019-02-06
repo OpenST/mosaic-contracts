@@ -42,56 +42,56 @@ const assert = require('assert');
  * Class to assert confirm redeem intent.
  */
 class ConfirmRedeemIntentAssertion {
-    /**
+  /**
      * This verifies event.
      * @param {Object} event Event object after decoding.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      */
-    static verify(event, redeemRequest) {
-        const eventData = event.RedeemIntentConfirmed;
+  static verify(event, redeemRequest) {
+    const eventData = event.RedeemIntentConfirmed;
 
-        assert.strictEqual(
-            eventData._messageHash,
-            redeemRequest.messageHash,
-            `Message hash from event must be equal to ${redeemRequest.messageHash}.`,
-        );
+    assert.strictEqual(
+      eventData._messageHash,
+      redeemRequest.messageHash,
+      `Message hash from event must be equal to ${redeemRequest.messageHash}.`,
+    );
 
-        assert.strictEqual(
-            eventData._redeemer,
-            redeemRequest.redeemer,
-            `Redeemer address from event must be equal to ${redeemRequest.redeemer}.`,
-        );
+    assert.strictEqual(
+      eventData._redeemer,
+      redeemRequest.redeemer,
+      `Redeemer address from event must be equal to ${redeemRequest.redeemer}.`,
+    );
 
-        assert.strictEqual(
-            redeemRequest.nonce.eq(eventData._redeemerNonce),
-            true,
-            `Redeem nonce from event must be equal to ${redeemRequest.nonce.toString(10)}.`,
-        );
+    assert.strictEqual(
+      redeemRequest.nonce.eq(eventData._redeemerNonce),
+      true,
+      `Redeem nonce from event must be equal to ${redeemRequest.nonce.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            eventData._beneficiary,
-            redeemRequest.beneficiary,
-            `Beneficiary address from event must be equal to ${redeemRequest.beneficiary}.`,
-        );
+    assert.strictEqual(
+      eventData._beneficiary,
+      redeemRequest.beneficiary,
+      `Beneficiary address from event must be equal to ${redeemRequest.beneficiary}.`,
+    );
 
-        assert.strictEqual(
-            redeemRequest.amount.eq(eventData._amount),
-            true,
-            `Amount from event must be equal to ${redeemRequest.amount.toString(10)}.`,
-        );
+    assert.strictEqual(
+      redeemRequest.amount.eq(eventData._amount),
+      true,
+      `Amount from event must be equal to ${redeemRequest.amount.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            redeemRequest.blockHeight.eq(eventData._blockHeight),
-            true,
-            `Block height from event must be equal to ${redeemRequest.blockHeight.toString(10)}.`,
-        );
+    assert.strictEqual(
+      redeemRequest.blockHeight.eq(eventData._blockHeight),
+      true,
+      `Block height from event must be equal to ${redeemRequest.blockHeight.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            eventData._hashLock,
-            redeemRequest.hashLock,
-            `Hash lock from event must be equal to ${redeemRequest.hashLock}.`,
-        );
-    }
+    assert.strictEqual(
+      eventData._hashLock,
+      redeemRequest.hashLock,
+      `Hash lock from event must be equal to ${redeemRequest.hashLock}.`,
+    );
+  }
 }
 
 module.exports = ConfirmRedeemIntentAssertion;

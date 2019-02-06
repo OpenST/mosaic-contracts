@@ -18,45 +18,43 @@
 //
 // ----------------------------------------------------------------------------
 
-const CoGateway = artifacts.require("TestEIP20CoGateway");
-const Token = artifacts.require("MockUtilityToken");
+const CoGateway = artifacts.require('TestEIP20CoGateway');
+const Token = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
-const Utils = require("./../../test_lib/utils");
-const TestData = require("./test_data/confirm_stake_intent.json");
+const Utils = require('./../../test_lib/utils');
+const TestData = require('./test_data/confirm_stake_intent.json');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
-let MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 
-contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
-
+contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
   // Contract deployment related variables.
-  let valueTokenAddress,
-    utilityToken,
-    bountyAmount,
-    coreAddress,
-    organizationAddress,
-    coGateway,
-    gatewayAddress,
-    burnerAddress;
+  let valueTokenAddress;
+  let utilityToken;
+  let bountyAmount;
+  let coreAddress;
+  let organizationAddress;
+  let coGateway;
+  let gatewayAddress;
+  let burnerAddress;
 
   // Confirm stake intent related variables.
-  let staker,
-    stakerNonce,
-    beneficiary,
-    amount,
-    gasPrice,
-    gasLimit,
-    hashLock,
-    blockHeight,
-    rlpParentNodes,
-    storageRoot,
-    data;
+  let staker;
+  let stakerNonce;
+  let beneficiary;
+  let amount;
+  let gasPrice;
+  let gasLimit;
+  let hashLock;
+  let blockHeight;
+  let rlpParentNodes;
+  let storageRoot;
+  let data;
 
   // Function to initialize test data.
   function initializeData(testData) {
-
     data = testData;
 
     // Populate the deployment params.
@@ -75,14 +73,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     rlpParentNodes = data.proofData.parentNodes;
     storageRoot = data.proofData.storageHash;
     hashLock = data.hashLock;
-    unlockSecret = data.hashSecret;
-
   }
 
   // Common assertion code for confirm stake intent.
   async function assertConfirmStakeIntent() {
-
-    let result = await coGateway.confirmStakeIntent.call(
+    const result = await coGateway.confirmStakeIntent.call(
       staker,
       stakerNonce,
       beneficiary,
@@ -112,7 +107,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       rlpParentNodes,
     );
 
-    let mintData = await coGateway.mints(data.messageHash);
+    const mintData = await coGateway.mints(data.messageHash);
 
     assert.strictEqual(
       amount.eq(mintData.amount),
@@ -126,30 +121,38 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       `Mints.beneficiary from the contract must match ${beneficiary}.`,
     );
 
-    let messageData = await coGateway.messages(data.messageHash);
+    const messageData = await coGateway.messages(data.messageHash);
 
     assert.strictEqual(
       messageData.intentHash,
       data.intentHash,
-      `Message.intentHash from the contract must be equal to ${data.intentHash}.`,
+      `Message.intentHash from the contract must be equal to ${
+        data.intentHash
+      }.`,
     );
 
     assert.strictEqual(
       stakerNonce.eq(messageData.nonce),
       true,
-      `Message.nonce from the contract must be equal to ${stakerNonce.toString(10)}.`,
+      `Message.nonce from the contract must be equal to ${stakerNonce.toString(
+        10,
+      )}.`,
     );
 
     assert.strictEqual(
       gasPrice.eq(messageData.gasPrice),
       true,
-      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(10)}.`,
+      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(
+        10,
+      )}.`,
     );
 
     assert.strictEqual(
       gasLimit.eq(messageData.gasLimit),
       true,
-      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(10)}.`,
+      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(
+        10,
+      )}.`,
     );
 
     assert.strictEqual(
@@ -165,24 +168,22 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
     );
   }
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     initializeData(TestData[0]);
+    let sender;
 
-    organizationAddress = accounts[4];
+    [sender, coreAddress, organizationAddress, burnerAddress] = accounts;
 
     // Deploy mocked utility token.
     utilityToken = await Token.new(
       data.token,
-      "",
-      "",
+      '',
+      '',
       18,
       organizationAddress,
-      { from: accounts[0] }
+      { from: sender },
     );
 
-    coreAddress = accounts[3];
-    burnerAddress = accounts[6];
 
     // Deploy CoGateway.
     coGateway = await CoGateway.new(
@@ -200,11 +201,9 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
 
     // Set the storage root.
     await coGateway.setStorageRoot(blockHeight, storageRoot);
-
   });
 
-  it('should fail when staker address is zero.', async function () {
-
+  it('should fail when staker address is zero.', async () => {
     staker = NullAddress;
 
     await Utils.expectRevert(
@@ -219,13 +218,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "Staker address must not be zero.",
+      'Staker address must not be zero.',
     );
-
   });
 
-  it('should fail when beneficiary address is zero.', async function () {
-
+  it('should fail when beneficiary address is zero.', async () => {
     beneficiary = NullAddress;
 
     await Utils.expectRevert(
@@ -240,13 +237,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "Beneficiary address must not be zero.",
+      'Beneficiary address must not be zero.',
     );
-
   });
 
-  it('should fail when stake amount is zero.', async function () {
-
+  it('should fail when stake amount is zero.', async () => {
     amount = new BN(0);
 
     await Utils.expectRevert(
@@ -261,14 +256,12 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "Stake amount must not be zero.",
+      'Stake amount must not be zero.',
     );
-
   });
 
-  it('should fail when rlp parent node is zero.', async function () {
-
-    rlpParentNodes = "0x";
+  it('should fail when rlp parent node is zero.', async () => {
+    rlpParentNodes = '0x';
 
     await Utils.expectRevert(
       coGateway.confirmStakeIntent(
@@ -282,13 +275,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "RLP parent nodes must not be zero.",
+      'RLP parent nodes must not be zero.',
     );
-
   });
 
-  it('should fail when staker nonce is already consumed.', async function () {
-
+  it('should fail when staker nonce is already consumed.', async () => {
     stakerNonce = new BN(0);
 
     await Utils.expectRevert(
@@ -303,61 +294,15 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         blockHeight,
         rlpParentNodes,
       ),
-      "Invalid nonce.",
+      'Invalid nonce.',
     );
-
   });
 
-  it('should fail when storage root for the block height is not available.',
-    async function () {
+  it('should fail when storage root for the block height is not available.', async () => {
+    blockHeight = new BN(1);
 
-      blockHeight = new BN(1);
-
-      await Utils.expectRevert(
-        coGateway.confirmStakeIntent(
-          staker,
-          stakerNonce,
-          beneficiary,
-          amount,
-          gasPrice,
-          gasLimit,
-          hashLock,
-          blockHeight,
-          rlpParentNodes,
-        ),
-        "Storage root must not be zero.",
-      );
-
-    }
-  );
-
-  it('should fail when the rlp parent node is a incorrect proof data.',
-    async function () {
-
-      rlpParentNodes = "0xf9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7";
-
-      await Utils.expectRevert(
-        coGateway.confirmStakeIntent(
-          staker,
-          stakerNonce,
-          beneficiary,
-          amount,
-          gasPrice,
-          gasLimit,
-          hashLock,
-          blockHeight,
-          rlpParentNodes,
-        ),
-        "Merkle proof verification failed.",
-      );
-
-    }
-  );
-
-  it('should fail to confirm stake intent if its already confirmed once',
-    async function () {
-
-      await coGateway.confirmStakeIntent(
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
         staker,
         stakerNonce,
         beneficiary,
@@ -367,29 +312,63 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         hashLock,
         blockHeight,
         rlpParentNodes,
-      );
+      ),
+      'Storage root must not be zero.',
+    );
+  });
 
-      await Utils.expectRevert(
-        coGateway.confirmStakeIntent(
-          staker,
-          stakerNonce,
-          beneficiary,
-          amount,
-          gasPrice,
-          gasLimit,
-          hashLock,
-          blockHeight,
-          rlpParentNodes,
-        ),
-        "Invalid nonce.",
-      );
+  it('should fail when the rlp parent node is a incorrect proof data.', async () => {
+    rlpParentNodes = '0xf9019ff901318080a09d4484981c7edad9f3182d5ae48f8d9d37920c6b38a2871cebef30386741a92280a0e159e6e0f6ff669a91e7d4d1cf5eddfcd53dde292231841f09dd29d7d29048e9a0670573eb7c83ac10c87de570273e1fde94c1acbd166758e85aeec2219669ceb5a06f09c8eefdb579cae94f595c48c0ee5e8052bef55f0aeb3cc4fac8ec1650631fa05176aab172a56135b9d01a89ccada74a9d11d8c33cbd07680acaf9704cbec062a0df7d6e63240928af91e7c051508a0306389d41043954c0e3335f6f37b8e53cc18080a03d30b1a0d2a61cafd83521c5701a8bf63d0020c0cd9e844ad62e9b4444527144a0a5aa2db9dc726541f2a493b79b83aeebe5bc8f7e7910570db218d30fa7d2ead18080a0b60ddc26977a026cc88f0d5b0236f4cee7b93007a17e2475547c0b4d59d16c3d80f869a034d7a0307ecd0d12f08317f9b12c4d34dfbe55ec8bdc90c4d8a6597eb4791f0ab846f8440280a0e99d9c02761142de96f3c92a63bb0edb761a8cd5bbfefed1e72341a94957ec51a0144788d43dba972c568df04560b995d9e57b58ef09fddf3b68cba065997efff7';
 
-    }
-  );
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      'Merkle proof verification failed.',
+    );
+  });
 
-  it('should fail to confirm new stake intent if status of previous ' +
-    'confirmed stake intent is declared', async function () {
+  it('should fail to confirm stake intent if its already confirmed once', async () => {
+    await coGateway.confirmStakeIntent(
+      staker,
+      stakerNonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+    );
 
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      'Invalid nonce.',
+    );
+  });
+
+  it(
+    'should fail to confirm new stake intent if status of previous '
+    + 'confirmed stake intent is declared',
+    async () => {
       await coGateway.confirmStakeIntent(
         staker,
         stakerNonce,
@@ -418,21 +397,17 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
           blockHeight,
           rlpParentNodes,
         ),
-        "Previous process is not completed.",
+        'Previous process is not completed.',
       );
-
-    }
+    },
   );
 
-  it('should pass with valid params.', async function () {
-
+  it('should pass with valid params.', async () => {
     await assertConfirmStakeIntent();
-
   });
 
-  it('should emit `StakeIntentConfirmed` event.', async function () {
-
-    let tx = await coGateway.confirmStakeIntent(
+  it('should emit `StakeIntentConfirmed` event.', async () => {
+    const tx = await coGateway.confirmStakeIntent(
       staker,
       stakerNonce,
       beneficiary,
@@ -444,14 +419,14 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       rlpParentNodes,
     );
 
-    let event = EventDecoder.getEvents(tx, coGateway);
+    const event = EventDecoder.getEvents(tx, coGateway);
 
     assert.isDefined(
       event.StakeIntentConfirmed,
       'Event StakeIntentConfirmed must be emitted.',
     );
 
-    let eventData = event.StakeIntentConfirmed;
+    const eventData = event.StakeIntentConfirmed;
 
     assert.strictEqual(
       eventData._messageHash,
@@ -494,13 +469,12 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
       hashLock,
       `Hash lock from event must be equal to ${hashLock}.`,
     );
-
   });
 
-
-  it('should confirm new stake intent if status of previous ' +
-    'confirmed stake intent is revoked', async function () {
-
+  it(
+    'should confirm new stake intent if status of previous '
+    + 'confirmed stake intent is revoked',
+    async () => {
       await coGateway.confirmStakeIntent(
         staker,
         stakerNonce,
@@ -513,20 +487,23 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         rlpParentNodes,
       );
 
-      await coGateway.setInboxStatus(data.messageHash, MessageStatusEnum.Revoked);
+      await coGateway.setInboxStatus(
+        data.messageHash,
+        MessageStatusEnum.Revoked,
+      );
 
       initializeData(TestData[1]);
 
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
       await assertConfirmStakeIntent();
-
-    }
+    },
   );
 
-  it('should confirm new stake intent if status of previous ' +
-    'confirmed stake intent is progressed', async function () {
-
+  it(
+    'should confirm new stake intent if status of previous '
+    + 'confirmed stake intent is progressed',
+    async () => {
       await coGateway.confirmStakeIntent(
         staker,
         stakerNonce,
@@ -539,15 +516,16 @@ contract('EIP20CoGateway.confirmStakeIntent() ', function (accounts) {
         rlpParentNodes,
       );
 
-      await coGateway.setInboxStatus(data.messageHash, MessageStatusEnum.Progressed);
+      await coGateway.setInboxStatus(
+        data.messageHash,
+        MessageStatusEnum.Progressed,
+      );
 
       initializeData(TestData[1]);
 
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
       await assertConfirmStakeIntent();
-
-    }
+    },
   );
-
 });

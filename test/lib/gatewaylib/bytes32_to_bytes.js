@@ -21,20 +21,16 @@
 const GatewayLib = artifacts.require('GatewayLib');
 
 contract('GatewayLib.bytes32ToBytes()', async (accounts) => {
+  it('should return correct values', async () => {
+    const gatewayLib = await GatewayLib.deployed();
+    const bytes32Value = web3.utils.sha3('some data');
 
-  it('should return correct values', async function () {
-
-    let gatewayLib = await GatewayLib.deployed();
-    let bytes32Value = web3.utils.sha3("some data");
-
-    let result = await gatewayLib.bytes32ToBytes(bytes32Value);
+    const result = await gatewayLib.bytes32ToBytes(bytes32Value);
 
     assert.strictEqual(
       bytes32Value,
       result,
-      "Expected value should be equal to actual.",
+      'Expected value should be equal to actual.',
     );
-
   });
-
 });

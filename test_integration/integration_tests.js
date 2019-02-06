@@ -32,35 +32,35 @@ const EIP20StandardToken = artifacts.require('EIP20StandardToken');
 const OSTPrime = artifacts.require('OSTPrime');
 
 const setupArtifacts = () => {
-    shared.artifacts = {
-        Anchor,
-        EIP20Gateway,
-        EIP20CoGateway,
-        EIP20StandardToken,
-        OSTPrime,
-    };
+  shared.artifacts = {
+    Anchor,
+    EIP20Gateway,
+    EIP20CoGateway,
+    EIP20StandardToken,
+    OSTPrime,
+  };
 };
 
 const runTests = (callback) => {
-    const mocha = new Mocha({
-        enableTimeouts: false,
+  const mocha = new Mocha({
+    enableTimeouts: false,
+  });
+
+  Mocha.utils.lookupFiles(__dirname, ['js'], true)
+    .filter(
+      // Skipping this file so that artifacts are not loaded.
+      file => file !== __filename,
+    )
+    .forEach((file) => {
+      mocha.addFile(file);
     });
 
-    Mocha.utils.lookupFiles(__dirname, ['js'], true)
-        .filter(
-            // Skipping this file so that artifacts are not loaded.
-            file => file !== __filename,
-        )
-        .forEach((file) => {
-            mocha.addFile(file);
-        });
-
-    mocha.run((failures) => {
-        callback(failures);
-    });
+  mocha.run((failures) => {
+    callback(failures);
+  });
 };
 
 module.exports = (callback) => {
-    setupArtifacts();
-    runTests(callback);
+  setupArtifacts();
+  runTests(callback);
 };

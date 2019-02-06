@@ -18,99 +18,86 @@
 //
 // ----------------------------------------------------------------------------
 
-const OSTPrime = artifacts.require("OSTPrime")
-  , BN = require('bn.js');
+const OSTPrime = artifacts.require('OSTPrime');
+
+const BN = require('bn.js');
 
 const Utils = require('../../../test/test_lib/utils');
 
-contract('OSTPrime.initialize()', function (accounts) {
-
+contract('OSTPrime.initialize()', (accounts) => {
   const DECIMAL = new BN(10);
   const POW = new BN(18);
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress, ostPrime, organization;
+  let brandedTokenAddress;
+  let ostPrime;
+  let organization;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     brandedTokenAddress = accounts[2];
     organization = accounts[0];
     ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
   });
 
-  it('The balance of OST prime contract must be zero', async function () {
-
-    let balance = await Utils.getBalance(ostPrime.address);
+  it('The balance of OST prime contract must be zero', async () => {
+    const balance = await Utils.getBalance(ostPrime.address);
     assert.strictEqual(
       balance.eqn(0),
       true,
-      `The balance of contract must be zero.`,
+      'The balance of contract must be zero.',
     );
-
   });
 
-  it('should fail if initialize is called with payable amount not equal ' +
-    'to TOKENS_MAX ost prime base token', async function () {
+  it(
+    'should fail if initialize is called with payable amount not equal '
+      + 'to TOKENS_MAX ost prime base token',
+    async () => {
+      const tokenAmount = new BN(1);
 
-    let tokenAmount = new BN(1);
+      const result = ostPrime.initialize.call({
+        from: accounts[2],
+        value: tokenAmount,
+      });
 
-    let result = ostPrime.initialize.call(
-      {from: accounts[2], value: tokenAmount}
-    );
+      await Utils.expectRevert(
+        result,
+        'Payable amount must be equal to total supply of token.',
+      );
+    },
+  );
+
+  it(
+    'should pass if initialize is called with value equal to '
+      + 'TOKENS_MAX ost prime base token',
+    async () => {
+      const result = await ostPrime.initialize.call({
+        from: accounts[2],
+        value: TOKENS_MAX,
+      });
+
+      assert.strictEqual(result, true, 'The result should be true.');
+
+      await ostPrime.initialize({ from: accounts[2], value: TOKENS_MAX });
+
+      const balance = await Utils.getBalance(ostPrime.address);
+      assert.strictEqual(
+        TOKENS_MAX.eq(balance),
+        true,
+        `The balance of contract must be ${TOKENS_MAX}.`,
+      );
+
+      const initialized = await ostPrime.initialized.call();
+      assert.strictEqual(initialized, true, 'Contract should be initialized.');
+    },
+  );
+
+  it('should fail if already initialized', async () => {
+    await ostPrime.initialize({ from: accounts[2], value: TOKENS_MAX });
 
     await Utils.expectRevert(
-      result,
-      'Payable amount must be equal to total supply of token.',
-    );
-
-  });
-
-  it('should pass if initialize is called with value equal to ' +
-    'TOKENS_MAX ost prime base token', async function () {
-
-    let result = await ostPrime.initialize.call(
-      {from: accounts[2], value: TOKENS_MAX}
-    );
-
-    assert.strictEqual(
-      result,
-      true,
-      `The result should be true.`,
-    );
-
-    await ostPrime.initialize(
-      {from: accounts[2], value: TOKENS_MAX}
-    );
-
-    let balance = await Utils.getBalance(ostPrime.address);
-    assert.strictEqual(
-      TOKENS_MAX.eq(balance),
-      true,
-      `The balance of contract must be ${TOKENS_MAX}.`,
-    );
-
-    let initialized = await ostPrime.initialized.call();
-    assert.strictEqual(
-      initialized,
-      true,
-      `Contract should be initialized.`,
-    );
-
-  });
-
-  it('should fail if already initialized', async function () {
-
-    await ostPrime.initialize(
-      {from: accounts[2], value: TOKENS_MAX}
-    );
-
-    await Utils.expectRevert(
-      ostPrime.initialize(
-        {from: accounts[3], value: TOKENS_MAX}
-      ),
+      ostPrime.initialize({ from: accounts[3], value: TOKENS_MAX }),
       'Contract is already initialized.',
     );
-
   });
-
 });

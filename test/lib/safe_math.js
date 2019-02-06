@@ -26,56 +26,60 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 
-var TestSafeMath = artifacts.require('./TestSafeMath.sol');
+const TestSafeMath = artifacts.require('TestSafeMath');
 
-contract('SafeMath', function (accounts) {
+contract('SafeMath', () => {
   let safeMath;
 
-  before(async function () {
+  before(async () => {
     safeMath = await TestSafeMath.new();
   });
 
-  it('multiplies correctly', async function () {
-    let a = 5678;
-    let b = 1234;
+  it('multiplies correctly', async () => {
+    const a = 5678;
+    const b = 1234;
     await safeMath.multiply(a, b);
-    let result = await safeMath.result();
+    const result = await safeMath.result();
     assert.equal(result, a * b);
   });
 
-  it('adds correctly', async function () {
-    let a = 5678;
-    let b = 1234;
+  it('adds correctly', async () => {
+    const a = 5678;
+    const b = 1234;
     await safeMath.add(a, b);
-    let result = await safeMath.result();
+    const result = await safeMath.result();
 
     assert.equal(result, a + b);
   });
 
-  it('subtracts correctly', async function () {
-    let a = 5678;
-    let b = 1234;
+  it('subtracts correctly', async () => {
+    const a = 5678;
+    const b = 1234;
     await safeMath.subtract(a, b);
-    let result = await safeMath.result();
+    const result = await safeMath.result();
 
     assert.equal(result, a - b);
   });
 
-  it('should throw an error if subtraction result would be negative', async function () {
-    let a = 1234;
-    let b = 5678;
-    await Utils.expectThrow(safeMath.subtract(a, b))
+  it('should throw an error if subtraction result would be negative', async () => {
+    const a = 1234;
+    const b = 5678;
+    await Utils.expectThrow(safeMath.subtract(a, b));
   });
 
-  it('should throw an error on addition overflow', async function () {
-    let a = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935');
-    let b = new BN(1);
+  it('should throw an error on addition overflow', async () => {
+    const a = new BN(
+      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    );
+    const b = new BN(1);
     await Utils.expectThrow(safeMath.add(a, b));
   });
 
-  it('should throw an error on multiplication overflow', async function () {
-    let a = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639933');
-    let b = new BN(2);
+  it('should throw an error on multiplication overflow', async () => {
+    const a = new BN(
+      '115792089237316195423570985008687907853269984665640564039457584007913129639933',
+    );
+    const b = new BN(2);
     await Utils.expectThrow(safeMath.multiply(a, b));
   });
 });

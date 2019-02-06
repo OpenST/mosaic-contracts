@@ -18,73 +18,57 @@
 //
 // ----------------------------------------------------------------------------
 
-const SimpleStake = artifacts.require("./SimpleStake.sol");
-const MockToken = artifacts.require("./MockToken.sol");
+const SimpleStake = artifacts.require('./SimpleStake.sol');
+const MockToken = artifacts.require('./MockToken.sol');
 
 const web3 = require('../../../test/test_lib/web3.js');
 const Utils = require('../../../test/test_lib/utils.js');
 
 const zeroAddress = Utils.NULL_ADDRESS;
-contract('SimpleStake.constructor()', function (accounts) {
+contract('SimpleStake.constructor()', (accounts) => {
+  const gateway = accounts[4];
+  let token;
+  beforeEach(async () => {
+    token = await MockToken.new({ from: accounts[0] });
+  });
 
-    const gateway = accounts[4];
-    let token;
-    beforeEach(async function () {
-        token = await MockToken.new({ from: accounts[0] });
+  it('should pass with correct parameters', async () => {
+    const simpleStake = await SimpleStake.new(token.address, gateway, {
+      from: accounts[0],
     });
 
-    it('should pass with correct parameters', async function () {
+    assert.strictEqual(
+      web3.utils.isAddress(simpleStake.address),
+      true,
+      'Returned value is not a valid address.',
+    );
 
-        let simpleStake = await SimpleStake.new(
-            token.address,
-            gateway,
-            {from: accounts[0]},
-        );
+    const eip20Token = await simpleStake.token.call();
+    const actualGateway = await simpleStake.gateway.call();
 
-        assert.strictEqual(
-            web3.utils.isAddress(simpleStake.address),
-            true,
-            'Returned value is not a valid address.',
-        );
+    assert.strictEqual(
+      eip20Token,
+      token.address,
+      'Expected token address is different from actual address.',
+    );
+    assert.strictEqual(
+      gateway,
+      actualGateway,
+      'Expected gateway address is different from actual address.',
+    );
+  });
 
-        let eip20Token = await simpleStake.token.call();
-        let actualGateway = await simpleStake.gateway.call();
+  it('should fail if zero token address is passed', async () => {
+    Utils.expectRevert(
+      SimpleStake.new(zeroAddress, gateway, { from: accounts[0] }),
+      'Token contract address must not be zero.',
+    );
+  });
 
-        assert.strictEqual(
-          eip20Token,
-          token.address,
-          "Expected token address is different from actual address.",
-        );
-        assert.strictEqual(
-          gateway,
-          actualGateway,
-          "Expected gateway address is different from actual address.",
-        );
-    });
-
-    it('should fail if zero token address is passed', async function () {
-
-        Utils.expectRevert(
-            SimpleStake.new(
-                zeroAddress,
-                gateway,
-                {from: accounts[0]},
-            ),
-            "Token contract address must not be zero.",
-        );
-
-    });
-
-    it('should fail if zero gateway address is passed', async function () {
-
-        Utils.expectRevert(
-            SimpleStake.new(
-                token.address,
-                zeroAddress,
-                {from: accounts[0]},
-            ),
-            "Gateway contract address must not be zero.",
-        );
-
-    });
+  it('should fail if zero gateway address is passed', async () => {
+    Utils.expectRevert(
+      SimpleStake.new(token.address, zeroAddress, { from: accounts[0] }),
+      'Gateway contract address must not be zero.',
+    );
+  });
 });

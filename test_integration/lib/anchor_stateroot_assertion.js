@@ -24,29 +24,29 @@ const assert = require('assert');
  * Class to assert anchor state root.
  */
 class AnchorStateRootAssertion {
-    /**
+  /**
      * This asserts StateRootAvailable event.
      * @param {Object} event  Deserialize event.
      * @param {Number} blockHeight Block Height at which state root is anchored.
      * @param {string} stateRoot State root which is anchored.
      */
-    static verify(event, blockHeight, stateRoot) {
-        const eventData = event.StateRootAvailable;
+  static verify(event, blockHeight, stateRoot) {
+    const eventData = event.StateRootAvailable;
 
-        assert.strictEqual(
-            eventData._blockHeight.eq(blockHeight),
-            true,
-            `Block height from event ${eventData._blockHeight}`
+    assert.strictEqual(
+      eventData._blockHeight.eq(blockHeight),
+      true,
+      `Block height from event ${eventData._blockHeight}`
             + ` is different from expected ${blockHeight} `,
-        );
+    );
 
-        assert.strictEqual(
-            eventData._stateRoot,
-            stateRoot,
-            `State root from event ${eventData._stateRoot}`
+    assert.strictEqual(
+      eventData._stateRoot,
+      stateRoot,
+      `State root from event ${eventData._stateRoot}`
             + ` is different from expected ${stateRoot} `,
-        );
-    }
+    );
+  }
 }
 
 module.exports = AnchorStateRootAssertion;

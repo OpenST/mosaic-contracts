@@ -24,13 +24,22 @@ const StubData = require('../../data/proof.json');
 const Utils = require('../../test_lib/utils.js');
 
 contract('GatewayLib.proveAccount()', async (accounts) => {
+  let gatewayLib;
 
-  let gatewayLib,
-    accountProof,
-    encodedAccountValue,
-    path,
-    stateRoot,
-    expectedStorageRoot;
+
+  let accountProof;
+
+
+  let encodedAccountValue;
+
+
+  let path;
+
+
+  let stateRoot;
+
+
+  let expectedStorageRoot;
 
   beforeEach(async () => {
     gatewayLib = await GatewayLib.deployed();
@@ -40,12 +49,10 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
     encodedAccountValue = StubData.account.rlpAccount;
     stateRoot = StubData.account.stateRoot;
     expectedStorageRoot = StubData.account.storageRoot;
-
   });
 
-  it('should return correct storage root for correct account proof', async function () {
-
-    let storageRoot = await gatewayLib.proveAccount(
+  it('should return correct storage root for correct account proof', async () => {
+    const storageRoot = await gatewayLib.proveAccount(
       encodedAccountValue,
       accountProof,
       path,
@@ -59,24 +66,8 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
     );
   });
 
-  it('should fail for wrong state root', async function () {
-
-    stateRoot = web3.utils.sha3("dummy state root");
-
-    await Utils.expectRevert(
-      gatewayLib.proveAccount(
-        encodedAccountValue,
-        accountProof,
-        path,
-        stateRoot,
-      ),
-      'Account proof is not verified.',
-    );
-  });
-
-  it('should fail for wrong path', async function () {
-
-    path = web3.utils.sha3("dummy path");
+  it('should fail for wrong state root', async () => {
+    stateRoot = web3.utils.sha3('dummy state root');
 
     await Utils.expectRevert(
       gatewayLib.proveAccount(
@@ -89,9 +80,8 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
     );
   });
 
-  it('should fail for invalid account proof', async function () {
-
-    accountProof = web3.utils.sha3("dummy proof");
+  it('should fail for wrong path', async () => {
+    path = web3.utils.sha3('dummy path');
 
     await Utils.expectRevert(
       gatewayLib.proveAccount(
@@ -104,9 +94,8 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
     );
   });
 
-  it('should fail for invalid account value', async function () {
-
-    encodedAccountValue = web3.utils.sha3("invalid account value");
+  it('should fail for invalid account proof', async () => {
+    accountProof = web3.utils.sha3('dummy proof');
 
     await Utils.expectRevert(
       gatewayLib.proveAccount(
@@ -115,8 +104,21 @@ contract('GatewayLib.proveAccount()', async (accounts) => {
         path,
         stateRoot,
       ),
-      "VM Exception while processing transaction",
+      'Account proof is not verified.',
     );
   });
 
+  it('should fail for invalid account value', async () => {
+    encodedAccountValue = web3.utils.sha3('invalid account value');
+
+    await Utils.expectRevert(
+      gatewayLib.proveAccount(
+        encodedAccountValue,
+        accountProof,
+        path,
+        stateRoot,
+      ),
+      'VM Exception while processing transaction',
+    );
+  });
 });

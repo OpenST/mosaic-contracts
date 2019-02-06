@@ -21,27 +21,28 @@
 const UtilityToken = artifacts.require('UtilityToken');
 const MockOrganization = artifacts.require('MockOrganization');
 
-const Utils = require("./../../test_lib/utils");
+const Utils = require('./../../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-const TOKEN_SYMBOL = "UT";
-const TOKEN_NAME = "Utility Token";
+const TOKEN_SYMBOL = 'UT';
+const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.constructor()', function (accounts) {
+contract('UtilityToken.constructor()', (accounts) => {
+  let brandedToken;
+  let organization;
+  let owner;
+  let worker;
 
-  let brandedToken, organization, owner, worker;
-
-  beforeEach(async function () {
+  beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
     brandedToken = accounts[4];
     organization = await MockOrganization.new(owner, worker);
   });
 
-  it('should fail to deploy when branded token address is zero', async function () {
-
+  it('should fail to deploy when branded token address is zero', async () => {
     brandedToken = NullAddress;
 
     await Utils.expectRevert(
@@ -54,11 +55,9 @@ contract('UtilityToken.constructor()', function (accounts) {
       ),
       'Token address should not be zero.',
     );
-
   });
 
-  it('should fail to deploy when organization address is zero', async function () {
-
+  it('should fail to deploy when organization address is zero', async () => {
     await Utils.expectRevert(
       UtilityToken.new(
         brandedToken,
@@ -69,12 +68,10 @@ contract('UtilityToken.constructor()', function (accounts) {
       ),
       'Organization contract address must not be zero.',
     );
-
   });
 
-  it('should pass with correct parameters.', async function () {
-
-    let utilityToken = await UtilityToken.new(
+  it('should pass with correct parameters.', async () => {
+    const utilityToken = await UtilityToken.new(
       brandedToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
@@ -88,7 +85,7 @@ contract('UtilityToken.constructor()', function (accounts) {
       'Utility token contract address must not be zero.',
     );
 
-    let tokenAddress = await utilityToken.token.call();
+    const tokenAddress = await utilityToken.token.call();
 
     assert.strictEqual(
       tokenAddress,
@@ -96,41 +93,41 @@ contract('UtilityToken.constructor()', function (accounts) {
       `Token address from contract must be equal to ${brandedToken}.`,
     );
 
-    let name = await utilityToken.name();
+    const name = await utilityToken.name();
     assert.strictEqual(
       name,
       TOKEN_NAME,
       `Token name from contract must be equal to ${TOKEN_NAME}.`,
     );
 
-    let symbol = await utilityToken.symbol();
+    const symbol = await utilityToken.symbol();
     assert.strictEqual(
       symbol,
       TOKEN_SYMBOL,
       `Token symbol from contract must be equal to ${TOKEN_SYMBOL}.`,
     );
 
-    let decimals = await utilityToken.decimals();
+    const decimals = await utilityToken.decimals();
     assert.strictEqual(
       decimals.eqn(TOKEN_DECIMALS),
       true,
       `Token decimals from contract must be equal to ${TOKEN_DECIMALS}.`,
     );
 
-    let totalSupply = await utilityToken.totalSupply();
+    const totalSupply = await utilityToken.totalSupply();
     assert.strictEqual(
       totalSupply.eqn(0),
       true,
-      `Token total supply from contract must be equal to zero.`,
+      'Token total supply from contract must be equal to zero.',
     );
 
-    let organizationAddress = await utilityToken.organization();
+    const organizationAddress = await utilityToken.organization();
     assert.strictEqual(
       organizationAddress,
       organization.address,
-      `Organization address from the contract must be equal to ${organization.address}.`,
+      `Organization address from the contract must be equal to ${
+        organization.address
+      }.`,
     );
-
   });
-
 });

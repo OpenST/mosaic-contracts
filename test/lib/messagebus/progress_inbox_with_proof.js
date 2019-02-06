@@ -19,101 +19,100 @@
 // ----------------------------------------------------------------------------
 //
 const messageBusUtilsKlass = require('./messagebus_utils');
+
 const messageBusUtils = new messageBusUtilsKlass();
 const messageBus = require('../../test_lib/message_bus.js');
 
-let MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 contract('MessageBus.progressInboxWithProof()', async (accounts) => {
-    let params;
+  let params;
 
-    beforeEach(async function () {
+  beforeEach(async () => {
+    await messageBusUtils.deployedMessageBus();
+    params = messageBusUtils.defaultParams(accounts);
+  });
 
-        await messageBusUtils.deployedMessageBus();
-        params = messageBusUtils.defaultParams(accounts);
-    });
+  it('should fail when source message is undeclared', async () => {
+    const message = 'Message on source must be Declared or Progressed.';
+    params.message = message;
 
-    it('should fail when source message is undeclared', async () => {
-        let message = 'Message on source must be Declared or Progressed.';
-        params.message = message;
+    params.messageStatus = MessageStatusEnum.Undeclared;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 
-        params.messageStatus = MessageStatusEnum.Undeclared;
-        await messageBusUtils.progressInboxWithProof(params, false);
+  it('should fail when source message is declared revocation', async () => {
+    const message = 'Message on source must be Declared or Progressed.';
+    params.message = message;
 
-    });
+    params.messageStatus = MessageStatusEnum.DeclaredRevocation;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 
-    it('should fail when source message is declared revocation', async () => {
-        let message = 'Message on source must be Declared or Progressed.';
-        params.message = message;
+  it('should fail if target message is Undeclared and source is declared', async () => {
+    const message = 'Message on target must be Declared.';
+    params.message = message;
 
-        params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-        await messageBusUtils.progressInboxWithProof(params, false);
+    params.messageStatus = MessageStatusEnum.Declared;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 
-    });
+  it('should fail if target message is Undeclared and source is progressed', async () => {
+    const message = 'Message on target must be Declared.';
+    params.message = message;
 
-    it('should fail if target message is Undeclared and source is declared', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+    params.messageStatus = MessageStatusEnum.Progressed;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 
-        params.messageStatus = MessageStatusEnum.Declared;
-        await messageBusUtils.progressInboxWithProof(params, false);
+  it(
+    'should fail when target message is progressed and source message is'
+      + ' declared',
+    async () => {
+      const message = 'Message on target must be Declared.';
+      params.message = message;
 
-    });
+      await messageBusUtils.confirmMessage(params, true);
+      params.messageStatus = MessageStatusEnum.Declared;
+      await messageBusUtils.progressInboxWithProof(params, true);
 
-    it('should fail if target message is Undeclared and source is progressed', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+      await messageBusUtils.progressInboxWithProof(params, false);
+    },
+  );
 
-        params.messageStatus = MessageStatusEnum.Progressed;
-        await messageBusUtils.progressInboxWithProof(params, false);
+  it(
+    'should fail when target message is progressed and source message is'
+      + ' progressed',
+    async () => {
+      const message = 'Message on target must be Declared.';
+      params.message = message;
 
-    });
+      await messageBusUtils.confirmMessage(params, true);
+      params.messageStatus = MessageStatusEnum.Progressed;
+      await messageBusUtils.progressInboxWithProof(params, true);
 
-    it('should fail when target message is progressed and source message is' +
-        ' declared', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+      await messageBusUtils.progressInboxWithProof(params, false);
+    },
+  );
 
-        await messageBusUtils.confirmMessage(params, true);
-        params.messageStatus = MessageStatusEnum.Declared;
-        await messageBusUtils.progressInboxWithProof(params, true);
+  it('should fail when target is revoked and source message is declared', async () => {
+    const message = 'Message on target must be Declared.';
+    params.message = message;
 
-        await messageBusUtils.progressInboxWithProof(params, false);
-    });
+    await messageBusUtils.confirmMessage(params, true);
+    await messageBusUtils.confirmRevocation(params, true);
 
-    it('should fail when target message is progressed and source message is' +
-        ' progressed', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+    params.messageStatus = MessageStatusEnum.Declared;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 
-        await messageBusUtils.confirmMessage(params, true);
-        params.messageStatus = MessageStatusEnum.Progressed;
-        await messageBusUtils.progressInboxWithProof(params, true);
+  it('should fail when target is revoked and source message is progressed', async () => {
+    const message = 'Message on target must be Declared.';
+    params.message = message;
 
-        await messageBusUtils.progressInboxWithProof(params, false);
-    });
+    await messageBusUtils.confirmMessage(params, true);
+    await messageBusUtils.confirmRevocation(params, true);
 
-    it('should fail when target is revoked and source message is declared', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.confirmRevocation(params, true);
-
-        params.messageStatus = MessageStatusEnum.Declared;
-        await messageBusUtils.progressInboxWithProof(params, false);
-
-    });
-
-    it('should fail when target is revoked and source message is progressed', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.confirmRevocation(params, true);
-
-        params.messageStatus = MessageStatusEnum.Progressed;
-        await messageBusUtils.progressInboxWithProof(params, false);
-
-    });
-
+    params.messageStatus = MessageStatusEnum.Progressed;
+    await messageBusUtils.progressInboxWithProof(params, false);
+  });
 });

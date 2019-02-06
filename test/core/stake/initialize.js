@@ -26,232 +26,178 @@ const MockToken = artifacts.require('MockToken');
 const Stake = artifacts.require('Stake');
 
 contract('Stake.initialize()', async (accounts) => {
+  const tokenDeployer = accounts[0];
+  const mosaicCoreAccount = accounts[1];
+  const minimumWeight = new BN('32000');
+  let token;
+  let stake;
 
-    let tokenDeployer = accounts[0];
-    let mosaicCoreAccount = accounts[1];
-    let minimumWeight = new BN('32000');
-    let token;
-    let stake;
+  let initialDepositors;
+  let initialValidators;
+  let initialStakes;
 
-    let initialDepositors;
-    let initialValidators;
-    let initialStakes;
+  beforeEach(async () => {
+    token = await MockToken.new({ from: tokenDeployer });
+    stake = await Stake.new(token.address, mosaicCoreAccount, minimumWeight);
 
-    beforeEach(async () => {
-        token = await MockToken.new({ from: tokenDeployer });
-        stake = await Stake.new(
-            token.address,
-            mosaicCoreAccount,
-            minimumWeight,
-        );
+    initialDepositors = [accounts[2], accounts[3], accounts[4]];
+    initialValidators = [accounts[5], accounts[6], accounts[7]];
+    initialStakes = [new BN('100'), new BN('2000'), new BN('30000')];
 
-        initialDepositors = [
-            accounts[2],
-            accounts[3],
-            accounts[4],
-        ];
-        initialValidators = [
-            accounts[5],
-            accounts[6],
-            accounts[7],
-        ];
-        initialStakes = [
-            new BN('100'),
-            new BN('2000'),
-            new BN('30000'),
-        ];
+    await StakeUtils.approveTransfers(
+      stake.address,
+      token,
+      tokenDeployer,
+      initialDepositors,
+      initialStakes,
+    );
+  });
 
-        await StakeUtils.approveTransfers(
-            stake.address,
-            token,
-            tokenDeployer,
-            initialDepositors,
-            initialStakes,
-        );
-    });
+  it('should register an initial set of validators', async () => {
+    await stake.initialize(
+      initialDepositors,
+      initialValidators,
+      initialStakes,
+    );
 
-    it('should register an initial set of validators', async () => {
-        await stake.initialize(
-            initialDepositors,
-            initialValidators,
-            initialStakes,
-        );
+    const registeredAddresses = await stake.getValidatorAddresses.call();
+    assert.deepEqual(
+      initialValidators,
+      registeredAddresses,
+      'The registered validators must be the ones given to initialize().',
+    );
 
-        let registeredAddresses = await stake.getValidatorAddresses.call();
-        assert.deepEqual(
-            initialValidators,
-            registeredAddresses,
-            'The registered validators must be the ones given to initialize().',
-        );
+    const count = registeredAddresses.length;
+    for (let i = 0; i < count; i++) {
+      const address = registeredAddresses[i];
+      const validator = await stake.validators.call(address);
 
-        let count = registeredAddresses.length;
-        for (i = 0; i < count; i++) {
-            let address = registeredAddresses[i];
-            let validator = await stake.validators.call(address);
+      assert.strictEqual(
+        validator.depositor,
+        initialDepositors[i],
+        'Did not register the correct depositor for a validator.',
+      );
+      assert.strictEqual(
+        validator.auxiliaryAddress,
+        initialValidators[i],
+        'Did not register the correct validator address for a validator.',
+      );
+      assert(
+        validator.stake.eq(initialStakes[i]),
+        'Did not register the correct stake for a validator.',
+      );
+      assert(
+        validator.startingHeight.eq(new BN('0')),
+        'Did not register a zero starting height for an initial validator.',
+      );
+      assert.strictEqual(
+        validator.evicted,
+        false,
+        'Did not register a new validator as non-evicted.',
+      );
+      assert(
+        validator.evictionHeight.eq(new BN('0')),
+        'Did not register a new validator with a zero eviction height.',
+      );
+    }
+  });
 
-            assert.strictEqual(
-                validator.depositor,
-                initialDepositors[i],
-                'Did not register the correct depositor for a validator.'
-            );
-            assert.strictEqual(
-                validator.auxiliaryAddress,
-                initialValidators[i],
-                'Did not register the correct validator address for a validator.'
-            );
-            assert(
-                validator.stake.eq(initialStakes[i]),
-                'Did not register the correct stake for a validator.'
-            );
-            assert(
-                validator.startingHeight.eq(new BN('0')),
-                'Did not register a zero starting height for an initial validator.'
-            );
-            assert.strictEqual(
-                validator.evicted,
-                false,
-                'Did not register a new validator as non-evicted.'
-            );
-            assert(
-                validator.evictionHeight.eq(new BN('0')),
-                'Did not register a new validator with a zero eviction height.'
-            );
-        }
-    });
+  it('should allow multiple calls if it failed', async () => {
+    await Utils.expectRevert(
+      stake.initialize([], initialValidators, initialStakes),
+    );
+    await Utils.expectRevert(
+      stake.initialize([], initialValidators, initialStakes),
+    );
+    await stake.initialize(
+      initialDepositors,
+      initialValidators,
+      initialStakes,
+    );
+  });
 
-    it('should allow multiple calls if it failed', async () => {
-        await Utils.expectRevert(
-            stake.initialize(
-                [],
-                initialValidators,
-                initialStakes,
-            ),
-        );
-        await Utils.expectRevert(
-            stake.initialize(
-                [],
-                initialValidators,
-                initialStakes,
-            ),
-        );
-        await stake.initialize(
-            initialDepositors,
-            initialValidators,
-            initialStakes,
-        );
-    });
+  it('should reject further calls after it succeeded', async () => {
+    await stake.initialize(
+      initialDepositors,
+      initialValidators,
+      initialStakes,
+    );
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'Initialize can only be called once.',
+    );
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'Initialize can only be called once.',
+    );
+  });
 
-    it('should reject further calls after it succeeded', async () => {
-        await stake.initialize(
-            initialDepositors,
-            initialValidators,
-            initialStakes,
-        );
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'Initialize can only be called once.',
-        );
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'Initialize can only be called once.',
-        );
-    });
+  it('should reject a zero validator address', async () => {
+    initialValidators[1] = Utils.NULL_ADDRESS;
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'The validator address may not be zero.',
+    );
+  });
 
-    it('should reject a zero validator address', async () => {
-        initialValidators[1] = Utils.NULL_ADDRESS;
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'The validator address may not be zero.',
-        );
-    });
+  it('should reject a zero stake amount', async () => {
+    initialStakes[2] = new BN('0');
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'The deposit amount must be greater than zero.',
+    );
+  });
 
-    it('should reject a zero stake amount', async () => {
-        initialStakes[2] = new BN('0');
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'The deposit amount must be greater than zero.',
-        );
-    });
+  it('should reject duplicate validators', async () => {
+    initialValidators[2] = initialValidators[0];
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'You must deposit for a validator that is not staked yet.',
+    );
+  });
 
-    it('should reject duplicate validators', async () => {
-        initialValidators[2] = initialValidators[0];
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'You must deposit for a validator that is not staked yet.',
-        );
-    });
+  it('should reject a validator where the value cannot be deposited', async () => {
+    // Accounts[6] was not approved to transfer tokens in beforeEach().
+    initialDepositors[1] = accounts[6];
+    // Cannot check error message as revert is caused by SafeMath without
+    // message.
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+    );
+  });
 
-    it('should reject a validator where the value cannot be deposited', async () => {
-        // Accounts[6] was not approved to transfer tokens in beforeEach().
-        initialDepositors[1] = accounts[6];
-        // Cannot check error message as revert is caused by SafeMath without
-        // message.
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-        );
-    });
+  it('should reject initial validator arrays of different lengths', async () => {
+    await Utils.expectRevert(
+      stake.initialize(
+        [accounts[2], accounts[3]],
+        [accounts[5], accounts[6], accounts[7]],
+        [new BN('5000'), new BN('5000'), new BN('5000')],
+      ),
+      'The initial validator arrays must all have the same length.',
+    );
+    await Utils.expectRevert(
+      stake.initialize(
+        [accounts[2], accounts[3]],
+        [accounts[5], accounts[6], accounts[7]],
+        [new BN('5000'), new BN('5000')],
+      ),
+      'The initial validator arrays must all have the same length.',
+    );
+    await Utils.expectRevert(
+      stake.initialize(
+        [accounts[2], accounts[3]],
+        [accounts[5], accounts[6]],
+        [new BN('5000'), new BN('5000'), new BN('5000')],
+      ),
+      'The initial validator arrays must all have the same length.',
+    );
+  });
 
-    it('should reject initial validator arrays of different lengths', async () => {
-        await Utils.expectRevert(
-            stake.initialize(
-                [accounts[2], accounts[3]],
-                [accounts[5], accounts[6], accounts[7]],
-                [new BN('5000'), new BN('5000'), new BN('5000')],
-            ),
-            'The initial validator arrays must all have the same length.',
-        );
-        await Utils.expectRevert(
-            stake.initialize(
-                [accounts[2], accounts[3]],
-                [accounts[5], accounts[6], accounts[7]],
-                [new BN('5000'), new BN('5000')],
-            ),
-            'The initial validator arrays must all have the same length.',
-        );
-        await Utils.expectRevert(
-            stake.initialize(
-                [accounts[2], accounts[3]],
-                [accounts[5], accounts[6]],
-                [new BN('5000'), new BN('5000'), new BN('5000')],
-            ),
-            'The initial validator arrays must all have the same length.',
-        );
-    });
-
-    it('should reject initial validators below the minimum weight', async () => {
-        initialStakes[2] = new BN('100');
-        await Utils.expectRevert(
-            stake.initialize(
-                initialDepositors,
-                initialValidators,
-                initialStakes,
-            ),
-            'The total initial weight must be greater than the minimum weight.',
-        );
-    });
-
+  it('should reject initial validators below the minimum weight', async () => {
+    initialStakes[2] = new BN('100');
+    await Utils.expectRevert(
+      stake.initialize(initialDepositors, initialValidators, initialStakes),
+      'The total initial weight must be greater than the minimum weight.',
+    );
+  });
 });

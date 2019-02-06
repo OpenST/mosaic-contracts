@@ -42,56 +42,56 @@ const assert = require('assert');
  * Class to assert confirm stake intent.
  */
 class ConfirmStakeIntentAssertion {
-    /**
+  /**
      * This verifies event.
      * @param {Object} event Event object after decoding.
      * @param {StakeRequest} stakeRequest Stake request parameters.
      */
-    static verify(event, stakeRequest) {
-        const eventData = event.StakeIntentConfirmed;
+  static verify(event, stakeRequest) {
+    const eventData = event.StakeIntentConfirmed;
 
-        assert.strictEqual(
-            eventData._messageHash,
-            stakeRequest.messageHash,
-            `Message hash from event must be equal to ${stakeRequest.messageHash}.`,
-        );
+    assert.strictEqual(
+      eventData._messageHash,
+      stakeRequest.messageHash,
+      `Message hash from event must be equal to ${stakeRequest.messageHash}.`,
+    );
 
-        assert.strictEqual(
-            eventData._staker,
-            stakeRequest.staker,
-            `Staker address from event must be equal to ${stakeRequest.staker}.`,
-        );
+    assert.strictEqual(
+      eventData._staker,
+      stakeRequest.staker,
+      `Staker address from event must be equal to ${stakeRequest.staker}.`,
+    );
 
-        assert.strictEqual(
-            stakeRequest.nonce.eq(eventData._stakerNonce),
-            true,
-            `Staker nonce from event must be equal to ${stakeRequest.nonce.toString(10)}.`,
-        );
+    assert.strictEqual(
+      stakeRequest.nonce.eq(eventData._stakerNonce),
+      true,
+      `Staker nonce from event must be equal to ${stakeRequest.nonce.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            eventData._beneficiary,
-            stakeRequest.beneficiary,
-            `Beneficiary address from event must be equal to ${stakeRequest.beneficiary}.`,
-        );
+    assert.strictEqual(
+      eventData._beneficiary,
+      stakeRequest.beneficiary,
+      `Beneficiary address from event must be equal to ${stakeRequest.beneficiary}.`,
+    );
 
-        assert.strictEqual(
-            stakeRequest.amount.eq(eventData._amount),
-            true,
-            `Amount from event must be equal to ${stakeRequest.amount.toString(10)}.`,
-        );
+    assert.strictEqual(
+      stakeRequest.amount.eq(eventData._amount),
+      true,
+      `Amount from event must be equal to ${stakeRequest.amount.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            stakeRequest.blockHeight.eq(eventData._blockHeight),
-            true,
-            `Block height from event must be equal to ${stakeRequest.blockHeight.toString(10)}.`,
-        );
+    assert.strictEqual(
+      stakeRequest.blockHeight.eq(eventData._blockHeight),
+      true,
+      `Block height from event must be equal to ${stakeRequest.blockHeight.toString(10)}.`,
+    );
 
-        assert.strictEqual(
-            eventData._hashLock,
-            stakeRequest.hashLock,
-            `Hash lock from event must be equal to ${stakeRequest.hashLock}.`,
-        );
-    }
+    assert.strictEqual(
+      eventData._hashLock,
+      stakeRequest.hashLock,
+      `Hash lock from event must be equal to ${stakeRequest.hashLock}.`,
+    );
+  }
 }
 
 module.exports = ConfirmStakeIntentAssertion;

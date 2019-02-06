@@ -18,20 +18,22 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
-const BN = require('bn.js');
+
 const KernelGateway = artifacts.require('TestKernelGateway');
 const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
-
   const zeroBytes = Utils.ZERO_BYTES32;
 
-  let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
+  let initialKernelHash;
 
-  beforeEach(async function() {
-
+  beforeEach(async () => {
     originBlockStore = await MockBlockStore.new();
     auxiliaryBlockStore = await MockBlockStore.new();
 
@@ -45,72 +47,77 @@ contract('KernelGateway.getOpenKernelHash()', async (accounts) => {
     );
 
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
-
   });
 
-  it('should return zero hash when height is not the activation ' +
-    'kernel hash', async () => {
+  it(
+    'should return zero hash when height is not the activation '
+    + 'kernel hash',
+    async () => {
+      const openKernelHash = await kernelGateway.getOpenKernelHash.call(2);
 
-    let openKernelHash = await kernelGateway.getOpenKernelHash.call(2);
+      assert.strictEqual(
+        openKernelHash,
+        zeroBytes,
+        'Open kernel hash must be zero.',
+      );
+    },
+  );
 
-    assert.strictEqual(
-      openKernelHash,
-      zeroBytes,
-      `Open kernel hash must be zero.`,
-    );
+  it(
+    'should return correct hash when height is the activation '
+    + 'kernel hash and open kernel exists',
+    async () => {
+      const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
-  });
+      const activationHeight = new BN(1234);
 
-  it('should return correct hash when height is the activation ' +
-    'kernel hash and open kernel exists', async () => {
+      await kernelGateway.setOpenKernelHash(hash);
+      await kernelGateway.setOpenKernelActivationHeight(activationHeight);
 
-    let hash =
-      "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
+      const openKernelHash = await kernelGateway.getOpenKernelHash.call(
+        activationHeight,
+      );
 
-    let activationHeight = new BN(1234);
+      assert.strictEqual(
+        openKernelHash,
+        hash,
+        `Open kernel hash must be ${hash}.`,
+      );
+    },
+  );
 
-    await kernelGateway.setOpenKernelHash(hash);
-    await kernelGateway.setOpenKernelActivationHeight(activationHeight);
+  it(
+    'should return zero hash for the activation height once the kernel '
+    + 'hash is activated',
+    async () => {
+      const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
-    let openKernelHash = await kernelGateway.getOpenKernelHash.call(activationHeight);
+      const activationHeight = new BN(1234);
 
-    assert.strictEqual(
-      openKernelHash,
-      hash,
-      `Open kernel hash must be ${hash}.`,
-    );
+      await kernelGateway.setOpenKernelHash(hash);
+      await kernelGateway.setOpenKernelActivationHeight(activationHeight);
 
-  });
+      let openKernelHash = await kernelGateway.getOpenKernelHash.call(
+        activationHeight,
+      );
 
-  it('should return zero hash for the activation height once the kernel ' +
-      'hash is activated', async () => {
+      assert.strictEqual(
+        openKernelHash,
+        hash,
+        `Open kernel hash must be ${hash}.`,
+      );
 
-    let hash =
-      "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
+      await auxiliaryBlockStore.activateKernel(hash);
 
-    let activationHeight = new BN(1234);
+      openKernelHash = await kernelGateway.getOpenKernelHash.call(
+        activationHeight,
+      );
 
-    await kernelGateway.setOpenKernelHash(hash);
-    await kernelGateway.setOpenKernelActivationHeight(activationHeight);
-
-    let openKernelHash = await kernelGateway.getOpenKernelHash.call(activationHeight);
-
-    assert.strictEqual(
-      openKernelHash,
-      hash,
-      `Open kernel hash must be ${hash}.`,
-    );
-
-    await auxiliaryBlockStore.activateKernel(hash);
-
-    openKernelHash = await kernelGateway.getOpenKernelHash.call(activationHeight);
-
-    assert.strictEqual(
-      openKernelHash,
-      zeroBytes,
-      `Open kernel hash must be zero.`,
-    );
-
-  });
-
+      assert.strictEqual(
+        openKernelHash,
+        zeroBytes,
+        'Open kernel hash must be zero.',
+      );
+    },
+  );
 });

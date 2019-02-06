@@ -27,79 +27,80 @@ const TestData = require('./helpers/data.js');
 const AuxiliaryBlockStore = artifacts.require('AuxiliaryBlockStore');
 const MockBlockStore = artifacts.require('MockBlockStore');
 
-contract('AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()', async (accounts) => {
-
-    let coreIdentifier = '0x0000000000000000000000000000000000000002';
-    let epochLength = new BN('3');
-    let pollingPlaceAddress = accounts[0];
+contract(
+  'AuxiliaryBlockStore.auxiliaryTransitionHashAtBlock()',
+  async (accounts) => {
+    const coreIdentifier = '0x0000000000000000000000000000000000000002';
+    const epochLength = new BN('3');
+    const pollingPlaceAddress = accounts[0];
     let originBlockStore;
-    let initialBlockHash = TestData.initialBlock.hash;
-    let initialStateRoot = TestData.initialBlock.stateRoot;
-    let initialGas = TestData.initialBlock.gas;
-    let initialTransactionRoot = TestData.initialBlock.transactionRoot;
-    let initialHeight = TestData.initialBlock.height;
-    let initialKernelHash  = TestData.initialBlock.kernelHash;
+    const initialBlockHash = TestData.initialBlock.hash;
+    const initialStateRoot = TestData.initialBlock.stateRoot;
+    const initialGas = TestData.initialBlock.gas;
+    const initialTransactionRoot = TestData.initialBlock.transactionRoot;
+    const initialHeight = TestData.initialBlock.height;
+    const initialKernelHash = TestData.initialBlock.kernelHash;
 
     let blockStore;
 
     beforeEach(async () => {
-        originBlockStore = await MockBlockStore.new();
+      originBlockStore = await MockBlockStore.new();
 
-        blockStore = await AuxiliaryBlockStore.new(
-            coreIdentifier,
-            epochLength,
-            pollingPlaceAddress,
-            originBlockStore.address,
-            initialBlockHash,
-            initialStateRoot,
-            initialHeight,
-            initialGas,
-            initialTransactionRoot,
-            initialKernelHash
-        );
+      blockStore = await AuxiliaryBlockStore.new(
+        coreIdentifier,
+        epochLength,
+        pollingPlaceAddress,
+        originBlockStore.address,
+        initialBlockHash,
+        initialStateRoot,
+        initialHeight,
+        initialGas,
+        initialTransactionRoot,
+        initialKernelHash,
+      );
     });
 
-    it('should return auxiliary transition hash at given block Hash if' +
-         ' checkpoint is defined', async () => {
+    it(
+      'should return auxiliary transition hash at given block Hash if'
+        + ' checkpoint is defined',
+      async () => {
+        const originDynasty = await originBlockStore.getCurrentDynasty.call();
+        const originBlockHash = await originBlockStore.getHead.call();
 
-        let originDynasty = await originBlockStore.getCurrentDynasty.call();
-        let originBlockHash = await originBlockStore.getHead.call();
-
-        let auxiliaryTransitionObject = {
-            coreIdentifier:coreIdentifier,
-            kernelHash:initialKernelHash,
-            auxiliaryDynasty:0,
-            auxiliaryBlockHash:initialBlockHash,
-            gas:initialGas,
-            originDynasty:originDynasty,
-            originBlockHash:originBlockHash,
-            transactionRoot:initialTransactionRoot,
+        const auxiliaryTransitionObject = {
+          coreIdentifier,
+          kernelHash: initialKernelHash,
+          auxiliaryDynasty: 0,
+          auxiliaryBlockHash: initialBlockHash,
+          gas: initialGas,
+          originDynasty,
+          originBlockHash,
+          transactionRoot: initialTransactionRoot,
         };
 
-        let expectedTransitionHash = MetaBlockUtils.hashAuxiliaryTransition(auxiliaryTransitionObject);
+        const expectedTransitionHash = MetaBlockUtils.hashAuxiliaryTransition(
+          auxiliaryTransitionObject,
+        );
 
-        let transitionHash =
-            await blockStore.auxiliaryTransitionHashAtBlock.call(
-                initialBlockHash
-            );
+        const transitionHash = await blockStore.auxiliaryTransitionHashAtBlock.call(
+          initialBlockHash,
+        );
 
         assert.strictEqual(
-            transitionHash,
-            expectedTransitionHash,
-            `Transition hash is different from expected transition hash.`
+          transitionHash,
+          expectedTransitionHash,
+          'Transition hash is different from expected transition hash.',
         );
+      },
+    );
 
+    it('should fail if checkpoint is not defined at given block hash.', async () => {
+      const wrongBlockHash = web3.utils.sha3('wrong block hash');
+
+      await Utils.expectRevert(
+        blockStore.auxiliaryTransitionHashAtBlock.call(wrongBlockHash),
+        'Checkpoint not defined for given block hash.',
+      );
     });
-
-
-    it('should fail if checkpoint is not defined at given block hash.', async function () {
-
-        let wrongBlockHash = web3.utils.sha3("wrong block hash");
-
-        await Utils.expectRevert(
-             blockStore.auxiliaryTransitionHashAtBlock.call(wrongBlockHash),
-             'Checkpoint not defined for given block hash.'
-        );
-
-    });
-});
+  },
+);

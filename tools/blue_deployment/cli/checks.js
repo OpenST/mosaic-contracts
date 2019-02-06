@@ -28,12 +28,12 @@ const colors = require('colors/safe');
  *                 contract code.
  */
 const checkAddressForCode = async (web3, address) => {
-    const contractCode = await web3.eth.getCode(address);
-    if (!contractCode) {
-        console.warn(colors.red('There is no contract present at the specified address!'));
-    }
+  const contractCode = await web3.eth.getCode(address);
+  if (!contractCode) {
+    console.warn(colors.red('There is no contract present at the specified address!'));
+  }
 };
 
 module.exports = {
-    checkAddressForCode,
+  checkAddressForCode,
 };

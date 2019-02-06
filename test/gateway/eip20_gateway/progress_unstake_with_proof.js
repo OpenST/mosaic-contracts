@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockToken = artifacts.require("MockToken");
+const Gateway = artifacts.require('./TestEIP20Gateway.sol');
+const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -32,35 +32,43 @@ const StubDataRedeemReward = require('../../data/redeem_progressed_reward_based_
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
-const MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 
 async function setStateRoot(gateway) {
-  let blockHeight = new BN(StubData.co_gateway.redeem.proof_data.block_number, 16);
-  let storageRoot = StubData.co_gateway.redeem.proof_data.storageHash;
+  const blockHeight = new BN(
+    StubData.co_gateway.redeem.proof_data.block_number,
+    16,
+  );
+  const storageRoot = StubData.co_gateway.redeem.proof_data.storageHash;
   await gateway.setStorageRoot(blockHeight, storageRoot);
   return blockHeight;
 }
 
-contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
-
-  let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage, stakeVaultAddress;
-  let bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
+contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
+  let gateway;
+  let mockToken;
+  let baseToken;
+  let unstakeRequest;
+  let unstakeMessage;
+  let stakeVaultAddress;
   let redeemRequest = StubData.co_gateway.redeem.params;
 
-  beforeEach(async function () {
-    redeemRequest = StubData.co_gateway.redeem.params;
-    mockToken = await MockToken.new({from: accounts[0]});
-    baseToken = await MockToken.new({from: accounts[0]});
+  const bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
 
-    let organizationAddress = accounts[3];
-    let coreAddress = accounts[5];
+  beforeEach(async () => {
+    redeemRequest = StubData.co_gateway.redeem.params;
+    mockToken = await MockToken.new({ from: accounts[0] });
+    baseToken = await MockToken.new({ from: accounts[0] });
+
+    const organizationAddress = accounts[3];
+    const coreAddress = accounts[5];
     gateway = await Gateway.new(
       mockToken.address,
       baseToken.address,
       coreAddress,
       bountyAmount,
       organizationAddress,
-      NullAddress, //burner
+      NullAddress, // burner
     );
 
     unstakeRequest = {
@@ -68,7 +76,7 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       amount: new BN(redeemRequest.amount, 16),
     };
 
-    let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
+    const redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
       StubData.contracts.coGateway,
@@ -92,14 +100,15 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       mockToken,
       accounts,
     );
-
   });
 
-  it('should unstake with correct parameters', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+  it('should unstake with correct parameters', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     //  This will throw exception if fails.
     await gateway.progressUnstakeWithProof(
@@ -108,64 +117,70 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       blockHeight,
       MessageStatusEnum.Declared,
     );
-
   });
 
-  it('should return correct parameters', async function () {
+  it('should return correct parameters', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-
-    let response = await gateway.progressUnstakeWithProof.call(
+    const response = await gateway.progressUnstakeWithProof.call(
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
       MessageStatusEnum.Declared,
     );
 
-    let estimatedReward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
-    let estimatedUnstakeAmount = unstakeRequest.amount.sub(estimatedReward);
+    const estimatedReward = unstakeMessage.gasPrice.mul(
+      unstakeMessage.gasLimit,
+    );
+    const estimatedUnstakeAmount = unstakeRequest.amount.sub(estimatedReward);
 
     assert.strictEqual(
       response.rewardAmount_.eq(estimatedReward),
       true,
-      `Reward amount ${response.rewardAmount_.toString(10)} must be equal to ${estimatedReward.toString(10)}`,
+      `Reward amount ${response.rewardAmount_.toString(
+        10,
+      )} must be equal to ${estimatedReward.toString(10)}`,
     );
     assert.strictEqual(
       response.unstakeAmount_.eq(estimatedUnstakeAmount),
       true,
-      `Unstake amount ${response.unstakeAmount_.toString(10)} must be equal to ${estimatedUnstakeAmount.toString(10)}`,
+      `Unstake amount ${response.unstakeAmount_.toString(
+        10,
+      )} must be equal to ${estimatedUnstakeAmount.toString(10)}`,
     );
     assert.strictEqual(
       response.redeemAmount_.eq(unstakeRequest.amount),
       true,
-      `Redeem amount ${response.redeemAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
+      `Redeem amount ${response.redeemAmount_.toString(
+        10,
+      )} must be equal to ${unstakeRequest.amount.toString(10)}`,
     );
-
   });
 
-  it('should emit "UnstakeProgressed" event', async function () {
+  it('should emit "UnstakeProgressed" event', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-
-    let tx = await gateway.progressUnstakeWithProof(
+    const tx = await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
       storageProof,
       blockHeight,
       MessageStatusEnum.Declared,
     );
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.UnstakeProgressed;
+    const event = EventDecoder.getEvents(tx, gateway);
+    const eventData = event.UnstakeProgressed;
 
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
+    assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
     assert.isDefined(
       event.UnstakeProgressed,
       'Event `UnstakeProgressed` must be emitted.',
@@ -173,28 +188,42 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       unstakeMessage.messageHash,
-      `Message hash ${eventData._messageHash} from event must be equal to ${unstakeMessage.messageHash}.`,
+      `Message hash ${eventData._messageHash} from event must be equal to ${
+        unstakeMessage.messageHash
+      }.`,
     );
     assert.strictEqual(
       eventData._redeemer,
       unstakeMessage.unstakeAccount,
-      `Redeemer address ${eventData._redeemer} from event must be equal to ${unstakeMessage.unstakeAccount}.`,
+      `Redeemer address ${eventData._redeemer} from event must be equal to ${
+        unstakeMessage.unstakeAccount
+      }.`,
     );
     assert.strictEqual(
       eventData._beneficiary,
       unstakeRequest.beneficiary,
-      `Beneficiary address ${eventData._beneficiary} from event must be equal to ${unstakeRequest.beneficiary}.`,
+      `Beneficiary address ${
+        eventData._beneficiary
+      } from event must be equal to ${unstakeRequest.beneficiary}.`,
     );
     assert.strictEqual(
       unstakeRequest.amount.eq(eventData._redeemAmount),
       true,
-      `Redeem amount ${eventData._redeemAmount.toString(10)} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
+      `Redeem amount ${eventData._redeemAmount.toString(
+        10,
+      )} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
     );
     assert.strictEqual(
-      eventData._rewardAmount.add(eventData._unstakeAmount).eq(unstakeRequest.amount),
+      eventData._rewardAmount
+        .add(eventData._unstakeAmount)
+        .eq(unstakeRequest.amount),
       true,
-      `Total unstake amount ${unstakeRequest.amount.toString(10)} should be equal to 
-      sum of reward amount ${eventData._rewardAmount.toString(10)} plus unstaked amount
+      `Total unstake amount ${unstakeRequest.amount.toString(
+        10,
+      )} should be equal to 
+      sum of reward amount ${eventData._rewardAmount.toString(
+    10,
+  )} plus unstaked amount
        to beneficiary ${eventData._unstakeAmount.toString(10)}`,
     );
     assert.strictEqual(
@@ -205,20 +234,34 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     assert.strictEqual(
       eventData._unlockSecret,
       ZeroBytes,
-      `Unlock secret ${eventData._unlockSecret} from event must be equal to ${ZeroBytes}.`,
+      `Unlock secret ${
+        eventData._unlockSecret
+      } from event must be equal to ${ZeroBytes}.`,
     );
-
   });
 
-  it('should unstake token to the beneficiary address', async function () {
+  it('should unstake token to the beneficiary address', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-
-    stakeVaultAddress = await setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts);
-    let initialBeneficiaryBalance = await mockToken.balanceOf(unstakeRequest.beneficiary);
-    let initialStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    stakeVaultAddress = await setup(
+      unstakeMessage,
+      gateway,
+      unstakeRequest,
+      stakeVaultAddress,
+      mockToken,
+      accounts,
+    );
+    const initialBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
+    const initialStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
+    );
 
     await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
@@ -227,140 +270,194 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let finalBeneficiaryBalance = await mockToken.balanceOf(unstakeRequest.beneficiary);
-    let finalStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
-    let reward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
-    let expectedBeneficiaryBalance = unstakeRequest.amount.sub(reward);
+    const finalBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
+    const finalStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
+    );
+    const reward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
+    const expectedBeneficiaryBalance = unstakeRequest.amount.sub(reward);
 
     assert.strictEqual(
       finalBeneficiaryBalance.eq(expectedBeneficiaryBalance),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toNumber(10)}` +
-      `must be equal to ${initialBeneficiaryBalance.add(expectedBeneficiaryBalance).toNumber(10)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toNumber(10)}`
+        + `must be equal to ${initialBeneficiaryBalance
+          .add(expectedBeneficiaryBalance)
+          .toNumber(10)}.`,
     );
     assert.strictEqual(
-      finalStakeVaultBalance.eq(initialStakeVaultBalance.sub(unstakeRequest.amount)),
+      finalStakeVaultBalance.eq(
+        initialStakeVaultBalance.sub(unstakeRequest.amount),
+      ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} ` +
-      `must be equal to ${initialStakeVaultBalance.sub(unstakeRequest.amount).toNumber(10)}.`,
+      `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} `
+        + `must be equal to ${initialStakeVaultBalance
+          .sub(unstakeRequest.amount)
+          .toNumber(10)}.`,
     );
-
   });
 
-  it('should reward token to the facilitator address with maximum' +
-    ' possible reward i.e. gasPrice * gasLimit', async function () {
+  it(
+    'should reward token to the facilitator address with maximum'
+      + ' possible reward i.e. gasPrice * gasLimit',
+    async () => {
+      const facilitatorAddress = accounts[1];
 
-    let facilitatorAddress = accounts[1];
+      const initialFacilitatorBalance = await mockToken.balanceOf(
+        facilitatorAddress,
+      );
+      const initialStakeVaultBalance = await mockToken.balanceOf(
+        stakeVaultAddress,
+      );
+      await gateway.setInboxStatus(
+        unstakeMessage.messageHash,
+        MessageStatusEnum.Declared,
+      );
+      const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+      const blockHeight = await setStateRoot(gateway);
 
-    let initialFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
-    let initialStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-    let blockHeight = await setStateRoot(gateway);
+      await gateway.progressUnstakeWithProof(
+        unstakeMessage.messageHash,
+        storageProof,
+        blockHeight,
+        MessageStatusEnum.Declared,
+        { from: facilitatorAddress },
+      );
 
-    await gateway.progressUnstakeWithProof(
+      const finalFacilitatorBalance = await mockToken.balanceOf(
+        facilitatorAddress,
+      );
+      const finalStakeVaultBalance = await mockToken.balanceOf(
+        stakeVaultAddress,
+      );
+      const reward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
+
+      assert.strictEqual(
+        finalFacilitatorBalance.eq(initialFacilitatorBalance.add(reward)),
+        true,
+        `Facilitator balance ${finalFacilitatorBalance.toNumber(10)}`
+          + `must be equal to ${initialFacilitatorBalance
+            .add(reward)
+            .toNumber(10)}.`,
+      );
+      assert.strictEqual(
+        finalStakeVaultBalance.eq(
+          initialStakeVaultBalance.sub(unstakeRequest.amount),
+        ),
+        true,
+        `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} `
+          + `must be equal to ${initialStakeVaultBalance
+            .sub(unstakeRequest.amount)
+            .toNumber(10)}.`,
+      );
+    },
+  );
+
+  it(
+    'should reward token to the facilitator address based on gas'
+      + ' consumption',
+    async () => {
+      redeemRequest = StubDataRedeemReward.co_gateway.redeem.params;
+      unstakeRequest = {
+        beneficiary: redeemRequest.beneficiary,
+        amount: new BN(redeemRequest.amount, 16),
+      };
+
+      const redeemIntentHash = cogatewayUtils.hashRedeemIntent(
+        unstakeRequest.amount,
+        unstakeRequest.beneficiary,
+        StubDataRedeemReward.contracts.coGateway,
+      );
+
+      unstakeMessage = {
+        intentHash: redeemIntentHash,
+        nonce: new BN(redeemRequest.nonce, 16),
+        gasPrice: new BN(redeemRequest.gasPrice, 16),
+        gasLimit: new BN(redeemRequest.gasLimit, 16),
+        unstakeAccount: redeemRequest.redeemer,
+        hashLock: redeemRequest.hashLock,
+        unlockSecret: redeemRequest.unlockSecret,
+      };
+
+      const facilitatorAddress = accounts[1];
+      stakeVaultAddress = await setup(
+        unstakeMessage,
+        gateway,
+        unstakeRequest,
+        stakeVaultAddress,
+        mockToken,
+        accounts,
+      );
+      await gateway.setInboxStatus(
+        unstakeMessage.messageHash,
+        MessageStatusEnum.Declared,
+      );
+      const blockHeight = new BN(
+        StubDataRedeemReward.co_gateway.redeem.proof_data.block_number,
+        16,
+      );
+      const storageRoot = StubDataRedeemReward.co_gateway.redeem.proof_data.storageHash;
+      const storageProof = StubDataRedeemReward.co_gateway.redeem.proof_data.storageProof[0]
+        .serializedProof;
+      await gateway.setStorageRoot(blockHeight, storageRoot);
+
+      const initialFacilitatorBalance = await mockToken.balanceOf(
+        facilitatorAddress,
+      );
+
+      const tx = await gateway.progressUnstakeWithProof(
+        unstakeMessage.messageHash,
+        storageProof,
+        blockHeight,
+        MessageStatusEnum.Declared,
+        { from: facilitatorAddress },
+      );
+
+      const gasUsed = new BN(tx.receipt.gasUsed);
+      const maxReward = gasUsed.mul(unstakeMessage.gasPrice);
+
+      const finalFacilitatorBalance = await mockToken.balanceOf(
+        facilitatorAddress,
+      );
+      const receivedReward = finalFacilitatorBalance.sub(
+        initialFacilitatorBalance,
+      );
+
+      const event = EventDecoder.getEvents(tx, gateway);
+      const eventData = event.UnstakeProgressed;
+      /*
+       * Reward is calculated as `gasPrice * gasConsumed`.
+       * The maximum reward possible is 'gasPrice * tx.gasUsed'.
+       * The gas used for fees calculations is always going to be less than
+       * the total transaction gas.
+       */
+      assert.strictEqual(
+        receivedReward.lt(maxReward),
+        true,
+        `Reward amount ${receivedReward.toString(
+          10,
+        )} must be less than ${maxReward.toString(10)}`,
+      );
+      assert.strictEqual(
+        eventData._rewardAmount.eq(receivedReward),
+        true,
+        `Reward received in the event ${eventData._rewardAmount.toString(
+          10,
+        )} should be same as actual received reward ${receivedReward}`,
+      );
+    },
+  );
+
+  it('should fail when message hash is zero', async () => {
+    const messageHash = ZeroBytes;
+    await gateway.setInboxStatus(
       unstakeMessage.messageHash,
-      storageProof,
-      blockHeight,
       MessageStatusEnum.Declared,
-      {from: facilitatorAddress},
     );
-
-    let finalFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
-    let finalStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
-    let reward = unstakeMessage.gasPrice.mul(unstakeMessage.gasLimit);
-
-    assert.strictEqual(
-      finalFacilitatorBalance.eq(initialFacilitatorBalance.add(reward)),
-      true,
-      `Facilitator balance ${finalFacilitatorBalance.toNumber(10)}` +
-      `must be equal to ${initialFacilitatorBalance.add(reward).toNumber(10)}.`,
-    );
-    assert.strictEqual(
-      finalStakeVaultBalance.eq(initialStakeVaultBalance.sub(unstakeRequest.amount)),
-      true,
-      `Stake vault balance ${finalStakeVaultBalance.toNumber(10)} ` +
-      `must be equal to ${initialStakeVaultBalance.sub(unstakeRequest.amount).toNumber(10)}.`,
-    );
-
-  });
-
-  it('should reward token to the facilitator address based on gas' +
-    ' consumption', async function () {
-
-    redeemRequest = StubDataRedeemReward.co_gateway.redeem.params;
-    unstakeRequest = {
-      beneficiary: redeemRequest.beneficiary,
-      amount: new BN(redeemRequest.amount, 16),
-    };
-
-    let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
-      unstakeRequest.amount,
-      unstakeRequest.beneficiary,
-      StubDataRedeemReward.contracts.coGateway,
-    );
-
-    unstakeMessage = {
-      intentHash: redeemIntentHash,
-      nonce: new BN(redeemRequest.nonce, 16),
-      gasPrice: new BN(redeemRequest.gasPrice, 16),
-      gasLimit: new BN(redeemRequest.gasLimit, 16),
-      unstakeAccount: redeemRequest.redeemer,
-      hashLock: redeemRequest.hashLock,
-      unlockSecret: redeemRequest.unlockSecret,
-    };
-
-    let facilitatorAddress = accounts[1];
-    stakeVaultAddress = await setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts);
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = new BN(StubDataRedeemReward.co_gateway.redeem.proof_data.block_number, 16);
-    let storageRoot = StubDataRedeemReward.co_gateway.redeem.proof_data.storageHash;
-    let storageProof = StubDataRedeemReward.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
-    await gateway.setStorageRoot(blockHeight, storageRoot);
-
-    let initialFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
-
-    let tx = await gateway.progressUnstakeWithProof(
-      unstakeMessage.messageHash,
-      storageProof,
-      blockHeight,
-      MessageStatusEnum.Declared,
-      {from: facilitatorAddress},
-    );
-
-    let gasUsed = new BN(tx.receipt.gasUsed);
-    let maxReward = gasUsed.mul(unstakeMessage.gasPrice);
-
-    let finalFacilitatorBalance = await mockToken.balanceOf(facilitatorAddress);
-    let receivedReward = finalFacilitatorBalance.sub(initialFacilitatorBalance);
-
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.UnstakeProgressed;
-    /*
-     * Reward is calculated as `gasPrice * gasConsumed`.
-     * The maximum reward possible is 'gasPrice * tx.gasUsed'.
-     * The gas used for fees calculations is always going to be less than
-     * the total transaction gas.
-     */
-    assert.strictEqual(
-      receivedReward.lt(maxReward),
-      true,
-      `Reward amount ${receivedReward.toString(10)} must be less than ${maxReward.toString(10)}`,
-    );
-    assert.strictEqual(
-      eventData._rewardAmount.eq(receivedReward),
-      true,
-      `Reward received in the event ${eventData._rewardAmount.toString(10)} should be same as actual received reward ${receivedReward}`,
-    );
-
-  });
-
-  it('should fail when message hash is zero', async function () {
-
-    let messageHash = ZeroBytes;
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -371,14 +468,15 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       ),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail when unstake message is undeclared', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Undeclared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+  it('should fail when unstake message is undeclared', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Undeclared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -391,11 +489,13 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     );
   });
 
-  it('should fail when unstake message is already progressed', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+  it('should fail when unstake message is already progressed', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await gateway.progressUnstakeWithProof(
       unstakeMessage.messageHash,
@@ -415,11 +515,13 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
     );
   });
 
-  it('should fail for revoked redeem (unstake) message', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Revoked);
-    let blockHeight = await setStateRoot(gateway);
-    let storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+  it('should fail for revoked redeem (unstake) message', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Revoked,
+    );
+    const blockHeight = await setStateRoot(gateway);
+    const storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -430,18 +532,16 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       ),
       'Message on target must be Declared.',
     );
-
   });
 
-  it('should fail when the reward amount is greater than the unstake amount', async function () {
-
+  it('should fail when the reward amount is greater than the unstake amount', async () => {
     redeemRequest = StubDataRedeemFailure.co_gateway.redeem.params;
     unstakeRequest = {
       beneficiary: redeemRequest.beneficiary,
       amount: new BN(redeemRequest.amount, 16),
     };
 
-    let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
+    const redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
       StubDataRedeemFailure.contracts.coGateway,
@@ -457,12 +557,26 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
       unlockSecret: redeemRequest.unlockSecret,
     };
 
-    stakeVaultAddress = await setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts);
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-    let blockHeight = new BN(StubDataRedeemFailure.co_gateway.redeem.proof_data.block_number, 16);
-    let storageRoot = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageHash;
+    stakeVaultAddress = await setup(
+      unstakeMessage,
+      gateway,
+      unstakeRequest,
+      stakeVaultAddress,
+      mockToken,
+      accounts,
+    );
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
+    const blockHeight = new BN(
+      StubDataRedeemFailure.co_gateway.redeem.proof_data.block_number,
+      16,
+    );
+    const storageRoot = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageHash;
     await gateway.setStorageRoot(blockHeight, storageRoot);
-    let storageProof = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
+    const storageProof = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageProof[0]
+      .serializedProof;
 
     await Utils.expectRevert(
       gateway.progressUnstakeWithProof(
@@ -471,14 +585,19 @@ contract('EIP20Gateway.progressUnstakeWithProof()', function (accounts) {
         blockHeight,
         MessageStatusEnum.Declared,
       ),
-      "Reward amount must be less than redeem amount.",
+      'Reward amount must be less than redeem amount.',
     );
   });
-
 });
 
-async function setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress, mockToken, accounts) {
-
+async function setup(
+  unstakeMessage,
+  gateway,
+  unstakeRequest,
+  stakeVaultAddress,
+  mockToken,
+  accounts,
+) {
   unstakeMessage.messageHash = messageBus.messageDigest(
     unstakeMessage.intentHash,
     unstakeMessage.nonce,
@@ -505,10 +624,8 @@ async function setup(unstakeMessage, gateway, unstakeRequest, stakeVaultAddress,
 
   stakeVaultAddress = await gateway.stakeVault.call();
 
-  await mockToken.transfer(
-    stakeVaultAddress,
-    unstakeRequest.amount,
-    {from: accounts[0]},
-  );
+  await mockToken.transfer(stakeVaultAddress, unstakeRequest.amount, {
+    from: accounts[0],
+  });
   return stakeVaultAddress;
 }

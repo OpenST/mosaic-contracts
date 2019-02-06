@@ -24,15 +24,14 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Organization = artifacts.require('Organization');
 
 contract('Organization.completeOwnershipTransfer()', async (accounts) => {
-
-  let initialOwner = accounts[0];
-  let proposedOwner = accounts[1];
+  const initialOwner = accounts[0];
+  const proposedOwner = accounts[1];
   let organization = null;
 
-  beforeEach(async function () {
-    let admin = Utils.NULL_ADDRESS;
-    let workers = [];
-    let expirationHeight = 0;
+  beforeEach(async () => {
+    const admin = Utils.NULL_ADDRESS;
+    const workers = [];
+    const expirationHeight = 0;
 
     organization = await Organization.new(
       initialOwner,
@@ -41,10 +40,9 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
       expirationHeight,
     );
 
-    await organization.initiateOwnershipTransfer(
-      proposedOwner,
-      { from: initialOwner },
-    )
+    await organization.initiateOwnershipTransfer(proposedOwner, {
+      from: initialOwner,
+    });
   });
 
   it('reverts when caller is not proposed owner', async () => {
@@ -55,9 +53,9 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
   });
 
   it('should pass when caller is proposed owner', async () => {
-    let response = await organization.completeOwnershipTransfer.call(
-      { from: proposedOwner }
-    );
+    const response = await organization.completeOwnershipTransfer.call({
+      from: proposedOwner,
+    });
     assert.strictEqual(
       response,
       true,
@@ -79,14 +77,11 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
   });
 
   it('verifies emitting of OwnershipTransferCompleted event', async () => {
-    const transaction = await organization.completeOwnershipTransfer(
-      { from: proposedOwner },
-    );
+    const transaction = await organization.completeOwnershipTransfer({
+      from: proposedOwner,
+    });
 
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.OwnershipTransferCompleted.newOwner,
@@ -98,7 +93,5 @@ contract('Organization.completeOwnershipTransfer()', async (accounts) => {
       initialOwner,
       'The emitted event does not record the previous owner.',
     );
-
   });
-
 });

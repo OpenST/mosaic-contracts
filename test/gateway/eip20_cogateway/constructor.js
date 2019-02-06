@@ -18,24 +18,29 @@
 //
 // ----------------------------------------------------------------------------
 
-const CoGateway = artifacts.require("EIP20CoGateway");
-const MockToken = artifacts.require("MockToken");
+const CoGateway = artifacts.require('EIP20CoGateway');
+const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
-const Utils = require("./../../test_lib/utils"),
-  BN = require('bn.js');
+const BN = require('bn.js');
+const Utils = require('./../../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-contract('EIP20CoGateway.constructor() ', function (accounts) {
+contract('EIP20CoGateway.constructor() ', (accounts) => {
+  let valueToken;
+  let utilityToken;
+  let bountyAmount;
+  let dummyStateRootProvider;
+  let owner;
+  let worker;
+  let organization;
+  let coGateway;
 
+  const gatewayAddress = accounts[6];
+  const burner = NullAddress;
 
-  let valueToken, utilityToken, bountyAmount, dummyStateRootProvider,
-    owner, worker, organization, coGateway, gatewayAddress = accounts[6],
-    burner = NullAddress;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     valueToken = await MockToken.new();
     utilityToken = await MockToken.new();
     dummyStateRootProvider = accounts[1];
@@ -46,68 +51,62 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
     organization = await MockOrganization.new(owner, worker);
   });
 
-  it('should able to deploy contract with correct parameters.', async function () {
-    coGateway = await
-      CoGateway.new(
-        valueToken.address,
-        utilityToken.address,
-        dummyStateRootProvider,
-        bountyAmount,
-        organization.address,
-        gatewayAddress,
-        burner
-      );
+  it('should able to deploy contract with correct parameters.', async () => {
+    coGateway = await CoGateway.new(
+      valueToken.address,
+      utilityToken.address,
+      dummyStateRootProvider,
+      bountyAmount,
+      organization.address,
+      gatewayAddress,
+      burner,
+    );
 
     assert(
       web3.utils.isAddress(coGateway.address),
-      'Returned value is not a valid address.'
+      'Returned value is not a valid address.',
     );
   });
 
-  it('should initialize coGateway contract with correct parameters.', async function () {
-    coGateway = await
-      CoGateway.new(
-        valueToken.address,
-        utilityToken.address,
-        dummyStateRootProvider,
-        bountyAmount,
-        organization.address,
-        gatewayAddress,
-        burner
-      );
+  it('should initialize coGateway contract with correct parameters.', async () => {
+    coGateway = await CoGateway.new(
+      valueToken.address,
+      utilityToken.address,
+      dummyStateRootProvider,
+      bountyAmount,
+      organization.address,
+      gatewayAddress,
+      burner,
+    );
 
-    let valueTokenAddress = await coGateway.valueToken.call();
+    const valueTokenAddress = await coGateway.valueToken.call();
 
     assert.strictEqual(
       valueTokenAddress,
       valueToken.address,
-      'Invalid valueTokenAddress address from contract.'
+      'Invalid valueTokenAddress address from contract.',
     );
 
-    let utilityTokenAddress = await coGateway.utilityToken.call();
+    const utilityTokenAddress = await coGateway.utilityToken.call();
     assert.strictEqual(
       utilityTokenAddress,
       utilityToken.address,
-      'Invalid bounty token address from contract.'
+      'Invalid bounty token address from contract.',
     );
 
-    let stateRootProviderAdd = await coGateway.stateRootProvider.call();
+    const stateRootProviderAdd = await coGateway.stateRootProvider.call();
     assert.strictEqual(
       stateRootProviderAdd,
       dummyStateRootProvider,
-      'Invalid stateRootProvider address from contract.'
+      'Invalid stateRootProvider address from contract.',
     );
 
-    let bounty = await coGateway.bounty.call();
-    assert(
-      bounty.eq(bountyAmount),
-      'Invalid bounty amount from contract'
-    );
-
+    const bounty = await coGateway.bounty.call();
+    assert(bounty.eq(bountyAmount), 'Invalid bounty amount from contract');
   });
 
-  it('should not deploy contract if value token is passed as zero.', async function () {
-    let valueTokenAddress = NullAddress;
+  it('should not deploy contract if value token is passed as zero.', async () => {
+    const valueTokenAddress = NullAddress;
 
     await Utils.expectRevert(
       CoGateway.new(
@@ -117,14 +116,14 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
         bountyAmount,
         organization.address,
         gatewayAddress,
-        burner
+        burner,
       ),
-      'Value token address must not be zero.'
+      'Value token address must not be zero.',
     );
   });
 
-  it('should not deploy contract if utility token is passed as zero.', async function () {
-    let utilityTokenAddress = NullAddress;
+  it('should not deploy contract if utility token is passed as zero.', async () => {
+    const utilityTokenAddress = NullAddress;
 
     await Utils.expectRevert(
       CoGateway.new(
@@ -134,14 +133,14 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
         bountyAmount,
         organization.address,
         gatewayAddress,
-        burner
+        burner,
       ),
-      'Utility token address must not be zero.'
+      'Utility token address must not be zero.',
     );
   });
 
-  it('should not deploy contract if state root provider contract address is passed as zero.', async function () {
-    let stateRootProviderAddress = NullAddress;
+  it('should not deploy contract if state root provider contract address is passed as zero.', async () => {
+    const stateRootProviderAddress = NullAddress;
 
     await Utils.expectRevert(
       CoGateway.new(
@@ -151,30 +150,28 @@ contract('EIP20CoGateway.constructor() ', function (accounts) {
         bountyAmount,
         organization.address,
         gatewayAddress,
-        burner
+        burner,
       ),
-      'State root provider contract address must not be zero.'
+      'State root provider contract address must not be zero.',
     );
-
   });
 
-  it('should able to deploy contract with zero bounty.', async function () {
-    let bountyAmount = new BN(0);
+  it('should able to deploy contract with zero bounty.', async () => {
+    const bountyAmount = new BN(0);
 
-    coGateway = await
-      CoGateway.new(
-        valueToken.address,
-        utilityToken.address,
-        dummyStateRootProvider,
-        bountyAmount,
-        organization.address,
-        gatewayAddress,
-        burner
-      );
+    coGateway = await CoGateway.new(
+      valueToken.address,
+      utilityToken.address,
+      dummyStateRootProvider,
+      bountyAmount,
+      organization.address,
+      gatewayAddress,
+      burner,
+    );
 
     assert(
       web3.utils.isAddress(coGateway.address),
-      'Returned value is not a valid address.'
+      'Returned value is not a valid address.',
     );
   });
 });

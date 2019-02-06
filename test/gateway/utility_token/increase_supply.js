@@ -21,27 +21,26 @@
 const UtilityToken = artifacts.require('TestUtilityToken');
 const MockEIP20CoGateway = artifacts.require('MockEIP20CoGateway');
 
-const Utils = require("./../../test_lib/utils"),
-  EventDecoder = require('../../test_lib/event_decoder.js'),
-  BN = require('bn.js');
+const BN = require('bn.js');
+const Utils = require('./../../test_lib/utils');
+
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-const TOKEN_SYMBOL = "UT";
-const TOKEN_NAME = "Utility Token";
+const TOKEN_SYMBOL = 'UT';
+const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.increaseSupply()', function (accounts) {
+contract('UtilityToken.increaseSupply()', (accounts) => {
+  let brandedToken;
+  let organization;
+  let utilityToken;
+  let coGatewayAddress;
+  let beneficiary;
+  let amount;
 
-  let brandedToken,
-    organization,
-    utilityToken,
-    coGatewayAddress,
-    beneficiary,
-    amount;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     brandedToken = accounts[4];
     organization = accounts[0];
     beneficiary = accounts[6];
@@ -57,104 +56,77 @@ contract('UtilityToken.increaseSupply()', function (accounts) {
     coGatewayAddress = accounts[1];
 
     await utilityToken.setCoGatewayAddress(coGatewayAddress);
-
   });
 
-  it('should fail when account address is zero', async function () {
-
+  it('should fail when account address is zero', async () => {
     beneficiary = NullAddress;
 
     await Utils.expectRevert(
-      utilityToken.increaseSupply(
-        beneficiary,
-        amount,
-        { from: coGatewayAddress },
-      ),
+      utilityToken.increaseSupply(beneficiary, amount, {
+        from: coGatewayAddress,
+      }),
       'Account address should not be zero.',
     );
-
   });
 
-  it('should fail when amount is zero', async function () {
-
+  it('should fail when amount is zero', async () => {
     amount = new BN(0);
 
     await Utils.expectRevert(
-      utilityToken.increaseSupply(
-        beneficiary,
-        amount,
-        { from: coGatewayAddress },
-      ),
+      utilityToken.increaseSupply(beneficiary, amount, {
+        from: coGatewayAddress,
+      }),
       'Amount should be greater than zero.',
     );
-
   });
 
-  it('should fail when caller is not CoGateway address', async function () {
-
+  it('should fail when caller is not CoGateway address', async () => {
     await Utils.expectRevert(
-      utilityToken.increaseSupply(
-        beneficiary,
-        amount,
-        { from: accounts[7] },
-      ),
+      utilityToken.increaseSupply(beneficiary, amount, { from: accounts[7] }),
       'Only CoGateway can call the function.',
     );
-
   });
 
-  it('should pass with correct params', async function () {
-
-    let result = await utilityToken.increaseSupply.call(
-        beneficiary,
-        amount,
-        { from: coGatewayAddress },
-      );
-
-    assert.strictEqual(
-      result,
-      true,
-      'Contract should return true.',
-    );
-
-    await utilityToken.increaseSupply(
+  it('should pass with correct params', async () => {
+    const result = await utilityToken.increaseSupply.call(
       beneficiary,
       amount,
-      { from: coGatewayAddress },
+      {
+        from: coGatewayAddress,
+      },
     );
 
-    let beneficiaryBalance = await utilityToken.balanceOf.call(beneficiary);
+    assert.strictEqual(result, true, 'Contract should return true.');
+
+    await utilityToken.increaseSupply(beneficiary, amount, {
+      from: coGatewayAddress,
+    });
+
+    const beneficiaryBalance = await utilityToken.balanceOf.call(beneficiary);
     assert.strictEqual(
       amount.eq(beneficiaryBalance),
       true,
       `Beneficiary address balance should be ${amount}.`,
     );
 
-    let totalSupply = await utilityToken.totalSupply();
+    const totalSupply = await utilityToken.totalSupply();
     assert.strictEqual(
       totalSupply.eq(amount),
       true,
       `Token total supply from contract must be equal to ${amount}.`,
     );
-
   });
 
-  it('should emit Transfer event', async function () {
+  it('should emit Transfer event', async () => {
+    const tx = await utilityToken.increaseSupply(beneficiary, amount, {
+      from: coGatewayAddress,
+    });
 
-    let tx = await utilityToken.increaseSupply(
-      beneficiary,
-      amount,
-      { from: coGatewayAddress }
-    );
+    const event = EventDecoder.getEvents(tx, utilityToken);
 
-    let event = EventDecoder.getEvents(tx, utilityToken);
+    assert.isDefined(event.Transfer, 'Event Transfer must be emitted.');
 
-    assert.isDefined(
-      event.Transfer,
-      'Event Transfer must be emitted.',
-    );
-
-    let eventData = event.Transfer;
+    const eventData = event.Transfer;
 
     assert.strictEqual(
       eventData._from,
@@ -173,7 +145,5 @@ contract('UtilityToken.increaseSupply()', function (accounts) {
       true,
       `The _value amount in the event should be equal to ${amount}.`,
     );
-
   });
-
 });

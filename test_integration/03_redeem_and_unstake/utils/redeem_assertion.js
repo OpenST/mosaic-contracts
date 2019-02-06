@@ -52,54 +52,54 @@ const BN = require('bn.js');
  * Class to assert event and balances after Redeem.
  */
 class RedeemAssertion {
-    /**
+  /**
      * Constructor.
      * @param {Object} cogateway Truffle cogateway instance.
      * @param {Object} ostPrime Truffle token instance.
      * @param {Web3} web3 Web3 instance.
      */
-    constructor(cogateway, ostPrime, web3) {
-        this.cogateway = cogateway;
-        this.token = ostPrime;
-        this.web3 = web3;
-    }
+  constructor(cogateway, ostPrime, web3) {
+    this.cogateway = cogateway;
+    this.token = ostPrime;
+    this.web3 = web3;
+  }
 
-    /**
+  /**
      * This verifies event and balances.
      * @param {Object} event Event object after decoding.
      * @param redeemRequest Redeem request parameters.
      * @param {BN} transactionFees Transaction fees in redeem request.
      * @param {Balances} initialBalances Initial baseToken and token balances.
      */
-    async verify(event, redeemRequest, transactionFees, initialBalances) {
-        await this._assertBalancesForRedeem(
-            redeemRequest,
-            initialBalances,
-            transactionFees,
-        );
+  async verify(event, redeemRequest, transactionFees, initialBalances) {
+    await this._assertBalancesForRedeem(
+      redeemRequest,
+      initialBalances,
+      transactionFees,
+    );
 
-        RedeemAssertion._assertRedeemEvent(event, redeemRequest);
-    }
+    RedeemAssertion._assertRedeemEvent(event, redeemRequest);
+  }
 
-    /**
+  /**
      * This captures base token and token balance of cogateway and redeemer
      * @param {string} redeemer Redeemer address.
      * @return {Promise<Balances>}
      */
-    async captureBalances(redeemer) {
-        return {
-            baseToken: {
-                cogateway: await this._getEthBalance(this.cogateway.address),
-                redeemer: await this._getEthBalance(redeemer),
-            },
-            token: {
-                cogateway: await this.token.balanceOf(this.cogateway.address),
-                redeemer: await this.token.balanceOf(redeemer),
-            },
-        };
-    }
+  async captureBalances(redeemer) {
+    return {
+      baseToken: {
+        cogateway: await this._getEthBalance(this.cogateway.address),
+        redeemer: await this._getEthBalance(redeemer),
+      },
+      token: {
+        cogateway: await this.token.balanceOf(this.cogateway.address),
+        redeemer: await this.token.balanceOf(redeemer),
+      },
+    };
+  }
 
-    /**
+  /**
      * This asserts balances of redeemer and cogateway after Redeem.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @param {Balances} initialBalances Initial balance of redeemer and cogateway
@@ -107,103 +107,103 @@ class RedeemAssertion {
      * @param {BN} transactionFees Transaction fees in redeem request.
      * @private
      */
-    async _assertBalancesForRedeem(redeemRequest, initialBalances, transactionFees) {
-        const finalBalances = await this.captureBalances(redeemRequest.redeemer);
+  async _assertBalancesForRedeem(redeemRequest, initialBalances, transactionFees) {
+    const finalBalances = await this.captureBalances(redeemRequest.redeemer);
 
-        // Assert cogateway balance.
-        const expectedCoGatewayBaseTokenBalance = initialBalances.baseToken.cogateway
-            .add(redeemRequest.bounty);
+    // Assert cogateway balance.
+    const expectedCoGatewayBaseTokenBalance = initialBalances.baseToken.cogateway
+      .add(redeemRequest.bounty);
 
-        // Assert bounty is transferred to cogateway.
-        assert.strictEqual(
-            expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.cogateway),
-            true,
-            `CoGateway base token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
+    // Assert bounty is transferred to cogateway.
+    assert.strictEqual(
+      expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.cogateway),
+      true,
+      `CoGateway base token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.baseToken.cogateway.toString(10)}`,
-        );
+    );
 
-        const expectedCoGatewayTokenBalance = initialBalances.token.cogateway
-            .add(redeemRequest.amount);
+    const expectedCoGatewayTokenBalance = initialBalances.token.cogateway
+      .add(redeemRequest.amount);
 
-        // Assert Redeem amount is transferred to cogateway.
-        assert.strictEqual(
-            expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
-            true,
-            `CoGateway token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
+    // Assert Redeem amount is transferred to cogateway.
+    assert.strictEqual(
+      expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
+      true,
+      `CoGateway token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.token.cogateway.toString(10)}`,
-        );
+    );
 
-        // Assert redeemer balance.
-        const expectedRedeemerBaseTokenBalance = initialBalances.baseToken.redeemer
-            .sub(redeemRequest.bounty).sub(transactionFees);
+    // Assert redeemer balance.
+    const expectedRedeemerBaseTokenBalance = initialBalances.baseToken.redeemer
+      .sub(redeemRequest.bounty).sub(transactionFees);
 
-        // Assert bounty is transferred to cogateway.
-        assert.strictEqual(
-            expectedRedeemerBaseTokenBalance.eq(finalBalances.baseToken.redeemer),
-            true,
-            `Redeemer base token balance must be ${expectedRedeemerBaseTokenBalance.toString(10)}`
+    // Assert bounty is transferred to cogateway.
+    assert.strictEqual(
+      expectedRedeemerBaseTokenBalance.eq(finalBalances.baseToken.redeemer),
+      true,
+      `Redeemer base token balance must be ${expectedRedeemerBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.baseToken.redeemer.toString(10)}`,
-        );
+    );
 
-        const expectedRedeemerTokenBalance = initialBalances.token.redeemer
-            .sub(redeemRequest.amount);
+    const expectedRedeemerTokenBalance = initialBalances.token.redeemer
+      .sub(redeemRequest.amount);
 
-        // Assert Redeem amount is transferred from redeemer.
-        assert.strictEqual(
-            expectedRedeemerTokenBalance.eq(finalBalances.token.redeemer),
-            true,
-            `Redeemer token balance must be ${expectedRedeemerTokenBalance.toString(10)}`
+    // Assert Redeem amount is transferred from redeemer.
+    assert.strictEqual(
+      expectedRedeemerTokenBalance.eq(finalBalances.token.redeemer),
+      true,
+      `Redeemer token balance must be ${expectedRedeemerTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.token.redeemer.toString(10)}`,
-        );
-    }
+    );
+  }
 
-    /**
+  /**
      * This asserts event after Redeem method.
      * @param {Object} event Event object after decoding.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
      * @private
      */
-    static _assertRedeemEvent(event, redeemRequest) {
-        const eventData = event.RedeemIntentDeclared;
+  static _assertRedeemEvent(event, redeemRequest) {
+    const eventData = event.RedeemIntentDeclared;
 
-        assert.strictEqual(
-            eventData._redeemer,
-            redeemRequest.redeemer,
-            `Redeemer address from event ${eventData._redeemer} must be equal to ${redeemRequest.redeemer}.`,
-        );
+    assert.strictEqual(
+      eventData._redeemer,
+      redeemRequest.redeemer,
+      `Redeemer address from event ${eventData._redeemer} must be equal to ${redeemRequest.redeemer}.`,
+    );
 
-        assert.strictEqual(
-            redeemRequest.nonce.eq(eventData._redeemerNonce),
-            true,
-            `Redeemer nonce from event ${eventData._redeemerNonce} 
+    assert.strictEqual(
+      redeemRequest.nonce.eq(eventData._redeemerNonce),
+      true,
+      `Redeemer nonce from event ${eventData._redeemerNonce} 
             must be equal to ${redeemRequest.nonce.toString(10)}.`,
-        );
+    );
 
-        assert.strictEqual(
-            eventData._beneficiary,
-            redeemRequest.beneficiary,
-            `Beneficiary address from event ${eventData._beneficiary} 
+    assert.strictEqual(
+      eventData._beneficiary,
+      redeemRequest.beneficiary,
+      `Beneficiary address from event ${eventData._beneficiary} 
             must be equal to ${redeemRequest.beneficiary}.`,
-        );
+    );
 
-        assert.strictEqual(
-            redeemRequest.amount.eq(eventData._amount),
-            true,
-            `Amount from event ${eventData._amount} must be equal 
+    assert.strictEqual(
+      redeemRequest.amount.eq(eventData._amount),
+      true,
+      `Amount from event ${eventData._amount} must be equal 
             to ${redeemRequest.amount.toString(10)}.`,
-        );
-    }
+    );
+  }
 
-    /**
+  /**
      * Returns ETH balance wrapped in BN.
      * @param {string} address Address for which balance is requested.
      * @return {Promise<BN>} ETH Balance.
      * @private
      */
-    async _getEthBalance(address) {
-        const balance = await this.web3.eth.getBalance(address);
-        return new BN(balance);
-    }
+  async _getEthBalance(address) {
+    const balance = await this.web3.eth.getBalance(address);
+    return new BN(balance);
+  }
 }
 
 module.exports = RedeemAssertion;

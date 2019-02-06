@@ -21,19 +21,19 @@
 const { Contract } = require('./Contract');
 const { ContractRegistry } = require('./ContractRegistry');
 const {
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
+  IncrementingAddressGenerator,
+  IncrementingNonceAddressGenerator,
 } = require('./address_generators');
 const {
-    deployContracts,
-    UnlockedWeb3Signer,
+  deployContracts,
+  UnlockedWeb3Signer,
 } = require('./utils');
 
 module.exports = {
-    Contract,
-    ContractRegistry,
-    IncrementingAddressGenerator,
-    IncrementingNonceAddressGenerator,
-    UnlockedWeb3Signer,
-    deployContracts,
+  Contract,
+  ContractRegistry,
+  IncrementingAddressGenerator,
+  IncrementingNonceAddressGenerator,
+  UnlockedWeb3Signer,
+  deployContracts,
 };

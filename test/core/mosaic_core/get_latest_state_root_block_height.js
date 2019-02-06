@@ -17,8 +17,9 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
+const web3 = require('../../test_lib/web3.js');
+
 const MosaicCore = artifacts.require('TestMosaicCore');
 
 /**
@@ -28,58 +29,51 @@ const MosaicCore = artifacts.require('TestMosaicCore');
  */
 
 contract('MosaicCore.getLatestStateRootBlockHeight()', async (accounts) => {
+  const coreIdentifier = '0x0000000000000000000000000000000000000001';
 
-    const coreIdentifier = '0x0000000000000000000000000000000000000001';
+  const gas = new BN('100');
+  const maxAccumulateGasLimit = new BN('100');
+  const transactionRoot = web3.utils.sha3('1');
+  const minimumWeight = new BN('1');
 
-    let gas = new BN('100');
-    let maxAccumulateGasLimit = new BN('100');
-    let transactionRoot= web3.utils.sha3("1");
-    let minimumWeight = new BN('1');
+  let mosaicCore;
+  let ost;
 
-    let mosaicCore, ost;
-
-    /** Deploys the mosaic core contract */
-    async function deployMosaicCore(){
-        mosaicCore = await MosaicCore.new(
-            coreIdentifier,
-            ost,
-            gas,
-            transactionRoot,
-            minimumWeight,
-            maxAccumulateGasLimit,
-        );
-    }
-
-    beforeEach(async () => {
-        ost = accounts[0];
-        await deployMosaicCore();
-    });
-
-    it('should return zero.',
-        async function () {
-            let latestStateRootBlockHeight =
-                await mosaicCore.getLatestStateRootBlockHeight.call();
-
-            assert(
-                latestStateRootBlockHeight.eq(new BN(0)),
-                "The latest height from the contract must be zero."
-            );
-        }
+  /** Deploys the mosaic core contract */
+  async function deployMosaicCore() {
+    mosaicCore = await MosaicCore.new(
+      coreIdentifier,
+      ost,
+      gas,
+      transactionRoot,
+      minimumWeight,
+      maxAccumulateGasLimit,
     );
+  }
 
-    it('should return latestStateRootBlockHeight variable value.',
-        async function () {
-            let height = new BN(1234);
-            await mosaicCore.setLatestStateRootBlockHeight(height);
+  beforeEach(async () => {
+    ost = accounts[0];
+    await deployMosaicCore();
+  });
 
-            let latestStateRootBlockHeight =
-                await mosaicCore.getLatestStateRootBlockHeight.call();
+  it('should return zero.', async () => {
+    const latestStateRootBlockHeight = await mosaicCore.getLatestStateRootBlockHeight.call();
 
-            assert(
-                latestStateRootBlockHeight.eq(height),
-                `State root from the contract must be ${height}.`
-            );
-        }
+    assert(
+      latestStateRootBlockHeight.eq(new BN(0)),
+      'The latest height from the contract must be zero.',
     );
+  });
 
+  it('should return latestStateRootBlockHeight variable value.', async () => {
+    const height = new BN(1234);
+    await mosaicCore.setLatestStateRootBlockHeight(height);
+
+    const latestStateRootBlockHeight = await mosaicCore.getLatestStateRootBlockHeight.call();
+
+    assert(
+      latestStateRootBlockHeight.eq(height),
+      `State root from the contract must be ${height}.`,
+    );
+  });
 });

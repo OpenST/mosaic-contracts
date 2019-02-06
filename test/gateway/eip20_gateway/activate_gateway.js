@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./EIP20Gateway.sol")
+const Gateway = artifacts.require('./EIP20Gateway.sol');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const BN = require('bn.js');
@@ -26,96 +26,93 @@ const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
-contract('EIP20Gateway.activateGateway()', function (accounts) {
+contract('EIP20Gateway.activateGateway()', (accounts) => {
+  let gateway;
+  const coGateway = accounts[5];
+  const owner = accounts[2];
+  const worker = accounts[3];
+  let organization;
+  const burner = NullAddress;
 
-    let gateway;
-    let coGateway = accounts[5];
-    let owner = accounts[2];
-    let worker = accounts[3];
-    let organization;
-    let burner = NullAddress;
+  beforeEach(async () => {
+    const mockToken = accounts[0];
 
-    beforeEach(async function () {
+    const baseToken = accounts[1];
 
-        let mockToken = accounts[0],
-            baseToken = accounts[1],
-            dummyStateRootProvider = accounts[2],
-            bountyAmount = new BN(100);
+    const dummyStateRootProvider = accounts[2];
 
-        organization = await MockOrganization.new(owner, worker);
+    const bountyAmount = new BN(100);
 
-        gateway = await Gateway.new(
-            mockToken,
-            baseToken,
-            dummyStateRootProvider,
-            bountyAmount,
-            organization.address,
-            burner
-        );
+    organization = await MockOrganization.new(owner, worker);
+
+    gateway = await Gateway.new(
+      mockToken,
+      baseToken,
+      dummyStateRootProvider,
+      bountyAmount,
+      organization.address,
+      burner,
+    );
+  });
+
+  it('should activate if not already activated', async () => {
+    const isSuccess = await gateway.activateGateway.call(coGateway, {
+      from: owner,
     });
 
-    it('should activate if not already activated', async function () {
+    assert.strictEqual(
+      isSuccess,
+      true,
+      'Gateway activation failed, activateGateway returned false.',
+    );
 
-        let isSuccess = await gateway.activateGateway.call(coGateway, { from: owner });
+    await gateway.activateGateway(coGateway, { from: owner });
+    const isActivated = await gateway.activated.call();
 
-        assert.strictEqual(
-            isSuccess,
-            true,
-            "Gateway activation failed, activateGateway returned false.",
-        );
+    assert.strictEqual(
+      isActivated,
+      true,
+      'Activation flag is false but expected as true.',
+    );
 
-        await gateway.activateGateway(coGateway, { from: owner });
-        let isActivated = await gateway.activated.call();
+    const actualCoGateway = await gateway.remoteGateway.call();
 
-        assert.strictEqual(
-            isActivated,
-            true,
-            'Activation flag is false but expected as true.'
-        );
+    assert.strictEqual(
+      coGateway,
+      actualCoGateway,
+      'Actual cogateway address is different from expected address.',
+    );
 
-        let actualCoGateway = await gateway.remoteGateway.call();
+    const actualEncodedGatewayPath = await gateway.encodedGatewayPath.call();
+    const expectedEncodedGatewayPath = web3.utils.sha3(coGateway);
 
-        assert.strictEqual(
-            coGateway,
-            actualCoGateway,
-            "Actual cogateway address is different from expected address."
-        );
+    assert.strictEqual(
+      expectedEncodedGatewayPath,
+      actualEncodedGatewayPath,
+      'Actual encoded gateway path address is different from expected.',
+    );
+  });
 
-        let actualEncodedGatewayPath = await gateway.encodedGatewayPath.call();
-        let expectedEncodedGatewayPath = web3.utils.sha3(coGateway);
+  it('should not activate if already activated', async () => {
+    await gateway.activateGateway(coGateway, { from: owner });
 
-        assert.strictEqual(
-            expectedEncodedGatewayPath,
-            actualEncodedGatewayPath,
-            "Actual encoded gateway path address is different from expected."
-        );
+    await Utils.expectRevert(
+      gateway.activateGateway(coGateway, { from: owner }),
+      'Gateway was already activated once.',
+    );
+  });
 
-    });
+  it('should not activate with zero co-gateway address', async () => {
+    await Utils.expectRevert(
+      gateway.activateGateway(NullAddress, { from: owner }),
+      'Co-gateway address must not be zero.',
+    );
+  });
 
-    it('should not activate if already activated', async function () {
-
-        await gateway.activateGateway(coGateway, { from: owner });
-
-        await Utils.expectRevert(
-            gateway.activateGateway(coGateway, { from: owner }),
-            'Gateway was already activated once.'
-        );
-    });
-
-    it('should not activate with zero co-gateway address', async function () {
-
-        await Utils.expectRevert(
-            gateway.activateGateway(NullAddress, { from: owner }),
-            'Co-gateway address must not be zero.'
-        );
-    });
-
-    it('should be activated by organization only', async function () {
-
-        await Utils.expectRevert(
-            gateway.activateGateway(coGateway, { from: accounts[0] }),
-            'Only the organization is allowed to call this method.'
-        );
-    });
+  it('should be activated by organization only', async () => {
+    await Utils.expectRevert(
+      gateway.activateGateway(coGateway, { from: accounts[0] }),
+      'Only the organization is allowed to call this method.',
+    );
+  });
 });
-

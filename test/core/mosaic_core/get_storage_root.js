@@ -17,9 +17,10 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
+const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
-const BN = require('bn.js');
+
 const MosaicCore = artifacts.require('TestMosaicCore');
 
 /**
@@ -28,61 +29,56 @@ const MosaicCore = artifacts.require('TestMosaicCore');
  */
 
 contract('MosaicCore.getStorageRoot()', async (accounts) => {
+  const coreIdentifier = '0x0000000000000000000000000000000000000001';
+  const zeroBytes = Utils.ZERO_BYTES32;
 
-    const coreIdentifier = '0x0000000000000000000000000000000000000001';
-    const zeroBytes = Utils.ZERO_BYTES32;
+  const gas = new BN('100');
+  const maxAccumulateGasLimit = new BN('100');
+  const transactionRoot = web3.utils.sha3('1');
+  const minimumWeight = new BN('1');
 
-    let gas = new BN('100');
-    let maxAccumulateGasLimit = new BN('100');
-    let transactionRoot= web3.utils.sha3("1");
-    let minimumWeight = new BN('1');
+  let mosaicCore;
+  let ost;
 
-    let mosaicCore, ost;
-
-    /** Deploys the mosaic core contract */
-    async function deployMosaicCore(){
-        mosaicCore = await MosaicCore.new(
-            coreIdentifier,
-            ost,
-            gas,
-            transactionRoot,
-            minimumWeight,
-            maxAccumulateGasLimit,
-        );
-    }
-
-    beforeEach(async () => {
-        ost = accounts[0];
-        await deployMosaicCore();
-    });
-
-    it('should return zero bytes when the data does not exists.',
-        async function () {
-            let height = new BN(1);
-            let stateRoot = await mosaicCore.getStateRoot.call(height);
-
-            assert.strictEqual(
-                stateRoot,
-                zeroBytes,
-                "State root from the contract must be zero."
-            );
-        }
+  /** Deploys the mosaic core contract */
+  async function deployMosaicCore() {
+    mosaicCore = await MosaicCore.new(
+      coreIdentifier,
+      ost,
+      gas,
+      transactionRoot,
+      minimumWeight,
+      maxAccumulateGasLimit,
     );
+  }
 
-    it('should return correct bytes when state root exists.',
-        async function () {
-            let height = new BN(1);
-            let stateRoot = web3.utils.sha3("stateRoot");
-            await mosaicCore.setStateRoot(height, stateRoot);
+  beforeEach(async () => {
+    ost = accounts[0];
+    await deployMosaicCore();
+  });
 
-            let cStateRoot = await mosaicCore.getStateRoot.call(height);
+  it('should return zero bytes when the data does not exists.', async () => {
+    const height = new BN(1);
+    const stateRoot = await mosaicCore.getStateRoot.call(height);
 
-            assert.strictEqual(
-                cStateRoot,
-                stateRoot,
-                `State root from the contract must be ${stateRoot}.`
-            );
-        }
+    assert.strictEqual(
+      stateRoot,
+      zeroBytes,
+      'State root from the contract must be zero.',
     );
+  });
 
+  it('should return correct bytes when state root exists.', async () => {
+    const height = new BN(1);
+    const stateRoot = web3.utils.sha3('stateRoot');
+    await mosaicCore.setStateRoot(height, stateRoot);
+
+    const cStateRoot = await mosaicCore.getStateRoot.call(height);
+
+    assert.strictEqual(
+      cStateRoot,
+      stateRoot,
+      `State root from the contract must be ${stateRoot}.`,
+    );
+  });
 });

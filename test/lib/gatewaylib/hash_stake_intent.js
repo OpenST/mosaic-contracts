@@ -20,25 +20,23 @@
 
 const GatewayLib = artifacts.require('GatewayLib');
 
-const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
 const BN = require('bn.js');
+const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
 
 contract('GatewayLib.hashStakeIntent()', async (accounts) => {
+  it('should return correct stake intent hash', async () => {
+    const gatewayLib = await GatewayLib.deployed();
+    const amount = new BN(1);
+    const beneficiary = accounts[0];
+    const gateway = accounts[1];
 
-  it('should return correct stake intent hash', async function () {
-
-    let gatewayLib = await GatewayLib.deployed();
-    let amount = new BN(1);
-    let beneficiary = accounts[0];
-    let gateway = accounts[1];
-
-    let stakeIntentHash = await gatewayLib.hashStakeIntent(
+    const stakeIntentHash = await gatewayLib.hashStakeIntent(
       amount,
       beneficiary,
       gateway,
     );
 
-    let expectedStakeIntentHash = Utils.hashStakeIntent(
+    const expectedStakeIntentHash = Utils.hashStakeIntent(
       amount,
       beneficiary,
       gateway,
@@ -47,9 +45,7 @@ contract('GatewayLib.hashStakeIntent()', async (accounts) => {
     assert.strictEqual(
       expectedStakeIntentHash,
       stakeIntentHash,
-      "The library did not hash the stake intent as expected.",
+      'The library did not hash the stake intent as expected.',
     );
-
   });
-
 });

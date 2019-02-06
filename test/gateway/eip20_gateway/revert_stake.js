@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockToken = artifacts.require("MockToken");
+const Gateway = artifacts.require('./TestEIP20Gateway.sol');
+const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
 
@@ -28,34 +28,33 @@ const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 
-let MessageStatusEnum = messageBus.MessageStatusEnum;
-contract('EIP20Gateway.revertStake()', function (accounts) {
-
+const { MessageStatusEnum } = messageBus;
+contract('EIP20Gateway.revertStake()', (accounts) => {
   let gateway;
-  let mockToken, baseToken;
-  let bountyAmount = new BN(100);
+  let mockToken;
+  let baseToken;
+  const bountyAmount = new BN(100);
 
-  let stakeRequest = {
+  const stakeRequest = {
     beneficiary: accounts[6],
     stakeAmount: new BN(100),
   };
 
-  let stakeMessage = {
-    intentHash: web3.utils.sha3("dummy"),
+  const stakeMessage = {
+    intentHash: web3.utils.sha3('dummy'),
     stakerNonce: new BN(1),
     gasPrice: new BN(1),
     gasLimit: new BN(2),
     staker: accounts[0],
   };
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     mockToken = await MockToken.new({ from: accounts[0] });
     baseToken = await MockToken.new({ from: accounts[0] });
 
-    let organization = accounts[1];
-    let coreAddress = accounts[5];
-    let burner = Utils.NULL_ADDRESS;
+    const organization = accounts[1];
+    const coreAddress = accounts[5];
+    const burner = Utils.NULL_ADDRESS;
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -66,7 +65,7 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
       burner,
     );
 
-    let hashLockObj = Utils.generateHashLock();
+    const hashLockObj = Utils.generateHashLock();
 
     stakeMessage.hashLock = hashLockObj.l;
     stakeMessage.unlockSecret = hashLockObj.s;
@@ -92,26 +91,25 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
       stakeMessage.staker,
       stakeMessage.hashLock,
     );
-
   });
 
-  it('should emit event on success', async function () {
+  it('should emit event on success', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
-    let tx = await gateway.revertStake(
-      stakeMessage.messageHash,
-      {from: stakeMessage.staker},
-    );
+    const tx = await gateway.revertStake(stakeMessage.messageHash, {
+      from: stakeMessage.staker,
+    });
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.RevertStakeIntentDeclared;
+    const event = EventDecoder.getEvents(tx, gateway);
+    const eventData = event.RevertStakeIntentDeclared;
 
     assert.isDefined(
       event.RevertStakeIntentDeclared,
@@ -120,81 +118,96 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       stakeMessage.messageHash,
-      `Expected message hash ${eventData._messageHash} is different from actual message hash ${stakeMessage.messageHash}`,
+      `Expected message hash ${
+        eventData._messageHash
+      } is different from actual message hash ${stakeMessage.messageHash}`,
     );
     assert.strictEqual(
       eventData._staker,
       stakeMessage.staker,
-      `Expected message hash ${eventData._staker} is different from actual message hash ${stakeMessage.staker}`,
+      `Expected message hash ${
+        eventData._staker
+      } is different from actual message hash ${stakeMessage.staker}`,
     );
     assert.strictEqual(
       eventData._amount.eq(stakeRequest.stakeAmount),
       true,
-      `Expected stake amount ${eventData._amount} is different from actual stake amount ${stakeRequest.stakeAmount}`,
+      `Expected stake amount ${
+        eventData._amount
+      } is different from actual stake amount ${stakeRequest.stakeAmount}`,
     );
     assert.strictEqual(
       eventData._stakerNonce.eq(stakeMessage.stakerNonce),
       true,
-      `Expected staker nonce ${eventData._stakerNonce} is different from actual staker nonce ${stakeMessage.stakerNonce}`,
+      `Expected staker nonce ${
+        eventData._stakerNonce
+      } is different from actual staker nonce ${stakeMessage.stakerNonce}`,
     );
-
   });
 
-  it('should return correct values', async function () {
+  it('should return correct values', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
-    let returnedValues = await gateway.revertStake.call(
+    const returnedValues = await gateway.revertStake.call(
       stakeMessage.messageHash,
-      {from: stakeMessage.staker},
+      { from: stakeMessage.staker },
     );
 
     assert.strictEqual(
       returnedValues.staker_,
       stakeMessage.staker,
-      `Returned staker ${returnedValues.staker_} value is different from expected ${stakeMessage.staker} `,
+      `Returned staker ${
+        returnedValues.staker_
+      } value is different from expected ${stakeMessage.staker} `,
     );
     assert.strictEqual(
       returnedValues.stakerNonce_.eq(stakeMessage.stakerNonce),
       true,
       `Returned staker nonce ${returnedValues.stakerNonce_.toNumber(10)}`
-      + ` value is different from expected ${stakeMessage.stakerNonce.toNumber(10)} `,
+        + ` value is different from expected ${stakeMessage.stakerNonce.toNumber(
+          10,
+        )} `,
     );
     assert.strictEqual(
       returnedValues.amount_.eq(stakeRequest.stakeAmount),
       true,
       `Returned amount ${returnedValues.amount_.toNumber(10)}`
-      + ` value is different from expected ${stakeRequest.stakeAmount.toNumber(10)} `,
+        + ` value is different from expected ${stakeRequest.stakeAmount.toNumber(
+          10,
+        )} `,
     );
-
   });
 
-  it('should charge/transfer penalty', async function () {
+  it('should charge/transfer penalty', async () => {
+    const gatewayInitialBalance = await baseToken.balanceOf(gateway.address);
+    const stakerInitialBalance = await baseToken.balanceOf(
+      stakeMessage.staker,
+    );
 
-    let gatewayInitialBalance = await baseToken.balanceOf(gateway.address);
-    let stakerInitialBalance = await baseToken.balanceOf(stakeMessage.staker);
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
-    await gateway.revertStake(
-      stakeMessage.messageHash,
-      {from: stakeMessage.staker},
-    );
+    await gateway.revertStake(stakeMessage.messageHash, {
+      from: stakeMessage.staker,
+    });
 
-    let gatewayFinalBalance = await baseToken.balanceOf(gateway.address);
-    let stakerFinalBalance = await baseToken.balanceOf(stakeMessage.staker);
+    const gatewayFinalBalance = await baseToken.balanceOf(gateway.address);
+    const stakerFinalBalance = await baseToken.balanceOf(stakeMessage.staker);
 
     assert.strictEqual(
       gatewayFinalBalance.eq(gatewayInitialBalance.add(penalty)),
@@ -208,140 +221,130 @@ contract('EIP20Gateway.revertStake()', function (accounts) {
     );
   });
 
-  it('should fail for zero message hash', async function () {
+  it('should fail for zero message hash', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        Utils.ZERO_BYTES32,
-        {from: stakeMessage.staker},
-      ),
+      gateway.revertStake(Utils.ZERO_BYTES32, { from: stakeMessage.staker }),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail if revocation is already declared', async function () {
+  it('should fail if revocation is already declared', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
-    await gateway.revertStake(
-      stakeMessage.messageHash,
-      {from: stakeMessage.staker},
-    );
+    await gateway.revertStake(stakeMessage.messageHash, {
+      from: stakeMessage.staker,
+    });
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: stakeMessage.staker},
-      ),
-      'Message on source must be Declared.'
-    )
+      gateway.revertStake(stakeMessage.messageHash, {
+        from: stakeMessage.staker,
+      }),
+      'Message on source must be Declared.',
+    );
   });
 
-  it('should fail for undeclared message', async function () {
+  it('should fail for undeclared message', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Undeclared,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: stakeMessage.staker},
-      ),
-      'Message on source must be Declared.'
-    )
+      gateway.revertStake(stakeMessage.messageHash, {
+        from: stakeMessage.staker,
+      }),
+      'Message on source must be Declared.',
+    );
   });
 
-  it('should fail for progressed message', async function () {
+  it('should fail for progressed message', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Progressed,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: stakeMessage.staker},
-      ),
-      'Message on source must be Declared.'
-    )
+      gateway.revertStake(stakeMessage.messageHash, {
+        from: stakeMessage.staker,
+      }),
+      'Message on source must be Declared.',
+    );
   });
 
-  it('should fail for revoked message', async function () {
+  it('should fail for revoked message', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Revoked,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: stakeMessage.staker},
-      ),
-      'Message on source must be Declared.'
+      gateway.revertStake(stakeMessage.messageHash, {
+        from: stakeMessage.staker,
+      }),
+      'Message on source must be Declared.',
     );
   });
 
-  it('should fail for non staker account', async function () {
+  it('should fail for non staker account', async () => {
+    const penalty = new BN(150);
 
-    let penalty = new BN(150);
-
-    await baseToken.approve(gateway.address, penalty, {from: stakeMessage.staker});
+    await baseToken.approve(gateway.address, penalty, {
+      from: stakeMessage.staker,
+    });
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: accounts[10]},
-      ),
-      'Only staker can revert stake.'
+      gateway.revertStake(stakeMessage.messageHash, { from: accounts[10] }),
+      'Only staker can revert stake.',
     );
   });
 
-  it('should fail if gateway is not approved for penalty amount', async function () {
-
+  it('should fail if gateway is not approved for penalty amount', async () => {
     await gateway.setOutboxStatus(
       stakeMessage.messageHash,
       MessageStatusEnum.Declared,
     );
 
     await Utils.expectRevert(
-      gateway.revertStake(
-        stakeMessage.messageHash,
-        {from: stakeMessage.staker},
-      ),
-      'Underflow when subtracting.'
+      gateway.revertStake(stakeMessage.messageHash, {
+        from: stakeMessage.staker,
+      }),
+      'Underflow when subtracting.',
     );
-
   });
-
 });

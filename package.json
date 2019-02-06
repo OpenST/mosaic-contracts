@@ -42,7 +42,8 @@
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
     "prepare": "npm run compile-all && npm run build-package",
-    "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js"
+    "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
+    "lint": "eslint {migrations,test,test_integration,tools} -c .eslintrc.json --ext js"
   },
   "main": "dist/index.js",
   "files": [

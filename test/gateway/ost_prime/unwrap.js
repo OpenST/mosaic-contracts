@@ -18,29 +18,30 @@
 //
 // ----------------------------------------------------------------------------
 
-const OSTPrime = artifacts.require("TestOSTPrime")
-  , BN = require('bn.js');
+const OSTPrime = artifacts.require('TestOSTPrime');
+
+const BN = require('bn.js');
 
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-contract('OSTPrime.unwrap()', function (accounts) {
-
+contract('OSTPrime.unwrap()', (accounts) => {
   const DECIMAL = new BN(10);
   const POW = new BN(18);
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress, ostPrime, callerAddress, amount, organization;
+  let brandedTokenAddress;
+  let ostPrime;
+  let callerAddress;
+  let amount;
+  let organization;
 
-  async function initialize(){
-    await ostPrime.initialize(
-      {from: accounts[2], value:TOKENS_MAX}
-    );
-  };
+  async function initialize() {
+    await ostPrime.initialize({ from: accounts[2], value: TOKENS_MAX });
+  }
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     organization = accounts[0];
     brandedTokenAddress = accounts[2];
     ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
@@ -49,168 +50,156 @@ contract('OSTPrime.unwrap()', function (accounts) {
     amount = new BN(500);
 
     await ostPrime.setTokenBalance(callerAddress, amount);
-
   });
 
-  it('should fail when the amount is zero', async function () {
+  it('should fail when the amount is zero', async () => {
     await initialize();
 
-    let amount = 0;
+    const amount = 0;
     await Utils.expectRevert(
       ostPrime.unwrap(amount, { from: callerAddress }),
-      'Amount must not be zero.'
+      'Amount must not be zero.',
     );
-
   });
 
-  it('should fail when contract is not initialized', async function () {
-
+  it('should fail when contract is not initialized', async () => {
     await Utils.expectRevert(
       ostPrime.unwrap(amount, { from: callerAddress }),
-      'Contract is not initialized.'
+      'Contract is not initialized.',
     );
-
   });
 
-  it('should fail when amount is greater than the account balance',
-    async function () {
+  it('should fail when amount is greater than the account balance', async () => {
+    await initialize();
 
+    const amount = new BN(501);
+    await Utils.expectRevert(
+      ostPrime.unwrap(amount, { from: callerAddress }),
+      'Insufficient balance.',
+    );
+  });
+
+  it(
+    "should fail when the amount is greater than the contract's base "
+      + 'token balance',
+    async () => {
       await initialize();
 
-      let amount = new BN(501);
-      await Utils.expectRevert(
+      const amount = TOKENS_MAX.addn(1);
+      await ostPrime.setTokenBalance(callerAddress, amount);
+      await Utils.expectFailedAssert(
         ostPrime.unwrap(amount, { from: callerAddress }),
-        'Insufficient balance.'
+        'invalid opcode',
       );
+    },
+  );
 
-    });
-
-  it('should fail when the amount is greater than the contract\'s base ' +
-    'token balance', async function () {
-
+  it('should pass with correct parameters', async () => {
     await initialize();
 
-    let amount = TOKENS_MAX.addn(1);
-    await ostPrime.setTokenBalance(callerAddress, amount);
-    await Utils.expectFailedAssert(
-      ostPrime.unwrap(amount, { from: callerAddress }),
-      'invalid opcode',
-    );
+    const initialContractBalance = await Utils.getBalance(ostPrime.address);
 
-  });
-
-  it('should pass with correct parameters', async function () {
-    await initialize();
-
-    let initialContractBalance = await Utils.getBalance(ostPrime.address);
-
-    let initialCallerBalance = await Utils.getBalance(callerAddress);
+    const initialCallerBalance = await Utils.getBalance(callerAddress);
 
     amount = new BN(400);
 
-    let result = await ostPrime.unwrap.call(amount, { from: callerAddress });
-    assert.strictEqual(
-      result,
-      true,
-      `The contract should return true.`
+    const result = await ostPrime.unwrap.call(amount, {
+      from: callerAddress,
+    });
+    assert.strictEqual(result, true, 'The contract should return true.');
+
+    const tx = await ostPrime.unwrap(amount, { from: callerAddress });
+    const gasUsed = new BN(tx.receipt.gasUsed);
+
+    const callerEIP20Tokenbalance = await ostPrime.balanceOf.call(
+      callerAddress,
     );
-
-    let tx = await ostPrime.unwrap(amount, { from: callerAddress });
-    let gasUsed = new BN(tx.receipt.gasUsed);
-
-    let callerEIP20Tokenbalance = await ostPrime.balanceOf.call(callerAddress);
     assert.strictEqual(
       callerEIP20Tokenbalance.eqn(100),
       true,
-      `The balance of ${callerAddress} should be 100.`
+      `The balance of ${callerAddress} should be 100.`,
     );
 
-    let contractEIP20Tokenbalance = await ostPrime.balanceOf.call(ostPrime.address);
+    const contractEIP20Tokenbalance = await ostPrime.balanceOf.call(
+      ostPrime.address,
+    );
     assert.strictEqual(
       contractEIP20Tokenbalance.eq(amount),
       true,
-      `The balance of OST prime contract should increase by ${amount}.`
+      `The balance of OST prime contract should increase by ${amount}.`,
     );
 
-    let finalContractBalance = await Utils.getBalance(ostPrime.address);
-    
+    const finalContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let finalCallerBalance = await Utils.getBalance(callerAddress);
+    const finalCallerBalance = await Utils.getBalance(callerAddress);
 
     assert.strictEqual(
       finalContractBalance.eq(initialContractBalance.sub(amount)),
       true,
-      `Contract base token balance should decrease by ${amount}`
+      `Contract base token balance should decrease by ${amount}`,
     );
 
     assert.strictEqual(
       finalCallerBalance.eq(initialCallerBalance.add(amount).sub(gasUsed)),
       true,
-      `Caller's base token balance should change by ${amount.sub(gasUsed)}`
+      `Caller's base token balance should change by ${amount.sub(gasUsed)}`,
     );
-
   });
 
-  it('should emit transfer event', async function () {
+  it('should emit transfer event', async () => {
     await initialize();
 
-    let tx = await ostPrime.unwrap(amount, { from: callerAddress });
+    const tx = await ostPrime.unwrap(amount, { from: callerAddress });
 
-    let event = EventDecoder.getEvents(tx, ostPrime);
+    const event = EventDecoder.getEvents(tx, ostPrime);
 
-    assert.isDefined(
-      event.Transfer,
-      'Event `Transfer` must be emitted.',
-    );
+    assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
 
-    let eventData = event.Transfer;
+    const eventData = event.Transfer;
 
     assert.strictEqual(
       eventData._from,
       callerAddress,
-      `The _from address in the event should be equal to ${callerAddress}`
+      `The _from address in the event should be equal to ${callerAddress}`,
     );
 
     assert.strictEqual(
       eventData._to,
       ostPrime.address,
-      `The _to address in the event should be equal to ${ostPrime.address}`
+      `The _to address in the event should be equal to ${ostPrime.address}`,
     );
 
     assert.strictEqual(
       amount.eq(eventData._value),
       true,
-      `The _value in the event should be equal to ${amount}`
+      `The _value in the event should be equal to ${amount}`,
     );
-
   });
 
-  it('should emit token unwrapped event', async function () {
+  it('should emit token unwrapped event', async () => {
     await initialize();
 
-    let tx = await ostPrime.unwrap(amount, { from: callerAddress });
+    const tx = await ostPrime.unwrap(amount, { from: callerAddress });
 
-    let event = EventDecoder.getEvents(tx, ostPrime);
+    const event = EventDecoder.getEvents(tx, ostPrime);
 
     assert.isDefined(
       event.TokenUnwrapped,
       'Event `TokenUnwrapped` must be emitted.',
     );
 
-    let eventData = event.TokenUnwrapped;
+    const eventData = event.TokenUnwrapped;
 
     assert.strictEqual(
       eventData._account,
       callerAddress,
-      `The _account address in the event should be equal to ${callerAddress}`
+      `The _account address in the event should be equal to ${callerAddress}`,
     );
 
     assert.strictEqual(
       amount.eq(eventData._amount),
       true,
-      `The _amount in the event should be equal to ${amount}`
+      `The _amount in the event should be equal to ${amount}`,
     );
-
   });
-
 });

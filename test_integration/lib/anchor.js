@@ -26,7 +26,7 @@ const EventDecoder = require('../../test/test_lib/event_decoder');
  * This class represents anchor contract on a chain.
  */
 class Anchor {
-    /**
+  /**
      * Constructor
      * @param {Web3} sourceWeb3 Web3 of source chain for which this anchor
      *                          tracks state root.
@@ -36,13 +36,13 @@ class Anchor {
      *                 that is responsible for anchoring the state root on
      *                 target chain.
      */
-    constructor(sourceWeb3, anchor, organization) {
-        this.sourceWeb3 = sourceWeb3;
-        this.anchor = anchor;
-        this.organization = organization;
-    }
+  constructor(sourceWeb3, anchor, organization) {
+    this.sourceWeb3 = sourceWeb3;
+    this.anchor = anchor;
+    this.organization = organization;
+  }
 
-    /**
+  /**
      * This anchors stateroot at a given block height.
      * @param {number | string} atBlock Block at which state root needs to
      *                           anchor. Default
@@ -50,24 +50,24 @@ class Anchor {
      * @return {Promise<blockHeight>} Returns blockHeight at which state
      *                                root is anchored.
      */
-    async anchorStateRoot(atBlock = 'latest') {
-        const block = await this.sourceWeb3.eth.getBlock(atBlock);
-        const blockHeight = new BN(block.number);
-        const stateRoot = block.stateRoot;
-        const tx = await this.anchor.anchorStateRoot(
-            blockHeight,
-            stateRoot,
-            { from: this.organization },
-        );
+  async anchorStateRoot(atBlock = 'latest') {
+    const block = await this.sourceWeb3.eth.getBlock(atBlock);
+    const blockHeight = new BN(block.number);
+    const stateRoot = block.stateRoot;
+    const tx = await this.anchor.anchorStateRoot(
+      blockHeight,
+      stateRoot,
+      { from: this.organization },
+    );
 
-        const event = EventDecoder.getEvents(tx, this.anchor);
-        AnchorStateRootAssertion.verify(
-            event,
-            blockHeight,
-            stateRoot,
-        );
-        return block.number;
-    }
+    const event = EventDecoder.getEvents(tx, this.anchor);
+    AnchorStateRootAssertion.verify(
+      event,
+      blockHeight,
+      stateRoot,
+    );
+    return block.number;
+  }
 }
 
 module.exports = Anchor;

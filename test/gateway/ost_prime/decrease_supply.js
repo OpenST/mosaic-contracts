@@ -18,35 +18,33 @@
 //
 // ----------------------------------------------------------------------------
 
-const OSTPrime = artifacts.require("TestOSTPrime")
-  , BN = require('bn.js');
+const OSTPrime = artifacts.require('TestOSTPrime');
+
+const BN = require('bn.js');
 
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
+
 const NullAddress = Utils.NULL_ADDRESS;
 
-contract('OSTPrime.decreaseSupply()', function (accounts) {
-
+contract('OSTPrime.decreaseSupply()', (accounts) => {
   const DECIMAL = new BN(10);
   const POW = new BN(18);
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress,
-    ostPrime,
-    callerAddress,
-    amount,
-    organization,
-    coGatewayAddress;
+  let brandedTokenAddress;
+  let ostPrime;
+  let callerAddress;
+  let amount;
+  let organization;
+  let coGatewayAddress;
 
   async function initialize() {
-    await ostPrime.initialize(
-      {from: accounts[2], value: TOKENS_MAX}
-    );
-  };
+    await ostPrime.initialize({ from: accounts[2], value: TOKENS_MAX });
+  }
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     organization = accounts[0];
     brandedTokenAddress = accounts[2];
     ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
@@ -61,75 +59,64 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
     await ostPrime.setCoGatewayAddress(coGatewayAddress);
     await ostPrime.setTokenBalance(coGatewayAddress, amount);
     await ostPrime.setTotalSupply(amount);
-
   });
 
-  it('should fail when decrease supply amount is zero', async function () {
-
+  it('should fail when decrease supply amount is zero', async () => {
     await initialize();
 
     amount = new BN(0);
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
+      ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
       'Amount should be greater than zero.',
     );
-
   });
 
-  it('should fail when caller is not cogateway address', async function () {
-
+  it('should fail when caller is not cogateway address', async () => {
     await initialize();
 
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, {from: accounts[5]}),
+      ostPrime.decreaseSupply(amount, { from: accounts[5] }),
       'Only CoGateway can call the function.',
     );
-
   });
 
-  it('should fail when OST Prime contract is not initialized', async function () {
-
+  it('should fail when OST Prime contract is not initialized', async () => {
     await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
+      ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
       'Contract is not initialized.',
     );
-
   });
 
-  it('should fail when decrease supply amount is greater than the available' +
-    ' balance', async function () {
+  it(
+    'should fail when decrease supply amount is greater than the available'
+      + ' balance',
+    async () => {
+      await initialize();
 
-    await initialize();
+      amount = new BN(2000);
 
-    amount = new BN(2000);
+      await Utils.expectRevert(
+        ostPrime.decreaseSupply(amount, { from: coGatewayAddress }),
+        'Insufficient balance.',
+      );
+    },
+  );
 
-    await Utils.expectRevert(
-      ostPrime.decreaseSupply(amount, {from: coGatewayAddress}),
-      'Insufficient balance.',
-    );
-
-  });
-
-  it('should pass when called with valid params', async function () {
-
+  it('should pass when called with valid params', async () => {
     await initialize();
 
     amount = new BN(500);
 
-    let result = await ostPrime.decreaseSupply.call(
-      amount, {from: coGatewayAddress}
-    );
+    const result = await ostPrime.decreaseSupply.call(amount, {
+      from: coGatewayAddress,
+    });
 
-    assert.strictEqual(
-      result,
-      true,
-      'Contract should return true.',
-    );
+    assert.strictEqual(result, true, 'Contract should return true.');
 
-    await ostPrime.decreaseSupply(amount, {from: coGatewayAddress});
+    await ostPrime.decreaseSupply(amount, { from: coGatewayAddress });
 
-    let coGatewayBalance = await ostPrime.balanceOf.call(coGatewayAddress);
+    const coGatewayBalance = await ostPrime.balanceOf.call(coGatewayAddress);
 
     assert.strictEqual(
       coGatewayBalance.eqn(500),
@@ -137,32 +124,26 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
       'CoGateway address balance should be 500.',
     );
 
-    let totalSupply = await ostPrime.totalSupply();
+    const totalSupply = await ostPrime.totalSupply();
     assert.strictEqual(
       totalSupply.eqn(500),
       true,
       'Token total supply from contract must be equal to 500.',
     );
-
   });
 
-  it('should emit transfer event', async function () {
-
+  it('should emit transfer event', async () => {
     await initialize();
 
-    let tx = await ostPrime.decreaseSupply(
-      amount,
-      {from: coGatewayAddress}
-    );
+    const tx = await ostPrime.decreaseSupply(amount, {
+      from: coGatewayAddress,
+    });
 
-    let event = EventDecoder.getEvents(tx, ostPrime);
+    const event = EventDecoder.getEvents(tx, ostPrime);
 
-    assert.isDefined(
-      event.Transfer,
-      'Event `Transfer` must be emitted.',
-    );
+    assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
 
-    let eventData = event.Transfer;
+    const eventData = event.Transfer;
 
     assert.strictEqual(
       eventData._from,
@@ -181,7 +162,5 @@ contract('OSTPrime.decreaseSupply()', function (accounts) {
       true,
       `The _value amount in the event should be equal to ${amount}.`,
     );
-
   });
-
 });

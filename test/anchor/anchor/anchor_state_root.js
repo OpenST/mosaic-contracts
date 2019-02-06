@@ -19,31 +19,29 @@
 // ----------------------------------------------------------------------------
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
-const Anchor = artifacts.require("./Anchor.sol");
-const web3 = require('../../test_lib/web3.js');
+const Anchor = artifacts.require('./Anchor.sol');
 const BN = require('bn.js');
+const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const zeroBytes = Utils.ZERO_BYTES32;
-contract('Anchor.anchorStateRoot()', function (accounts) {
+contract('Anchor.anchorStateRoot()', (accounts) => {
+  let remoteChainId;
+  let blockHeight;
+  let stateRoot;
+  let maxNumberOfStateRoots;
+  let organization;
+  let anchor;
+  let owner;
+  let worker;
 
-  let remoteChainId,
-    blockHeight,
-    stateRoot,
-    maxNumberOfStateRoots,
-    organization,
-    anchor,
-    owner,
-    worker;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
-    stateRoot = web3.utils.sha3("dummy_state_root");
+    stateRoot = web3.utils.sha3('dummy_state_root');
     maxNumberOfStateRoots = new BN(10);
     organization = await MockOrganization.new(owner, worker);
 
@@ -55,81 +53,59 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       organization.address,
     );
 
-    stateRoot = web3.utils.sha3("dummy_state_root_1");
-
+    stateRoot = web3.utils.sha3('dummy_state_root_1');
   });
 
   it('should fail when state root is zero', async () => {
-
     stateRoot = zeroBytes;
     blockHeight = blockHeight.addn(1);
 
     await Utils.expectRevert(
-      anchor.anchorStateRoot(
-        blockHeight,
-        stateRoot,
-        { from: owner },
-      ),
+      anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner }),
       'State root must not be zero.',
     );
-
   });
 
-  it('should fail when block height is less than the latest anchored ' +
-    'state root\'s block height', async () => {
-
+  it(
+    'should fail when block height is less than the latest anchored '
+      + "state root's block height",
+    async () => {
       blockHeight = blockHeight.subn(1);
 
       await Utils.expectRevert(
-        anchor.anchorStateRoot(
-          blockHeight,
-          stateRoot,
-          { from: owner },
-        ),
+        anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner }),
         'Given block height is lower or equal to highest anchored state root block height.',
       );
+    },
+  );
 
-    });
-
-  it('should fail when block height is equal to the latest anchored ' +
-    'state root\'s block height', async () => {
-
+  it(
+    'should fail when block height is equal to the latest anchored '
+      + "state root's block height",
+    async () => {
       await Utils.expectRevert(
-        anchor.anchorStateRoot(
-          blockHeight,
-          stateRoot,
-          { from: owner },
-        ),
+        anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner }),
         'Given block height is lower or equal to highest anchored state root block height.',
       );
-
-    });
+    },
+  );
 
   it('should fail when caller is not owner address', async () => {
-
     blockHeight = blockHeight.addn(1);
-    let nonOwner = accounts[6];
+    const nonOwner = accounts[6];
 
     await Utils.expectRevert(
-      anchor.anchorStateRoot(
-        blockHeight,
-        stateRoot,
-        { from: nonOwner },
-      ),
+      anchor.anchorStateRoot(blockHeight, stateRoot, { from: nonOwner }),
       'Only the organization is allowed to call this method.',
     );
-
   });
 
   it('should pass with correct params', async () => {
-
     blockHeight = blockHeight.addn(1);
 
-    let result = await anchor.anchorStateRoot.call(
-      blockHeight,
-      stateRoot,
-      { from: owner },
-    );
+    const result = await anchor.anchorStateRoot.call(blockHeight, stateRoot, {
+      from: owner,
+    });
 
     assert.strictEqual(
       result,
@@ -137,59 +113,50 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       'Return value of anchorStateRoot must be true.',
     );
 
-    await anchor.anchorStateRoot(
-      blockHeight,
-      stateRoot,
-      { from: owner },
-    );
+    await anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner });
 
-    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    const latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
 
-    let latestStateRoot = await anchor.getStateRoot.call(blockHeight);
+    const latestStateRoot = await anchor.getStateRoot.call(blockHeight);
     assert.strictEqual(
       latestStateRoot,
       stateRoot,
       `Latest state root from the contract must be ${stateRoot}.`,
     );
-
   });
 
   it('should emit `StateRootAvailable` event', async () => {
-
     blockHeight = blockHeight.addn(1);
 
-    let tx = await anchor.anchorStateRoot(
-      blockHeight,
-      stateRoot,
-      { from: owner },
-    );
+    const tx = await anchor.anchorStateRoot(blockHeight, stateRoot, {
+      from: owner,
+    });
 
-    let event = EventDecoder.getEvents(tx, anchor);
+    const event = EventDecoder.getEvents(tx, anchor);
 
     assert.isDefined(
       event.StateRootAvailable,
       'Event `StateRootAvailable` must be emitted.',
     );
 
-    let eventData = event.StateRootAvailable;
+    const eventData = event.StateRootAvailable;
 
     assert.strictEqual(
       eventData._stateRoot,
       stateRoot,
-      `The _stateRoot value in the event should be equal to ${stateRoot}`
+      `The _stateRoot value in the event should be equal to ${stateRoot}`,
     );
 
     assert.strictEqual(
       blockHeight.eq(eventData._blockHeight),
       true,
-      `The _blockHeight in the event should be equal to ${blockHeight}`
+      `The _blockHeight in the event should be equal to ${blockHeight}`,
     );
-
   });
 
   it('should store only the given number of max store roots', async () => {
@@ -199,36 +166,30 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
      * roots has been exceeded, the old state roots should no longer be
      * available.
      */
-    let iterations = maxNumberOfStateRoots.muln(2).toNumber();
+    const iterations = maxNumberOfStateRoots.muln(2).toNumber();
     for (let i = 0; i < iterations; i++) {
       blockHeight = blockHeight.addn(1);
-      await anchor.anchorStateRoot(
-        blockHeight,
-        stateRoot,
-        { from: owner },
-      );
+      await anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner });
 
       // Check that the older state root has been deleted when i > max state roots.
       if (maxNumberOfStateRoots.ltn(i)) {
-        let prunedBlockHeight = blockHeight.sub(maxNumberOfStateRoots);
+        const prunedBlockHeight = blockHeight.sub(maxNumberOfStateRoots);
         let storedStateRoot = await anchor.getStateRoot.call(
           prunedBlockHeight,
         );
         assert.strictEqual(
           storedStateRoot,
           Utils.ZERO_BYTES32,
-          'There should not be any state root stored at a ' +
-          'pruned height. It should have been reset by now.',
+          'There should not be any state root stored at a '
+            + 'pruned height. It should have been reset by now.',
         );
 
         /*
          * The state root that is one block younger than the pruned
          * one should still be available.
          */
-        let existingBlockHeight = prunedBlockHeight.addn(1);
-        storedStateRoot = await anchor.getStateRoot.call(
-          existingBlockHeight,
-        );
+        const existingBlockHeight = prunedBlockHeight.addn(1);
+        storedStateRoot = await anchor.getStateRoot.call(existingBlockHeight);
         assert.strictEqual(
           storedStateRoot,
           stateRoot,
@@ -237,5 +198,4 @@ contract('Anchor.anchorStateRoot()', function (accounts) {
       }
     }
   });
-
 });

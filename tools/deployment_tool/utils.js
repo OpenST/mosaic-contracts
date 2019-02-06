@@ -18,7 +18,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require('bn.js');
 const colors = require('colors/safe');
 
 /**
@@ -30,30 +29,30 @@ const colors = require('colors/safe');
  *                 the transaction status.
  */
 const waitForTransactionReceiptMined = (web3, txHash, interval = 500) => {
-    const transactionReceiptAsync = (resolve, reject) => {
-        web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
-            if (error) {
-                reject(error);
-            } else if (receipt == null) {
-                setTimeout(
-                    () => transactionReceiptAsync(resolve, reject),
-                    interval,
-                );
-            } else {
-                resolve(receipt);
-            }
-        });
-    };
+  const transactionReceiptAsync = (resolve, reject) => {
+    web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
+      if (error) {
+        reject(error);
+      } else if (receipt == null) {
+        setTimeout(
+          () => transactionReceiptAsync(resolve, reject),
+          interval,
+        );
+      } else {
+        resolve(receipt);
+      }
+    });
+  };
 
-    if (Array.isArray(txHash)) {
-        return Promise.all(txHash.map(
-            oneTxHash => waitForTransactionReceiptMined(web3, oneTxHash, interval),
-        ));
-    }
-    if (typeof txHash === 'string') {
-        return new Promise(transactionReceiptAsync);
-    }
-    throw new Error('Invalid Type: ' + txHash);
+  if (Array.isArray(txHash)) {
+    return Promise.all(txHash.map(
+      oneTxHash => waitForTransactionReceiptMined(web3, oneTxHash, interval),
+    ));
+  }
+  if (typeof txHash === 'string') {
+    return new Promise(transactionReceiptAsync);
+  }
+  throw new Error(`Invalid Type: ${txHash}`);
 };
 
 /**
@@ -61,22 +60,22 @@ const waitForTransactionReceiptMined = (web3, txHash, interval = 500) => {
  * permanently unlocked in the web3 instance it points to.
  */
 class UnlockedWeb3Signer {
-    /**
-     * @param {object} web3 The web3 instance to use.
-     */
-    constructor(web3) {
-        this.web3 = web3;
+  /**
+   * @param {object} web3 The web3 instance to use.
+   */
+  constructor(web3) {
+    this.web3 = web3;
 
-        this.signTransaction = this.signTransaction.bind(this);
-    }
+    this.signTransaction = this.signTransaction.bind(this);
+  }
 
-    /**
-     * @param {object} transactionObject The transaction object to sign.
-     *                 See {@link https://web3js.readthedocs.io/en/1.0/web3-eth.html#sendtransaction}
-     */
-    signTransaction(transactionObject) {
-        return this.web3.eth.signTransaction(transactionObject);
-    }
+  /**
+   * @param {object} transactionObject The transaction object to sign.
+   *                 See {@link https://web3js.readthedocs.io/en/1.0/web3-eth.html#sendtransaction}
+   */
+  signTransaction(transactionObject) {
+    return this.web3.eth.signTransaction(transactionObject);
+  }
 }
 
 /**
@@ -92,28 +91,26 @@ class UnlockedWeb3Signer {
  * @returns {Promise.<string>} The address of the deployed contract.
  */
 const sendDeploymentTransaction = (
-    web3,
-    deploymentObject,
-    rawTransaction,
-    loggingActive,
-) => {
-    return web3.eth.sendSignedTransaction(rawTransaction)
-        .then((receipt) => {
-            if (loggingActive) {
-                console.log(colors.dim(`Deploying ${deploymentObject.contractName} (tx ${receipt.transactionHash})`));
-            }
-            return waitForTransactionReceiptMined(web3, receipt.transactionHash, 10);
-        })
-        .then((receipt) => {
-            if (loggingActive) {
-                console.log(colors.green(`Deployed ${colors.underline.green(deploymentObject.contractName)} at ${receipt.contractAddress}`));
-                if (receipt.contractAddress.toLowerCase() !== deploymentObject.address) {
-                    console.warn(`"${deploymentObject.contractName}" was not deployed at the predicted address ${deploymentObject.address})`);
-                }
-            }
-            return receipt.contractAddress.toLowerCase();
-        });
-};
+  web3,
+  deploymentObject,
+  rawTransaction,
+  loggingActive,
+) => web3.eth.sendSignedTransaction(rawTransaction)
+  .then((receipt) => {
+    if (loggingActive) {
+      console.log(colors.dim(`Deploying ${deploymentObject.contractName} (tx ${receipt.transactionHash})`));
+    }
+    return waitForTransactionReceiptMined(web3, receipt.transactionHash, 10);
+  })
+  .then((receipt) => {
+    if (loggingActive) {
+      console.log(colors.green(`Deployed ${colors.underline.green(deploymentObject.contractName)} at ${receipt.contractAddress}`));
+      if (receipt.contractAddress.toLowerCase() !== deploymentObject.address) {
+        console.warn(`"${deploymentObject.contractName}" was not deployed at the predicted address ${deploymentObject.address})`);
+      }
+    }
+    return receipt.contractAddress.toLowerCase();
+  });
 
 /**
  * Deploy the provided deployment objects, as provided by
@@ -130,57 +127,57 @@ const sendDeploymentTransaction = (
  *                 If omitted, it will be calculated via `web3.eth.getGasPrice`.
  */
 const deployContracts = async (
-    signer,
-    web3,
-    deploymentObjects,
-    options = {
-        log: false,
-    },
+  signer,
+  web3,
+  deploymentObjects,
+  options = {
+    log: false,
+  },
 ) => {
-    // allows us to run promises in sequence
-    const asyncForEach = async (array, callback) => {
-        for (let index = 0; index < array.length; index++) {
-            await callback(array[index], index, array);
-        }
-    };
+  // allows us to run promises in sequence
+  const asyncForEach = async (array, callback) => {
+    for (let index = 0; index < array.length; index += 1) {
+      await callback(array[index], index, array);
+    }
+  };
 
-    const _options = options;
-    const loggingActive = _options.log;
-    delete _options.log;
+  const _options = options;
+  const loggingActive = _options.log;
+  delete _options.log;
 
-    const contractAddresses = {};
-    await asyncForEach(deploymentObjects, async (deploymentObject) => {
-        let { gas, gasPrice } = _options;
-        if (!gas) {
-            gas = await web3.eth.estimateGas(deploymentObject.transactionObject);
-        }
-        if (!gasPrice) {
-            gasPrice = await web3.eth.getGasPrice();
-        }
+  const contractAddresses = {};
+  await asyncForEach(deploymentObjects, async (deploymentObject) => {
+    let { gas, gasPrice } = _options;
+    if (!gas) {
+      gas = await web3.eth.estimateGas(deploymentObject.transactionObject);
+    }
+    if (!gasPrice) {
+      gasPrice = await web3.eth.getGasPrice();
+    }
 
-        return signer.signTransaction(Object.assign(
-            deploymentObject.transactionObject,
-            _options,
-            {
-                gas,
-                gasPrice,
-            },
-        ))
-            .then(signedTransaction => sendDeploymentTransaction(
-                web3,
-                deploymentObject,
-                signedTransaction.raw,
-                loggingActive,
-            ))
-            .then((contractAddress) => {
-                contractAddresses[deploymentObject.contractName] = contractAddress;
-            });
-    });
+    return signer.signTransaction(Object.assign(
+      deploymentObject.transactionObject,
+      _options,
+      {
+        gas,
+        gasPrice,
+      },
+    ))
+      .then(signedTransaction => sendDeploymentTransaction(
+        web3,
+        deploymentObject,
+        signedTransaction.raw,
+        loggingActive,
+      ))
+      .then((contractAddress) => {
+        contractAddresses[deploymentObject.contractName] = contractAddress;
+      });
+  });
 
-    return contractAddresses;
+  return contractAddresses;
 };
 
 module.exports = {
-    deployContracts,
-    UnlockedWeb3Signer,
+  deployContracts,
+  UnlockedWeb3Signer,
 };

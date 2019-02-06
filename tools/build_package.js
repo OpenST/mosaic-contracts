@@ -36,49 +36,49 @@ const fs = require('fs');
 const path = require('path');
 
 const contractNames = [
-    'Anchor',
-    'CoGatewayUtilityTokenInterface',
-    'EIP20CoGateway',
-    'EIP20Gateway',
-    'EIP20Interface',
-    'EIP20Token',
-    'GatewayLib',
-    'MerklePatriciaProof',
-    'MessageBus',
-    'Organization',
-    'OrganizationInterface',
-    'Organized',
-    'OSTPrime',
-    'StateRootInterface',
-    'UtilityToken',
-    'UtilityTokenInterface',
+  'Anchor',
+  'CoGatewayUtilityTokenInterface',
+  'EIP20CoGateway',
+  'EIP20Gateway',
+  'EIP20Interface',
+  'EIP20Token',
+  'GatewayLib',
+  'MerklePatriciaProof',
+  'MessageBus',
+  'Organization',
+  'OrganizationInterface',
+  'Organized',
+  'OSTPrime',
+  'StateRootInterface',
+  'UtilityToken',
+  'UtilityTokenInterface',
 ];
 
 const contracts = {};
 
 contractNames.forEach((contract) => {
-    const contractPath = path.join(
-        __dirname,
-        `../build/contracts/${contract}.json`,
-    );
+  const contractPath = path.join(
+    __dirname,
+    `../build/contracts/${contract}.json`,
+  );
 
-    if (!fs.existsSync(contractPath)) {
-        throw new Error(
-            `Cannot read file ${contractPath}.`
+  if (!fs.existsSync(contractPath)) {
+    throw new Error(
+      `Cannot read file ${contractPath}.`
             + 'Truffle compile must be run before building the package.'
             + 'That should be done automatically when running `npm publish`.',
-        );
-    }
+    );
+  }
 
-    const contractFile = fs.readFileSync(contractPath);
-    const metaData = JSON.parse(contractFile);
+  const contractFile = fs.readFileSync(contractPath);
+  const metaData = JSON.parse(contractFile);
 
-    contracts[contract] = {};
-    contracts[contract].abi = metaData.abi;
+  contracts[contract] = {};
+  contracts[contract].abi = metaData.abi;
 
-    if (metaData.bytecode !== '0x') {
-        contracts[contract].bin = metaData.bytecode;
-    }
+  if (metaData.bytecode !== '0x') {
+    contracts[contract].bin = metaData.bytecode;
+  }
 });
 
 fs.writeFileSync('dist/contracts.json', JSON.stringify(contracts));

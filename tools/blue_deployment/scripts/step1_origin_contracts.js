@@ -19,25 +19,24 @@
 // ----------------------------------------------------------------------------
 
 const Web3 = require('web3');
-const inquirer = require('inquirer');
 const colors = require('colors/safe');
 
 const {
-    inquireDeployerAddressAuxiliary,
-    inquireDeployerAddressOrigin,
-    inquireEIP20TokenAddress,
-    inquireEIP20BaseTokenAddress,
-    inquireRpcEndpointAuxiliary,
-    inquireRpcEndpointOrigin,
+  inquireDeployerAddressAuxiliary,
+  inquireDeployerAddressOrigin,
+  inquireEIP20TokenAddress,
+  inquireEIP20BaseTokenAddress,
+  inquireRpcEndpointAuxiliary,
+  inquireRpcEndpointOrigin,
 } = require('../cli/prompts');
 const {
-    checkAddressForCode,
+  checkAddressForCode,
 } = require('../cli/checks');
 const {
-    deployAuxiliary,
-    deployOrigin,
-    deployedToken,
-    getChainInfo,
+  deployAuxiliary,
+  deployOrigin,
+  deployedToken,
+  getChainInfo,
 } = require('../index');
 
 /**
@@ -46,67 +45,67 @@ const {
  * @param {string} text The text message to use.
  */
 const printSign = (text) => {
-    const mainLine = '===== ' + text + ' =====';
-    const delimiter = '='.repeat(mainLine.length);
+  const mainLine = `===== ${text} =====`;
+  const delimiter = '='.repeat(mainLine.length);
 
-    console.log();
-    console.log(colors.yellow(delimiter));
-    console.log(colors.yellow(mainLine));
-    console.log(colors.yellow(delimiter));
-    console.log();
+  console.log();
+  console.log(colors.yellow(delimiter));
+  console.log(colors.yellow(mainLine));
+  console.log(colors.yellow(delimiter));
+  console.log();
 };
 
 const main = async () => {
-    printSign('QUESTIONS ORIGIN');
-    const rpcEndpointOrigin = await inquireRpcEndpointOrigin();
-    const web3Origin = new Web3(rpcEndpointOrigin);
-    const deployerAddressOrigin = await inquireDeployerAddressOrigin(web3Origin);
+  printSign('QUESTIONS ORIGIN');
+  const rpcEndpointOrigin = await inquireRpcEndpointOrigin();
+  const web3Origin = new Web3(rpcEndpointOrigin);
+  const deployerAddressOrigin = await inquireDeployerAddressOrigin(web3Origin);
 
-    let tokenAddressOrigin = await inquireEIP20TokenAddress(web3Origin);
-    tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin, { log: true });
-    checkAddressForCode(web3Origin, tokenAddressOrigin);
+  let tokenAddressOrigin = await inquireEIP20TokenAddress(web3Origin);
+  tokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, tokenAddressOrigin, { log: true });
+  checkAddressForCode(web3Origin, tokenAddressOrigin);
 
-    let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress();
-    baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin, { log: true });
-    checkAddressForCode(web3Origin, baseTokenAddressOrigin);
+  let baseTokenAddressOrigin = await inquireEIP20BaseTokenAddress();
+  baseTokenAddressOrigin = await deployedToken(web3Origin, deployerAddressOrigin, baseTokenAddressOrigin, { log: true });
+  checkAddressForCode(web3Origin, baseTokenAddressOrigin);
 
-    printSign('QUESTIONS AUXILIARY');
-    const rpcEndpointAuxiliary = await inquireRpcEndpointAuxiliary();
-    const web3Auxiliary = new Web3(rpcEndpointAuxiliary);
-    const deployerAddressAuxiliary = await inquireDeployerAddressAuxiliary(web3Auxiliary);
+  printSign('QUESTIONS AUXILIARY');
+  const rpcEndpointAuxiliary = await inquireRpcEndpointAuxiliary();
+  const web3Auxiliary = new Web3(rpcEndpointAuxiliary);
+  const deployerAddressAuxiliary = await inquireDeployerAddressAuxiliary(web3Auxiliary);
 
-    const bountyOrigin = '100'; // FIXME #623; inquire bounty
-    const bountyAuxiliary = '100'; // FIXME #623; inquire bounty
+  const bountyOrigin = '100'; // FIXME #623; inquire bounty
+  const bountyAuxiliary = '100'; // FIXME #623; inquire bounty
 
-    const originInfo = await getChainInfo(web3Origin);
-    const auxiliaryInfo = await getChainInfo(web3Auxiliary);
+  const originInfo = await getChainInfo(web3Origin);
+  const auxiliaryInfo = await getChainInfo(web3Auxiliary);
 
-    printSign('DEPLOYING ORIGIN');
-    const originAddresses = await deployOrigin(
-        web3Origin,
-        deployerAddressOrigin,
-        tokenAddressOrigin,
-        baseTokenAddressOrigin,
-        bountyOrigin,
-        auxiliaryInfo.chainId,
-        auxiliaryInfo.blockHeight,
-        auxiliaryInfo.stateRoot,
-        { log: true },
-    );
+  printSign('DEPLOYING ORIGIN');
+  const originAddresses = await deployOrigin(
+    web3Origin,
+    deployerAddressOrigin,
+    tokenAddressOrigin,
+    baseTokenAddressOrigin,
+    bountyOrigin,
+    auxiliaryInfo.chainId,
+    auxiliaryInfo.blockHeight,
+    auxiliaryInfo.stateRoot,
+    { log: true },
+  );
 
-    printSign('DEPLOYING AUXILIARY');
-    const gatewayAddressOrigin = originAddresses.EIP20Gateway;
-    const _auxiliaryAddresses = await deployAuxiliary(
-        web3Auxiliary,
-        deployerAddressAuxiliary,
-        tokenAddressOrigin,
-        gatewayAddressOrigin,
-        bountyAuxiliary,
-        originInfo.chainId,
-        originInfo.blockHeight,
-        originInfo.stateRoot,
-        { log: true },
-    );
+  printSign('DEPLOYING AUXILIARY');
+  const gatewayAddressOrigin = originAddresses.EIP20Gateway;
+  await deployAuxiliary(
+    web3Auxiliary,
+    deployerAddressAuxiliary,
+    tokenAddressOrigin,
+    gatewayAddressOrigin,
+    bountyAuxiliary,
+    originInfo.chainId,
+    originInfo.blockHeight,
+    originInfo.stateRoot,
+    { log: true },
+  );
 };
 
 main();

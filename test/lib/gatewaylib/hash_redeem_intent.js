@@ -20,25 +20,23 @@
 
 const GatewayLib = artifacts.require('GatewayLib');
 
-const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
 const BN = require('bn.js');
+const Utils = require('../../gateway/eip20_cogateway/helpers/co_gateway_utils');
 
 contract('GatewayLib.hashRedeemIntent()', async (accounts) => {
+  it('should return correct redeem intent hash', async () => {
+    const gatewayLib = await GatewayLib.deployed();
+    const amount = new BN(1);
+    const beneficiary = accounts[0];
+    const gateway = accounts[1];
 
-  it('should return correct redeem intent hash', async function () {
-
-    let gatewayLib = await GatewayLib.deployed();
-    let amount = new BN(1);
-    let beneficiary = accounts[0];
-    let gateway = accounts[1];
-
-    let redeemIntentHash = await gatewayLib.hashRedeemIntent(
+    const redeemIntentHash = await gatewayLib.hashRedeemIntent(
       amount,
       beneficiary,
       gateway,
     );
 
-    let expectedRedeemIntentHash = Utils.hashRedeemIntent(
+    const expectedRedeemIntentHash = Utils.hashRedeemIntent(
       amount,
       beneficiary,
       gateway,
@@ -47,9 +45,7 @@ contract('GatewayLib.hashRedeemIntent()', async (accounts) => {
     assert.strictEqual(
       expectedRedeemIntentHash,
       redeemIntentHash,
-      "The library did not hash the redeem intent as expected.",
+      'The library did not hash the redeem intent as expected.',
     );
-
   });
-
 });

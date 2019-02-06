@@ -54,53 +54,53 @@ const assert = require('assert');
  * Class to assert event and balances after progress stake
  */
 class ProgressStakeAssertion {
-    /** Constructor
+  /** Constructor
      * @param {Object} gateway Truffle gateway instance.
      * @param {Object} token Truffle token instance.
      * @param {Object} baseToken Truffle baseToken instance.
      */
-    constructor(gateway, token, baseToken) {
-        this.gateway = gateway;
-        this.token = token;
-        this.baseToken = baseToken;
-    }
+  constructor(gateway, token, baseToken) {
+    this.gateway = gateway;
+    this.token = token;
+    this.baseToken = baseToken;
+  }
 
-    /**
+  /**
      * This verifies event and balances of staker, gateway and stakeVault.
      * @param {Object} event Event object after decoding.
      * @param  {StakeRequest} stakeRequest Stake request parameters.
      * @param {Balances} initialBalances Initial baseToken and token
      *                                   balances before progress stake.
      */
-    async verify(event, stakeRequest, initialBalances) {
-        await this._assertBalancesForStake(stakeRequest, initialBalances);
+  async verify(event, stakeRequest, initialBalances) {
+    await this._assertBalancesForStake(stakeRequest, initialBalances);
 
-        ProgressStakeAssertion._assertProgressStakeEvent(event, stakeRequest);
-    }
+    ProgressStakeAssertion._assertProgressStakeEvent(event, stakeRequest);
+  }
 
-    /**
+  /**
      * This captures base token and token balance of gateway, staker and
      * stakeVault.
      * @param {string} staker Address of staker.
      * @return {Promise<{Balances}>} Base token and token balances.
      */
-    async captureBalances(staker) {
-        const stakeVault = await this.gateway.stakeVault();
-        return {
-            baseToken: {
-                gateway: await this.baseToken.balanceOf(this.gateway.address),
-                staker: await this.baseToken.balanceOf(staker),
-                stakeVault: await this.baseToken.balanceOf(stakeVault),
-            },
-            token: {
-                gateway: await this.token.balanceOf(this.gateway.address),
-                staker: await this.token.balanceOf(staker),
-                stakeVault: await this.token.balanceOf(stakeVault),
-            },
-        };
-    }
+  async captureBalances(staker) {
+    const stakeVault = await this.gateway.stakeVault();
+    return {
+      baseToken: {
+        gateway: await this.baseToken.balanceOf(this.gateway.address),
+        staker: await this.baseToken.balanceOf(staker),
+        stakeVault: await this.baseToken.balanceOf(stakeVault),
+      },
+      token: {
+        gateway: await this.token.balanceOf(this.gateway.address),
+        staker: await this.token.balanceOf(staker),
+        stakeVault: await this.token.balanceOf(stakeVault),
+      },
+    };
+  }
 
-    /**
+  /**
      * This asserts balances of staker, gateway and stakeVault  after
      * progress stake.
      * @param {StakeRequest} stakeRequest Stake request parameters.
@@ -108,115 +108,115 @@ class ProgressStakeAssertion {
      *                                   stake vault.
      * @private
      */
-    async _assertBalancesForStake(stakeRequest, initialBalances) {
-        const finalBalances = await this.captureBalances(stakeRequest.staker);
+  async _assertBalancesForStake(stakeRequest, initialBalances) {
+    const finalBalances = await this.captureBalances(stakeRequest.staker);
 
-        // Assert gateway balance
-        const expectedGatewayBaseTokenBalance = initialBalances.baseToken.gateway
-            .sub(stakeRequest.bounty);
+    // Assert gateway balance
+    const expectedGatewayBaseTokenBalance = initialBalances.baseToken.gateway
+      .sub(stakeRequest.bounty);
 
-        // Assert bounty is transferred to gateway.
-        assert.strictEqual(
-            expectedGatewayBaseTokenBalance.eq(finalBalances.baseToken.gateway),
-            true,
-            `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+    // Assert bounty is transferred to gateway.
+    assert.strictEqual(
+      expectedGatewayBaseTokenBalance.eq(finalBalances.baseToken.gateway),
+      true,
+      `Gateway base token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.baseToken.gateway.toString(10)}`,
-        );
+    );
 
-        const expectedGatewayTokenBalance = initialBalances.token.gateway
-            .sub(stakeRequest.amount);
+    const expectedGatewayTokenBalance = initialBalances.token.gateway
+      .sub(stakeRequest.amount);
 
-        // Assert stake amount is transferred to gateway.
-        assert.strictEqual(
-            expectedGatewayTokenBalance.eq(finalBalances.token.gateway),
-            true,
-            `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
+    // Assert stake amount is transferred to gateway.
+    assert.strictEqual(
+      expectedGatewayTokenBalance.eq(finalBalances.token.gateway),
+      true,
+      `Gateway token balance must be ${expectedGatewayBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.token.gateway.toString(10)}`,
-        );
+    );
 
-        // Assert staker balance
-        const expectedStakerBaseTokenBalance = initialBalances.baseToken.staker
-            .add(stakeRequest.bounty);
+    // Assert staker balance
+    const expectedStakerBaseTokenBalance = initialBalances.baseToken.staker
+      .add(stakeRequest.bounty);
 
-        // Assert bounty is transferred to gateway.
-        assert.strictEqual(
-            expectedStakerBaseTokenBalance.eq(finalBalances.baseToken.staker),
-            true,
-            `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}`
+    // Assert bounty is transferred to gateway.
+    assert.strictEqual(
+      expectedStakerBaseTokenBalance.eq(finalBalances.baseToken.staker),
+      true,
+      `Staker base token balance must be ${expectedStakerBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.baseToken.staker.toString(10)}`,
-        );
+    );
 
-        const expectedStakerTokenBalance = initialBalances.token.staker;
+    const expectedStakerTokenBalance = initialBalances.token.staker;
 
-        // Assert stake amount is transferred from staker.
-        assert.strictEqual(
-            expectedStakerTokenBalance.eq(finalBalances.token.staker),
-            true,
-            `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}`
+    // Assert stake amount is transferred from staker.
+    assert.strictEqual(
+      expectedStakerTokenBalance.eq(finalBalances.token.staker),
+      true,
+      `Staker token balance must be ${expectedStakerTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.token.staker.toString(10)}`,
-        );
+    );
 
-        // Assert stake valult balance.
-        const expectedStakeVaultTokenBalance = initialBalances.token.stakeVault
-            .add(stakeRequest.amount);
+    // Assert stake valult balance.
+    const expectedStakeVaultTokenBalance = initialBalances.token.stakeVault
+      .add(stakeRequest.amount);
 
-        assert.strictEqual(
-            expectedStakeVaultTokenBalance.eq(finalBalances.token.stakeVault),
-            true,
-            `Stake value token balance must be ${expectedStakeVaultTokenBalance} instead`
+    assert.strictEqual(
+      expectedStakeVaultTokenBalance.eq(finalBalances.token.stakeVault),
+      true,
+      `Stake value token balance must be ${expectedStakeVaultTokenBalance} instead`
           + ` of ${finalBalances.token.stakeVault}`,
-        );
+    );
 
-        const expectedStakeVaultBaseTokenBalance = initialBalances.baseToken.stakeVault;
+    const expectedStakeVaultBaseTokenBalance = initialBalances.baseToken.stakeVault;
 
-        assert.strictEqual(
-            expectedStakeVaultBaseTokenBalance.eq(finalBalances.baseToken.stakeVault),
-            true,
-            `Stake vault base token balance must be ${expectedStakeVaultTokenBalance} instead`
+    assert.strictEqual(
+      expectedStakeVaultBaseTokenBalance.eq(finalBalances.baseToken.stakeVault),
+      true,
+      `Stake vault base token balance must be ${expectedStakeVaultTokenBalance} instead`
           + ` of ${finalBalances.baseToken.stakeVault}`,
-        );
-    }
+    );
+  }
 
-    /**
+  /**
      * This assert event after stake method.
      * @param {Object} event Object representing stake progressed event.
      * @param {StakeRequest} stakeRequest Stake request parameters.
      * @private
      */
-    static _assertProgressStakeEvent(event, stakeRequest) {
-        const eventData = event.StakeProgressed;
+  static _assertProgressStakeEvent(event, stakeRequest) {
+    const eventData = event.StakeProgressed;
 
-        assert.strictEqual(
-            eventData._messageHash,
-            stakeRequest.messageHash,
-            'Message hash must match.',
-        );
-        assert.strictEqual(
-            eventData._staker,
-            stakeRequest.staker,
-            'Staker address must match.',
-        );
-        assert.strictEqual(
-            eventData._stakerNonce.eq(stakeRequest.nonce),
-            true,
-            'Staker nonce must match.',
-        );
-        assert.strictEqual(
-            eventData._amount.eq(stakeRequest.amount),
-            true,
-            'Stake amount must match.',
-        );
-        assert.strictEqual(
-            eventData._proofProgress,
-            false,
-            'Proof progress flag should be false.',
-        );
-        assert.strictEqual(
-            eventData._unlockSecret,
-            stakeRequest.unlockSecret,
-            'Unlock secret must match.',
-        );
-    }
+    assert.strictEqual(
+      eventData._messageHash,
+      stakeRequest.messageHash,
+      'Message hash must match.',
+    );
+    assert.strictEqual(
+      eventData._staker,
+      stakeRequest.staker,
+      'Staker address must match.',
+    );
+    assert.strictEqual(
+      eventData._stakerNonce.eq(stakeRequest.nonce),
+      true,
+      'Staker nonce must match.',
+    );
+    assert.strictEqual(
+      eventData._amount.eq(stakeRequest.amount),
+      true,
+      'Stake amount must match.',
+    );
+    assert.strictEqual(
+      eventData._proofProgress,
+      false,
+      'Proof progress flag should be false.',
+    );
+    assert.strictEqual(
+      eventData._unlockSecret,
+      stakeRequest.unlockSecret,
+      'Unlock secret must match.',
+    );
+  }
 }
 
 module.exports = ProgressStakeAssertion;

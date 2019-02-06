@@ -18,30 +18,31 @@
 //
 // ----------------------------------------------------------------------------
 
-const GatewayBase = artifacts.require('./GatewayBase.sol')
-  , BN = require('bn.js');
+const GatewayBase = artifacts.require('./GatewayBase.sol');
+
+const BN = require('bn.js');
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
-contract('GatewayBase.sol', function (accounts) {
-
+contract('GatewayBase.sol', (accounts) => {
   describe('Construction', async () => {
+    let dummyStateRootProvider;
+    let bounty;
+    let worker;
+    let organization;
+    let gatewayBaseInstance;
 
-    let dummyStateRootProvider, bounty, worker, organization;
+    beforeEach(async () => {
+      [organization, worker, dummyStateRootProvider] = accounts;
 
-    beforeEach(async function () {
+      bounty = new BN(100);
 
-      owner = accounts[2]
-        , worker = accounts[3]
-        , dummyStateRootProvider = accounts[0]
-        , bounty = new BN(100);
-
-      organization = await MockOrganization.new(owner, worker);
+      organization = await MockOrganization.new(organization, worker);
     });
 
-    it('should pass with right set of parameters', async function () {
+    it('should pass with right set of parameters', async () => {
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProvider,
         bounty,
@@ -51,13 +52,12 @@ contract('GatewayBase.sol', function (accounts) {
       assert.strictEqual(
         dummyStateRootProvider,
         await gatewayBaseInstance.stateRootProvider.call(),
-        "State root provider contract address doesn't match."
+        "State root provider contract address doesn't match.",
       );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
 
-    it('should pass with right set of parameters and zero bounty', async function () {
-
+    it('should pass with right set of parameters and zero bounty', async () => {
       bounty = new BN(0);
 
       gatewayBaseInstance = await GatewayBase.new(
@@ -66,27 +66,26 @@ contract('GatewayBase.sol', function (accounts) {
         organization.address,
       );
 
-      assert.equal(dummyStateRootProvider, await gatewayBaseInstance.stateRootProvider.call());
+      assert.equal(
+        dummyStateRootProvider,
+        await gatewayBaseInstance.stateRootProvider.call(),
+      );
       assert((await gatewayBaseInstance.bounty.call()).eq(bounty));
     });
 
-    it('should fail if state root provider contract address is zero', async function () {
-
-      let stateRootProvider = NullAddress;
+    it('should fail if state root provider contract address is zero', async () => {
+      const stateRootProvider = NullAddress;
       await Utils.expectRevert(
         GatewayBase.new(stateRootProvider, bounty, organization.address),
-        "State root provider contract address must not be zero."
+        'State root provider contract address must not be zero.',
       );
-
     });
 
-    it('should fail if worker manager address is not passed', async function () {
-
+    it('should fail if worker manager address is not passed', async () => {
       await Utils.expectRevert(
         GatewayBase.new(dummyStateRootProvider, bounty, NullAddress),
-        "Organization contract address must not be zero."
+        'Organization contract address must not be zero.',
       );
-
     });
   });
 });

@@ -26,17 +26,16 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Organization = artifacts.require('Organization');
 
 contract('Organization.setWorker()', async (accounts) => {
-
-  let owner = accounts[0];
-  let admin = accounts[1];
-  let worker = accounts[2];
-  let expirationHeightDelta = 10;
+  const owner = accounts[0];
+  const admin = accounts[1];
+  const worker = accounts[2];
+  const expirationHeightDelta = 10;
 
   let organization = null;
   let expirationHeight = 0;
 
-  beforeEach(async function () {
-    let workers = [];
+  beforeEach(async () => {
+    const workers = [];
 
     organization = await Organization.new(
       owner,
@@ -45,37 +44,27 @@ contract('Organization.setWorker()', async (accounts) => {
       expirationHeight,
     );
 
-    let currentBlockNumber = await web3.eth.getBlockNumber();
+    const currentBlockNumber = await web3.eth.getBlockNumber();
     expirationHeight = currentBlockNumber + expirationHeightDelta;
   });
 
   it('reverts when caller is not owner/admin', async () => {
-
     await Utils.expectRevert(
-      organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: accounts[3] },
-      ),
+      organization.setWorker(worker, expirationHeight, { from: accounts[3] }),
       'Only owner and admin are allowed to call this method.',
     );
   });
 
   it('reverts when worker address is null', async () => {
-
     await Utils.expectRevert(
-      organization.setWorker(
-        Utils.NULL_ADDRESS,
-        expirationHeight,
-        { from: owner },
-      ),
+      organization.setWorker(Utils.NULL_ADDRESS, expirationHeight, {
+        from: owner,
+      }),
       'Worker address cannot be null.',
     );
-
   });
 
   it('reverts when expiration height is expired', async () => {
-
     const blockNumber = await web3.eth.getBlockNumber();
     expirationHeight = blockNumber + expirationHeightDelta;
     for (let i = 0; i < expirationHeightDelta; i++) {
@@ -84,60 +73,40 @@ contract('Organization.setWorker()', async (accounts) => {
 
     // Checking that worker key has expired.
     assert.strictEqual(
-      (await organization.isWorker.call(worker)),
+      await organization.isWorker.call(worker),
       false,
       'The worker was expected to be expired.',
     );
     await Utils.expectRevert(
-      organization.setWorker(
-        worker,
-        expirationHeight,
-        { from: owner },
-      ),
+      organization.setWorker(worker, expirationHeight, { from: owner }),
       'Expiration height must be in the future.',
     );
-
   });
 
   it('should pass when owner adds a worker with valid expiration height', async () => {
-
-    await organization.setWorker(
-      worker,
-      expirationHeight,
-      { from: owner },
-    );
+    await organization.setWorker(worker, expirationHeight, { from: owner });
     assert(
       (await organization.workers.call(worker)).eqn(expirationHeight),
       'The recorded expiration height should equal the given one.',
     );
-
   });
 
   it('should pass when admin adds a worker with valid expiration height', async () => {
-    await organization.setWorker(
-      worker,
-      expirationHeight,
-      { from: admin },
-    );
+    await organization.setWorker(worker, expirationHeight, { from: admin });
     assert(
       (await organization.workers.call(worker)).eqn(expirationHeight),
       'The recorded expiration height should equal the given one.',
     );
-
   });
 
   it('verifies emitting of WorkerSet event', async () => {
-
     const transaction = await organization.setWorker(
       worker,
       expirationHeight,
       { from: owner },
     );
 
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.WorkerSet.worker,
@@ -148,7 +117,5 @@ contract('Organization.setWorker()', async (accounts) => {
       events.WorkerSet.expirationHeight.eqn(expirationHeight),
       'Event must emit correct expiration height.',
     );
-
   });
-
 });

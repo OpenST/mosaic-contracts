@@ -18,30 +18,31 @@
 //
 // ----------------------------------------------------------------------------
 
-const OSTPrime = artifacts.require("TestOSTPrime")
-  , BN = require('bn.js');
+const OSTPrime = artifacts.require('TestOSTPrime');
+
+const BN = require('bn.js');
 
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../../test/test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-contract('OSTPrime.wrap()', function (accounts) {
-
+contract('OSTPrime.wrap()', (accounts) => {
   const DECIMAL = new BN(10);
   const POW = new BN(18);
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress, ostPrime, callerAddress, amount, organization;
+  let brandedTokenAddress;
+  let ostPrime;
+  let callerAddress;
+  let amount;
+  let organization;
 
-  async function initialize(){
-    await ostPrime.initialize(
-      {from: accounts[5], value: TOKENS_MAX}
-    );
-  };
+  async function initialize() {
+    await ostPrime.initialize({ from: accounts[5], value: TOKENS_MAX });
+  }
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     organization = accounts[0];
     brandedTokenAddress = accounts[2];
     ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
@@ -50,104 +51,100 @@ contract('OSTPrime.wrap()', function (accounts) {
     amount = new BN(500);
 
     await ostPrime.setTokenBalance(ostPrime.address, amount);
-
   });
 
-  it('should fail when the payable amount is zero', async function () {
-
+  it('should fail when the payable amount is zero', async () => {
     await initialize();
 
-    let amount = 0;
+    const amount = 0;
     await Utils.expectRevert(
-      ostPrime.wrap({from: callerAddress, value: amount }),
+      ostPrime.wrap({ from: callerAddress, value: amount }),
       'Payable amount should not be zero.',
     );
-
   });
 
-  it('should fail when the contract is not initialized', async function () {
-
+  it('should fail when the contract is not initialized', async () => {
     await Utils.expectRevert(
-      ostPrime.wrap({from: callerAddress, value: amount }),
+      ostPrime.wrap({ from: callerAddress, value: amount }),
       'Contract is not initialized.',
     );
-
   });
 
-  it('should fail when the payable amount sent is less than the available ' +
-    'balance', async function () {
+  it(
+    'should fail when the payable amount sent is less than the available '
+      + 'balance',
+    async () => {
+      await initialize();
 
-    await initialize();
+      /*
+       * Create a new account for this testing. This will just contain the
+       * sufficient amount of gas that is required for this testing. We are not
+       * using the existing account as it is used by other test cases. There will
+       * an overhead to manage the gas for the account if used.
+       */
+      const newAccount = await web3.eth.personal.newAccount('password');
+      await web3.eth.personal.unlockAccount(newAccount, 'password', 15000);
 
-    /*
-     * Create a new account for this testing. This will just contain the
-     * sufficient amount of gas that is required for this testing. We are not
-     * using the existing account as it is used by other test cases. There will
-     * an overhead to manage the gas for the account if used.
-     */
-    let newAccount = await web3.eth.personal.newAccount("password");
-    await web3.eth.personal.unlockAccount(newAccount, "password",15000);
+      await web3.eth.sendTransaction({
+        to: newAccount,
+        from: accounts[0],
+        value: new BN(12000000),
+      });
 
-    await web3.eth.sendTransaction(
-        {to:newAccount, from:accounts[0], value: new BN(12000000)}
+      await Utils.expectFailedAssert(
+        ostPrime.wrap({ from: newAccount, value: new BN(120005000) }),
+        "sender doesn't have enough funds to send tx",
       );
+    },
+  );
 
-    await Utils.expectFailedAssert(
-      ostPrime.wrap({from: newAccount, value: new BN(120005000) }),
-      'sender doesn\'t have enough funds to send tx',
-    );
-
-  });
-
-  it('should fail when OST Prime balance is insufficient', async function () {
-
+  it('should fail when OST Prime balance is insufficient', async () => {
     await initialize();
 
     await Utils.expectFailedAssert(
-      ostPrime.wrap({from: callerAddress, value: new BN(1000) }),
-      "invalid opcode",
+      ostPrime.wrap({ from: callerAddress, value: new BN(1000) }),
+      'invalid opcode',
     );
-
   });
 
-  it('should pass with correct parameters ', async function () {
-
+  it('should pass with correct parameters ', async () => {
     await initialize();
 
-    let initialContractBalance = await Utils.getBalance(ostPrime.address);
+    const initialContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let initialCallerBalance = await Utils.getBalance(callerAddress);
+    const initialCallerBalance = await Utils.getBalance(callerAddress);
 
-    let result = await ostPrime.wrap.call(
-      {from: callerAddress, value: amount}
+    const result = await ostPrime.wrap.call({
+      from: callerAddress,
+      value: amount,
+    });
+
+    assert.strictEqual(result, true, 'The contract should return true.');
+
+    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
+    const gasUsed = new BN(tx.receipt.gasUsed);
+
+    const callerEIP20Tokenbalance = await ostPrime.balanceOf.call(
+      callerAddress,
     );
-
-    assert.strictEqual(
-      result,
-      true,
-      `The contract should return true.`,
-    );
-
-    let tx = await ostPrime.wrap({from: callerAddress, value: amount});
-    let gasUsed = new BN(tx.receipt.gasUsed);
-
-    let callerEIP20Tokenbalance = await ostPrime.balanceOf.call(callerAddress);
     assert.strictEqual(
       callerEIP20Tokenbalance.eq(amount),
       true,
       `The balance of ${callerAddress} should increase by ${amount}.`,
     );
 
-    let contractEIP20Tokenbalance = await ostPrime.balanceOf.call(ostPrime.address);
+    const contractEIP20Tokenbalance = await ostPrime.balanceOf.call(
+      ostPrime.address,
+    );
     assert.strictEqual(
       contractEIP20Tokenbalance.eq(new BN(0)),
       true,
-      `The balance of OST prime contract should be zero.`,
+      'The balance of OST prime contract should be zero.',
     );
 
-    let finalContractBalance = await Utils.getBalance(ostPrime.address);
+    const finalContractBalance = await Utils.getBalance(ostPrime.address);
 
-    let finalCallerBalance = await Utils.getBalance(callerAddress);
+    const finalCallerBalance = await Utils.getBalance(callerAddress);
 
     assert.strictEqual(
       finalContractBalance.eq(initialContractBalance.add(amount)),
@@ -160,22 +157,18 @@ contract('OSTPrime.wrap()', function (accounts) {
       true,
       `Caller's base token balance should decrease by ${amount.sub(gasUsed)}`,
     );
-
   });
 
-  it('should emit transfer event', async function () {
+  it('should emit transfer event', async () => {
     await initialize();
 
-    let tx = await ostPrime.wrap({from: callerAddress, value: amount});
+    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
 
-    let event = EventDecoder.getEvents(tx, ostPrime);
+    const event = EventDecoder.getEvents(tx, ostPrime);
 
-    assert.isDefined(
-      event.Transfer,
-      'Event `Transfer` must be emitted.',
-    );
+    assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
 
-    let eventData = event.Transfer;
+    const eventData = event.Transfer;
 
     assert.strictEqual(
       eventData._from,
@@ -194,22 +187,21 @@ contract('OSTPrime.wrap()', function (accounts) {
       true,
       `The _value in the event should be equal to ${amount}`,
     );
-
   });
 
-  it('should emit token wrapped event', async function () {
+  it('should emit token wrapped event', async () => {
     await initialize();
 
-    let tx = await ostPrime.wrap({from: callerAddress, value: amount});
+    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
 
-    let event = EventDecoder.getEvents(tx, ostPrime);
+    const event = EventDecoder.getEvents(tx, ostPrime);
 
     assert.isDefined(
       event.TokenWrapped,
-      "Event `TokenWrapped` must be emitted.",
+      'Event `TokenWrapped` must be emitted.',
     );
 
-    let eventData = event.TokenWrapped;
+    const eventData = event.TokenWrapped;
 
     assert.strictEqual(
       eventData._account,
@@ -222,7 +214,5 @@ contract('OSTPrime.wrap()', function (accounts) {
       true,
       `The _amount in the event should be equal to ${amount}`,
     );
-
   });
-
 });

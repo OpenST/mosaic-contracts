@@ -19,67 +19,100 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../test_lib/web3.js');
-
 const Assert = require('assert');
 const BN = require('bn.js');
+const web3 = require('../test_lib/web3.js');
 
-var EIP20Token = artifacts.require("./MockEIP20Token.sol");
+const EIP20Token = artifacts.require('MockEIP20Token');
 
-/// @dev Deploy 
+const assertTransferEvent = (
+  eventType,
+  actualFrom,
+  actualTo,
+  actualValue,
+  expectedFrom,
+  expectedTo,
+  expectedValue,
+) => {
+  const actualValue_ = new BN(actualValue);
+  const expectedValue_ = new BN(expectedValue);
+
+  Assert.equal(eventType, 'Transfer');
+  Assert.equal(actualFrom, expectedFrom);
+  Assert.equal(
+    web3.utils.toChecksumAddress(actualTo),
+    web3.utils.toChecksumAddress(expectedTo),
+  );
+  Assert(expectedValue_.eq(actualValue_));
+};
+
+// / @dev Deploy
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
-  const token = await EIP20Token.new("SYMBOL", "Name", 18, {from: accounts[0]});
+  const token = await EIP20Token.new('SYMBOL', 'Name', 18, {
+    from: accounts[0],
+  });
 
   return {
-    token: token
-  }
-}
+    token,
+  };
+};
 
-/// @dev Assert on Transfer event
+// / @dev Assert on Transfer event
 module.exports.checkTransferEventGroup = (result, _from, _to, _value) => {
   Assert.equal(result.logs.length, 1);
 
   const event = result.logs[0];
 
   module.exports.checkTransferEvent(event, _from, _to, _value);
-}
-
+};
 
 module.exports.checkTransferEvent = (event, _from, _to, _value) => {
-  let eventBody = event.args;
-  assertTransferEvent(event.event, eventBody._from, eventBody._to, eventBody._value, _from, _to, _value)
-}
+  const eventBody = event.args;
+  assertTransferEvent(
+    event.event,
+    eventBody._from,
+    eventBody._to,
+    eventBody._value,
+    _from,
+    _to,
+    _value,
+  );
+};
 
 module.exports.checkTransferEventAbiDecoder = (event, _from, _to, _value) => {
-  let eventType = Object.keys(event)[0];
-  let eventBody = event[eventType];
-  assertTransferEvent(eventType, eventBody._from, eventBody._to, eventBody._value, _from, _to, _value)
-}
-
-assertTransferEvent = (eventType, actualFrom, actualTo, actualValue, expectedFrom, expectedTo, expectedValue) => {
-  actualValue = new BN(actualValue);
-  expectedValue = new BN(expectedValue);
-
-  Assert.equal(eventType, "Transfer");
-  Assert.equal(actualFrom, expectedFrom);
-  Assert.equal(
-    web3.utils.toChecksumAddress(actualTo),
-    web3.utils.toChecksumAddress(expectedTo)
+  const eventType = Object.keys(event)[0];
+  const eventBody = event[eventType];
+  assertTransferEvent(
+    eventType,
+    eventBody._from,
+    eventBody._to,
+    eventBody._value,
+    _from,
+    _to,
+    _value,
   );
-  Assert(expectedValue.eq(actualValue));
-}
+};
 
-module.exports.checkApprovalEventGroup = (result, _owner, _spender, _value) => {
-  assert.equal(result.logs.length, 1)
 
-  const event = result.logs[0]
+module.exports.checkApprovalEventGroup = (
+  result,
+  _owner,
+  _spender,
+  _value,
+) => {
+  assert.equal(result.logs.length, 1);
 
+  const event = result.logs[0];
+
+  let value;
   if (Number.isInteger(_value)) {
-    _value = new BN(_value)
+    value = new BN(_value);
+  } else {
+    value = _value;
   }
 
-  assert.equal(event.event, "Approval")
-  assert.equal(event.args._owner, _owner)
-  assert.equal(event.args._spender, _spender)
-  assert(event.args._value.eq(_value))
-}
+  assert.equal(event.event, 'Approval');
+  assert.equal(event.args._owner, _owner);
+  assert.equal(event.args._spender, _spender);
+  assert(event.args._value.eq(value));
+};

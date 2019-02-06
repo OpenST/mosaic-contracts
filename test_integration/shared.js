@@ -48,17 +48,17 @@
  * @property {string []} accounts List of external accounts of this chain.
  */
 class Chain {
-    constructor() {
-        this.web3 = {};
-        this.contractAddresses = {};
-        this.contracts = {};
-        this.deployerAddress = '';
-        this.organizationAddress = '';
-        this.networkId = '*';
-        this.accounts = [];
-    }
+  constructor() {
+    this.web3 = {};
+    this.contractAddresses = {};
+    this.contracts = {};
+    this.deployerAddress = '';
+    this.organizationAddress = '';
+    this.networkId = '*';
+    this.accounts = [];
+  }
 
-    /**
+  /**
      * Adds a new contract instance to the chain.
      *
      * @param {string} contractName The name of the contract to add.
@@ -66,13 +66,13 @@ class Chain {
      *     contract name. The property on the `contractAddresses` that holds
      *     this contract.
      */
-    async addContract(contractName, identifier = contractName) {
-        const Contract = shared.artifacts[contractName].clone(this.networkId);
-        Contract.setProvider(this.web3.currentProvider);
-        this.contracts[identifier] = await Contract.at(
-            this.contractAddresses[identifier],
-        );
-    }
+  async addContract(contractName, identifier = contractName) {
+    const Contract = shared.artifacts[contractName].clone(this.networkId);
+    Contract.setProvider(this.web3.currentProvider);
+    this.contracts[identifier] = await Contract.at(
+      this.contractAddresses[identifier],
+    );
+  }
 }
 
 /**
@@ -85,9 +85,9 @@ class Chain {
  *     file.
  */
 const shared = {
-    origin: new Chain(),
-    auxiliary: new Chain(),
-    artifacts: {},
+  origin: new Chain(),
+  auxiliary: new Chain(),
+  artifacts: {},
 };
 
 /**

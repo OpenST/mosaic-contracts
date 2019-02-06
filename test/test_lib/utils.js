@@ -19,17 +19,16 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('./web3.js');
-const hashLock = require("./hash_lock");
 const Assert = require('assert');
 const BN = require('bn.js');
+const web3 = require('./web3.js');
+const hashLock = require('./hash_lock');
 
 const ResultType = {
   FAIL: 0,
-  SUCCESS: 1
+  SUCCESS: 1,
 };
 Object.freeze(ResultType);
-
 
 /**
  * Asserts that an error message contains a string given as message. Always
@@ -42,46 +41,47 @@ function assertExpectedMessage(message, error) {
   if (message !== undefined) {
     assert(
       error.message.search(message) > -1,
-      'The contract was expected to error including "' + message + '", but instead: "' + error.message + '"'
+      `The contract was expected to error including "${message}", but instead: "${
+        error.message
+      }"`,
     );
   }
-};
+}
 
 /** Tracking Gas Usage. */
 const receipts = [];
 
-function Utils() {
-
-}
+function Utils() {}
 
 Utils.prototype = {
-
   /** Log receipt. */
   logReceipt: (receipt, description) => {
     receipts.push({
-      receipt: receipt,
-      description: description,
-      response: null
-    })
+      receipt,
+      description,
+      response: null,
+    });
   },
 
   /** Print gas statistics. */
   printGasStatistics: () => {
-    var totalGasUsed = 0
+    let totalGasUsed = 0;
 
-    console.log("      -----------------------------------------------------");
-    console.log("      Report gas usage\n");
+    console.log('      -----------------------------------------------------');
+    console.log('      Report gas usage\n');
 
-    for (i = 0; i < receipts.length; i++) {
-      const entry = receipts[i]
+    for (let i = 0; i < receipts.length; i++) {
+      const entry = receipts[i];
 
-      totalGasUsed += entry.receipt.gasUsed
+      totalGasUsed += entry.receipt.gasUsed;
 
-      console.log("      " + entry.description.padEnd(45) + entry.receipt.gasUsed)
+      console.log(
+        `      ${entry.description.padEnd(45)}${entry.receipt.gasUsed}`,
+      );
     }
 
-    console.log("      -----------------------------------------------------")
-    console.log("      " + "Total gas logged: ".padEnd(45) + totalGasUsed + "\n")
+    console.log('      -----------------------------------------------------');
+    console.log(`      ${'Total gas logged: '.padEnd(45)}${totalGasUsed}\n`);
   },
 
   /** Clear receipt. */
@@ -94,7 +94,11 @@ Utils.prototype = {
    * @param result Receipt
    */
   expectNoEvents: (result) => {
-    Assert.equal(result.receipt.logs.length, 0, "expected empty array of logs")
+    Assert.equal(
+      result.receipt.logs.length,
+      0,
+      'expected empty array of logs',
+    );
   },
 
   /**
@@ -116,12 +120,15 @@ Utils.prototype = {
         const revertInstead = error.message.search('revert') > -1;
         const invalidAddress = error.message.search('invalid address') > -1;
 
-        assert(invalidOpcode || outOfGas || revertInstead || invalidAddress, `Expected throw, but got ${error} instead`);
+        assert(
+          invalidOpcode || outOfGas || revertInstead || invalidAddress,
+          `Expected throw, but got ${error} instead`,
+        );
       }
 
       return;
     }
-    assert(false, "Did not throw as expected");
+    assert(false, 'Did not throw as expected');
   },
 
   /**
@@ -138,14 +145,14 @@ Utils.prototype = {
     } catch (error) {
       assert(
         error.message.search('revert') > -1,
-        'The contract should revert. Instead: ' + error.message
+        `The contract should revert. Instead: ${error.message}`,
       );
 
       assertExpectedMessage(expectedMessage, error);
       return;
     }
 
-    assert(false, "Did not revert as expected.");
+    assert(false, 'Did not revert as expected.');
   },
 
   /**
@@ -162,69 +169,68 @@ Utils.prototype = {
     } catch (error) {
       assert(
         error.message.search('Returned error:') > -1,
-        'The contract should fail an assert. Instead: ' + error.message
+        `The contract should fail an assert. Instead: ${error.message}`,
       );
 
       assertExpectedMessage(expectedMessage, error);
       return;
     }
 
-    assert(false, "Did not fail assert as expected.");
+    assert(false, 'Did not fail assert as expected.');
   },
 
   /** Get account balance. */
-  getBalance: (address) => {
-    return new Promise((resolve, reject) => {
-      web3.eth.getBalance(address, (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(new BN(result));
-        }
-      })
-    })
-  },
+  getBalance: address => new Promise((resolve, reject) => {
+    web3.eth.getBalance(address, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(new BN(result));
+      }
+    });
+  }),
 
   /** Get gas price. */
-  getGasPrice: () => {
-    return new Promise((resolve, reject) => {
-      web3.eth.getGasPrice((error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      })
-    })
-  },
+  getGasPrice: () => new Promise((resolve, reject) => {
+    web3.eth.getGasPrice((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    });
+  }),
 
   validateEvents: (eventLogs, expectedData) => {
     assert.equal(
       eventLogs.length,
       Object.keys(expectedData).length,
-      "Number of events emitted must match expected event counts"
+      'Number of events emitted must match expected event counts',
     );
     eventLogs.forEach((event) => {
-      let eventName = event.event;
-      let eventData = Object.keys(event.args);
-      let eventExpectedData = expectedData[eventName];
+      const eventName = event.event;
+      const eventData = Object.keys(event.args);
+      const eventExpectedData = expectedData[eventName];
 
-      assert.notEqual(eventExpectedData, undefined, "Expected event not found");
+      assert.notEqual(
+        eventExpectedData,
+        undefined,
+        'Expected event not found',
+      );
 
-      for (let index in eventData) {
-
-        let key = eventData[index];
+      for (const index in eventData) {
+        const key = eventData[index];
         if (eventExpectedData[key]) {
           if (web3.utils.isBN(eventExpectedData[key])) {
             assert(
               event.args[key].eq(eventExpectedData[key]),
-              `Event data ${key} must match the expectedData`
+              `Event data ${key} must match the expectedData`,
             );
           } else {
             assert.strictEqual(
               event.args[key],
-              (eventExpectedData[key]),
-              `Event data ${key} must match the expectedData`
+              eventExpectedData[key],
+              `Event data ${key} must match the expectedData`,
             );
           }
         }
@@ -233,33 +239,30 @@ Utils.prototype = {
   },
 
   advanceBlock: async () => {
-    await web3.currentProvider.send({
-      jsonrpc: '2.0',
-      method: 'evm_mine',
-      id: new Date().getTime(),
-    }, (err) => {
-      assert.strictEqual(err, null);
-    });
-  },
-
-  /** Get latest hash. */
-  generateHashLock: () => {
-    return hashLock.getHashLock();
-  },
-
-  getTypeHash: (structDescriptor) => {
-    return web3.utils.sha3(
-      web3.eth.abi.encodeParameter(
-        'string',
-        structDescriptor,
-      ),
+    await web3.currentProvider.send(
+      {
+        jsonrpc: '2.0',
+        method: 'evm_mine',
+        id: new Date().getTime(),
+      },
+      (err) => {
+        assert.strictEqual(err, null);
+      },
     );
   },
 
-  ResultType: ResultType,
+  /** Get latest hash. */
+  generateHashLock: () => hashLock.getHashLock(),
 
-  ZERO_BYTES32: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  NULL_ADDRESS: "0x0000000000000000000000000000000000000000",
+  getTypeHash: structDescriptor => web3.utils.sha3(
+    web3.eth.abi.encodeParameter('string', structDescriptor),
+  ),
+
+  ResultType,
+
+  ZERO_BYTES32:
+    '0x0000000000000000000000000000000000000000000000000000000000000000',
+  NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
 };
 
 module.exports = new Utils();

@@ -19,15 +19,17 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('../../test_lib/web3.js');
+
 const KernelGateway = artifacts.require('TestKernelGateway');
 const MockBlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
+  let initialKernelHash;
 
-  let kernelGateway, originBlockStore, auxiliaryBlockStore, initialKernelHash;
-
-  beforeEach(async function() {
-
+  beforeEach(async () => {
     initialKernelHash = web3.utils.sha3('kernelHash');
     originBlockStore = await MockBlockStore.new();
     auxiliaryBlockStore = await MockBlockStore.new();
@@ -43,34 +45,28 @@ contract('KernelGateway.getActiveKernelHash()', async (accounts) => {
   });
 
   it('should return initial kernel hash', async () => {
-
-    let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
+    const activeKernelHash = await kernelGateway.getActiveKernelHash.call();
 
     assert.strictEqual(
       activeKernelHash,
       initialKernelHash,
-      'The contract did not return initial kernel hash.'
+      'The contract did not return initial kernel hash.',
     );
-
   });
 
   it('should return correct kernel hash', async () => {
-
-    let hash =
-      "0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca";
+    const hash = '0xb6a85955e3671040901a17db85b121550338ad1a0071ca13d196d19df31f56ca';
 
     await kernelGateway.setOpenKernelHash(hash);
 
     await auxiliaryBlockStore.activateKernel(hash);
 
-    let activeKernelHash = await kernelGateway.getActiveKernelHash.call();
+    const activeKernelHash = await kernelGateway.getActiveKernelHash.call();
 
     assert.strictEqual(
       activeKernelHash,
       hash,
-      'The contract did not return correct hash.'
+      'The contract did not return correct hash.',
     );
-
   });
-
 });

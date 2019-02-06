@@ -24,7 +24,7 @@ const assert = require('assert');
  * Class to assert prove gateway.
  */
 class ProveGatewayAssertion {
-    /**
+  /**
      *
      * @param {Object} event Decoded event for Gateway Proven.
      * @param {BN} blockHeight Block height at which prove gateway is done.
@@ -32,35 +32,35 @@ class ProveGatewayAssertion {
      *                             height.
      * @param {string}gateway Gateway address
      */
-    static verify(event, blockHeight, storageRoot, gateway) {
-        const eventData = event.GatewayProven;
+  static verify(event, blockHeight, storageRoot, gateway) {
+    const eventData = event.GatewayProven;
 
-        assert.strictEqual(
-            eventData._blockHeight.eq(blockHeight),
-            true,
-            `Block height from event ${eventData._blockHeight.toString(10)} 
+    assert.strictEqual(
+      eventData._blockHeight.eq(blockHeight),
+      true,
+      `Block height from event ${eventData._blockHeight.toString(10)} 
             is different from expected ${blockHeight} `,
-        );
+    );
 
-        assert.strictEqual(
-            eventData._storageRoot,
-            storageRoot,
-            `Storage root from event ${eventData._storageRoot} 
+    assert.strictEqual(
+      eventData._storageRoot,
+      storageRoot,
+      `Storage root from event ${eventData._storageRoot} 
             is different from expected ${storageRoot} `,
-        );
+    );
 
-        assert.strictEqual(
-            eventData._wasAlreadyProved,
-            false,
-            'Already proven should be false',
-        );
+    assert.strictEqual(
+      eventData._wasAlreadyProved,
+      false,
+      'Already proven should be false',
+    );
 
-        assert.strictEqual(
-            eventData._gateway,
-            gateway,
-            'Proven gateway must match.',
-        );
-    }
+    assert.strictEqual(
+      eventData._gateway,
+      gateway,
+      'Proven gateway must match.',
+    );
+  }
 }
 
 module.exports = ProveGatewayAssertion;

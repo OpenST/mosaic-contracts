@@ -24,41 +24,37 @@ const Organization = artifacts.require('Organization');
 const Organized = artifacts.require('Organized');
 
 contract('Organized.constructor()', async (accounts) => {
+  const owner = accounts[0];
+  let organization = null;
 
-    let owner = accounts[0];
-    let organization = null;
+  beforeEach(async () => {
+    const admin = Utils.NULL_ADDRESS;
+    const workers = [];
+    const expirationHeight = 0;
 
-    beforeEach(async function () {
-        let admin = Utils.NULL_ADDRESS;
-        let workers = [];
-        let expirationHeight = 0;
+    organization = await Organization.new(
+      owner,
+      admin,
+      workers,
+      expirationHeight,
+    );
+  });
 
-        organization = await Organization.new(
-            owner,
-            admin,
-            workers,
-            expirationHeight,
-        );
+  it('reverts when organization address is null', async () => {
+    await Utils.expectRevert(
+      Organized.new(Utils.NULL_ADDRESS, { from: owner }),
+      'Organization contract address must not be zero.',
+    );
+  });
+
+  it('checks that valid organization address is set', async () => {
+    const organized = await Organized.new(organization.address, {
+      from: owner,
     });
-
-    it('reverts when organization address is null', async () => {
-        await Utils.expectRevert(
-            Organized.new(
-                Utils.NULL_ADDRESS,
-                { from: owner },
-            ),
-            'Organization contract address must not be zero.',
-        );
-
-    });
-
-    it('checks that valid organization address is set', async () => {
-        organized = await Organized.new(organization.address, { from: owner });
-        assert.strictEqual(
-            await organized.organization.call(),
-            organization.address,
-            'The organized contract should store the given organization.',
-        );
-    });
-
+    assert.strictEqual(
+      await organized.organization.call(),
+      organization.address,
+      'The organized contract should store the given organization.',
+    );
+  });
 });

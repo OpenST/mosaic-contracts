@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockToken = artifacts.require("MockToken");
+const Gateway = artifacts.require('./TestEIP20Gateway.sol');
+const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -30,15 +30,19 @@ const web3 = require('../../../test/test_lib/web3.js');
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
 
-contract('EIP20Gateway.progressUnstake()', function (accounts) {
+contract('EIP20Gateway.progressUnstake()', (accounts) => {
+  let gateway;
+  let mockToken;
+  let baseToken;
+  let unstakeRequest;
+  let unstakeMessage;
+  let stakeVaultAddress;
 
-  let gateway, mockToken, baseToken, unstakeRequest, unstakeMessage, stakeVaultAddress;
-  let bountyAmount = new BN(100);
-  let facilitatorAddress = accounts[0];
-  let MessageStatusEnum = messageBus.MessageStatusEnum;
+  const bountyAmount = new BN(100);
+  const facilitatorAddress = accounts[0];
+  const { MessageStatusEnum } = messageBus;
 
-  let setMessage = async function() {
-
+  const setMessage = async () => {
     unstakeMessage.messageHash = messageBus.messageDigest(
       unstakeMessage.intentHash,
       unstakeMessage.nonce,
@@ -64,14 +68,13 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
     );
   };
 
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     mockToken = await MockToken.new({ from: accounts[0] });
     baseToken = await MockToken.new({ from: accounts[0] });
 
-    let organizationAddress = accounts[3];
-    let coreAddress = accounts[5];
-    let burnerAddress = NullAddress;
+    const organizationAddress = accounts[3];
+    const coreAddress = accounts[5];
+    const burnerAddress = NullAddress;
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -87,60 +90,46 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       amount: new BN(100000000),
     };
 
-    let hashLockObj = Utils.generateHashLock();
+    const hashLockObj = Utils.generateHashLock();
 
     unstakeMessage = {
-      intentHash: web3.utils.sha3("dummy"),
+      intentHash: web3.utils.sha3('dummy'),
       nonce: new BN(1),
       gasPrice: new BN(100),
       gasLimit: new BN(1000000),
       unstakeAccount: accounts[8],
       hashLock: hashLockObj.l,
-      unlockSecret: hashLockObj.s
+      unlockSecret: hashLockObj.s,
     };
 
     await setMessage();
 
     stakeVaultAddress = await gateway.stakeVault.call();
 
-    await mockToken.transfer(
-      stakeVaultAddress,
-      new BN(500000000),
-      { from: accounts[0] }
-    );
-
+    await mockToken.transfer(stakeVaultAddress, new BN(500000000), {
+      from: accounts[0],
+    });
   });
 
-  it('should fail when message hash is zero', async function () {
-
-    let messageHash = ZeroBytes;
+  it('should fail when message hash is zero', async () => {
+    const messageHash = ZeroBytes;
 
     await Utils.expectRevert(
-      gateway.progressUnstake(
-        messageHash,
-        unstakeMessage.unlockSecret,
-      ),
+      gateway.progressUnstake(messageHash, unstakeMessage.unlockSecret),
       'Message hash must not be zero.',
     );
-
   });
 
-  it('should fail when unlock secret is incorrect', async function () {
-
-    let unlockSecret = ZeroBytes;
+  it('should fail when unlock secret is incorrect', async () => {
+    const unlockSecret = ZeroBytes;
 
     await Utils.expectRevert(
-      gateway.progressUnstake(
-        unstakeMessage.messageHash,
-        unlockSecret,
-      ),
+      gateway.progressUnstake(unstakeMessage.messageHash, unlockSecret),
       'Invalid unlock secret.',
     );
-
   });
 
-  it('should fail when unstake message is undeclared', async function () {
-
+  it('should fail when unstake message is undeclared', async () => {
     await Utils.expectRevert(
       gateway.progressUnstake(
         unstakeMessage.messageHash,
@@ -148,11 +137,9 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       ),
       'Message on target status must be Declared.',
     );
-
   });
 
-  it('should fail when unstake message is already progressed', async function () {
-
+  it('should fail when unstake message is already progressed', async () => {
     await gateway.setInboxStatus(
       unstakeMessage.messageHash,
       MessageStatusEnum.Declared,
@@ -170,11 +157,9 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       ),
       'Message on target status must be Declared.',
     );
-
   });
 
-  it('should fail for revoked redeem(unstake) message', async function () {
-
+  it('should fail for revoked redeem(unstake) message', async () => {
     await gateway.setInboxStatus(
       unstakeMessage.messageHash,
       MessageStatusEnum.Revoked,
@@ -187,12 +172,9 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       ),
       'Message on target status must be Declared.',
     );
-
   });
 
-  it('should fail when the reward amount is greater than the unstake amount',
-    async function () {
-
+  it('should fail when the reward amount is greater than the unstake amount', async () => {
     unstakeMessage.gasPrice = new BN(10000);
     unstakeMessage.gasLimit = new BN(10000);
 
@@ -210,128 +192,147 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       ),
       'Reward amount must be less than redeem amount.',
     );
-
   });
 
-  it('should return correct "redeemAmount", "unstakeAmount" and ' +
-    '"rewardAmount" when gas price is zero', async function () {
+  it(
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when gas price is zero',
+    async () => {
+      unstakeMessage.gasPrice = new BN(0);
 
-    unstakeMessage.gasPrice = new BN(0);
+      await setMessage();
 
-    await setMessage();
+      await gateway.setInboxStatus(
+        unstakeMessage.messageHash,
+        MessageStatusEnum.Declared,
+      );
 
-    await gateway.setInboxStatus(
-      unstakeMessage.messageHash,
-      MessageStatusEnum.Declared,
-    );
+      const result = await gateway.progressUnstake.call(
+        unstakeMessage.messageHash,
+        unstakeMessage.unlockSecret,
+      );
 
-    let result = await gateway.progressUnstake.call(
-      unstakeMessage.messageHash,
-      unstakeMessage.unlockSecret,
-    );
+      assert.strictEqual(
+        unstakeRequest.amount.eq(result.redeemAmount_),
+        true,
+        `Redeem amount ${result.redeemAmount_.toString(
+          10,
+        )} must be equal to ${unstakeRequest.amount.toString(10)}`,
+      );
 
-    assert.strictEqual(
-      unstakeRequest.amount.eq(result.redeemAmount_),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
-    );
+      assert.strictEqual(
+        unstakeRequest.amount.eq(result.unstakeAmount_),
+        true,
+        `Unstake amount ${result.unstakeAmount_.toString(
+          10,
+        )} must be equal to ${unstakeRequest.amount.toString(10)}`,
+      );
 
-    assert.strictEqual(
-      unstakeRequest.amount.eq(result.unstakeAmount_),
-      true,
-      `Unstake amount ${result.unstakeAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
-    );
+      assert.strictEqual(
+        result.rewardAmount_.eqn(0),
+        true,
+        `Reward amount ${result.rewardAmount_.toString(
+          10,
+        )} must be equal to zero`,
+      );
+    },
+  );
 
-    assert.strictEqual(
-      result.rewardAmount_.eqn(0),
-      true,
-      `Reward amount ${result.rewardAmount_.toString(10)} must be equal to zero`,
-    );
+  it(
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when gas price is greater than zero',
+    async () => {
+      unstakeMessage.gasPrice = new BN(1);
+      unstakeMessage.gasLimit = new BN(1000000000);
 
-  });
+      await setMessage();
 
-  it('should return correct "redeemAmount", "unstakeAmount" and ' +
-    '"rewardAmount" when gas price is greater than zero', async function () {
+      await gateway.setInboxStatus(
+        unstakeMessage.messageHash,
+        MessageStatusEnum.Declared,
+      );
 
-    unstakeMessage.gasPrice = new BN(1);
-    unstakeMessage.gasLimit = new BN(1000000000);
+      const tx = await gateway.progressUnstake(
+        unstakeMessage.messageHash,
+        unstakeMessage.unlockSecret,
+      );
 
-    await setMessage();
+      const event = EventDecoder.getEvents(tx, gateway);
+      const eventData = event.UnstakeProgressed;
 
-    await gateway.setInboxStatus(
-      unstakeMessage.messageHash,
-      MessageStatusEnum.Declared,
-    );
+      const gasUsed = new BN(tx.receipt.gasUsed);
+      const maxReward = gasUsed.mul(unstakeMessage.gasPrice);
 
-    let tx = await gateway.progressUnstake(
-      unstakeMessage.messageHash,
-      unstakeMessage.unlockSecret,
-    );
+      /*
+       * Reward is calculated as `gasPrice * gasConsumed`.
+       * The maximum reward possible is 'gasPrice * tx.gasUsed'.
+       * The gas used for fees calculations is always going to be less than
+       * the total transaction gas.
+       */
+      assert.strictEqual(
+        eventData._rewardAmount.lt(maxReward),
+        true,
+        `Reward amount ${eventData._rewardAmount.toString(
+          10,
+        )} must be less than ${maxReward.toString(10)}`,
+      );
+    },
+  );
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.UnstakeProgressed;
+  it(
+    'should return correct "redeemAmount", "unstakeAmount" and '
+      + '"rewardAmount" when reward is restricted to gasLimit',
+    async () => {
+      unstakeMessage.gasPrice = new BN(1);
+      unstakeMessage.gasLimit = new BN(100);
 
-    let gasUsed = new BN(tx.receipt.gasUsed);
-    let maxReward = gasUsed.mul(unstakeMessage.gasPrice);
+      await setMessage();
 
-    /*
-     * Reward is calculated as `gasPrice * gasConsumed`.
-     * The maximum reward possible is 'gasPrice * tx.gasUsed'.
-     * The gas used for fees calculations is always going to be less than
-     * the total transaction gas.
-     */
-    assert.strictEqual(
-      eventData._rewardAmount.lt(maxReward),
-      true,
-      `Reward amount ${eventData._rewardAmount.toString(10)} must be less than ${maxReward.toString(10)}`,
-    );
+      await gateway.setInboxStatus(
+        unstakeMessage.messageHash,
+        MessageStatusEnum.Declared,
+      );
 
-  });
+      const result = await gateway.progressUnstake.call(
+        unstakeMessage.messageHash,
+        unstakeMessage.unlockSecret,
+      );
 
-  it('should return correct "redeemAmount", "unstakeAmount" and ' +
-    '"rewardAmount" when reward is restricted to gasLimit', async function () {
+      const estimatedReward = unstakeMessage.gasLimit.mul(
+        unstakeMessage.gasPrice,
+      );
 
-    unstakeMessage.gasPrice = new BN(1);
-    unstakeMessage.gasLimit = new BN(100);
+      assert.strictEqual(
+        result.rewardAmount_.eq(estimatedReward),
+        true,
+        `Reward amount ${result.rewardAmount_.toString(
+          10,
+        )} must be equal to ${estimatedReward.toString(10)}`,
+      );
 
-    await setMessage();
+      const estimatedUnstakeAmount = unstakeRequest.amount.sub(
+        estimatedReward,
+      );
 
-    await gateway.setInboxStatus(
-      unstakeMessage.messageHash,
-      MessageStatusEnum.Declared,
-    );
+      assert.strictEqual(
+        result.unstakeAmount_.eq(estimatedUnstakeAmount),
+        true,
+        `Unstake amount ${result.unstakeAmount_.toString(
+          10,
+        )} must be equal to ${estimatedUnstakeAmount.toString(10)}`,
+      );
 
-    let result = await gateway.progressUnstake.call(
-      unstakeMessage.messageHash,
-      unstakeMessage.unlockSecret,
-    );
+      assert.strictEqual(
+        result.redeemAmount_.eq(unstakeRequest.amount),
+        true,
+        `Redeem amount ${result.redeemAmount_.toString(
+          10,
+        )} must be equal to ${unstakeRequest.amount.toString(10)}`,
+      );
+    },
+  );
 
-    let estimatedReward = unstakeMessage.gasLimit.mul(unstakeMessage.gasPrice);
-
-    assert.strictEqual(
-      result.rewardAmount_.eq(estimatedReward),
-      true,
-      `Reward amount ${result.rewardAmount_.toString(10)} must be equal to ${estimatedReward.toString(10)}`,
-    );
-
-    let estimatedUnstakeAmount = unstakeRequest.amount.sub(estimatedReward);
-
-    assert.strictEqual(
-      result.unstakeAmount_.eq(estimatedUnstakeAmount),
-      true,
-      `Unstake amount ${result.unstakeAmount_.toString(10)} must be equal to ${estimatedUnstakeAmount.toString(10)}`,
-    );
-
-    assert.strictEqual(
-      result.redeemAmount_.eq(unstakeRequest.amount),
-      true,
-      `Redeem amount ${result.redeemAmount_.toString(10)} must be equal to ${unstakeRequest.amount.toString(10)}`,
-    );
-
-  });
-
-  it('redeem amount must be equal to reward amount plus unstake amount', async function () {
-
+  it('redeem amount must be equal to reward amount plus unstake amount', async () => {
     unstakeMessage.gasPrice = new BN(1);
     unstakeMessage.gasLimit = new BN(10000000000);
 
@@ -342,7 +343,7 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let result = await gateway.progressUnstake.call(
+    const result = await gateway.progressUnstake.call(
       unstakeMessage.messageHash,
       unstakeMessage.unlockSecret,
     );
@@ -350,13 +351,15 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
     assert.strictEqual(
       result.redeemAmount_.eq(result.unstakeAmount_.add(result.rewardAmount_)),
       true,
-      `Unstake amount ${result.redeemAmount_.toString(10)} must be equal to ${result.unstakeAmount_.add(result.rewardAmount_).toString(10)}`,
+      `Unstake amount ${result.redeemAmount_.toString(
+        10,
+      )} must be equal to ${result.unstakeAmount_
+        .add(result.rewardAmount_)
+        .toString(10)}`,
     );
-
   });
 
-  it('should emit "UnstakeProgressed" event', async function () {
-
+  it('should emit "UnstakeProgressed" event', async () => {
     unstakeMessage.gasPrice = new BN(0);
 
     await setMessage();
@@ -366,53 +369,54 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let tx = await gateway.progressUnstake(
+    const tx = await gateway.progressUnstake(
       unstakeMessage.messageHash,
       unstakeMessage.unlockSecret,
     );
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.UnstakeProgressed;
+    const event = EventDecoder.getEvents(tx, gateway);
+    const eventData = event.UnstakeProgressed;
 
-    assert.equal(
-      tx.receipt.status,
-      1,
-      "Receipt status is unsuccessful",
-    );
+    assert.equal(tx.receipt.status, 1, 'Receipt status is unsuccessful');
 
     assert.isDefined(
       event.UnstakeProgressed,
       'Event `UnstakeProgressed` must be emitted.',
     );
-    
+
     assert.strictEqual(
       eventData._messageHash,
       unstakeMessage.messageHash,
-      `Message hash ${eventData._messageHash} from event must be equal to ${unstakeMessage.messageHash}.`,
+      `Message hash ${eventData._messageHash} from event must be equal to `
+      + `${unstakeMessage.messageHash}.`,
     );
 
     assert.strictEqual(
       eventData._redeemer,
       unstakeMessage.unstakeAccount,
-      `Redeemer address ${eventData._redeemer} from event must be equal to ${unstakeMessage.unstakeAccount}.`,
+      `Redeemer address ${eventData._redeemer} from event must be equal to `
+      + `${unstakeMessage.unstakeAccount}.`,
     );
 
     assert.strictEqual(
       eventData._beneficiary,
       unstakeRequest.beneficiary,
-      `Beneficiary address ${eventData._beneficiary} from event must be equal to ${unstakeRequest.beneficiary}.`,
+      `Beneficiary address ${eventData._beneficiary} from event must be equal to `
+      + `${unstakeRequest.beneficiary}.`,
     );
 
     assert.strictEqual(
       unstakeRequest.amount.eq(eventData._redeemAmount),
       true,
-      `Redeem amount ${eventData._redeemAmount.toString(10)} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
+      `Redeem amount ${eventData._redeemAmount.toString(10)} from event must be equal to `
+      + `${unstakeRequest.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       unstakeRequest.amount.eq(eventData._unstakeAmount),
       true,
-      `Unstake amount ${eventData._unstakeAmount.toString(10)} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
+      `Unstake amount ${eventData._unstakeAmount.toString(10)} from event must be equal to `
+      + `${unstakeRequest.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -430,13 +434,12 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
     assert.strictEqual(
       eventData._unlockSecret,
       unstakeMessage.unlockSecret,
-      `Unlock secret ${eventData._unlockSecret} from event must be equal to ${unstakeMessage.unlockSecret}.`,
+      `Unlock secret ${eventData._unlockSecret} from event must be equal to `
+      + `${unstakeMessage.unlockSecret}.`,
     );
-
   });
 
-  it('should unstake token to the beneficiary address', async function () {
-
+  it('should unstake token to the beneficiary address', async () => {
     unstakeMessage.gasPrice = new BN(0);
 
     await setMessage();
@@ -446,37 +449,47 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let initialBeneficiaryBalance =
-      await mockToken.balanceOf(unstakeRequest.beneficiary);
+    const initialBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
 
-    let initialStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    const initialStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
+    );
 
     await gateway.progressUnstake(
       unstakeMessage.messageHash,
       unstakeMessage.unlockSecret,
     );
 
-    let finalBeneficiaryBalance =
-      await mockToken.balanceOf(unstakeRequest.beneficiary);
+    const finalBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
 
-    let finalStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
-
-    assert.strictEqual(
-      finalBeneficiaryBalance.eq(initialBeneficiaryBalance.add(unstakeRequest.amount)),
-      true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to ${initialBeneficiaryBalance.add(unstakeRequest.amount).toString(10)}.`,
+    const finalStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
     );
 
     assert.strictEqual(
-      finalStakeVaultBalance.eq(initialStakeVaultBalance.sub(unstakeRequest.amount)),
+      finalBeneficiaryBalance.eq(
+        initialBeneficiaryBalance.add(unstakeRequest.amount),
+      ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to ${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to `
+      + `${initialBeneficiaryBalance.add(unstakeRequest.amount).toString(10)}.`,
     );
 
+    assert.strictEqual(
+      finalStakeVaultBalance.eq(
+        initialStakeVaultBalance.sub(unstakeRequest.amount),
+      ),
+      true,
+      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to `
+      + `${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
+    );
   });
 
-  it('should reward the facilitator', async function () {
-
+  it('should reward the facilitator', async () => {
     unstakeMessage.gasLimit = new BN(1000);
 
     await setMessage();
@@ -486,48 +499,61 @@ contract('EIP20Gateway.progressUnstake()', function (accounts) {
       MessageStatusEnum.Declared,
     );
 
-    let rewardAmount = unstakeMessage.gasLimit.mul(unstakeMessage.gasPrice);
+    const rewardAmount = unstakeMessage.gasLimit.mul(unstakeMessage.gasPrice);
 
-    let initialFacilitatorBalance =
-      await mockToken.balanceOf(facilitatorAddress);
+    const initialFacilitatorBalance = await mockToken.balanceOf(
+      facilitatorAddress,
+    );
 
-    let initialBeneficiaryBalance =
-      await mockToken.balanceOf(unstakeRequest.beneficiary);
+    const initialBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
 
-    let initialStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    const initialStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
+    );
 
     await gateway.progressUnstake(
       unstakeMessage.messageHash,
       unstakeMessage.unlockSecret,
-      { from: facilitatorAddress }
+      { from: facilitatorAddress },
     );
 
-    let finalFacilitatorBalance =
-      await mockToken.balanceOf(facilitatorAddress);
+    const finalFacilitatorBalance = await mockToken.balanceOf(
+      facilitatorAddress,
+    );
 
-    let finalBeneficiaryBalance =
-      await mockToken.balanceOf(unstakeRequest.beneficiary);
+    const finalBeneficiaryBalance = await mockToken.balanceOf(
+      unstakeRequest.beneficiary,
+    );
 
-    let finalStakeVaultBalance = await mockToken.balanceOf(stakeVaultAddress);
+    const finalStakeVaultBalance = await mockToken.balanceOf(
+      stakeVaultAddress,
+    );
 
     assert.strictEqual(
       finalFacilitatorBalance.eq(initialFacilitatorBalance.add(rewardAmount)),
       true,
-      `Facilitator balance ${finalFacilitatorBalance.toString(10)} must be equal to ${initialFacilitatorBalance.add(rewardAmount).toString(10)}.`,
+      `Facilitator balance ${finalFacilitatorBalance.toString(10)} must be equal to `
+      + `${initialFacilitatorBalance.add(rewardAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
-      finalBeneficiaryBalance.eq(initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount)),
+      finalBeneficiaryBalance.eq(
+        initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount),
+      ),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to ${initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount).toString(10)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to `
+      + `${initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
-      finalStakeVaultBalance.eq(initialStakeVaultBalance.sub(unstakeRequest.amount)),
+      finalStakeVaultBalance.eq(
+        initialStakeVaultBalance.sub(unstakeRequest.amount),
+      ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to ${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
+      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to `
+      + `${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
     );
-
   });
-
 });

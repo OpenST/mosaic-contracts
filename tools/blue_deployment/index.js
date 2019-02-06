@@ -40,18 +40,18 @@
  */
 
 const {
-    Contract,
-    ContractRegistry,
-    UnlockedWeb3Signer,
-    deployContracts,
+  Contract,
+  ContractRegistry,
+  UnlockedWeb3Signer,
+  deployContracts,
 } = require('../deployment_tool');
 const {
-    createAnchor,
-    createEIP20CoGateway,
-    createEIP20Gateway,
-    createLibraryConracts,
-    createOSTPrime,
-    createOrganization,
+  createAnchor,
+  createEIP20CoGateway,
+  createEIP20Gateway,
+  createLibraryConracts,
+  createOSTPrime,
+  createOrganization,
 } = require('./contracts');
 
 // root directory of npm project
@@ -71,34 +71,34 @@ const rootDir = `${__dirname}/../../`;
  *                   newly deployed one.
  */
 const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions) => {
-    if (eip20Address !== 'new') {
-        return eip20Address;
-    }
+  if (eip20Address !== 'new') {
+    return eip20Address;
+  }
 
-    const startingNonce = await web3.eth.getTransactionCount(deployerAddress);
+  const startingNonce = await web3.eth.getTransactionCount(deployerAddress);
 
-    /*
-     * Deploys the EIP20StandardToken that is provided in `contracts/test`.
-     * It is a simple ERC20 token which transfers the entire initial balance to
-     * the account that deploys the token. In this case the `deployerAddress`.
-     */
-    const EIP20StandardToken = Contract.loadTruffleContract(
-        'EIP20StandardToken',
-        ['MYT', 'MyToken', 800000000, 18],
-        { rootDir },
-    );
+  /*
+   * Deploys the EIP20StandardToken that is provided in `contracts/test`.
+   * It is a simple ERC20 token which transfers the entire initial balance to
+   * the account that deploys the token. In this case the `deployerAddress`.
+   */
+  const EIP20StandardToken = Contract.loadTruffleContract(
+    'EIP20StandardToken',
+    ['MYT', 'MyToken', 800000000, 18],
+    { rootDir },
+  );
 
-    const registry = new ContractRegistry();
-    registry.addContract(EIP20StandardToken);
+  const registry = new ContractRegistry();
+  registry.addContract(EIP20StandardToken);
 
-    const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    const contracts = await deployContracts(
-        new UnlockedWeb3Signer(web3),
-        web3,
-        deploymentObjects,
-        deployOptions,
-    );
-    return contracts.EIP20StandardToken;
+  const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
+  const contracts = await deployContracts(
+    new UnlockedWeb3Signer(web3),
+    web3,
+    deploymentObjects,
+    deployOptions,
+  );
+  return contracts.EIP20StandardToken;
 };
 
 /**
@@ -109,14 +109,14 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
  * @returns {ChainInfo} The chain information of the most recent block on the chain.
  */
 const getChainInfo = async (web3) => {
-    const chainId = await web3.eth.net.getId();
-    const block = await web3.eth.getBlock('latest');
+  const chainId = await web3.eth.net.getId();
+  const block = await web3.eth.getBlock('latest');
 
-    return {
-        chainId,
-        blockHeight: block.number,
-        stateRoot: block.stateRoot,
-    };
+  return {
+    chainId,
+    blockHeight: block.number,
+    stateRoot: block.stateRoot,
+  };
 };
 
 /**
@@ -141,67 +141,67 @@ const getChainInfo = async (web3) => {
  *                             names to their deployed addresses.
  */
 const deployOrigin = async (
-    web3Origin,
-    deployerAddress,
-    tokenAddress,
-    baseTokenAddress,
-    bounty,
+  web3Origin,
+  deployerAddress,
+  tokenAddress,
+  baseTokenAddress,
+  bounty,
+  chainIdAuxiliary,
+  blockHeightAuxiliary,
+  stateRootAuxiliary,
+  options = {
+    log: false,
+  },
+) => {
+  const startingNonce = await web3Origin.eth.getTransactionCount(deployerAddress);
+
+  const {
+    MerklePatriciaProof,
+    GatewayLib,
+    MessageBus,
+  } = createLibraryConracts();
+  const Organization = createOrganization(
+    deployerAddress, // FIXME: #623
+    deployerAddress, // FIXME: #623
+    [deployerAddress], // FIXME: #623
+    '100000000000', // FIXME: #623
+  );
+  const Anchor = createAnchor(
+    Organization.reference(),
     chainIdAuxiliary,
     blockHeightAuxiliary,
     stateRootAuxiliary,
-    options = {
-        log: false,
-    },
-) => {
-    const startingNonce = await web3Origin.eth.getTransactionCount(deployerAddress);
+    '10', // FIXME: #623
+  );
 
-    const {
-        MerklePatriciaProof,
-        GatewayLib,
-        MessageBus,
-    } = createLibraryConracts();
-    const Organization = createOrganization(
-        deployerAddress, // FIXME: #623
-        deployerAddress, // FIXME: #623
-        [deployerAddress], // FIXME: #623
-        '100000000000', // FIXME: #623
-    );
-    const Anchor = createAnchor(
-        Organization.reference(),
-        chainIdAuxiliary,
-        blockHeightAuxiliary,
-        stateRootAuxiliary,
-        '10', // FIXME: #623
-    );
+  const EIP20Gateway = createEIP20Gateway(
+    tokenAddress,
+    baseTokenAddress,
+    Anchor.reference(),
+    bounty,
+    Organization.reference(),
+    '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
+  );
+  EIP20Gateway.addLinkedDependency(GatewayLib);
+  EIP20Gateway.addLinkedDependency(MessageBus);
 
-    const EIP20Gateway = createEIP20Gateway(
-        tokenAddress,
-        baseTokenAddress,
-        Anchor.reference(),
-        bounty,
-        Organization.reference(),
-        '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
-    );
-    EIP20Gateway.addLinkedDependency(GatewayLib);
-    EIP20Gateway.addLinkedDependency(MessageBus);
+  const registry = new ContractRegistry();
+  registry.addContracts([
+    EIP20Gateway,
+    GatewayLib,
+    MerklePatriciaProof,
+    MessageBus,
+    Organization,
+    Anchor,
+  ]);
 
-    const registry = new ContractRegistry();
-    registry.addContracts([
-        EIP20Gateway,
-        GatewayLib,
-        MerklePatriciaProof,
-        MessageBus,
-        Organization,
-        Anchor,
-    ]);
-
-    const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return deployContracts(
-        new UnlockedWeb3Signer(web3Origin),
-        web3Origin,
-        deploymentObjects,
-        options,
-    );
+  const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
+  return deployContracts(
+    new UnlockedWeb3Signer(web3Origin),
+    web3Origin,
+    deploymentObjects,
+    options,
+  );
 };
 
 
@@ -225,79 +225,79 @@ const deployOrigin = async (
  *                             names to their deployed addresses.
  */
 const deployAuxiliary = async (
-    web3Auxiliary,
-    deployerAddress,
-    tokenAddressOrigin,
-    gatewayAddress,
-    bounty,
+  web3Auxiliary,
+  deployerAddress,
+  tokenAddressOrigin,
+  gatewayAddress,
+  bounty,
+  chainIdOrigin,
+  blockHeightOrigin,
+  stateRootOrigin,
+  options = {
+    log: false,
+  },
+) => {
+  const startingNonce = await web3Auxiliary.eth.getTransactionCount(deployerAddress);
+
+  const {
+    MerklePatriciaProof,
+    GatewayLib,
+    MessageBus,
+  } = createLibraryConracts();
+  const Organization = createOrganization(
+    deployerAddress, // FIXME: #623
+    deployerAddress, // FIXME: #623
+    [deployerAddress], // FIXME: #623
+    '100000000000', // FIXME: #623
+  );
+  const Anchor = createAnchor(
+    Organization.reference(),
     chainIdOrigin,
     blockHeightOrigin,
     stateRootOrigin,
-    options = {
-        log: false,
-    },
-) => {
-    const startingNonce = await web3Auxiliary.eth.getTransactionCount(deployerAddress);
+    '10', // FIXME: #623
+  );
 
-    const {
-        MerklePatriciaProof,
-        GatewayLib,
-        MessageBus,
-    } = createLibraryConracts();
-    const Organization = createOrganization(
-        deployerAddress, // FIXME: #623
-        deployerAddress, // FIXME: #623
-        [deployerAddress], // FIXME: #623
-        '100000000000', // FIXME: #623
-    );
-    const Anchor = createAnchor(
-        Organization.reference(),
-        chainIdOrigin,
-        blockHeightOrigin,
-        stateRootOrigin,
-        '10', // FIXME: #623
-    );
+  const OSTPrime = createOSTPrime(
+    tokenAddressOrigin,
+    Organization.reference(),
+  );
 
-    const OSTPrime = createOSTPrime(
-        tokenAddressOrigin,
-        Organization.reference(),
-    );
+  const EIP20CoGateway = createEIP20CoGateway(
+    tokenAddressOrigin,
+    OSTPrime.reference(),
+    Anchor.reference(),
+    bounty,
+    Organization.reference(),
+    gatewayAddress,
+    '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
+  );
+  EIP20CoGateway.addLinkedDependency(GatewayLib);
+  EIP20CoGateway.addLinkedDependency(MessageBus);
 
-    const EIP20CoGateway = createEIP20CoGateway(
-        tokenAddressOrigin,
-        OSTPrime.reference(),
-        Anchor.reference(),
-        bounty,
-        Organization.reference(),
-        gatewayAddress,
-        '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
-    );
-    EIP20CoGateway.addLinkedDependency(GatewayLib);
-    EIP20CoGateway.addLinkedDependency(MessageBus);
+  const registry = new ContractRegistry();
+  registry.addContracts([
+    EIP20CoGateway,
+    OSTPrime,
+    GatewayLib,
+    MerklePatriciaProof,
+    MessageBus,
+    Organization,
+    Anchor,
+  ]);
 
-    const registry = new ContractRegistry();
-    registry.addContracts([
-        EIP20CoGateway,
-        OSTPrime,
-        GatewayLib,
-        MerklePatriciaProof,
-        MessageBus,
-        Organization,
-        Anchor,
-    ]);
-
-    const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
-    return deployContracts(
-        new UnlockedWeb3Signer(web3Auxiliary),
-        web3Auxiliary,
-        deploymentObjects,
-        options,
-    );
+  const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
+  return deployContracts(
+    new UnlockedWeb3Signer(web3Auxiliary),
+    web3Auxiliary,
+    deploymentObjects,
+    options,
+  );
 };
 
 module.exports = {
-    deployAuxiliary,
-    deployOrigin,
-    deployedToken,
-    getChainInfo,
+  deployAuxiliary,
+  deployOrigin,
+  deployedToken,
+  getChainInfo,
 };

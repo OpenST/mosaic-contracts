@@ -17,12 +17,12 @@
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-const web3 = require('../../test_lib/web3.js');
 const BN = require('bn.js');
+const web3 = require('../../test_lib/web3.js');
+
 const MosaicCore = artifacts.require('MosaicCore');
 
 contract('MosaicCore.getAccumulatedGasTarget()', async (accounts) => {
-
   /**
    * @dev while writing this test commitMetaBlock function is not
    *      implemented, So once its updated the tests should be updated to use
@@ -30,17 +30,16 @@ contract('MosaicCore.getAccumulatedGasTarget()', async (accounts) => {
    *      meta block for testing
    */
 
-  let mosaicCore,
-    maxAccumulateGasLimit,
-    gas,
-    auxiliaryCoreIdentifier,
-    transactionRoot,
-    ost,
-    minimumWeight
-  ;
+  let mosaicCore;
+  let maxAccumulateGasLimit;
+  let gas;
+  let auxiliaryCoreIdentifier;
+  let transactionRoot;
+  let ost;
+  let minimumWeight;
 
   /** Deploys the mosaic core contract */
-  async function deployMosaicCore(){
+  async function deployMosaicCore() {
     mosaicCore = await MosaicCore.new(
       auxiliaryCoreIdentifier,
       ost,
@@ -52,33 +51,32 @@ contract('MosaicCore.getAccumulatedGasTarget()', async (accounts) => {
   }
 
   /** Asserts the accumulated gas target */
-  async function testAccumulatedGasTarget(){
+  async function testAccumulatedGasTarget() {
     await deployMosaicCore();
-    let accumulatedGasTarget = await mosaicCore.getAccumulatedGasTarget.call();
+    const accumulatedGasTarget = await mosaicCore.getAccumulatedGasTarget.call();
     assert(
       accumulatedGasTarget.eq(gas.add(maxAccumulateGasLimit)),
-      `Accumulated gas target should` +
-        `be ${gas.add(maxAccumulateGasLimit).toString(10)}`
-    )
+      'Accumulated gas target should'
+        + `be ${gas.add(maxAccumulateGasLimit).toString(10)}`,
+    );
   }
 
   beforeEach(async () => {
-    auxiliaryCoreIdentifier = web3.utils.sha3("1");
-    transactionRoot= web3.utils.sha3("1");
+    auxiliaryCoreIdentifier = web3.utils.sha3('1');
+    transactionRoot = web3.utils.sha3('1');
     ost = accounts[0];
     minimumWeight = new BN('1');
   });
 
-  it('should return 200 as accumulate gas target', async function () {
-      gas = new BN('100');
-      maxAccumulateGasLimit = new BN('100');
-      await testAccumulatedGasTarget();
+  it('should return 200 as accumulate gas target', async () => {
+    gas = new BN('100');
+    maxAccumulateGasLimit = new BN('100');
+    await testAccumulatedGasTarget();
   });
 
-  it('should return 1245 as accumulate gas target', async function () {
+  it('should return 1245 as accumulate gas target', async () => {
     gas = new BN('245');
     maxAccumulateGasLimit = new BN('1000');
     await testAccumulatedGasTarget();
   });
-
 });

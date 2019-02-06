@@ -19,28 +19,26 @@
 // ----------------------------------------------------------------------------
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
-const Anchor = artifacts.require("./Anchor.sol");
-const web3 = require('../../test_lib/web3.js');
+const Anchor = artifacts.require('./Anchor.sol');
 const BN = require('bn.js');
+const web3 = require('../../test_lib/web3.js');
 
-contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
+contract('Anchor.getLatestStateRootBlockHeight()', (accounts) => {
+  let remoteChainId;
+  let blockHeight;
+  let stateRoot;
+  let maxNumberOfStateRoots;
+  let organization;
+  let anchor;
+  let owner;
+  let worker;
 
-  let remoteChainId,
-    blockHeight,
-    stateRoot,
-    maxNumberOfStateRoots,
-    organization,
-    anchor,
-    owner,
-    worker;
-
-  beforeEach(async function () {
-
+  beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
     remoteChainId = new BN(1410);
     blockHeight = new BN(5);
-    stateRoot = web3.utils.sha3("dummy_state_root");
+    stateRoot = web3.utils.sha3('dummy_state_root');
     maxNumberOfStateRoots = new BN(10);
     organization = await MockOrganization.new(owner, worker);
 
@@ -51,37 +49,27 @@ contract('Anchor.getLatestStateRootBlockHeight()', function (accounts) {
       maxNumberOfStateRoots,
       organization.address,
     );
-
   });
 
   it('should return the state root that was set while deployment', async () => {
-
-    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    const latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
-
   });
 
   it('should return the latest anchored state root block height', async () => {
-
     blockHeight = blockHeight.addn(50000);
 
-    await anchor.anchorStateRoot(
-      blockHeight,
-      stateRoot,
-      { from: owner },
-    );
+    await anchor.anchorStateRoot(blockHeight, stateRoot, { from: owner });
 
-    let latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+    const latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
     assert.strictEqual(
       blockHeight.eq(latestBlockHeight),
       true,
       `Latest block height from the contract must be ${blockHeight}.`,
     );
-
   });
-
 });

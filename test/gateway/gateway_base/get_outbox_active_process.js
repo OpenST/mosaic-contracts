@@ -19,37 +19,30 @@
 // ----------------------------------------------------------------------------
 
 const GatewayBase = artifacts.require('./TestGatewayBase.sol');
-const BN = require("bn.js");
+const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 const messageBus = require('../../test_lib/message_bus.js');
-const MessageStatusEnum = messageBus.MessageStatusEnum;
+
+const { MessageStatusEnum } = messageBus;
 const Utils = require('../../../test/test_lib/utils');
+
 const zeroBytes = Utils.ZERO_BYTES32;
 
-contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
+contract('GatewayBase.getOutboxActiveProcess()', (accounts) => {
+  let gatewayBase;
+  let messageHash;
+  let accountAddress;
 
-  let gatewayBase, messageHash, accountAddress;
-
-  beforeEach(async function () {
-
-    gatewayBase = await GatewayBase.new(
-      accounts[0],
-      new BN(100),
-      accounts[1],
-    );
+  beforeEach(async () => {
+    gatewayBase = await GatewayBase.new(accounts[0], new BN(100), accounts[1]);
 
     accountAddress = accounts[2];
-    messageHash = web3.utils.sha3("message_hash");
+    messageHash = web3.utils.sha3('message_hash');
 
-    await gatewayBase.setOutboxProcess(
-      accountAddress,
-      messageHash
-    );
-
+    await gatewayBase.setOutboxProcess(accountAddress, messageHash);
   });
 
-  it('should return correct message hash and message status', async function () {
-
+  it('should return correct message hash and message status', async () => {
     await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Declared);
 
     let result = await gatewayBase.getOutboxActiveProcess(accountAddress);
@@ -57,7 +50,9 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
     assert.strictEqual(
       result.status_.eqn(MessageStatusEnum.Declared),
       true,
-      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Declared}`,
+      `Message status ${result.status_.toString(10)} must be equal to ${
+        MessageStatusEnum.Declared
+      }`,
     );
 
     assert.strictEqual(
@@ -75,7 +70,9 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
     assert.strictEqual(
       result.status_.eqn(MessageStatusEnum.Revoked),
       true,
-      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Revoked}`,
+      `Message status ${result.status_.toString(10)} must be equal to ${
+        MessageStatusEnum.Revoked
+      }`,
     );
 
     assert.strictEqual(
@@ -83,42 +80,51 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
       messageHash,
       `Message hash ${result.messageHash_} must be equal to ${messageHash}`,
     );
-
   });
 
-  it('should return zero message hash and undeclared message status when the ' +
-    'account address does not have active outbox process', async function () {
+  it(
+    'should return zero message hash and undeclared message status when the '
+      + 'account address does not have active outbox process',
+    async () => {
+      await gatewayBase.setOutboxStatus(
+        messageHash,
+        MessageStatusEnum.Declared,
+      );
 
-    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Declared);
+      accountAddress = accounts[5];
 
-    accountAddress = accounts[5];
+      const result = await gatewayBase.getOutboxActiveProcess(accountAddress);
 
-    let result = await gatewayBase.getOutboxActiveProcess(accountAddress);
+      assert.strictEqual(
+        result.status_.eqn(MessageStatusEnum.Undeclared),
+        true,
+        `Message status ${result.status_.toString(10)} must be equal to ${
+          MessageStatusEnum.Undeclared
+        }`,
+      );
 
-    assert.strictEqual(
-      result.status_.eqn(MessageStatusEnum.Undeclared),
-      true,
-      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Undeclared}`,
+      assert.strictEqual(
+        result.messageHash_,
+        zeroBytes,
+        `Message hash ${result.messageHash_} must be equal to ${zeroBytes}`,
+      );
+    },
+  );
+
+  it('should return the most recent active process', async () => {
+    await gatewayBase.setOutboxStatus(
+      messageHash,
+      MessageStatusEnum.Progressed,
     );
-
-    assert.strictEqual(
-      result.messageHash_,
-      zeroBytes,
-      `Message hash ${result.messageHash_} must be equal to ${zeroBytes}`,
-    );
-
-  });
-
-  it('should return the most recent active process', async function () {
-
-    await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Progressed);
 
     let result = await gatewayBase.getOutboxActiveProcess(accountAddress);
 
     assert.strictEqual(
       result.status_.eqn(MessageStatusEnum.Progressed),
       true,
-      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Progressed}`,
+      `Message status ${result.status_.toString(10)} must be equal to ${
+        MessageStatusEnum.Progressed
+      }`,
     );
 
     assert.strictEqual(
@@ -128,13 +134,10 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
     );
 
     // Get the new message hash.
-    messageHash = web3.utils.sha3("message_hash_1");
+    messageHash = web3.utils.sha3('message_hash_1');
 
     // Set the new message hash as active inbox process.
-    await gatewayBase.setOutboxProcess(
-      accountAddress,
-      messageHash
-    );
+    await gatewayBase.setOutboxProcess(accountAddress, messageHash);
 
     await gatewayBase.setOutboxStatus(messageHash, MessageStatusEnum.Declared);
 
@@ -143,7 +146,9 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
     assert.strictEqual(
       result.status_.eqn(MessageStatusEnum.Declared),
       true,
-      `Message status ${result.status_.toString(10)} must be equal to ${MessageStatusEnum.Declared}`,
+      `Message status ${result.status_.toString(10)} must be equal to ${
+        MessageStatusEnum.Declared
+      }`,
     );
 
     assert.strictEqual(
@@ -151,7 +156,5 @@ contract('GatewayBase.getOutboxActiveProcess()', function (accounts) {
       messageHash,
       `Message hash ${result.messageHash_} must be equal to ${messageHash}`,
     );
-
   });
-
 });

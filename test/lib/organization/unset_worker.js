@@ -26,19 +26,18 @@ const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Organization = artifacts.require('Organization');
 
 contract('Organization.unsetWorker()', async (accounts) => {
-
-  let owner = accounts[0];
-  let worker = accounts[1];
-  let admin = accounts[2];
+  const owner = accounts[0];
+  const worker = accounts[1];
+  const admin = accounts[2];
 
   let organization = null;
   let expirationHeight;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     expirationHeight = (await web3.eth.getBlockNumber()) + 10;
 
-    let zeroAdmin = Utils.NULL_ADDRESS;
-    let workers = [];
+    const zeroAdmin = Utils.NULL_ADDRESS;
+    const workers = [];
     organization = await Organization.new(
       owner,
       zeroAdmin,
@@ -49,63 +48,38 @@ contract('Organization.unsetWorker()', async (accounts) => {
   });
 
   it('reverts when caller is not owner/admin', async () => {
-
     await Utils.expectRevert(
-      organization.unsetWorker(
-        worker,
-        { from: accounts[4] },
-      ),
+      organization.unsetWorker(worker, { from: accounts[4] }),
       'Only owner and admin are allowed to call this method.',
     );
-
   });
 
   it('should pass when owner unsets/deactivates a worker', async () => {
-    await organization.unsetWorker(
-      worker,
-      { from: owner },
-    );
+    await organization.unsetWorker(worker, { from: owner });
 
-    let returnedWorker = await organization.workers.call(worker);
-    assert(
-      returnedWorker.eqn(0),
-      'Worker should be reset to zero.',
-    );
-
+    const returnedWorker = await organization.workers.call(worker);
+    assert(returnedWorker.eqn(0), 'Worker should be reset to zero.');
   });
 
   it('should pass when admin unsets/deactivates a worker', async () => {
     await organization.setAdmin(admin, { from: owner });
-    await organization.unsetWorker(
-      worker,
-      { from: admin },
-    );
+    await organization.unsetWorker(worker, { from: admin });
 
-    let returnedWorker = await organization.workers.call(worker);
-    assert(
-      returnedWorker.eqn(0),
-      'Worker should be reset to zero.',
-    );
-
+    const returnedWorker = await organization.workers.call(worker);
+    assert(returnedWorker.eqn(0), 'Worker should be reset to zero.');
   });
 
   it('emits an unsetWorker event when worker is present', async () => {
     await organization.setWorker(worker, expirationHeight, { from: owner });
-    const transaction = await organization.unsetWorker(
-      worker,
-      { from: owner },
-    );
-    const events = EventsDecoder.getEvents(
-      transaction,
-      organization,
-    );
+    const transaction = await organization.unsetWorker(worker, {
+      from: owner,
+    });
+    const events = EventsDecoder.getEvents(transaction, organization);
 
     assert.strictEqual(
       events.WorkerUnset.worker,
       worker,
       'The event should list the worker that was unset.',
     );
-
   });
-
 });

@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./TestEIP20Gateway.sol");
-const MockToken = artifacts.require("MockToken");
+const Gateway = artifacts.require('./TestEIP20Gateway.sol');
+const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -31,42 +31,43 @@ const StubData = require('../../data/redeem_revoked_1.json');
 const NullAddress = Utils.NULL_ADDRESS;
 
 async function setStorageRoot(gateway) {
-
-  let blockHeight = new BN(StubData.co_gateway.revert_redeem.proof_data.block_number, 16);
-  let storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
+  const blockHeight = new BN(
+    StubData.co_gateway.revert_redeem.proof_data.block_number,
+    16,
+  );
+  const storageRoot = StubData.co_gateway.revert_redeem.proof_data.storageHash;
   await gateway.setStorageRoot(blockHeight, storageRoot);
   return blockHeight;
 }
 
-contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
+contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
+  let gateway;
+  let mockToken;
+  let baseToken;
+  let unstakeRequest;
+  let unstakeMessage;
+  let stakeVaultAddress;
+  let storageProof;
+  let blockHeight;
 
-  let gateway,
-    mockToken,
-    baseToken,
-    unstakeRequest,
-    unstakeMessage,
-    stakeVaultAddress,
-    storageProof,
-    blockHeight;
-
-  let bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
-  let MessageStatusEnum = messageBus.MessageStatusEnum;
+  const bountyAmount = new BN(StubData.gateway.constructor.bountyAmount, 16);
+  const { MessageStatusEnum } = messageBus;
   let redeemRequest = StubData.co_gateway.redeem.params;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     redeemRequest = StubData.co_gateway.redeem.params;
-    mockToken = await MockToken.new({from: accounts[0]});
-    baseToken = await MockToken.new({from: accounts[0]});
+    mockToken = await MockToken.new({ from: accounts[0] });
+    baseToken = await MockToken.new({ from: accounts[0] });
 
-    let organizationAddress = accounts[3];
-    let coreAddress = accounts[5];
+    const organizationAddress = accounts[3];
+    const coreAddress = accounts[5];
     gateway = await Gateway.new(
       mockToken.address,
       baseToken.address,
       coreAddress,
       bountyAmount,
       organizationAddress,
-      NullAddress, //burner address
+      NullAddress, // burner address
     );
 
     unstakeRequest = {
@@ -74,7 +75,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       amount: new BN(redeemRequest.amount, 16),
     };
 
-    let redeemIntentHash = cogatewayUtils.hashRedeemIntent(
+    const redeemIntentHash = cogatewayUtils.hashRedeemIntent(
       unstakeRequest.amount,
       unstakeRequest.beneficiary,
       StubData.contracts.coGateway,
@@ -98,14 +99,16 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       accounts,
     );
 
-    storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0].serializedProof;
+    storageProof = StubData.co_gateway.revert_redeem.proof_data.storageProof[0]
+      .serializedProof;
     blockHeight = await setStorageRoot(gateway);
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Declared);
-
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Declared,
+    );
   });
 
-  it('should confirm revert redeem intent', async function () {
-
+  it('should confirm revert redeem intent', async () => {
     await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
       blockHeight,
@@ -113,9 +116,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should return correct response', async function () {
-
-    let response = await gateway.confirmRevertRedeemIntent.call(
+  it('should return correct response', async () => {
+    const response = await gateway.confirmRevertRedeemIntent.call(
       unstakeMessage.messageHash,
       blockHeight,
       storageProof,
@@ -124,34 +126,38 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     assert.strictEqual(
       response.redeemer_,
       unstakeMessage.unstakeAccount,
-      `Expected redeemer ${unstakeMessage.unstakeAccount} is different from redeemer from 
+      `Expected redeemer ${
+        unstakeMessage.unstakeAccount
+      } is different from redeemer from 
       event ${response.redeemer_}`,
     );
     assert.strictEqual(
       response.redeemerNonce_.eq(unstakeMessage.nonce),
       true,
-      `Expected stakerNonce ${unstakeMessage.nonce.toString(10)} is different from nonce from 
+      `Expected stakerNonce ${unstakeMessage.nonce.toString(
+        10,
+      )} is different from nonce from 
       event ${response.redeemerNonce_.toString(10)}`,
     );
     assert.strictEqual(
       response.amount_.eq(unstakeRequest.amount),
       true,
-      `Expected amount ${unstakeRequest.amount.toString(10)} is different from amount from 
+      `Expected amount ${unstakeRequest.amount.toString(
+        10,
+      )} is different from amount from 
       event ${response.amount_.toString(10)}`,
     );
-
   });
 
-  it('should emit RevertRedeemIntentConfirmed event', async function () {
-
-    let tx = await gateway.confirmRevertRedeemIntent(
+  it('should emit RevertRedeemIntentConfirmed event', async () => {
+    const tx = await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
       blockHeight,
       storageProof,
     );
 
-    let event = EventDecoder.getEvents(tx, gateway);
-    let eventData = event.RevertRedeemIntentConfirmed;
+    const event = EventDecoder.getEvents(tx, gateway);
+    const eventData = event.RevertRedeemIntentConfirmed;
 
     assert.isDefined(
       event.RevertRedeemIntentConfirmed,
@@ -160,32 +166,38 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     assert.strictEqual(
       eventData._messageHash,
       unstakeMessage.messageHash,
-      `Expected message hash ${unstakeMessage.messageHash} is different from message hash from 
+      `Expected message hash ${
+        unstakeMessage.messageHash
+      } is different from message hash from 
       event ${eventData._messageHash}`,
     );
     assert.strictEqual(
       eventData._redeemer,
       unstakeMessage.unstakeAccount,
-      `Expected redeemer ${unstakeMessage.unstakeAccount} is different from redeemer from 
+      `Expected redeemer ${
+        unstakeMessage.unstakeAccount
+      } is different from redeemer from 
       event ${eventData._redeemer}`,
     );
     assert.strictEqual(
       eventData._redeemerNonce.eq(unstakeMessage.nonce),
       true,
-      `Expected stakerNonce ${unstakeMessage.nonce.toString(10)} is different from nonce from 
+      `Expected stakerNonce ${unstakeMessage.nonce.toString(
+        10,
+      )} is different from nonce from 
       event ${eventData._redeemerNonce.toString(10)}`,
     );
     assert.strictEqual(
       eventData._amount.eq(unstakeRequest.amount),
       true,
-      `Expected amount ${unstakeRequest.amount.toString(10)} is different from amount from 
+      `Expected amount ${unstakeRequest.amount.toString(
+        10,
+      )} is different from amount from 
       event ${eventData._amount.toString(10)}`,
     );
-
   });
 
-  it('should fail if revert redeem intent is already confirmed', async function () {
-
+  it('should fail if revert redeem intent is already confirmed', async () => {
     await gateway.confirmRevertRedeemIntent(
       unstakeMessage.messageHash,
       blockHeight,
@@ -202,9 +214,11 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should fail for undeclared message', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Undeclared);
+  it('should fail for undeclared message', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Undeclared,
+    );
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -216,9 +230,11 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should fail for progressed message', async function () {
-
-    await gateway.setInboxStatus(unstakeMessage.messageHash, MessageStatusEnum.Progressed);
+  it('should fail for progressed message', async () => {
+    await gateway.setInboxStatus(
+      unstakeMessage.messageHash,
+      MessageStatusEnum.Progressed,
+    );
 
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
@@ -230,8 +246,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should fail for zero message hash', async function () {
-
+  it('should fail for zero message hash', async () => {
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
         Utils.ZERO_BYTES32,
@@ -242,8 +257,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should fail for blank rlp parent nodes(storage proof)', async function () {
-
+  it('should fail for blank rlp parent nodes(storage proof)', async () => {
     storageProof = '0x';
 
     await Utils.expectRevert(
@@ -256,8 +270,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
     );
   });
 
-  it('should fail if storage root is not available for given block height', async function () {
-
+  it('should fail if storage root is not available for given block height', async () => {
     await Utils.expectRevert(
       gateway.confirmRevertRedeemIntent(
         unstakeMessage.messageHash,
@@ -266,11 +279,9 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', function (accounts) {
       ),
       'Storage root must not be zero.',
     );
-
   });
 
-  it('should fail for wrong merkle proof', async function () {
-
+  it('should fail for wrong merkle proof', async () => {
     // Using revert proof instead of revert_redeem proof.
     storageProof = StubData.co_gateway.redeem.proof_data.storageProof[0].serializedProof;
 
@@ -291,8 +302,8 @@ async function setup(
   unstakeRequest,
   stakeVaultAddress,
   mockToken,
-  accounts) {
-
+  accounts,
+) {
   unstakeMessage.messageHash = messageBus.messageDigest(
     unstakeMessage.intentHash,
     unstakeMessage.nonce,
@@ -318,10 +329,8 @@ async function setup(
 
   stakeVaultAddress = await gateway.stakeVault.call();
 
-  await mockToken.transfer(
-    stakeVaultAddress,
-    unstakeRequest.amount,
-    {from: accounts[0]},
-  );
+  await mockToken.transfer(stakeVaultAddress, unstakeRequest.amount, {
+    from: accounts[0],
+  });
   return stakeVaultAddress;
 }

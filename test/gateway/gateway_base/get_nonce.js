@@ -29,28 +29,28 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
  */
 
 contract('GatewayBase.sol', (accounts) => {
-    describe('get nonce', async () => {
-        let gatewayBaseInstance;
+  describe('get nonce', async () => {
+    let gatewayBaseInstance;
 
-        beforeEach(async () => {
-            const owner = accounts[2];
-            const worker = accounts[3];
-            const dummyStateRootProviderAddress = accounts[0];
-            const bounty = new BN(100);
+    beforeEach(async () => {
+      const owner = accounts[2];
+      const worker = accounts[3];
+      const dummyStateRootProviderAddress = accounts[0];
+      const bounty = new BN(100);
 
-            const organization = await MockOrganization.new(owner, worker);
+      const organization = await MockOrganization.new(owner, worker);
 
-            gatewayBaseInstance = await GatewayBase.new(
-                dummyStateRootProviderAddress,
-                bounty,
-                organization.address,
-            );
-        });
-
-        it('should return nonce `1` if there is no active process', async () => {
-            const expectedNonce = new BN(1);
-            const nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
-            assert(nonce.eq(expectedNonce));
-        });
+      gatewayBaseInstance = await GatewayBase.new(
+        dummyStateRootProviderAddress,
+        bounty,
+        organization.address,
+      );
     });
+
+    it('should return nonce `1` if there is no active process', async () => {
+      const expectedNonce = new BN(1);
+      const nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
+      assert(nonce.eq(expectedNonce));
+    });
+  });
 });

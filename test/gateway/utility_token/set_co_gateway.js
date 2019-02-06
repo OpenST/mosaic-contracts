@@ -22,20 +22,25 @@ const UtilityToken = artifacts.require('UtilityToken');
 const MockOrganization = artifacts.require('MockOrganization');
 const MockEIP20CoGateway = artifacts.require('MockEIP20CoGateway');
 
-const Utils = require("./../../test_lib/utils"),
-  EventDecoder = require('../../test_lib/event_decoder.js');
+const Utils = require('./../../test_lib/utils');
+
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-const TOKEN_SYMBOL = "UT";
-const TOKEN_NAME = "Utility Token";
+const TOKEN_SYMBOL = 'UT';
+const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
-contract('UtilityToken.setCoGateway() ', function (accounts) {
+contract('UtilityToken.setCoGateway() ', (accounts) => {
+  let brandedToken;
+  let organization;
+  let owner;
+  let worker;
+  let utilityToken;
+  let coGateway;
 
-  let brandedToken, organization, owner, worker, utilityToken, coGateway;
-
-  beforeEach(async function () {
+  beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
     brandedToken = accounts[4];
@@ -51,94 +56,82 @@ contract('UtilityToken.setCoGateway() ', function (accounts) {
 
     coGateway = await MockEIP20CoGateway.new();
     await coGateway.setUtilityToken(utilityToken.address);
-
   });
 
-  it('should fail when called by non organization address', async function () {
-
+  it('should fail when called by non organization address', async () => {
     await Utils.expectRevert(
       utilityToken.setCoGateway(coGateway.address, { from: accounts[5] }),
       'Only the organization is allowed to call this method.',
     );
-
   });
 
-  it('should fail when cogateway address is zero', async function () {
-
+  it('should fail when cogateway address is zero', async () => {
     await Utils.expectRevert(
       utilityToken.setCoGateway(NullAddress, { from: owner }),
       'CoGateway address should not be zero.',
     );
-
   });
 
-  it('should fail when cogateway address is not linked with current ' +
-    'utility token', async function () {
-
+  it(
+    'should fail when cogateway address is not linked with current '
+      + 'utility token',
+    async () => {
       await coGateway.setUtilityToken(NullAddress);
 
       await Utils.expectRevert(
         utilityToken.setCoGateway(coGateway.address, { from: owner }),
         'CoGateway should be linked with this utility token.',
       );
-
-    }
+    },
   );
 
-  it('should pass with correct params', async function () {
+  it('should pass with correct params', async () => {
+    const result = await utilityToken.setCoGateway.call(coGateway.address, {
+      from: owner,
+    });
 
-    let result = await utilityToken.setCoGateway.call(
-      coGateway.address, { from: owner }
-    );
-
-    assert.strictEqual(
-      result,
-      true,
-      'Contract should return true.',
-    );
+    assert.strictEqual(result, true, 'Contract should return true.');
 
     await utilityToken.setCoGateway(coGateway.address, { from: owner });
 
-    let coGatewayAddress = await utilityToken.coGateway.call();
+    const coGatewayAddress = await utilityToken.coGateway.call();
 
     assert.strictEqual(
       coGatewayAddress,
       coGateway.address,
       `CoGateway address from contract should be ${coGateway.address}.`,
     );
-
   });
 
-  it('should fail when cogateway address is already set once', async function () {
-
+  it('should fail when cogateway address is already set once', async () => {
     await utilityToken.setCoGateway(coGateway.address, { from: owner });
 
     await Utils.expectRevert(
       utilityToken.setCoGateway(coGateway.address, { from: owner }),
       'CoGateway address is already set.',
     );
-
   });
 
-  it('should emit CoGatewaySet event', async function () {
+  it('should emit CoGatewaySet event', async () => {
+    const tx = await utilityToken.setCoGateway(coGateway.address, {
+      from: owner,
+    });
 
-    let tx = await utilityToken.setCoGateway(coGateway.address, { from: owner });
-
-    let event = EventDecoder.getEvents(tx, utilityToken);
+    const event = EventDecoder.getEvents(tx, utilityToken);
 
     assert.isDefined(
       event.CoGatewaySet,
       'Event `CoGatewaySet` must be emitted.',
     );
 
-    let eventData = event.CoGatewaySet;
+    const eventData = event.CoGatewaySet;
 
     assert.strictEqual(
       eventData._coGateway,
       coGateway.address,
-      `The _coGateway address in the event should be equal to ${coGateway.address}.`
+      `The _coGateway address in the event should be equal to ${
+        coGateway.address
+      }.`,
     );
-
   });
-
 });

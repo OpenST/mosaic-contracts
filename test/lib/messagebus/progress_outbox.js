@@ -18,70 +18,65 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils'),
-    web3 = require('web3');
+const web3 = require('web3');
+const messageBusUtilsKlass = require('./messagebus_utils');
+
 const messageBusUtils = new messageBusUtilsKlass();
 const messageBus = require('../../test_lib/message_bus.js');
 
-let MessageStatusEnum = messageBus.MessageStatusEnum;
+const { MessageStatusEnum } = messageBus;
 contract('MessageBus.progressOutbox()', async (accounts) => {
-    let params;
+  let params;
 
-    beforeEach(async function () {
+  beforeEach(async () => {
+    await messageBusUtils.deployedMessageBus();
+    params = messageBusUtils.defaultParams(accounts);
+  });
 
-        await messageBusUtils.deployedMessageBus();
-        params = messageBusUtils.defaultParams(accounts);
+  it('should fail when message status is undeclared in outbox', async () => {
+    const message = 'Message on source must be Declared.';
+    params.message = message;
+
+    await messageBusUtils.progressOutbox(params, false);
+  });
+
+  it('should fail when message status is already progressed in outbox', async () => {
+    const message = 'Message on source must be Declared.';
+    params.message = message;
+
+    await messageBusUtils.declareMessage(params, true);
+    await messageBusUtils.progressOutbox(params, true);
+    await messageBusUtils.progressOutbox(params, false);
+  });
+
+  it('should fail when message status is declared revocation in outbox', async () => {
+    const message = 'Message on source must be Declared.';
+    params.message = message;
+
+    await messageBusUtils.declareMessage(params, true);
+    await messageBusUtils.declareRevocationMessage(params, true);
+    await messageBusUtils.progressOutbox(params, false);
+  });
+
+  it('should fail when message status is revoked in outbox', async () => {
+    const message = 'Message on source must be Declared.';
+    params.message = message;
+
+    await messageBusUtils.declareMessage(params, true);
+    await messageBusUtils.declareRevocationMessage(params, true);
+    params.messageStatus = MessageStatusEnum.Revoked;
+    await messageBusUtils.progressOutboxRevocation(params, true);
+    await messageBusUtils.progressOutbox(params, false);
+  });
+
+  it('should fail when unlock secret is incorrect', async () => {
+    const message = 'Invalid unlock secret.';
+    params.message = message;
+
+    params.unlockSecret = web3.utils.soliditySha3({
+      type: 'bytes32',
+      value: 'secret1',
     });
-
-    it('should fail when message status is undeclared in outbox', async () => {
-        let message = 'Message on source must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.progressOutbox(params, false);
-
-    });
-
-    it('should fail when message status is already progressed in outbox', async () => {
-        let message = 'Message on source must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.declareMessage(params, true);
-        await messageBusUtils.progressOutbox(params, true);
-        await messageBusUtils.progressOutbox(params, false);
-
-    });
-
-    it('should fail when message status is declared revocation in outbox', async () => {
-        let message = 'Message on source must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.declareMessage(params, true);
-        await messageBusUtils.declareRevocationMessage(params, true);
-        await messageBusUtils.progressOutbox(params, false);
-
-    });
-
-    it('should fail when message status is revoked in outbox', async () => {
-        let message = 'Message on source must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.declareMessage(params, true);
-        await messageBusUtils.declareRevocationMessage(params, true);
-        params.messageStatus = MessageStatusEnum.Revoked;
-        await messageBusUtils.progressOutboxRevocation(params, true);
-        await messageBusUtils.progressOutbox(params, false);
-
-    });
-
-    it('should fail when unlock secret is incorrect', async () => {
-        let message = 'Invalid unlock secret.';
-        params.message = message;
-
-        params.unlockSecret = web3.utils.soliditySha3({
-            type: 'bytes32',
-            value: 'secret1'
-        });
-        await messageBusUtils.progressOutbox(params, false);
-
-    });
+    await messageBusUtils.progressOutbox(params, false);
+  });
 });

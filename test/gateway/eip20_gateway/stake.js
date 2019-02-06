@@ -53,235 +53,235 @@ let errorMessage;
 let mockOrganization;
 
 async function prepareData() {
-    const intentHash = gatewayUtils.hashStakeIntent(
-        stakeAmount,
-        beneficiary,
-        gateway.address,
-    );
+  const intentHash = gatewayUtils.hashStakeIntent(
+    stakeAmount,
+    beneficiary,
+    gateway.address,
+  );
 
-    messageHash = messageBus.messageDigest(
-        intentHash,
-        nonce,
-        gasPrice,
-        gasLimit,
-        stakerAddress,
-        hashLock,
-    );
+  messageHash = messageBus.messageDigest(
+    intentHash,
+    nonce,
+    gasPrice,
+    gasLimit,
+    stakerAddress,
+    hashLock,
+  );
 }
 
 async function stake(resultType) {
-    const params = {
-        amount: stakeAmount,
-        beneficiary,
-        staker: stakerAddress,
-        gasPrice,
-        gasLimit,
-        nonce,
-        hashLock,
-    };
+  const params = {
+    amount: stakeAmount,
+    beneficiary,
+    staker: stakerAddress,
+    gasPrice,
+    gasLimit,
+    nonce,
+    hashLock,
+  };
 
-    const expectedResult = {
-        returns: { messageHash },
-        events: {
-            StakeIntentDeclared: {
-                _messageHash: messageHash,
-                _staker: stakerAddress,
-                _stakerNonce: nonce,
-                _beneficiary: beneficiary,
-                _amount: stakeAmount,
-            },
-        },
-        errorMessage,
-    };
+  const expectedResult = {
+    returns: { messageHash },
+    events: {
+      StakeIntentDeclared: {
+        _messageHash: messageHash,
+        _staker: stakerAddress,
+        _stakerNonce: nonce,
+        _beneficiary: beneficiary,
+        _amount: stakeAmount,
+      },
+    },
+    errorMessage,
+  };
 
-    const txOption = {
-        from: stakerAddress,
-    };
+  const txOption = {
+    from: stakerAddress,
+  };
 
-    await gatewayUtils.stake(
-        params,
-        resultType,
-        expectedResult,
-        txOption,
-    );
+  await gatewayUtils.stake(
+    params,
+    resultType,
+    expectedResult,
+    txOption,
+  );
 }
 
 contract('EIP20Gateway.stake() ', (accounts) => {
-    beforeEach(async () => {
-        [core, stakerAddress, beneficiary, coGateway, organization] = accounts;
+  beforeEach(async () => {
+    [core, stakerAddress, beneficiary, coGateway, organization] = accounts;
 
-        mockToken = await MockToken.new();
-        baseToken = await MockToken.new();
-        mockOrganization = await MockOrganization.new(organization, organization);
+    mockToken = await MockToken.new();
+    baseToken = await MockToken.new();
+    mockOrganization = await MockOrganization.new(organization, organization);
 
-        bountyAmount = new BN(100);
-        gateway = await Gateway.new(
-            mockToken.address,
-            baseToken.address,
-            core,
-            bountyAmount,
-            mockOrganization.address,
-            burner,
-        );
-        await gateway.activateGateway(coGateway, { from: organization });
+    bountyAmount = new BN(100);
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      core,
+      bountyAmount,
+      mockOrganization.address,
+      burner,
+    );
+    await gateway.activateGateway(coGateway, { from: organization });
 
-        gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
+    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
 
-        hashLockObj = utils.generateHashLock();
+    hashLockObj = utils.generateHashLock();
 
-        nonce = await gatewayUtils.getNonce(accounts[1]);
-        stakeAmount = new BN(100000000000);
-        gasPrice = new BN(200);
-        gasLimit = new BN(900000);
-        hashLock = hashLockObj.l;
+    nonce = await gatewayUtils.getNonce(accounts[1]);
+    stakeAmount = new BN(100000000000);
+    gasPrice = new BN(200);
+    gasLimit = new BN(900000);
+    hashLock = hashLockObj.l;
 
 
-        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
-        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
 
-        await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
-        await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
+    await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
+    await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-        errorMessage = '';
-    });
+    errorMessage = '';
+  });
 
-    it('should successfully stake', async () => {
-        await prepareData();
-        await stake(utils.ResultType.SUCCESS);
-    });
+  it('should successfully stake', async () => {
+    await prepareData();
+    await stake(utils.ResultType.SUCCESS);
+  });
 
-    it('should increase the nonce by 1 when staking', async () => {
-        const nonceBefore = await gateway.getNonce.call(stakerAddress);
-        await prepareData();
-        await stake(utils.ResultType.SUCCESS);
-        const nonceAfter = await gateway.getNonce.call(stakerAddress);
+  it('should increase the nonce by 1 when staking', async () => {
+    const nonceBefore = await gateway.getNonce.call(stakerAddress);
+    await prepareData();
+    await stake(utils.ResultType.SUCCESS);
+    const nonceAfter = await gateway.getNonce.call(stakerAddress);
 
-        assert.strictEqual(
-            nonceBefore.addn(1).eq(nonceAfter),
-            true,
-            'The nonce should increase by one when staking. '
-            + `Instead, it is ${nonceBefore.toString(10)} before and ${nonceAfter.toString(10)} after.`,
-        );
-    });
+    assert.strictEqual(
+      nonceBefore.addn(1).eq(nonceAfter),
+      true,
+      'The nonce should increase by one when staking. '
+      + `Instead, it is ${nonceBefore.toString(10)} before and ${nonceAfter.toString(10)} after.`,
+    );
+  });
 
-    it('should fail to stake when stake amount is 0', async () => {
-        stakeAmount = new BN(0);
-        errorMessage = 'Stake amount must not be zero.';
-        await prepareData();
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail to stake when stake amount is 0', async () => {
+    stakeAmount = new BN(0);
+    errorMessage = 'Stake amount must not be zero.';
+    await prepareData();
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail to stake when beneficiary address is 0', async () => {
-        beneficiary = Utils.NULL_ADDRESS;
-        errorMessage = 'Beneficiary address must not be zero.';
-        await prepareData();
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail to stake when beneficiary address is 0', async () => {
+    beneficiary = Utils.NULL_ADDRESS;
+    errorMessage = 'Beneficiary address must not be zero.';
+    await prepareData();
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail when max reward amount is greater than the stake amount', async () => {
-        /*
-        * Max reward amount will be `gasPrice * gasLimit`.
-        * i.e. in this case its 180000000, which is higher than the stake amount.
-        */
-        stakeAmount = new BN(200);
-        await prepareData();
-        errorMessage = 'Maximum possible reward must be less than the stake amount.';
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail when max reward amount is greater than the stake amount', async () => {
+    /*
+    * Max reward amount will be `gasPrice * gasLimit`.
+    * i.e. in this case its 180000000, which is higher than the stake amount.
+    */
+    stakeAmount = new BN(200);
+    await prepareData();
+    errorMessage = 'Maximum possible reward must be less than the stake amount.';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail to stake when staker has balance less than the stake amount', async () => {
-        stakeAmount = new BN(200000000000);
-        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
-        await prepareData();
-        errorMessage = 'revert';
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail to stake when staker has balance less than the stake amount', async () => {
+    stakeAmount = new BN(200000000000);
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+    await prepareData();
+    errorMessage = 'revert';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail to stake when stakerAddress has balance less than the bounty amount', async () => {
-        await baseToken.transfer(accounts[0], new BN(50), { from: stakerAddress });
-        await prepareData();
-        errorMessage = 'revert';
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail to stake when stakerAddress has balance less than the bounty amount', async () => {
+    await baseToken.transfer(accounts[0], new BN(50), { from: stakerAddress });
+    await prepareData();
+    errorMessage = 'revert';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail to stake when gateway is not approved by the staker', async () => {
-        stakerAddress = accounts[5];
-        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
-        await prepareData();
-        errorMessage = 'revert';
-        await stake(utils.ResultType.FAIL);
-    });
+  it('should fail to stake when gateway is not approved by the staker', async () => {
+    stakerAddress = accounts[5];
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await prepareData();
+    errorMessage = 'revert';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail when its already staked with same data (replay attack)', async () => {
-        await prepareData();
-        await stake(utils.ResultType.SUCCESS);
+  it('should fail when its already staked with same data (replay attack)', async () => {
+    await prepareData();
+    await stake(utils.ResultType.SUCCESS);
 
-        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
-        await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
-        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
-        await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+    await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-        errorMessage = 'Invalid nonce';
-        await stake(utils.ResultType.FAIL);
-    });
+    errorMessage = 'Invalid nonce';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail to stake when previous stake for same address is not progressed', async () => {
-        await prepareData();
-        await stake(utils.ResultType.SUCCESS);
+  it('should fail to stake when previous stake for same address is not progressed', async () => {
+    await prepareData();
+    await stake(utils.ResultType.SUCCESS);
 
-        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
-        await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
-        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
-        await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+    await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-        nonce = new BN(2);
-        await prepareData();
-        errorMessage = 'Previous process is not completed';
-        await stake(utils.ResultType.FAIL);
-    });
+    nonce = new BN(2);
+    await prepareData();
+    errorMessage = 'Previous process is not completed';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail when previous stake for same address is in revocation', async () => {
-        await prepareData();
-        await stake(utils.ResultType.SUCCESS);
+  it('should fail when previous stake for same address is in revocation', async () => {
+    await prepareData();
+    await stake(utils.ResultType.SUCCESS);
 
-        const penalty = new BN(bountyAmount * PENALTY_PERCENT);
+    const penalty = new BN(bountyAmount * PENALTY_PERCENT);
 
-        // funding staker for penalty amount
-        await baseToken.transfer(stakerAddress, penalty, { from: accounts[0] });
-        // approving gateway for penalty amount
-        await baseToken.approve(gateway.address, penalty, { from: stakerAddress });
+    // funding staker for penalty amount
+    await baseToken.transfer(stakerAddress, penalty, { from: accounts[0] });
+    // approving gateway for penalty amount
+    await baseToken.approve(gateway.address, penalty, { from: stakerAddress });
 
-        // revertStaking
-        await gateway.revertStake(messageHash, { from: stakerAddress });
+    // revertStaking
+    await gateway.revertStake(messageHash, { from: stakerAddress });
 
-        await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
-        await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
-        await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
-        await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
+    await mockToken.transfer(stakerAddress, stakeAmount, { from: accounts[0] });
+    await baseToken.transfer(stakerAddress, bountyAmount, { from: accounts[0] });
+    await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
+    await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-        nonce = new BN(2);
-        await prepareData();
-        errorMessage = 'Previous process is not completed';
-        await stake(utils.ResultType.FAIL);
-    });
+    nonce = new BN(2);
+    await prepareData();
+    errorMessage = 'Previous process is not completed';
+    await stake(utils.ResultType.FAIL);
+  });
 
-    it('should fail stake if gateway is not activated.', async () => {
-        gateway = await Gateway.new(
-            mockToken.address,
-            baseToken.address,
-            core,
-            bountyAmount,
-            mockOrganization.address,
-            burner,
-        );
+  it('should fail stake if gateway is not activated.', async () => {
+    gateway = await Gateway.new(
+      mockToken.address,
+      baseToken.address,
+      core,
+      bountyAmount,
+      mockOrganization.address,
+      burner,
+    );
 
-        /*
-        * New utils, because the gateway is a new one and the old utils still
-        * have the old gateway registered.
-        */
-        gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
-        await prepareData();
+    /*
+    * New utils, because the gateway is a new one and the old utils still
+    * have the old gateway registered.
+    */
+    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
+    await prepareData();
 
-        await stake(utils.ResultType.FAIL);
-    });
+    await stake(utils.ResultType.FAIL);
+  });
 });
