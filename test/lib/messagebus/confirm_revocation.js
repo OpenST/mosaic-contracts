@@ -18,16 +18,14 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils');
-
-const messageBusUtils = new messageBusUtilsKlass();
+const MessageBusUtils = require('./messagebus_utils');
 
 contract('MessageBus.confirmRevocation()', async (accounts) => {
   let params;
 
   beforeEach(async () => {
-    await messageBusUtils.deployedMessageBus();
-    params = messageBusUtils.defaultParams(accounts);
+    await MessageBusUtils.deployedMessageBus();
+    params = MessageBusUtils.defaultParams(accounts);
   });
 
   it(
@@ -37,7 +35,7 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
       const message = 'Message on target must be Declared.';
       params.message = message;
 
-      await messageBusUtils.confirmRevocation(params, false);
+      await MessageBusUtils.confirmRevocation(params, false);
     },
   );
 
@@ -48,10 +46,10 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
       const message = 'Message on target must be Declared.';
       params.message = message;
 
-      await messageBusUtils.confirmMessage(params, true);
-      await messageBusUtils.progressInbox(params, true);
+      await MessageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.progressInbox(params, true);
 
-      await messageBusUtils.confirmRevocation(params, false);
+      await MessageBusUtils.confirmRevocation(params, false);
     },
   );
 
@@ -62,10 +60,10 @@ contract('MessageBus.confirmRevocation()', async (accounts) => {
       const message = 'Message on target must be Declared.';
       params.message = message;
 
-      await messageBusUtils.confirmMessage(params, true);
-      await messageBusUtils.confirmRevocation(params, true);
+      await MessageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.confirmRevocation(params, true);
 
-      await messageBusUtils.confirmRevocation(params, false);
+      await MessageBusUtils.confirmRevocation(params, false);
     },
   );
 });

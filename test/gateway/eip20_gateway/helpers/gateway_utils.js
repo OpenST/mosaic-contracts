@@ -38,17 +38,6 @@ class GatewayUtils {
   }
 
   /**
-   * Generate the stake type hash. This is as per EIP-712
-   *
-   * @return {string} message type hash.
-   */
-  async stakeTypeHash() {
-    return utils.getTypeHash(
-      'Stake(uint256 amount,address beneficiary,MessageBus.Message message)',
-    );
-  }
-
-  /**
    * Generate the stake intent hash
    *
    * @param {object} amount Staking amount.
@@ -58,7 +47,7 @@ class GatewayUtils {
    *
    * @return {string} stake intent hash.
    */
-  hashStakeIntent(amount, beneficiary, gateway) {
+  static hashStakeIntent(amount, beneficiary, gateway) {
     const stakeIntentTypeHash = utils.getTypeHash(
       'StakeIntent(uint256 amount,address beneficiary,address gateway)',
     );
@@ -163,7 +152,7 @@ class GatewayUtils {
 
     const finalBalance = await this._getBalances(staker, this.gateway.address);
 
-    await this._assertBalances(
+    await GatewayUtils._assertBalances(
       initialBalance,
       finalBalance,
       amount,
@@ -216,7 +205,7 @@ class GatewayUtils {
    * @param {Object} resultType expected result FAIL => 0 and SUCCESS => 1
    *
    */
-  async _assertBalances(
+  static async _assertBalances(
     initialBalance,
     currentBalance,
     stakeAmount,

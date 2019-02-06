@@ -71,9 +71,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
       staker: stakeParams.staker,
     };
 
-    const gatewayUtils = new GatewayUtils();
-
-    stakeData.intentHash = gatewayUtils.hashStakeIntent(
+    stakeData.intentHash = GatewayUtils.hashStakeIntent(
       stakeData.amount,
       stakeData.beneficiary,
       stubData.contracts.gateway,

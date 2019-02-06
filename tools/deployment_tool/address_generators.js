@@ -29,8 +29,8 @@ const rlp = require('rlp');
 class IncrementingAddressGenerator {
   /**
    * @param {string} [startAddress=0x0000000000000000000000000000000000010000]
-   *                  Address from which we generate (by incrementing)
-   *                  new addresses for contracts to deploy.
+   *                 Address from which we generate (by incrementing)
+   *                 new addresses for contracts to deploy.
    */
   constructor(startAddress = '0x0000000000000000000000000000000000010000') {
     this.nextAvailableAddress = startAddress;
@@ -40,7 +40,7 @@ class IncrementingAddressGenerator {
    * Function returns next available address.
    *
    * @return {string} Next address to use as a pre-allocated address within
-   *         genesis file for contract deployment.
+   *                  genesis file for contract deployment.
    */
   generateAddress() {
     const addressHex = this.nextAvailableAddress;
@@ -61,11 +61,11 @@ class IncrementingAddressGenerator {
  */
 class IncrementingNonceAddressGenerator {
   /**
-     * @param {string} fromAddress The address that is used for deployment.
-     * @param {number} startingNonce The first nonce to use for generating addresses.
-     *                 This should be equivalent to the number of transactions previously
-     *                 made from the `fromAddress`.
-     */
+   * @param {string} fromAddress The address that is used for deployment.
+   * @param {number} startingNonce The first nonce to use for generating addresses.
+   *                 This should be equivalent to the number of transactions previously
+   *                 made from the `fromAddress`.
+   */
   constructor(fromAddress, startingNonce) {
     if (typeof fromAddress === 'undefined') {
       throw new Error('"fromAddress" address not provided');

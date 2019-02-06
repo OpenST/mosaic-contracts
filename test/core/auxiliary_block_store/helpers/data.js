@@ -165,23 +165,21 @@ const blocks = {
  *
  * @returns {BN} The new accumulated gas that includes the new gas.
  */
-const accumulateGas = function (oldAccumulatedGos, newGas) {
-  return oldAccumulatedGos.add(newGas);
-};
+const accumulateGas = (oldAccumulatedGos, newGas) => oldAccumulatedGos.add(newGas);
 
 /**
  * Iterates over all blocks and calculates the accumulated gas and transaction
  * root, based on the accumulated gas and transaction root of the previous item
  * in the list.
  */
-const calculateAccumulatedValues = function () {
+const calculateAccumulatedValues = () => {
   blocks[1].accumulatedGas = accumulateGas(initialBlock.gas, blocks[1].gas);
   blocks[1].accumulatedTransactionRoot = AuxStoreUtils.accumulateTransactionRoot(
     initialBlock.transactionRoot,
     blocks[1].transactionRoot,
   );
 
-  for (let i = 2; i < 13; i++) {
+  for (let i = 2; i < 13; i += 1) {
     blocks[i].accumulatedGas = accumulateGas(
       blocks[i - 1].accumulatedGas,
       blocks[i].gas,

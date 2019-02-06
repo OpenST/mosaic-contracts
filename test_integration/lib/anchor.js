@@ -27,15 +27,15 @@ const EventDecoder = require('../../test/test_lib/event_decoder');
  */
 class Anchor {
   /**
-     * Constructor
-     * @param {Web3} sourceWeb3 Web3 of source chain for which this anchor
-     *                          tracks state root.
-     * @param {Object} anchor Contract instance of anchor contract on target
-     *                        chain.
-     * @param {string} organization Organization address of the organization
-     *                 that is responsible for anchoring the state root on
-     *                 target chain.
-     */
+   * Constructor
+   * @param {Web3} sourceWeb3 Web3 of source chain for which this anchor
+   *                          tracks state root.
+   * @param {Object} anchor Contract instance of anchor contract on target
+   *                        chain.
+   * @param {string} organization Organization address of the organization
+   *                 that is responsible for anchoring the state root on
+   *                 target chain.
+   */
   constructor(sourceWeb3, anchor, organization) {
     this.sourceWeb3 = sourceWeb3;
     this.anchor = anchor;
@@ -43,17 +43,16 @@ class Anchor {
   }
 
   /**
-     * This anchors stateroot at a given block height.
-     * @param {number | string} atBlock Block at which state root needs to
-     *                           anchor. Default
-     * value is latest.
-     * @return {Promise<blockHeight>} Returns blockHeight at which state
-     *                                root is anchored.
-     */
+   * This anchors a state root at a given block height.
+   * @param {number | string} atBlock Block at which state root needs to
+   *                          anchor. Default value is latest.
+   * @return {Promise<blockHeight>} Returns blockHeight at which state
+   *                                root is anchored.
+   */
   async anchorStateRoot(atBlock = 'latest') {
     const block = await this.sourceWeb3.eth.getBlock(atBlock);
     const blockHeight = new BN(block.number);
-    const stateRoot = block.stateRoot;
+    const { stateRoot } = block;
     const tx = await this.anchor.anchorStateRoot(
       blockHeight,
       stateRoot,

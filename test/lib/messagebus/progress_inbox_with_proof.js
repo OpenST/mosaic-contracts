@@ -18,9 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 //
-const messageBusUtilsKlass = require('./messagebus_utils');
-
-const messageBusUtils = new messageBusUtilsKlass();
+const MessageBusUtils = require('./messagebus_utils');
 const messageBus = require('../../test_lib/message_bus.js');
 
 const { MessageStatusEnum } = messageBus;
@@ -28,8 +26,8 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
   let params;
 
   beforeEach(async () => {
-    await messageBusUtils.deployedMessageBus();
-    params = messageBusUtils.defaultParams(accounts);
+    await MessageBusUtils.deployedMessageBus();
+    params = MessageBusUtils.defaultParams(accounts);
   });
 
   it('should fail when source message is undeclared', async () => {
@@ -37,7 +35,7 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
     params.message = message;
 
     params.messageStatus = MessageStatusEnum.Undeclared;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 
   it('should fail when source message is declared revocation', async () => {
@@ -45,7 +43,7 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
     params.message = message;
 
     params.messageStatus = MessageStatusEnum.DeclaredRevocation;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 
   it('should fail if target message is Undeclared and source is declared', async () => {
@@ -53,7 +51,7 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
     params.message = message;
 
     params.messageStatus = MessageStatusEnum.Declared;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 
   it('should fail if target message is Undeclared and source is progressed', async () => {
@@ -61,7 +59,7 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
     params.message = message;
 
     params.messageStatus = MessageStatusEnum.Progressed;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 
   it(
@@ -71,11 +69,11 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
       const message = 'Message on target must be Declared.';
       params.message = message;
 
-      await messageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.confirmMessage(params, true);
       params.messageStatus = MessageStatusEnum.Declared;
-      await messageBusUtils.progressInboxWithProof(params, true);
+      await MessageBusUtils.progressInboxWithProof(params, true);
 
-      await messageBusUtils.progressInboxWithProof(params, false);
+      await MessageBusUtils.progressInboxWithProof(params, false);
     },
   );
 
@@ -86,11 +84,11 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
       const message = 'Message on target must be Declared.';
       params.message = message;
 
-      await messageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.confirmMessage(params, true);
       params.messageStatus = MessageStatusEnum.Progressed;
-      await messageBusUtils.progressInboxWithProof(params, true);
+      await MessageBusUtils.progressInboxWithProof(params, true);
 
-      await messageBusUtils.progressInboxWithProof(params, false);
+      await MessageBusUtils.progressInboxWithProof(params, false);
     },
   );
 
@@ -98,21 +96,21 @@ contract('MessageBus.progressInboxWithProof()', async (accounts) => {
     const message = 'Message on target must be Declared.';
     params.message = message;
 
-    await messageBusUtils.confirmMessage(params, true);
-    await messageBusUtils.confirmRevocation(params, true);
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.confirmRevocation(params, true);
 
     params.messageStatus = MessageStatusEnum.Declared;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 
   it('should fail when target is revoked and source message is progressed', async () => {
     const message = 'Message on target must be Declared.';
     params.message = message;
 
-    await messageBusUtils.confirmMessage(params, true);
-    await messageBusUtils.confirmRevocation(params, true);
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.confirmRevocation(params, true);
 
     params.messageStatus = MessageStatusEnum.Progressed;
-    await messageBusUtils.progressInboxWithProof(params, false);
+    await MessageBusUtils.progressInboxWithProof(params, false);
   });
 });

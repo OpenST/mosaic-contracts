@@ -1,16 +1,34 @@
-const web3EventsDecoder = function () {};
+// Copyright 2019 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// ----------------------------------------------------------------------------
+// Test: lib/hash_lock.js
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
-web3EventsDecoder.prototype = {
-  getFormattedEvents(eventsData) {
+'use strict';
+
+class Web3EventsDecoder {
+  static getFormattedEvents(eventsData) {
     const formattedEvents = {};
 
-    for (let i = 0; i < eventsData.length; i++) {
+    for (let i = 0; i < eventsData.length; i += 1) {
       const currEvent = eventsData[i];
-
       const currEventName = currEvent.name ? currEvent.name : currEvent.event;
-
       const currEventAddr = currEvent.address;
-
       const currEventParams = currEvent.events
         ? currEvent.events
         : currEvent.args;
@@ -18,7 +36,7 @@ web3EventsDecoder.prototype = {
       formattedEvents[currEventName] = { address: currEventAddr };
 
       if (Array.isArray(currEventParams)) {
-        for (let j = 0; j < currEventParams.length; j++) {
+        for (let j = 0; j < currEventParams.length; j += 1) {
           const p = currEventParams[j];
           formattedEvents[currEventName][p.name] = p.value;
         }
@@ -28,7 +46,7 @@ web3EventsDecoder.prototype = {
     }
 
     return formattedEvents;
-  },
+  }
 
   /**
    * Gets a events from a transaction.
@@ -39,12 +57,12 @@ web3EventsDecoder.prototype = {
    *
    * @returns {Object} The events, if any.
    */
-  getEvents(transaction, contract) {
-    return this.perform(transaction.receipt, contract.address, contract.abi);
-  },
+  static getEvents(transaction, contract) {
+    return Web3EventsDecoder.perform(transaction.receipt, contract.address, contract.abi);
+  }
 
   // decode logs from a transaction receipt
-  perform(txReceipt, contractAddr, contractAbi) {
+  static perform(txReceipt, contractAddr, contractAbi) {
     let decodedEvents = [];
 
     // Transaction receipt not found
@@ -113,8 +131,8 @@ web3EventsDecoder.prototype = {
       }
     }
 
-    return this.getFormattedEvents(decodedEvents);
-  },
-};
+    return Web3EventsDecoder.getFormattedEvents(decodedEvents);
+  }
+}
 
-module.exports = new web3EventsDecoder();
+module.exports = Web3EventsDecoder;

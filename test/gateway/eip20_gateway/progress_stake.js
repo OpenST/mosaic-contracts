@@ -23,7 +23,6 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
-const GatewayUtils = require('./helpers/gateway_utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -52,8 +51,6 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
 
   const { MessageStatusEnum } = messageBus;
 
-  let gatewayUtils;
-
   beforeEach(async () => {
     mockToken = await MockToken.new({ from: accounts[0] });
     baseToken = await MockToken.new({ from: accounts[0] });
@@ -80,8 +77,6 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
     await baseToken.transfer(gateway.address, new BN(10000), {
       from: accounts[0],
     });
-
-    gatewayUtils = new GatewayUtils(gateway, mockToken, baseToken);
 
     const hashLockObj = Utils.generateHashLock();
 

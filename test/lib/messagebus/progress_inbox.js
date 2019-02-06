@@ -19,54 +19,52 @@
 // ----------------------------------------------------------------------------
 
 const web3 = require('web3');
-const messageBusUtilsKlass = require('./messagebus_utils');
-
-const messageBusUtils = new messageBusUtilsKlass();
+const MessageBusUtils = require('./messagebus_utils');
 
 contract('MessageBus.progressInbox()', async (accounts) => {
   let params;
 
   beforeEach(async () => {
-    await messageBusUtils.deployedMessageBus();
-    params = messageBusUtils.defaultParams(accounts);
+    await MessageBusUtils.deployedMessageBus();
+    params = MessageBusUtils.defaultParams(accounts);
   });
 
   it('should fail when message status is undeclared in inbox', async () => {
     const message = 'Message on target status must be Declared.';
     params.message = message;
 
-    await messageBusUtils.progressInbox(params, false);
+    await MessageBusUtils.progressInbox(params, false);
   });
 
   it('should fail when message status is already progressed in inbox', async () => {
     const message = 'Message on target status must be Declared.';
     params.message = message;
 
-    await messageBusUtils.confirmMessage(params, true);
-    await messageBusUtils.progressInbox(params, true);
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.progressInbox(params, true);
 
-    await messageBusUtils.progressInbox(params, false);
+    await MessageBusUtils.progressInbox(params, false);
   });
 
   it('should fail when message status is revoked in inbox', async () => {
     const message = 'Message on target status must be Declared.';
     params.message = message;
 
-    await messageBusUtils.confirmMessage(params, true);
-    await messageBusUtils.confirmRevocation(params, true);
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.confirmRevocation(params, true);
 
-    await messageBusUtils.progressInbox(params, false);
+    await MessageBusUtils.progressInbox(params, false);
   });
 
   it('should fail when unlock secret is incorrect', async () => {
     const message = 'Invalid unlock secret.';
     params.message = message;
 
-    await messageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.confirmMessage(params, true);
     params.unlockSecret = web3.utils.soliditySha3({
       type: 'bytes32',
       value: 'secret1',
     });
-    await messageBusUtils.progressInbox(params, false);
+    await MessageBusUtils.progressInbox(params, false);
   });
 });

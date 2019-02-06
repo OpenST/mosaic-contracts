@@ -93,9 +93,8 @@ contract('EIP20Gateway.confirmRedeemIntent()', (accounts) => {
     mockOrganization = await MockOrganization.new(owner, worker);
 
     bountyAmount = new BN(100);
+
     const dummyToken = accounts[5];
-
-
     const dummyBaseToken = accounts[2];
 
     eip20Gateway = await EIP20Gateway.new(
