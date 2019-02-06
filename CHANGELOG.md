@@ -38,7 +38,10 @@
 * Added getter functions for easier interaction ([#598](https://github.com/OpenSTFoundation/mosaic-contracts/pull/598), [#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600), [#601](https://github.com/OpenSTFoundation/mosaic-contracts/pull/601), [#602](https://github.com/OpenSTFoundation/mosaic-contracts/pull/602))
 * Naming of RLP encoded parameters and variables is unified ([#528](https://github.com/OpenSTFoundation/mosaic-contracts/pull/528)).
 * Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458), [#550](https://github.com/OpenSTFoundation/mosaic-contracts/pull/550))
-* Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619)).
+* Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619), [#637](https://github.com/OpenSTFoundation/mosaic-contracts/pull/637)).
+* Penalty is returned to the staker and redeemer on progress stake  and progress mint, if revocation of message is declared on source chain and target is already progressed ([#576](https://github.com/OpenSTFoundation/mosaic-contracts/pull/576)).
+* Stake and mint integration test ([#634](https://github.com/OpenSTFoundation/mosaic-contracts/pull/634)). 
+* Redeem and unstake integration test ([#638](https://github.com/OpenSTFoundation/mosaic-contracts/pull/638)).
 
 ### Known Issues
 
