@@ -18,36 +18,35 @@
 //
 // ----------------------------------------------------------------------------
 
+const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 const testData = require('../../data/proof');
 
 const KernelGateway = artifacts.require('TestKernelGateway');
 const KernelGatewayFail = artifacts.require('TestKernelGatewayFail');
 const BlockStore = artifacts.require('MockBlockStore');
-const BN = require('bn.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
 
 contract('KernelGateway.proveMosaicCore()', async (accounts) => {
   const zeroBytes = Utils.ZERO_BYTES32;
+  const accountRlp = testData.account.rlpAccount;
+  const accountBranchRlp = testData.account.rlpParentNodes;
+  const { stateRoot } = testData.account;
 
+  let originBlockHeight;
   let mosaicCore;
   let kernelGateway;
   let originBlockStore;
   let auxiliaryBlockStore;
 
-  const accountRlp = testData.account.rlpAccount;
-  const accountBranchRlp = testData.account.rlpParentNodes;
-  const stateRoot = testData.account.stateRoot;
-  const originBlockHeight = new BN(100);
-
-  async function deploy(KernelGateway) {
+  const deploy = async (Gateway) => {
     // deploy the kernel gateway
     mosaicCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
 
-    kernelGateway = await KernelGateway.new(
+    kernelGateway = await Gateway.new(
       mosaicCore,
       originBlockStore.address,
       auxiliaryBlockStore.address,
@@ -55,10 +54,11 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
     );
 
     await originBlockStore.setStateRoot(stateRoot);
-  }
+  };
 
   beforeEach(async () => {
     await deploy(KernelGateway);
+    originBlockHeight = new BN(100);
   });
 
   it('should fail when rlp account is zero', async () => {
@@ -154,9 +154,7 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
     assert.strictEqual(
       eventData._storageRoot,
       testData.account.storageRoot,
-      `Storage root from event must be equal to ${
-        testData.account.storageRoot
-      }`,
+      `Storage root from event must be equal to ${testData.account.storageRoot}`,
     );
 
     assert.strictEqual(
@@ -172,17 +170,14 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
     assert.strictEqual(
       storageRoot,
       testData.account.storageRoot,
-      `Storage root from contract must be equal to ${
-        testData.account.storageRoot
-      }`,
+      `Storage root from contract must be equal to ${testData.account.storageRoot}`,
     );
   });
 
   it(
-    'should pass when the account is already proved for a given block '
-      + 'height',
+    'should pass when the account is already proved for a given block height',
     async () => {
-      const originBlockHeight = new BN(100);
+      originBlockHeight = new BN(100);
 
       await kernelGateway.proveMosaicCore(
         accountRlp,
@@ -219,9 +214,7 @@ contract('KernelGateway.proveMosaicCore()', async (accounts) => {
       assert.strictEqual(
         eventData._storageRoot,
         testData.account.storageRoot,
-        `Storage root from event must be equal to ${
-          testData.account.storageRoot
-        }`,
+        `Storage root from event must be equal to ${testData.account.storageRoot}`,
       );
 
       assert.strictEqual(

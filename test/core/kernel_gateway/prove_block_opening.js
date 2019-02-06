@@ -29,43 +29,34 @@ const BlockStore = artifacts.require('MockBlockStore');
 
 contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   const zeroBytes = Utils.ZERO_BYTES32;
-  let mosaicCore;
-
-  let kernelGateway;
-
-  let originBlockStore;
-
-  let auxiliaryBlockStore;
-
-  let genesisKernelHash;
-
-  let height;
-
-  let parent;
-
-  let updatedValidators;
-
-  let updatedWeights;
-
-  let auxiliaryBlockHash;
-
-  let storageBranchRlp;
-
-  let originBlockHeight;
-
-  let kernelHash;
-
-  let transitionHash;
-
   const storageRoot = '0x36ed801abf5678f1506f1fa61e5ccda1f4de53cc7cd03224e3b2a03159b6460d';
 
-  async function deploy(KernelGateway) {
+  let mosaicCore;
+  let kernelGateway;
+  let originBlockStore;
+  let auxiliaryBlockStore;
+  let genesisKernelHash;
+  let height;
+  let parent;
+  let updatedValidators;
+  let updatedWeights;
+  let auxiliaryBlockHash;
+  let storageBranchRlp;
+  let originBlockHeight;
+  let kernelHash;
+  let transitionHash;
+
+  /**
+   *
+   * @param {Object} Gateway A gateway class, e.g. KernelGateway or KernelGatewayFail.
+   */
+  const deploy = async (Gateway) => {
     // deploy the kernel gateway
     mosaicCore = accounts[1];
     originBlockStore = await BlockStore.new();
     auxiliaryBlockStore = await BlockStore.new();
     genesisKernelHash = '0xc5d856a8246e84f5c3c715e2a5571961ebe8a02eeba28eb007cd8331fc2c613e';
-    kernelGateway = await KernelGateway.new(
+    kernelGateway = await Gateway.new(
       mosaicCore,
       originBlockStore.address,
       auxiliaryBlockStore.address,
@@ -87,7 +78,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
     await auxiliaryBlockStore.setKernelGateway(kernelGateway.address);
     await auxiliaryBlockStore.setAuxiliaryTransitionHash(transitionHash);
     await originBlockStore.setLatestBlockHeight(3);
-  }
+  };
 
   beforeEach(async () => {
     await deploy(KernelGateway);
@@ -188,7 +179,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
 
   it(
     'should fail when validators count and validator weight count is'
-      + ' not same',
+    + ' not same',
     async () => {
       updatedValidators.push(accounts[5]);
 
@@ -225,7 +216,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it(
-    'should fail when block containing the state root is not ' + 'finalized',
+    'should fail when block containing the state root is not finalized',
     async () => {
       originBlockHeight = 4;
 
@@ -262,7 +253,7 @@ contract('KernelGateway.proveBlockOpening()', async (accounts) => {
   });
 
   it('should fail when storage proof is invalid', async () => {
-    await await deploy(KernelGatewayFail);
+    await deploy(KernelGatewayFail);
 
     await Utils.expectRevert(
       kernelGateway.proveBlockOpening.call(

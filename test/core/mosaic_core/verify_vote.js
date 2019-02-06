@@ -54,6 +54,7 @@ async function proposeMetaBlock() {
   const gas = 1000;
   const originDynasty = 1;
   const originBlockHash = web3.utils.sha3('1');
+
   const tx = await mosaicCore.proposeBlock(
     height,
     auxiliaryCoreIdentifier,
@@ -65,11 +66,7 @@ async function proposeMetaBlock() {
     originBlockHash,
     transactionRoot,
   );
-  const events = EventsDecoder.perform(
-    tx.receipt,
-    mosaicCore.address,
-    mosaicCore.abi,
-  );
+  const events = EventsDecoder.perform(tx.receipt, mosaicCore.address, mosaicCore.abi);
 
   assert.equal(
     events.BlockProposed.height,
@@ -84,9 +81,21 @@ contract('MosaicCore.verifyVote()', async (accounts) => {
   beforeEach(async () => {
     [auxiliaryCoreIdentifier] = accounts;
 
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN('100'), new BN('2000'), new BN('30000')];
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('2000'),
+      new BN('30000'),
+    ];
     requiredWeight = new BN(21400);
 
     [tokenDeployer] = accounts;
@@ -116,10 +125,8 @@ contract('MosaicCore.verifyVote()', async (accounts) => {
     vote = {
       coreIdentifier: auxiliaryCoreIdentifier,
       transitionHash,
-      source:
-        '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
-      target:
-        '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
+      source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
+      target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
       sourceHeight: new BN('1'),
       targetHeight: new BN('2'),
     };
@@ -208,9 +215,7 @@ contract('MosaicCore.verifyVote()', async (accounts) => {
       requiredWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[1]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
     await MosaicCoreUtils.verifyVote(
       initialStakes[1],
@@ -341,10 +346,8 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
     vote = {
       coreIdentifier: auxiliaryCoreIdentifier,
       transitionHash,
-      source:
-        '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
-      target:
-        '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
+      source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
+      target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
       sourceHeight: new BN('1'),
       targetHeight: new BN('2'),
     };
@@ -352,10 +355,23 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
     stakeAddress = await mosaicCore.stake.call();
   });
 
-  it('should commit a meta-block if 2/3 super majority is achieved.', async () => {
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN('100'), new BN('100'), new BN('100')];
+  it('should commit a meta-block if 2/3 super majority is'
+        + ' achieved.', async () => {
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('100'),
+      new BN('100'),
+    ];
 
     await MosaicCoreUtils.initializeStakeContract(
       stakeAddress,
@@ -379,9 +395,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedRequiredWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[1]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
     const events = await MosaicCoreUtils.verifyVote(
       initialStakes[1],
@@ -408,47 +422,68 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
     );
   });
 
-  it(
-    'should not commit a meta-block if 2/3 super majority is not'
-    + ' achieved.',
-    async () => {
-      initialDepositors = [accounts[2], accounts[3], accounts[4]];
-      initialValidators = [accounts[5], accounts[6], accounts[7]];
-      initialStakes = [new BN('100'), new BN('100'), new BN('100')];
+  it('should not commit a meta-block if 2/3 super majority is not'
+        + ' achieved.', async () => {
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('100'),
+      new BN('100'),
+    ];
 
-      await MosaicCoreUtils.initializeStakeContract(
-        stakeAddress,
-        erc20,
-        tokenDeployer,
-        initialDepositors,
-        initialStakes,
-        initialValidators,
-      );
+    await MosaicCoreUtils.initializeStakeContract(
+      stakeAddress,
+      erc20,
+      tokenDeployer,
+      initialDepositors,
+      initialStakes,
+      initialValidators,
+    );
 
-      const expectedVerifiedWeight = new BN(initialStakes[0]);
-      const expectedRequiredWeight = new BN(200);
+    const expectedVerifiedWeight = new BN(initialStakes[0]);
+    const expectedRequiredWeight = new BN(200);
 
-      const events = await MosaicCoreUtils.verifyVote(
-        initialStakes[0],
-        initialValidators[0],
-        vote,
-        mosaicCore,
-        kernelHash,
-        expectedVerifiedWeight,
-        expectedRequiredWeight,
-      );
+    const events = await MosaicCoreUtils.verifyVote(
+      initialStakes[0],
+      initialValidators[0],
+      vote,
+      mosaicCore,
+      kernelHash,
+      expectedVerifiedWeight,
+      expectedRequiredWeight,
+    );
 
-      assert(
-        events.MetaBlockCommitted === undefined,
-        'Commit meta-block event is emitted',
-      );
-    },
-  );
+    assert(
+      events.MetaBlockCommitted === undefined,
+      'Commit meta-block event is emitted',
+    );
+  });
 
   it('should not commit meta-block due to rounding error ', async () => {
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN(2), new BN(1), new BN(1)];
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN(2),
+      new BN(1),
+      new BN(1),
+    ];
 
     await MosaicCoreUtils.initializeStakeContract(
       stakeAddress,
@@ -479,9 +514,21 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
   });
 
   it('should open new kernel on meta-block commit', async () => {
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN('100'), new BN('100'), new BN('100')];
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('100'),
+      new BN('100'),
+    ];
 
     await MosaicCoreUtils.initializeStakeContract(
       stakeAddress,
@@ -505,9 +552,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedRequiredWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[1]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
     const events = await MosaicCoreUtils.verifyVote(
       initialStakes[1],
@@ -566,9 +611,21 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
   });
 
   it('should update head to latest committed meta-block', async () => {
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN('100'), new BN('100'), new BN('100')];
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('100'),
+      new BN('100'),
+    ];
 
     await MosaicCoreUtils.initializeStakeContract(
       stakeAddress,
@@ -592,9 +649,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedRequiredWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[1]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
     const events = await MosaicCoreUtils.verifyVote(
       initialStakes[1],
@@ -620,10 +675,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedVerifiedWeight,
     );
 
-    const expectedHead = MetaBlockUtils.hashMetaBlock(
-      kernelHash,
-      vote.transitionHash,
-    );
+    const expectedHead = MetaBlockUtils.hashMetaBlock(kernelHash, vote.transitionHash);
 
     assert.equal(
       expectedHead,
@@ -633,9 +685,21 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
   });
 
   it('should not commit already committed meta-block', async () => {
-    initialDepositors = [accounts[2], accounts[3], accounts[4]];
-    initialValidators = [accounts[5], accounts[6], accounts[7]];
-    initialStakes = [new BN('100'), new BN('100'), new BN('100')];
+    initialDepositors = [
+      accounts[2],
+      accounts[3],
+      accounts[4],
+    ];
+    initialValidators = [
+      accounts[5],
+      accounts[6],
+      accounts[7],
+    ];
+    initialStakes = [
+      new BN('100'),
+      new BN('100'),
+      new BN('100'),
+    ];
 
     await MosaicCoreUtils.initializeStakeContract(
       stakeAddress,
@@ -659,9 +723,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedRequiredWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[1]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[1]));
 
     let events = await MosaicCoreUtils.verifyVote(
       initialStakes[1],
@@ -687,9 +749,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
       expectedVerifiedWeight,
     );
 
-    expectedVerifiedWeight = expectedVerifiedWeight.add(
-      new BN(initialStakes[2]),
-    );
+    expectedVerifiedWeight = expectedVerifiedWeight.add(new BN(initialStakes[2]));
 
     events = await MosaicCoreUtils.verifyVote(
       initialStakes[2],

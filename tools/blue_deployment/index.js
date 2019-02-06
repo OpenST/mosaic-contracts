@@ -78,10 +78,10 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
   const startingNonce = await web3.eth.getTransactionCount(deployerAddress);
 
   /*
-     * Deploys the EIP20StandardToken that is provided in `contracts/test`.
-     * It is a simple ERC20 token which transfers the entire initial balance to
-     * the account that deploys the token. In this case the `deployerAddress`.
-     */
+   * Deploys the EIP20StandardToken that is provided in `contracts/test`.
+   * It is a simple ERC20 token which transfers the entire initial balance to
+   * the account that deploys the token. In this case the `deployerAddress`.
+   */
   const EIP20StandardToken = Contract.loadTruffleContract(
     'EIP20StandardToken',
     ['MYT', 'MyToken', 800000000, 18],

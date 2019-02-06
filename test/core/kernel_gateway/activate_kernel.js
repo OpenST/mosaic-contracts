@@ -72,7 +72,7 @@ contract('KernelGateway.activateKernel()', async (accounts) => {
   });
 
   it(
-    'should fail when kernel hash is not equal to the open kernel' + ' hash',
+    'should fail when kernel hash is not equal to the open kernel hash',
     async () => {
       await Utils.expectRevert(
         auxiliaryBlockStore.activateKernel.call(randomHash),

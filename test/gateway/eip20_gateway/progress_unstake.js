@@ -387,49 +387,42 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
     assert.strictEqual(
       eventData._messageHash,
       unstakeMessage.messageHash,
-      `Message hash ${eventData._messageHash} from event must be equal to ${
-        unstakeMessage.messageHash
-      }.`,
+      `Message hash ${eventData._messageHash} from event must be equal to `
+      + `${unstakeMessage.messageHash}.`,
     );
 
     assert.strictEqual(
       eventData._redeemer,
       unstakeMessage.unstakeAccount,
-      `Redeemer address ${eventData._redeemer} from event must be equal to ${
-        unstakeMessage.unstakeAccount
-      }.`,
+      `Redeemer address ${eventData._redeemer} from event must be equal to `
+      + `${unstakeMessage.unstakeAccount}.`,
     );
 
     assert.strictEqual(
       eventData._beneficiary,
       unstakeRequest.beneficiary,
-      `Beneficiary address ${
-        eventData._beneficiary
-      } from event must be equal to ${unstakeRequest.beneficiary}.`,
+      `Beneficiary address ${eventData._beneficiary} from event must be equal to `
+      + `${unstakeRequest.beneficiary}.`,
     );
 
     assert.strictEqual(
       unstakeRequest.amount.eq(eventData._redeemAmount),
       true,
-      `Redeem amount ${eventData._redeemAmount.toString(
-        10,
-      )} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
+      `Redeem amount ${eventData._redeemAmount.toString(10)} from event must be equal to `
+      + `${unstakeRequest.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       unstakeRequest.amount.eq(eventData._unstakeAmount),
       true,
-      `Unstake amount ${eventData._unstakeAmount.toString(
-        10,
-      )} from event must be equal to ${unstakeRequest.amount.toString(10)}.`,
+      `Unstake amount ${eventData._unstakeAmount.toString(10)} from event must be equal to `
+      + `${unstakeRequest.amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       eventData._rewardAmount.eqn(0),
       true,
-      `Reward amount ${eventData._rewardAmount.toString(
-        10,
-      )} from event must be equal to zero.`,
+      `Reward amount ${eventData._rewardAmount.toString(10)} from event must be equal to zero.`,
     );
 
     assert.strictEqual(
@@ -441,9 +434,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
     assert.strictEqual(
       eventData._unlockSecret,
       unstakeMessage.unlockSecret,
-      `Unlock secret ${eventData._unlockSecret} from event must be equal to ${
-        unstakeMessage.unlockSecret
-      }.`,
+      `Unlock secret ${eventData._unlockSecret} from event must be equal to `
+      + `${unstakeMessage.unlockSecret}.`,
     );
   });
 
@@ -483,11 +475,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
         initialBeneficiaryBalance.add(unstakeRequest.amount),
       ),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toString(
-        10,
-      )} must be equal to ${initialBeneficiaryBalance
-        .add(unstakeRequest.amount)
-        .toString(10)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to `
+      + `${initialBeneficiaryBalance.add(unstakeRequest.amount).toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -495,11 +484,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
         initialStakeVaultBalance.sub(unstakeRequest.amount),
       ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toString(
-        10,
-      )} must be equal to ${initialStakeVaultBalance
-        .sub(unstakeRequest.amount)
-        .toString(10)}.`,
+      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to `
+      + `${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
     );
   });
 
@@ -548,11 +534,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
     assert.strictEqual(
       finalFacilitatorBalance.eq(initialFacilitatorBalance.add(rewardAmount)),
       true,
-      `Facilitator balance ${finalFacilitatorBalance.toString(
-        10,
-      )} must be equal to ${initialFacilitatorBalance
-        .add(rewardAmount)
-        .toString(10)}.`,
+      `Facilitator balance ${finalFacilitatorBalance.toString(10)} must be equal to `
+      + `${initialFacilitatorBalance.add(rewardAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -560,12 +543,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
         initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount),
       ),
       true,
-      `Beneficiary balance ${finalBeneficiaryBalance.toString(
-        10,
-      )} must be equal to ${initialBeneficiaryBalance
-        .add(unstakeRequest.amount)
-        .sub(rewardAmount)
-        .toString(10)}.`,
+      `Beneficiary balance ${finalBeneficiaryBalance.toString(10)} must be equal to `
+      + `${initialBeneficiaryBalance.add(unstakeRequest.amount).sub(rewardAmount).toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -573,11 +552,8 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
         initialStakeVaultBalance.sub(unstakeRequest.amount),
       ),
       true,
-      `Stake vault balance ${finalStakeVaultBalance.toString(
-        10,
-      )} must be equal to ${initialStakeVaultBalance
-        .sub(unstakeRequest.amount)
-        .toString(10)}.`,
+      `Stake vault balance ${finalStakeVaultBalance.toString(10)} must be equal to `
+      + `${initialStakeVaultBalance.sub(unstakeRequest.amount).toString(10)}.`,
     );
   });
 });

@@ -18,8 +18,6 @@
 //
 // ----------------------------------------------------------------------------
 
-'use strict';
-
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
 
@@ -29,6 +27,10 @@ const Utils = require('../../test_lib/utils.js');
 
 const MockBlockStore = artifacts.require('MockBlockStore');
 const PollingPlace = artifacts.require('PollingPlace');
+
+const VOTE_MESSAGE_TYPEHASH = web3.utils.sha3(
+  'VoteMessage(bytes20 coreIdentifier,bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceHeight,uint256 targetHeight)',
+);
 
 contract('PollingPlace.vote()', async (accounts) => {
   let pollingPlace;
@@ -60,10 +62,8 @@ contract('PollingPlace.vote()', async (accounts) => {
     vote = {
       coreIdentifier: originCoreIdentifier,
       transitionHash: web3.utils.sha3('transition'),
-      source:
-        '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
-      target:
-        '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
+      source: '0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f983e593ac4302d38a112b',
+      target: '0x4bd8f94ba769f24bf30c09d4a3575795a776f76ca6f772893618943ea2dab9ce',
       sourceHeight: new BN('1'),
       targetHeight: new BN('2'),
     };
@@ -167,9 +167,24 @@ contract('PollingPlace.vote()', async (accounts) => {
       [new BN('12')],
     );
 
+    // Origin block store should pass.
+    vote.coreIdentifier = originCoreIdentifier;
+    let signature = await MetaBlockUtils.signVote(accounts[0], vote);
+    await pollingPlace.vote(
+      vote.coreIdentifier,
+      vote.transitionHash,
+      vote.source,
+      vote.target,
+      vote.sourceHeight,
+      vote.targetHeight,
+      signature.v,
+      signature.r,
+      signature.s,
+    );
+
     // Auxiliary block store should fail.
     vote.coreIdentifier = auxiliaryCoreIdentifier;
-    const signature = await MetaBlockUtils.signVote(accounts[0], vote);
+    signature = await MetaBlockUtils.signVote(accounts[0], vote);
     await Utils.expectRevert(
       pollingPlace.vote(
         vote.coreIdentifier,
@@ -188,9 +203,9 @@ contract('PollingPlace.vote()', async (accounts) => {
 
   it('should signal a 2/3 majority vote', async () => {
     /*
-     * There is a total weight of 60. That means a voting weight of
-     * >=40 is >=2/3 of the total weight.
-     */
+         * There is a total weight of 60. That means a voting weight of
+         * >=40 is >=2/3 of the total weight.
+         */
     const expectedWeights = {
       addresses: [
         accounts[0],
@@ -230,10 +245,7 @@ contract('PollingPlace.vote()', async (accounts) => {
      * for the first 7 there should not be a justification event.
      */
     for (let i = 0; i < 7; i += 1) {
-      const signature = await MetaBlockUtils.signVote(
-        expectedWeights.addresses[i],
-        vote,
-      );
+      const signature = await MetaBlockUtils.signVote(expectedWeights.addresses[i], vote);
       const tx = await pollingPlace.vote(
         vote.coreIdentifier,
         vote.transitionHash,
@@ -274,10 +286,7 @@ contract('PollingPlace.vote()', async (accounts) => {
      * The eighth vote should trigger the expected event as a 2/3
      * majority is reached
      */
-    const signature = await MetaBlockUtils.signVote(
-      expectedWeights.addresses[7],
-      vote,
-    );
+    const signature = await MetaBlockUtils.signVote(expectedWeights.addresses[7], vote);
     const tx = await pollingPlace.vote(
       vote.coreIdentifier,
       vote.transitionHash,
@@ -363,16 +372,16 @@ contract('PollingPlace.vote()', async (accounts) => {
      * By splitting the votes across both core identifiers' respective
      * block stores, a >=2/3 majority should not be reached on either.
      */
-    const coreIdentifiers = [originCoreIdentifier, auxiliaryCoreIdentifier];
+    const coreIdentifiers = [
+      originCoreIdentifier,
+      auxiliaryCoreIdentifier,
+    ];
     for (let i = 0; i < 10; i += 1) {
       // Alternate core identifiers to split the votes
       const coreIdentifier = coreIdentifiers[i % 2];
       vote.coreIdentifier = coreIdentifier;
 
-      const signature = await MetaBlockUtils.signVote(
-        expectedWeights.addresses[i],
-        vote,
-      );
+      const signature = await MetaBlockUtils.signVote(expectedWeights.addresses[i], vote);
       const tx = await pollingPlace.vote(
         vote.coreIdentifier,
         vote.transitionHash,
@@ -455,7 +464,7 @@ contract('PollingPlace.vote()', async (accounts) => {
       for (let i = 0; i < 10; i += 1) {
         // Incrementing source hashes to split the votes
         vote.source = `${'0xe03b82d609dd4c84cdf0e94796d21d65f56b197405f9'
-          + '83e593ac4302d38a112'}${i.toString(16)}`;
+                    + '83e593ac4302d38a112'}${i.toString(16)}`;
 
         const signature = await MetaBlockUtils.signVote(
           expectedWeights.addresses[i],
@@ -495,7 +504,6 @@ contract('PollingPlace.vote()', async (accounts) => {
           'There should not be a Justify event emitted by the auxiliary block store.',
         );
       }
-
       for (let i = 0; i < 10; i += 1) {
         /*
          * New target height as validators are not allowed to vote on
@@ -590,10 +598,7 @@ contract('PollingPlace.vote()', async (accounts) => {
 
     // The first 8 validators will validate 40 of 61 weight.
     for (let i = 0; i < 8; i += 1) {
-      const signature = await MetaBlockUtils.signVote(
-        expectedWeights.addresses[i],
-        vote,
-      );
+      const signature = await MetaBlockUtils.signVote(expectedWeights.addresses[i], vote);
       const tx = await pollingPlace.vote(
         vote.coreIdentifier,
         vote.transitionHash,
@@ -632,8 +637,14 @@ contract('PollingPlace.vote()', async (accounts) => {
 
   it('should not count the same validator more than once on the same target', async () => {
     const expectedWeights = {
-      addresses: [accounts[0], accounts[1]],
-      values: [new BN('1'), new BN('9')],
+      addresses: [
+        accounts[0],
+        accounts[1],
+      ],
+      values: [
+        new BN('1'),
+        new BN('9'),
+      ],
     };
 
     pollingPlace = await PollingPlace.new(

@@ -105,71 +105,104 @@ contract('BlockStore.justify()', async (accounts) => {
     ];
 
     const count = testData.length;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i += 1) {
       const testDate = testData[i];
 
-      await blockStore.justify(testDate.source, testDate.target, {
-        from: pollingPlaceAddress,
-      });
+      await blockStore.justify(
+        testDate.source,
+        testDate.target,
+        { from: pollingPlaceAddress },
+      );
 
       // Assert that the checkpoint is recorded with the correct data.
       const checkpointTarget = await blockStore.checkpoints.call(
         testDate.target,
       );
-      assert.strictEqual(checkpointTarget.blockHash, testDate.target);
-      assert.strictEqual(checkpointTarget.parent, testDate.source);
-      assert.strictEqual(checkpointTarget.justified, true);
+      assert.strictEqual(
+        checkpointTarget.blockHash,
+        testDate.target,
+      );
+      assert.strictEqual(
+        checkpointTarget.parent,
+        testDate.source,
+      );
+      assert.strictEqual(
+        checkpointTarget.justified,
+        true,
+      );
 
       // The source should possibly be finalised (depends on distance).
       const checkpointSource = await blockStore.checkpoints.call(
         testDate.source,
       );
-      assert.strictEqual(checkpointSource.finalised, testDate.sourceFinalised);
+      assert.strictEqual(
+        checkpointSource.finalised,
+        testDate.sourceFinalised,
+      );
     }
   });
 
   it('should emit an event when a checkpoint is justified', async () => {
-    const tx = await blockStore.justify(blockHashAtZero, blockHashAtTen, {
-      from: pollingPlaceAddress,
-    });
+    const tx = await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTen,
+      { from: pollingPlaceAddress },
+    );
 
     const event = EventDecoder.getEvents(tx, blockStore);
-    assert.strictEqual(event.BlockJustified.blockHash, blockHashAtTen);
+    assert.strictEqual(
+      event.BlockJustified.blockHash,
+      blockHashAtTen,
+    );
   });
 
   it('should emit an event when a checkpoint is finalised', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
-    const tx = await blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
+    const tx = await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtThirty,
+      { from: pollingPlaceAddress },
+    );
 
     const event = EventDecoder.getEvents(tx, blockStore);
-    assert.strictEqual(event.BlockFinalised.blockHash, blockHashAtTwenty);
+    assert.strictEqual(
+      event.BlockFinalised.blockHash,
+      blockHashAtTwenty,
+    );
   });
 
   it(
     'should not emit a finalisation event when the target is not the '
-      + 'direct child',
+        + 'direct child',
     async () => {
-      const tx = await blockStore.justify(blockHashAtZero, blockHashAtTwenty, {
-        from: pollingPlaceAddress,
-      });
+      const tx = await blockStore.justify(
+        blockHashAtZero,
+        blockHashAtTwenty,
+        { from: pollingPlaceAddress },
+      );
 
       const event = EventDecoder.getEvents(tx, blockStore);
-      assert.strictEqual(event.BlockFinalised, undefined);
+      assert.strictEqual(
+        event.BlockFinalised,
+        undefined,
+      );
     },
   );
 
   it(
     'should not accept a justification from an address other than the '
-      + 'polling place',
+        + 'polling place',
     async () => {
       await Utils.expectRevert(
-        blockStore.justify(blockHashAtZero, blockHashAtTwenty, {
-          from: accounts[4],
-        }),
+        blockStore.justify(
+          blockHashAtZero,
+          blockHashAtTwenty,
+          { from: accounts[4] },
+        ),
         'This method must be called from the registered polling place.',
       );
     },
@@ -177,94 +210,124 @@ contract('BlockStore.justify()', async (accounts) => {
 
   it('should not accept an unknown source hash', async () => {
     await Utils.expectRevert(
-      blockStore.justify(unknownBlockHash, blockHashAtTwenty, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        unknownBlockHash,
+        blockHashAtTwenty,
+        { from: pollingPlaceAddress },
+      ),
       'The source block must first be reported.',
     );
   });
 
   it('should not accept an unknown target hash', async () => {
     await Utils.expectRevert(
-      blockStore.justify(blockHashAtZero, unknownBlockHash, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        blockHashAtZero,
+        unknownBlockHash,
+        { from: pollingPlaceAddress },
+      ),
       'The target block must first be reported.',
     );
   });
 
   it('should not accept a source checkpoint that is not justified', async () => {
     await Utils.expectRevert(
-      blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        blockHashAtTwenty,
+        blockHashAtThirty,
+        { from: pollingPlaceAddress },
+      ),
       'The source block must first be justified.',
     );
   });
 
   it(
     'should not accept a target block that has a height that is not a '
-      + 'multiple of the epoch length',
+        + 'multiple of the epoch length',
     async () => {
       await Utils.expectRevert(
-        blockStore.justify(blockHashAtZero, blockHashAtTwentyFive, {
-          from: pollingPlaceAddress,
-        }),
+        blockStore.justify(
+          blockHashAtZero,
+          blockHashAtTwentyFive,
+          { from: pollingPlaceAddress },
+        ),
         'The target must be at a height that is a multiple of the '
-          + 'epoch length.',
+                + 'epoch length.',
       );
     },
   );
 
   it('should not accept a target block that has a height lower than the head', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTen, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTen, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTen,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTen,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtThirty,
+      { from: pollingPlaceAddress },
+    );
 
     await Utils.expectRevert(
-      blockStore.justify(blockHashAtTen, blockHashAtTwenty, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        blockHashAtTen,
+        blockHashAtTwenty,
+        { from: pollingPlaceAddress },
+      ),
       'The target must be higher than the head.',
     );
   });
 
   it('should not allow the target to be below the source', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
     await Utils.expectRevert(
-      blockStore.justify(blockHashAtTwenty, blockHashAtTen, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        blockHashAtTwenty,
+        blockHashAtTen,
+        { from: pollingPlaceAddress },
+      ),
       'The target must be above the source in height.',
     );
   });
 
   it('should not allow the target to be justified with a different source', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTen, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTen, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtFourty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTen,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTen,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtThirty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtFourty,
+      { from: pollingPlaceAddress },
+    );
 
     await Utils.expectRevert(
-      blockStore.justify(blockHashAtThirty, blockHashAtFourty, {
-        from: pollingPlaceAddress,
-      }),
+      blockStore.justify(
+        blockHashAtThirty,
+        blockHashAtFourty,
+        { from: pollingPlaceAddress },
+      ),
       'The target must not be justified already.',
     );
   });

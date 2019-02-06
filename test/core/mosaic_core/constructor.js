@@ -27,16 +27,17 @@ const Utils = require('../../test_lib/utils.js');
 const MosaicCore = artifacts.require('MosaicCore');
 
 contract('MosaicCore.constructor()', async (accounts) => {
+  const auxiliaryCoreIdentifier = web3.utils.sha3('1');
+  const minimumWeight = new BN('1');
+
   let mosaicCore;
   let gas;
   let transactionRoot;
   let ost;
   let maxAccumulateGasLimit;
-  const auxiliaryCoreIdentifier = web3.utils.sha3('1');
-  const minimumWeight = new BN('1');
 
   beforeEach(async () => {
-    ost = accounts[0];
+    [ost] = accounts;
     gas = new BN(1000);
     transactionRoot = web3.utils.sha3('1');
     maxAccumulateGasLimit = new BN(105000);

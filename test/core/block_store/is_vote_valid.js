@@ -80,207 +80,291 @@ contract('BlockStore.isVoteValid()', async (accounts) => {
 
   it('should return true for valid votes', async () => {
     let isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('0'),
-        blockHash: blockHashAtZero,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('0'),
+          blockHash: blockHashAtZero,
+          coreIdentifier,
+        },
+      ),
       blockHashAtZero,
       blockHashAtTen,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
 
     isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('0'),
-        blockHash: blockHashAtZero,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('0'),
+          blockHash: blockHashAtZero,
+          coreIdentifier,
+        },
+      ),
       blockHashAtZero,
       blockHashAtTwenty,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
 
     isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('0'),
-        blockHash: blockHashAtZero,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('0'),
+          blockHash: blockHashAtZero,
+          coreIdentifier,
+        },
+      ),
       blockHashAtZero,
       blockHashAtFourty,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
 
     await blockStore.justify(blockHashAtZero, blockHashAtTwenty);
 
     isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1'),
-        blockHash: blockHashAtTwenty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1'),
+          blockHash: blockHashAtTwenty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtTwenty,
       blockHashAtThirty,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
 
     isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1'),
-        blockHash: blockHashAtTwenty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1'),
+          blockHash: blockHashAtTwenty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtTwenty,
       blockHashAtFourty,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
 
     await blockStore.justify(blockHashAtTwenty, blockHashAtThirty);
 
     isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('2'),
-        blockHash: blockHashAtThirty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('2'),
+          blockHash: blockHashAtThirty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtThirty,
       blockHashAtFourty,
     );
-    assert(isValid, 'Vote expected to be valid; instead it was not.');
+    assert(
+      isValid,
+      'Vote expected to be valid; instead it was not.',
+    );
   });
 
   it('should not accept an unknown source hash', async () => {
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('0'),
-        blockHash: unknownBlockHash,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('0'),
+          blockHash: unknownBlockHash,
+          coreIdentifier,
+        },
+      ),
       unknownBlockHash,
       blockHashAtTwenty,
     );
-    assert(!isValid, 'Vote expected to be invalid; instead it was.');
+    assert(
+      !isValid,
+      'Vote expected to be invalid; instead it was.',
+    );
   });
 
   it('should not accept an unknown target hash', async () => {
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('0'),
-        blockHash: blockHashAtZero,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('0'),
+          blockHash: blockHashAtZero,
+          coreIdentifier,
+        },
+      ),
       blockHashAtZero,
       unknownBlockHash,
     );
-    assert(!isValid, 'Vote expected to be invalid; instead it was.');
+    assert(
+      !isValid,
+      'Vote expected to be invalid; instead it was.',
+    );
   });
 
   it('should not accept a source checkpoint that is not justified', async () => {
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1'),
-        blockHash: blockHashAtTwenty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1'),
+          blockHash: blockHashAtTwenty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtTwenty,
       blockHashAtThirty,
     );
-    assert(!isValid, 'Vote expected to be invalid; instead it was.');
+    assert(
+      !isValid,
+      'Vote expected to be invalid; instead it was.',
+    );
   });
 
-  it(
-    'should not accept a target block that has a height that is not a '
-      + 'multiple of the epoch length',
-    async () => {
-      const isValid = await blockStore.isVoteValid.call(
-        MetaBlock.hashOriginTransition({
+  it('should not accept a target block that has a height that is not a '
+        + 'multiple of the epoch length',
+  async () => {
+    const isValid = await blockStore.isVoteValid.call(
+      MetaBlock.hashOriginTransition(
+        {
           dynasty: new BN('0'),
           blockHash: blockHashAtZero,
           coreIdentifier,
-        }),
-        blockHashAtZero,
-        blockHashAtTwentyFive,
-      );
-      assert(!isValid, 'Vote expected to be invalid; instead it was.');
-    },
-  );
+        },
+      ),
+      blockHashAtZero,
+      blockHashAtTwentyFive,
+    );
+    assert(
+      !isValid,
+      'Vote expected to be invalid; instead it was.',
+    );
+  });
 
   it('should not accept a target block that has a height lower than the head', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTen, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTen, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTen,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTen,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtThirty,
+      { from: pollingPlaceAddress },
+    );
 
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1'),
-        blockHash: blockHashAtTen,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1'),
+          blockHash: blockHashAtTen,
+          coreIdentifier,
+        },
+      ),
       blockHashAtTen,
       blockHashAtTwenty,
     );
-    assert(!isValid, 'The target must be higher than the head.');
+    assert(
+      !isValid,
+      'The target must be higher than the head.',
+    );
   });
 
   it('should not accept an invalid transition hash', async () => {
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1337'),
-        blockHash: blockHashAtZero,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1337'),
+          blockHash: blockHashAtZero,
+          coreIdentifier,
+        },
+      ),
       blockHashAtZero,
       blockHashAtTen,
     );
-    assert(!isValid, 'It should not accept an invalid transition hash.');
+    assert(
+      !isValid,
+      'It should not accept an invalid transition hash.',
+    );
   });
 
   it('should not allow the target to be below the source', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('1'),
-        blockHash: blockHashAtTwenty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('1'),
+          blockHash: blockHashAtTwenty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtTwenty,
       blockHashAtTen,
     );
-    assert(!isValid, 'It should not accept a target below the source.');
+    assert(
+      !isValid,
+      'It should not accept a target below the source.',
+    );
   });
 
   it('should not allow the target to be justified with a different source', async () => {
-    await blockStore.justify(blockHashAtZero, blockHashAtTen, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTen, blockHashAtTwenty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtThirty, {
-      from: pollingPlaceAddress,
-    });
-    await blockStore.justify(blockHashAtTwenty, blockHashAtFourty, {
-      from: pollingPlaceAddress,
-    });
+    await blockStore.justify(
+      blockHashAtZero,
+      blockHashAtTen,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTen,
+      blockHashAtTwenty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtThirty,
+      { from: pollingPlaceAddress },
+    );
+    await blockStore.justify(
+      blockHashAtTwenty,
+      blockHashAtFourty,
+      { from: pollingPlaceAddress },
+    );
 
     const isValid = await blockStore.isVoteValid.call(
-      MetaBlock.hashOriginTransition({
-        dynasty: new BN('3'),
-        blockHash: blockHashAtThirty,
-        coreIdentifier,
-      }),
+      MetaBlock.hashOriginTransition(
+        {
+          dynasty: new BN('3'),
+          blockHash: blockHashAtThirty,
+          coreIdentifier,
+        },
+      ),
       blockHashAtThirty,
       blockHashAtFourty,
     );
-    assert(!isValid, 'The target must not be justified before.');
+    assert(
+      !isValid,
+      'The target must not be justified before.',
+    );
   });
 });

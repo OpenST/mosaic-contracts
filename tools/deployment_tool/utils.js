@@ -18,7 +18,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require('bn.js');
 const colors = require('colors/safe');
 
 /**
@@ -62,8 +61,8 @@ const waitForTransactionReceiptMined = (web3, txHash, interval = 500) => {
  */
 class UnlockedWeb3Signer {
   /**
-     * @param {object} web3 The web3 instance to use.
-     */
+   * @param {object} web3 The web3 instance to use.
+   */
   constructor(web3) {
     this.web3 = web3;
 
@@ -71,9 +70,9 @@ class UnlockedWeb3Signer {
   }
 
   /**
-     * @param {object} transactionObject The transaction object to sign.
-     *                 See {@link https://web3js.readthedocs.io/en/1.0/web3-eth.html#sendtransaction}
-     */
+   * @param {object} transactionObject The transaction object to sign.
+   *                 See {@link https://web3js.readthedocs.io/en/1.0/web3-eth.html#sendtransaction}
+   */
   signTransaction(transactionObject) {
     return this.web3.eth.signTransaction(transactionObject);
   }
@@ -137,7 +136,7 @@ const deployContracts = async (
 ) => {
   // allows us to run promises in sequence
   const asyncForEach = async (array, callback) => {
-    for (let index = 0; index < array.length; index++) {
+    for (let index = 0; index < array.length; index += 1) {
       await callback(array[index], index, array);
     }
   };

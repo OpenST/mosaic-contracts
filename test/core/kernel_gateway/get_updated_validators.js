@@ -54,8 +54,8 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
   });
 
   it(
-    'should return blank array of validator addresses and weights when '
-      + 'kernel hash is not open kernel hash',
+    'should return blank array of validator addresses and weights when kernel hash is not open '
+    + 'kernel hash',
     async () => {
       const result = await kernelGateway.getUpdatedValidators.call(randomHash);
 
@@ -119,9 +119,8 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
   });
 
   it(
-    'should return blank array for validator addresses and weights for the '
-      + 'old active kernel hash when the active kernel hash is'
-      + ' updated',
+    'should return blank array for validator addresses and weights for the old active kernel '
+    + 'hash when the active kernel hash is updated',
     async () => {
       const validatorAddresses = [accounts[1], accounts[2]];
       const validatorWeights = [new BN(100), new BN(150)];
@@ -140,7 +139,7 @@ contract('KernelGateway.getUpdatedValidators()', async (accounts) => {
 
       let result = await kernelGateway.getUpdatedValidators.call(hash1);
 
-      for (let i = 0; i < result.length; i++) {
+      for (let i = 0; i < result.length; i += 1) {
         assert.strictEqual(
           result.updatedValidators_[i],
           validatorAddresses[i],

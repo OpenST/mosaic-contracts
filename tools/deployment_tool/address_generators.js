@@ -28,20 +28,20 @@ const rlp = require('rlp');
  */
 class IncrementingAddressGenerator {
   /**
-     * @param {string} [startAddress=0x0000000000000000000000000000000000010000]
-     *                  Address from which we generate (by incrementing)
-     *                  new addresses for contracts to deploy.
-     */
+   * @param {string} [startAddress=0x0000000000000000000000000000000000010000]
+   *                  Address from which we generate (by incrementing)
+   *                  new addresses for contracts to deploy.
+   */
   constructor(startAddress = '0x0000000000000000000000000000000000010000') {
     this.nextAvailableAddress = startAddress;
   }
 
   /**
-     * Function returns next available address.
-     *
-     * @return {string} Next address to use as a pre-allocated address within
-     *         genesis file for contract deployment.
-     */
+   * Function returns next available address.
+   *
+   * @return {string} Next address to use as a pre-allocated address within
+   *         genesis file for contract deployment.
+   */
   generateAddress() {
     const addressHex = this.nextAvailableAddress;
 
@@ -79,12 +79,12 @@ class IncrementingNonceAddressGenerator {
   }
 
   /**
-     * Returns the next available address.
-     *
-     * @return {string} Next address that will be used for a contract created by
-     *                  a transaction from `fromAddress` at the current transaction
-     *                  count (= nonce).
-     */
+   * Returns the next available address.
+   *
+   * @return {string} Next address that will be used for a contract created by
+   *                  a transaction from `fromAddress` at the current transaction
+   *                  count (= nonce).
+   */
   generateAddress() {
     // Derive address from sender and nonce.
     //
