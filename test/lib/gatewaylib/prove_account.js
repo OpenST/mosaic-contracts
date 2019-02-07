@@ -23,22 +23,12 @@ const GatewayLib = artifacts.require('GatewayLib');
 const StubData = require('../../data/proof.json');
 const Utils = require('../../test_lib/utils.js');
 
-contract('GatewayLib.proveAccount()', async (accounts) => {
+contract('GatewayLib.proveAccount()', async () => {
   let gatewayLib;
-
-
   let accountProof;
-
-
   let encodedAccountValue;
-
-
   let path;
-
-
   let stateRoot;
-
-
   let expectedStorageRoot;
 
   beforeEach(async () => {

@@ -24,7 +24,7 @@ const web3 = require('../test_lib/web3.js');
 
 const Utils = require('../test_lib/utils.js');
 const EIP20TokenUtils = require('./EIP20_token_utils.js');
-const web3EventsDecoder = require('../test_lib/event_decoder.js');
+const EventsDecoder = require('../test_lib/event_decoder.js');
 
 const MockToken = artifacts.require('./MockToken.sol');
 
@@ -111,7 +111,7 @@ contract('MockToken', (accounts) => {
         token.transactionHash,
       );
       assert.equal(receipt.logs.length, 1);
-      const logs = web3EventsDecoder.perform(
+      const logs = EventsDecoder.perform(
         receipt,
         token.address,
         token.abi,

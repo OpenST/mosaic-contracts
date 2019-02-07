@@ -134,25 +134,19 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     assert.strictEqual(
       stakerNonce.eq(messageData.nonce),
       true,
-      `Message.nonce from the contract must be equal to ${stakerNonce.toString(
-        10,
-      )}.`,
+      `Message.nonce from the contract must be equal to ${stakerNonce.toString(10)}.`,
     );
 
     assert.strictEqual(
       gasPrice.eq(messageData.gasPrice),
       true,
-      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(
-        10,
-      )}.`,
+      `Message.gasPrice from the contract must be equal to ${gasPrice.toString(10)}.`,
     );
 
     assert.strictEqual(
       gasLimit.eq(messageData.gasLimit),
       true,
-      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(
-        10,
-      )}.`,
+      `Message.gasLimit from the contract must be equal to ${gasLimit.toString(10)}.`,
     );
 
     assert.strictEqual(

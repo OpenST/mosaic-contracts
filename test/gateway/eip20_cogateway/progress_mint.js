@@ -54,28 +54,18 @@ async function setup(accounts) {
 }
 
 contract('EIP20CoGateway.progressMint() ', (accounts) => {
-  let amount = new BN(200);
-
   const beneficiary = accounts[4];
-
-  let gasPrice;
-
-  let gasLimit;
-
   const nonce = new BN(1);
-
   const hashLockObj = Utils.generateHashLock();
-
   const facilitator = accounts[5];
 
+  let amount = new BN(200);
+  let gasPrice;
+  let gasLimit;
   let intentHash;
-
   let hashLock;
-
   let unlockSecret;
-
   let testEIP20CoGateway;
-
   let messageHash;
 
   beforeEach(async () => {
@@ -149,19 +139,22 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
     assert.strictEqual(
       amount.eq(progressMintValues.stakeAmount_),
       true,
-      `Staked amount is ${progressMintValues.stakeAmount_.toString(10)} and expected is ${amount.toString(10)}.`,
+      `Staked amount is ${progressMintValues.stakeAmount_.toString(10)} and expected is `
+      + `${amount.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedMintedToken.eq(progressMintValues.mintedAmount_),
       true,
-      `Minted amount is ${progressMintValues.mintedAmount_.toString(10)} and expected is ${expectedMintedToken.toString(10)}.`,
+      `Minted amount is ${progressMintValues.mintedAmount_.toString(10)} and expected is `
+      + `${expectedMintedToken.toString(10)}.`,
     );
 
     assert.strictEqual(
       expectedReward.eq(progressMintValues.rewardAmount_),
       true,
-      `Reward to facilitator is ${progressMintValues.rewardAmount_.toString(10)} and expected is ${expectedReward.toString(10)}.`,
+      `Reward to facilitator is ${progressMintValues.rewardAmount_.toString(10)} and expected is `
+      + `${expectedReward.toString(10)}.`,
     );
 
     const response = await testEIP20CoGateway.progressMint(
@@ -176,7 +169,8 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
     assert.strictEqual(
       facilitatorBalance.eq(expectedReward),
       true,
-      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is ${expectedReward.toString(10)}.`,
+      `Facilitator reward is ${facilitatorBalance.toString(10)} and expected is `
+      + `${expectedReward.toString(10)}.`,
     );
 
     assert.strictEqual(

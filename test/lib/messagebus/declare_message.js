@@ -19,9 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const messageBus = require('../../test_lib/message_bus.js');
-const messageBusUtilsKlass = require('./messagebus_utils');
-
-const messageBusUtils = new messageBusUtilsKlass();
+const MessageBusUtils = require('./messagebus_utils');
 
 const { MessageStatusEnum } = messageBus;
 
@@ -29,48 +27,48 @@ contract('MessageBus.declareMessage()', async (accounts) => {
   let params;
 
   beforeEach(async () => {
-    await messageBusUtils.deployedMessageBus();
+    await MessageBusUtils.deployedMessageBus();
 
-    params = messageBusUtils.defaultParams(accounts);
+    params = MessageBusUtils.defaultParams(accounts);
   });
 
   it('should fail when message status is already in declared state', async () => {
     const message = 'Message on source must be Undeclared.';
     params.message = message;
 
-    await messageBusUtils.declareMessage(params, true);
-    await messageBusUtils.declareMessage(params, false);
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareMessage(params, false);
   });
 
   it('should fail when message status is progressed in outbox', async () => {
     const message = 'Message on source must be Undeclared.';
     params.message = message;
 
-    await messageBusUtils.declareMessage(params, true);
-    await messageBusUtils.progressOutbox(params, true);
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.progressOutbox(params, true);
 
-    await messageBusUtils.declareMessage(params, false);
+    await MessageBusUtils.declareMessage(params, false);
   });
 
   it('should fail when message status is DeclaredRevocation in outbox', async () => {
     const message = 'Message on source must be Undeclared.';
     params.message = message;
 
-    await messageBusUtils.declareMessage(params, true);
-    await messageBusUtils.declareRevocationMessage(params, true);
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareRevocationMessage(params, true);
 
-    await messageBusUtils.declareMessage(params, false);
+    await MessageBusUtils.declareMessage(params, false);
   });
 
   it('should fail when message status is Revoked in outbox', async () => {
     const message = 'Message on source must be Undeclared.';
     params.message = message;
 
-    await messageBusUtils.declareMessage(params, true);
-    await messageBusUtils.declareRevocationMessage(params, true);
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareRevocationMessage(params, true);
     params.messageStatus = MessageStatusEnum.Revoked;
-    await messageBusUtils.progressOutboxRevocation(params, true);
+    await MessageBusUtils.progressOutboxRevocation(params, true);
 
-    await messageBusUtils.declareMessage(params, false);
+    await MessageBusUtils.declareMessage(params, false);
   });
 });

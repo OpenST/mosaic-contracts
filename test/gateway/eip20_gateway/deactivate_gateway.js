@@ -18,30 +18,25 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require('./EIP20Gateway.sol');
-
 const BN = require('bn.js');
-
-const MockOrganization = artifacts.require('MockOrganization.sol');
-
 const Utils = require('../../../test/test_lib/utils');
 
+const Gateway = artifacts.require('./EIP20Gateway.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
+
 const NullAddress = Utils.NULL_ADDRESS;
+
 contract('EIP20Gateway.deactivateGateway()', (accounts) => {
-  let gateway;
   const owner = accounts[2];
   const worker = accounts[3];
   const coGateway = accounts[5];
-  let organization;
   const burner = NullAddress;
 
+  let gateway;
+  let organization;
+
   beforeEach(async () => {
-    const mockToken = accounts[0];
-
-    const baseToken = accounts[1];
-
-    const dummyStateRootProvider = accounts[2];
-
+    const [mockToken, baseToken, dummyStateRootProvider] = accounts;
     const bountyAmount = new BN(100);
 
     organization = await MockOrganization.new(owner, worker);

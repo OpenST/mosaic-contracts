@@ -53,7 +53,7 @@ let errorMessage;
 let mockOrganization;
 
 async function prepareData() {
-  const intentHash = gatewayUtils.hashStakeIntent(
+  const intentHash = GatewayUtils.hashStakeIntent(
     stakeAmount,
     beneficiary,
     gateway.address,

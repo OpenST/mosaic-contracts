@@ -30,11 +30,11 @@ const EventDecoder = require('../../test_lib/event_decoder');
 
 const { MessageStatusEnum } = messageBus;
 contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
-  const facilitator = accounts[1];
   const amount = new BN(100);
   const beneficiary = accounts[4];
   const bountyAmount = new BN(100);
 
+  let facilitator;
   let unlockSecret;
   let eip20CoGateway;
   let messageHash;
@@ -44,17 +44,13 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
 
   beforeEach(async () => {
     const gasPrice = new BN(10);
-
     const gasLimit = new BN(10);
-
     const hashLockObj = Utils.generateHashLock();
-
     const hashLock = hashLockObj.l;
-
     const owner = accounts[8];
-
     const intentHash = web3.utils.sha3('dummy');
 
+    facilitator = accounts[1];
     sender = owner;
     unlockSecret = hashLockObj.s;
     nonce = new BN(1);
@@ -167,7 +163,7 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
   });
 
   it('should return bounty to the facilitator', async () => {
-    const facilitator = accounts[8];
+    facilitator = accounts[8];
     const initialFacilitatorEthBalance = await Utils.getBalance(facilitator);
     const initialCoGatewayEthBalance = await Utils.getBalance(
       eip20CoGateway.address,

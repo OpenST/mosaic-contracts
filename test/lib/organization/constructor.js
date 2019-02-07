@@ -18,9 +18,9 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require('../../test_lib/web3.js');
-const EventDecoder = require('../../test_lib/event_decoder.js');
-const Utils = require('../../test_lib/utils.js');
+const web3 = require('../../test_lib/web3');
+const EventDecoder = require('../../test_lib/event_decoder');
+const Utils = require('../../test_lib/utils');
 
 const Organization = artifacts.require('Organization');
 
@@ -89,7 +89,7 @@ contract('Organization.constructor()', async (accounts) => {
     );
 
     const count = workers.length;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i += 1) {
       const worker = workers[i];
       const setExpirationHeight = await organization.workers.call(worker);
       assert(
@@ -124,7 +124,7 @@ contract('Organization.constructor()', async (accounts) => {
     );
 
     assert.strictEqual(
-      parseInt(event.WorkerSet.expirationHeight),
+      parseInt(event.WorkerSet.expirationHeight, 10),
       expirationHeight,
       'The emitted event did not have the right expiration height set.',
     );
@@ -146,17 +146,15 @@ contract('Organization.constructor()', async (accounts) => {
     );
   });
 
-  it(
-    'should not deploy if the expiration height is not in the future for '
-      + 'any workers',
-    async () => {
-      const currentBlockHeight = await web3.eth.getBlockNumber();
-      const pastBlockHeight = currentBlockHeight - 1;
+  it('should not deploy if the expiration height is not in the future for '
+    + 'any workers',
+  async () => {
+    const currentBlockHeight = await web3.eth.getBlockNumber();
+    const pastBlockHeight = currentBlockHeight - 1;
 
-      await Utils.expectRevert(
-        Organization.new(owner, admin, workers, pastBlockHeight),
-        'Expiration height must be in the future\\.',
-      );
-    },
-  );
+    await Utils.expectRevert(
+      Organization.new(owner, admin, workers, pastBlockHeight),
+      'Expiration height must be in the future\\.',
+    );
+  });
 });

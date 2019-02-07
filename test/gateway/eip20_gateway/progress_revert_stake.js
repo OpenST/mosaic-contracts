@@ -43,34 +43,30 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
   let revertStakeParams;
   let bountyAmount;
 
-  const gatewayUtils = new GatewayUtils();
-
-  const setup = async (revertStakeParams) => {
-    const stakeIntentHash = await gatewayUtils.hashStakeIntent(
-      revertStakeParams.amount,
-      revertStakeParams.beneficiary,
-      revertStakeParams.gatewayAddress,
+  const setup = async (givenStakeParams) => {
+    const stakeIntentHash = GatewayUtils.hashStakeIntent(
+      givenStakeParams.amount,
+      givenStakeParams.beneficiary,
+      givenStakeParams.gatewayAddress,
     );
 
-    revertStakeParams.intentHash = stakeIntentHash;
-
     await gateway.setStake(
-      revertStakeParams.messageHash,
-      revertStakeParams.beneficiary,
-      revertStakeParams.amount,
+      givenStakeParams.messageHash,
+      givenStakeParams.beneficiary,
+      givenStakeParams.amount,
     );
 
     await gateway.setMessage(
-      revertStakeParams.intentHash,
-      revertStakeParams.nonce,
-      revertStakeParams.gasPrice,
-      revertStakeParams.gasLimit,
-      revertStakeParams.staker,
-      revertStakeParams.hashLock,
+      stakeIntentHash,
+      givenStakeParams.nonce,
+      givenStakeParams.gasPrice,
+      givenStakeParams.gasLimit,
+      givenStakeParams.staker,
+      givenStakeParams.hashLock,
     );
 
     await gateway.setOutboxStatus(
-      revertStakeParams.messageHash,
+      givenStakeParams.messageHash,
       MessageStatusEnum.DeclaredRevocation,
     );
   };
