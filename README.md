@@ -14,7 +14,7 @@ Mosaic enables building scalable blockchain token economies through the bidirect
 
 The Protocol defines a set of actions that are performed atomically across a gateway. A gateway for a given token is comprised of a `EIP20Gateway` contract on origin, a corresponding `EIP20CoGateway` contract on auxiliary, and and an ERC20 contract on auxiliary that mints and burns utility tokens for an equivalent value of ERC20 tokens staked and unstaked on origin. Atomicity is achieved by combining performance of the transpositional actions in a 2-phase-commit structure with a hash-timelock on each of the origin and auxiliary chains.
 
-You can read [the draft of the mosaic whitepaper][Mosaic whitepaper] or [the original OpenST whitepaper][OpenST whitepaper].
+You can read [the draft of the mosaic whitepaper][mosaic whitepaper] or [the original OpenST whitepaper][openst whitepaper].
 
 ## Installation
 
@@ -25,9 +25,29 @@ npm install @openstfoundation/mosaic-contracts
 ## Usage
 
 ```js
-import mosaicContracts from '@openstfoundation/mosaic-contracts';
+// Load the contracts' meta-data from the package:
+const {
+  Anchor,
+  CoGatewayUtilityTokenInterface,
+  EIP20CoGateway,
+  EIP20Gateway,
+  EIP20Interface,
+  EIP20Token,
+  GatewayLib,
+  MerklePatriciaProof,
+  MessageBus,
+  Organization,
+  OrganizationInterface,
+  Organized,
+  OSTPrime,
+  StateRootInterface,
+  UtilityToken,
+  UtilityTokenInterface,
+} = require('@openstfoundation/mosaic-contracts');
 
-const { gatewayAbi, gatewayBin } = mosaicContracts.EIP20Gateway;
+// Access the ABIs and BINs directly on the contracts. For example:
+const anchorAbi = Anchor.abi;
+const anchorBinary = Anchor.bin;
 ```
 
 ## Related Work
