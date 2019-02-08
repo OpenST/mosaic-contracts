@@ -19,13 +19,17 @@ Messages can also be reverted if they are not yet completed on the target chain.
 
 You can read [the draft of the mosaic whitepaper][mosaic whitepaper] or [the original OpenST whitepaper][openst whitepaper].
 
-## Installation
+## Instructions
+
+### For JS Consumers
+
+#### Installation
 
 ```bash
 npm install @openstfoundation/mosaic-contracts
 ```
 
-## Usage
+#### Usage
 
 ```js
 // Load the contracts' meta-data from the package:
@@ -52,6 +56,28 @@ const {
 const anchorAbi = Anchor.abi;
 const anchorBinary = Anchor.bin;
 ```
+
+### For Direct Users
+
+This section is only required if you want to *set up a **new** mosaic chain.*
+
+#### Installation
+
+```bash
+git clone git@github.com:OpenSTFoundation/mosaic-contracts.git
+cd mosaic-contracts
+npm install
+npm run compile-all
+```
+
+#### Usage
+
+There is a deployment tool available for deployment and set-up:
+```bash
+node ./tools/blue_deployment/index.js
+```
+
+> ⚠️ Note that this feature is still very experimental ⚠️
 
 ## Related Work
 
