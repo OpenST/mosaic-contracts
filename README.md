@@ -43,6 +43,7 @@ git clone git@github.com:OpenSTFoundation/mosaic-contracts.git
 cd mosaic-contracts
 npm install
 npm run compile-all
+npm run ganache
 npm run test
 # Requires docker:
 npm run test:integration
