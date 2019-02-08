@@ -69,7 +69,8 @@ npm install
 npm run compile-all
 npm run ganache
 npm run test
-# Requires docker:
+
+# Requires docker, stop ganache first:
 npm run test:integration
 ```
 
