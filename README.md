@@ -55,7 +55,8 @@ const anchorBinary = Anchor.bin;
 
 ## Related Work
 
-* [mosaic.js] uses this package to provide a JavaScript abstraction layer of the mosaic contracts.
+[mosaic.js] uses this package to provide a JavaScript abstraction layer of the mosaic contracts.
+You can use [mosaic.js] directly to deploy the contracts and interact with them.
 
 ## Contributing
 
