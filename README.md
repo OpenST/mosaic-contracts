@@ -12,7 +12,10 @@ Decentralized applications can use Mosaic to compute over a composed network of 
 
 Mosaic enables building scalable blockchain token economies through the bidirectional transposition of ERC20 tokens on one blockchain, the *origin* chain, and a utility token representation on another blockchain, the *auxiliary* chain.
 
-The Protocol defines a set of actions that are performed atomically across a gateway. A gateway for a given token is comprised of a `EIP20Gateway` contract on origin, a corresponding `EIP20CoGateway` contract on auxiliary, and and an ERC20 contract on auxiliary that mints and burns utility tokens for an equivalent value of ERC20 tokens staked and unstaked on origin. Atomicity is achieved by combining performance of the transpositional actions in a 2-phase-commit structure with a hash-timelock on each of the origin and auxiliary chains.
+The protocol defines a set of actions that together perform atomic token transfers across two blockchains using gateway contracts. A gateway for a given EIP20 token is comprised of a `EIP20Gateway` contract on origin, a corresponding `EIP20CoGateway` contract on auxiliary, and and an ERC20 utility token contract on auxiliary that mints and burns utility tokens to atomically mirror tokens staked and unstaked on the origin chain.
+
+Atomicity is achieved using a 2-phase message passing architecture between the chains. Messages are declared on the source chain, and confirmed on the target chain with Patricia Merkle proofs once the source chain is finalized. Once messages are confirmed on the target chain, they can efficiently progressed with a hashlock.
+Messages can also be reverted if they are not yet completed on the target chain.
 
 You can read [the draft of the mosaic whitepaper][mosaic whitepaper] or [the original OpenST whitepaper][openst whitepaper].
 
