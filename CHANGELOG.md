@@ -1,8 +1,8 @@
 # Mosaic Contracts Change Log
 
-## Version 0.10.0 ⚓️ Anchor (Beta 1)
+## Version 0.10.0 ⚓️ Anchor
 
-[**Release 0.10.0-beta.1, (2019-02-11)**](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/0.10.0-beta.1)
+<!-- [**Release 0.10.0, (<date-here>)**](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/0.10.0) -->
 
 A gateway for a given EIP20 token is comprised of a `EIP20Gateway` contract on origin  and a corresponding `EIP20CoGateway` contract on auxiliary.
 On auxiliary there is an ERC20 utility token contract that mints and burns utility tokens.
