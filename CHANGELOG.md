@@ -65,7 +65,7 @@ The current release uses a "anchors" to provide state roots from remote chains.
 * Validator rewards are not handled yet.
 
 
-## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.2) March 27 2018
+## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/v.0.9.2) March 27 2018
 
 OpenST v0.9.2 improves usability to facilitate application by the [OpenST-Platform](https://github.com/OpenSTFoundation/openst-platform) and other services. Additionally, this release increases test coverage, with additional unit and integration tests, and adds continuous integration with Travis CI.
 
@@ -86,7 +86,7 @@ Detailed changelog:
 - Tests: migrate unit tests for `Owned`, `OpsManaged`, and `SafeMath` from SimpleTokenSale repo ([openst-protocol #73](https://github.com/OpenSTFoundation/openst-protocol/pull/73))
 - Tests: add integration tests for reversion functions ([openst-protocol #65](https://github.com/OpenSTFoundation/openst-protocol/pull/65))
 
-## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) December 19 2017
+## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/v0.9.1) December 19 2017
 
 OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
 activation of Simple Token to power the OpenST platform.  The OpenST platform
