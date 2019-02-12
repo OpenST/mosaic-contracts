@@ -1,23 +1,60 @@
 {
-  "name": "openst-protocol",
-  "version": "0.9.1",
-  "description": "",
+  "name": "@openstfoundation/mosaic-contracts",
+  "version": "0.10.0-beta.1",
+  "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
+  "keywords": [
+    "Mosaic",
+    "Gateway",
+    "Anchor",
+    "OpenST",
+    "OST",
+    "Simple Token",
+    "Token Economy",
+    "web3",
+    "Ethereum",
+    "EIP20"
+  ],
+  "homepage": "https://openst.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenSTFoundation/mosaic-contracts"
+  },
   "devDependencies": {
     "abi-decoder": "1.2.0",
     "assert": "1.4.1",
     "bn.js": "4.11.8",
+    "chai": "4.2.0",
+    "colors": "1.3.3",
+    "eslint": "5.10.0",
+    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-plugin-import": "2.14.0",
     "ganache-cli": "6.1.8",
+    "inquirer": "6.2.1",
     "keccak": "1.4.0",
+    "mocha": "5.2.0",
     "rlp": "2.1.0",
     "solidity-coverage": "0.5.11",
     "solparse": "2.2.5",
     "truffle": "beta",
+    "wait-port": "^0.2.2",
     "web3": "1.0.0-beta.36"
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test"
+    "compile-all": "truffle compile --all",
+    "test": "truffle test",
+    "test:deployment_tool": "mocha tools/deployment_tool/test",
+    "test:integration": "cd test_integration && ./main.sh",
+    "ganache": "sh tools/runGanacheCli.sh",
+    "build-package": "node tools/build_package.js",
+    "prepare": "npm run compile-all && npm run build-package",
+    "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
+    "lint": "eslint {migrations,test,test_integration,tools} -c .eslintrc.json --ext js"
   },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "author": "OpenST Foundation Ltd.",
-  "license": "Apache v2.0"
+  "license": "Apache-2.0"
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@
 //
 // ----------------------------------------------------------------------------
 
-var MockToken = artifacts.require("./MockToken.sol");
+const MockToken = artifacts.require('./MockToken.sol');
 
-/// @dev Deploy 
+// / @dev Deploy
 module.exports.deployMockToken = async (artifacts, accounts) => {
+  const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
 
-   const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
-
-   return {
-      token : token
-   }
-}
+  return {
+    token,
+  };
+};

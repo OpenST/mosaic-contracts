@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,52 +18,39 @@
 //
 // ----------------------------------------------------------------------------
 
-const GatewayBase = artifacts.require("./GatewayBase.sol")
-  , BN = require('bn.js');
+const BN = require('bn.js');
 
+const GatewayBase = artifacts.require('./GatewayBase.sol');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
-contract('GatewayBase.sol', function (accounts) {
+/*
+ * The tests that assert that the nonce increases when staking or redeeming are
+ * in the respective test files for stake and redeem.
+ */
 
+contract('GatewayBase.sol', (accounts) => {
   describe('get nonce', async () => {
     let gatewayBaseInstance;
 
+    beforeEach(async () => {
+      const owner = accounts[2];
+      const worker = accounts[3];
+      const dummyStateRootProviderAddress = accounts[0];
+      const bounty = new BN(100);
 
-    beforeEach(async function () {
-
-      let owner = accounts[2]
-        , worker = accounts[3]
-        , dummyStateRootProviderAddress = accounts[0]
-        , bounty = new BN(100);
-
-      let organization = await MockOrganization.new(owner, worker);
+      const organization = await MockOrganization.new(owner, worker);
 
       gatewayBaseInstance = await GatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
       );
-
     });
 
-    it('should return 1 nonce if there is no active process', async function () {
-
-      let expectedNonce = new BN(1);
-      let nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
+    it('should return nonce `1` if there is no active process', async () => {
+      const expectedNonce = new BN(1);
+      const nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
       assert(nonce.eq(expectedNonce));
-
     });
-
-    it('should return nonce incremented by 1 if stake process is initiated', async function () {
-
-      //todo implement this when stake unit tests are done
-    });
-
-    it('should return nonce incremented by 1 if linking process is initiated', async function () {
-
-      //todo implement this when linking unit tests are done
-    });
-
-
   });
 });

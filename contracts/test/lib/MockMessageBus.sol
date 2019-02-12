@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -258,21 +258,34 @@ library MockMessageBus {
         external
         returns (bytes32 messageHash_)
     {
-        // The inbox message status must be either `Declared` or `Progressed`.
-        require(
-            _messageStatus == MessageStatus.Declared ||
-            _messageStatus == MessageStatus.Progressed,
-            "Message on target must be Declared or Progressed."
-        );
-
         messageHash_ = messageDigest(_message);
 
-        // The message status must be `Declared` or DeclaredRevocation`.
-        require(
-            _messageBox.outbox[messageHash_] == MessageStatus.Declared ||
-            _messageBox.outbox[messageHash_] == MessageStatus.DeclaredRevocation,
-            "Message on source must be Declared."
-        );
+        if(_messageBox.outbox[messageHash_] == MessageStatus.Declared) {
+
+            /*
+             * The inbox message status of target must be either `Declared` or
+             * `Progressed` when outbox message status at source is `Declared`.
+             */
+            require(
+                _messageStatus == MessageStatus.Declared ||
+                _messageStatus == MessageStatus.Progressed,
+                "Message on target must be Declared or Progressed."
+            );
+
+        } else if (_messageBox.outbox[messageHash_] == MessageStatus.DeclaredRevocation) {
+
+            /*
+             * The inbox message status of target must be either `Progressed`
+             * when outbox message status at source is `DeclaredRevocation`.
+             */
+            require(
+                _messageStatus == MessageStatus.Progressed,
+                "Message on target must be Progressed."
+            );
+
+        } else {
+            revert("Status of message on source must be Declared or DeclareRevocation.");
+        }
 
         bytes memory storagePath = bytes32ToBytes(
             storageVariablePathForStruct(
@@ -522,7 +535,7 @@ library MockMessageBus {
         require(
             _messageBox.outbox[messageHash_] ==
             MessageStatus.DeclaredRevocation,
-            "Message on source must be DeclaredRevocation."
+            "Message status on source must be DeclaredRevocation."
         );
 
         /*
@@ -689,31 +702,20 @@ library MockMessageBus {
         pure
         returns(bytes32 storagePath_)
     {
+        if(_offset > 0){
+            _structPosition = _structPosition + _offset;
+        }
+
         bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(
-                bytes32(uint256(_structPosition))
-            )
+            bytes32ToBytes(bytes32(uint256(_structPosition)))
         );
+
         bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
 
-        bytes32 structPath = keccak256(
-            abi.encodePacked(
-                keccak256(
-                    abi.encodePacked(path)
-                )
-            )
+        storagePath_ = keccak256(
+            abi.encodePacked(keccak256(abi.encodePacked(path)))
         );
-
-        if (_offset == 0) {
-            return structPath;
-        }
-        bytes32 storagePath;
-        uint8 offset = _offset;
-        assembly {
-            storagePath := add(structPath, offset)
-        }
-        storagePath_ = keccak256(abi.encodePacked(storagePath));
     }
 
     /**

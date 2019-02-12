@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,71 +18,57 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils'),
-  messageBusUtils = new messageBusUtilsKlass();
+const messageBus = require('../../test_lib/message_bus.js');
+const MessageBusUtils = require('./messagebus_utils');
 
-let MessageStatusEnum = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4
-};
+const { MessageStatusEnum } = messageBus;
 
 contract('MessageBus.declareMessage()', async (accounts) => {
+  let params;
 
-    let params;
+  beforeEach(async () => {
+    await MessageBusUtils.deployedMessageBus();
 
-    beforeEach(async function () {
+    params = MessageBusUtils.defaultParams(accounts);
+  });
 
-      await messageBusUtils.deployedMessageBus();
+  it('should fail when message status is already in declared state', async () => {
+    const message = 'Message on source must be Undeclared.';
+    params.message = message;
 
-      params = messageBusUtils.defaultParams(accounts);
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareMessage(params, false);
+  });
 
-    });
+  it('should fail when message status is progressed in outbox', async () => {
+    const message = 'Message on source must be Undeclared.';
+    params.message = message;
 
-    it('should fail when message status is already in declared state', async () => {
-      let message = 'Message on source must be Undeclared.';
-      params.message = message;
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.progressOutbox(params, true);
 
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.declareMessage(params, false);
+    await MessageBusUtils.declareMessage(params, false);
+  });
 
-    });
+  it('should fail when message status is DeclaredRevocation in outbox', async () => {
+    const message = 'Message on source must be Undeclared.';
+    params.message = message;
 
-    it('should fail when message status is progressed in outbox', async () => {
-      let message = 'Message on source must be Undeclared.';
-      params.message = message;
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareRevocationMessage(params, true);
 
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.progressOutbox(params, true);
+    await MessageBusUtils.declareMessage(params, false);
+  });
 
-      await messageBusUtils.declareMessage(params, false);
+  it('should fail when message status is Revoked in outbox', async () => {
+    const message = 'Message on source must be Undeclared.';
+    params.message = message;
 
-    });
+    await MessageBusUtils.declareMessage(params, true);
+    await MessageBusUtils.declareRevocationMessage(params, true);
+    params.messageStatus = MessageStatusEnum.Revoked;
+    await MessageBusUtils.progressOutboxRevocation(params, true);
 
-    it('should fail when message status is DeclaredRevocation in outbox', async () => {
-      let message = 'Message on source must be Undeclared.';
-      params.message = message;
-
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.declareRevocationMessage(params, true);
-
-      await messageBusUtils.declareMessage(params, false);
-
-    });
-
-    it('should fail when message status is Revoked in outbox', async () => {
-      let message = 'Message on source must be Undeclared.';
-      params.message = message;
-
-      await messageBusUtils.declareMessage(params, true);
-      await messageBusUtils.declareRevocationMessage(params, true);
-      params.messageStatus = MessageStatusEnum.Revoked;
-      await messageBusUtils.progressOutboxRevocation(params, true);
-
-      await messageBusUtils.declareMessage(params, false);
-    });
+    await MessageBusUtils.declareMessage(params, false);
+  });
 });
-
-

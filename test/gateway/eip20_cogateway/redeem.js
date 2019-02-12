@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,55 +18,52 @@
 //
 // ----------------------------------------------------------------------------
 
-const EIP20CoGateway = artifacts.require('TestEIP20CoGateway'),
-  BN = require('bn.js'),
-  MockToken = artifacts.require('MockToken'),
-  Utils = require("../../test_lib/utils.js"),
-  messageBus = require('../../test_lib/message_bus.js'),
-  coGatewayUtils = require('./helpers/co_gateway_utils.js');
+const BN = require('bn.js');
+const Utils = require('../../test_lib/utils');
+const messageBus = require('../../test_lib/message_bus.js');
+const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 
-let eip20CoGateway,
-  burner,
-  valueToken,
-  dummyStateRootProvider,
-  organization,
-  gateway,
-  utilityToken,
-  bountyAmount,
-  owner,
-  redeemer,
-  redeemerBalance;
+const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
+const MockToken = artifacts.require('MockToken');
 
-let MessageStatusEnum = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4
-};
+const { MessageStatusEnum } = messageBus;
 
-contract('EIP20CoGateway.redeem() ', function (accounts) {
+const nonce = new BN(1);
+const hashLockObj = Utils.generateHashLock();
+const hashLock = hashLockObj.l;
 
-  let amount,
-    beneficiary = accounts[4],
-    gasPrice = new BN(10),
-    gasLimit = new BN(10),
-    nonce = new BN(1),
-    hashLockObj = Utils.generateHashLock(),
-    hashLock = hashLockObj.l;
+let eip20CoGateway;
+let burner;
+let valueToken;
+let dummyStateRootProvider;
+let organization;
+let gateway;
+let utilityToken;
+let bountyAmount;
+let owner;
+let redeemer;
+let beneficiary;
+let redeemerBalance;
+let amount;
+let gasPrice = new BN(1);
+let gasLimit = new BN(1000);
 
-  beforeEach(async function () {
+contract('EIP20CoGateway.redeem()', (accounts) => {
+  beforeEach(async () => {
+    [
+      valueToken,
+      dummyStateRootProvider,
+      organization,
+      gateway,
+      beneficiary,
+      redeemer,
+      owner,
+      burner,
+    ] = accounts;
 
-    valueToken = accounts[0];
-    dummyStateRootProvider = accounts[1];
-    organization = accounts[2];
-    gateway = accounts[3];
-    owner = accounts[8];
     utilityToken = await MockToken.new({ from: owner });
     bountyAmount = new BN(100);
-    redeemer = accounts[7];
-    redeemerBalance = new BN(1000);
-    burner = accounts[10];
+    redeemerBalance = new BN(100000);
 
     eip20CoGateway = await EIP20CoGateway.new(
       valueToken,
@@ -75,7 +72,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       bountyAmount,
       organization,
       gateway,
-      burner
+      burner,
     );
 
     await utilityToken.transfer(redeemer, redeemerBalance, { from: owner });
@@ -85,13 +82,11 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       redeemerBalance,
       { from: redeemer },
     );
-    amount = new BN(100);
-
+    amount = redeemerBalance;
   });
 
-  it('should fail when the bounty amount is less than expected bounty amount', async function () {
-
-    let bounty = new BN(10);
+  it('should fail when the bounty amount is less than expected bounty amount', async () => {
+    const bounty = new BN(10);
     await Utils.expectRevert(
       eip20CoGateway.redeem(
         amount,
@@ -106,9 +101,8 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     );
   });
 
-  it('should fail when the bounty amount is more than expected bounty amount', async function () {
-
-    let bounty = new BN(110);
+  it('should fail when the bounty amount is more than expected bounty amount', async () => {
+    const bounty = new BN(110);
     await Utils.expectRevert(
       eip20CoGateway.redeem(
         amount,
@@ -123,9 +117,9 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     );
   });
 
-  it('should fail when redeem amount is zero', async function () {
+  it('should fail when redeem amount is zero', async () => {
+    amount = new BN(0);
 
-    amount = 0;
     await Utils.expectRevert(
       eip20CoGateway.redeem(
         amount,
@@ -140,8 +134,26 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     );
   });
 
-  it('should fail when redeem with same nonce is already initiated', async function () {
+  it('should fail when max reward amount is greater than the redeem amount', async () => {
+    amount = new BN(100);
+    gasPrice = new BN(1);
+    gasLimit = new BN(10000);
 
+    await Utils.expectRevert(
+      eip20CoGateway.redeem(
+        amount,
+        beneficiary,
+        gasPrice,
+        gasLimit,
+        nonce,
+        hashLock,
+        { from: redeemer, value: bountyAmount },
+      ),
+      'Maximum possible reward must be less than the redeem amount.',
+    );
+  });
+
+  it('should fail when redeem with same nonce is already initiated', async () => {
     await eip20CoGateway.redeem(
       amount,
       beneficiary,
@@ -152,7 +164,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       { from: redeemer, value: bountyAmount },
     );
 
-    amount = new BN(200);
+    amount = new BN(200000);
     await Utils.expectRevert(
       eip20CoGateway.redeem(
         amount,
@@ -165,11 +177,9 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       ),
       'Invalid nonce.',
     );
-
   });
 
-  it('should fail when previous redeem is in progress', async function () {
-
+  it('should fail when previous redeem is in progress', async () => {
     await eip20CoGateway.redeem(
       amount,
       beneficiary,
@@ -192,16 +202,19 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       ),
       'Previous process is not completed.',
     );
-
   });
 
-  it('should fail when cogateway is not approved with redeem amount', async function () {
-
-    amount = new BN(100000);
+  it('should fail when cogateway is not approved with redeem amount', async () => {
+    /*
+         * CoGateway is approved to spend the redeem amount in beforeEach, so by
+         * adding 1 to the approved(redeem) amount, the transfer will fail for this
+         * test case.
+         */
+    const redeemAmount = amount.addn(1);
 
     await Utils.expectRevert(
       eip20CoGateway.redeem(
-        amount,
+        redeemAmount,
         beneficiary,
         gasPrice,
         gasLimit,
@@ -209,13 +222,11 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      "Underflow when subtracting.",
+      'Underflow when subtracting.',
     );
-
   });
 
-  it('should fail when the redeemer\'s base token balance is less than the bounty amount', async function () {
-
+  it('should fail when the redeemer\'s base token balance is less than the bounty amount', async () => {
     bountyAmount = new BN(10);
     await Utils.expectRevert(
       eip20CoGateway.redeem(
@@ -227,23 +238,22 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      "Payable amount should be equal to the bounty amount.",
-    )
+      'Payable amount should be equal to the bounty amount.',
+    );
   });
 
-  it('should fail when the redeemer\'s BT balance is less than the redeem amount', async function () {
-
-    let amount = new BN(10000);
+  it('should fail when the redeemer\'s BT balance is less than the redeem amount', async () => {
+    const redeemAmount = redeemerBalance.addn(1);
 
     await utilityToken.approve(
       eip20CoGateway.address,
-      amount,
+      redeemAmount,
       { from: redeemer },
     );
 
     await Utils.expectRevert(
       eip20CoGateway.redeem(
-        amount,
+        redeemAmount,
         beneficiary,
         gasPrice,
         gasLimit,
@@ -251,13 +261,12 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      "Underflow when subtracting.",
-    )
+      'Underflow when subtracting.',
+    );
   });
 
-  it('should fail when the message status is progressed', async function () {
-
-    let messageHash = await eip20CoGateway.redeem.call(
+  it('should fail when the message status is progressed', async () => {
+    const messageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -280,16 +289,14 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        { from: redeemer, value: bountyAmount }
+        { from: redeemer, value: bountyAmount },
       ),
-      "Message on source must be Undeclared."
+      'Message on source must be Undeclared',
     );
-
   });
 
-  it('should fail when the message status is declared revocation', async function () {
-
-    let messageHash = await eip20CoGateway.redeem.call(
+  it('should fail when the message status is declared revocation', async () => {
+    const messageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -312,16 +319,14 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        { from: redeemer, value: bountyAmount }
+        { from: redeemer, value: bountyAmount },
       ),
-      "Message on source must be Undeclared."
+      'Message on source must be Undeclared.',
     );
-
   });
 
-  it('should fail when the message status is declared', async function () {
-
-    let messageHash = await eip20CoGateway.redeem.call(
+  it('should fail when the message status is declared', async () => {
+    const messageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -344,16 +349,14 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        { from: redeemer, value: bountyAmount }
+        { from: redeemer, value: bountyAmount },
       ),
-      "Message on source must be Undeclared."
+      'Message on source must be Undeclared.',
     );
-
   });
 
-  it('should fail when the message status is revoked', async function () {
-
-    let messageHash = await eip20CoGateway.redeem.call(
+  it('should fail when the message status is revoked', async () => {
+    const messageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -376,16 +379,14 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         gasLimit,
         nonce,
         hashLock,
-        { from: redeemer, value: bountyAmount }
+        { from: redeemer, value: bountyAmount },
       ),
-      "Message on source must be Undeclared."
+      'Message on source must be Undeclared.',
     );
-
   });
 
-  it('should fail if the previous process is in revocation declared state', async function () {
-
-    let messageHash = await eip20CoGateway.redeem.call(
+  it('should fail if the previous process is in revocation declared state', async () => {
+    const messageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -420,21 +421,18 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Previous process is not completed.'
+      'Previous process is not completed.',
     );
-
   });
 
-
-  it('should successfully redeem', async function () {
-
-    let intentHash = coGatewayUtils.hashRedeemIntent(
+  it('should successfully redeem', async () => {
+    const intentHash = CoGatewayUtils.hashRedeemIntent(
       amount,
       beneficiary,
       eip20CoGateway.address,
     );
 
-    let expectedMessageHash = messageBus.messageDigest(
+    const expectedMessageHash = messageBus.messageDigest(
       intentHash,
       nonce,
       gasPrice,
@@ -443,7 +441,7 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       hashLock,
     );
 
-    let actualMessageHash = await eip20CoGateway.redeem.call(
+    const actualMessageHash = await eip20CoGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
@@ -456,10 +454,10 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
     assert.strictEqual(
       actualMessageHash,
       expectedMessageHash,
-      "Incorrect messageHash from contract",
+      'Incorrect messageHash from contract',
     );
 
-    let response = await eip20CoGateway.redeem(
+    const response = await eip20CoGateway.redeem(
       amount,
       beneficiary,
       gasPrice,
@@ -469,52 +467,70 @@ contract('EIP20CoGateway.redeem() ', function (accounts) {
       { from: redeemer, value: bountyAmount },
     );
 
-    let eip20CoGatewayBaseBalance = new BN(
+    const eip20CoGatewayBaseBalance = new BN(
       await web3.eth.getBalance(eip20CoGateway.address),
     );
 
     assert.strictEqual(
       bountyAmount.eq(eip20CoGatewayBaseBalance),
       true,
-      "Bounty is not transferred to CoGateway",
+      'Bounty is not transferred to CoGateway',
     );
 
-    let eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
+    const eip20CoGatewayBalance = await utilityToken.balanceOf(eip20CoGateway.address);
 
     assert.strictEqual(
       eip20CoGatewayBalance.eq(amount),
       true,
-      "EIP20CoGateway address did not receive redeemed amount",
+      'EIP20CoGateway address did not receive redeemed amount',
     );
 
-    let expectedBalance = redeemerBalance.sub(amount);
-
+    const expectedBalance = redeemerBalance.sub(amount);
+    const redeemerTokenBalance = await utilityToken.balanceOf(redeemer);
     assert.strictEqual(
-      (await utilityToken.balanceOf(redeemer)).eq(expectedBalance),
+      redeemerTokenBalance.eq(expectedBalance),
       true,
-      "Redeemer EIP20 token balance should be equal to ${expectedBalance}",
+      `Redeemer's EIP20 token balance ${redeemerTokenBalance} should be equal to ${expectedBalance}`,
     );
 
-    let expectedEvent = {
+    const expectedEvent = {
       RedeemIntentDeclared: {
         _messageHash: expectedMessageHash,
         _redeemer: redeemer,
         _redeemerNonce: nonce,
         _beneficiary: beneficiary,
-        _amount: amount
-      }
+        _amount: amount,
+      },
     };
 
     assert.equal(
       response.receipt.status,
       1,
-      "Receipt status is unsuccessful"
+      'Receipt status is unsuccessful',
     );
 
-    let eventData = response.logs;
+    const eventData = response.logs;
     await Utils.validateEvents(eventData, expectedEvent);
-
   });
 
-});
+  it('should increase the nonce by 1 when redeeming', async () => {
+    const nonceBefore = await eip20CoGateway.getNonce.call(redeemer);
+    await eip20CoGateway.redeem(
+      amount,
+      beneficiary,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+      { from: redeemer, value: bountyAmount },
+    );
+    const nonceAfter = await eip20CoGateway.getNonce.call(redeemer);
 
+    assert.strictEqual(
+      nonceBefore.addn(1).eq(nonceAfter),
+      true,
+      'The nonce should increase by one when redeeming. '
+            + `Instead, it is ${nonceBefore.toString(10)} before and ${nonceAfter.toString(10)} after.`,
+    );
+  });
+});

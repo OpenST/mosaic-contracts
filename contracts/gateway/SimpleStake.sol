@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./EIP20Interface.sol";
+import "../lib/EIP20Interface.sol";
 import "../lib/SafeMath.sol";
 
 /**
@@ -117,7 +117,7 @@ contract SimpleStake {
     {
         require(
             _amount > 0,
-            "Amount must not be zero."
+            "Release amount must not be zero."
         );
         require(
             token.transfer(_to, _amount) == true,

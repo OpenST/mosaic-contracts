@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./EIP20Interface.sol";
-import "../lib/MessageBus.sol";
-import "../StateRootInterface.sol";
+import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
+import "../lib/MessageBus.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
+import "../lib/StateRootInterface.sol";
 
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
@@ -154,7 +154,7 @@ contract GatewayBase is Organized {
      * @param _stateRootProvider Contract address which implements
      *                           StateRootInterface.
      * @param _bounty The amount that facilitator will stakes to initiate the
-     *                stake process.
+     *                message transfers.
      * @param _organization Address of an organization contract.
      */
     constructor(
@@ -171,8 +171,12 @@ contract GatewayBase is Organized {
         );
 
         stateRootProvider = _stateRootProvider;
-
         bounty = _bounty;
+
+        // The following variables are not known at construction:
+        messageBox = MessageBus.MessageBox();
+        encodedGatewayPath = '';
+        remoteGateway = address(0);
     }
 
 
@@ -338,8 +342,134 @@ contract GatewayBase is Organized {
         emit BountyChangeConfirmed(previousBountyAmount_, changedBountyAmount_);
     }
 
+    /**
+     * @notice Method to get the outbox message status for the given message
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getOutboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.outbox[_messageHash];
+    }
+
+    /**
+     * @notice Method to get the inbox message status for the given message
+     *         hash. If message hash does not exist then it will return
+     *         undeclared status.
+     *
+     * @param _messageHash Message hash to get the status.
+     *
+     * @return status_ Message status.
+     */
+    function getInboxMessageStatus(
+        bytes32 _messageHash
+    )
+        external
+        view
+        returns (MessageBus.MessageStatus status_)
+    {
+        status_ = messageBox.inbox[_messageHash];
+    }
+
+    /**
+     * @notice Method to get the active message hash and its status from inbox
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
+     *
+     * @param _account Account address.
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getInboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+        messageHash_ = inboxActiveProcess[_account];
+        status_ = messageBox.inbox[messageHash_];
+    }
+
+    /**
+     * @notice Method to get the active message hash and its status from outbox
+     *         for the given account address. If message hash does not exist
+     *         for the given account address then it will return zero hash and
+     *         undeclared status.
+     *
+     * @param _account Account address.
+     *
+     * @return messageHash_ Message hash.
+     * @return status_ Message status.
+     */
+    function getOutboxActiveProcess(
+        address _account
+    )
+        external
+        view
+        returns (
+            bytes32 messageHash_,
+            MessageBus.MessageStatus status_
+        )
+    {
+        messageHash_ = outboxActiveProcess[_account];
+        status_ = messageBox.outbox[messageHash_];
+    }
+
 
     /* Internal Functions */
+
+    /**
+     * @notice Calculate the fee amount which is rewarded to facilitator for
+     *         performing message transfers.
+     *
+     * @param _gasConsumed Gas consumption during message confirmation.
+     * @param _gasLimit Maximum amount of gas can be used for reward.
+     * @param _gasPrice Gas price at which reward is calculated.
+     * @param _initialGas Initial gas at the start of the process.
+     *
+     * @return fee_ Fee amount.
+     * @return totalGasConsumed_ Total gas consumed during message transfer.
+     */
+    function feeAmount(
+        uint256 _gasConsumed,
+        uint256 _gasLimit,
+        uint256 _gasPrice,
+        uint256 _initialGas
+    )
+        internal
+        view
+        returns (
+            uint256 fee_,
+            uint256 totalGasConsumed_
+        )
+    {
+        totalGasConsumed_ = _initialGas.add(
+            _gasConsumed
+        ).sub(
+            gasleft()
+        );
+
+        if (totalGasConsumed_ < _gasLimit) {
+            fee_ = totalGasConsumed_.mul(_gasPrice);
+        } else {
+            fee_ = _gasLimit.mul(_gasPrice);
+        }
+    }
 
     /**
      * @notice Create and return Message object.
@@ -521,6 +651,22 @@ contract GatewayBase is Organized {
         inboxActiveProcess[_account] = _messageHash;
     }
 
+    /**
+     * @notice Calculates the penalty amount for reverting a message transfer.
+     *
+     * @param _bounty The amount that facilitator has staked to initiate the
+     *                message transfers.
+     *
+     * @return penalty_ Amount of penalty needs to be paid by message initiator
+     *                  to revert message transfers.
+     */
+    function penaltyFromBounty(uint256 _bounty)
+        internal
+        pure
+        returns(uint256 penalty_)
+    {
+        penalty_ = _bounty.mul(REVOCATION_PENALTY).div(100);
+    }
 
     /* Private Functions */
 

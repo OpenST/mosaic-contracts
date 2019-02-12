@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -406,7 +406,7 @@ contract PollingPlace is PollingPlaceInterface {
             "The lengths of the addresses and weights arrays must be identical."
         );
 
-        for (uint256 i; i < _auxiliaryAddresses.length; i++) {
+        for (uint256 i = 0; i < _auxiliaryAddresses.length; i++) {
             address auxiliaryAddress = _auxiliaryAddresses[i];
             uint256 weight = _weights[i];
 

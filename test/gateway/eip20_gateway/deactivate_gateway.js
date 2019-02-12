@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,28 +18,26 @@
 //
 // ----------------------------------------------------------------------------
 
-const Gateway = artifacts.require("./EIP20Gateway.sol")
-  , BN = require('bn.js');
-const MockOrganization = artifacts.require('MockOrganization.sol');
-
+const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils');
 
-const NullAddress = "0x0000000000000000000000000000000000000000";
-contract('EIP20Gateway.deactivateGateway()', function (accounts) {
+const Gateway = artifacts.require('./EIP20Gateway.sol');
+const MockOrganization = artifacts.require('MockOrganization.sol');
+
+const NullAddress = Utils.NULL_ADDRESS;
+
+contract('EIP20Gateway.deactivateGateway()', (accounts) => {
+  const owner = accounts[2];
+  const worker = accounts[3];
+  const coGateway = accounts[5];
+  const burner = NullAddress;
 
   let gateway;
-  let owner = accounts[2];
-  let worker = accounts[3];
-  let coGateway = accounts[5];
   let organization;
-  let burner = NullAddress;
 
-  beforeEach(async function () {
-
-    let mockToken = accounts[0],
-      baseToken = accounts[1],
-      dummyStateRootProvider = accounts[2],
-      bountyAmount = new BN(100);
+  beforeEach(async () => {
+    const [mockToken, baseToken, dummyStateRootProvider] = accounts;
+    const bountyAmount = new BN(100);
 
     organization = await MockOrganization.new(owner, worker);
 
@@ -49,48 +47,43 @@ contract('EIP20Gateway.deactivateGateway()', function (accounts) {
       dummyStateRootProvider,
       bountyAmount,
       organization.address,
-      burner
+      burner,
     );
 
     await gateway.activateGateway(coGateway, { from: owner });
-
   });
 
-  it('should deactivate if activated', async function () {
-
-    let isSuccess = await gateway.deactivateGateway.call({ from: owner });
+  it('should deactivate if activated', async () => {
+    const isSuccess = await gateway.deactivateGateway.call({ from: owner });
 
     assert.strictEqual(
       isSuccess,
       true,
-      "Gateway deactivation failed, deactivateGateway returned false.",
+      'Gateway deactivation failed, deactivateGateway returned false.',
     );
 
     await gateway.deactivateGateway({ from: owner });
-    let isActivated = await gateway.activated.call();
+    const isActivated = await gateway.activated.call();
 
     assert.strictEqual(
       isActivated,
       false,
-      'Activation flag is true but expected as false.'
+      'Activation flag is true but expected as false.',
     );
   });
 
-  it('should not deactivate if already deactivated', async function () {
-
+  it('should not deactivate if already deactivated', async () => {
     await gateway.deactivateGateway({ from: owner });
     await Utils.expectRevert(
       gateway.deactivateGateway.call({ from: owner }),
-      'Gateway is already deactivated.'
+      'Gateway is already deactivated.',
     );
   });
 
-  it('should deactivated by organization only', async function () {
-
+  it('should deactivated by organization only', async () => {
     await Utils.expectRevert(
       gateway.deactivateGateway.call({ from: accounts[0] }),
-      'Only the organization is allowed to call this method.'
+      'Only the organization is allowed to call this method.',
     );
   });
-
 });

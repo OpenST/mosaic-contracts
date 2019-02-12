@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,51 +18,52 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils'),
-    messageBusUtils = new messageBusUtilsKlass();
+const MessageBusUtils = require('./messagebus_utils');
 
 contract('MessageBus.confirmRevocation()', async (accounts) => {
+  let params;
 
-    let params;
+  beforeEach(async () => {
+    await MessageBusUtils.deployedMessageBus();
+    params = MessageBusUtils.defaultParams(accounts);
+  });
 
-    beforeEach(async function () {
+  it(
+    'should fail when message status of the message hash in inbox is'
+      + ' undeclared ',
+    async () => {
+      const message = 'Message on target must be Declared.';
+      params.message = message;
 
-        await messageBusUtils.deployedMessageBus();
-        params = messageBusUtils.defaultParams(accounts);
-    });
+      await MessageBusUtils.confirmRevocation(params, false);
+    },
+  );
 
-    it('should fail when message status of the message hash in inbox is' +
-        ' undeclared ', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+  it(
+    'should fail when message status of the message hash in inbox is'
+      + ' progressed ',
+    async () => {
+      const message = 'Message on target must be Declared.';
+      params.message = message;
 
-        await messageBusUtils.confirmRevocation(params, false);
+      await MessageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.progressInbox(params, true);
 
-    });
+      await MessageBusUtils.confirmRevocation(params, false);
+    },
+  );
 
-    it('should fail when message status of the message hash in inbox is' +
-        ' progressed ', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
+  it(
+    'should fail when message status of the message hash in inbox is'
+      + ' revoked',
+    async () => {
+      const message = 'Message on target must be Declared.';
+      params.message = message;
 
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.progressInbox(params, true);
+      await MessageBusUtils.confirmMessage(params, true);
+      await MessageBusUtils.confirmRevocation(params, true);
 
-        await messageBusUtils.confirmRevocation(params, false);
-
-    });
-
-    it('should fail when message status of the message hash in inbox is' +
-        ' revoked', async () => {
-        let message = 'Message on target must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.confirmRevocation(params, true);
-
-        await messageBusUtils.confirmRevocation(params, false);
-
-    });
+      await MessageBusUtils.confirmRevocation(params, false);
+    },
+  );
 });
-
-

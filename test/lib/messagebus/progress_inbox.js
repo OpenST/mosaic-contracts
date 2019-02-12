@@ -1,4 +1,4 @@
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,59 +18,53 @@
 //
 // ----------------------------------------------------------------------------
 
-const messageBusUtilsKlass = require('./messagebus_utils'),
-    web3 = require('web3'),
-    messageBusUtils = new messageBusUtilsKlass();
+const web3 = require('web3');
+const MessageBusUtils = require('./messagebus_utils');
 
 contract('MessageBus.progressInbox()', async (accounts) => {
-    let params;
+  let params;
 
-    beforeEach(async function () {
+  beforeEach(async () => {
+    await MessageBusUtils.deployedMessageBus();
+    params = MessageBusUtils.defaultParams(accounts);
+  });
 
-        await messageBusUtils.deployedMessageBus();
-        params = messageBusUtils.defaultParams(accounts);
+  it('should fail when message status is undeclared in inbox', async () => {
+    const message = 'Message on target status must be Declared.';
+    params.message = message;
+
+    await MessageBusUtils.progressInbox(params, false);
+  });
+
+  it('should fail when message status is already progressed in inbox', async () => {
+    const message = 'Message on target status must be Declared.';
+    params.message = message;
+
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.progressInbox(params, true);
+
+    await MessageBusUtils.progressInbox(params, false);
+  });
+
+  it('should fail when message status is revoked in inbox', async () => {
+    const message = 'Message on target status must be Declared.';
+    params.message = message;
+
+    await MessageBusUtils.confirmMessage(params, true);
+    await MessageBusUtils.confirmRevocation(params, true);
+
+    await MessageBusUtils.progressInbox(params, false);
+  });
+
+  it('should fail when unlock secret is incorrect', async () => {
+    const message = 'Invalid unlock secret.';
+    params.message = message;
+
+    await MessageBusUtils.confirmMessage(params, true);
+    params.unlockSecret = web3.utils.soliditySha3({
+      type: 'bytes32',
+      value: 'secret1',
     });
-
-    it('should fail when message status is undeclared in inbox', async () => {
-        let message = 'Message on target status must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.progressInbox(params, false);
-
-    });
-
-    it('should fail when message status is already progressed in inbox', async () => {
-        let message = 'Message on target status must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.progressInbox(params, true);
-
-        await messageBusUtils.progressInbox(params, false);
-
-    });
-
-    it('should fail when message status is revoked in inbox', async () => {
-        let message = 'Message on target status must be Declared.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        await messageBusUtils.confirmRevocation(params, true);
-
-        await messageBusUtils.progressInbox(params, false);
-
-    });
-
-    it('should fail when unlock secret is incorrect', async () => {
-        let message = 'Invalid unlock secret.';
-        params.message = message;
-
-        await messageBusUtils.confirmMessage(params, true);
-        params.unlockSecret = web3.utils.soliditySha3({
-            type: 'bytes32',
-            value: 'secret1'
-        });
-        await messageBusUtils.progressInbox(params, false);
-
-    });
+    await MessageBusUtils.progressInbox(params, false);
+  });
 });

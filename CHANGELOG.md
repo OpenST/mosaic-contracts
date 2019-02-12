@@ -2,44 +2,73 @@
 
 ## Version 0.10.0 ⚓️ Anchor
 
-[**Release v0.10.0, (date goes here)**](Link to release goes here)
+<!-- [**Release 0.10.0, (<date-here>)**](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/0.10.0) -->
+
+A gateway for a given EIP20 token is comprised of a `EIP20Gateway` contract on origin  and a corresponding `EIP20CoGateway` contract on auxiliary.
+On auxiliary there is an EIP20 utility token contract that mints and burns utility tokens.
+It atomically mirrors tokens staked and unstaked on the origin chain.
+
+Atomicity is achieved using a 2-phase message passing architecture between the chains.
+Messages are declared on the source chain and confirmed on the target chain.
+In order to confirm a message, a facilitator uses a Merkle Patricia proof once the source chain's state has been transferred to the target.
+Once messages are confirmed on the target chain, the facilitator can efficiently progress them by providing the hash lock secret.
+Alternatively, anyone can progress the messages with two more Merkle Patricia proofs.
+Progressing with proofs does not require knowledge of the hash lock secret.
+Messages can also be reverted if they are not yet completed on the target chain.
+
+The current release uses a "anchors" to provide state roots from remote chains.
 
 ### Notable Changes
 
+* Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619), [#637](https://github.com/OpenSTFoundation/mosaic-contracts/pull/637)).
 * Contracts are now separated into "Gateway" and "Core" contracts ([#221](https://github.com/OpenSTFoundation/mosaic-contracts/pull/221)).
+  * Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
+* Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
+* Introduced a new state-machine based message bus ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
+* Gateways are now based on the new message bus ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
+* Redeeming no longer requires a facilitator argument ([#517](https://github.com/OpenSTFoundation/mosaic-contracts/pull/517)).
+* CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
+* Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
+* CoGateway no more mints zero reward amount for facilitator ([#527](https://github.com/OpenSTFoundation/mosaic-contracts/pull/527)).
+* Mint and burn now changed to increase and decrease supply ([#529](https://github.com/OpenSTFoundation/mosaic-contracts/pull/529), [#540](https://github.com/OpenSTFoundation/mosaic-contracts/pull/540)).
+* OST prime supply is now increased as base token ([#559](https://github.com/OpenSTFoundation/mosaic-contracts/pull/559)).
+* Claim and redeem are now called unwrap and wrap. Claim and redeem events are now called token unwrapped and token wrapped ([#533](https://github.com/OpenSTFoundation/mosaic-contracts/pull/533)).
+* The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
+* Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
+* Gateway and CoGateway now check that the stake/redeem amount covers at least the potential reward ([#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600)).
+* Penalty is returned to the staker and redeemer on progress stake  and progress mint, if revocation of message is declared on source chain and target is already progressed ([#576](https://github.com/OpenSTFoundation/mosaic-contracts/pull/576)).
+* Anchor now stores only recent state roots ([#546](https://github.com/OpenSTFoundation/mosaic-contracts/pull/546)).
+* Contracts can now be `Organized` in line with [openst-contracts](https://github.com/OpenSTFoundation/openst-contracts) ([#513](https://github.com/OpenSTFoundation/mosaic-contracts/pull/513)).
+  * Gateways are now `Organized` ([#515](https://github.com/OpenSTFoundation/mosaic-contracts/pull/515)).
+  * Only the organization can anchor state roots ([#560](https://github.com/OpenSTFoundation/mosaic-contracts/pull/560)).
+* Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399), [#566](https://github.com/OpenSTFoundation/mosaic-contracts/pull/566)).
+* Added tools to make deployment of mosaic easier ([#458](https://github.com/OpenSTFoundation/mosaic-contracts/pull/458), [#550](https://github.com/OpenSTFoundation/mosaic-contracts/pull/550)).
+* Naming of RLP encoded parameters and variables is unified ([#528](https://github.com/OpenSTFoundation/mosaic-contracts/pull/528)).
+* Added getter functions for easier interaction ([#598](https://github.com/OpenSTFoundation/mosaic-contracts/pull/598), [#600](https://github.com/OpenSTFoundation/mosaic-contracts/pull/600), [#601](https://github.com/OpenSTFoundation/mosaic-contracts/pull/601), [#602](https://github.com/OpenSTFoundation/mosaic-contracts/pull/602)).
+* Significantly improved test coverage (various PRs).
+* Significantly improved readability and maintainability (various PRs).
+* Stake and mint integration test ([#634](https://github.com/OpenSTFoundation/mosaic-contracts/pull/634)).
+* Redeem and unstake integration test ([#638](https://github.com/OpenSTFoundation/mosaic-contracts/pull/638)).
+* Ported repository to Truffle v5 ([#334](https://github.com/OpenSTFoundation/mosaic-contracts/pull/334)).
+* Ported repository to solidity 0.5.0 ([#480](https://github.com/OpenSTFoundation/mosaic-contracts/pull/480)).
+
+#### Updates to Mosaic Core
+
 * Core contracts implement an initial version of the Mosaic protocol (various PRs).
   * Report block headers of both chains to the respective block stores.
   * Vote on checkpoints (Casper FFG style).
   * Propose meta-blocks to origin.
   * Verify a seal on a proposal on origin.
   * Transfer the new kernel to auxiliary.
-* Significantly improved test coverage (various PRs).
-* Significantly improved readability and maintainability (various PRs).
-* Message-based gateway ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
-* Ported repository to Truffle v5 ([#334](https://github.com/OpenSTFoundation/mosaic-contracts/pull/334)).
-* Ported repository to solidity 0.5.0 ([#480](https://github.com/OpenSTFoundation/mosaic-contracts/pull/480)).
-* Objects are now hashed according to [EIP 712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) ([#399](https://github.com/OpenSTFoundation/mosaic-contracts/pull/399)).
-* Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
-* Contracts can now be `Organized` in line with [openst-contracts](https://github.com/OpenSTFoundation/openst-contracts) ([#513](https://github.com/OpenSTFoundation/mosaic-contracts/pull/513)).
-  * Gateways are now `Organized` ([#515](https://github.com/OpenSTFoundation/mosaic-contracts/pull/515)).
-* Redeeming no longer requires a facilitator argument ([#517](https://github.com/OpenSTFoundation/mosaic-contracts/pull/517)).
-* CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
-* Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
-* Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
-* Cogateway no more mints zero reward amount for facilitator ([#527](https://github.com/OpenSTFoundation/mosaic-contracts/pull/527)).
-* Mint and burn now changed to increase and decrease supply ([#529](https://github.com/OpenSTFoundation/mosaic-contracts/pull/529)).
-* The gateways now accept a "burner" argument. All burnt value will be sent to the burner instead ([#542](https://github.com/OpenSTFoundation/mosaic-contracts/pull/542)).
-* Staker can now stake without providing signatures. This also means that there is now only one actor known to the Gateways ([#548](https://github.com/OpenSTFoundation/mosaic-contracts/pull/548)).
 
+#### Known Issues of Mosaic Core
 
-### Known Issues
-
-* Circular dependencies between mosaic contracts on auxiliary.
+* Circular dependencies between mosaic core contracts on auxiliary.
 * Validators can not yet join an existing set of validators.
 * Validator rewards are not handled yet.
 
 
-## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.2) March 27 2018
+## OpenST-protocol [v0.9.2](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/v.0.9.2) March 27 2018
 
 OpenST v0.9.2 improves usability to facilitate application by the [OpenST-Platform](https://github.com/OpenSTFoundation/openst-platform) and other services. Additionally, this release increases test coverage, with additional unit and integration tests, and adds continuous integration with Travis CI.
 
@@ -60,7 +89,7 @@ Detailed changelog:
 - Tests: migrate unit tests for `Owned`, `OpsManaged`, and `SafeMath` from SimpleTokenSale repo ([openst-protocol #73](https://github.com/OpenSTFoundation/openst-protocol/pull/73))
 - Tests: add integration tests for reversion functions ([openst-protocol #65](https://github.com/OpenSTFoundation/openst-protocol/pull/65))
 
-## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/openst-protocol/releases/tag/v0.9.1) December 19 2017
+## OpenST-protocol [v0.9.1](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/v0.9.1) December 19 2017
 
 OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
 activation of Simple Token to power the OpenST platform.  The OpenST platform

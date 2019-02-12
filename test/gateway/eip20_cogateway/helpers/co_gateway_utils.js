@@ -1,6 +1,6 @@
 'use strict';
 
-// Copyright 2018 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,24 +20,10 @@
 //
 // ----------------------------------------------------------------------------
 
-const web3 = require("../../../test_lib/web3.js");
-const utils = require("../../../test_lib/utils.js");
+const web3 = require('../../../test_lib/web3.js');
+const utils = require('../../../test_lib/utils.js');
 
-const CoGatewayUtils = function () { };
-
-CoGatewayUtils.prototype = {
-
-  /**
-   * Generate the redeem type hash. This is as per EIP-712.
-   *
-   * @return {string} message type hash.
-   */
-  redeemTypeHash: function () {
-    return utils.getTypeHash(
-      'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
-    );
-  },
-
+class CoGatewayUtils {
   /**
    * Generate the redeem intent hash
    *
@@ -48,35 +34,45 @@ CoGatewayUtils.prototype = {
    *
    * @return {string} redeem intent hash.
    */
-  hashRedeemIntent: function (
-    amount,
-    beneficiary,
-    gateway,
-  ) {
-    let redeemIntentTypeHash = utils.getTypeHash(
-      'RedeemIntent(uint256 amount,address beneficiary,address gateway)'
+  static hashRedeemIntent(amount, beneficiary, gateway) {
+    const redeemIntentTypeHash = utils.getTypeHash(
+      'RedeemIntent(uint256 amount,address beneficiary,address gateway)',
     );
 
-    let redeemIntent = web3.utils.sha3(
+    const redeemIntent = web3.utils.sha3(
       web3.eth.abi.encodeParameters(
-        [
-          'bytes32',
-          'uint256',
-          'address',
-          'address',
-        ],
-        [
-          redeemIntentTypeHash,
-          amount.toNumber(),
-          beneficiary,
-          gateway,
-        ],
-      )
+        ['bytes32', 'uint256', 'address', 'address'],
+        [redeemIntentTypeHash, amount.toString(10), beneficiary, gateway],
+      ),
     );
 
     return redeemIntent;
-  },
+  }
 
-};
+  /**
+   * Generate the stake intent hash
+   *
+   * @param {object} amount Staking amount.
+   * @param {string} beneficiary Beneficiary address.
+   * @param {string} gateway The address of the gateway where the staking was
+   *                         initiated.
+   *
+   * @return {string} stake intent hash.
+   */
+  static hashStakeIntent(amount, beneficiary, gateway) {
+    const stakeIntentTypeHash = utils.getTypeHash(
+      'StakeIntent(uint256 amount,address beneficiary,address gateway)',
+    );
 
-module.exports = new CoGatewayUtils();
+    const stakeIntent = web3.utils.sha3(
+      web3.eth.abi.encodeParameters(
+        ['bytes32', 'uint256', 'address', 'address'],
+        [stakeIntentTypeHash, amount.toNumber(), beneficiary, gateway],
+      ),
+    );
+
+    return stakeIntent;
+  }
+}
+
+module.exports = CoGatewayUtils;
