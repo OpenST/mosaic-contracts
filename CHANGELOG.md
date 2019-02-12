@@ -5,13 +5,15 @@
 <!-- [**Release 0.10.0, (<date-here>)**](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/0.10.0) -->
 
 A gateway for a given EIP20 token is comprised of a `EIP20Gateway` contract on origin  and a corresponding `EIP20CoGateway` contract on auxiliary.
-On auxiliary there is an ERC20 utility token contract that mints and burns utility tokens.
+On auxiliary there is an EIP20 utility token contract that mints and burns utility tokens.
 It atomically mirrors tokens staked and unstaked on the origin chain.
 
 Atomicity is achieved using a 2-phase message passing architecture between the chains.
 Messages are declared on the source chain and confirmed on the target chain.
-In order to confirm a message, a facilitator uses a Patricia Merkle proof once the source chain's state has been transferred to the target.
+In order to confirm a message, a facilitator uses a Merkle Patricia proof once the source chain's state has been transferred to the target.
 Once messages are confirmed on the target chain, the facilitator can efficiently progress them by providing the hash lock secret.
+Alternatively, anyone can progress the messages with two more Merkle Patricia proofs.
+Progressing with proofs does not require knowledge of the hash lock secret.
 Messages can also be reverted if they are not yet completed on the target chain.
 
 The current release uses a "anchors" to provide state roots from remote chains.
@@ -22,7 +24,8 @@ The current release uses a "anchors" to provide state roots from remote chains.
 * Contracts are now separated into "Gateway" and "Core" contracts ([#221](https://github.com/OpenSTFoundation/mosaic-contracts/pull/221)).
   * Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
 * Gateway can now interact with decentralized mosaic core ([#463](https://github.com/OpenSTFoundation/mosaic-contracts/pull/463)).
-* Gateways are now message-based ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
+* Introduced a new state-machine based message bus ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
+* Gateways are now based on the new message bus ([#293](https://github.com/OpenSTFoundation/mosaic-contracts/pull/293)).
 * Redeeming no longer requires a facilitator argument ([#517](https://github.com/OpenSTFoundation/mosaic-contracts/pull/517)).
 * CoGateway can no longer be deactivated ([#518](https://github.com/OpenSTFoundation/mosaic-contracts/pull/518)).
 * Stake and redeem now support "zero gas price" ([#521](https://github.com/OpenSTFoundation/mosaic-contracts/pull/521)).
