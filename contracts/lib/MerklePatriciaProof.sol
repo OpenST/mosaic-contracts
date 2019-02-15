@@ -60,6 +60,7 @@ library MerklePatriciaProof {
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
             } else if(currentNodeList.length == 2) {
+                uint currentpathPtr = pathPtr;
                 pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if(pathPtr == path.length) {//leaf node
@@ -70,7 +71,7 @@ library MerklePatriciaProof {
                     }
                 }
                 //extension node ... test if means that it is empty value
-                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr) == 0) {
+                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, currentpathPtr) == 0) {
                     return (keccak256(abi.encodePacked()) == value);
                 }
 
