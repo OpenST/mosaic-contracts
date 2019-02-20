@@ -59,9 +59,9 @@ library MerklePatriciaProof {
                 if(nextPathNibble > 16) {return false;}
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
-            }else if(currentNodeList.length == 2) {
+            } else if(currentNodeList.length == 2) {
 
-                // Count of matched bytes in path starting from pathPtr and node key.
+                // Count of matching node key nibbles in path starting from pathPtr.
                 uint traverseLength = _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
 
                 if(pathPtr + traverseLength == path.length) { //leaf node

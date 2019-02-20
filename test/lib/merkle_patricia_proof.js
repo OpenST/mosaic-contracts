@@ -23,7 +23,7 @@ const proofJson = require('../data/proof.json');
 const Utils = require('../test_lib/utils.js');
 
 contract('MerklePatriciaProof.verify()', (accounts) => {
-  let merklePatriciaLib = null;
+  let merklePatriciaLib;
 
   describe('Test Cases for Account proof verification', async () => {
     before(async () => {
