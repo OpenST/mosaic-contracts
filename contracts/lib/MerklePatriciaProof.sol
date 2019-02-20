@@ -59,23 +59,24 @@ library MerklePatriciaProof {
                 if(nextPathNibble > 16) {return false;}
                 nodeKey = RLP.toBytes32(currentNodeList[nextPathNibble]);
                 pathPtr += 1;
-            } else if(currentNodeList.length == 2) {
-                uint currentpathPtr = pathPtr;
-                pathPtr += _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
+            }else if(currentNodeList.length == 2) {
 
-                if(pathPtr == path.length) {//leaf node
+                // Count of matched bytes in path starting from pathPtr and node key.
+                uint traverseLength = _nibblesToTraverse(RLP.toData(currentNodeList[0]), path, pathPtr);
+
+                if(pathPtr + traverseLength == path.length) { //leaf node
                     if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[1]))) == value) {
                         return true;
                     } else {
                         return false;
                     }
-                }
-                //extension node ... test if means that it is empty value
-                if(_nibblesToTraverse(RLP.toData(currentNodeList[0]), path, currentpathPtr) == 0) {
-                    return (keccak256(abi.encodePacked()) == value);
+                } else if (traverseLength == 0) { // error: couldn't traverse path
+                    return false;
+                } else { // extension node
+                    pathPtr += traverseLength;
+                    nodeKey = RLP.toBytes32(currentNodeList[1]);
                 }
 
-                nodeKey = RLP.toBytes32(currentNodeList[1]);
             } else {
                 return false;
             }
