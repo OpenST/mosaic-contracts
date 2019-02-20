@@ -20,6 +20,7 @@ The current release uses a "anchors" to provide state roots from remote chains.
 
 ### Notable Changes
 
+* MerklePatriciaProof library can now verify valid proof with extension nodes ([#651](https://github.com/OpenSTFoundation/mosaic-contracts/pull/651)). 
 * Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619), [#637](https://github.com/OpenSTFoundation/mosaic-contracts/pull/637)).
 * Contracts are now separated into "Gateway" and "Core" contracts ([#221](https://github.com/OpenSTFoundation/mosaic-contracts/pull/221)).
   * Core logic is now cleanly split into a "mosaic core" and an "anchor" ([#522](https://github.com/OpenSTFoundation/mosaic-contracts/pull/522), [#549](https://github.com/OpenSTFoundation/mosaic-contracts/pull/549)).
