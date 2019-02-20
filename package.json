@@ -1,6 +1,6 @@
 {
   "name": "@openstfoundation/mosaic-contracts",
-  "version": "0.10.0-beta.1",
+  "version": "0.10.0-beta.2",
   "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "keywords": [
     "Mosaic",
