@@ -75,73 +75,6 @@ library BytesLib {
         }
     }
 
-    function slice(
-        bytes memory _bytes,
-        uint _start,
-        uint _length
-    )
-        internal
-        pure
-        returns (bytes memory bytes_)
-    {
-        require(
-            _bytes.length >= (_start + _length),
-            "Attempting to slice outside of bounds!"
-        );
-
-        /* solium-disable-next-line */
-        assembly {
-            switch iszero(_length)
-            case 0 {
-                // Get a location of some free memory and store it in bytes_ as
-                // Solidity does for memory variables.
-                bytes_ := mload(0x40)
-
-                // The first word of the slice result is potentially a partial
-                // word read from the original array. To read it, we calculate
-                // the length of that partial word and start copying that many
-                // bytes into the array. The first word we copy will start with
-                // data we don't care about, but the last `lengthmod` bytes will
-                // land at the beginning of the contents of the new array. When
-                // we're done copying, we overwrite the full first word with
-                // the actual length of the slice.
-                let lengthmod := and(_length, 31)
-
-                // The multiplication in the next line is necessary
-                // because when slicing multiples of 32 bytes (lengthmod == 0)
-                // the following copy loop was copying the origin's length
-                // and then ending prematurely not copying everything it should.
-                let mc := add(add(bytes_, lengthmod), mul(0x20, iszero(lengthmod)))
-                let end := add(mc, _length)
-
-                for {
-                    // The multiplication in the next line has the same exact purpose
-                    // as the one above.
-                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)
-                } lt(mc, end) {
-                    mc := add(mc, 0x20)
-                    cc := add(cc, 0x20)
-                } {
-                    mstore(mc, mload(cc))
-                }
-
-                mstore(bytes_, _length)
-
-                //update free-memory pointer
-                //allocating the array padded to 32 bytes like the compiler does now
-                mstore(0x40, and(add(mc, 31), not(31)))
-            }
-            //if we want a zero-length slice let's just return a zero-length array
-            default {
-                bytes_ := mload(0x40)
-
-                mstore(0x40, add(bytes_, 0x20))
-            }
-        }
-
-        return bytes_;
-    }
-
     // Pad a bytes array to 32 bytes
     function leftPad(
         bytes memory _bytes
@@ -152,62 +85,6 @@ library BytesLib {
     {
         bytes memory padding = new bytes(32 - _bytes.length);
         padded_ = concat(padding, _bytes);
-    }
-
-    function toBytes32(
-        bytes memory b
-    )
-        internal
-        pure
-        returns (bytes32 out_)
-    {
-        for (uint i = 0; i < 32; i++) {
-            out_ |= bytes32(b[i] & 0xFF) >> (i * 8);
-        }
-    }
-
-    function fromBytes32(bytes32 x) internal pure returns (bytes memory bytes_) {
-        bytes_ = new bytes(32);
-        for (uint i = 0; i < 32; i++) {
-            bytes_[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
-        }
-    }
-
-    function toUint(
-        bytes memory _bytes,
-        uint _start
-    )
-        internal
-        pure returns (uint256 uint_)
-    {
-        require(
-            _bytes.length >= (_start + 32),
-            "Out of bounds when converting to uint!"
-        );
-
-        /* solium-disable-next-line */
-        assembly {
-            uint_ := mload(add(add(_bytes, 0x20), _start))
-        }
-    }
-
-    function toAddress(
-        bytes memory _bytes,
-        uint _start
-    )
-        internal
-        pure
-        returns (address address_)
-    {
-        require(
-            _bytes.length >= (_start + 20),
-            "Out of bounds when converting to address!"
-        );
-
-        /* solium-disable-next-line */
-        assembly {
-            address_ := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
-        }
     }
 
     /**
