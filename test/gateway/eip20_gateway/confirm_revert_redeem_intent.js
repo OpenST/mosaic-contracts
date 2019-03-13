@@ -210,7 +210,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
         blockHeight,
         storageProof,
       ),
-      'Message on target must be Declared.',
+      'Unstake amount must not be zero.',
     );
   });
 

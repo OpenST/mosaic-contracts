@@ -413,6 +413,15 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
+        amount_ = mints[_messageHash].amount;
+
+        require(
+            amount_ > uint256(0),
+            "Mint amount must not be zero."
+        );
+
+        delete mints[_messageHash];
+
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
@@ -435,20 +444,15 @@ contract EIP20CoGateway is GatewayBase {
             storageRoot
         );
 
-        Mint storage mint = mints[_messageHash];
-
         staker_ = message.sender;
         stakerNonce_ = message.nonce;
-        amount_ = mint.amount;
 
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
-            mint.amount
+            amount_
         );
-
-        delete mints[_messageHash];
     }
 
     /**
