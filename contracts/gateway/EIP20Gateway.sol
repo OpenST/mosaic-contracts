@@ -974,6 +974,15 @@ contract EIP20Gateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
+        amount_ = unstakes[_messageHash].amount;
+
+        require(
+            amount_ > uint256(0),
+            "Unstake amount must not be zero."
+        );
+
+        delete unstakes[_messageHash];
+
         // Get the message object.
         MessageBus.Message storage message = messages[_messageHash];
         require(
@@ -999,7 +1008,6 @@ contract EIP20Gateway is GatewayBase {
 
         redeemer_ = message.sender;
         redeemerNonce_ = message.nonce;
-        amount_ = unstakes[_messageHash].amount;
 
         emit RevertRedeemIntentConfirmed(
             _messageHash,
@@ -1007,8 +1015,6 @@ contract EIP20Gateway is GatewayBase {
             redeemerNonce_,
             amount_
         );
-
-        delete unstakes[_messageHash];
     }
 
     /**
