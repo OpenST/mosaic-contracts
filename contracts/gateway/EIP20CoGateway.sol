@@ -822,6 +822,17 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after minting of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the stake amount."
+        );
+
+
         bytes32 intentHash = hashStakeIntent(
             _amount,
             _beneficiary
@@ -1123,11 +1134,6 @@ contract EIP20CoGateway is GatewayBase {
             _message.gasLimit,
             _message.gasPrice,
             _initialGas
-        );
-
-        require(
-            rewardAmount_ <= stakeAmount_,
-            "Reward amount must not be greater than the stake amount."
         );
 
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
