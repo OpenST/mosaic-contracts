@@ -750,6 +750,16 @@ contract EIP20Gateway is GatewayBase {
             "RLP encoded parent nodes must not be zero."
         );
 
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after unstake of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the redeem amount."
+        );
+
         bytes32 intentHash = hashRedeemIntent(
             _amount,
             _beneficiary
@@ -1214,11 +1224,6 @@ contract EIP20Gateway is GatewayBase {
             message.gasLimit,
             message.gasPrice,
             _initialGas
-        );
-
-        require(
-            rewardAmount_ < redeemAmount_,
-            "Reward amount must be less than redeem amount."
         );
 
         unstakeAmount_ = redeemAmount_.sub(rewardAmount_);
