@@ -75,8 +75,11 @@ contract GatewayBase is Organized {
     uint8 constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
-    /** Unlock period for change bounty in block height. */
-    uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+    /**
+     * Unlock period of 7-days for change bounty in block height.
+     * Considering aux block generation time per block is 3-secs.
+     */
+    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 201600;
 
 
     /* Public Variables */
@@ -295,16 +298,7 @@ contract GatewayBase is Organized {
         onlyOrganization
         returns(uint256)
     {
-        proposedBounty = _proposedBounty;
-        proposedBountyUnlockHeight = block.number.add(BOUNTY_CHANGE_UNLOCK_PERIOD);
-
-        emit BountyChangeInitiated(
-                bounty,
-                _proposedBounty,
-                proposedBountyUnlockHeight
-        );
-
-        return _proposedBounty;
+        return initiateBountyAmountChangeInternal(_proposedBounty, BOUNTY_CHANGE_UNLOCK_PERIOD);
     }
 
     /**
@@ -666,6 +660,35 @@ contract GatewayBase is Organized {
         returns(uint256 penalty_)
     {
         penalty_ = _bounty.mul(REVOCATION_PENALTY).div(100);
+    }
+
+    /**
+     * Internal method to propose new bounty. This is added for large block
+     * heights value for unlocking bounty change.
+     *
+     * @param _proposedBounty proposed bounty amount.
+     * @param _bountyChangePeriod  Unlock period for change bounty in
+     *                             block height.
+     *
+     * @return uint256 proposed bounty amount.
+     */
+    function initiateBountyAmountChangeInternal(
+        uint256 _proposedBounty,
+        uint256 _bountyChangePeriod
+    )
+        internal
+        returns(uint256)
+    {
+        proposedBounty = _proposedBounty;
+        proposedBountyUnlockHeight = block.number.add(_bountyChangePeriod);
+
+        emit BountyChangeInitiated(
+            bounty,
+            _proposedBounty,
+            proposedBountyUnlockHeight
+        );
+
+        return _proposedBounty;
     }
 
     /* Private Functions */

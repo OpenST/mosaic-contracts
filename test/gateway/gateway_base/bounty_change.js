@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const TestGatewayBase = artifacts.require('./TestGatewayBase.sol');
 const GatewayBase = artifacts.require('./GatewayBase.sol');
 
 const BN = require('bn.js');
@@ -25,7 +26,7 @@ const BN = require('bn.js');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
-const unlockTimeInBlocks = 100;
+const unlockTimeInBlocks = 2;
 
 async function proposeBountyChange(
   gatewayBaseInstance,
@@ -75,7 +76,7 @@ contract('GatewayBase.sol', (accounts) => {
 
       const organization = await MockOrganization.new(owner, worker);
 
-      gatewayBaseInstance = await GatewayBase.new(
+      gatewayBaseInstance = await TestGatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
@@ -142,7 +143,7 @@ contract('GatewayBase.sol', (accounts) => {
 
       const organization = await MockOrganization.new(owner, worker);
 
-      gatewayBaseInstance = await GatewayBase.new(
+      gatewayBaseInstance = await TestGatewayBase.new(
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
@@ -204,5 +205,42 @@ contract('GatewayBase.sol', (accounts) => {
         gatewayBaseInstance.confirmBountyAmountChange({ from: accounts[5] }),
       );
     });
+  });
+
+  describe('Confirm unlock period', async () => {
+    let gatewayBaseInstance;
+    const owner = accounts[2];
+    const worker = accounts[3];
+
+    beforeEach(async () => {
+      const dummyStateRootProviderAddress = accounts[0];
+
+      const bounty = new BN(100);
+
+      const organization = await MockOrganization.new(owner, worker);
+
+      gatewayBaseInstance = await GatewayBase.new(
+        dummyStateRootProviderAddress,
+        bounty,
+        organization.address,
+      );
+    });
+
+    it('should verify the bounty change unlock period value is equal to 7 days', async () => {
+
+      // Considering block generation time is 3-sec per block.
+
+      const expectedBountyChangeUnlockPeriod = new BN(201600);
+      const bountyChangeUnlockPeriod = await gatewayBaseInstance.BOUNTY_CHANGE_UNLOCK_PERIOD.call();
+
+      assert.strictEqual(
+        expectedBountyChangeUnlockPeriod.eq(bountyChangeUnlockPeriod),
+        true,
+        `Unlock period for bounty in block height is not equal to 7-days. Expected value is ` +
+        `${expectedBountyChangeUnlockPeriod} but got ${bountyChangeUnlockPeriod} from contract`
+      );
+
+    });
+
   });
 });
