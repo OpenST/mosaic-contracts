@@ -142,24 +142,4 @@ library GatewayLib {
             )
         );
     }
-
-
-    /* Public Functions */
-
-    /**
-     * @notice Convert bytes32 to bytes.
-     *
-     * @param _inBytes32 Bytes32 value.
-     *
-     * @return bytesValue_ Bytes value.
-     */
-    function bytes32ToBytes(
-        bytes32 _inBytes32
-    )
-        external
-        pure
-        returns (bytes memory bytesValue_)
-    {
-        bytesValue_ = BytesLib.bytes32ToBytes(_inBytes32);
-    }
 }

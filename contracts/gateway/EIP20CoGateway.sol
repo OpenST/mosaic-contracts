@@ -247,7 +247,7 @@ contract EIP20CoGateway is GatewayBase {
         burner = _burner;
 
         // Update the encodedGatewayPath.
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+        encodedGatewayPath = BytesLib.bytes32ToBytes(
             keccak256(abi.encodePacked(remoteGateway))
         );
     }
@@ -791,7 +791,7 @@ contract EIP20CoGateway is GatewayBase {
             _amount,
             _beneficiary
         );
-        
+
         MessageBus.Message memory message = MessageBus.Message(
             intentHash,
             _stakerNonce,
