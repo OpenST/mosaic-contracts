@@ -58,28 +58,6 @@ contract('UtilityToken.increaseSupply()', (accounts) => {
     await utilityToken.setCoGatewayAddress(coGatewayAddress);
   });
 
-  it('should fail when account address is zero', async () => {
-    beneficiary = NullAddress;
-
-    await Utils.expectRevert(
-      utilityToken.increaseSupply(beneficiary, amount, {
-        from: coGatewayAddress,
-      }),
-      'Account address should not be zero.',
-    );
-  });
-
-  it('should fail when amount is zero', async () => {
-    amount = new BN(0);
-
-    await Utils.expectRevert(
-      utilityToken.increaseSupply(beneficiary, amount, {
-        from: coGatewayAddress,
-      }),
-      'Amount should be greater than zero.',
-    );
-  });
-
   it('should fail when caller is not CoGateway address', async () => {
     await Utils.expectRevert(
       utilityToken.increaseSupply(beneficiary, amount, { from: accounts[7] }),

@@ -1098,19 +1098,18 @@ contract EIP20CoGateway is GatewayBase {
 
         delete mints[_messageHash];
 
-        // Increase token supply after subtracting reward amount.
+        // Increase token supply with mint amount to beneficiary
+        // after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             payableBeneficiary,
             mintedAmount_
         );
 
-        if(rewardAmount_ > 0) {
-            // Reward beneficiary with the reward amount.
-            UtilityTokenInterface(utilityToken).increaseSupply(
-                msg.sender,
-                rewardAmount_
-            );
-        }
+        // Reward facilitator with the reward amount.
+        UtilityTokenInterface(utilityToken).increaseSupply(
+            msg.sender,
+            rewardAmount_
+        );
 
         // Emit MintProgressed event.
         emit MintProgressed(

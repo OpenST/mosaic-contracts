@@ -58,15 +58,6 @@ contract('UtilityToken.decreaseSupply()', (accounts) => {
     await utilityToken.setTotalSupply(amount);
   });
 
-  it('should fail when decrease supply amount is zero', async () => {
-    amount = new BN(0);
-
-    await Utils.expectRevert(
-      utilityToken.decreaseSupply(amount, { from: coGatewayAddress }),
-      'Amount should be greater than zero.',
-    );
-  });
-
   it('should fail when caller is not cogateway address', async () => {
     await Utils.expectRevert(
       utilityToken.decreaseSupply(amount, { from: accounts[5] }),
