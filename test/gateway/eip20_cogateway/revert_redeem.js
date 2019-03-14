@@ -366,7 +366,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       eip20CoGatewayFinalBalance.eq(eip20CoGatewayBalance),
       true,
       `CoGateway's token balance ${eip20CoGatewayBalance.toString(10)}`
-      + `must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
+      + `must be equal to ${eip20CoGatewayFinalBalance.toString(10)}.`,
     );
   });
 });
