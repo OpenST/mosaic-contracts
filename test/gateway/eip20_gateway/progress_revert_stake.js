@@ -389,7 +389,7 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
     );
   });
 
-  it('should burn bounty and penalty amount', async () => {
+  it('should burn bounty', async () => {
     const burnerAddress = await gateway.burner.call();
 
     const gatewayInitialTokenBalance = await baseToken.balanceOf(
@@ -421,13 +421,13 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
 
     assert.strictEqual(
       gatewayFinalTokenBalance.eq(
-        gatewayInitialTokenBalance.sub(bountyAmount.muln(2.5)),
+        gatewayInitialTokenBalance.sub(bountyAmount),
       ),
       true,
       `Gateway balance ${gatewayFinalTokenBalance.toString(
         10,
       )} must be equal to ${gatewayInitialTokenBalance
-        .sub(bountyAmount.muln(2.5))
+        .sub(bountyAmount)
         .toString(10)}.`,
     );
 
@@ -441,13 +441,13 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
 
     assert.strictEqual(
       burnerFinalTokenBalance.eq(
-        burnerInitialTokenBalance.add(bountyAmount.muln(2.5)),
+        burnerInitialTokenBalance.add(bountyAmount),
       ),
       true,
       `Burner balance ${burnerFinalTokenBalance.toString(
         10,
       )} must be equal to ${burnerInitialTokenBalance
-        .add(bountyAmount.muln(2.5))
+        .add(bountyAmount)
         .toString(10)}.`,
     );
   });

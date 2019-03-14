@@ -632,53 +632,6 @@ library MessageBus {
     }
 
     /**
-     * @notice Verify the signature is signed by the signer address.
-     *
-     * @param _message Message hash.
-     * @param _signature Signature.
-     * @param _signer Signer address.
-     *
-     * @return success_ `true` if the signature is signed by the signer.
-     */
-    function verifySignature(
-        bytes32 _message,
-        bytes memory _signature,
-        address _signer
-    )
-        private
-        pure
-        returns (bool success_)
-    {
-        if (_signature.length != 65) {
-            return false;
-        }
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-
-        _message = keccak256(abi.encodePacked(prefix, _message));
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := mload(add(_signature, 32))
-            s := mload(add(_signature, 64))
-            v := byte(0, mload(add(_signature, 96)))
-        }
-        /*
-         * Version of signature should be 27 or 28, but 0 and 1 are also
-         * possible versions.
-         */
-        if (v < 27) {
-            v += 27;
-        }
-
-        if (v != 27 && v != 28) {
-            return false;
-        }
-        success_ = ecrecover(_message, v, r, s) == _signer;
-    }
-
-    /**
      * @notice Get the storage path of the variable inside the struct.
      *
      * @param _structPosition Position of struct variable.

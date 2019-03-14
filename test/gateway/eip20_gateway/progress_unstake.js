@@ -174,26 +174,6 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
     );
   });
 
-  it('should fail when the reward amount is greater than the unstake amount', async () => {
-    unstakeMessage.gasPrice = new BN(10000);
-    unstakeMessage.gasLimit = new BN(10000);
-
-    await setMessage();
-
-    await gateway.setInboxStatus(
-      unstakeMessage.messageHash,
-      MessageStatusEnum.Declared,
-    );
-
-    await Utils.expectRevert(
-      gateway.progressUnstake(
-        unstakeMessage.messageHash,
-        unstakeMessage.unlockSecret,
-      ),
-      'Reward amount must be less than redeem amount.',
-    );
-  });
-
   it(
     'should return correct "redeemAmount", "unstakeAmount" and '
       + '"rewardAmount" when gas price is zero',
