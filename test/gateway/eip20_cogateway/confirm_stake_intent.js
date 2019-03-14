@@ -362,7 +362,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
   it('should fail to confirm stake intent if UtilityToken.exists() function ' +
     'returns false', async () => {
 
-    await utilityToken.mockAddressExists(false);
+    await utilityToken.setExists(false);
 
     await Utils.expectRevert(
       coGateway.confirmStakeIntent(

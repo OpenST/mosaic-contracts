@@ -77,12 +77,11 @@ contract UtilityTokenInterface {
     function setCoGateway(address _coGateway) external returns (bool);
 
     /**
-     * @notice Checks if the given address is registered in the economy
+     * @notice Checks if an address is allowed to hold utility token.
      *
      * @param _actor Address that needs to be checked
      *
-     * @return exists_ `true` if the address is registered in the economy,
-     *                 otherwise `false`
+     * @return exists_ `true` if the address is allowed otherwise `false`
      */
     function exists(address _actor) external returns (bool exists_);
 }

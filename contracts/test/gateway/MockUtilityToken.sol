@@ -34,7 +34,7 @@ contract MockUtilityToken is UtilityToken {
     uint256 constant INITIAL_BALANCE  = 1000000000000000000;
 
     // This variable is used to mock the return of function exists()
-    bool addressExists;
+    bool existsValue;
 
     /* Constructor */
 
@@ -62,7 +62,7 @@ contract MockUtilityToken is UtilityToken {
         balances[msg.sender] = INITIAL_BALANCE;
         totalTokenSupply = totalTokenSupply.add(INITIAL_BALANCE);
 
-        addressExists = true;
+        existsValue = true;
     }
 
     /**
@@ -75,7 +75,7 @@ contract MockUtilityToken is UtilityToken {
      *                 otherwise `false`
      */
     function exists(address) external returns (bool exists_) {
-        exists_ = addressExists;
+        exists_ = existsValue;
     }
 
     /**
@@ -93,8 +93,8 @@ contract MockUtilityToken is UtilityToken {
      *
      * @param _exists Boolean value
      */
-    function mockAddressExists(bool _exists) external {
-        addressExists = _exists;
+    function setExists(bool _exists) external {
+        existsValue = _exists;
     }
 
 }

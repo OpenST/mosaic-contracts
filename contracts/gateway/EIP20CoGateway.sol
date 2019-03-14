@@ -777,7 +777,7 @@ contract EIP20CoGateway is GatewayBase {
         );
         require(
             UtilityTokenInterface(utilityToken).exists(_beneficiary),
-            "Beneficiary address must be a registered address in utility token."
+            "Beneficiary address must be allowed to hold utility token."
         );
 
         /*

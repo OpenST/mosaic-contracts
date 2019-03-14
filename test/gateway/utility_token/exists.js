@@ -29,8 +29,6 @@ const TOKEN_SYMBOL = 'UT';
 const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
-// @reviewer please check if this test is even required.
-
 contract('UtilityToken.exists()', (accounts) => {
 
   let utilityToken;
@@ -49,18 +47,18 @@ contract('UtilityToken.exists()', (accounts) => {
   });
 
   it('should always return true for any given address', async () => {
-    let account5ExistsResult = await utilityToken.exists.call(accounts[5]);
+    const account5ExistsResult = await utilityToken.exists.call(accounts[5]);
     assert.strictEqual(
       account5ExistsResult,
       true,
-      'Contract should return true.'
+      'Contract should return true.',
     );
 
-    let account6ExistsResult = await utilityToken.exists.call(accounts[6]);
+    const account6ExistsResult = await utilityToken.exists.call(accounts[6]);
     assert.strictEqual(
       account6ExistsResult,
       true,
-      'Contract should return true.'
+      'Contract should return true.',
     );
 
   });
