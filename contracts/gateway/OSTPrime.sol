@@ -244,11 +244,6 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
         onlyCoGateway
         returns (bool success_)
     {
-        require(
-            _account != address(0),
-            "Account address should not be zero."
-        );
-
         /*
          * Acquire lock for msg.sender so that this function can only be
          * executed once in a transaction.

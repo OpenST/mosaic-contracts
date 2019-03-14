@@ -201,16 +201,6 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         internal
         returns (bool success_)
     {
-        require(
-            _account != address(0),
-            "Account address should not be zero."
-        );
-
-        require(
-            _amount > 0,
-            "Amount should be greater than zero."
-        );
-
         // Increase the balance of the _account
         balances[_account] = balances[_account].add(_amount);
         totalTokenSupply = totalTokenSupply.add(_amount);
@@ -241,26 +231,19 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         returns (bool success_)
     {
         require(
-            _amount > 0,
-            "Amount should be greater than zero."
-        );
-
-        address sender = msg.sender;
-
-        require(
-            balances[sender] >= _amount,
+            balances[msg.sender] >= _amount,
             "Insufficient balance."
         );
 
         // Decrease the balance of the msg.sender account.
-        balances[sender] = balances[sender].sub(_amount);
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
         totalTokenSupply = totalTokenSupply.sub(_amount);
 
         /*
          * Burning of the tokens should trigger a Transfer event with _to
          * as 0x0.
          */
-        emit Transfer(sender, address(0), _amount);
+        emit Transfer(msg.sender, address(0), _amount);
 
         success_ = true;
     }
