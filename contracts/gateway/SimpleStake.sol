@@ -141,6 +141,6 @@ contract SimpleStake {
         view
         returns (uint256 stakedAmount_)
     {
-            stakedAmount_ = token.balanceOf(address(this));
+        stakedAmount_ = token.balanceOf(address(this));
     }
 }
