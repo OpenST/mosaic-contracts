@@ -1,8 +1,8 @@
 # 💠 Mosaic Contracts
 
-![Build master](https://img.shields.io/travis/OpenSTFoundation/mosaic-contracts/master.svg?label=build%20master&style=flat)
-![Build develop](https://img.shields.io/travis/OpenSTFoundation/mosaic-contracts/develop.svg?label=build%20develop&style=flat)
-![npm version](https://img.shields.io/npm/v/@openstfoundation/mosaic-contracts.svg?style=flat)
+![Build master](https://img.shields.io/travis/OpenST/mosaic-contracts/master.svg?label=build%20master&style=flat)
+![Build develop](https://img.shields.io/travis/OpenST/mosaic-contracts/develop.svg?label=build%20develop&style=flat)
+![npm version](https://img.shields.io/npm/v/@openst/mosaic-contracts.svg?style=flat)
 [![Discuss on Discourse](https://img.shields.io/discourse/https/discuss.openst.org/topics.svg?style=flat)][discourse]
 [![Chat on Gitter](https://img.shields.io/gitter/room/OpenSTFoundation/SimpleToken.svg?style=flat)][gitter]
 
@@ -26,7 +26,7 @@ You can read [the draft of the mosaic whitepaper][mosaic whitepaper] or [the ori
 #### Installation
 
 ```bash
-npm install @openstfoundation/mosaic-contracts
+npm install @openst/mosaic-contracts
 ```
 
 #### Usage
@@ -50,7 +50,7 @@ const {
   StateRootInterface,
   UtilityToken,
   UtilityTokenInterface,
-} = require('@openstfoundation/mosaic-contracts');
+} = require('@openst/mosaic-contracts');
 
 // Access the ABIs and BINs directly on the contracts. For example:
 const anchorAbi = Anchor.abi;
@@ -64,7 +64,7 @@ This section is only required if you want to *set up a **new** mosaic chain.*
 #### Installation
 
 ```bash
-git clone git@github.com:OpenSTFoundation/mosaic-contracts.git
+git clone git@github.com:OpenST/mosaic-contracts.git
 cd mosaic-contracts
 npm install
 npm run compile-all
@@ -89,7 +89,7 @@ You can use [mosaic.js] directly to deploy the contracts and interact with them.
 ### Set-up
 
 ```bash
-git clone git@github.com:OpenSTFoundation/mosaic-contracts.git
+git clone git@github.com:OpenST/mosaic-contracts.git
 cd mosaic-contracts
 npm install
 npm run compile-all
@@ -116,8 +116,8 @@ To contribute code, please ensure that your submissions adhere to the [Style Gui
 [code of conduct]: https://github.com/OpenSTFoundation/mosaic-contracts/blob/develop/CODE_OF_CONDUCT.md
 [discourse]: https://discuss.openst.org/
 [gitter]: https://gitter.im/OpenSTFoundation/SimpleToken
-[issues]: https://github.com/OpenSTFoundation/mosaic-contracts/issues
-[mosaic.js]: https://github.com/OpenSTFoundation/mosaic.js
-[mosaic whitepaper]: https://github.com/OpenSTFoundation/mosaic-contracts/blob/develop/docs/mosaicv0.pdf
+[issues]: https://github.com/OpenST/mosaic-contracts/issues
+[mosaic.js]: https://github.com/OpenST/mosaic.js
+[mosaic whitepaper]: https://github.com/OpenST/mosaic-contracts/blob/develop/docs/mosaicv0.pdf
 [openst whitepaper]: https://drive.google.com/file/d/0Bwgf8QuAEOb7Z2xIeUlLd21DSjQ/view
-[style guide]: https://github.com/OpenSTFoundation/mosaic-contracts/blob/develop/SOLIDITY_STYLE_GUIDE.md
+[style guide]: https://github.com/OpenST/mosaic-contracts/blob/develop/SOLIDITY_STYLE_GUIDE.md
