@@ -31,6 +31,12 @@ import "../../lib/StateRootInterface.sol";
  */
 contract TestGatewayBase is GatewayBase {
 
+    /* Constants */
+
+    /** Unlock period for change bounty in block height. */
+    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+
+
     /* Constructor */
 
     /**
@@ -171,5 +177,24 @@ contract TestGatewayBase is GatewayBase {
         external
     {
         super.registerOutboxProcess(_account, 1, _messageHash);
+    }
+
+    /**
+     * @notice Method allows organization to propose new bounty amount.
+     *
+     * @dev This is used for testing purpose.
+     *
+     * @param _proposedBounty proposed bounty amount.
+     *
+     * @return uint256 proposed bounty amount.
+     */
+    function initiateBountyAmountChange(uint256 _proposedBounty)
+        external
+        onlyOrganization
+        returns(uint256)
+    {
+
+        return initiateBountyAmountChangeInternal(_proposedBounty, BOUNTY_CHANGE_UNLOCK_PERIOD);
+
     }
 }
