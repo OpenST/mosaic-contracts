@@ -139,9 +139,6 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @notice Increases the total token supply. Also, adds the number of
      *         tokens to the beneficiary balance.
      *
-     * @dev The parameters _account and _amount should not be zero. This check
-     *      is added in function increaseSupplyInternal.
-     *
      * @param _account Account address for which the balance will be increased.
                        This is payable so that it provides flexibility of
      *                 transferring base token to account on increase supply.
@@ -162,9 +159,6 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /**
      * @notice Decreases the token supply.
-     *
-     * @dev The parameters _amount should not be zero. This check is added in
-     *      function decreaseSupplyInternal.
      *
      * @param _amount Amount of tokens.
      *
