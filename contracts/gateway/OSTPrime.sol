@@ -29,7 +29,7 @@ pragma solidity ^0.5.0;
  */
 import "./OSTPrimeConfig.sol";
 import "./UtilityToken.sol";
-import "../lib/MutexAddress.sol";
+import "../lib/Mutex.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/SafeMath.sol";
 
@@ -43,7 +43,7 @@ import "../lib/SafeMath.sol";
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
  */
-contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
+contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
     /* Usings */
 
@@ -242,6 +242,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
         external
         onlyInitialized
         onlyCoGateway
+        mutex
         returns (bool success_)
     {
         require(
@@ -249,16 +250,8 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
             "Account address should not be zero."
         );
 
-        /*
-         * Acquire lock for msg.sender so that this function can only be
-         * executed once in a transaction.
-         */
-        MutexAddress.acquire(msg.sender);
-
         success_ = increaseSupplyInternal(address(this), _amount);
         _account.transfer(_amount);
-
-        MutexAddress.release(msg.sender);
     }
 
     /**
