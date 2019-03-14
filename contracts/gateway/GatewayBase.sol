@@ -20,6 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
+import "../lib/CircularBufferUint.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
 import "../lib/MessageBus.sol";
@@ -31,7 +32,7 @@ import "../lib/StateRootInterface.sol";
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
  */
-contract GatewayBase is Organized {
+contract GatewayBase is Organized, CircularBufferUint {
 
     /* Usings */
 
@@ -77,6 +78,9 @@ contract GatewayBase is Organized {
     //todo identify how to get block time for both chains
     /** Unlock period for change bounty in block height. */
     uint256 private constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+
+    /** The max number of storage roots to store. */
+    uint256 private constant MAX_STORAGE_ROOTS = 256;
 
 
     /* Public Variables */
@@ -163,6 +167,7 @@ contract GatewayBase is Organized {
         OrganizationInterface _organization
     )
         Organized(_organization)
+        CircularBufferUint(MAX_STORAGE_ROOTS)
         public
     {
         require(
@@ -254,6 +259,9 @@ contract GatewayBase is Organized {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete storageRoots[oldestStoredBlockHeight];
+
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
