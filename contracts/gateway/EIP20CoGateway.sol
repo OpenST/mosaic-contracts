@@ -775,6 +775,10 @@ contract EIP20CoGateway is GatewayBase {
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero."
         );
+        require(
+            UtilityTokenInterface(utilityToken).exists(_beneficiary),
+            "Beneficiary address must exist."
+        );
 
         /*
          * Maximum reward possible is _gasPrice * _gasLimit, we check this
@@ -791,7 +795,7 @@ contract EIP20CoGateway is GatewayBase {
             _amount,
             _beneficiary
         );
-        
+
         MessageBus.Message memory message = MessageBus.Message(
             intentHash,
             _stakerNonce,

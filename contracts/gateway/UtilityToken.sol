@@ -180,6 +180,18 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         success_ = decreaseSupplyInternal(_amount);
     }
 
+    /**
+     * @notice Checks if an address exists.
+     *
+     * @dev For standard ethereum all account addresses exist by default,
+     *      so it returns true for all addresses.
+     *
+     * @return exists_ `true` for all given address
+     */
+    function exists(address) external returns (bool exists_) {
+        exists_ = true;
+    }
+
 
     /* Internal functions. */
 

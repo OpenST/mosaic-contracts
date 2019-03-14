@@ -76,4 +76,12 @@ contract UtilityTokenInterface {
      */
     function setCoGateway(address _coGateway) external returns (bool);
 
+    /**
+     * @notice  Checks if an address exists.
+     *
+     * @param _actor Address that needs to be checked
+     *
+     * @return exists_ `true` if the address is allowed otherwise `false`
+     */
+    function exists(address _actor) external returns (bool exists_);
 }
