@@ -194,7 +194,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
     );
   });
 
-  it('should burn bounty and penalty amount', async () => {
+  it('should burn bounty', async () => {
     const burnerAddress = await cogateway.burner.call();
 
     const cogatewayInitialTokenBalance = await Utils.getBalance(
@@ -219,12 +219,8 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
     );
     const burnerFinalTokenBalance = await Utils.getBalance(burnerAddress);
 
-    // Penalty is paid by redeemer and it is burned with bounty on
-    // message revocation.
-    const penalty = bountyAmount.muln(PENALTY_MULTIPLIER);
-
     const expectedCoGatewayBalance = cogatewayInitialTokenBalance.sub(
-      bountyAmount.add(penalty),
+      bountyAmount,
     );
     assert.strictEqual(
       cogatewayFinalTokenBalance.eq(expectedCoGatewayBalance),
@@ -241,7 +237,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
     );
 
     const expectedBurnerBalance = burnerInitialTokenBalance.add(
-      bountyAmount.add(penalty),
+      bountyAmount,
     );
     assert.strictEqual(
       burnerFinalTokenBalance.eq(expectedBurnerBalance),

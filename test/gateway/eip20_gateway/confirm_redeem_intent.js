@@ -442,4 +442,27 @@ contract('EIP20Gateway.confirmRedeemIntent()', (accounts) => {
       'Previous process is not completed.',
     );
   });
+
+  it('should fail to confirm redeem intent if max reward is more than'
+    + ' redeem amount', async () => {
+    // gasPrice * gasLimit is max reward which should be less than the amount.
+    const gasPrice = '1000';
+    const gasLimit = '1000';
+    const amount = '1000';
+
+    await Utils.expectRevert(
+      eip20Gateway.confirmRedeemIntent(
+        redeemRequest.redeemer,
+        redeemRequest.nonce,
+        redeemRequest.beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        redeemRequest.blockNumber,
+        redeemRequest.hashLock,
+        redeemRequest.storageProof,
+      ),
+      'Maximum possible reward must be less than the redeem amount.',
+    );
+  });
 });

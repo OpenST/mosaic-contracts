@@ -205,7 +205,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
         blockHeight,
         storageProof,
       ),
-      'Message on target must be Declared.',
+      'Mint amount must not be zero.',
     );
   });
 
