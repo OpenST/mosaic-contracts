@@ -122,13 +122,15 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
             "CoGateway address should not be zero."
         );
 
+        // protect against reentrancy by setting the coGateway
+        // before querying the contract.
+        coGateway = _coGatewayAddress;
+
         require(
             CoGatewayUtilityTokenInterface(_coGatewayAddress).utilityToken()
                 == address(this),
             "CoGateway should be linked with this utility token."
         );
-
-        coGateway = _coGatewayAddress;
 
         emit CoGatewaySet(coGateway);
 
