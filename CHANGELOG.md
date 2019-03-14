@@ -20,6 +20,7 @@ The current release uses a "anchors" to provide state roots from remote chains.
 
 ### Notable Changes
 
+* Penalty is now burned on revert stake and revert redeem instead of returning on progress stake with proof and progree redeem with proof([#668](https://github.com/OpenST/mosaic-contracts/pull/668)).
 * MerklePatriciaProof library can now verify valid proof with extension nodes ([#651](https://github.com/OpenSTFoundation/mosaic-contracts/pull/651)). 
 * Contracts' ABIs and BINs are provided via npm package [@openstfoundation/mosaic-contracts](https://www.npmjs.com/package/@openstfoundation/mosaic-contracts) ([#619](https://github.com/OpenSTFoundation/mosaic-contracts/pull/619), [#637](https://github.com/OpenSTFoundation/mosaic-contracts/pull/637)).
 * Contracts are now separated into "Gateway" and "Core" contracts ([#221](https://github.com/OpenSTFoundation/mosaic-contracts/pull/221)).
