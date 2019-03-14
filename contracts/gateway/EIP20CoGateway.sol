@@ -247,7 +247,7 @@ contract EIP20CoGateway is GatewayBase {
         burner = _burner;
 
         // Update the encodedGatewayPath.
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+        encodedGatewayPath = BytesLib.bytes32ToBytes(
             keccak256(abi.encodePacked(remoteGateway))
         );
     }

@@ -1002,7 +1002,7 @@ contract EIP20Gateway is GatewayBase {
         remoteGateway = _coGatewayAddress;
 
         // update the encodedGatewayPath
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+        encodedGatewayPath = BytesLib.bytes32ToBytes(
             keccak256(abi.encodePacked(remoteGateway))
         );
         activated = true;

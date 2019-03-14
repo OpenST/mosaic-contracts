@@ -171,7 +171,7 @@ library MessageBus {
         );
 
         // Get the storage path to verify proof.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -287,7 +287,7 @@ library MessageBus {
             revert("Status of message on source must be Declared or DeclareRevocation.");
         }
 
-        bytes memory storagePath = bytes32ToBytes(
+        bytes memory storagePath = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -386,7 +386,7 @@ library MessageBus {
         );
 
         // The outbox is at location OUTBOX_OFFSET of the MessageBox struct.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -470,7 +470,7 @@ library MessageBus {
         );
 
         // Get the path.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -536,7 +536,7 @@ library MessageBus {
         );
 
         // The inbox is at location INBOX_OFFSET of the MessageBox struct.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -654,32 +654,14 @@ library MessageBus {
         }
 
         bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(bytes32(uint256(_structPosition)))
+            BytesLib.bytes32ToBytes(bytes32(uint256(_structPosition)))
         );
 
-        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+        bytes memory keyBytes = BytesLib.leftPad(BytesLib.bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
 
         storagePath_ = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(path)))
         );
-    }
-
-    /**
-     * @notice Convert bytes32 to bytes.
-     *
-     * @param _inBytes32 Bytes32 value.
-     *
-     * @return _inBytes32 value.
-     */
-    function bytes32ToBytes(bytes32 _inBytes32)
-        private
-        pure
-        returns (bytes memory bytes_)
-    {
-        bytes_ = new bytes(32);
-        assembly {
-            mstore(add(32, bytes_), _inBytes32)
-        }
     }
 }

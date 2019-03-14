@@ -171,7 +171,7 @@ library MockMessageBus {
         );
 
         // Get the storage path to verify proof.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -287,7 +287,7 @@ library MockMessageBus {
             revert("Status of message on source must be Declared or DeclareRevocation.");
         }
 
-        bytes memory storagePath = bytes32ToBytes(
+        bytes memory storagePath = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -389,7 +389,7 @@ library MockMessageBus {
          * The outbox location index is 0 in the MessageBox struct, so it
          * is same as _messageBoxOffset.
          */
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -473,7 +473,7 @@ library MockMessageBus {
         );
 
         // Get the path.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -542,7 +542,7 @@ library MockMessageBus {
          * The inbox is at location 1 of the MessageBox struct.
          * So add one to get the path.
          */
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -707,10 +707,10 @@ library MockMessageBus {
         }
 
         bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(bytes32(uint256(_structPosition)))
+            BytesLib.bytes32ToBytes(bytes32(uint256(_structPosition)))
         );
 
-        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+        bytes memory keyBytes = BytesLib.leftPad(BytesLib.bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
 
         storagePath_ = keccak256(
@@ -718,21 +718,4 @@ library MockMessageBus {
         );
     }
 
-    /**
-     * @notice Convert bytes32 to bytes.
-     *
-     * @param _inBytes32 Bytes32 value.
-     *
-     * @return _inBytes32 value.
-     */
-    function bytes32ToBytes(bytes32 _inBytes32)
-        private
-        pure
-        returns (bytes memory bytes_)
-    {
-        bytes_ = new bytes(32);
-        assembly {
-            mstore(add(32, bytes_), _inBytes32)
-        }
-    }
 }
