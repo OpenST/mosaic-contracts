@@ -181,11 +181,10 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
     /**
-     * @notice Checks if the given address is registered in the economy
+     * @notice Checks if an address is allowed to hold utility token.
      *
-     * @dev In case of internal economy, an address has to be registered.
-     *      This utility token does not have any internal actors so it returns
-     *      true for all addresses.
+     * @dev In this case all the addresses are allowed to hold the utility
+     *      token, so it returns true for all addresses
      *
      * @return exists_ `true` for all given address
      */
