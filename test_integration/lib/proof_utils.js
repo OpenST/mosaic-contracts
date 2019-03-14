@@ -21,10 +21,7 @@
 const rlp = require('rlp');
 
 // This is the position of message outbox defined in GatewayBase.sol
-const MESSAGE_OUTBOX_OFFSET = '7';
-
-// This is the position of message inbox defined in GatewayBase.sol
-const MESSAGE_INBOX_OFFSET = '8';
+const MESSAGE_OUTBOX_OFFSET = '9';
 
 /**
  * Utils class to generate inbox and outbox proof.
@@ -38,26 +35,6 @@ class ProofUtils {
   constructor(sourceWeb3, targetWeb3) {
     this.sourceWeb3 = sourceWeb3;
     this.targetWeb3 = targetWeb3;
-  }
-
-  /**
-     * Get proof for inbox
-     * @param {string} address Address of ethereum account for which proof needs
-     *                         to be generated.
-     * @param {string[]} keys Array of keys for a mapping in solidity.
-     * @param {string} blockNumber Block number in hex.
-     *
-     * @return {Object} Proof data.
-     */
-  async getInboxProof(address, keys = [], blockNumber) {
-    const proof = await this._getProof(
-      this.targetWeb3,
-      MESSAGE_INBOX_OFFSET,
-      address,
-      keys,
-      blockNumber,
-    );
-    return proof;
   }
 
   /**

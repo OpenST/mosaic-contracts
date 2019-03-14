@@ -68,7 +68,7 @@ contract GatewayBase is Organized, CircularBufferUint {
     /* Constants */
 
     /** Position of message bus in the storage. */
-    uint8 constant MESSAGE_BOX_OFFSET = 7;
+    uint8 constant MESSAGE_BOX_OFFSET = 9;
 
     /**
      * Penalty in bounty amount percentage charged to staker on revert stake.
