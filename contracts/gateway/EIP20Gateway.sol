@@ -1185,13 +1185,11 @@ contract EIP20Gateway is GatewayBase {
 
         delete unstakes[_messageHash];
 
-        // Release the amount to beneficiary.
+        // Release the amount to beneficiary, but with reward subtracted.
         stakeVault.releaseTo(beneficiary, unstakeAmount_);
 
-        if (rewardAmount_ > 0) {
-            // Reward facilitator with the reward amount.
-            stakeVault.releaseTo(msg.sender, rewardAmount_);
-        }
+        // Reward facilitator with the reward amount.
+        stakeVault.releaseTo(msg.sender, rewardAmount_);
 
         emit UnstakeProgressed(
             _messageHash,

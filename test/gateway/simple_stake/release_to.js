@@ -110,16 +110,6 @@ contract('SimpleStake.releaseTo()', (accounts) => {
     );
   });
 
-  it('should fail if amount is zero', async () => {
-    const beneficiary = accounts[5];
-    const releasedAmount = new BN(0);
-
-    await Utils.expectRevert(
-      simpleStake.releaseTo(beneficiary, releasedAmount, { from: gateway }),
-      'Release amount must not be zero.',
-    );
-  });
-
   it('should fail if simple stake has insufficient EIP20 fund', async () => {
     const beneficiary = accounts[5];
     const releasedAmount = new BN(200);
