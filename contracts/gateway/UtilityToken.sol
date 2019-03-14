@@ -181,10 +181,10 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     }
 
     /**
-     * @notice Checks if an address is allowed to hold utility token.
+     * @notice Checks if an address exists.
      *
-     * @dev In this case all the addresses are allowed to hold the utility
-     *      token, so it returns true for all addresses
+     * @dev For standard ethereum all account addresses exist by default,
+     *      so it returns true for all addresses.
      *
      * @return exists_ `true` for all given address
      */

@@ -376,7 +376,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
         blockHeight,
         rlpParentNodes,
       ),
-      'Beneficiary address must be allowed to hold utility token.',
+      'Beneficiary address must exist.',
     );
   });
 
