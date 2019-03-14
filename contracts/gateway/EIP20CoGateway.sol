@@ -546,10 +546,6 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         MessageBus.Message storage message = messages[_messageHash];
-        MessageBus.MessageStatus outboxMessageStatus =
-            messageBox.outbox[_messageHash];
-
-        redeemAmount_ = redeems[_messageHash].amount;
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -560,50 +556,8 @@ contract EIP20CoGateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        uint256 bountyAmount = redeems[_messageHash].bounty;
         (redeemer_, redeemAmount_) =
             progressRedeemInternal(_messageHash, message, true, bytes32(0));
-
-        // Return revert penalty to redeemer if message is already progressed
-        // and can't be reverted anymore.
-        tryReturnPenaltyToRedeemer(
-            address(uint160(redeemer_)), // cast to address payable
-            outboxMessageStatus,
-            MessageBus.MessageStatus(_messageStatus),
-            bountyAmount
-        );
-    }
-
-    /**
-     * @notice Return the revert penalty to the redeemer. Only valid for
-     *         a message transition from DeclaredRevocation -> Progressed.
-     *
-     * @dev Should only be called from progressRedeemWithProof. This function
-     *      exists to avoid a stack too deep error.
-     *
-     * @param _redeemer Redeemer address.
-     * @param _outboxMessageStatus Message status before progressing.
-     * @param _inboxMessageStatus Message status after progressing.
-     * @param _bountyAmount Bounty amount to use for calculating penalty.
-     */
-    function tryReturnPenaltyToRedeemer(
-        address payable _redeemer,
-        MessageBus.MessageStatus _outboxMessageStatus,
-        MessageBus.MessageStatus _inboxMessageStatus,
-        uint256 _bountyAmount
-    )
-      private
-    {
-        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
-            return;
-        }
-        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
-            return;
-        }
-
-        // Penalty charged to redeemer for revert redeem.
-        uint256 penalty = penaltyFromBounty(_bountyAmount);
-        _redeemer.transfer(penalty);
     }
 
     /**
@@ -660,6 +614,10 @@ contract EIP20CoGateway is GatewayBase {
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
+
+        // Burn penalty amount. Reentrancy is protected by message bus states.
+        burner.transfer(penalty);
+
         emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,
@@ -670,7 +628,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /**
      * @notice Complete revert redeem by providing the merkle proof.
-     *         It will burn facilitator bounty and redeemer penalty.
+     *         It will burn facilitator bounty.
      *
      * @dev Message bus ensures correct execution sequence of methods and also
      *      provides safety mechanism for any possible re-entrancy attack.
@@ -747,13 +705,9 @@ contract EIP20CoGateway is GatewayBase {
         // Return the redeem amount back.
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
-        // Penalty charged to redeemer.
-        uint256 penalty = penaltyFromBounty(bounty);
 
-        uint256 amountToBurn = bounty.add(penalty);
-
-        // Burn bounty and penalty.
-        burner.transfer(amountToBurn);
+        // Burn bounty.
+        burner.transfer(bounty);
 
         emit RedeemReverted(
             _messageHash,

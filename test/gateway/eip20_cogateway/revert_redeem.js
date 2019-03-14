@@ -28,7 +28,6 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const web3 = require('../../test_lib/web3.js');
 
 const { MessageStatusEnum } = messageBus;
-const zeroAddress = Utils.NULL_ADDRESS;
 const zeroBytes = Utils.ZERO_BYTES32;
 const PENALTY_MULTIPLIER = 1.5;
 
@@ -37,6 +36,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
   let redeemParams;
   let utilityToken;
   let eip20CoGateway;
+  const burner = accounts[5];
 
   beforeEach(async () => {
     constructorParams = {
@@ -45,7 +45,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       bounty: new BN(100),
       organization: accounts[9],
       gateway: accounts[4],
-      burner: zeroAddress,
+      burner,
       owner: accounts[0],
     };
 
@@ -299,10 +299,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
   });
 
   it('redeemer should pay the penalty', async () => {
-    const eip20CoGatewayBaseBalance = await Utils.getBalance(
-      eip20CoGateway.address,
-    );
-
+    const burnerInitialBaseTokenBalance = await Utils.getBalance(burner);
     const redeemerBaseBalance = await Utils.getBalance(redeemParams.redeemer);
 
     const eip20CoGatewayBalance = await utilityToken.balanceOf(
@@ -312,13 +309,15 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       redeemParams.redeemer,
     );
 
-    const tx = await eip20CoGateway.revertRedeem(redeemParams.messageHash, {
-      from: redeemParams.redeemer,
-      value: redeemParams.penalty,
-    });
+    const tx = await eip20CoGateway.revertRedeem(
+      redeemParams.messageHash, {
+        from: redeemParams.redeemer,
+        value: redeemParams.penalty,
+      },
+    );
 
-    const eip20CoGatewayBaseFinalBalance = await Utils.getBalance(
-      eip20CoGateway.address,
+    const burnerBaseTokenFinalBalance = await Utils.getBalance(
+      burner,
     );
 
     const redeemerBaseFinalBalance = await Utils.getBalance(
@@ -330,18 +329,6 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
     );
     const redeemerFinalBalance = await utilityToken.balanceOf(
       redeemParams.redeemer,
-    );
-
-    assert.strictEqual(
-      eip20CoGatewayBaseFinalBalance.eq(
-        eip20CoGatewayBaseBalance.add(redeemParams.penalty),
-      ),
-      true,
-      `CoGateway base token balance ${eip20CoGatewayBaseFinalBalance.toString(
-        10,
-      )} must be equal to ${eip20CoGatewayBaseBalance
-        .add(redeemParams.penalty)
-        .toString(10)}.`,
     );
 
     assert.strictEqual(
@@ -358,6 +345,16 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
     );
 
     assert.strictEqual(
+      burnerBaseTokenFinalBalance.eq(
+        burnerInitialBaseTokenBalance.add(redeemParams.penalty),
+      ),
+      true,
+      `Burner base token balance ${burnerBaseTokenFinalBalance.toString(10)}`
+      + ` must be equal to ${burnerInitialBaseTokenBalance.add(redeemParams.penalty)
+        .toString(10)}.`,
+    );
+
+    assert.strictEqual(
       redeemerFinalBalance.eq(redeemerBalance),
       true,
       `Redeemer's token balance ${redeemerFinalBalance.toString(
@@ -368,9 +365,8 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
     assert.strictEqual(
       eip20CoGatewayFinalBalance.eq(eip20CoGatewayBalance),
       true,
-      `CoGateway's token balance ${eip20CoGatewayFinalBalance.toString(
-        10,
-      )} must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
+      `CoGateway's token balance ${eip20CoGatewayBalance.toString(10)}`
+      + `must be equal to ${eip20CoGatewayBalance.toString(10)}.`,
     );
   });
 });
