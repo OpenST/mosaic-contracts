@@ -61,19 +61,6 @@ contract('OSTPrime.increaseSupply()', (accounts) => {
     await ostPrime.setCoGatewayAddress(coGatewayAddress);
   });
 
-  it('should fail when account address is zero', async () => {
-    await initialize();
-
-    beneficiary = NullAddress;
-
-    await Utils.expectRevert(
-      ostPrime.increaseSupply(beneficiary, amount, {
-        from: coGatewayAddress,
-      }),
-      'Account address should not be zero.',
-    );
-  });
-
   it('should fail when amount is zero', async () => {
     await initialize();
 

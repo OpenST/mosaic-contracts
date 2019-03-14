@@ -225,9 +225,6 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
      *          It can be called by CoGateway address and when contract is
      *          initialized.
      *
-     * @dev The parameter _amount should not be zero. This check
-     *      is added in function increaseSupplyInternal.
-     *
      * @param _account Account address for which the OST Prime balance will be
      *                 increased. This is payable so that base token can be
      *                 transferred to the account.
@@ -244,15 +241,8 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
         onlyCoGateway
         returns (bool success_)
     {
-        require(
-            _account != address(0),
-            "Account address should not be zero."
-        );
-
-        /*
-         * Acquire lock for msg.sender so that this function can only be
-         * executed once in a transaction.
-         */
+        // Acquire lock for msg.sender so that this function can only be
+        // executed once in a transaction.
         MutexAddress.acquire(msg.sender);
 
         success_ = increaseSupplyInternal(address(this), _amount);
