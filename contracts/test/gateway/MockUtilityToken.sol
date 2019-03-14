@@ -33,6 +33,8 @@ contract MockUtilityToken is UtilityToken {
     // Total initial balance of the deployer.
     uint256 constant INITIAL_BALANCE  = 1000000000000000000;
 
+    // This variable is used to mock the return of function exists()
+    bool addressExists;
 
     /* Constructor */
 
@@ -60,6 +62,20 @@ contract MockUtilityToken is UtilityToken {
         balances[msg.sender] = INITIAL_BALANCE;
         totalTokenSupply = totalTokenSupply.add(INITIAL_BALANCE);
 
+        addressExists = true;
+    }
+
+    /**
+     * @notice Checks if the given address is registered in the economy
+     *
+     * @dev This function is overridden to mock return value for exists
+     *      function for testing.
+     *
+     * @return exists_ `true` if the address is registered in the economy,
+     *                 otherwise `false`
+     */
+    function exists(address) external returns (bool exists_) {
+        exists_ = addressExists;
     }
 
     /**
@@ -70,4 +86,15 @@ contract MockUtilityToken is UtilityToken {
     function setCoGatewayAddress(address _coGatewayAddress) external {
         coGateway = _coGatewayAddress;
     }
+
+    /**
+     * @notice Set the addressExists variable to mock return value of
+     *         function exists(). This is only for testing.
+     *
+     * @param _exists Boolean value
+     */
+    function mockAddressExists(bool _exists) external {
+        addressExists = _exists;
+    }
+
 }

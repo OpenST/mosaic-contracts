@@ -180,6 +180,19 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         success_ = decreaseSupplyInternal(_amount);
     }
 
+    /**
+     * @notice Checks if the given address is registered in the economy
+     *
+     * @dev In case of internal economy, an address has to be registered.
+     *      This utility token does not have any internal actors so it returns
+     *      true for all addresses.
+     *
+     * @return exists_ `true` for all given address
+     */
+    function exists(address) external returns (bool exists_) {
+        exists_ = true;
+    }
+
 
     /* Internal functions. */
 

@@ -359,6 +359,27 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
+  it('should fail to confirm stake intent if UtilityToken.exists() function ' +
+    'returns false', async () => {
+
+    await utilityToken.mockAddressExists(false);
+
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      'Beneficiary address must be a registered address in utility token.',
+    );
+  });
+
   it(
     'should fail to confirm new stake intent if status of previous '
     + 'confirmed stake intent is declared',

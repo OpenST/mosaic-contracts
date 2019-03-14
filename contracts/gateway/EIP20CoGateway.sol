@@ -817,12 +817,16 @@ contract EIP20CoGateway is GatewayBase {
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero."
         );
+        require(
+            UtilityTokenInterface(utilityToken).exists(_beneficiary),
+            "Beneficiary address must be a registered address in utility token."
+        );
 
         bytes32 intentHash = hashStakeIntent(
             _amount,
             _beneficiary
         );
-        
+
         MessageBus.Message memory message = MessageBus.Message(
             intentHash,
             _stakerNonce,
