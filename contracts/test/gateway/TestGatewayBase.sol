@@ -34,7 +34,7 @@ contract TestGatewayBase is GatewayBase {
     /* Constants */
 
     /** Unlock period for change bounty in block height. */
-    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 100;
+    uint256 public constant BOUNTY_CHANGE_UNLOCK_PERIOD = 2;
 
 
     /* Constructor */

@@ -26,7 +26,7 @@ const BN = require('bn.js');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 const Utils = require('../../../test/test_lib/utils');
 
-const unlockTimeInBlocks = 100;
+const unlockTimeInBlocks = 2;
 
 async function proposeBountyChange(
   gatewayBaseInstance,
@@ -211,10 +211,6 @@ contract('GatewayBase.sol', (accounts) => {
     let gatewayBaseInstance;
     const owner = accounts[2];
     const worker = accounts[3];
-    let unlockHeight;
-    let currentBlock;
-    const proposedBounty = new BN(50);
-    const currentBounty = new BN(100);
 
     beforeEach(async () => {
       const dummyStateRootProviderAddress = accounts[0];
