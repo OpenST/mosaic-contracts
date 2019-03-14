@@ -201,16 +201,6 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         internal
         returns (bool success_)
     {
-        require(
-            _account != address(0),
-            "Account address should not be zero."
-        );
-
-        require(
-            _amount > 0,
-            "Amount should be greater than zero."
-        );
-
         // Increase the balance of the _account
         balances[_account] = balances[_account].add(_amount);
         totalTokenSupply = totalTokenSupply.add(_amount);
