@@ -1,6 +1,6 @@
 {
-  "name": "@openstfoundation/mosaic-contracts",
-  "version": "0.10.0-beta.2",
+  "name": "@openst/mosaic-contracts",
+  "version": "0.10.0-rc.1",
   "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "keywords": [
     "Mosaic",
@@ -17,7 +17,7 @@
   "homepage": "https://openst.org/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OpenSTFoundation/mosaic-contracts"
+    "url": "https://github.com/OpenST/mosaic-contracts"
   },
   "devDependencies": {
     "abi-decoder": "1.2.0",
