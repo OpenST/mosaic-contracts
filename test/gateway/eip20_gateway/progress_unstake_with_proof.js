@@ -533,61 +533,6 @@ contract('EIP20Gateway.progressUnstakeWithProof()', (accounts) => {
       'Message on target must be Declared.',
     );
   });
-
-  it('should fail when the reward amount is greater than the unstake amount', async () => {
-    redeemRequest = StubDataRedeemFailure.co_gateway.redeem.params;
-    unstakeRequest = {
-      beneficiary: redeemRequest.beneficiary,
-      amount: new BN(redeemRequest.amount, 16),
-    };
-
-    const redeemIntentHash = cogatewayUtils.hashRedeemIntent(
-      unstakeRequest.amount,
-      unstakeRequest.beneficiary,
-      StubDataRedeemFailure.contracts.coGateway,
-    );
-
-    unstakeMessage = {
-      intentHash: redeemIntentHash,
-      nonce: new BN(redeemRequest.nonce, 16),
-      gasPrice: new BN(redeemRequest.gasPrice, 16),
-      gasLimit: new BN(redeemRequest.gasLimit, 16),
-      unstakeAccount: redeemRequest.redeemer,
-      hashLock: redeemRequest.hashLock,
-      unlockSecret: redeemRequest.unlockSecret,
-    };
-
-    stakeVaultAddress = await setup(
-      unstakeMessage,
-      gateway,
-      unstakeRequest,
-      stakeVaultAddress,
-      mockToken,
-      accounts,
-    );
-    await gateway.setInboxStatus(
-      unstakeMessage.messageHash,
-      MessageStatusEnum.Declared,
-    );
-    const blockHeight = new BN(
-      StubDataRedeemFailure.co_gateway.redeem.proof_data.block_number,
-      16,
-    );
-    const storageRoot = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageHash;
-    await gateway.setStorageRoot(blockHeight, storageRoot);
-    const storageProof = StubDataRedeemFailure.co_gateway.redeem.proof_data.storageProof[0]
-      .serializedProof;
-
-    await Utils.expectRevert(
-      gateway.progressUnstakeWithProof(
-        unstakeMessage.messageHash,
-        storageProof,
-        blockHeight,
-        MessageStatusEnum.Declared,
-      ),
-      'Reward amount must be less than redeem amount.',
-    );
-  });
 });
 
 async function setup(

@@ -359,7 +359,28 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
-  it(
+  it('should fail to confirm stake intent if UtilityToken.exists() function ' +
+    'returns false', async () => {
+
+    await utilityToken.setExists(false);
+
+    await Utils.expectRevert(
+      coGateway.confirmStakeIntent(
+        staker,
+        stakerNonce,
+        beneficiary,
+        amount,
+        gasPrice,
+        gasLimit,
+        hashLock,
+        blockHeight,
+        rlpParentNodes,
+      ),
+      'Beneficiary address must exist.',
+    );
+  });
+
+  it.skip(
     'should fail to confirm new stake intent if status of previous '
     + 'confirmed stake intent is declared',
     async () => {
@@ -465,7 +486,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
-  it(
+  it.skip(
     'should confirm new stake intent if status of previous '
     + 'confirmed stake intent is revoked',
     async () => {
@@ -494,7 +515,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     },
   );
 
-  it(
+  it.skip(
     'should confirm new stake intent if status of previous '
     + 'confirmed stake intent is progressed',
     async () => {
@@ -520,6 +541,32 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
       await assertConfirmStakeIntent();
+    },
+  );
+
+  it(
+    'should fail to confirm stake intent if max reward is more than'
+    + ' stake amount',
+    async () => {
+      // gasPrice * gasLimit is max reward which should be less than the amount.
+      gasPrice = '1000';
+      gasLimit = '1000';
+      amount = '1000';
+
+      await Utils.expectRevert(
+        coGateway.confirmStakeIntent(
+          staker,
+          stakerNonce,
+          beneficiary,
+          amount,
+          gasPrice,
+          gasLimit,
+          hashLock,
+          blockHeight,
+          rlpParentNodes,
+        ),
+        'Maximum possible reward must be less than the stake amount.',
+      );
     },
   );
 });

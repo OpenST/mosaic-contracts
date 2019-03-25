@@ -34,6 +34,7 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
   let mockToken;
   let baseToken;
   const bountyAmount = new BN(100);
+  const burner = Utils.NULL_ADDRESS;
 
   const stakeRequest = {
     beneficiary: accounts[6],
@@ -54,7 +55,6 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
 
     const organization = accounts[1];
     const coreAddress = accounts[5];
-    const burner = Utils.NULL_ADDRESS;
 
     gateway = await Gateway.new(
       mockToken.address,
@@ -187,7 +187,7 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
   });
 
   it('should charge/transfer penalty', async () => {
-    const gatewayInitialBalance = await baseToken.balanceOf(gateway.address);
+    const burnerInitialBalance = await baseToken.balanceOf(burner);
     const stakerInitialBalance = await baseToken.balanceOf(
       stakeMessage.staker,
     );
@@ -206,13 +206,13 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
       from: stakeMessage.staker,
     });
 
-    const gatewayFinalBalance = await baseToken.balanceOf(gateway.address);
+    const burnerFinalBalance = await baseToken.balanceOf(burner);
     const stakerFinalBalance = await baseToken.balanceOf(stakeMessage.staker);
 
     assert.strictEqual(
-      gatewayFinalBalance.eq(gatewayInitialBalance.add(penalty)),
+      burnerFinalBalance.eq(burnerInitialBalance.add(penalty)),
       true,
-      'Penalty must be transferred to gateway',
+      'Penalty must be transferred to burner',
     );
     assert.strictEqual(
       stakerFinalBalance.eq(stakerInitialBalance.sub(penalty)),

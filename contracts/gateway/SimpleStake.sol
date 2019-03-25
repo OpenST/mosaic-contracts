@@ -116,10 +116,6 @@ contract SimpleStake {
         returns (bool success_)
     {
         require(
-            _amount > 0,
-            "Release amount must not be zero."
-        );
-        require(
             token.transfer(_to, _amount) == true,
             "Token transfer must success."
         );
@@ -145,6 +141,6 @@ contract SimpleStake {
         view
         returns (uint256 stakedAmount_)
     {
-            stakedAmount_ = token.balanceOf(address(this));
+        stakedAmount_ = token.balanceOf(address(this));
     }
 }

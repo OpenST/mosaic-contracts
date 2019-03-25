@@ -1,3 +1,5 @@
+pragma solidity ^0.5.0;
+
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +20,28 @@
 //
 // ----------------------------------------------------------------------------
 
-const GatewayLib = artifacts.require('GatewayLib');
+/** @title Mutex contract provide locking mechanism. */
+contract Mutex {
 
-contract('GatewayLib.bytes32ToBytes()', async (accounts) => {
-  it('should return correct values', async () => {
-    const gatewayLib = await GatewayLib.deployed();
-    const bytes32Value = web3.utils.sha3('some data');
+    /* Storage */
 
-    const result = await gatewayLib.bytes32ToBytes(bytes32Value);
+    bool private mutexAcquired;
 
-    assert.strictEqual(
-      bytes32Value,
-      result,
-      'Expected value should be equal to actual.',
-    );
-  });
-});
+
+    /* Modifiers */
+
+    /**
+     *  Checks that mutex is acquired or not. If mutex is not acquired,
+     *  mutexAcquired is set to true. At the end of function execution,
+     *  mutexAcquired is set to false.
+     */
+    modifier mutex() {
+        require(
+            !mutexAcquired,
+            "Mutex is already acquired."
+        );
+        mutexAcquired = true;
+        _;
+        mutexAcquired = false;
+    }
+}

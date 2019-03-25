@@ -29,7 +29,7 @@ pragma solidity ^0.5.0;
  */
 import "./OSTPrimeConfig.sol";
 import "./UtilityToken.sol";
-import "../lib/MutexAddress.sol";
+import "../lib/Mutex.sol";
 import "../lib/OrganizationInterface.sol";
 import "../lib/SafeMath.sol";
 
@@ -43,7 +43,7 @@ import "../lib/SafeMath.sol";
  *  @dev OSTPrime functions as the base token to pay for gas consumption on the
  *       utility chain.
  */
-contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
+contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
     /* Usings */
 
@@ -225,9 +225,6 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
      *          It can be called by CoGateway address and when contract is
      *          initialized.
      *
-     * @dev The parameter _amount should not be zero. This check
-     *      is added in function increaseSupplyInternal.
-     *
      * @param _account Account address for which the OST Prime balance will be
      *                 increased. This is payable so that base token can be
      *                 transferred to the account.
@@ -242,23 +239,11 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
         external
         onlyInitialized
         onlyCoGateway
+        mutex
         returns (bool success_)
     {
-        require(
-            _account != address(0),
-            "Account address should not be zero."
-        );
-
-        /*
-         * Acquire lock for msg.sender so that this function can only be
-         * executed once in a transaction.
-         */
-        MutexAddress.acquire(msg.sender);
-
         success_ = increaseSupplyInternal(address(this), _amount);
         _account.transfer(_amount);
-
-        MutexAddress.release(msg.sender);
     }
 
     /**
@@ -266,9 +251,6 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, MutexAddress {
      *         address and decreases the total token supply count. Can be
      *         called only when contract is initialized and only by CoGateway
      *         address.
-     *
-     * @dev The parameters _amount should not be zero. This check is added in
-     *      function decreaseSupplyInternal.
      *
      * @param _amount Amount of tokens.
      *

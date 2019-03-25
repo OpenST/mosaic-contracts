@@ -171,7 +171,7 @@ library MessageBus {
         );
 
         // Get the storage path to verify proof.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -287,7 +287,7 @@ library MessageBus {
             revert("Status of message on source must be Declared or DeclareRevocation.");
         }
 
-        bytes memory storagePath = bytes32ToBytes(
+        bytes memory storagePath = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -386,7 +386,7 @@ library MessageBus {
         );
 
         // The outbox is at location OUTBOX_OFFSET of the MessageBox struct.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -470,7 +470,7 @@ library MessageBus {
         );
 
         // Get the path.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 OUTBOX_OFFSET,
@@ -536,7 +536,7 @@ library MessageBus {
         );
 
         // The inbox is at location INBOX_OFFSET of the MessageBox struct.
-        bytes memory path = bytes32ToBytes(
+        bytes memory path = BytesLib.bytes32ToBytes(
             storageVariablePathForStruct(
                 _messageBoxOffset,
                 INBOX_OFFSET,
@@ -632,53 +632,6 @@ library MessageBus {
     }
 
     /**
-     * @notice Verify the signature is signed by the signer address.
-     *
-     * @param _message Message hash.
-     * @param _signature Signature.
-     * @param _signer Signer address.
-     *
-     * @return success_ `true` if the signature is signed by the signer.
-     */
-    function verifySignature(
-        bytes32 _message,
-        bytes memory _signature,
-        address _signer
-    )
-        private
-        pure
-        returns (bool success_)
-    {
-        if (_signature.length != 65) {
-            return false;
-        }
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-
-        _message = keccak256(abi.encodePacked(prefix, _message));
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := mload(add(_signature, 32))
-            s := mload(add(_signature, 64))
-            v := byte(0, mload(add(_signature, 96)))
-        }
-        /*
-         * Version of signature should be 27 or 28, but 0 and 1 are also
-         * possible versions.
-         */
-        if (v < 27) {
-            v += 27;
-        }
-
-        if (v != 27 && v != 28) {
-            return false;
-        }
-        success_ = ecrecover(_message, v, r, s) == _signer;
-    }
-
-    /**
      * @notice Get the storage path of the variable inside the struct.
      *
      * @param _structPosition Position of struct variable.
@@ -701,32 +654,14 @@ library MessageBus {
         }
 
         bytes memory indexBytes = BytesLib.leftPad(
-            bytes32ToBytes(bytes32(uint256(_structPosition)))
+            BytesLib.bytes32ToBytes(bytes32(uint256(_structPosition)))
         );
 
-        bytes memory keyBytes = BytesLib.leftPad(bytes32ToBytes(_key));
+        bytes memory keyBytes = BytesLib.leftPad(BytesLib.bytes32ToBytes(_key));
         bytes memory path = BytesLib.concat(keyBytes, indexBytes);
 
         storagePath_ = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(path)))
         );
-    }
-
-    /**
-     * @notice Convert bytes32 to bytes.
-     *
-     * @param _inBytes32 Bytes32 value.
-     *
-     * @return _inBytes32 value.
-     */
-    function bytes32ToBytes(bytes32 _inBytes32)
-        private
-        pure
-        returns (bytes memory bytes_)
-    {
-        bytes_ = new bytes(32);
-        assembly {
-            mstore(add(32, bytes_), _inBytes32)
-        }
     }
 }

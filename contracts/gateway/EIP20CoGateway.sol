@@ -247,7 +247,7 @@ contract EIP20CoGateway is GatewayBase {
         burner = _burner;
 
         // Update the encodedGatewayPath.
-        encodedGatewayPath = GatewayLib.bytes32ToBytes(
+        encodedGatewayPath = BytesLib.bytes32ToBytes(
             keccak256(abi.encodePacked(remoteGateway))
         );
     }
@@ -413,6 +413,15 @@ contract EIP20CoGateway is GatewayBase {
             "RLP parent nodes must not be zero."
         );
 
+        amount_ = mints[_messageHash].amount;
+
+        require(
+            amount_ > uint256(0),
+            "Mint amount must not be zero."
+        );
+
+        delete mints[_messageHash];
+
         MessageBus.Message storage message = messages[_messageHash];
         require(
             message.intentHash != bytes32(0),
@@ -435,20 +444,15 @@ contract EIP20CoGateway is GatewayBase {
             storageRoot
         );
 
-        Mint storage mint = mints[_messageHash];
-
         staker_ = message.sender;
         stakerNonce_ = message.nonce;
-        amount_ = mint.amount;
 
         emit RevertStakeIntentConfirmed(
             _messageHash,
             message.sender,
             message.nonce,
-            mint.amount
+            amount_
         );
-
-        delete mints[_messageHash];
     }
 
     /**
@@ -546,10 +550,6 @@ contract EIP20CoGateway is GatewayBase {
         );
 
         MessageBus.Message storage message = messages[_messageHash];
-        MessageBus.MessageStatus outboxMessageStatus =
-            messageBox.outbox[_messageHash];
-
-        redeemAmount_ = redeems[_messageHash].amount;
 
         MessageBus.progressOutboxWithProof(
             messageBox,
@@ -560,50 +560,8 @@ contract EIP20CoGateway is GatewayBase {
             MessageBus.MessageStatus(_messageStatus)
         );
 
-        uint256 bountyAmount = redeems[_messageHash].bounty;
         (redeemer_, redeemAmount_) =
             progressRedeemInternal(_messageHash, message, true, bytes32(0));
-
-        // Return revert penalty to redeemer if message is already progressed
-        // and can't be reverted anymore.
-        tryReturnPenaltyToRedeemer(
-            address(uint160(redeemer_)), // cast to address payable
-            outboxMessageStatus,
-            MessageBus.MessageStatus(_messageStatus),
-            bountyAmount
-        );
-    }
-
-    /**
-     * @notice Return the revert penalty to the redeemer. Only valid for
-     *         a message transition from DeclaredRevocation -> Progressed.
-     *
-     * @dev Should only be called from progressRedeemWithProof. This function
-     *      exists to avoid a stack too deep error.
-     *
-     * @param _redeemer Redeemer address.
-     * @param _outboxMessageStatus Message status before progressing.
-     * @param _inboxMessageStatus Message status after progressing.
-     * @param _bountyAmount Bounty amount to use for calculating penalty.
-     */
-    function tryReturnPenaltyToRedeemer(
-        address payable _redeemer,
-        MessageBus.MessageStatus _outboxMessageStatus,
-        MessageBus.MessageStatus _inboxMessageStatus,
-        uint256 _bountyAmount
-    )
-      private
-    {
-        if (_outboxMessageStatus != MessageBus.MessageStatus.DeclaredRevocation) {
-            return;
-        }
-        if (_inboxMessageStatus != MessageBus.MessageStatus.Progressed) {
-            return;
-        }
-
-        // Penalty charged to redeemer for revert redeem.
-        uint256 penalty = penaltyFromBounty(_bountyAmount);
-        _redeemer.transfer(penalty);
     }
 
     /**
@@ -660,6 +618,10 @@ contract EIP20CoGateway is GatewayBase {
         redeemerNonce_ = message.nonce;
         amount_ = redeems[_messageHash].amount;
 
+
+        // Burn penalty amount. Reentrancy is protected by message bus states.
+        burner.transfer(penalty);
+
         emit RevertRedeemDeclared(
             _messageHash,
             redeemer_,
@@ -670,7 +632,7 @@ contract EIP20CoGateway is GatewayBase {
 
     /**
      * @notice Complete revert redeem by providing the merkle proof.
-     *         It will burn facilitator bounty and redeemer penalty.
+     *         It will burn facilitator bounty.
      *
      * @dev Message bus ensures correct execution sequence of methods and also
      *      provides safety mechanism for any possible re-entrancy attack.
@@ -747,13 +709,9 @@ contract EIP20CoGateway is GatewayBase {
         // Return the redeem amount back.
         EIP20Interface(utilityToken).transfer(message.sender, amount_);
 
-        // Penalty charged to redeemer.
-        uint256 penalty = penaltyFromBounty(bounty);
 
-        uint256 amountToBurn = bounty.add(penalty);
-
-        // Burn bounty and penalty.
-        burner.transfer(amountToBurn);
+        // Burn bounty.
+        burner.transfer(bounty);
 
         emit RedeemReverted(
             _messageHash,
@@ -817,12 +775,27 @@ contract EIP20CoGateway is GatewayBase {
             _rlpParentNodes.length != 0,
             "RLP parent nodes must not be zero."
         );
+        require(
+            UtilityTokenInterface(utilityToken).exists(_beneficiary),
+            "Beneficiary address must exist."
+        );
+
+        /*
+         * Maximum reward possible is _gasPrice * _gasLimit, we check this
+         * upfront in this function to make sure that after minting of the
+         * tokens it is possible to give the reward to the facilitator.
+         */
+        require(
+            _amount > _gasPrice.mul(_gasLimit),
+            "Maximum possible reward must be less than the stake amount."
+        );
+
 
         bytes32 intentHash = hashStakeIntent(
             _amount,
             _beneficiary
         );
-        
+
         MessageBus.Message memory message = MessageBus.Message(
             intentHash,
             _stakerNonce,
@@ -1121,28 +1094,22 @@ contract EIP20CoGateway is GatewayBase {
             _initialGas
         );
 
-        require(
-            rewardAmount_ <= stakeAmount_,
-            "Reward amount must not be greater than the stake amount."
-        );
-
         mintedAmount_ = stakeAmount_.sub(rewardAmount_);
 
         delete mints[_messageHash];
 
-        // Increase token supply after subtracting reward amount.
+        // Increase token supply with mint amount to beneficiary
+        // after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             payableBeneficiary,
             mintedAmount_
         );
 
-        if(rewardAmount_ > 0) {
-            // Reward beneficiary with the reward amount.
-            UtilityTokenInterface(utilityToken).increaseSupply(
-                msg.sender,
-                rewardAmount_
-            );
-        }
+        // Reward facilitator with the reward amount.
+        UtilityTokenInterface(utilityToken).increaseSupply(
+            msg.sender,
+            rewardAmount_
+        );
 
         // Emit MintProgressed event.
         emit MintProgressed(
