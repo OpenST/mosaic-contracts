@@ -22,9 +22,11 @@ const CoGateway = artifacts.require('TestEIP20CoGateway');
 const Token = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 const Utils = require('./../../test_lib/utils');
-const TestData = require('./test_data/confirm_stake_intent.json');
+const StubDataWithNonceOne = require('../../data/stake_progressed_1');
+const StubDataWithNonceTwo = require('../../data/stake_progressed_2');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
+const coGatewayUtils = require('./helpers/co_gateway_utils.js');
 
 const NullAddress = Utils.NULL_ADDRESS;
 const { MessageStatusEnum } = messageBus;
@@ -51,28 +53,27 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
   let blockHeight;
   let rlpParentNodes;
   let storageRoot;
-  let data;
+  let messageHash;
 
   // Function to initialize test data.
   function initializeData(testData) {
-    data = testData;
-
     // Populate the deployment params.
-    valueTokenAddress = data.token;
-    bountyAmount = new BN(data.bountyAmount);
-    gatewayAddress = data.gateway;
+    valueTokenAddress = testData.gateway.constructor.token;
+    bountyAmount = new BN(testData.gateway.constructor.bounty);
+    gatewayAddress = testData.contracts.gateway;
 
     // Populate the confirm stake params.
-    staker = data.staker;
-    stakerNonce = new BN(data.nonce);
-    beneficiary = data.beneficiary;
-    amount = new BN(data.stakeAmount);
-    gasPrice = new BN(data.gasPrice);
-    gasLimit = new BN(data.gasLimit);
-    blockHeight = new BN(data.blockNumber);
-    rlpParentNodes = data.proofData.parentNodes;
-    storageRoot = data.proofData.storageHash;
-    hashLock = data.hashLock;
+    staker = testData.gateway.stake.params.staker;
+    stakerNonce = new BN(testData.gateway.stake.params.nonce);
+    beneficiary = testData.gateway.stake.params.beneficiary;
+    amount = new BN(testData.gateway.stake.params.amount, 16);
+    gasPrice = new BN(testData.gateway.stake.params.gasPrice);
+    gasLimit = new BN(testData.gateway.stake.params.gasLimit, 16);
+    blockHeight = new BN(testData.gateway.stake.return_value.blockNumber);
+    rlpParentNodes = testData.gateway.stake.proof_data.storageProof[0].serializedProof;
+    storageRoot = testData.gateway.stake.proof_data.storageHash;
+    hashLock = testData.gateway.stake.params.hashLock;
+    messageHash = testData.gateway.stake.return_value.returned_value.messageHash_;
   }
 
   // Common assertion code for confirm stake intent.
@@ -91,8 +92,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
 
     assert.strictEqual(
       result,
-      data.messageHash,
-      `Message hash form the contract must match ${data.messageHash}.`,
+      messageHash,
+      `Message hash form the contract must match ${messageHash}.`,
     );
 
     await coGateway.confirmStakeIntent(
@@ -107,7 +108,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       rlpParentNodes,
     );
 
-    const mintData = await coGateway.mints(data.messageHash);
+    const mintData = await coGateway.mints(messageHash);
 
     assert.strictEqual(
       amount.eq(mintData.amount),
@@ -121,13 +122,14 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       `Mints.beneficiary from the contract must match ${beneficiary}.`,
     );
 
-    const messageData = await coGateway.messages(data.messageHash);
+    const messageData = await coGateway.messages(messageHash);
 
+    const intentHash = coGatewayUtils.hashStakeIntent(amount, beneficiary, gatewayAddress);
     assert.strictEqual(
       messageData.intentHash,
-      data.intentHash,
+      intentHash,
       `Message.intentHash from the contract must be equal to ${
-        data.intentHash
+        intentHash
       }.`,
     );
 
@@ -163,21 +165,20 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
   }
 
   beforeEach(async () => {
-    initializeData(TestData[0]);
+    initializeData(StubDataWithNonceOne);
     let sender;
 
     [sender, coreAddress, organizationAddress, burnerAddress] = accounts;
 
     // Deploy mocked utility token.
     utilityToken = await Token.new(
-      data.token,
+      valueTokenAddress,
       '',
       '',
       18,
       organizationAddress,
       { from: sender },
     );
-
 
     // Deploy CoGateway.
     coGateway = await CoGateway.new(
@@ -359,9 +360,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
-  it('should fail to confirm stake intent if UtilityToken.exists() function ' +
-    'returns false', async () => {
-
+  it('should fail to confirm stake intent if UtilityToken.exists() function '
+    + 'returns false', async () => {
     await utilityToken.setExists(false);
 
     await Utils.expectRevert(
@@ -380,7 +380,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
-  it.skip(
+  it(
     'should fail to confirm new stake intent if status of previous '
     + 'confirmed stake intent is declared',
     async () => {
@@ -396,7 +396,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
         rlpParentNodes,
       );
 
-      initializeData(TestData[1]);
+      initializeData(StubDataWithNonceTwo);
 
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
@@ -420,6 +420,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
   it('should pass with valid params.', async () => {
     await assertConfirmStakeIntent();
   });
+
 
   it('should emit `StakeIntentConfirmed` event.', async () => {
     const tx = await coGateway.confirmStakeIntent(
@@ -445,8 +446,8 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
 
     assert.strictEqual(
       eventData._messageHash,
-      data.messageHash,
-      `Message hash from event must be equal to ${data.messageHash}.`,
+      messageHash,
+      `Message hash from event must be equal to ${messageHash}.`,
     );
 
     assert.strictEqual(
@@ -486,7 +487,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     );
   });
 
-  it.skip(
+  it(
     'should confirm new stake intent if status of previous '
     + 'confirmed stake intent is revoked',
     async () => {
@@ -503,11 +504,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       );
 
       await coGateway.setInboxStatus(
-        data.messageHash,
+        messageHash,
         MessageStatusEnum.Revoked,
       );
 
-      initializeData(TestData[1]);
+      initializeData(StubDataWithNonceTwo);
 
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
@@ -515,7 +516,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     },
   );
 
-  it.skip(
+  it(
     'should confirm new stake intent if status of previous '
     + 'confirmed stake intent is progressed',
     async () => {
@@ -532,11 +533,11 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       );
 
       await coGateway.setInboxStatus(
-        data.messageHash,
+        messageHash,
         MessageStatusEnum.Progressed,
       );
 
-      initializeData(TestData[1]);
+      initializeData(StubDataWithNonceTwo);
 
       await coGateway.setStorageRoot(blockHeight, storageRoot);
 
