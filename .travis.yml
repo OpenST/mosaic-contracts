@@ -5,6 +5,9 @@ branches:
   only:
   - master
   - develop
+  - /^feature\/.*/
+  - /^release-.*/
+  - /^hotfix-.*/
 notifications:
   email:
     recipients:
@@ -20,8 +23,12 @@ before_install:
 install:
   - npm install
 before_script:
-  - nohup ./tools/runTestRpc.sh </dev/null >/dev/null 2>&1 &
+  - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
+  - npm run compile
 script:
-  - truffle test
+  - npm run test
+  - npm run test:deployment_tool
+  - npm run test:integration
+  - npm run build-package
 after_script:
-  - kill $(ps aux | grep 'testrpc' | awk '{print $2}')
+  - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')

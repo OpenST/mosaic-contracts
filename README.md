@@ -1,68 +1,123 @@
-# [OpenST protocol](https://simpletoken.org) - staking value for utility
+# 💠 Mosaic Contracts
 
-[![Gitter: JOIN CHAT](https://img.shields.io/badge/gitter-JOIN%20CHAT-brightgreen.svg)](https://gitter.im/OpenSTFoundation/SimpleToken)
+![Build master](https://img.shields.io/travis/OpenST/mosaic-contracts/master.svg?label=build%20master&style=flat)
+![Build develop](https://img.shields.io/travis/OpenST/mosaic-contracts/develop.svg?label=build%20develop&style=flat)
+![npm version](https://img.shields.io/npm/v/@openst/mosaic-contracts.svg?style=flat)
+[![Discuss on Discourse](https://img.shields.io/discourse/https/discuss.openst.org/topics.svg?style=flat)][discourse]
+[![Chat on Gitter](https://img.shields.io/gitter/room/OpenSTFoundation/SimpleToken.svg?style=flat)][gitter]
 
-While OpenST 0.9 is available as-is for anyone to use, we caution that this is early stage software and under heavy ongoing development and improvement. Please report bugs and suggested improvements.
+Mosaic is a parallelization schema for decentralized applications.
+It composes heterogeneous blockchain systems into one another.
+Decentralized applications can use Mosaic to compute over a composed network of multiple blockchain systems in parallel.
 
-OpenST v0.9.1 is the first release deployed on Ethereum mainnet combined with the
-activation of Simple Token to power the OpenST platform.  The OpenST platform
-allows Ethereum smart contracts to runs faster and cheaper while leveraging
-the security properties of Ethereum's Proof-of-Work.  In this release we implement
-the first corner stone of the protocol: the ability to stake value on Ethereum
-mainnet and mint a new representation of that value on a utility chain,
-effectively increasing the computational throughput of Ethereum smart contracts
-by allowing parallel execution across chains.
+Mosaic enables building scalable blockchain token economies through the bidirectional transposition of ERC20 tokens on one blockchain, the *origin* chain, and a utility token representation on another blockchain, the *auxiliary* chain.
 
-OpenST smart contracts have been restructured to store value separately from
-the logic that implements the protocol.  v0.9.1 is not yet protocol complete
-as the validators are whitelisted and not yet open with stake put forward on
-Ethereum mainnet.  However, by splitting the protocol implementation into
-these two logically separate problems, we can already start working with
-member companies and developers to fine-tune the APIs and the developer
-experience to build mainstream applications on Ethereum.
+The protocol defines a set of actions that together perform atomic token transfers across two blockchains using gateway contracts. A gateway for a given EIP20 token is comprised of a `EIP20Gateway` contract on origin, a corresponding `EIP20CoGateway` contract on auxiliary, and and an ERC20 utility token contract on auxiliary that mints and burns utility tokens to atomically mirror tokens staked and unstaked on the origin chain.
 
-```
-  Ethereum mainnet (value)   |  OpenST platform (utility)
-  ---------------------------------------------------------------------
-      Core - - - - - - - - - - - (Core)
-      /                      |      \
-     /                       |       \
-  Registrar                  |  Registrar
-    |                        |        |
-  OpenSTValue                |  OpenSTUtility
-    \_ SimpleStake           |    \_ UtilityTokenAbstract
-                             |         \_ SimpleTokenPrime (base token)
-                             |         \_ BrandedToken
+Atomicity is achieved using a 2-phase message passing architecture between the chains. Messages are declared on the source chain, and confirmed on the target chain with Patricia Merkle proofs once the source chain is finalized. Once messages are confirmed on the target chain, they can efficiently progressed with a hashlock.
+Messages can also be reverted if they are not yet completed on the target chain.
+
+You can read [the draft of the mosaic whitepaper][mosaic whitepaper] or [the original OpenST whitepaper][openst whitepaper].
+
+## Instructions
+
+### For JS Consumers
+
+#### Installation
+
+```bash
+npm install @openst/mosaic-contracts
 ```
 
-Watch demo video of milestone 1 (v0.9.0 - will take you to [https://www.youtube.com/watch?v=-SxJ8c1Xh_A](https://www.youtube.com/watch?v=-SxJ8c1Xh_A))
+#### Usage
 
-[![Milestone 1 demo video](https://img.youtube.com/vi/-SxJ8c1Xh_A/0.jpg)](https://www.youtube.com/watch?v=-SxJ8c1Xh_A)
+```js
+// Load the contracts' meta-data from the package:
+const {
+  Anchor,
+  CoGatewayUtilityTokenInterface,
+  EIP20CoGateway,
+  EIP20Gateway,
+  EIP20Interface,
+  EIP20Token,
+  GatewayLib,
+  MerklePatriciaProof,
+  MessageBus,
+  Organization,
+  OrganizationInterface,
+  Organized,
+  OSTPrime,
+  StateRootInterface,
+  UtilityToken,
+  UtilityTokenInterface,
+} = require('@openst/mosaic-contracts');
 
-## About Simple Token
+// Access the ABIs and BINs directly on the contracts. For example:
+const anchorAbi = Anchor.abi;
+const anchorBinary = Anchor.bin;
+```
 
-Simple Token [“ST”] is an EIP20 token and OpenST is a protocol to support token economies in mainstream consumer applications. The business and technical challenge we set out to solve is to enable mainstream consumer applications to benefit from deploying their own branded crypto-backed token economies, in a scalable and cryptographically auditable manner, without needing to mint and maintain their own publicly-tradeable EIP20 tokens.
+### For Direct Users
 
-The OpenST protocol enables the creation of utility tokens on a utility blockchain while the value of those tokens is backed by staked crypto-assets on a value blockchain.
+This section is only required if you want to *set up a **new** mosaic chain.*
 
-The OpenST Protocol establishes a bridge between two differently purposed blockchains.  A value blockchain, which is required in order to hold cryptographically secured valuable assets; and a utility blockchain, which has utility tokens in favor of which the assets are held on the value blockchain.
+#### Installation
 
-## OpenST Protocol
+```bash
+git clone git@github.com:OpenST/mosaic-contracts.git
+cd mosaic-contracts
+npm install
+npm run compile-all
+```
 
-To mint utility tokens on a utility chain out of value staked on a value chain, or to redeem value on the value chain by redeeming ownership of utility tokens on the utility chain, the protocol needs to atomically act on two blockchains.  OpenST Protocol requires a two-phased commit for either action.
+#### Usage
 
-`openst-protocol` provides the smart contracts that implement the OpenST protocol which enables staking and redeeming utility tokens. For more details see the technical white paper on [simpletoken.org/documents](https://simpletoken.org/documents).
+There is a deployment tool available for deployment and set-up:
+```bash
+node ./tools/blue_deployment/index.js
+```
 
-![](docs/protocol.png)
+> ⚠️ Note that this feature is still very experimental ⚠️
 
-## Roadmap
+## Related Work
 
-Milestone 1 : OpenST Platform v0.9 (7 November 2017)
+[mosaic.js] uses this package to provide a JavaScript abstraction layer of the mosaic contracts.
+You can use [mosaic.js] directly to deploy the contracts and interact with them.
 
-Milestone 2 : OpenST Platform v1.0 (Q1 2018)
+## Contributing
 
-Milestone 3 : Public Launch of Initial Member Companies (Q2 2018)
+### Set-up
 
-Milestone 4 : 10 Founding Member Companies (Q3-Q4 2018)
+```bash
+git clone git@github.com:OpenST/mosaic-contracts.git
+cd mosaic-contracts
+npm install
+npm run compile-all
+npm run ganache
+npm run test
 
-Milestone 5 : Consolidation of OpenST as open platform (2019)
+# Requires docker, stop ganache first:
+npm run test:integration
+```
+
+### Guidelines
+
+There are multiple ways to contribute to this project. However, before contributing, please first review the [Code of Conduct].
+
+We track our [issues] on GitHub.
+
+To contribute code, please ensure that your submissions adhere to the [Style Guide]; please also be aware that this project is under active development and we have not yet established firm contribution guidelines or acceptance criteria.
+
+### Community
+
+* [Forum][discourse]
+* [Gitter]
+
+[code of conduct]: https://github.com/OpenSTFoundation/mosaic-contracts/blob/develop/CODE_OF_CONDUCT.md
+[discourse]: https://discuss.openst.org/
+[gitter]: https://gitter.im/OpenSTFoundation/SimpleToken
+[issues]: https://github.com/OpenST/mosaic-contracts/issues
+[mosaic.js]: https://github.com/OpenST/mosaic.js
+[mosaic whitepaper]: https://github.com/OpenST/mosaic-contracts/blob/develop/docs/mosaicv0.pdf
+[openst whitepaper]: https://drive.google.com/file/d/0Bwgf8QuAEOb7Z2xIeUlLd21DSjQ/view
+[style guide]: https://github.com/OpenST/mosaic-contracts/blob/develop/SOLIDITY_STYLE_GUIDE.md
