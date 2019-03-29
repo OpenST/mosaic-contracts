@@ -197,11 +197,11 @@ contract('OSTPrime.wrap()', (accounts) => {
     const event = EventDecoder.getEvents(tx, ostPrime);
 
     assert.isDefined(
-      event.TokenWrapped,
-      'Event `TokenWrapped` must be emitted.',
+      event.OSTWrapped,
+      'Event `OSTWrapped` must be emitted.',
     );
 
-    const eventData = event.TokenWrapped;
+    const eventData = event.OSTWrapped;
 
     assert.strictEqual(
       eventData._account,

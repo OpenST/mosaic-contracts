@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 /*
  * Simple Token Prime [OST'] is equivalently staked for with Simple Token
- * on the value chain and is the base token that pays for gas on the auxiliary
+ * on the value chain and is the base coin that pays for gas on the auxiliary
  * chain. The gasprice on auxiliary chains is set in [OST'-Wei/gas] (like
  * Ether pays for gas on Ethereum mainnet) when sending a transaction on
  * the auxiliary chain.
@@ -40,7 +40,7 @@ import "../lib/SafeMath.sol";
  *  @notice A freely tradable equivalent representation of Simple Token [OST]
  *          on Ethereum mainnet on the auxiliary chain.
  *
- *  @dev OSTPrime functions as the base token to pay for gas consumption on the
+ *  @dev OSTPrime functions as the base coin to pay for gas consumption on the
  *       utility chain.
  */
 contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
@@ -49,20 +49,20 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
     using SafeMath for uint256;
 
-    /** Emitted whenever OST Prime token is converted to OST Prime base token. */
-    event TokenUnwrapped(
+    /** Emitted whenever OST is converted to coin. */
+    event OSTUnwrapped(
         address indexed _account,
         uint256 _amount
     );
 
-    /** Emitted whenever OST Prime base token is converted to OST Prime token. */
-    event TokenWrapped(
+    /** Emitted whenever coin is converted to OST. */
+    event OSTWrapped(
         address indexed _account,
         uint256 _amount
     );
 
     /**
-     * Set when OST Prime has received TOKENS_MAX tokens;
+     * Set when OST Prime has received TOKENS_MAX coins;
      * when uninitialized wrap and unwrap is not allowed.
      */
     bool public initialized;
@@ -115,10 +115,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      * @notice Public function initialize.
      *
      * @dev It must verify that the genesis exactly specified TOKENS_MAX
-     *      so that all base tokens are held by OSTPrime.
-     *      On setup of the auxiliary chain the base tokens need to be
-     *      transferred in full to OSTPrime for the base tokens to be
-     *      minted as OST Prime.
+     *      so that all coins are held by this contract.
+     *      On setup of the auxiliary chain the coins need to be
+     *      transferred in full to this contract for the token to be
+     *      minted as coin.
      *
      * @return success_ `true` if initialize was successful.
      */    
@@ -146,9 +146,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
     /* External functions. */
 
     /**
-     * @notice Convert the OST Prime token to OST Prime base token.
+     * @notice Convert the OST to coin.
      *
-     * @param _amount Amount of OST Prime token to convert to base token.
+     * @param _amount Amount of OST to convert to coin.
      *
      * @return success_ `true` if unwrap was successful.
      */
@@ -170,7 +170,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         );
 
         /*
-         * The OST Prime base token balance of contract should always be
+         * The OST Prime coin balance of contract should always be
          * greater than the amount if the above conditions are satisfied
          * received payable amount.
          */
@@ -180,13 +180,13 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
         msg.sender.transfer(_amount);
 
-        emit TokenUnwrapped(msg.sender, _amount);
+        emit OSTUnwrapped(msg.sender, _amount);
 
         success_ = true;
     }
 
     /**
-     * @notice Convert OST Prime base token to OST Prime token.
+     * @notice Convert coin to OST.
      *
      * @return success_ `true` if claim was successfully progressed.
      */
@@ -205,28 +205,28 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         );
 
         /*
-         * The OST Prime balance of contract should always be greater than the
+         * The OST balance of contract should always be greater than the
          * received payable amount.
          */
         assert(balances[address(this)] >= amount);
 
         transferBalance(address(this), account, amount);
 
-        emit TokenWrapped(account, amount);
+        emit OSTWrapped(account, amount);
 
         success_ = true;
     }
 
     /**
      * @notice This method performs following operations:
-     *          - Adds number of OST Prime EIP20 tokens to this contract address.
+     *          - Adds number of OST EIP20 tokens to this contract address.
      *          - Increases the total token supply.
-     *          - Transfers base token to the beneficiary address.
+     *          - Transfers coin to the beneficiary address.
      *          It can be called by CoGateway address and when contract is
      *          initialized.
      *
-     * @param _account Account address for which the OST Prime balance will be
-     *                 increased. This is payable so that base token can be
+     * @param _account Account address for which the coin balance will be
+     *                 increased. This is payable so that coin can be
      *                 transferred to the account.
      * @param _amount Amount of tokens.
      *
@@ -247,7 +247,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
     }
 
     /**
-     * @notice Decreases the OST Prime token balance from the msg.sender
+     * @notice Decreases the OST balance from the msg.sender
      *         address and decreases the total token supply count. Can be
      *         called only when contract is initialized and only by CoGateway
      *         address.
