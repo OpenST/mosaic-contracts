@@ -117,7 +117,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      * @dev It must verify that the genesis exactly specified TOKENS_MAX
      *      so that all coins are held by this contract.
      *      On setup of the auxiliary chain the coins need to be
-     *      transferred in full to this contract for the token to be
+     *      transferred in full to this contract for ost to be
      *      minted as coin.
      *
      * @return success_ `true` if initialize was successful.
@@ -146,7 +146,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
     /* External functions. */
 
     /**
-     * @notice Convert the OST to coin.
+     * @notice Unwrap converts OST to coin.
      *
      * @param _amount Amount of OST to convert to coin.
      *
@@ -170,9 +170,8 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         );
 
         /*
-         * The OST Prime coin balance of contract should always be
-         * greater than the amount if the above conditions are satisfied
-         * received payable amount.
+         * This contract's coin balance must always be greater than unwrap
+         * amount.
          */
         assert(address(this).balance >= _amount);
 
@@ -186,7 +185,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
     }
 
     /**
-     * @notice Convert coin to OST.
+     * @notice Wrap converts coin to OST.
      *
      * @return success_ `true` if claim was successfully progressed.
      */
