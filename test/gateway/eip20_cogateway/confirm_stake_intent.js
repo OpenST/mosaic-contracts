@@ -63,17 +63,20 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     gatewayAddress = testData.contracts.gateway;
 
     // Populate the confirm stake params.
-    staker = testData.gateway.stake.params.staker;
-    stakerNonce = new BN(testData.gateway.stake.params.nonce);
-    beneficiary = testData.gateway.stake.params.beneficiary;
-    amount = new BN(testData.gateway.stake.params.amount, 16);
-    gasPrice = new BN(testData.gateway.stake.params.gasPrice);
-    gasLimit = new BN(testData.gateway.stake.params.gasLimit, 16);
-    blockHeight = new BN(testData.gateway.stake.return_value.blockNumber);
-    rlpParentNodes = testData.gateway.stake.proof_data.storageProof[0].serializedProof;
-    storageRoot = testData.gateway.stake.proof_data.storageHash;
-    hashLock = testData.gateway.stake.params.hashLock;
-    messageHash = testData.gateway.stake.return_value.returned_value.messageHash_;
+    const stake = testData.gateway.stake;
+    const stakeParams = stake.params;
+
+    staker = stakeParams.staker;
+    stakerNonce = new BN(stakeParams.nonce);
+    beneficiary = stakeParams.beneficiary;
+    amount = new BN(stakeParams.amount, 16);
+    gasPrice = new BN(stakeParams.gasPrice);
+    gasLimit = new BN(stakeParams.gasLimit, 16);
+    blockHeight = new BN(stake.return_value.blockNumber);
+    rlpParentNodes = stake.proof_data.storageProof[0].serializedProof;
+    storageRoot = stake.proof_data.storageHash;
+    hashLock = stakeParams.hashLock;
+    messageHash = stake.return_value.returned_value.messageHash_;
   }
 
   // Common assertion code for confirm stake intent.
@@ -93,7 +96,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     assert.strictEqual(
       result,
       messageHash,
-      `Message hash form the contract must match ${messageHash}.`,
+      'Message hash from the contract must match.',
     );
 
     await coGateway.confirmStakeIntent(
@@ -128,9 +131,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     assert.strictEqual(
       messageData.intentHash,
       intentHash,
-      `Message.intentHash from the contract must be equal to ${
-        intentHash
-      }.`,
+      'Message.intentHash from the contract must match.',
     );
 
     assert.strictEqual(
@@ -447,7 +448,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
     assert.strictEqual(
       eventData._messageHash,
       messageHash,
-      `Message hash from event must be equal to ${messageHash}.`,
+      'Message hash from event must be match.',
     );
 
     assert.strictEqual(
