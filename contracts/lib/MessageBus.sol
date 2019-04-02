@@ -242,8 +242,8 @@ library MessageBus {
      *                        messageBox inbox.
      * @param _messageBoxOffset Position of the messageBox.
      * @param _storageRoot Storage root for proof.
-     * @param _messageStatus Message status of message hash in the inbox of
-     *                       source chain.
+     * @param _messageStatus Message status of message hash in the inbox on
+     *                       target chain.
      *
      * @return messageHash_ Message hash.
      */

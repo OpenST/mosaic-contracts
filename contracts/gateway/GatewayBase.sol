@@ -70,7 +70,7 @@ contract GatewayBase is Organized {
     uint8 constant MESSAGE_BOX_OFFSET = 7;
 
     /**
-     * Penalty in bounty amount percentage charged to staker on revert stake.
+     * Penalty in bounty amount percentage charged to message sender on revert message.
      */
     uint8 constant REVOCATION_PENALTY = 150;
 
