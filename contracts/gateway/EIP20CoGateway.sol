@@ -729,7 +729,7 @@ contract EIP20CoGateway is GatewayBase {
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted. This is payable so that it
-     *                     provides flexibility of transferring coin to account
+     *                     provides flexibility of transferring base coin to account
      *                     on minting.
      * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
@@ -850,7 +850,7 @@ contract EIP20CoGateway is GatewayBase {
      * @dev In order to redeem the redeemer needs to approve CoGateway contract
      *      for redeem amount. Redeem amount is transferred from redeemer
      *      address to CoGateway contract.
-     *      This is a payable function. The bounty is transferred in coin.
+     *      This is a payable function. The bounty is transferred in base coin.
      *      Redeemer is always msg.sender.
      *
      * @param _amount Redeem amount that will be transferred from redeemer

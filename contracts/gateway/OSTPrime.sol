@@ -49,20 +49,20 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
     using SafeMath for uint256;
 
-    /** Emitted whenever OST is converted to coin. */
-    event OSTUnwrapped(
+    /** Emitted whenever the EIP20 OST is converted to base coin OST */
+    event TokenUnwrapped(
         address indexed _account,
         uint256 _amount
     );
 
-    /** Emitted whenever coin is converted to OST. */
-    event OSTWrapped(
+    /** Emitted whenever the base coin OST is converted to EIP20 OST */
+    event TokenWrapped(
         address indexed _account,
         uint256 _amount
     );
 
     /**
-     * Set when OST Prime has received TOKENS_MAX coins;
+     * Set when OST Prime has received TOKENS_MAX base coins;
      * when uninitialized wrap and unwrap is not allowed.
      */
     bool public initialized;
@@ -115,10 +115,10 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      * @notice Public function initialize.
      *
      * @dev It must verify that the genesis exactly specified TOKENS_MAX
-     *      so that all coins are held by this contract.
-     *      On setup of the auxiliary chain the coins need to be
+     *      so that all base coins are held by this contract.
+     *      On setup of the auxiliary chain the base coins need to be
      *      transferred in full to this contract for ost to be
-     *      minted as coin.
+     *      minted as base coin.
      *
      * @return success_ `true` if initialize was successful.
      */    
@@ -146,9 +146,9 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
     /* External functions. */
 
     /**
-     * @notice Unwrap converts OST to coin.
+     * @notice Unwrap converts EIP20 OST to base coin.
      *
-     * @param _amount Amount of OST to convert to coin.
+     * @param _amount Amount of EIP20 OST to convert to base coin.
      *
      * @return success_ `true` if unwrap was successful.
      */
@@ -170,7 +170,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         );
 
         /*
-         * This contract's coin balance must always be greater than unwrap
+         * This contract's base coin balance must always be greater than unwrap
          * amount.
          */
         assert(address(this).balance >= _amount);
@@ -179,13 +179,13 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
         msg.sender.transfer(_amount);
 
-        emit OSTUnwrapped(msg.sender, _amount);
+        emit TokenUnwrapped(msg.sender, _amount);
 
         success_ = true;
     }
 
     /**
-     * @notice Wrap converts coin to OST.
+     * @notice Wrap converts base coin to EIP20 OST.
      *
      * @return success_ `true` if claim was successfully progressed.
      */
@@ -204,14 +204,14 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
         );
 
         /*
-         * The OST balance of contract should always be greater than the
+         * The EIP20 OST balance of contract should always be greater than the
          * received payable amount.
          */
         assert(balances[address(this)] >= amount);
 
         transferBalance(address(this), account, amount);
 
-        emit OSTWrapped(account, amount);
+        emit TokenWrapped(account, amount);
 
         success_ = true;
     }
@@ -220,12 +220,12 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      * @notice This method performs following operations:
      *          - Adds number of OST EIP20 tokens to this contract address.
      *          - Increases the total token supply.
-     *          - Transfers coin to the beneficiary address.
+     *          - Transfers base coin to the beneficiary address.
      *          It can be called by CoGateway address and when contract is
      *          initialized.
      *
-     * @param _account Account address for which the coin balance will be
-     *                 increased. This is payable so that coin can be
+     * @param _account Account address for which the base coin balance will be
+     *                 increased. This is payable so that base coin can be
      *                 transferred to the account.
      * @param _amount Amount of tokens.
      *
