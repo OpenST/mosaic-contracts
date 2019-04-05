@@ -242,7 +242,7 @@ library MessageBus {
      *                        messageBox inbox.
      * @param _messageBoxOffset Position of the messageBox.
      * @param _storageRoot Storage root for proof.
-     * @param _messageStatus Message status of message hash in the inbox on
+     * @param _inboxMessageStatus Message status of message hash in the inbox on
      *                       target chain.
      *
      * @return messageHash_ Message hash.
@@ -253,7 +253,7 @@ library MessageBus {
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _inboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
@@ -267,8 +267,8 @@ library MessageBus {
              * `Progressed` when outbox message status at source is `Declared`.
              */
             require(
-                _messageStatus == MessageStatus.Declared ||
-                _messageStatus == MessageStatus.Progressed,
+                _inboxMessageStatus == MessageStatus.Declared ||
+                _inboxMessageStatus == MessageStatus.Progressed,
                 "Message on target must be Declared or Progressed."
             );
 
@@ -279,7 +279,7 @@ library MessageBus {
              * when outbox message status at source is `DeclaredRevocation`.
              */
             require(
-                _messageStatus == MessageStatus.Progressed,
+                _inboxMessageStatus == MessageStatus.Progressed,
                 "Message on target must be Progressed."
             );
 
@@ -298,7 +298,7 @@ library MessageBus {
         // Verify the merkle proof.
         require(
             MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_inboxMessageStatus)),
                 storagePath,
                 _rlpParentNodes,
                 _storageRoot),
@@ -356,7 +356,7 @@ library MessageBus {
      *                        messageBox outbox.
      * @param _messageBoxOffset Position of the messageBox.
      * @param _storageRoot Storage root for proof.
-     * @param _messageStatus Message status of message hash in the outbox of
+     * @param _outboxMessageStatus Message status of message hash in the outbox of
      *                       source chain.
      *
      * @return messageHash_ Message hash.
@@ -367,15 +367,15 @@ library MessageBus {
         bytes calldata _rlpParentNodes,
         uint8 _messageBoxOffset,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _outboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
     {
         // Outbox message status must be either `Declared` or `Progressed`.
         require(
-            _messageStatus == MessageStatus.Declared ||
-            _messageStatus == MessageStatus.Progressed,
+            _outboxMessageStatus == MessageStatus.Declared ||
+            _outboxMessageStatus == MessageStatus.Progressed,
             "Message on source must be Declared or Progressed."
         );
 
@@ -397,7 +397,7 @@ library MessageBus {
         // Perform the merkle proof.
         require(
             MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_outboxMessageStatus)),
                 path,
                 _rlpParentNodes,
                 _storageRoot
@@ -507,7 +507,7 @@ library MessageBus {
      * @param _rlpParentNodes RLP encoded parent node data to prove in
      *                        messageBox inbox.
      * @param _storageRoot Storage root for proof.
-     * @param _messageStatus Message status of message hash in the inbox of
+     * @param _inboxMessageStatus Message status of message hash in the inbox of
      *                       source chain.
      *
      * @return messageHash_ Message hash.
@@ -518,13 +518,13 @@ library MessageBus {
         uint8 _messageBoxOffset,
         bytes calldata _rlpParentNodes,
         bytes32 _storageRoot,
-        MessageStatus _messageStatus
+        MessageStatus _inboxMessageStatus
     )
         external
         returns (bytes32 messageHash_)
     {
         require(
-            _messageStatus == MessageStatus.Revoked,
+            _inboxMessageStatus == MessageStatus.Revoked,
             "Message on target status must be Revoked."
         );
 
@@ -547,7 +547,7 @@ library MessageBus {
         // Perform the merkle proof.
         require(
             MerklePatriciaProof.verify(
-                keccak256(abi.encodePacked(_messageStatus)),
+                keccak256(abi.encodePacked(_inboxMessageStatus)),
                 path,
                 _rlpParentNodes,
                 _storageRoot
