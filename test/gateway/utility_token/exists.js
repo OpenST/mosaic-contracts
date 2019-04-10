@@ -34,10 +34,10 @@ contract('UtilityToken.exists()', (accounts) => {
   let utilityToken;
 
   beforeEach(async () => {
-    let brandedToken = accounts[4];
+    let valueToken = accounts[4];
     let organization = await MockOrganization.new(accounts[2], accounts[3]);
     utilityToken = await UtilityToken.new(
-      brandedToken,
+      valueToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,

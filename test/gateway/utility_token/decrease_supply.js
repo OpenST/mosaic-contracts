@@ -33,18 +33,18 @@ const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.decreaseSupply()', (accounts) => {
-  let brandedToken;
+  let valueToken;
   let organization;
   let utilityToken;
   let coGatewayAddress;
   let amount;
 
   beforeEach(async () => {
-    brandedToken = accounts[4];
+    valueToken = accounts[4];
     organization = accounts[0];
     amount = new BN(1000);
     utilityToken = await UtilityToken.new(
-      brandedToken,
+      valueToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,

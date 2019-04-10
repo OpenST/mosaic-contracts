@@ -43,8 +43,8 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
 
     /* Storage */
 
-    /** Address of the EIP20 token (branded token) in origin chain. */
-    address public token;
+    /** Address of the EIP20 token (value token) in origin chain. */
+    address public valueToken;
 
     /** Address of CoGateway contract. */
     address public coGateway;
@@ -69,14 +69,14 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /**
      * @notice Contract constructor.
      *
-     * @param _token Address of branded token.
-     * @param _symbol Symbol of token.
-     * @param _name Name of token.
-     * @param _decimals Decimal of token.
+     * @param _valueToken Address of value token.
+     * @param _symbol Symbol of value token.
+     * @param _name Name of value token.
+     * @param _decimals Decimal of value token.
      * @param _organization Address of a contract that manages organization.
      */
     constructor(
-        address _token,
+        address _valueToken,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
@@ -87,11 +87,11 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         EIP20Token(_symbol, _name, _decimals)
     {
         require(
-            _token != address(0),
-            "Token address should not be zero."
+            address(_valueToken) != address(0),
+            "Value token address should not be zero."
         );
 
-        token = _token;
+        valueToken = _valueToken;
     }
 
 
@@ -188,6 +188,20 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         exists_ = true;
     }
 
+    /**
+     * @notice Returns the value of valueToken.
+     *
+     * @dev This function supports previous versions of this contract's ABI
+     *      that expect a public function, token, that returns the address
+     *      of the value token.
+     */
+    function token()
+        external
+        view
+        returns (address valueToken_)
+    {
+        return address(valueToken);
+    }
 
     /* Internal functions. */
 

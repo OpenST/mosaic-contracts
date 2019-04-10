@@ -33,7 +33,7 @@ const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.setCoGateway() ', (accounts) => {
-  let brandedToken;
+  let valueToken;
   let organization;
   let owner;
   let worker;
@@ -43,11 +43,11 @@ contract('UtilityToken.setCoGateway() ', (accounts) => {
   beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
-    brandedToken = accounts[4];
+    valueToken = accounts[4];
     organization = await MockOrganization.new(owner, worker);
 
     utilityToken = await UtilityToken.new(
-      brandedToken,
+      valueToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,

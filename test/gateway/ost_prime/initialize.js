@@ -30,14 +30,14 @@ contract('OSTPrime.initialize()', (accounts) => {
   const DECIMAL_FACTOR = DECIMAL.pow(POW);
   const TOKENS_MAX = new BN(800000000).mul(DECIMAL_FACTOR);
 
-  let brandedTokenAddress;
+  let valueTokenAddress;
   let ostPrime;
   let organization;
 
   beforeEach(async () => {
-    brandedTokenAddress = accounts[2];
+    valueTokenAddress = accounts[2];
     organization = accounts[0];
-    ostPrime = await OSTPrime.new(brandedTokenAddress, organization);
+    ostPrime = await OSTPrime.new(valueTokenAddress, organization);
   });
 
   it('The balance of OST prime contract must be zero', async () => {
@@ -62,7 +62,7 @@ contract('OSTPrime.initialize()', (accounts) => {
 
       await Utils.expectRevert(
         result,
-        'Payable amount must be equal to total supply of token.',
+        'Payable amount must be equal to total supply of value token.',
       );
     },
   );
