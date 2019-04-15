@@ -44,7 +44,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
     /* Storage */
 
     /** Address of the EIP20 token (branded token) in origin chain. */
-    EIP20Interface public token;
+    address public token;
 
     /** Address of CoGateway contract. */
     address public coGateway;
@@ -76,7 +76,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
      * @param _organization Address of a contract that manages organization.
      */
     constructor(
-        EIP20Interface _token,
+        address _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
@@ -87,7 +87,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         EIP20Token(_symbol, _name, _decimals)
     {
         require(
-            address(_token) != address(0),
+            _token != address(0),
             "Token address should not be zero."
         );
 

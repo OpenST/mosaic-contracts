@@ -42,7 +42,7 @@ contract TestUtilityToken is UtilityToken {
      * @param _organization Address of an organization contract.
      */
     constructor(
-        EIP20Interface _token,
+        address _token,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
