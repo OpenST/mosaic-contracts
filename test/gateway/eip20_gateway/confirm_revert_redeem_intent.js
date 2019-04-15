@@ -26,7 +26,7 @@ const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const cogatewayUtils = require('../../../test/gateway/eip20_cogateway/helpers/co_gateway_utils');
-const StubData = require('../../data/redeem_revoked_1.json');
+const StubData = require('../../data/redeem_revoked_0.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
 

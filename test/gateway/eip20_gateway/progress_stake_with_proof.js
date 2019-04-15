@@ -32,7 +32,7 @@ const GatewayUtils = require('./helpers/gateway_utils');
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
 
-const proofData = require('../../../test/data/stake_progressed_1.json');
+const proofData = require('../../../test/data/stake_progressed_0.json');
 
 const { MessageStatusEnum } = messageBus;
 

@@ -234,7 +234,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
     await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
     await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-    nonce = new BN(2);
+    nonce = new BN(1);
     await prepareData();
     errorMessage = 'Previous process is not completed';
     await stake(utils.ResultType.FAIL);
@@ -259,7 +259,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
     await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
     await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-    nonce = new BN(2);
+    nonce = new BN(1);
     await prepareData();
     errorMessage = 'Previous process is not completed';
     await stake(utils.ResultType.FAIL);
