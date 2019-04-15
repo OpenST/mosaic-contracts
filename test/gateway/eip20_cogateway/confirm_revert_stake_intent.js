@@ -25,7 +25,7 @@ const Utils = require('./../../test_lib/utils');
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
-const StubData = require('../../data/stake_revoked_1.json');
+const StubData = require('../../data/stake_revoked_0.json');
 
 const { MessageStatusEnum } = messageBus;
 

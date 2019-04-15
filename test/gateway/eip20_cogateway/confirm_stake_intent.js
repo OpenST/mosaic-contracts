@@ -22,8 +22,8 @@ const CoGateway = artifacts.require('TestEIP20CoGateway');
 const Token = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 const Utils = require('./../../test_lib/utils');
-const StubDataWithNonceOne = require('../../data/stake_progressed_1');
-const StubDataWithNonceTwo = require('../../data/stake_progressed_2');
+const StubDataWithNonceOne = require('../../data/stake_progressed_0');
+const StubDataWithNonceTwo = require('../../data/stake_progressed_1');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const coGatewayUtils = require('./helpers/co_gateway_utils.js');
@@ -272,25 +272,6 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
         rlpParentNodes,
       ),
       'RLP parent nodes must not be zero.',
-    );
-  });
-
-  it('should fail when staker nonce is already consumed.', async () => {
-    stakerNonce = new BN(0);
-
-    await Utils.expectRevert(
-      coGateway.confirmStakeIntent(
-        staker,
-        stakerNonce,
-        beneficiary,
-        amount,
-        gasPrice,
-        gasLimit,
-        hashLock,
-        blockHeight,
-        rlpParentNodes,
-      ),
-      'Invalid nonce.',
     );
   });
 

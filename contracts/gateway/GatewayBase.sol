@@ -706,7 +706,7 @@ contract GatewayBase is Organized {
         returns(uint256)
     {
         if (_messageHash == bytes32(0)) {
-            return 1;
+            return 0;
         }
 
         MessageBus.Message storage message =

@@ -29,8 +29,8 @@ const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 const GatewayUtils = require('./helpers/gateway_utils');
 
-const revokedProofData = require('../../../test/data/stake_revoked_1.json');
-const progressedProofData = require('../../../test/data/stake_progressed_1.json');
+const revokedProofData = require('../../../test/data/stake_revoked_0.json');
+const progressedProofData = require('../../../test/data/stake_progressed_0.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;

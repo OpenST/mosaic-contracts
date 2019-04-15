@@ -28,7 +28,7 @@ const MockToken = artifacts.require('MockToken');
 
 const { MessageStatusEnum } = messageBus;
 
-const nonce = new BN(1);
+const nonce = new BN(0);
 const hashLockObj = Utils.generateHashLock();
 const hashLock = hashLockObj.l;
 
