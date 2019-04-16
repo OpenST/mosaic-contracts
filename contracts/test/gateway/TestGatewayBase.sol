@@ -159,7 +159,8 @@ contract TestGatewayBase is GatewayBase {
     )
         external
     {
-        super.registerInboxProcess(_account, 1, _messageHash);
+        uint256 nonce = super._getInboxNonce(_account);
+        super.registerInboxProcess(_account, nonce, _messageHash);
     }
 
     /**
@@ -176,7 +177,8 @@ contract TestGatewayBase is GatewayBase {
     )
         external
     {
-        super.registerOutboxProcess(_account, 1, _messageHash);
+        uint256 nonce = super._getOutboxNonce(_account);
+        super.registerOutboxProcess(_account, nonce, _messageHash);
     }
 
     /**
