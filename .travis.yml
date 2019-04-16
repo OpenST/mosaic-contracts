@@ -29,6 +29,7 @@ script:
   - npm run test
   - npm run test:deployment_tool
   - npm run test:integration
+  - npm run test:generate_proof
   - npm run build-package
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')

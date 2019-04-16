@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+
+  geth_node_origin:
+    image: augurproject/dev-node-geth:v1.8.18
+    ports:
+      - "8546:8545"
