@@ -1,7 +1,7 @@
 /* solhint-disable-next-line compiler-fixed */
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,35 +16,72 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Utility chain: UtilityTokenInterface
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 /**
- *  @title UtilityTokenInterface contract
+ *  @title UtilityTokenInterface contract.
  *
  *  @notice Provides the interface to utility token contract.
  */
 contract UtilityTokenInterface {
 
-    /** Public Functions */
-    
-    /** @dev transfer full claim to beneficiary */
-    function claim(address _beneficiary) public returns (bool success);
-    /** @dev Mint new utility token into  claim for beneficiary */
-    function mint(address _beneficiary, uint256 _amount) public returns (bool success);
-    /** @dev Burn utility tokens after having redeemed them 
-     *       through the protocol for the staked Simple Token 
+
+    /* External functions */
+
+    /**
+     * @notice Increases the total token supply.
+     *
+     * @dev Adds number of tokens to beneficiary balance and increases the
+     *      total token supply.
+     *
+     * @param _account Account address for which the balance will be increased.
+     *                 This is payable so that it provides flexibility of
+     *                 transferring base token to account on increase supply.
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if increase supply is successful, false otherwise.
      */
-    function burn(address _burner, uint256 _amount) public payable returns (bool success);
-    /** @dev Get totalTokenSupply as view so that child cannot edit */
-    function totalSupply() public view returns (uint256 supply);
-    /** @dev Get unique universal identifier for utility token */
-    function uuid() public view returns (bytes32 getUuid);
-    /** @dev Get conversion rate for utility token */
-    function conversionRate() public view returns (uint256 rate);
-    /** @dev Get conversion rate decimal factor for utility token */
-    function conversionRateDecimals() public view returns (uint8 rateDecimal);
+    function increaseSupply(
+        address payable _account,
+        uint256 _amount
+    )
+        external
+        returns (bool success_);
+
+    /**
+     * @notice Decreases the token supply.
+     *
+     * @dev Decreases the token balance from the msg.sender address and
+     *      decreases the total token supply count.
+     *
+     * @param _amount Amount of tokens.
+     *
+     * @return success_ `true` if decrease supply is successful, false otherwise.
+     */
+    function decreaseSupply(uint256 _amount) external returns (bool success_);
+
+    /**
+     * @notice Sets the CoGateway contract address.
+     *
+     * @dev Function requires:
+     *          - It is called by whitelisted workers.
+     *          - coGateway address is set only once.
+     *          - coGateway.utilityToken must match this contract.
+     *
+     * @param _coGateway CoGateway contract address.
+     *
+     */
+    function setCoGateway(address _coGateway) external returns (bool);
+
+    /**
+     * @notice  Checks if an address exists.
+     *
+     * @param _actor Address that needs to be checked
+     *
+     * @return exists_ `true` if the address is allowed otherwise `false`
+     */
+    function exists(address _actor) external returns (bool exists_);
 }

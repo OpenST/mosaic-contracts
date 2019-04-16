@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
-// Copyright 2017 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,211 +15,250 @@ pragma solidity ^0.4.23;
 // limitations under the License.
 // 
 // ----------------------------------------------------------------------------
-// Utility chain: EIP20 Token Implementation
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
-import "./EIP20Interface.sol";
-import "./SafeMath.sol";
+import "../lib/EIP20Interface.sol";
+import "../lib/SafeMath.sol";
 
 /**
- *  @title EIP20Token contract which implements EIP20Interface.
+ * @title EIP20Token contract.
  *
- *  @notice Implements EIP20 token.
+ * @notice EIP20Token implements EIP20Interface.
  */
 contract EIP20Token is EIP20Interface {
+
     using SafeMath for uint256;
 
+    /** Name of the token. */
     string private tokenName;
+
+    /** Symbol of the token. */
     string private tokenSymbol;
+
+    /** Decimals used by the token. */
     uint8  private tokenDecimals;
 
+    /** Total supply of the token. */
+    uint256 internal totalTokenSupply;
+
+    /** Stores the token balance of the accounts. */
     mapping(address => uint256) balances;
+
+    /** Stores the authorization information. */
     mapping(address => mapping (address => uint256)) allowed;
 
+
+    /* Constructor */
+
     /**
-     *  @notice Contract constructor.
+     * @notice Contract constructor.
      *
-     *  @param _symbol Symbol of the token.
-     *  @param _name Name of the token.
-     *  @param _decimals Decimal places of the token.
+     * @param _symbol Symbol of the token.
+     * @param _name Name of the token.
+     * @param _decimals Decimal places of the token.
      */
-    constructor(string _symbol, string _name, uint8 _decimals) public
+    constructor(
+        string memory _symbol,
+        string memory _name,
+        uint8 _decimals
+    )
+        public
     {
-        tokenSymbol      = _symbol;
-        tokenName        = _name;
-        tokenDecimals    = _decimals;
+        tokenSymbol = _symbol;
+        tokenName = _name;
+        tokenDecimals = _decimals;
+        totalTokenSupply = 0;
+    }
+
+
+    /* Public functions. */
+
+    /**
+     * @notice Public function to get the name of the token.
+     *
+     * @return tokenName_ Name of the token.
+     */
+    function name() public view returns (string memory tokenName_) {
+        tokenName_ = tokenName;
     }
 
     /**
-     *  @notice Public view function name.
+     * @notice Public function to get the symbol of the token.
      *
-     *  @return string Name of the token.
+     * @return tokenSymbol_ Symbol of the token.
      */
-    function name() public view returns (string) {
-        return tokenName;
+    function symbol() public view returns (string memory tokenSymbol_) {
+        tokenSymbol_ = tokenSymbol;
     }
 
     /**
-     *  @notice Public view function symbol.
+     * @notice Public function to get the decimals of the token.
      *
-     *  @return string Symbol of the token.
+     * @return tokenDecimals Decimals of the token.
      */
-    function symbol() public view returns (string) {
-        return tokenSymbol;
+    function decimals() public view returns (uint8 tokenDecimals_) {
+        tokenDecimals_ = tokenDecimals;
     }
 
     /**
-     *  @notice Public view function decimals.
+     * @notice Get the balance of an account.
      *
-     *  @return uint8 Decimal places of the token.
+     * @param _owner Address of the owner account.
+     *
+     * @return balance_ Account balance of the owner account.
      */
-    function decimals() public view returns (uint8) {
-        return tokenDecimals;
+    function balanceOf(address _owner) public view returns (uint256 balance_) {
+        balance_ = balances[_owner];
     }
 
     /**
-     *  @notice Public view function balanceOf.
+     * @notice Public function to get the total supply of the tokens.
      *
-     *  @param _owner Address of the owner account.
+     * @dev Get totalTokenSupply as view so that child cannot edit.
      *
-     *  @return uint256 Account balance of the owner account.
+     * @return totalTokenSupply_ Total token supply.
      */
-    function balanceOf(address _owner) public view returns (uint256) {
-        return balances[_owner];
+    function totalSupply()
+        public
+        view
+        returns (uint256 totalTokenSupply_)
+    {
+        totalTokenSupply_ = totalTokenSupply;
+    }
+
+
+    /**
+     * @notice Public function to get the allowance.
+     *
+     * @param _owner Address of the owner account.
+     * @param _spender Address of the spender account.
+     *
+     * @return allowance_ Remaining allowance for the spender to spend from
+     *                    owner's account.
+     */
+    function allowance(
+        address _owner,
+        address _spender
+    )
+        public
+        view
+        returns (uint256 allowance_)
+    {
+        allowance_ = allowed[_owner][_spender];
     }
 
     /**
-     *  @notice Public view function allowance.
+     * @notice Public function to transfer the token.
      *
-     *  @param _owner Address of the owner account.
-     *  @param _spender Address of the spender account.
+     * @dev Fires the transfer event, throws if, _from account does not have
+     *      enough tokens to spend.
      *
-     *  @return uint256 Remaining allowance for the spender to spend from owner's account.
+     * @param _to Address to which tokens are transferred.
+     * @param _value Amount of tokens to be transferred.
+     *
+     * @return success_ `true` for a successful transfer, `false` otherwise.
      */
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
-        return allowed[_owner][_spender];
+    function transfer(
+        address _to,
+        uint256 _value
+    )
+        public
+        returns (bool success_)
+    {
+        success_ = transferBalance(msg.sender, _to, _value);
     }
 
     /**
-     *  @notice Public function transfer.
+     * @notice Public function transferFrom.
      *
-     *  @dev Fires the transfer event, throws if, _from account does not have enough
-     *       tokens to spend.
+     * @dev Allows a contract to transfer tokens on behalf of _from address
+     *      to _to address, the function caller has to be pre-authorized for
+     *      multiple transfers up to the total of _value amount by the _from
+     *      address.
      *
-     *  @param _to Address to which tokens are transferred.
-     *  @param _value Amount of tokens to be transferred.
+     * @param _from Address from which tokens are transferred.
+     * @param _to Address to which tokens are transferred.
+     * @param _value Amount of tokens transferred.
      *
-     *  @return bool True for a successful transfer, false otherwise.
+     * @return success_ `true` for a successful transfer, `false` otherwise.
      */
-    function transfer(address _to, uint256 _value) public returns (bool success) {
-        // According to the EIP20 spec, "transfers of 0 values MUST be treated as normal
-        // transfers and fire the Transfer event".
-        // Also, should throw if not enough balance. This is taken care of by SafeMath.
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-
-        emit Transfer(msg.sender, _to, _value);
-
-        return true;
-    }
-
-    /**
-     *  @notice Public function transferFrom.
-     *
-     *  @dev Allows a contract to transfer tokens on behalf of _from address to _to address,
-     *       the function caller has to be pre-authorized for multiple transfers up to the 
-     *       total of _value amount by the _from address.
-     *
-     *  @param _from Address from which tokens are transferred.
-     *  @param _to Address to which tokens are transferred.
-     *  @param _value Amount of tokens transferred.
-     *
-     *  @return bool True for a successful transfer, false otherwise.
-     */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        balances[_from] = balances[_from].sub(_value);
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    )
+        public
+        returns (bool success_)
+    {
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-
-        emit Transfer(_from, _to, _value);
-
-        return true;
+        success_ = transferBalance(_from, _to, _value);
     }
 
     /**
-     *  @notice Public function approve.
+     * @notice Public function to approve an account for transfer.
      *
-     *  @dev Allows _spender address to withdraw from function caller's account, multiple times up 
-     *       to the _value amount, if this function is called again 
-     *       it overwrites the current allowance with _value.
+     * @dev Allows _spender address to withdraw from function caller's account,
+     *      multiple times up to the _value amount, if this function is called
+     *      again it overwrites the current allowance with _value.
      *
-     *  @param _spender Address authorized to spend from the function caller's address.
-     *  @param _value Amount up to which spender is authorized to spend.
+     * @param _spender Address authorized to spend from the function caller's
+     *                  address.
+     * @param _value Amount up to which spender is authorized to spend.
      *
-     *  @return bool True for a successful approval, false otherwise.
+     * @return bool `true` for a successful approval, `false` otherwise.
      */
-    function approve(address _spender, uint256 _value) public returns (bool success) {
+    function approve(
+        address _spender,
+        uint256 _value
+    )
+        public
+        returns (bool success_)
+    {
 
         allowed[msg.sender][_spender] = _value;
 
         emit Approval(msg.sender, _spender, _value);
 
-        return true;
+        success_ = true;
     }
 
-    /**
-     *  @notice Internal function claimEIP20.
-     *
-     *  @dev Subtracts _amount of tokens from EIP20Token contract balance,
-     *       adds _amount to beneficiary's balance.
-     *
-     *  @param _beneficiary Address of tokens beneificary.
-     *  @param _amount Amount of tokens claimed for beneficiary.
-     *
-     *  @return bool True if claim of tokens for beneficiary address is successful, 
-     *          false otherwise.
-     */
-    function claimEIP20(address _beneficiary, uint256 _amount) internal returns (bool success) {
-        // claimable tokens are minted in the contract address to be pulled on claim
-        balances[address(this)] = balances[address(this)].sub(_amount);
-        balances[_beneficiary] = balances[_beneficiary].add(_amount);
 
-        emit Transfer(address(this), _beneficiary, _amount);
-
-        return true;
-    }
+    /* Internal functions. */
 
     /**
-     *  @notice Internal function mintEIP20.
+     * @notice Internal function to transfer the tokens.
      *
-     *  @dev Adds _amount tokens to EIP20Token contract balance.
+     * @dev This is an internal functions that transfers the token. This
+     *      function is called from transfer and transferFrom functions.
      *
-     *  @param _amount Amount of tokens to mint.
+     * @param _from Address from which tokens are transferred.
+     * @param _to Address to which tokens are transferred.
+     * @param _value Amount of tokens transferred.
      *
-     *  @return bool True if mint is successful, false otherwise.
+     * @return success_ `true` for a successful transfer, `false` otherwise.
      */
-    function mintEIP20(uint256 _amount) internal returns (bool /* success */) {
-        // mint EIP20 tokens in contract address for them to be claimed
-        balances[address(this)] = balances[address(this)].add(_amount);
-    
-        return true;
-    }
+    function transferBalance(
+        address _from,
+        address _to,
+        uint256 _value
+    )
+        internal
+        returns (bool success_)
+    {
+        /**
+         * According to the EIP20 spec, "transfers of 0 values MUST be treated
+         * as normal transfers and fire the Transfer event".
+         * Also, should throw if not enough balance. This is taken care of by
+         * SafeMath.
+         */
+        balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
 
-    /**
-     *  @notice Internal function burnEIP20.
-     *
-     *  @dev Subtracts _amount tokens from the balance of function caller's address.  
-     *
-     *  @param _amount Amount of tokens to burn.
-     *
-     *  @return bool True if burn is successful, false otherwise.
-     */
-    function burnEIP20(uint256 _amount) internal returns (bool /* success */) {
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        emit Transfer(_from, _to, _value);
 
-        return true;
+        success_ = true;
     }
 }
