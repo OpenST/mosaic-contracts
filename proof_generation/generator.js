@@ -98,7 +98,7 @@ contract('Stake and Mint ', function (accounts) {
     };
   });
 
-  it('Generate proof data for "Stake progressed"', async function () {
+  it('Generates proof data for "Stake progressed"', async function () {
 
     const gateway = new Gateway(registeredContracts);
     const coGateway = new CoGateway(registeredContracts);
@@ -202,7 +202,7 @@ contract('Stake and Mint ', function (accounts) {
 
   });
 
-  it('Generate proof data for "Stake revoked"', async function () {
+  it('Generates proof data for "Stake revoked"', async function () {
 
     const gateway = new Gateway(registeredContracts);
     const coGateway = new CoGateway(registeredContracts);
@@ -361,7 +361,7 @@ contract('Redeem and Un-stake ', function (accounts) {
 
   });
 
-  it('Generate proof data for "Redeem progressed"', async function () {
+  it('Generates proof data for "Redeem progressed"', async function () {
 
     const gateway = new Gateway(registeredContracts);
     const coGateway = new CoGateway(registeredContracts);
@@ -466,7 +466,7 @@ contract('Redeem and Un-stake ', function (accounts) {
     }
   });
 
-  it('Generate proof data for "Redeem revoked"', async function () {
+  it('Generates proof data for "Redeem revoked"', async function () {
 
     const gateway = new Gateway(registeredContracts);
     const coGateway = new CoGateway(registeredContracts);

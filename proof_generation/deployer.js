@@ -33,7 +33,8 @@ const MockUtilityToken = artifacts.require("MockUtilityToken");
 /**
  * Deploy the contracts for proof generation.
  *
- * @param {Array} accounts An array of available accounts.
+ * @param web3Provider {Object} web3 provider object.
+ * @param accounts {Array} accounts An array of available accounts.
  *
  * @returns {Object} Object containing the deployed contracts.
  */
