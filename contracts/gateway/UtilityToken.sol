@@ -200,7 +200,7 @@ contract UtilityToken is EIP20Token, Organized, UtilityTokenInterface {
         view
         returns (address valueToken_)
     {
-        return address(valueToken);
+        valueToken_ = address(valueToken);
     }
 
     /* Internal functions. */

@@ -156,6 +156,6 @@ contract SimpleStake {
         view
         returns (address valueToken_)
     {
-        return address(valueToken);
+        valueToken_ = address(valueToken);
     }
 }
