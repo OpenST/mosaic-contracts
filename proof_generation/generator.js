@@ -78,19 +78,19 @@ contract('Stake and Mint ', function (accounts) {
   let generatedHashLock;
   let rpcEndpointOrigin;
   let proofUtils;
+  let web3Provider;
 
   before(async () => {
     ({ rpcEndpointOrigin } = await docker());
-    const web3Provider = new Web3(rpcEndpointOrigin);
+    web3Provider = new Web3(rpcEndpointOrigin);
     proofUtils = new ProofUtils(web3Provider, web3Provider);
-
-    registeredContracts = await deployer(web3Provider, accounts);
   });
 
   beforeEach(async function () {
+    registeredContracts = await deployer(web3Provider, accounts);
     stakeParams = {
       amount: new BN(100000000),
-      beneficiary: accounts[3],
+      beneficiary: accounts[2],
       gasPrice: new BN(1),
       gasLimit: new BN(10000),
       nonce: new BN(0),
@@ -340,23 +340,23 @@ contract('Redeem and Un-stake ', function (accounts) {
   let generatedHashLock;
   let rpcEndpointOrigin;
   let proofUtils;
+  let web3Provider;
 
   before(async () => {
     ({ rpcEndpointOrigin } = await docker());
-    const web3Provider = new Web3(rpcEndpointOrigin);
+    web3Provider = new Web3(rpcEndpointOrigin);
     proofUtils = new ProofUtils(web3Provider, web3Provider);
-
-    registeredContracts = await deployer(web3Provider, accounts);
   });
 
   beforeEach(async function () {
+    registeredContracts = await deployer(web3Provider, accounts);
     redeemParams = {
       amount: new BN(1000),
       gasPrice: new BN(1),
       gasLimit: new BN(100),
       nonce: new BN(0),
       redeemer: accounts[0],
-      beneficiary: accounts[3],
+      beneficiary: accounts[2],
     };
 
   });
