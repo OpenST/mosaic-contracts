@@ -35,21 +35,21 @@ contract TestUtilityToken is UtilityToken {
     /**
      * @dev This is used for testing by mocking certain variables.
      *
-     * @param _token Address of branded token.
-     * @param _symbol Symbol of token.
-     * @param _name Name of token.
-     * @param _decimals Decimal of token.
+     * @param _valueToken Address of value token.
+     * @param _symbol Symbol of value token.
+     * @param _name Name of value token.
+     * @param _decimals Decimal of value token.
      * @param _organization Address of an organization contract.
      */
     constructor(
-        address _token,
+        address _valueToken,
         string memory _symbol,
         string memory _name,
         uint8 _decimals,
         OrganizationInterface _organization
     )
         public
-        UtilityToken(_token, _symbol, _name, _decimals, _organization)
+        UtilityToken(_valueToken, _symbol, _name, _decimals, _organization)
     {}
 
     /**

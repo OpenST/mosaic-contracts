@@ -48,7 +48,7 @@ contract SimpleStake {
     /* Storage */
 
     /** EIP20 token contract that can be staked. */
-    EIP20Interface public token;
+    EIP20Interface public valueToken;
 
     /** EIP20 gateway address. */
     address public gateway;
@@ -71,25 +71,25 @@ contract SimpleStake {
     /**
      *  @notice Contract constructor.
      *
-     *  @param _token EIP20 token that will be staked.
+     *  @param _valueToken EIP20 token that will be staked.
      *  @param _gateway EIP20Gateway contract that governs staking.
      */
     constructor(
-        EIP20Interface _token,
+        EIP20Interface _valueToken,
         address _gateway
     )
         public
     {
         require(
-            address(_token) != address(0),
-            "Token contract address must not be zero."
+            address(_valueToken) != address(0),
+            "Value token contract address must not be zero."
         );
         require(
             _gateway != address(0),
             "Gateway contract address must not be zero."
         );
 
-        token = _token;
+        valueToken = _valueToken;
         gateway = _gateway;
     }
 
@@ -116,8 +116,8 @@ contract SimpleStake {
         returns (bool success_)
     {
         require(
-            token.transfer(_to, _amount) == true,
-            "Token transfer must success."
+            valueToken.transfer(_to, _amount) == true,
+            "Value token transfer must success."
         );
 
         emit ReleasedStake(msg.sender, _to, _amount);
@@ -141,6 +141,21 @@ contract SimpleStake {
         view
         returns (uint256 stakedAmount_)
     {
-        stakedAmount_ = token.balanceOf(address(this));
+        stakedAmount_ = valueToken.balanceOf(address(this));
+    }
+
+    /**
+     * @notice Returns the value of valueToken.
+     *
+     * @dev This function supports previous versions of this contract's ABI
+     *      that expect a public function, token, that returns the address
+     *      of the value token.
+     */
+    function token()
+        external
+        view
+        returns (address valueToken_)
+    {
+        valueToken_ = address(valueToken);
     }
 }

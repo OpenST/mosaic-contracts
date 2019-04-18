@@ -30,7 +30,7 @@ const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.constructor()', (accounts) => {
-  let brandedToken;
+  let valueTokenAddress;
   let organization;
   let owner;
   let worker;
@@ -38,29 +38,29 @@ contract('UtilityToken.constructor()', (accounts) => {
   beforeEach(async () => {
     owner = accounts[2];
     worker = accounts[3];
-    brandedToken = accounts[4];
+    valueTokenAddress = accounts[4];
     organization = await MockOrganization.new(owner, worker);
   });
 
-  it('should fail to deploy when branded token address is zero', async () => {
-    brandedToken = NullAddress;
+  it('should fail to deploy when value token address is zero', async () => {
+    valueTokenAddress = NullAddress;
 
     await Utils.expectRevert(
       UtilityToken.new(
-        brandedToken,
+        valueTokenAddress,
         TOKEN_SYMBOL,
         TOKEN_NAME,
         TOKEN_DECIMALS,
         organization.address,
       ),
-      'Token address should not be zero.',
+      'Value token address should not be zero.',
     );
   });
 
   it('should fail to deploy when organization address is zero', async () => {
     await Utils.expectRevert(
       UtilityToken.new(
-        brandedToken,
+        valueTokenAddress,
         TOKEN_SYMBOL,
         TOKEN_NAME,
         TOKEN_DECIMALS,
@@ -72,7 +72,7 @@ contract('UtilityToken.constructor()', (accounts) => {
 
   it('should pass with correct parameters.', async () => {
     const utilityToken = await UtilityToken.new(
-      brandedToken,
+      valueTokenAddress,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
@@ -85,12 +85,19 @@ contract('UtilityToken.constructor()', (accounts) => {
       'Utility token contract address must not be zero.',
     );
 
-    const tokenAddress = await utilityToken.token.call();
-
+    const valueToken = await utilityToken.valueToken.call();
     assert.strictEqual(
-      tokenAddress,
-      brandedToken,
-      `Token address from contract must be equal to ${brandedToken}.`,
+      valueToken,
+      valueTokenAddress,
+      `Token address from contract must be equal to ${valueTokenAddress}.`,
+    );
+
+    // token supports previous ABIs
+    const token = await utilityToken.token.call();
+    assert.strictEqual(
+      token,
+      valueTokenAddress,
+      `Token address from contract must be equal to ${valueTokenAddress}.`,
     );
 
     const name = await utilityToken.name();
