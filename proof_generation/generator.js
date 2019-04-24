@@ -18,19 +18,22 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require("bn.js");
+/* eslint-disable no-await-in-loop, no-plusplus, array-callback-return */
+
+const BN = require('bn.js');
 const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-const Utils = require("../test/test_lib/utils.js");
+const Utils = require('../test/test_lib/utils.js');
 
 const docker = require('../test_integration/docker');
-const CoGateway = require('../test_integration/helper/co_gateway');
-const Gateway = require('../test_integration/helper/gateway');
+const CoGateway = require('./helper/co_gateway');
+const Gateway = require('./helper/gateway');
 const ProofUtils = require('../test_integration/lib/proof_utils');
 
 const deployer = require('./deployer.js');
+
 const PROOF_GENERATED_PATH = 'test/data/';
 
 /**
@@ -41,15 +44,13 @@ const PROOF_GENERATED_PATH = 'test/data/';
  *
  */
 function writeToFile(location, content) {
-
-  const rootDir= `${__dirname}/../`;
+  const rootDir = `${__dirname}/../`;
   const pathLocation = path.join(rootDir, location);
-  fs.writeFile(pathLocation, content, function(err) {
-    if(err) {
+  fs.writeFile(pathLocation, content, (err) => {
+    if (err) {
       throw err;
     }
   });
-
 }
 
 /**
@@ -60,34 +61,40 @@ function writeToFile(location, content) {
  * @returns {Object} An object containing the deployed contract address.
  */
 function getContractAddresses(registeredContracts) {
-
   const addresses = {};
-  Object.keys(registeredContracts).map(function(key, index) {
+  Object.keys(registeredContracts).map((key) => {
     if (registeredContracts[key].address) {
       addresses[key] = registeredContracts[key].address;
     }
   });
-
   return addresses;
 }
 
-contract('Stake and Mint ', function (accounts) {
-
+contract('Stake and Mint ', (accounts) => {
   let registeredContracts;
   let stakeParams;
   let generatedHashLock;
   let rpcEndpointOrigin;
   let proofUtils;
   let web3Provider;
+  let gateway;
+  let coGateway;
 
   before(async () => {
+    console.log('starting docker');
     ({ rpcEndpointOrigin } = await docker());
+    console.log('started docker');
     web3Provider = new Web3(rpcEndpointOrigin);
     proofUtils = new ProofUtils(web3Provider, web3Provider);
+    console.log('proofUtils started');
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
+    console.log('deploying contracts');
     registeredContracts = await deployer(web3Provider, accounts);
+    console.log('contracts deployed');
+    gateway = new Gateway(registeredContracts);
+    coGateway = new CoGateway(registeredContracts);
     stakeParams = {
       amount: new BN(100000000),
       beneficiary: accounts[2],
@@ -98,15 +105,110 @@ contract('Stake and Mint ', function (accounts) {
     };
   });
 
-  it('Generates proof data for "Stake progressed"', async function () {
-
-    const gateway = new Gateway(registeredContracts);
-    const coGateway = new CoGateway(registeredContracts);
-
+  it('Generates proof data for "Stake progressed"', async () => {
     const numberOfProofs = 2;
 
-    for (let i = 0; i<numberOfProofs; i++) {
+    for (let i = 0; i < numberOfProofs; ++i) {
+      const proofData = {};
+      proofData.contracts = getContractAddresses(registeredContracts);
 
+      proofData.gateway = {};
+      // no-await-in-loop
+      proofData.gateway.constructor = await gateway.getConstructorParams();
+
+      proofData.co_gateway = {};
+      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
+
+      generatedHashLock = Utils.generateHashLock();
+
+      // Stake
+      stakeParams.hashLock = generatedHashLock.l;
+      stakeParams.unlockSecret = generatedHashLock.s;
+
+      const stakeResult = await gateway.stake(stakeParams);
+
+      const stakeProofData = await proofUtils.getOutboxProof(
+        gateway.address,
+        [stakeResult.returned_value.messageHash_],
+      );
+
+      // Populate proof data.
+      proofData.gateway.stake = {};
+      proofData.gateway.stake.params = stakeParams;
+      proofData.gateway.stake.return_value = stakeResult;
+      proofData.gateway.stake.proof_data = stakeProofData;
+
+      // Confirm stake intent.
+      const confirmStakeIntentParams = Object.assign({}, stakeParams);
+      confirmStakeIntentParams.blockHeight = stakeProofData.block_number;
+      confirmStakeIntentParams.rlpParentNodes = stakeProofData.storageProof[0].serializedProof;
+      confirmStakeIntentParams.facilitator = stakeParams.staker;
+      confirmStakeIntentParams.storageRoot = stakeProofData.storageHash;
+
+      // confirmStakeIntent also sets/anchors storage root for a block number.
+      const confirmStakeIntentResult = await coGateway.confirmStakeIntent(confirmStakeIntentParams);
+
+      const confirmStakeIntentProofData = await proofUtils.getInboxProof(
+        coGateway.address,
+        [confirmStakeIntentResult.returned_value.messageHash_],
+      );
+
+      // Populate proof data.
+      proofData.co_gateway.confirm_stake_intent = {};
+      proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
+      proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
+      proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
+
+      // Progress stake
+      const progressStakeParams = {};
+      progressStakeParams.messageHash = stakeResult.returned_value.messageHash_;
+      progressStakeParams.unlockSecret = stakeParams.unlockSecret;
+      progressStakeParams.facilitator = stakeParams.staker;
+
+      const progressStakeResult = await gateway.progressStake(progressStakeParams);
+
+      const progressStakeProofData = await proofUtils.getOutboxProof(
+        gateway.address,
+        [confirmStakeIntentResult.returned_value.messageHash_],
+      );
+
+      // Populate proof data.
+      proofData.gateway.progress_stake = {};
+      proofData.gateway.progress_stake.params = progressStakeParams;
+      proofData.gateway.progress_stake.return_value = progressStakeResult;
+      proofData.gateway.progress_stake.proof_data = progressStakeProofData;
+
+      // Progress mint.
+      const progressMintParams = Object.assign({}, progressStakeParams);
+
+      const progressMintResult = await coGateway.progressMint(progressMintParams);
+
+      const progressMintProofData = await proofUtils.getInboxProof(
+        coGateway.address,
+        [confirmStakeIntentResult.returned_value.messageHash_],
+      );
+
+      // Populate proof data.
+      proofData.co_gateway.progress_mint = {};
+      proofData.co_gateway.progress_mint.params = progressMintParams;
+      proofData.co_gateway.progress_mint.return_value = progressMintResult;
+      proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
+
+      // Write the proof data in to the files.
+      writeToFile(
+        `${PROOF_GENERATED_PATH}stake_progressed_${stakeParams.nonce.toString(10)}.json`,
+        JSON.stringify(proofData),
+      );
+
+      // Proof data should be generated starting for nonce 0.
+      stakeParams.nonce = stakeParams.nonce.addn(1);
+    }
+  });
+
+  it('Generates proof data for "Stake revoked"', async () => {
+    const numberOfProofs = 2;
+
+    for (let i = 0; i < numberOfProofs; i++) {
       const proofData = {};
       proofData.contracts = getContractAddresses(registeredContracts);
 
@@ -155,112 +257,8 @@ contract('Stake and Mint ', function (accounts) {
       proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
       proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
 
-      // Progress stake
-      let progressStakeParams = {};
-      progressStakeParams.messageHash = stakeResult.returned_value.messageHash_;
-      progressStakeParams.unlockSecret = stakeParams.unlockSecret;
-      progressStakeParams.facilitator = stakeParams.staker;
-
-      const progressStakeResult = await gateway.progressStake(progressStakeParams);
-
-      const progressStakeProofData = await proofUtils.getOutboxProof(
-        gateway.address,
-        [confirmStakeIntentResult.returned_value.messageHash_],
-      );
-
-      // Populate proof data.
-      proofData.gateway.progress_stake = {};
-      proofData.gateway.progress_stake.params = progressStakeParams;
-      proofData.gateway.progress_stake.return_value = progressStakeResult;
-      proofData.gateway.progress_stake.proof_data = progressStakeProofData;
-
-      // Progress mint.
-      const progressMintParams = Object.assign({}, progressStakeParams);
-
-      const progressMintResult = await coGateway.progressMint(progressMintParams);
-
-      const progressMintProofData = await proofUtils.getInboxProof(
-        coGateway.address,
-        [confirmStakeIntentResult.returned_value.messageHash_],
-      );
-
-      // Populate proof data.
-      proofData.co_gateway.progress_mint = {};
-      proofData.co_gateway.progress_mint.params = progressMintParams;
-      proofData.co_gateway.progress_mint.return_value = progressMintResult;
-      proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
-
-      // Write the proof data in to the files.
-      writeToFile(
-        `${PROOF_GENERATED_PATH}stake_progressed_${stakeParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData)
-      );
-
-      // Proof data should be generated starting for nonce 0.
-      stakeParams.nonce = stakeParams.nonce.addn(1);
-    }
-
-  });
-
-  it('Generates proof data for "Stake revoked"', async function () {
-
-    const gateway = new Gateway(registeredContracts);
-    const coGateway = new CoGateway(registeredContracts);
-
-    const numberOfProofs = 2;
-
-    for (let i = 0; i<numberOfProofs; i++) {
-
-      let proofData = {};
-      proofData.contracts = getContractAddresses(registeredContracts);
-
-      proofData.gateway = {};
-      proofData.gateway.constructor = await gateway.getConstructorParams();
-
-      proofData.co_gateway = {};
-      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
-
-      generatedHashLock = Utils.generateHashLock();
-
-      // Stake
-      stakeParams.hashLock = generatedHashLock.l;
-      stakeParams.unlockSecret = generatedHashLock.s;
-
-      const stakeResult = await gateway.stake(stakeParams);
-
-      const stakeProofData = await proofUtils.getOutboxProof(
-        gateway.address,
-        [stakeResult.returned_value.messageHash_],
-      );
-
-      // Populate proof data.
-      proofData.gateway.stake = {};
-      proofData.gateway.stake.params = stakeParams;
-      proofData.gateway.stake.return_value = stakeResult;
-      proofData.gateway.stake.proof_data = stakeProofData;
-
-      // Confirm stake intent.
-      const confirmStakeIntentParams = Object.assign({}, stakeParams);
-      confirmStakeIntentParams.blockHeight = stakeProofData.block_number;
-      confirmStakeIntentParams.rlpParentNodes = stakeProofData.storageProof[0].serializedProof;
-      confirmStakeIntentParams.facilitator = stakeParams.staker;
-      confirmStakeIntentParams.storageRoot = stakeProofData.storageHash;
-
-      const confirmStakeIntentResult = await coGateway.confirmStakeIntent(confirmStakeIntentParams);
-
-      const confirmStakeIntentProofData = await proofUtils.getInboxProof(
-        coGateway.address,
-        [confirmStakeIntentResult.returned_value.messageHash_],
-      );
-
-      // Populate proof data.
-      proofData.co_gateway.confirm_stake_intent = {};
-      proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
-      proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
-      proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
-
       // Revert stake
-      let revertStakeParams = {};
+      const revertStakeParams = {};
       revertStakeParams.messageHash = confirmStakeIntentResult.returned_value.messageHash_;
       revertStakeParams.staker = stakeParams.staker;
 
@@ -278,14 +276,17 @@ contract('Stake and Mint ', function (accounts) {
       proofData.gateway.revert_stake.proof_data = revertStakeProofData;
 
       // Confirm revert stake
-      let confirmRevertStakeParams = {};
+      const confirmRevertStakeParams = {};
       confirmRevertStakeParams.messageHash = revertStakeParams.messageHash;
       confirmRevertStakeParams.blockHeight = revertStakeProofData.block_number;
-      confirmRevertStakeParams.rlpParentNodes = revertStakeProofData.storageProof[0].serializedProof;
+      confirmRevertStakeParams.rlpParentNodes = revertStakeProofData
+        .storageProof[0].serializedProof;
       confirmRevertStakeParams.facilitator = stakeParams.staker;
       confirmRevertStakeParams.storageRoot = revertStakeProofData.storageHash;
 
-      const confirmRevertStakeResult = await coGateway.confirmRevertStakeIntent(confirmRevertStakeParams);
+      const confirmRevertStakeResult = await coGateway.confirmRevertStakeIntent(
+        confirmRevertStakeParams,
+      );
 
       const confirmRevertStakeProofData = await proofUtils.getInboxProof(
         coGateway.address,
@@ -299,14 +300,17 @@ contract('Stake and Mint ', function (accounts) {
       proofData.co_gateway.confirm_revert_stake_intent.proof_data = confirmRevertStakeProofData;
 
       // Progress revoke.
-      let progressRevertStakeParams = {};
+      const progressRevertStakeParams = {};
       progressRevertStakeParams.messageHash = revertStakeParams.messageHash;
       progressRevertStakeParams.blockHeight = confirmRevertStakeProofData.block_number;
-      progressRevertStakeParams.rlpParentNodes = confirmRevertStakeProofData.storageProof[0].serializedProof;
+      progressRevertStakeParams.rlpParentNodes = confirmRevertStakeProofData
+        .storageProof[0].serializedProof;
       progressRevertStakeParams.facilitator = stakeParams.staker;
       progressRevertStakeParams.storageRoot = confirmRevertStakeProofData.storageHash;
 
-      const progressRevertStakeResult = await gateway.progressRevertStake(progressRevertStakeParams);
+      const progressRevertStakeResult = await gateway.progressRevertStake(
+        progressRevertStakeParams,
+      );
 
       const progressRevertStakeProofData = await proofUtils.getOutboxProof(
         gateway.address,
@@ -322,25 +326,24 @@ contract('Stake and Mint ', function (accounts) {
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}stake_revoked_${stakeParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData)
+        JSON.stringify(proofData),
       );
 
       // Proof data should be generated starting for nonce 0.
       stakeParams.nonce = stakeParams.nonce.addn(1);
     }
-
   });
-
 });
 
-contract('Redeem and Un-stake ', function (accounts) {
-
+contract('Redeem and Un-stake ', (accounts) => {
   let registeredContracts;
   let redeemParams;
   let generatedHashLock;
   let rpcEndpointOrigin;
   let proofUtils;
   let web3Provider;
+  let gateway;
+  let coGateway;
 
   before(async () => {
     ({ rpcEndpointOrigin } = await docker());
@@ -348,8 +351,10 @@ contract('Redeem and Un-stake ', function (accounts) {
     proofUtils = new ProofUtils(web3Provider, web3Provider);
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     registeredContracts = await deployer(web3Provider, accounts);
+    gateway = new Gateway(registeredContracts);
+    coGateway = new CoGateway(registeredContracts);
     redeemParams = {
       amount: new BN(1000),
       gasPrice: new BN(1),
@@ -358,19 +363,13 @@ contract('Redeem and Un-stake ', function (accounts) {
       redeemer: accounts[0],
       beneficiary: accounts[2],
     };
-
   });
 
-  it('Generates proof data for "Redeem progressed"', async function () {
-
-    const gateway = new Gateway(registeredContracts);
-    const coGateway = new CoGateway(registeredContracts);
-
+  it('Generates proof data for "Redeem progressed"', async () => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; i++) {
-
-      let proofData = {};
+      const proofData = {};
       proofData.contracts = getContractAddresses(registeredContracts);
 
       proofData.gateway = {};
@@ -406,7 +405,10 @@ contract('Redeem and Un-stake ', function (accounts) {
       confirmRedeemIntentParams.storageRoot = redeemProofData.storageHash;
       confirmRedeemIntentParams.facilitator = redeemParams.redeemer;
 
-      const confirmRedeemIntentResult = await gateway.confirmRedeemIntent(confirmRedeemIntentParams);
+      // confirmRedeemIntent also anchors/sets storage root.
+      const confirmRedeemIntentResult = await gateway.confirmRedeemIntent(
+        confirmRedeemIntentParams,
+      );
 
       const confirmRedeemIntentProofData = await proofUtils.getInboxProof(
         gateway.address,
@@ -420,12 +422,14 @@ contract('Redeem and Un-stake ', function (accounts) {
       proofData.gateway.confirm_redeem_intent.proof_data = confirmRedeemIntentProofData;
 
       // Progress redeem.
-      let progressRedeemParams = {};
+      const progressRedeemParams = {};
       progressRedeemParams.messageHash = confirmRedeemIntentResult.returned_value.messageHash_;
       progressRedeemParams.unlockSecret = redeemParams.unlockSecret;
       progressRedeemParams.facilitator = redeemParams.redeemer;
 
-      const progressRedeemResult = await coGateway.progressRedeem(progressRedeemParams);
+      const progressRedeemResult = await coGateway.progressRedeem(
+        progressRedeemParams,
+      );
 
       const progressRedeemProofData = await proofUtils.getOutboxProof(
         coGateway.address,
@@ -442,7 +446,9 @@ contract('Redeem and Un-stake ', function (accounts) {
       const progressUnstakeParams = Object.assign({}, progressRedeemParams);
       progressUnstakeParams.unstakeAmount = redeemParams.amount;
 
-      const progressUnstakeResult = await gateway.progressUnstake(progressUnstakeParams);
+      const progressUnstakeResult = await gateway.progressUnstake(
+        progressUnstakeParams,
+      );
 
       const progressUnstakeProofData = await proofUtils.getInboxProof(
         gateway.address,
@@ -458,7 +464,7 @@ contract('Redeem and Un-stake ', function (accounts) {
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}redeem_progressed_${redeemParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData)
+        JSON.stringify(proofData),
       );
 
       // Proof data should be generated starting for nonce 0.
@@ -466,16 +472,11 @@ contract('Redeem and Un-stake ', function (accounts) {
     }
   });
 
-  it('Generates proof data for "Redeem revoked"', async function () {
-
-    const gateway = new Gateway(registeredContracts);
-    const coGateway = new CoGateway(registeredContracts);
-
+  it('Generates proof data for "Redeem revoked"', async () => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; i++) {
-
-      let proofData = {};
+      const proofData = {};
       proofData.contracts = getContractAddresses(registeredContracts);
 
       proofData.gateway = {};
@@ -506,12 +507,15 @@ contract('Redeem and Un-stake ', function (accounts) {
       // Confirm redeem intent
       const confirmRedeemIntentParams = Object.assign({}, redeemParams);
       confirmRedeemIntentParams.blockNumber = redeemProofData.block_number;
-      confirmRedeemIntentParams.storageProof = redeemProofData.storageProof[0].serializedProof;
+      confirmRedeemIntentParams.storageProof = redeemProofData
+        .storageProof[0].serializedProof;
       confirmRedeemIntentParams.facilitator = redeemProofData.staker;
       confirmRedeemIntentParams.storageRoot = redeemProofData.storageHash;
       confirmRedeemIntentParams.facilitator = redeemParams.redeemer;
 
-      const confirmRedeemIntentResult = await gateway.confirmRedeemIntent(confirmRedeemIntentParams);
+      const confirmRedeemIntentResult = await gateway.confirmRedeemIntent(
+        confirmRedeemIntentParams,
+      );
 
       const confirmRedeemIntentProofData = await proofUtils.getInboxProof(
         gateway.address,
@@ -525,11 +529,13 @@ contract('Redeem and Un-stake ', function (accounts) {
       proofData.gateway.confirm_redeem_intent.proof_data = confirmRedeemIntentProofData;
 
       // Revert redeem.
-      let revertRedeemParams = {};
+      const revertRedeemParams = {};
       revertRedeemParams.messageHash = redeemResult.returned_value.messageHash_;
       revertRedeemParams.redeemer = redeemParams.redeemer;
 
-      const revertRedeemResult = await coGateway.revertRedeem(revertRedeemParams);
+      const revertRedeemResult = await coGateway.revertRedeem(
+        revertRedeemParams,
+      );
 
       const revertRedeemProofData = await proofUtils.getOutboxProof(
         coGateway.address,
@@ -543,14 +549,17 @@ contract('Redeem and Un-stake ', function (accounts) {
       proofData.co_gateway.revert_redeem.proof_data = revertRedeemProofData;
 
       // Confirm revert redeem intent.
-      let confirmRevertRedeemIntentParams = {};
+      const confirmRevertRedeemIntentParams = {};
       confirmRevertRedeemIntentParams.messageHash = revertRedeemParams.messageHash;
       confirmRevertRedeemIntentParams.blockNumber = revertRedeemProofData.block_number;
-      confirmRevertRedeemIntentParams.rlpParentNodes = revertRedeemProofData.storageProof[0].serializedProof;
+      confirmRevertRedeemIntentParams.rlpParentNodes = revertRedeemProofData
+        .storageProof[0].serializedProof;
       confirmRevertRedeemIntentParams.facilitator = redeemParams.redeemer;
       confirmRevertRedeemIntentParams.storageRoot = revertRedeemProofData.storageHash;
 
-      const confirmRevertRedeemResult = await gateway.confirmRevertRedeemIntent(confirmRevertRedeemIntentParams);
+      const confirmRevertRedeemResult = await gateway.confirmRevertRedeemIntent(
+        confirmRevertRedeemIntentParams,
+      );
 
       const confirmRevertRedeemProofData = await proofUtils.getInboxProof(
         gateway.address,
@@ -564,16 +573,19 @@ contract('Redeem and Un-stake ', function (accounts) {
       proofData.gateway.confirm_revert_redeem_intent.proof_data = confirmRevertRedeemProofData;
 
       // Progress revert redeem.
-      let progressRevertRedeemParams = {};
+      const progressRevertRedeemParams = {};
       progressRevertRedeemParams.messageHash = revertRedeemParams.messageHash;
       progressRevertRedeemParams.blockHeight = confirmRevertRedeemProofData.block_number;
-      progressRevertRedeemParams.rlpParentNodes = confirmRevertRedeemProofData.storageProof[0].serializedProof;
+      progressRevertRedeemParams.rlpParentNodes = confirmRevertRedeemProofData
+        .storageProof[0].serializedProof;
       progressRevertRedeemParams.facilitator = redeemParams.redeemer;
       progressRevertRedeemParams.storageRoot = confirmRevertRedeemProofData.storageHash;
 
-      const progressRevertRedeemResult = await coGateway.progressRevertRedeem(progressRevertRedeemParams);
+      const progressRevertRedeemResult = await coGateway.progressRevertRedeem(
+        progressRevertRedeemParams,
+      );
 
-      let progressRevertRedeemProofData = await proofUtils.getOutboxProof(
+      const progressRevertRedeemProofData = await proofUtils.getOutboxProof(
         coGateway.address,
         [progressRevertRedeemParams.messageHash],
       );
@@ -587,12 +599,11 @@ contract('Redeem and Un-stake ', function (accounts) {
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}redeem_revoked_${redeemParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData)
+        JSON.stringify(proofData),
       );
 
       // Proof data should be generated starting for nonce 0.
       redeemParams.nonce = redeemParams.nonce.addn(1);
     }
   });
-
 });

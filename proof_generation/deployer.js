@@ -18,33 +18,32 @@
 //
 // ----------------------------------------------------------------------------
 
-const BN = require("bn.js");
+const BN = require('bn.js');
 
-const Utils = require("../test/test_lib/utils.js");
+const Utils = require('../test/test_lib/utils.js');
 
 const MockOrganization = artifacts.require('MockOrganization.sol');
-const Anchor = artifacts.require("./Anchor.sol");
-const Gateway = artifacts.require("TestEIP20Gateway");
-const CoGateway = artifacts.require("TestEIP20CoGateway");
-const MockToken = artifacts.require("MockToken");
-const MockUtilityToken = artifacts.require("MockUtilityToken");
+const Anchor = artifacts.require('./Anchor.sol');
+const Gateway = artifacts.require('TestEIP20Gateway');
+const CoGateway = artifacts.require('TestEIP20CoGateway');
+const MockToken = artifacts.require('MockToken');
+const MockUtilityToken = artifacts.require('MockUtilityToken');
 
 
 /**
  * Deploy the contracts for proof generation.
  *
- * @param web3Provider {Object} web3 provider object.
+ * @param web3Provider {Web3} web3 provider object.
  * @param accounts {Array} accounts An array of available accounts.
  *
  * @returns {Object} Object containing the deployed contracts.
  */
 async function deployer(web3Provider, accounts) {
-
   const owner = accounts[0];
   const worker = accounts[1];
   const remoteChainId = new BN(1410);
   const blockHeight = new BN(5);
-  const stateRoot = web3Provider.utils.sha3("dummy_state_root");
+  const stateRoot = web3Provider.utils.sha3('dummy_state_root');
   const maxNumberOfStateRoots = new BN(10);
   const bounty = new BN(100);
   const organization = await MockOrganization.new(owner, worker);
@@ -57,13 +56,13 @@ async function deployer(web3Provider, accounts) {
     maxNumberOfStateRoots,
     organization.address,
   );
-  const mockToken = await MockToken.new({from: accounts[0]});
-  const baseToken = await MockToken.new({from: accounts[0]});
+  const mockToken = await MockToken.new({ from: accounts[0] });
+  const baseToken = await MockToken.new({ from: accounts[0] });
 
   const mockUtilityToken = await MockUtilityToken.new(
     mockToken.address,
-    "",
-    "",
+    '',
+    '',
     18,
     organization.address,
     { from: owner },
@@ -91,18 +90,17 @@ async function deployer(web3Provider, accounts) {
   await mockUtilityToken.setCoGateway(coGateway.address, { from: owner });
   await gateway.activateGateway(coGateway.address, { from: owner });
   return {
-    gateway: gateway,
-    coGateway: coGateway,
-    organization: organization,
-    mockToken: mockToken,
-    baseToken: baseToken,
-    mockUtilityToken: mockUtilityToken,
-    anchor: anchor,
-    owner: owner,
-    worker: worker,
-    bounty: bounty,
-  }
-
+    gateway,
+    coGateway,
+    organization,
+    mockToken,
+    baseToken,
+    mockUtilityToken,
+    anchor,
+    owner,
+    worker,
+    bounty,
+  };
 }
 
 module.exports = deployer;

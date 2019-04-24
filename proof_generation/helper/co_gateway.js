@@ -21,7 +21,6 @@
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 class CoGateway {
-
   /**
    * @param {Object} registeredContracts All the deployed contracts
    */
@@ -47,56 +46,57 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async redeem(params) {
-
-    let redeemer = params.redeemer;
-    let amount = params.amount;
-    let beneficiary = params.beneficiary;
-    let gasPrice = params.gasPrice;
-    let gasLimit = params.gasLimit;
-    let nonce = params.nonce;
-    let hashLock = params.hashLock;
-    let bounty = await this.coGateway.bounty.call();
+    const {
+      redeemer,
+      amount,
+      beneficiary,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+    } = params;
+    const bounty = await this.coGateway.bounty.call();
 
     await this.utilityToken.transfer(
-        redeemer,
-        amount,
-        {from: this.owner},
-      );
+      redeemer,
+      amount,
+      { from: this.owner },
+    );
 
     await this.utilityToken.approve(
       this.coGateway.address,
       amount,
-      {from: redeemer},
+      { from: redeemer },
     );
 
-    let messageHash = await this.coGateway.redeem.call(
+    const messageHash = await this.coGateway.redeem.call(
       amount,
       beneficiary,
       gasPrice,
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bounty},
+      { from: redeemer, value: bounty },
     );
 
-    let tx = await this.coGateway.redeem(
+    const tx = await this.coGateway.redeem(
       amount,
       beneficiary,
       gasPrice,
       gasLimit,
       nonce,
       hashLock,
-      {from: redeemer, value: bounty},
+      { from: redeemer, value: bounty },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
-    let returnedValue = {};
+    const returnedValue = {};
     returnedValue.messageHash_ = messageHash;
 
     return {
       returned_value: returnedValue,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -113,32 +113,29 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressRedeem(params) {
-
-    let messageHash = params.messageHash;
-    let unlockSecret = params.unlockSecret;
-    let facilitator = params.facilitator;
-
-    let result = await this.coGateway.progressRedeem.call(
+    const {
       messageHash,
       unlockSecret,
-      {from: facilitator},
-    );
+      facilitator,
+    } = params;
 
-    let tx = await this.coGateway.progressRedeem(
+    const result = await this.coGateway.progressRedeem.call(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
+    const tx = await this.coGateway.progressRedeem(
+      messageHash,
+      unlockSecret,
+      { from: facilitator },
+    );
 
-    // let returnedValue = {};
-    // returnedValue.redeemer = result.redeemer_;
-    // returnedValue.redeemAmount = result.redeemAmount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -153,33 +150,29 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async revertRedeem(params) {
-
-    let messageHash = params.messageHash;
-    let redeemer = params.redeemer;
-
-    let bounty = await this.coGateway.bounty.call();
-    let penalty = bounty.muln(1.5);
-
-    let result = await this.coGateway.revertRedeem.call(
+    const {
       messageHash,
-      {from: redeemer, value: penalty},
+      redeemer,
+    } = params;
+
+    const bounty = await this.coGateway.bounty.call();
+    const penalty = bounty.muln(1.5);
+
+    const result = await this.coGateway.revertRedeem.call(
+      messageHash,
+      { from: redeemer, value: penalty },
     );
 
-    let tx = await this.coGateway.revertRedeem(
+    const tx = await this.coGateway.revertRedeem(
       messageHash,
-      {from: redeemer, value: penalty},
+      { from: redeemer, value: penalty },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
-
-    // let returnedValue = {};
-    // returnedValue.redeemer = result.redeemer_;
-    // returnedValue.redeemerNonce = result.redeemerNonce_.toString(10);
-    // returnedValue.amount = result.amount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -197,39 +190,35 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressRevertRedeem(params) {
-
-    let messageHash = params.messageHash;
-    let blockHeight = params.blockHeight;
-    let rlpParentNodes = params.rlpParentNodes;
-    let facilitator = params.facilitator;
-    let storageRoot = params.storageRoot;
+    const {
+      messageHash,
+      blockHeight,
+      rlpParentNodes,
+      facilitator,
+      storageRoot,
+    } = params;
 
     await this.coGateway.setStorageRoot(blockHeight, storageRoot);
 
-    let result = await this.coGateway.progressRevertRedeem.call(
+    const result = await this.coGateway.progressRevertRedeem.call(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let tx = await this.coGateway.progressRevertRedeem(
+    const tx = await this.coGateway.progressRevertRedeem(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
-
-    // let returnedValue = {};
-    // returnedValue.redeemer = result.redeemer_;
-    // returnedValue.redeemerNonce = result.redeemerNonce_.toString(10);
-    // returnedValue.amount = result.amount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -254,18 +243,19 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async confirmStakeIntent(params) {
-
-    let staker = params.staker;
-    let nonce = params.nonce;
-    let beneficiary = params.beneficiary;
-    let amount = params.amount;
-    let gasPrice = params.gasPrice;
-    let gasLimit = params.gasLimit;
-    let hashLock = params.hashLock;
-    let blockHeight = params.blockHeight;
-    let rlpParentNodes = params.rlpParentNodes;
-    let facilitator = params.facilitator;
-    let storageRoot = params.storageRoot;
+    const {
+      staker,
+      nonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      hashLock,
+      blockHeight,
+      rlpParentNodes,
+      facilitator,
+      storageRoot,
+    } = params;
 
     await this.coGateway.setStorageRoot(
       blockHeight,
@@ -273,7 +263,7 @@ class CoGateway {
       { from: this.owner },
     );
 
-    let messageHash = await this.coGateway.confirmStakeIntent.call(
+    const messageHash = await this.coGateway.confirmStakeIntent.call(
       staker,
       nonce,
       beneficiary,
@@ -286,7 +276,7 @@ class CoGateway {
       { from: facilitator },
     );
 
-    let tx = await this.coGateway.confirmStakeIntent(
+    const tx = await this.coGateway.confirmStakeIntent(
       staker,
       nonce,
       beneficiary,
@@ -299,17 +289,16 @@ class CoGateway {
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
-    let returnedValue = {};
+    const returnedValue = {};
     returnedValue.messageHash_ = messageHash;
 
     return {
       returned_value: returnedValue,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -323,38 +312,31 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressMint(params) {
+    const {
+      messageHash,
+      unlockSecret,
+      facilitator,
+    } = params;
 
-    let messageHash = params.messageHash;
-    let unlockSecret = params.unlockSecret;
-    let facilitator = params.facilitator;
-
-    let result = await this.coGateway.progressMint.call(
+    const result = await this.coGateway.progressMint.call(
       messageHash,
       unlockSecret,
       { from: facilitator },
     );
 
-    let tx = await this.coGateway.progressMint(
+    const tx = await this.coGateway.progressMint(
       messageHash,
       unlockSecret,
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
-
-    // Add return params in proof json data.
-    // let returnedValue = {};
-    // returnedValue.beneficiary = result.beneficiary_;
-    // returnedValue.stake_amount = result.stakeAmount_.toString(10);
-    // returnedValue.minted_amount = result.mintedAmount_.toString(10);
-    // returnedValue.reward_amount = result.rewardAmount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -372,12 +354,13 @@ class CoGateway {
    * @returns {Object} Object containing events and return values.
    */
   async confirmRevertStakeIntent(params) {
-
-    let messageHash = params.messageHash;
-    let blockHeight = params.blockHeight;
-    let rlpParentNodes = params.rlpParentNodes;
-    let facilitator = params.facilitator;
-    let storageRoot = params.storageRoot;
+    const {
+      messageHash,
+      blockHeight,
+      rlpParentNodes,
+      facilitator,
+      storageRoot,
+    } = params;
 
     await this.coGateway.setStorageRoot(
       blockHeight,
@@ -385,33 +368,27 @@ class CoGateway {
       { from: this.owner },
     );
 
-    let result = await this.coGateway.confirmRevertStakeIntent.call(
+    const result = await this.coGateway.confirmRevertStakeIntent.call(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let tx = await this.coGateway.confirmRevertStakeIntent(
+    const tx = await this.coGateway.confirmRevertStakeIntent(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.coGateway);
-
-    // let returnedValue = {};
-    // returnedValue.staker = result.staker_;
-    // returnedValue.stakerNonce = result.stakerNonce_.toString(10);
-    // returnedValue.amount = result.amount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.coGateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -420,23 +397,22 @@ class CoGateway {
    * @returns {Object} Object containing the constructor params.
    */
   async getConstructorParams() {
-
-    let valueToken = await this.coGateway.valueToken.call();
-    let utilityToken = await this.coGateway.utilityToken.call();
-    let stateRootProvider = await this.coGateway.stateRootProvider.call();
-    let bounty = await this.coGateway.bounty.call();
-    let organization = await this.coGateway.organization.call();
-    let gateway = await this.coGateway.remoteGateway.call();
-    let burner = await this.coGateway.burner.call();
+    const valueToken = await this.coGateway.valueToken.call();
+    const utilityToken = await this.coGateway.utilityToken.call();
+    const stateRootProvider = await this.coGateway.stateRootProvider.call();
+    const bounty = await this.coGateway.bounty.call();
+    const organization = await this.coGateway.organization.call();
+    const gateway = await this.coGateway.remoteGateway.call();
+    const burner = await this.coGateway.burner.call();
 
     return {
-      valueToken: valueToken,
-      utilityToken: utilityToken,
-      stateRootProvider: stateRootProvider,
+      valueToken,
+      utilityToken,
+      stateRootProvider,
       bounty: bounty.toString(10),
-      organization: organization,
-      gateway: gateway,
-      burner: burner,
+      organization,
+      gateway,
+      burner,
     };
   }
 }

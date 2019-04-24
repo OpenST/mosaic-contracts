@@ -383,7 +383,6 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
     const storageRoot = StubData.co_gateway.redeem.proof_data.storageHash;
 
     await cogateway.setStorageRoot(blockHeight, storageRoot);
-
     await Utils.expectRevert(
       cogateway.progressRevertRedeem(
         revertRedeemParams.messageHash,

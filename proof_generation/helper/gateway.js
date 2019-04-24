@@ -21,7 +21,6 @@
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 class Gateway {
-
   /**
    * @param {Object} registeredContracts All the deployed contracts
    */
@@ -52,14 +51,15 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async stake(params) {
-
-    let amount = params.amount;
-    let beneficiary = params.beneficiary;
-    let gasPrice = params.gasPrice;
-    let gasLimit = params.gasLimit;
-    let nonce = params.nonce;
-    let hashLock = params.hashLock;
-    let staker = params.staker;
+    const {
+      amount,
+      beneficiary,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+      staker,
+    } = params;
 
     await this.token.transfer(
       staker,
@@ -67,7 +67,7 @@ class Gateway {
       { from: this.deployer },
     );
 
-    let bounty = await this.gateway.bounty.call();
+    const bounty = await this.gateway.bounty.call();
     await this.baseToken.transfer(
       staker,
       bounty,
@@ -75,9 +75,9 @@ class Gateway {
     );
 
     await this.token.approve(this.gateway.address, amount, { from: staker });
-    await this.baseToken.approve(this.gateway.address, bounty, {from: staker });
+    await this.baseToken.approve(this.gateway.address, bounty, { from: staker });
 
-    let messageHash = await this.gateway.stake.call(
+    const messageHash = await this.gateway.stake.call(
       amount,
       beneficiary,
       gasPrice,
@@ -87,7 +87,7 @@ class Gateway {
       { from: staker },
     );
 
-    let tx = await this.gateway.stake(
+    const tx = await this.gateway.stake(
       amount,
       beneficiary,
       gasPrice,
@@ -97,17 +97,16 @@ class Gateway {
       { from: staker },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
-    let returnedValue = {};
+    const returnedValue = {};
     returnedValue.messageHash_ = messageHash;
 
     return {
       returned_value: returnedValue,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -123,35 +122,31 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressStake(params) {
+    const {
+      messageHash,
+      unlockSecret,
+      facilitator,
+    } = params;
 
-    let messageHash = params.messageHash;
-    let unlockSecret = params.unlockSecret;
-    let facilitator = params.facilitator;
-
-    let result = await this.gateway.progressStake.call(
+    const result = await this.gateway.progressStake.call(
       messageHash,
       unlockSecret,
       { from: facilitator },
     );
 
-    let tx = await this.gateway.progressStake(
+    const tx = await this.gateway.progressStake(
       messageHash,
       unlockSecret,
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
-
-    // let returnedValue = {};
-    // returnedValue.staker = result.staker_;
-    // returnedValue.stake_amount_ = result.stakeAmount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -164,38 +159,33 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async revertStake(params) {
+    const {
+      messageHash,
+      staker,
+    } = params;
 
-    let messageHash = params.messageHash;
-    let staker = params.staker;
+    const bounty = await this.gateway.bounty.call();
+    const penalty = bounty.muln(1.5);
 
-    let bounty = await this.gateway.bounty.call();
-    let penalty = bounty.muln(1.5);
+    await this.baseToken.approve(this.gateway.address, penalty, { from: staker });
 
-    await this.baseToken.approve(this.gateway.address, penalty, {from: staker });
-
-    let result = await this.gateway.revertStake.call(
+    const result = await this.gateway.revertStake.call(
       messageHash,
       { from: staker },
     );
 
-    let tx = await this.gateway.revertStake(
+    const tx = await this.gateway.revertStake(
       messageHash,
       { from: staker },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
-
-    // let returnedValue = {};
-    // returnedValue.staker = result.staker_;
-    // returnedValue.amount = result.amount_.toString(10);
-    // returnedValue.staker_nonce = result.stakerNonce_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -213,12 +203,13 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressRevertStake(params) {
-
-    let messageHash = params.messageHash;
-    let blockHeight = params.blockHeight;
-    let rlpParentNodes = params.rlpParentNodes;
-    let facilitator = params.facilitator;
-    let storageRoot = params.storageRoot;
+    const {
+      messageHash,
+      blockHeight,
+      rlpParentNodes,
+      facilitator,
+      storageRoot,
+    } = params;
 
     await this.gateway.setStorageRoot(
       blockHeight,
@@ -226,33 +217,27 @@ class Gateway {
       { from: facilitator },
     );
 
-    let result = await this.gateway.progressRevertStake.call(
+    const result = await this.gateway.progressRevertStake.call(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let tx = await this.gateway.progressRevertStake(
+    const tx = await this.gateway.progressRevertStake(
       messageHash,
       blockHeight,
       rlpParentNodes,
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
-
-    // let returnedValue = {};
-    // returnedValue.staker = result.staker_;
-    // returnedValue.staker_nonce = result.stakerNonce_.toString(10);
-    // returnedValue.amount = result.amount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
-
   }
 
   /**
@@ -276,22 +261,23 @@ class Gateway {
    * @return messageHash_ Message hash.
    */
   async confirmRedeemIntent(params) {
-
-    let redeemer = params.redeemer;
-    let nonce = params.nonce;
-    let beneficiary = params.beneficiary;
-    let amount = params.amount;
-    let gasPrice = params.gasPrice;
-    let gasLimit = params.gasLimit;
-    let blockNumber = params.blockNumber;
-    let hashLock = params.hashLock;
-    let storageProof = params.storageProof;
-    let storageRoot = params.storageRoot;
-    let facilitator = params.facilitator;
+    const {
+      redeemer,
+      nonce,
+      beneficiary,
+      amount,
+      gasPrice,
+      gasLimit,
+      blockNumber,
+      hashLock,
+      storageProof,
+      storageRoot,
+      facilitator,
+    } = params;
 
     await this.gateway.setStorageRoot(blockNumber, storageRoot);
 
-    let messageHash = await this.gateway.confirmRedeemIntent.call(
+    const messageHash = await this.gateway.confirmRedeemIntent.call(
       redeemer,
       nonce,
       beneficiary,
@@ -304,7 +290,7 @@ class Gateway {
       { from: facilitator },
     );
 
-    let tx = await this.gateway.confirmRedeemIntent(
+    const tx = await this.gateway.confirmRedeemIntent(
       redeemer,
       nonce,
       beneficiary,
@@ -317,14 +303,14 @@ class Gateway {
       { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
-    let returnedValue = {};
+    const returnedValue = {};
     returnedValue.messageHash_ = messageHash;
 
     return {
       returned_value: returnedValue,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -341,42 +327,38 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async progressUnstake(params) {
+    const {
+      messageHash,
+      unlockSecret,
+      unstakeAmount,
+      facilitator,
+    } = params;
 
-    let messageHash = params.messageHash;
-    let unlockSecret = params.unlockSecret;
-    let unstakeAmount = params.unstakeAmount;
-    let facilitator = params.facilitator;
-
-    let stakeVault = await this.gateway.stakeVault.call();
+    const stakeVault = await this.gateway.stakeVault.call();
 
     await this.token.transfer(
       stakeVault,
       unstakeAmount,
-      {from: this.deployer},
+      { from: this.deployer },
     );
 
-    let result = await this.gateway.progressUnstake.call(
+    const result = await this.gateway.progressUnstake.call(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let tx = await this.gateway.progressUnstake(
+    const tx = await this.gateway.progressUnstake(
       messageHash,
       unlockSecret,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
-
-    // let returnedValue = {};
-    // returnedValue.redeemAmount = result.redeemAmount_.toString(10);
-    // returnedValue.unstakeAmount = result.unstakeAmount_.toString(10);
-    // returnedValue.rewardAmount = result.rewardAmount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -394,12 +376,13 @@ class Gateway {
    * @returns {Object} Object containing events and return values.
    */
   async confirmRevertRedeemIntent(params) {
-
-    let messageHash = params.messageHash;
-    let blockNumber = params.blockNumber;
-    let rlpParentNodes = params.rlpParentNodes;
-    let storageRoot = params.storageRoot;
-    let facilitator = params.facilitator;
+    const {
+      messageHash,
+      blockNumber,
+      rlpParentNodes,
+      storageRoot,
+      facilitator,
+    } = params;
 
     await this.gateway.setStorageRoot(
       blockNumber,
@@ -407,30 +390,25 @@ class Gateway {
       { from: this.deployer },
     );
 
-    let result =  await this.gateway.confirmRevertRedeemIntent.call(
+    const result = await this.gateway.confirmRevertRedeemIntent.call(
       messageHash,
       blockNumber,
       rlpParentNodes,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let tx = await this.gateway.confirmRevertRedeemIntent(
+    const tx = await this.gateway.confirmRevertRedeemIntent(
       messageHash,
       blockNumber,
       rlpParentNodes,
-      {from: facilitator},
+      { from: facilitator },
     );
 
-    let events = EventDecoder.getEvents(tx, this.gateway);
-
-    // let returnedValue = {};
-    // returnedValue.redeemer = result.redeemer_;
-    // returnedValue.redeemerNonce = result.redeemerNonce_.toString(10);
-    // returnedValue.amount = result.amount_.toString(10);
+    const events = EventDecoder.getEvents(tx, this.gateway);
 
     return {
       returned_value: result,
-      events: events,
+      events,
       block_number: tx.receipt.blockNumber,
     };
   }
@@ -441,21 +419,20 @@ class Gateway {
    * @returns {Object} Object containing the constructor params.
    */
   async getConstructorParams() {
-
-    let token = await this.gateway.token.call();
-    let baseToken = await this.gateway.baseToken.call();
-    let stateRootProvider = await this.gateway.stateRootProvider.call();
-    let bounty = await this.gateway.bounty.call();
-    let organization = await this.gateway.organization.call();
-    let burner = await this.gateway.burner.call();
+    const token = await this.gateway.token.call();
+    const baseToken = await this.gateway.baseToken.call();
+    const stateRootProvider = await this.gateway.stateRootProvider.call();
+    const bounty = await this.gateway.bounty.call();
+    const organization = await this.gateway.organization.call();
+    const burner = await this.gateway.burner.call();
 
     return {
-      token: token,
-      baseToken: baseToken,
-      stateRootProvider: stateRootProvider,
+      token,
+      baseToken,
+      stateRootProvider,
       bounty: bounty.toString(10),
-      organization: organization,
-      burner: burner,
+      organization,
+      burner,
     };
   }
 }
