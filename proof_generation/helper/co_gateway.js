@@ -20,6 +20,27 @@
 
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
+/**
+ * Object contains input parameter for confirmStakingIntent.
+ *
+ * @typedef {Object} Params
+ * @property {string} params.staker Staker address.
+ * @property {string} params.nonce Staker nonce.
+ * @property {string} params.beneficiary Beneficiary address.
+ * @property {string} params.amount Stake amount.
+ * @property {string} params.gasPrice Gas price.
+ * @property {string} params.gasLimit Gas limit.
+ * @property {string} params.hashLock Hash lock
+ * @property {string} params.blockHeight Block height.
+ * @property {string} params.rlpParentNodes RLP encoded proof data.
+ * @property {string} params.unlockSecret Unlock secret.
+ * @property {string} params.facilitator Facilitator address.
+ * @property {string} params.storageRoot Storage root for proof.
+ */
+
+/**
+ * CoGateway Class provides helper methods for stake and mint and redeem and unstake.
+ */
 class CoGateway {
   /**
    * @param {Object} registeredContracts All the deployed contracts
@@ -227,18 +248,18 @@ class CoGateway {
    * Confirm stake intent.
    *
    * @param {object} params.
-   * @param {string} options.staker Staker address.
-   * @param {string} options.nonce Staker nonce.
-   * @param {string} options.beneficiary Beneficiary address.
-   * @param {string} options.amount Stake amount.
-   * @param {string} options.gasPrice Gas price.
-   * @param {string} options.gasLimit Gas limit.
-   * @param {string} options.hashLock Hash lock
-   * @param {string} options.blockHeight Block height.
-   * @param {string} options.rlpParentNodes RLP encoded proof data.
-   * @param {string} options.unlockSecret Unlock secret.
-   * @param {string} options.facilitator Facilitator address.
-   * @param {string} options.storageRoot Storage root for proof.
+   * @param {string} params.staker Staker address.
+   * @param {string} params.nonce Staker nonce.
+   * @param {string} params.beneficiary Beneficiary address.
+   * @param {string} params.amount Stake amount.
+   * @param {string} params.gasPrice Gas price.
+   * @param {string} params.gasLimit Gas limit.
+   * @param {string} params.hashLock Hash lock
+   * @param {string} params.blockHeight Block height.
+   * @param {string} params.rlpParentNodes RLP encoded proof data.
+   * @param {string} params.unlockSecret Unlock secret.
+   * @param {string} params.facilitator Facilitator address.
+   * @param {string} params.storageRoot Storage root for proof.
    *
    * @returns {Object} Object containing events and return values.
    */

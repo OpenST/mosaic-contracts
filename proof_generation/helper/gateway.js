@@ -20,6 +20,28 @@
 
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
+/**
+ * Object contains input parameter needed for confirmRedeemIntent.
+ *
+ * @typedef {object} params.
+ * @property {string} params.redeemer Redeemer address.
+ * @property {string} params.redeemerNonce Redeemer nonce.
+ * @property {string} params.beneficiary Address where the redeemed tokens
+ *                                    will be transferred.
+ * @property {string} params.amount Redeem amount.
+ * @property {string} params.gasPrice Gas price that redeemer is ready to pay to
+ *                             get the redeem and unstake process done.
+ * @property {string} params.gasLimit Gas limit that redeemer is ready to pay.
+ * @property {string} params.blockHeight Block number for which the proof is valid.
+ * @property {string} params.hashLock Hash lock.
+ * @property {string} params.rlpParentNodes RLP encoded proof data.
+ * @property {string} params.storageRoot Storage root for proof.
+ * @property {string} params.facilitator Facilitator address for progress mint.
+ */
+
+/**
+ * Gateway class provides helper methods for stake and mint and redeem and unstake.
+ */
 class Gateway {
   /**
    * @param {Object} registeredContracts All the deployed contracts
