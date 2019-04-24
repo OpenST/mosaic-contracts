@@ -27,7 +27,7 @@ const Web3 = require('web3');
 
 const Utils = require('../test/test_lib/utils.js');
 
-const docker = require('../test_integration/docker');
+const docker = require('./docker');
 const CoGateway = require('./helper/co_gateway');
 const Gateway = require('./helper/gateway');
 const ProofUtils = require('../test_integration/lib/proof_utils');
@@ -81,18 +81,13 @@ contract('Stake and Mint ', (accounts) => {
   let coGateway;
 
   before(async () => {
-    console.log('starting docker');
     ({ rpcEndpointOrigin } = await docker());
-    console.log('started docker');
     web3Provider = new Web3(rpcEndpointOrigin);
     proofUtils = new ProofUtils(web3Provider, web3Provider);
-    console.log('proofUtils started');
   });
 
   beforeEach(async () => {
-    console.log('deploying contracts');
     registeredContracts = await deployer(web3Provider, accounts);
-    console.log('contracts deployed');
     gateway = new Gateway(registeredContracts);
     coGateway = new CoGateway(registeredContracts);
     stakeParams = {
