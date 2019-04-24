@@ -27,13 +27,13 @@ const Utils = require('../../../test/test_lib/utils.js');
 const zeroAddress = Utils.NULL_ADDRESS;
 contract('SimpleStake.constructor()', (accounts) => {
   const gateway = accounts[4];
-  let token;
+  let mockToken;
   beforeEach(async () => {
-    token = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new({ from: accounts[0] });
   });
 
   it('should pass with correct parameters', async () => {
-    const simpleStake = await SimpleStake.new(token.address, gateway, {
+    const simpleStake = await SimpleStake.new(mockToken.address, gateway, {
       from: accounts[0],
     });
 
@@ -43,12 +43,19 @@ contract('SimpleStake.constructor()', (accounts) => {
       'Returned value is not a valid address.',
     );
 
-    const eip20Token = await simpleStake.token.call();
+    const valueToken = await simpleStake.valueToken.call();
+    // token supports previous ABIs
+    const token = await simpleStake.token.call();
     const actualGateway = await simpleStake.gateway.call();
 
     assert.strictEqual(
-      eip20Token,
-      token.address,
+      valueToken,
+      mockToken.address,
+      'Expected token address is different from actual address.',
+    );
+    assert.strictEqual(
+      token,
+      mockToken.address,
       'Expected token address is different from actual address.',
     );
     assert.strictEqual(
@@ -59,15 +66,15 @@ contract('SimpleStake.constructor()', (accounts) => {
   });
 
   it('should fail if zero token address is passed', async () => {
-    Utils.expectRevert(
+    await Utils.expectRevert(
       SimpleStake.new(zeroAddress, gateway, { from: accounts[0] }),
-      'Token contract address must not be zero.',
+      'Value token contract address must not be zero.',
     );
   });
 
   it('should fail if zero gateway address is passed', async () => {
-    Utils.expectRevert(
-      SimpleStake.new(token.address, zeroAddress, { from: accounts[0] }),
+    await Utils.expectRevert(
+      SimpleStake.new(mockToken.address, zeroAddress, { from: accounts[0] }),
       'Gateway contract address must not be zero.',
     );
   });

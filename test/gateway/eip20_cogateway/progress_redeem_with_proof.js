@@ -74,14 +74,14 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', (accounts) => {
       messageStatus: MessageStatusEnum.Declared,
     };
 
-    const tokenAddress = accounts[9];
+    const valueTokenAddress = accounts[9];
     const symbol = 'DMY';
     const tokenName = 'Dummy token';
     const tokenDecimal = 18;
     const organization = accounts[2];
 
     utilityToken = await MockUtilityToken.new(
-      tokenAddress,
+      valueTokenAddress,
       symbol,
       tokenName,
       tokenDecimal,

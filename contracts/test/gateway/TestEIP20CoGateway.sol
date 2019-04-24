@@ -46,7 +46,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      *                staking process.
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
-     * @param _burner An address where tokens are sent when they should be burnt.
+     * @param _burner An address where base tokens are sent when they should be burnt.
      */
     constructor(
         address _valueToken,
@@ -204,7 +204,7 @@ contract TestEIP20CoGateway is EIP20CoGateway {
     * @dev This is used for testing purpose.
     *
     * @param _messageHash Hash for which redeem mapping is updated.
-    * @param _beneficiary Beneficiary address to which the branded tokens
+    * @param _beneficiary Beneficiary address to which the value tokens
     *                     will be transferred after unstake.
     * @param _amount Total amount for which the redeem was initiated.
     */

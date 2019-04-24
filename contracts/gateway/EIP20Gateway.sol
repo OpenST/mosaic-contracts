@@ -172,7 +172,7 @@ contract EIP20Gateway is GatewayBase {
         /** Amount that will be unstaked. */
         uint256 amount;
 
-        /** Address that will receive the unstaked token. */
+        /** Address that will receive the unstaked value token. */
         address beneficiary;
     }
 
@@ -185,8 +185,11 @@ contract EIP20Gateway is GatewayBase {
     /** Escrow address to lock staked fund. */
     SimpleStake public stakeVault;
 
-    /** Address of EIP20 token. */
-    EIP20Interface public token;
+    /**
+     * Address of EIP20 token for which the gateway
+     * will enable facilitation of stake and mint.
+     */
+    EIP20Interface public valueToken;
 
     /**
      * Address of ERC20 token in which the facilitator will stake(bounty)
@@ -194,7 +197,7 @@ contract EIP20Gateway is GatewayBase {
      */
     EIP20Interface public baseToken;
 
-    /** Address where token will be burned. */
+    /** Address where base token will be burned. */
     address public burner;
 
     /** Maps messageHash to the Stake object. */
@@ -223,7 +226,7 @@ contract EIP20Gateway is GatewayBase {
      *         for which the gateway will enable facilitation of stake and
      *         mint.
      *
-     * @param _token The ERC20 token contract address that will be
+     * @param _valueToken The ERC20 token contract address that will be
      *               staked and corresponding utility tokens will be minted
      *               in auxiliary chain.
      * @param _baseToken The ERC20 token address that will be used for
@@ -233,10 +236,10 @@ contract EIP20Gateway is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _organization Address of an organization contract.
-     * @param _burner Address where tokens will be burned.
+     * @param _burner Address where base tokens will be burned.
      */
     constructor(
-        EIP20Interface _token,
+        EIP20Interface _valueToken,
         EIP20Interface _baseToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
@@ -251,20 +254,20 @@ contract EIP20Gateway is GatewayBase {
         public
     {
         require(
-            address(_token) != address(0),
-            "Token contract address must not be zero."
+            address(_valueToken) != address(0),
+            "Value token contract address must not be zero."
         );
         require(
             address(_baseToken) != address(0),
             "Base token contract address for bounty must not be zero"
         );
-        token = _token;
+        valueToken = _valueToken;
         baseToken = _baseToken;
         burner = _burner;
         // gateway is in-active initially.
         activated = false;
         // deploy simpleStake contract that will keep the staked amounts.
-        stakeVault = new SimpleStake(_token, address(this));
+        stakeVault = new SimpleStake(_valueToken, address(this));
     }
 
 
@@ -315,7 +318,7 @@ contract EIP20Gateway is GatewayBase {
         /*
          * Maximum reward possible is _gasPrice * _gasLimit, we check this
          * upfront in this function to make sure that after minting of the
-         * tokens it is possible to give the reward to the facilitator.
+         * utility tokens it is possible to give the reward to the facilitator.
          */
         require(
             _amount > _gasPrice.mul(_gasLimit),
@@ -361,7 +364,7 @@ contract EIP20Gateway is GatewayBase {
 
         // Transfer staker amount to the gateway.
         require(
-            token.transferFrom(staker, address(this), _amount),
+            valueToken.transferFrom(staker, address(this), _amount),
             "Stake amount must be transferred to gateway"
         );
 
@@ -631,7 +634,7 @@ contract EIP20Gateway is GatewayBase {
         delete stakes[_messageHash];
 
         // Transfer the staked amount to the staker.
-        token.transfer(message.sender, amount_);
+        valueToken.transfer(message.sender, amount_);
 
         // Burn facilitator bounty.
         baseToken.transfer(burner, stakeBounty);
@@ -649,7 +652,7 @@ contract EIP20Gateway is GatewayBase {
      *
      * @param _redeemer Redeemer address.
      * @param _redeemerNonce Redeemer nonce.
-     * @param _beneficiary Address where the redeemed tokens will be
+     * @param _beneficiary Address where the unstaked value tokens will be
      *                     transferred.
      * @param _amount Redeem amount.
      * @param _gasPrice Gas price that redeemer is ready to pay to get the
@@ -700,7 +703,7 @@ contract EIP20Gateway is GatewayBase {
         /*
          * Maximum reward possible is _gasPrice * _gasLimit, we check this
          * upfront in this function to make sure that after unstake of the
-         * tokens it is possible to give the reward to the facilitator.
+         * value tokens it is possible to give the reward to the facilitator.
          */
         require(
             _amount > _gasPrice.mul(_gasLimit),
@@ -1028,6 +1031,20 @@ contract EIP20Gateway is GatewayBase {
         success_ = true;
     }
 
+    /**
+     * @notice Returns the value of valueToken.
+     *
+     * @dev This function supports previous versions of this contract's ABI
+     *      that expect a public function, token, that returns the address
+     *      of the value token.
+     */
+    function token()
+        external
+        view
+        returns (address valueToken_)
+    {
+        valueToken_ = address(valueToken);
+    }
 
     /* Private functions */
 
@@ -1110,7 +1127,7 @@ contract EIP20Gateway is GatewayBase {
         delete stakes[_messageHash];
 
         // Transfer the staked amount to stakeVault.
-        token.transfer(address(stakeVault), stakeAmount_);
+        valueToken.transfer(address(stakeVault), stakeAmount_);
 
         baseToken.transfer(msg.sender, stakedBounty);
 

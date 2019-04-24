@@ -184,7 +184,7 @@ contract EIP20CoGateway is GatewayBase {
     /** Address of value token. */
     address public valueToken;
 
-    /** Address where token will be burned. */
+    /** Address where base coin will be burned. */
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
@@ -210,7 +210,7 @@ contract EIP20CoGateway is GatewayBase {
      *                process.
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
-     * @param _burner Address where tokens will be burned.
+     * @param _burner Address where base coin will be burned.
      */
     constructor(
         address _valueToken,
@@ -456,7 +456,7 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice Completes the redeem process. This decreases token supply
+     * @notice Completes the redeem process. This decreases utility token supply
      *         on successful redeem.
      *
      * @dev Message bus ensures correct execution sequence of methods and also
@@ -782,7 +782,7 @@ contract EIP20CoGateway is GatewayBase {
 
         /*
          * Maximum reward possible is _gasPrice * _gasLimit, we check this
-         * upfront in this function to make sure that after minting of the
+         * upfront in this function to ensure that after minting the utility
          * tokens it is possible to give the reward to the facilitator.
          */
         require(
@@ -1098,7 +1098,7 @@ contract EIP20CoGateway is GatewayBase {
 
         delete mints[_messageHash];
 
-        // Increase token supply with mint amount to beneficiary
+        // Increase utility token supply with mint amount to beneficiary
         // after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             payableBeneficiary,
@@ -1164,7 +1164,7 @@ contract EIP20CoGateway is GatewayBase {
 
         delete redeems[_messageHash];
 
-        // Decrease the token supply.
+        // Decrease the utility token supply.
         UtilityTokenInterface(utilityToken).decreaseSupply(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator.

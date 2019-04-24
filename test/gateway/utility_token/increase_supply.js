@@ -33,7 +33,7 @@ const TOKEN_NAME = 'Utility Token';
 const TOKEN_DECIMALS = 18;
 
 contract('UtilityToken.increaseSupply()', (accounts) => {
-  let brandedToken;
+  let valueToken;
   let organization;
   let utilityToken;
   let coGatewayAddress;
@@ -41,12 +41,12 @@ contract('UtilityToken.increaseSupply()', (accounts) => {
   let amount;
 
   beforeEach(async () => {
-    brandedToken = accounts[4];
+    valueToken = accounts[4];
     organization = accounts[0];
     beneficiary = accounts[6];
     amount = new BN(1000);
     utilityToken = await UtilityToken.new(
-      brandedToken,
+      valueToken,
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,

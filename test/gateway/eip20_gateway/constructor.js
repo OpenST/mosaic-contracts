@@ -76,12 +76,21 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       burner,
     );
 
+    const valueTokenAddress = await gateway.valueToken.call();
+
+    assert.equal(
+      valueTokenAddress,
+      mockToken.address,
+      'Invalid valueTokenAddress address from contract.',
+    );
+
+    // token supports previous ABIs
     const tokenAddress = await gateway.token.call();
 
     assert.equal(
       tokenAddress,
       mockToken.address,
-      'Invalid valueTokenAddress address from contract.',
+      'Invalid tokenAddress address from contract.',
     );
 
     const bountyTokenAdd = await gateway.baseToken.call();
@@ -117,7 +126,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         mockOrganization.address,
         burner,
       ),
-      'Token contract address must not be zero.',
+      'Value token contract address must not be zero.',
     );
   });
 

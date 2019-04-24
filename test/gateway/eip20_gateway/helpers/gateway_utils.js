@@ -27,13 +27,13 @@ const utils = require('../../../test_lib/utils.js');
  * @constructor
  *
  * @param {Object} gateway Gateway contract object.
- * @param {Object} token EIP20 token contract object.
+ * @param {Object} valueToken EIP20 token contract object. This is the value token.
  * @param {Object} baseToken EIP20 token contract object. This is the base token.
  */
 class GatewayUtils {
-  constructor(gateway, token, baseToken) {
+  constructor(gateway, valueToken, baseToken) {
     this.gateway = gateway;
-    this.token = token;
+    this.valueToken = valueToken;
     this.baseToken = baseToken;
   }
 
@@ -170,9 +170,9 @@ class GatewayUtils {
    * @return {Object} object containing balances of all the addresses.
    */
   async _getBalances(staker, gateway) {
-    const stakerTokenBalance = await this.token.balanceOf.call(staker);
+    const stakerValueTokenBalance = await this.valueToken.balanceOf.call(staker);
 
-    const gatewayTokenBalance = await this.token.balanceOf.call(gateway);
+    const gatewayValueTokenBalance = await this.valueToken.balanceOf.call(gateway);
 
     const stakerBaseTokenBalance = await this.baseToken.balanceOf.call(staker);
 
@@ -180,9 +180,9 @@ class GatewayUtils {
       gateway,
     );
 
-    const tokenBalance = {
-      staker: stakerTokenBalance,
-      gateway: gatewayTokenBalance,
+    const valueTokenBalance = {
+      staker: stakerValueTokenBalance,
+      gateway: gatewayValueTokenBalance,
     };
     const baseTokenBalance = {
       staker: stakerBaseTokenBalance,
@@ -190,7 +190,7 @@ class GatewayUtils {
     };
 
     return {
-      token: tokenBalance,
+      valueToken: valueTokenBalance,
       baseToken: baseTokenBalance,
     };
   }
@@ -215,12 +215,12 @@ class GatewayUtils {
     // Assert the balances
     if (resultType === utils.ResultType.FAIL) {
       assert(
-        initialBalance.token.staker.eq(currentBalance.token.staker),
+        initialBalance.valueToken.staker.eq(currentBalance.valueToken.staker),
         'Staker balance must be unchanged',
       );
 
       assert(
-        initialBalance.token.gateway.eq(currentBalance.token.gateway),
+        initialBalance.valueToken.gateway.eq(currentBalance.valueToken.gateway),
         'Gateway balance must be unchanged',
       );
 
@@ -235,16 +235,16 @@ class GatewayUtils {
       );
     } else {
       assert(
-        currentBalance.token.staker.eq(
-          initialBalance.token.staker.sub(stakeAmount),
+        currentBalance.valueToken.staker.eq(
+          initialBalance.valueToken.staker.sub(stakeAmount),
         ),
         `Staker token balance must decrease by ${stakeAmount}`,
       );
 
       assert(
-        initialBalance.token.gateway
+        initialBalance.valueToken.gateway
           .add(stakeAmount)
-          .eq(currentBalance.token.gateway),
+          .eq(currentBalance.valueToken.gateway),
         `Gateway token balance must increase by ${stakeAmount}`,
       );
 

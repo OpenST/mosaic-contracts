@@ -134,7 +134,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
 
         require(
             msg.value == TOKENS_MAX,
-            "Payable amount must be equal to total supply of token."
+            "Payable amount must be equal to total supply of value token."
         );
 
         initialized = true;
