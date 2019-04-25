@@ -27,8 +27,6 @@ const Web3 = require('web3');
 
 const ProofGenerationUtils = require('./proof_generation_utils');
 const docker = require('./docker');
-const CoGateway = require('./helper/co_gateway');
-const Gateway = require('./helper/gateway');
 const ProofUtils = require('../test_integration/lib/proof_utils');
 const deployer = require('./deployer.js');
 
@@ -51,31 +49,12 @@ function writeToFile(location, content) {
   });
 }
 
-/**
- * Get address of all deployed contracts.
- *
- * @param {Object} registeredContracts Object containing all contracts.
- *
- * @returns {Object} An object containing the deployed contract address.
- */
-function getContractAddresses(registeredContracts) {
-  const addresses = {};
-  Object.keys(registeredContracts).map((key) => {
-    if (registeredContracts[key].address) {
-      addresses[key] = registeredContracts[key].address;
-    }
-  });
-  return addresses;
-}
-
 contract('Stake and Mint ', (accounts) => {
   let registeredContracts;
   let stakeParams;
   let rpcEndpointOrigin;
   let proofUtils;
   let web3Provider;
-  let gateway;
-  let coGateway;
   let proofGenerationUtils;
 
   before(async () => {
@@ -86,8 +65,6 @@ contract('Stake and Mint ', (accounts) => {
 
   beforeEach(async () => {
     registeredContracts = await deployer(web3Provider, accounts);
-    gateway = new Gateway(registeredContracts);
-    coGateway = new CoGateway(registeredContracts);
     stakeParams = {
       amount: new BN(100000000),
       beneficiary: accounts[2],
@@ -97,11 +74,10 @@ contract('Stake and Mint ', (accounts) => {
       staker: accounts[0],
     };
     proofGenerationUtils = new ProofGenerationUtils(
-      gateway,
-      coGateway,
+      registeredContracts,
       stakeParams,
       null,
-      proofUtils
+      proofUtils,
     );
   });
 
@@ -109,45 +85,36 @@ contract('Stake and Mint ', (accounts) => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; ++i) {
-      const proofData = {};
-      proofData.contracts = getContractAddresses(registeredContracts);
-      proofData.gateway = {};
-      proofData.gateway.constructor = await gateway.getConstructorParams();
-      proofData.co_gateway = {};
-      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
+     proofGenerationUtils.resetProofData();
+     proofGenerationUtils.initializeProofData();
 
       const {
         stakeProofData,
         stakeResult,
-      } = await proofGenerationUtils.populateStakeProofData(
-        proofData,
-      );
+      } = await proofGenerationUtils.populateStakeProofData();
 
       const {
         confirmStakeIntentResult,
       } = await proofGenerationUtils.populateConfirmStakeIntentProofData(
         stakeProofData,
-        proofData,
-      );
+        );
 
       const {
         progressStakeParams,
       } = await proofGenerationUtils.populateProgressStakeProofData(
         stakeResult,
         confirmStakeIntentResult,
-        proofData,
       );
 
       await proofGenerationUtils.populateProgressMintProofData(
         progressStakeParams,
         confirmStakeIntentResult,
-        proofData,
       );
 
       // Write the proof data in file.
       writeToFile(
         `${PROOF_GENERATED_PATH}stake_progressed_${stakeParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData),
+        JSON.stringify(proofGenerationUtils.proofData),
       );
 
       // proof data is generated starting for nonce 0.
@@ -159,25 +126,18 @@ contract('Stake and Mint ', (accounts) => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; i++) {
-      const proofData = {};
-      proofData.contracts = getContractAddresses(registeredContracts);
-      proofData.gateway = {};
-      proofData.gateway.constructor = await gateway.getConstructorParams();
-      proofData.co_gateway = {};
-      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
+      proofGenerationUtils.resetProofData();
+      proofGenerationUtils.initializeProofData();
 
       const {
         stakeProofData,
         stakeResult,
-      } = await proofGenerationUtils.populateStakeProofData(
-        proofData,
-      );
+      } = await proofGenerationUtils.populateStakeProofData();
 
       const {
         confirmStakeIntentResult,
       } = await proofGenerationUtils.populateConfirmStakeIntentProofData(
         stakeProofData,
-        proofData,
       );
 
       const {
@@ -186,7 +146,6 @@ contract('Stake and Mint ', (accounts) => {
       } = await proofGenerationUtils.populateRevertStakeProofData(
         stakeResult,
         confirmStakeIntentResult,
-        proofData,
       );
 
       const {
@@ -194,13 +153,11 @@ contract('Stake and Mint ', (accounts) => {
       } = await proofGenerationUtils.populateConfirmRevertStakeProofData(
         revertStakeParams,
         revertStakeProofData,
-        proofData,
       );
 
       await proofGenerationUtils.populateProgressRevertStakeProofData(
         revertStakeParams,
         confirmRevertStakeProofData,
-        proofData,
       );
 
       // Write the proof data in to the files.
@@ -221,8 +178,6 @@ contract('Redeem and Unstake ', (accounts) => {
   let rpcEndpointOrigin;
   let proofUtils;
   let web3Provider;
-  let gateway;
-  let coGateway;
   let proofGenerationUtils;
 
   before(async () => {
@@ -233,8 +188,6 @@ contract('Redeem and Unstake ', (accounts) => {
 
   beforeEach(async () => {
     registeredContracts = await deployer(web3Provider, accounts);
-    gateway = new Gateway(registeredContracts);
-    coGateway = new CoGateway(registeredContracts);
     redeemParams = {
       amount: new BN(1000),
       gasPrice: new BN(1),
@@ -244,11 +197,10 @@ contract('Redeem and Unstake ', (accounts) => {
       beneficiary: accounts[2],
     };
     proofGenerationUtils = new ProofGenerationUtils(
-      gateway,
-      coGateway,
+      registeredContracts,
       null,
       redeemParams,
-      proofUtils
+      proofUtils,
     );
   });
 
@@ -256,36 +208,27 @@ contract('Redeem and Unstake ', (accounts) => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; i++) {
-      const proofData = {};
-      proofData.contracts = getContractAddresses(registeredContracts);
-      proofData.gateway = {};
-      proofData.gateway.constructor = await gateway.getConstructorParams();
-      proofData.co_gateway = {};
-      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
+      proofGenerationUtils.resetProofData();
+      proofGenerationUtils.initializeProofData();
 
       const {
         redeemProofData,
-      } = await proofGenerationUtils.populateRedeemProofData(
-        proofData,
-      );
+      } = await proofGenerationUtils.populateRedeemProofData();
 
       const {
         confirmRedeemIntentResult,
       } = await proofGenerationUtils.populateConfirmRedeemIntentProofData(
         redeemProofData,
-        proofData,
       );
 
       const {
         progressRedeemParams,
       } = await proofGenerationUtils.populateProgressRedeemProofData(
         confirmRedeemIntentResult,
-        proofData,
       );
 
       await proofGenerationUtils.populateProgressUnstakeProofData(
         progressRedeemParams,
-        proofData,
       );
 
       // Write the proof data in to the files.
@@ -303,23 +246,16 @@ contract('Redeem and Unstake ', (accounts) => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; i++) {
-      const proofData = {};
-      proofData.contracts = getContractAddresses(registeredContracts);
-      proofData.gateway = {};
-      proofData.gateway.constructor = await gateway.getConstructorParams();
-      proofData.co_gateway = {};
-      proofData.co_gateway.constructor = await coGateway.getConstructorParams();
+      proofGenerationUtils.resetProofData();
+      proofGenerationUtils.initializeProofData();
 
       const {
         redeemProofData,
         redeemResult,
-      } = await proofGenerationUtils.populateRedeemProofData(
-        proofData,
-      );
+      } = await proofGenerationUtils.populateRedeemProofData();
 
       await proofGenerationUtils.populateConfirmRedeemIntentProofData(
         redeemProofData,
-        proofData,
       );
 
       const {
@@ -327,7 +263,6 @@ contract('Redeem and Unstake ', (accounts) => {
         revertRedeemProofData,
       } = await proofGenerationUtils.populateRevertRedeemProofData(
         redeemResult,
-        proofData,
       );
 
       const {
@@ -335,19 +270,17 @@ contract('Redeem and Unstake ', (accounts) => {
       } = await proofGenerationUtils.populateConfirmRevertRedeemProofData(
         revertRedeemParams,
         revertRedeemProofData,
-        proofData,
       );
 
       await proofGenerationUtils.populateProgressRevertRedeemProofData(
         revertRedeemParams,
         confirmRevertRedeemProofData,
-        proofData,
       );
 
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}redeem_revoked_${redeemParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData),
+        JSON.stringify(proofGenerationUtils.proofData),
       );
 
       // proof data is generated starting for nonce 0.
