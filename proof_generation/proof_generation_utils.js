@@ -119,11 +119,9 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling stake.
    *
-   * @param proofData {object} Contains proof data.
-   *
    * @returns {Promise<{stakeProofData, stakeResult: void}>}
    */
-  async populateStakeProofData(proofData) {
+  async populateStakeProofData() {
     const generatedHashLock = TestLibUtils.generateHashLock();
     this.stakeParams.hashLock = generatedHashLock.l;
     this.stakeParams.unlockSecret = generatedHashLock.s;
@@ -133,10 +131,10 @@ class ProofGenerationUtils {
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
-    proofData.gateway.stake = {};
-    proofData.gateway.stake.params = this.stakeParams;
-    proofData.gateway.stake.return_value = stakeResult;
-    proofData.gateway.stake.proof_data = stakeProofData;
+    this.proofData.gateway.stake = {};
+    this.proofData.gateway.stake.params = this.stakeParams;
+    this.proofData.gateway.stake.return_value = stakeResult;
+    this.proofData.gateway.stake.proof_data = stakeProofData;
     return {
       stakeProofData,
       stakeResult,
@@ -147,14 +145,10 @@ class ProofGenerationUtils {
    * Populates proof data after calling confirmStakingIntent.
    *
    * @param stakeProofData {object} Contains proof data after calling stake.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{confirmStakeIntentResult}>}
    */
-  async populateConfirmStakeIntentProofData(
-    stakeProofData,
-    proofData,
-  ) {
+  async populateConfirmStakeIntentProofData(stakeProofData) {
     const confirmStakeIntentParams = Object.assign({}, this.stakeParams);
     confirmStakeIntentParams.blockHeight = stakeProofData.block_number;
     confirmStakeIntentParams.rlpParentNodes = stakeProofData.storageProof[0].serializedProof;
@@ -169,10 +163,10 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-    proofData.co_gateway.confirm_stake_intent = {};
-    proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
-    proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
-    proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
+    this.proofData.co_gateway.confirm_stake_intent = {};
+    this.proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
+    this.proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
+    this.proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
     return {
       confirmStakeIntentResult,
     };
@@ -183,15 +177,10 @@ class ProofGenerationUtils {
    *
    * @param stakeResult {object} Result after calling staking.
    * @param confirmStakeIntentResult {object} Result after calling confirmStakeIntent
-   * @param proofData Contains proof data.
    *
    * @returns {Promise<{progressStakeParams}>}
    */
-  async populateProgressStakeProofData(
-    stakeResult,
-    confirmStakeIntentResult,
-    proofData,
-  ) {
+  async populateProgressStakeProofData(stakeResult, confirmStakeIntentResult) {
     const progressStakeParams = {};
     progressStakeParams.messageHash = stakeResult.returned_value.messageHash_;
     progressStakeParams.unlockSecret = this.stakeParams.unlockSecret;
@@ -202,10 +191,10 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-    proofData.gateway.progress_stake = {};
-    proofData.gateway.progress_stake.params = progressStakeParams;
-    proofData.gateway.progress_stake.return_value = progressStakeResult;
-    proofData.gateway.progress_stake.proof_data = progressStakeProofData;
+    this.proofData.gateway.progress_stake = {};
+    this.proofData.gateway.progress_stake.params = progressStakeParams;
+    this.proofData.gateway.progress_stake.return_value = progressStakeResult;
+    this.proofData.gateway.progress_stake.proof_data = progressStakeProofData;
 
     return {
       progressStakeParams,
@@ -217,14 +206,12 @@ class ProofGenerationUtils {
    *
    * @param progressStakeParams {object} Contains data needed for progressStake.
    * @param confirmStakeIntentResult {object} Result after calling confirmStakeIntent.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<void>}
    */
   async populateProgressMintProofData(
     progressStakeParams,
     confirmStakeIntentResult,
-    proofData,
   ) {
     const progressMintParams = Object.assign({}, progressStakeParams);
     const progressMintResult = await this.coGateway.progressMint(progressMintParams);
@@ -233,10 +220,10 @@ class ProofGenerationUtils {
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
 
-    proofData.co_gateway.progress_mint = {};
-    proofData.co_gateway.progress_mint.params = progressMintParams;
-    proofData.co_gateway.progress_mint.return_value = progressMintResult;
-    proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
+    this.proofData.co_gateway.progress_mint = {};
+    this.proofData.co_gateway.progress_mint.params = progressMintParams;
+    this.proofData.co_gateway.progress_mint.return_value = progressMintResult;
+    this.proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
   }
 
   /**
@@ -244,15 +231,10 @@ class ProofGenerationUtils {
    *
    * @param stakeResult {object} Result after calling stake.
    * @param confirmStakeIntentResult {object} Result after calling confirmStakeIntent.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{revertStakeProofData, revertStakeParams}>}
    */
-  async populateRevertStakeProofData(
-    stakeResult,
-    confirmStakeIntentResult,
-    proofData,
-  ) {
+  async populateRevertStakeProofData(stakeResult, confirmStakeIntentResult) {
     const revertStakeParams = {};
     revertStakeParams.messageHash = confirmStakeIntentResult.returned_value.messageHash_;
     revertStakeParams.staker = this.stakeParams.staker;
@@ -263,10 +245,10 @@ class ProofGenerationUtils {
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
-    proofData.gateway.revert_stake = {};
-    proofData.gateway.revert_stake.params = revertStakeParams;
-    proofData.gateway.revert_stake.return_value = revertStakeResult;
-    proofData.gateway.revert_stake.proof_data = revertStakeProofData;
+    this.proofData.gateway.revert_stake = {};
+    this.proofData.gateway.revert_stake.params = revertStakeParams;
+    this.proofData.gateway.revert_stake.return_value = revertStakeResult;
+    this.proofData.gateway.revert_stake.proof_data = revertStakeProofData;
 
     return {
       revertStakeProofData,
@@ -279,15 +261,10 @@ class ProofGenerationUtils {
    *
    * @param revertStakeParams {object} Contains revert stake parameters.
    * @param revertStakeProofData {object} Contains revert stake proof data.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{confirmRevertStakeProofData}>}
    */
-  async populateConfirmRevertStakeProofData(
-    revertStakeParams,
-    revertStakeProofData,
-    proofData,
-  ) {
+  async populateConfirmRevertStakeProofData(revertStakeParams, revertStakeProofData) {
     const confirmRevertStakeParams = {};
     confirmRevertStakeParams.messageHash = revertStakeParams.messageHash;
     confirmRevertStakeParams.blockHeight = revertStakeProofData.block_number;
@@ -305,10 +282,10 @@ class ProofGenerationUtils {
       [confirmRevertStakeParams.messageHash],
     );
 
-    proofData.co_gateway.confirm_revert_stake_intent = {};
-    proofData.co_gateway.confirm_revert_stake_intent.params = confirmRevertStakeParams;
-    proofData.co_gateway.confirm_revert_stake_intent.return_value = confirmRevertStakeResult;
-    proofData.co_gateway.confirm_revert_stake_intent.proof_data = confirmRevertStakeProofData;
+    this.proofData.co_gateway.confirm_revert_stake_intent = {};
+    this.proofData.co_gateway.confirm_revert_stake_intent.params = confirmRevertStakeParams;
+    this.proofData.co_gateway.confirm_revert_stake_intent.return_value = confirmRevertStakeResult;
+    this.proofData.co_gateway.confirm_revert_stake_intent.proof_data = confirmRevertStakeProofData;
 
     return {
       confirmRevertStakeProofData,
@@ -320,15 +297,10 @@ class ProofGenerationUtils {
    *
    * @param revertStakeParams {object} Contains revert stake data.
    * @param confirmRevertStakeProofData {object} Contains confirm revert stake proof data.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<void>}
    */
-  async populateProgressRevertStakeProofData(
-    revertStakeParams,
-    confirmRevertStakeProofData,
-    proofData,
-  ) {
+  async populateProgressRevertStakeProofData(revertStakeParams, confirmRevertStakeProofData) {
     const progressRevertStakeParams = {};
     progressRevertStakeParams.messageHash = revertStakeParams.messageHash;
     progressRevertStakeParams.blockHeight = confirmRevertStakeProofData.block_number;
@@ -345,22 +317,18 @@ class ProofGenerationUtils {
       this.gateway.address,
       [progressRevertStakeParams.messageHash],
     );
-    proofData.gateway.progress_revert_stake_intent = {};
-    proofData.gateway.progress_revert_stake_intent.params = progressRevertStakeParams;
-    proofData.gateway.progress_revert_stake_intent.return_value = progressRevertStakeResult;
-    proofData.gateway.progress_revert_stake_intent.proof_data = progressRevertStakeProofData;
+    this.proofData.gateway.progress_revert_stake_intent = {};
+    this.proofData.gateway.progress_revert_stake_intent.params = progressRevertStakeParams;
+    this.proofData.gateway.progress_revert_stake_intent.return_value = progressRevertStakeResult;
+    this.proofData.gateway.progress_revert_stake_intent.proof_data = progressRevertStakeProofData;
   }
 
   /**
    * Populates proof data after calling redeem.
    *
-   * @param proofData {object} Contains proof data.
-   *
    * @returns {Promise<{redeemProofData, redeemResult}>}
    */
-  async populateRedeemProofData(
-    proofData,
-  ) {
+  async populateRedeemProofData() {
     const generatedHashLock = TestLibUtils.generateHashLock();
     this.redeemParams.hashLock = generatedHashLock.l;
     this.redeemParams.unlockSecret = generatedHashLock.s;
@@ -369,10 +337,10 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [redeemResult.returned_value.messageHash_],
     );
-    proofData.co_gateway.redeem = {};
-    proofData.co_gateway.redeem.params = this.redeemParams;
-    proofData.co_gateway.redeem.return_value = redeemResult;
-    proofData.co_gateway.redeem.proof_data = redeemProofData;
+    this.proofData.co_gateway.redeem = {};
+    this.proofData.co_gateway.redeem.params = this.redeemParams;
+    this.proofData.co_gateway.redeem.return_value = redeemResult;
+    this.proofData.co_gateway.redeem.proof_data = redeemProofData;
 
     return {
       redeemProofData,
@@ -384,14 +352,10 @@ class ProofGenerationUtils {
    * Contains proof data after calling confirm redeem intent.
    *
    * @param redeemProofData {object} Contains redeem proof data.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{confirmRedeemIntentResult}>}
    */
-  async populateConfirmRedeemIntentProofData(
-    redeemProofData,
-    proofData,
-  ) {
+  async populateConfirmRedeemIntentProofData(redeemProofData) {
     const confirmRedeemIntentParams = Object.assign({}, this.redeemParams);
     confirmRedeemIntentParams.blockNumber = redeemProofData.block_number;
     confirmRedeemIntentParams.storageProof = redeemProofData.storageProof[0].serializedProof;
@@ -407,10 +371,10 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmRedeemIntentResult.returned_value.messageHash_],
     );
-    proofData.gateway.confirm_redeem_intent = {};
-    proofData.gateway.confirm_redeem_intent.params = confirmRedeemIntentParams;
-    proofData.gateway.confirm_redeem_intent.return_value = confirmRedeemIntentResult;
-    proofData.gateway.confirm_redeem_intent.proof_data = confirmRedeemIntentProofData;
+    this.proofData.gateway.confirm_redeem_intent = {};
+    this.proofData.gateway.confirm_redeem_intent.params = confirmRedeemIntentParams;
+    this.proofData.gateway.confirm_redeem_intent.return_value = confirmRedeemIntentResult;
+    this.proofData.gateway.confirm_redeem_intent.proof_data = confirmRedeemIntentProofData;
 
     return {
       confirmRedeemIntentResult,
@@ -421,14 +385,10 @@ class ProofGenerationUtils {
    * Populates proof data after calling progress redeem.
    *
    * @param confirmRedeemIntentResult {object} Result after calling confirm redeem intent.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{progressRedeemParams}>}
    */
-  async populateProgressRedeemProofData(
-    confirmRedeemIntentResult,
-    proofData,
-  ) {
+  async populateProgressRedeemProofData(confirmRedeemIntentResult) {
     const progressRedeemParams = {};
     progressRedeemParams.messageHash = confirmRedeemIntentResult.returned_value.messageHash_;
     progressRedeemParams.unlockSecret = this.redeemParams.unlockSecret;
@@ -441,10 +401,10 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [progressRedeemParams.messageHash],
     );
-    proofData.co_gateway.progress_redeem = {};
-    proofData.co_gateway.progress_redeem.params = progressRedeemParams;
-    proofData.co_gateway.progress_redeem.return_value = progressRedeemResult;
-    proofData.co_gateway.progress_redeem.proof_data = progressRedeemProofData;
+    this.proofData.co_gateway.progress_redeem = {};
+    this.proofData.co_gateway.progress_redeem.params = progressRedeemParams;
+    this.proofData.co_gateway.progress_redeem.return_value = progressRedeemResult;
+    this.proofData.co_gateway.progress_redeem.proof_data = progressRedeemProofData;
 
     return {
       progressRedeemParams,
@@ -455,14 +415,10 @@ class ProofGenerationUtils {
    * Populates proof data after calling progress unstake.
    *
    * @param progressRedeemParams {object} Contains data needed for progress redeem.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<void>}
    */
-  async populateProgressUnstakeProofData(
-    progressRedeemParams,
-    proofData,
-  ) {
+  async populateProgressUnstakeProofData(progressRedeemParams) {
     const progressUnstakeParams = Object.assign({}, progressRedeemParams);
     progressUnstakeParams.unstakeAmount = this.redeemParams.amount;
     const progressUnstakeResult = await this.gateway.progressUnstake(
@@ -472,24 +428,20 @@ class ProofGenerationUtils {
       this.gateway.address,
       [progressUnstakeParams.messageHash],
     );
-    proofData.gateway.progress_unstake = {};
-    proofData.gateway.progress_unstake.params = progressUnstakeParams;
-    proofData.gateway.progress_unstake.return_value = progressUnstakeResult;
-    proofData.gateway.progress_unstake.proof_data = progressUnstakeProofData;
+    this.proofData.gateway.progress_unstake = {};
+    this.proofData.gateway.progress_unstake.params = progressUnstakeParams;
+    this.proofData.gateway.progress_unstake.return_value = progressUnstakeResult;
+    this.proofData.gateway.progress_unstake.proof_data = progressUnstakeProofData;
   }
 
   /**
    * Populates proof data after calling revert redeem.
    *
    * @param redeemResult {object} Result after calling redeem.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{revertRedeemProofData, revertRedeemResult, revertRedeemParams}>}
    */
-  async populateRevertRedeemProofData(
-    redeemResult,
-    proofData,
-  ) {
+  async populateRevertRedeemProofData(redeemResult) {
     const revertRedeemParams = {};
     revertRedeemParams.messageHash = redeemResult.returned_value.messageHash_;
     revertRedeemParams.redeemer = this.redeemParams.redeemer;
@@ -500,10 +452,10 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [revertRedeemParams.messageHash],
     );
-    proofData.co_gateway.revert_redeem = {};
-    proofData.co_gateway.revert_redeem.params = revertRedeemParams;
-    proofData.co_gateway.revert_redeem.return_value = revertRedeemResult;
-    proofData.co_gateway.revert_redeem.proof_data = revertRedeemProofData;
+    this.proofData.co_gateway.revert_redeem = {};
+    this.proofData.co_gateway.revert_redeem.params = revertRedeemParams;
+    this.proofData.co_gateway.revert_redeem.return_value = revertRedeemResult;
+    this.proofData.co_gateway.revert_redeem.proof_data = revertRedeemProofData;
 
     return {
       revertRedeemProofData,
@@ -517,14 +469,12 @@ class ProofGenerationUtils {
    *
    * @param revertRedeemParams {object} Contains data needed for calling revert redeem.
    * @param revertRedeemProofData {object} Contains revert redeem proof data.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<{confirmRevertRedeemProofData, confirmRevertRedeemIntentParams}>}
    */
   async populateConfirmRevertRedeemProofData(
     revertRedeemParams,
     revertRedeemProofData,
-    proofData,
   ) {
     const confirmRevertRedeemIntentParams = {};
     confirmRevertRedeemIntentParams.messageHash = revertRedeemParams.messageHash;
@@ -541,10 +491,10 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmRevertRedeemIntentParams.messageHash],
     );
-    proofData.gateway.confirm_revert_redeem_intent = {};
-    proofData.gateway.confirm_revert_redeem_intent.params = confirmRevertRedeemIntentParams;
-    proofData.gateway.confirm_revert_redeem_intent.return_value = confirmRevertRedeemResult;
-    proofData.gateway.confirm_revert_redeem_intent.proof_data = confirmRevertRedeemProofData;
+    this.proofData.gateway.confirm_revert_redeem_intent = {};
+    this.proofData.gateway.confirm_revert_redeem_intent.params = confirmRevertRedeemIntentParams;
+    this.proofData.gateway.confirm_revert_redeem_intent.return_value = confirmRevertRedeemResult;
+    this.proofData.gateway.confirm_revert_redeem_intent.proof_data = confirmRevertRedeemProofData;
 
     return {
       confirmRevertRedeemProofData,
@@ -557,14 +507,12 @@ class ProofGenerationUtils {
    *
    * @param revertRedeemParams {object} Contains data needed for calling revert redeem.
    * @param confirmRevertRedeemProofData {object} Contains revert redeem proof data.
-   * @param proofData {object} Contains proof data.
    *
    * @returns {Promise<void>}
    */
   async populateProgressRevertRedeemProofData(
     revertRedeemParams,
     confirmRevertRedeemProofData,
-    proofData,
   ) {
     const progressRevertRedeemParams = {};
     progressRevertRedeemParams.messageHash = revertRedeemParams.messageHash;
@@ -582,10 +530,10 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [progressRevertRedeemParams.messageHash],
     );
-    proofData.co_gateway.progress_revert_redeem = {};
-    proofData.co_gateway.progress_revert_redeem.params = progressRevertRedeemParams;
-    proofData.co_gateway.progress_revert_redeem.return_value = progressRevertRedeemResult;
-    proofData.co_gateway.progress_revert_redeem.proof_data = progressRevertRedeemProofData;
+    this.proofData.co_gateway.progress_revert_redeem = {};
+    this.proofData.co_gateway.progress_revert_redeem.params = progressRevertRedeemParams;
+    this.proofData.co_gateway.progress_revert_redeem.return_value = progressRevertRedeemResult;
+    this.proofData.co_gateway.progress_revert_redeem.proof_data = progressRevertRedeemProofData;
   }
 }
 
