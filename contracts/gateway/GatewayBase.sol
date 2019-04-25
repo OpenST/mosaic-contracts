@@ -27,6 +27,7 @@ import "../lib/OrganizationInterface.sol";
 import "../lib/Organized.sol";
 import "../lib/SafeMath.sol";
 import "../lib/StateRootInterface.sol";
+import "../lib/CircularBufferUintLib.sol";
 
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
@@ -68,6 +69,9 @@ contract GatewayBase is Organized {
 
     /** Position of message bus in the storage. */
     uint8 constant MESSAGE_BOX_OFFSET = 7;
+
+    /** The max number of storage roots to store. */
+    uint256 private constant MAX_STORAGE_ROOTS = 256;
 
     /**
      * Penalty in bounty amount percentage charged to message sender on revert message.
@@ -149,6 +153,8 @@ contract GatewayBase is Organized {
     mapping(address => bytes32) private outboxActiveProcess;
 
 
+    CircularBufferUintLib.BufferUint storageRootBuffer;
+
     /* Constructor */
 
     /**
@@ -180,6 +186,11 @@ contract GatewayBase is Organized {
         messageBox = MessageBus.MessageBox();
         encodedGatewayPath = '';
         remoteGateway = address(0);
+
+        CircularBufferUintLib.setMaxItemLimit(
+            MAX_STORAGE_ROOTS,
+            storageRootBuffer
+        );
     }
 
 
@@ -223,6 +234,12 @@ contract GatewayBase is Organized {
             "Length of RLP parent nodes is 0"
         );
 
+        // Input block height should be valid.
+        require(
+            _blockHeight > CircularBufferUintLib.head(storageRootBuffer),
+            "Given block height is lower or equal to highest anchored state root block height."
+        );
+
         bytes32 stateRoot = stateRootProvider.getStateRoot(_blockHeight);
 
         // State root should be present for the block height
@@ -257,6 +274,8 @@ contract GatewayBase is Organized {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUintLib.store(_blockHeight, storageRootBuffer);
+        delete storageRoots[oldestStoredBlockHeight];
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
