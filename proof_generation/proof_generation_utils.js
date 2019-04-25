@@ -12,63 +12,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// ----------------------------------------------------------------------------
-// Test: lib/utils.js
-//
 // http://www.simpletoken.org/
 //
-// ----------------------------------------------------------------------------
 
 /* eslint-disable no-param-reassign */
 
 const TestLibUtils = require('../test/test_lib/utils.js');
 
-function Utils() {}
+class ProofGenerationUtils {
 
-Utils.prototype = {
+  constructor(gateway, coGateway, stakeParams, redeemParams, proofUtils) {
+    this.gateway = gateway;
+    this.coGateway = coGateway;
+    this.stakeParams = stakeParams;
+    this.redeemParams = redeemParams;
+    this.proofUtils = proofUtils;
+  }
 
-  populateStakeProofData: async (gateway, stakeParams, proofUtils, proofData) => {
+  async populateStakeProofData(proofData) {
     const generatedHashLock = TestLibUtils.generateHashLock();
-    stakeParams.hashLock = generatedHashLock.l;
-    stakeParams.unlockSecret = generatedHashLock.s;
+    this.stakeParams.hashLock = generatedHashLock.l;
+    this.stakeParams.unlockSecret = generatedHashLock.s;
 
-    const stakeResult = await gateway.stake(stakeParams);
-    const stakeProofData = await proofUtils.getOutboxProof(
-      gateway.address,
+    const stakeResult = await this.gateway.stake(this.stakeParams);
+    const stakeProofData = await this.proofUtils.getOutboxProof(
+      this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
-    // Populate stakeProof data.
     proofData.gateway.stake = {};
-    proofData.gateway.stake.params = stakeParams;
+    proofData.gateway.stake.params = this.stakeParams;
     proofData.gateway.stake.return_value = stakeResult;
     proofData.gateway.stake.proof_data = stakeProofData;
     return {
       stakeProofData,
       stakeResult,
     };
-  },
+  }
 
-  populateConfirmStakeIntentProofData: async (
-    coGateway,
-    stakeParams,
+  async populateConfirmStakeIntentProofData (
     stakeProofData,
-    proofUtils,
     proofData,
-  ) => {
-    const confirmStakeIntentParams = Object.assign({}, stakeParams);
+  ) {
+    const confirmStakeIntentParams = Object.assign({}, this.stakeParams);
     confirmStakeIntentParams.blockHeight = stakeProofData.block_number;
     confirmStakeIntentParams.rlpParentNodes = stakeProofData.storageProof[0].serializedProof;
-    confirmStakeIntentParams.facilitator = stakeParams.staker;
+    confirmStakeIntentParams.facilitator = this.stakeParams.staker;
     confirmStakeIntentParams.storageRoot = stakeProofData.storageHash;
 
     // confirmStakeIntent also sets/anchors storage root for a block number.
-    const confirmStakeIntentResult = await coGateway.confirmStakeIntent(confirmStakeIntentParams);
-    const confirmStakeIntentProofData = await proofUtils.getInboxProof(
-      coGateway.address,
+    const confirmStakeIntentResult = await this.coGateway.confirmStakeIntent(confirmStakeIntentParams);
+    const confirmStakeIntentProofData = await this.proofUtils.getInboxProof(
+      this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-
-    // Populate confirmStakeIntentProof data.
     proofData.co_gateway.confirm_stake_intent = {};
     proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
     proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
@@ -76,28 +72,23 @@ Utils.prototype = {
     return {
       confirmStakeIntentResult,
     };
-  },
+  }
 
-  populateProgressStakeProofData: async (
-    gateway,
-    stakeParams,
+  async populateProgressStakeProofData(
     stakeResult,
     confirmStakeIntentResult,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressStakeParams = {};
     progressStakeParams.messageHash = stakeResult.returned_value.messageHash_;
-    progressStakeParams.unlockSecret = stakeParams.unlockSecret;
-    progressStakeParams.facilitator = stakeParams.staker;
+    progressStakeParams.unlockSecret = this.stakeParams.unlockSecret;
+    progressStakeParams.facilitator = this.stakeParams.staker;
 
-    const progressStakeResult = await gateway.progressStake(progressStakeParams);
-    const progressStakeProofData = await proofUtils.getOutboxProof(
-      gateway.address,
+    const progressStakeResult = await this.gateway.progressStake(progressStakeParams);
+    const progressStakeProofData = await this.proofUtils.getOutboxProof(
+      this.gateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-
-    // Populate progressStakeProof data.
     proofData.gateway.progress_stake = {};
     proofData.gateway.progress_stake.params = progressStakeParams;
     proofData.gateway.progress_stake.return_value = progressStakeResult;
@@ -106,19 +97,17 @@ Utils.prototype = {
     return {
       progressStakeParams,
     };
-  },
+  }
 
-  populateProgressMintProofData: async (
+  async populateProgressMintProofData(
     progressStakeParams,
-    coGateway,
     confirmStakeIntentResult,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressMintParams = Object.assign({}, progressStakeParams);
-    const progressMintResult = await coGateway.progressMint(progressMintParams);
-    const progressMintProofData = await proofUtils.getInboxProof(
-      coGateway.address,
+    const progressMintResult = await this.coGateway.progressMint(progressMintParams);
+    const progressMintProofData = await this.proofUtils.getInboxProof(
+      this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
 
@@ -126,24 +115,21 @@ Utils.prototype = {
     proofData.co_gateway.progress_mint.params = progressMintParams;
     proofData.co_gateway.progress_mint.return_value = progressMintResult;
     proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
-  },
+  }
 
-  populateRevertStakeProofData: async (
-    gateway,
-    stakeParams,
+  async populateRevertStakeProofData(
     stakeResult,
     confirmStakeIntentResult,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const revertStakeParams = {};
     revertStakeParams.messageHash = confirmStakeIntentResult.returned_value.messageHash_;
-    revertStakeParams.staker = stakeParams.staker;
+    revertStakeParams.staker = this.stakeParams.staker;
 
-    const revertStakeResult = await gateway.revertStake(revertStakeParams);
+    const revertStakeResult = await this.gateway.revertStake(revertStakeParams);
 
-    const revertStakeProofData = await proofUtils.getOutboxProof(
-      gateway.address,
+    const revertStakeProofData = await this.proofUtils.getOutboxProof(
+      this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
     proofData.gateway.revert_stake = {};
@@ -155,30 +141,27 @@ Utils.prototype = {
       revertStakeProofData,
       revertStakeParams,
     };
-  },
+  }
 
-  populateConfirmRevertStakeProofData: async (
-    coGateway,
-    stakeParams,
+  async populateConfirmRevertStakeProofData(
     revertStakeParams,
     revertStakeProofData,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const confirmRevertStakeParams = {};
     confirmRevertStakeParams.messageHash = revertStakeParams.messageHash;
     confirmRevertStakeParams.blockHeight = revertStakeProofData.block_number;
     confirmRevertStakeParams.rlpParentNodes = revertStakeProofData
       .storageProof[0].serializedProof;
-    confirmRevertStakeParams.facilitator = stakeParams.staker;
+    confirmRevertStakeParams.facilitator = this.stakeParams.staker;
     confirmRevertStakeParams.storageRoot = revertStakeProofData.storageHash;
 
-    const confirmRevertStakeResult = await coGateway.confirmRevertStakeIntent(
+    const confirmRevertStakeResult = await this.coGateway.confirmRevertStakeIntent(
       confirmRevertStakeParams,
     );
 
-    const confirmRevertStakeProofData = await proofUtils.getInboxProof(
-      coGateway.address,
+    const confirmRevertStakeProofData = await this.proofUtils.getInboxProof(
+      this.coGateway.address,
       [confirmRevertStakeParams.messageHash],
     );
 
@@ -190,54 +173,48 @@ Utils.prototype = {
     return {
       confirmRevertStakeProofData,
     };
-  },
+  }
 
-  populateProgressRevertStakeProofData: async (
-    gateway,
-    stakeParams,
+  async populateProgressRevertStakeProofData (
     revertStakeParams,
     confirmRevertStakeProofData,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressRevertStakeParams = {};
     progressRevertStakeParams.messageHash = revertStakeParams.messageHash;
     progressRevertStakeParams.blockHeight = confirmRevertStakeProofData.block_number;
     progressRevertStakeParams.rlpParentNodes = confirmRevertStakeProofData
       .storageProof[0].serializedProof;
-    progressRevertStakeParams.facilitator = stakeParams.staker;
+    progressRevertStakeParams.facilitator = this.stakeParams.staker;
     progressRevertStakeParams.storageRoot = confirmRevertStakeProofData.storageHash;
 
-    const progressRevertStakeResult = await gateway.progressRevertStake(
+    const progressRevertStakeResult = await this.gateway.progressRevertStake(
       progressRevertStakeParams,
     );
 
-    const progressRevertStakeProofData = await proofUtils.getOutboxProof(
-      gateway.address,
+    const progressRevertStakeProofData = await this.proofUtils.getOutboxProof(
+      this.gateway.address,
       [progressRevertStakeParams.messageHash],
     );
     proofData.gateway.progress_revert_stake_intent = {};
     proofData.gateway.progress_revert_stake_intent.params = progressRevertStakeParams;
     proofData.gateway.progress_revert_stake_intent.return_value = progressRevertStakeResult;
     proofData.gateway.progress_revert_stake_intent.proof_data = progressRevertStakeProofData;
-  },
+  }
 
-  populateRedeemProofData: async (
-    coGateway,
-    redeemParams,
-    proofUtils,
+  async populateRedeemProofData (
     proofData,
-  ) => {
+  ) {
     const generatedHashLock = TestLibUtils.generateHashLock();
-    redeemParams.hashLock = generatedHashLock.l;
-    redeemParams.unlockSecret = generatedHashLock.s;
-    const redeemResult = await coGateway.redeem(redeemParams);
-    const redeemProofData = await proofUtils.getOutboxProof(
-      coGateway.address,
+    this.redeemParams.hashLock = generatedHashLock.l;
+    this.redeemParams.unlockSecret = generatedHashLock.s;
+    const redeemResult = await this.coGateway.redeem(this.redeemParams);
+    const redeemProofData = await this.proofUtils.getOutboxProof(
+      this.coGateway.address,
       [redeemResult.returned_value.messageHash_],
     );
     proofData.co_gateway.redeem = {};
-    proofData.co_gateway.redeem.params = redeemParams;
+    proofData.co_gateway.redeem.params = this.redeemParams;
     proofData.co_gateway.redeem.return_value = redeemResult;
     proofData.co_gateway.redeem.proof_data = redeemProofData;
 
@@ -245,28 +222,25 @@ Utils.prototype = {
       redeemProofData,
       redeemResult,
     };
-  },
+  }
 
-  populateConfirmRedeemIntentProofData: async (
-    gateway,
-    redeemParams,
+  async populateConfirmRedeemIntentProofData (
     redeemProofData,
-    proofUtils,
     proofData,
-  ) => {
-    const confirmRedeemIntentParams = Object.assign({}, redeemParams);
+  ) {
+    const confirmRedeemIntentParams = Object.assign({}, this.redeemParams);
     confirmRedeemIntentParams.blockNumber = redeemProofData.block_number;
     confirmRedeemIntentParams.storageProof = redeemProofData.storageProof[0].serializedProof;
     confirmRedeemIntentParams.facilitator = redeemProofData.staker;
     confirmRedeemIntentParams.storageRoot = redeemProofData.storageHash;
-    confirmRedeemIntentParams.facilitator = redeemParams.redeemer;
+    confirmRedeemIntentParams.facilitator = this.redeemParams.redeemer;
 
     // confirmRedeemIntent also anchors/sets storage root.
-    const confirmRedeemIntentResult = await gateway.confirmRedeemIntent(
+    const confirmRedeemIntentResult = await this.gateway.confirmRedeemIntent(
       confirmRedeemIntentParams,
     );
-    const confirmRedeemIntentProofData = await proofUtils.getInboxProof(
-      gateway.address,
+    const confirmRedeemIntentProofData = await this.proofUtils.getInboxProof(
+      this.gateway.address,
       [confirmRedeemIntentResult.returned_value.messageHash_],
     );
     proofData.gateway.confirm_redeem_intent = {};
@@ -277,25 +251,22 @@ Utils.prototype = {
     return {
       confirmRedeemIntentResult,
     };
-  },
+  }
 
-  populateProgressRedeemProofData: async (
-    coGateway,
-    redeemParams,
+  async populateProgressRedeemProofData (
     confirmRedeemIntentResult,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressRedeemParams = {};
     progressRedeemParams.messageHash = confirmRedeemIntentResult.returned_value.messageHash_;
-    progressRedeemParams.unlockSecret = redeemParams.unlockSecret;
-    progressRedeemParams.facilitator = redeemParams.redeemer;
-    const progressRedeemResult = await coGateway.progressRedeem(
+    progressRedeemParams.unlockSecret = this.redeemParams.unlockSecret;
+    progressRedeemParams.facilitator = this.redeemParams.redeemer;
+    const progressRedeemResult = await this.coGateway.progressRedeem(
       progressRedeemParams,
     );
 
-    const progressRedeemProofData = await proofUtils.getOutboxProof(
-      coGateway.address,
+    const progressRedeemProofData = await this.proofUtils.getOutboxProof(
+      this.coGateway.address,
       [progressRedeemParams.messageHash],
     );
     proofData.co_gateway.progress_redeem = {};
@@ -306,45 +277,39 @@ Utils.prototype = {
     return {
       progressRedeemParams,
     };
-  },
+  }
 
-  populateProgressUnstakeProofData: async (
-    gateway,
-    redeemParams,
+  async populateProgressUnstakeProofData (
     progressRedeemParams,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressUnstakeParams = Object.assign({}, progressRedeemParams);
-    progressUnstakeParams.unstakeAmount = redeemParams.amount;
-    const progressUnstakeResult = await gateway.progressUnstake(
+    progressUnstakeParams.unstakeAmount = this.redeemParams.amount;
+    const progressUnstakeResult = await this.gateway.progressUnstake(
       progressUnstakeParams,
     );
-    const progressUnstakeProofData = await proofUtils.getInboxProof(
-      gateway.address,
+    const progressUnstakeProofData = await this.proofUtils.getInboxProof(
+      this.gateway.address,
       [progressUnstakeParams.messageHash],
     );
     proofData.gateway.progress_unstake = {};
     proofData.gateway.progress_unstake.params = progressUnstakeParams;
     proofData.gateway.progress_unstake.return_value = progressUnstakeResult;
     proofData.gateway.progress_unstake.proof_data = progressUnstakeProofData;
-  },
+  }
 
-  populateRevertRedeemProofData: async (
-    coGateway,
-    redeemParams,
+  async populateRevertRedeemProofData (
     redeemResult,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const revertRedeemParams = {};
     revertRedeemParams.messageHash = redeemResult.returned_value.messageHash_;
-    revertRedeemParams.redeemer = redeemParams.redeemer;
-    const revertRedeemResult = await coGateway.revertRedeem(
+    revertRedeemParams.redeemer = this.redeemParams.redeemer;
+    const revertRedeemResult = await this.coGateway.revertRedeem(
       revertRedeemParams,
     );
-    const revertRedeemProofData = await proofUtils.getOutboxProof(
-      coGateway.address,
+    const revertRedeemProofData = await this.proofUtils.getOutboxProof(
+      this.coGateway.address,
       [revertRedeemParams.messageHash],
     );
     proofData.co_gateway.revert_redeem = {};
@@ -357,29 +322,26 @@ Utils.prototype = {
       revertRedeemResult,
       revertRedeemParams,
     };
-  },
+  }
 
-  populateConfirmRevertRedeemProofData: async (
-    gateway,
-    redeemParams,
+  async populateConfirmRevertRedeemProofData (
     revertRedeemParams,
     revertRedeemProofData,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const confirmRevertRedeemIntentParams = {};
     confirmRevertRedeemIntentParams.messageHash = revertRedeemParams.messageHash;
     confirmRevertRedeemIntentParams.blockNumber = revertRedeemProofData.block_number;
     confirmRevertRedeemIntentParams.rlpParentNodes = revertRedeemProofData
       .storageProof[0].serializedProof;
-    confirmRevertRedeemIntentParams.facilitator = redeemParams.redeemer;
+    confirmRevertRedeemIntentParams.facilitator = this.redeemParams.redeemer;
     confirmRevertRedeemIntentParams.storageRoot = revertRedeemProofData.storageHash;
 
-    const confirmRevertRedeemResult = await gateway.confirmRevertRedeemIntent(
+    const confirmRevertRedeemResult = await this.gateway.confirmRevertRedeemIntent(
       confirmRevertRedeemIntentParams,
     );
-    const confirmRevertRedeemProofData = await proofUtils.getInboxProof(
-      gateway.address,
+    const confirmRevertRedeemProofData = await this.proofUtils.getInboxProof(
+      this.gateway.address,
       [confirmRevertRedeemIntentParams.messageHash],
     );
     proofData.gateway.confirm_revert_redeem_intent = {};
@@ -391,38 +353,35 @@ Utils.prototype = {
       confirmRevertRedeemProofData,
       confirmRevertRedeemIntentParams,
     };
-  },
+  }
 
-  populateProgressRevertRedeemProofData: async (
-    coGateway,
-    redeemParams,
+  async populateProgressRevertRedeemProofData (
     revertRedeemParams,
     confirmRevertRedeemProofData,
-    proofUtils,
     proofData,
-  ) => {
+  ) {
     const progressRevertRedeemParams = {};
     progressRevertRedeemParams.messageHash = revertRedeemParams.messageHash;
     progressRevertRedeemParams.blockHeight = confirmRevertRedeemProofData.block_number;
     progressRevertRedeemParams.rlpParentNodes = confirmRevertRedeemProofData
       .storageProof[0].serializedProof;
-    progressRevertRedeemParams.facilitator = redeemParams.redeemer;
+    progressRevertRedeemParams.facilitator = this.redeemParams.redeemer;
     progressRevertRedeemParams.storageRoot = confirmRevertRedeemProofData.storageHash;
 
-    const progressRevertRedeemResult = await coGateway.progressRevertRedeem(
+    const progressRevertRedeemResult = await this.coGateway.progressRevertRedeem(
       progressRevertRedeemParams,
     );
 
-    const progressRevertRedeemProofData = await proofUtils.getOutboxProof(
-      coGateway.address,
+    const progressRevertRedeemProofData = await this.proofUtils.getOutboxProof(
+      this.coGateway.address,
       [progressRevertRedeemParams.messageHash],
     );
     proofData.co_gateway.progress_revert_redeem = {};
     proofData.co_gateway.progress_revert_redeem.params = progressRevertRedeemParams;
     proofData.co_gateway.progress_revert_redeem.return_value = progressRevertRedeemResult;
     proofData.co_gateway.progress_revert_redeem.proof_data = progressRevertRedeemProofData;
-  },
+  }
 
 };
 
-module.exports = new Utils();
+module.exports = ProofGenerationUtils;

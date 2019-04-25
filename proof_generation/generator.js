@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-const proofGenerationUtils = require('./utils.js');
+const ProofGenerationUtils = require('./proof_generation_utils');
 const docker = require('./docker');
 const CoGateway = require('./helper/co_gateway');
 const Gateway = require('./helper/gateway');
@@ -76,6 +76,7 @@ contract('Stake and Mint ', (accounts) => {
   let web3Provider;
   let gateway;
   let coGateway;
+  let proofGenerationUtils;
 
   before(async () => {
     ({ rpcEndpointOrigin } = await docker());
@@ -95,6 +96,13 @@ contract('Stake and Mint ', (accounts) => {
       nonce: new BN(0),
       staker: accounts[0],
     };
+    proofGenerationUtils = new ProofGenerationUtils(
+      gateway,
+      coGateway,
+      stakeParams,
+      null,
+      proofUtils
+    );
   });
 
   it('Generates proof data for "Stake progressed"', async () => {
@@ -112,38 +120,27 @@ contract('Stake and Mint ', (accounts) => {
         stakeProofData,
         stakeResult,
       } = await proofGenerationUtils.populateStakeProofData(
-        gateway,
-        stakeParams,
-        proofUtils,
         proofData,
       );
 
       const {
         confirmStakeIntentResult,
       } = await proofGenerationUtils.populateConfirmStakeIntentProofData(
-        coGateway,
-        stakeParams,
         stakeProofData,
-        proofUtils,
         proofData,
       );
 
       const {
         progressStakeParams,
       } = await proofGenerationUtils.populateProgressStakeProofData(
-        gateway,
-        stakeParams,
         stakeResult,
         confirmStakeIntentResult,
-        proofUtils,
         proofData,
       );
 
       await proofGenerationUtils.populateProgressMintProofData(
         progressStakeParams,
-        coGateway,
         confirmStakeIntentResult,
-        proofUtils,
         proofData,
       );
 
@@ -173,19 +170,13 @@ contract('Stake and Mint ', (accounts) => {
         stakeProofData,
         stakeResult,
       } = await proofGenerationUtils.populateStakeProofData(
-        gateway,
-        stakeParams,
-        proofUtils,
         proofData,
       );
 
       const {
         confirmStakeIntentResult,
       } = await proofGenerationUtils.populateConfirmStakeIntentProofData(
-        coGateway,
-        stakeParams,
         stakeProofData,
-        proofUtils,
         proofData,
       );
 
@@ -193,31 +184,22 @@ contract('Stake and Mint ', (accounts) => {
         revertStakeProofData,
         revertStakeParams,
       } = await proofGenerationUtils.populateRevertStakeProofData(
-        gateway,
-        stakeParams,
         stakeResult,
         confirmStakeIntentResult,
-        proofUtils,
         proofData,
       );
 
       const {
         confirmRevertStakeProofData,
       } = await proofGenerationUtils.populateConfirmRevertStakeProofData(
-        coGateway,
-        stakeParams,
         revertStakeParams,
         revertStakeProofData,
-        proofUtils,
         proofData,
       );
 
       await proofGenerationUtils.populateProgressRevertStakeProofData(
-        gateway,
-        stakeParams,
         revertStakeParams,
         confirmRevertStakeProofData,
-        proofUtils,
         proofData,
       );
 
@@ -241,6 +223,7 @@ contract('Redeem and Unstake ', (accounts) => {
   let web3Provider;
   let gateway;
   let coGateway;
+  let proofGenerationUtils;
 
   before(async () => {
     ({ rpcEndpointOrigin } = await docker());
@@ -260,6 +243,13 @@ contract('Redeem and Unstake ', (accounts) => {
       redeemer: accounts[0],
       beneficiary: accounts[2],
     };
+    proofGenerationUtils = new ProofGenerationUtils(
+      gateway,
+      coGateway,
+      null,
+      redeemParams,
+      proofUtils
+    );
   });
 
   it('Generates proof data for "Redeem progressed"', async () => {
@@ -276,37 +266,25 @@ contract('Redeem and Unstake ', (accounts) => {
       const {
         redeemProofData,
       } = await proofGenerationUtils.populateRedeemProofData(
-        coGateway,
-        redeemParams,
-        proofUtils,
         proofData,
       );
 
       const {
         confirmRedeemIntentResult,
       } = await proofGenerationUtils.populateConfirmRedeemIntentProofData(
-        gateway,
-        redeemParams,
         redeemProofData,
-        proofUtils,
         proofData,
       );
 
       const {
         progressRedeemParams,
       } = await proofGenerationUtils.populateProgressRedeemProofData(
-        coGateway,
-        redeemParams,
         confirmRedeemIntentResult,
-        proofUtils,
         proofData,
       );
 
       await proofGenerationUtils.populateProgressUnstakeProofData(
-        gateway,
-        redeemParams,
         progressRedeemParams,
-        proofUtils,
         proofData,
       );
 
@@ -336,17 +314,11 @@ contract('Redeem and Unstake ', (accounts) => {
         redeemProofData,
         redeemResult,
       } = await proofGenerationUtils.populateRedeemProofData(
-        coGateway,
-        redeemParams,
-        proofUtils,
         proofData,
       );
 
       await proofGenerationUtils.populateConfirmRedeemIntentProofData(
-        gateway,
-        redeemParams,
         redeemProofData,
-        proofUtils,
         proofData,
       );
 
@@ -354,30 +326,21 @@ contract('Redeem and Unstake ', (accounts) => {
         revertRedeemParams,
         revertRedeemProofData,
       } = await proofGenerationUtils.populateRevertRedeemProofData(
-        coGateway,
-        redeemParams,
         redeemResult,
-        proofUtils,
         proofData,
       );
 
       const {
         confirmRevertRedeemProofData,
       } = await proofGenerationUtils.populateConfirmRevertRedeemProofData(
-        gateway,
-        redeemParams,
         revertRedeemParams,
         revertRedeemProofData,
-        proofUtils,
         proofData,
       );
 
       await proofGenerationUtils.populateProgressRevertRedeemProofData(
-        coGateway,
-        redeemParams,
         revertRedeemParams,
         confirmRevertRedeemProofData,
-        proofUtils,
         proofData,
       );
 
