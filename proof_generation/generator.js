@@ -85,8 +85,8 @@ contract('Stake and Mint ', (accounts) => {
     const numberOfProofs = 2;
 
     for (let i = 0; i < numberOfProofs; ++i) {
-     proofGenerationUtils.resetProofData();
-     proofGenerationUtils.initializeProofData();
+      proofGenerationUtils.resetProofData();
+      await proofGenerationUtils.initializeProofData();
 
       const {
         stakeProofData,
@@ -97,7 +97,7 @@ contract('Stake and Mint ', (accounts) => {
         confirmStakeIntentResult,
       } = await proofGenerationUtils.populateConfirmStakeIntentProofData(
         stakeProofData,
-        );
+      );
 
       const {
         progressStakeParams,
@@ -127,7 +127,7 @@ contract('Stake and Mint ', (accounts) => {
 
     for (let i = 0; i < numberOfProofs; i++) {
       proofGenerationUtils.resetProofData();
-      proofGenerationUtils.initializeProofData();
+      await proofGenerationUtils.initializeProofData();
 
       const {
         stakeProofData,
@@ -163,7 +163,7 @@ contract('Stake and Mint ', (accounts) => {
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}stake_revoked_${stakeParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData),
+        JSON.stringify(proofGenerationUtils.proofData),
       );
 
       // proof data is generated starting for nonce 0.
@@ -209,7 +209,7 @@ contract('Redeem and Unstake ', (accounts) => {
 
     for (let i = 0; i < numberOfProofs; i++) {
       proofGenerationUtils.resetProofData();
-      proofGenerationUtils.initializeProofData();
+      await proofGenerationUtils.initializeProofData();
 
       const {
         redeemProofData,
@@ -234,7 +234,7 @@ contract('Redeem and Unstake ', (accounts) => {
       // Write the proof data in to the files.
       writeToFile(
         `${PROOF_GENERATED_PATH}redeem_progressed_${redeemParams.nonce.toString(10)}.json`,
-        JSON.stringify(proofData),
+        JSON.stringify(proofGenerationUtils.proofData),
       );
 
       // proof data is generated starting for nonce 0.
@@ -247,7 +247,7 @@ contract('Redeem and Unstake ', (accounts) => {
 
     for (let i = 0; i < numberOfProofs; i++) {
       proofGenerationUtils.resetProofData();
-      proofGenerationUtils.initializeProofData();
+      await proofGenerationUtils.initializeProofData();
 
       const {
         redeemProofData,
