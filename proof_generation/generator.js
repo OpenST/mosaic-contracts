@@ -117,7 +117,7 @@ contract('Stake and Mint ', (accounts) => {
         JSON.stringify(proofGenerationUtils.proofData),
       );
 
-      // proof data is generated starting for nonce 0.
+      // proof data is generated starting from nonce 0.
       stakeParams.nonce = stakeParams.nonce.addn(1);
     }
   });
@@ -166,7 +166,7 @@ contract('Stake and Mint ', (accounts) => {
         JSON.stringify(proofGenerationUtils.proofData),
       );
 
-      // proof data is generated starting for nonce 0.
+      // proof data is generated starting from nonce 0.
       stakeParams.nonce = stakeParams.nonce.addn(1);
     }
   });
@@ -237,7 +237,7 @@ contract('Redeem and Unstake ', (accounts) => {
         JSON.stringify(proofGenerationUtils.proofData),
       );
 
-      // proof data is generated starting for nonce 0.
+      // proof data is generated starting from nonce 0.
       redeemParams.nonce = redeemParams.nonce.addn(1);
     }
   });
@@ -283,7 +283,7 @@ contract('Redeem and Unstake ', (accounts) => {
         JSON.stringify(proofGenerationUtils.proofData),
       );
 
-      // proof data is generated starting for nonce 0.
+      // proof data is generated starting from nonce 0.
       redeemParams.nonce = redeemParams.nonce.addn(1);
     }
   });

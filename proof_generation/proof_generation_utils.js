@@ -15,8 +15,6 @@
 // http://www.simpletoken.org/
 //
 
-/* eslint-disable no-param-reassign */
-
 const TestLibUtils = require('../test/test_lib/utils.js');
 const Gateway = require('./helper/gateway');
 const CoGateway = require('./helper/co_gateway');
