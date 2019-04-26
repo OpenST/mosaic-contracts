@@ -132,10 +132,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
-    this.proofData.gateway.stake = {};
-    this.proofData.gateway.stake.params = this.stakeParams;
-    this.proofData.gateway.stake.return_value = stakeResult;
-    this.proofData.gateway.stake.proof_data = stakeProofData;
+    const stake = {};
+    stake.params = this.stakeParams;
+    stake.return_value = stakeResult;
+    stake.proof_data = stakeProofData;
+    this.proofData.gateway.stake = stake;
     return {
       stakeProofData,
       stakeResult,
@@ -164,10 +165,12 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-    this.proofData.co_gateway.confirm_stake_intent = {};
-    this.proofData.co_gateway.confirm_stake_intent.params = confirmStakeIntentParams;
-    this.proofData.co_gateway.confirm_stake_intent.return_value = confirmStakeIntentResult;
-    this.proofData.co_gateway.confirm_stake_intent.proof_data = confirmStakeIntentProofData;
+    const confirmStakeIntent = {};
+    confirmStakeIntent.params = confirmStakeIntentParams;
+    confirmStakeIntent.return_value = confirmStakeIntentResult;
+    confirmStakeIntent.proof_data = confirmStakeIntentProofData;
+    this.proofData.co_gateway.confirm_stake_intent = confirmStakeIntent;
+
     return {
       confirmStakeIntentResult,
     };
@@ -192,10 +195,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
-    this.proofData.gateway.progress_stake = {};
-    this.proofData.gateway.progress_stake.params = progressStakeParams;
-    this.proofData.gateway.progress_stake.return_value = progressStakeResult;
-    this.proofData.gateway.progress_stake.proof_data = progressStakeProofData;
+    const progressStake = {};
+    progressStake.params = progressStakeParams;
+    progressStake.return_value = progressStakeResult;
+    progressStake.proof_data = progressStakeProofData;
+    this.proofData.gateway.progress_stake = progressStake;
 
     return {
       progressStakeParams,
@@ -221,10 +225,11 @@ class ProofGenerationUtils {
       [confirmStakeIntentResult.returned_value.messageHash_],
     );
 
-    this.proofData.co_gateway.progress_mint = {};
-    this.proofData.co_gateway.progress_mint.params = progressMintParams;
-    this.proofData.co_gateway.progress_mint.return_value = progressMintResult;
-    this.proofData.co_gateway.progress_mint.proof_data = progressMintProofData;
+    const progressMint = {};
+    progressMint.params = progressMintParams;
+    progressMint.return_value = progressMintResult;
+    progressMint.proof_data = progressMintProofData;
+    this.proofData.co_gateway.progress_mint = progressMint;
   }
 
   /**
@@ -246,10 +251,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
     );
-    this.proofData.gateway.revert_stake = {};
-    this.proofData.gateway.revert_stake.params = revertStakeParams;
-    this.proofData.gateway.revert_stake.return_value = revertStakeResult;
-    this.proofData.gateway.revert_stake.proof_data = revertStakeProofData;
+    const revertStake = {};
+    revertStake.params = revertStakeParams;
+    revertStake.return_value = revertStakeResult;
+    revertStake.proof_data = revertStakeProofData;
+    this.proofData.gateway.revert_stake = revertStake;
 
     return {
       revertStakeProofData,
@@ -283,10 +289,11 @@ class ProofGenerationUtils {
       [confirmRevertStakeParams.messageHash],
     );
 
-    this.proofData.co_gateway.confirm_revert_stake_intent = {};
-    this.proofData.co_gateway.confirm_revert_stake_intent.params = confirmRevertStakeParams;
-    this.proofData.co_gateway.confirm_revert_stake_intent.return_value = confirmRevertStakeResult;
-    this.proofData.co_gateway.confirm_revert_stake_intent.proof_data = confirmRevertStakeProofData;
+    const confirmRevertStakeIntent = {};
+    confirmRevertStakeIntent.params = confirmRevertStakeParams;
+    confirmRevertStakeIntent.return_value = confirmRevertStakeResult;
+    confirmRevertStakeIntent.proof_data = confirmRevertStakeProofData;
+    this.proofData.co_gateway.confirm_revert_stake_intent = confirmRevertStakeIntent;
 
     return {
       confirmRevertStakeProofData,
@@ -318,10 +325,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [progressRevertStakeParams.messageHash],
     );
-    this.proofData.gateway.progress_revert_stake_intent = {};
-    this.proofData.gateway.progress_revert_stake_intent.params = progressRevertStakeParams;
-    this.proofData.gateway.progress_revert_stake_intent.return_value = progressRevertStakeResult;
-    this.proofData.gateway.progress_revert_stake_intent.proof_data = progressRevertStakeProofData;
+    const progressRevertStakeIntent = {};
+    progressRevertStakeIntent.params = progressRevertStakeParams;
+    progressRevertStakeIntent.return_value = progressRevertStakeResult;
+    progressRevertStakeIntent.proof_data = progressRevertStakeProofData;
+    this.proofData.gateway.progress_revert_stake_intent = progressRevertStakeIntent;
   }
 
   /**
@@ -338,10 +346,11 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [redeemResult.returned_value.messageHash_],
     );
-    this.proofData.co_gateway.redeem = {};
-    this.proofData.co_gateway.redeem.params = this.redeemParams;
-    this.proofData.co_gateway.redeem.return_value = redeemResult;
-    this.proofData.co_gateway.redeem.proof_data = redeemProofData;
+    const redeem = {};
+    redeem.params = this.redeemParams;
+    redeem.return_value = redeemResult;
+    redeem.proof_data = redeemProofData;
+    this.proofData.co_gateway.redeem = redeem;
 
     return {
       redeemProofData,
@@ -372,10 +381,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmRedeemIntentResult.returned_value.messageHash_],
     );
-    this.proofData.gateway.confirm_redeem_intent = {};
-    this.proofData.gateway.confirm_redeem_intent.params = confirmRedeemIntentParams;
-    this.proofData.gateway.confirm_redeem_intent.return_value = confirmRedeemIntentResult;
-    this.proofData.gateway.confirm_redeem_intent.proof_data = confirmRedeemIntentProofData;
+    const confirmRedeemIntent = {};
+    confirmRedeemIntent.params = confirmRedeemIntentParams;
+    confirmRedeemIntent.return_value = confirmRedeemIntentResult;
+    confirmRedeemIntent.proof_data = confirmRedeemIntentProofData;
+    this.proofData.gateway.confirm_redeem_intent = confirmRedeemIntent;
 
     return {
       confirmRedeemIntentResult,
@@ -402,10 +412,11 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [progressRedeemParams.messageHash],
     );
-    this.proofData.co_gateway.progress_redeem = {};
-    this.proofData.co_gateway.progress_redeem.params = progressRedeemParams;
-    this.proofData.co_gateway.progress_redeem.return_value = progressRedeemResult;
-    this.proofData.co_gateway.progress_redeem.proof_data = progressRedeemProofData;
+    const progressRedeem = {};
+    progressRedeem.params = progressRedeemParams;
+    progressRedeem.return_value = progressRedeemResult;
+    progressRedeem.proof_data = progressRedeemProofData;
+    this.proofData.co_gateway.progress_redeem = progressRedeem;
 
     return {
       progressRedeemParams,
@@ -429,10 +440,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [progressUnstakeParams.messageHash],
     );
-    this.proofData.gateway.progress_unstake = {};
-    this.proofData.gateway.progress_unstake.params = progressUnstakeParams;
-    this.proofData.gateway.progress_unstake.return_value = progressUnstakeResult;
-    this.proofData.gateway.progress_unstake.proof_data = progressUnstakeProofData;
+    const progressUnstake = {};
+    progressUnstake.params = progressUnstakeParams;
+    progressUnstake.return_value = progressUnstakeResult;
+    progressUnstake.proof_data = progressUnstakeProofData;
+    this.proofData.gateway.progress_unstake = progressUnstake;
   }
 
   /**
@@ -453,10 +465,11 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [revertRedeemParams.messageHash],
     );
-    this.proofData.co_gateway.revert_redeem = {};
-    this.proofData.co_gateway.revert_redeem.params = revertRedeemParams;
-    this.proofData.co_gateway.revert_redeem.return_value = revertRedeemResult;
-    this.proofData.co_gateway.revert_redeem.proof_data = revertRedeemProofData;
+    const revertRedeem = {};
+    revertRedeem.params = revertRedeemParams;
+    revertRedeem.return_value = revertRedeemResult;
+    revertRedeem.proof_data = revertRedeemProofData;
+    this.proofData.co_gateway.revert_redeem = revertRedeem;
 
     return {
       revertRedeemProofData,
@@ -492,10 +505,11 @@ class ProofGenerationUtils {
       this.gateway.address,
       [confirmRevertRedeemIntentParams.messageHash],
     );
-    this.proofData.gateway.confirm_revert_redeem_intent = {};
-    this.proofData.gateway.confirm_revert_redeem_intent.params = confirmRevertRedeemIntentParams;
-    this.proofData.gateway.confirm_revert_redeem_intent.return_value = confirmRevertRedeemResult;
-    this.proofData.gateway.confirm_revert_redeem_intent.proof_data = confirmRevertRedeemProofData;
+    const confirmRevertRedeemIntent = {};
+    confirmRevertRedeemIntent.params = confirmRevertRedeemIntentParams;
+    confirmRevertRedeemIntent.return_value = confirmRevertRedeemResult;
+    confirmRevertRedeemIntent.proof_data = confirmRevertRedeemProofData;
+    this.proofData.gateway.confirm_revert_redeem_intent = confirmRevertRedeemIntent;
 
     return {
       confirmRevertRedeemProofData,
@@ -531,10 +545,11 @@ class ProofGenerationUtils {
       this.coGateway.address,
       [progressRevertRedeemParams.messageHash],
     );
-    this.proofData.co_gateway.progress_revert_redeem = {};
-    this.proofData.co_gateway.progress_revert_redeem.params = progressRevertRedeemParams;
-    this.proofData.co_gateway.progress_revert_redeem.return_value = progressRevertRedeemResult;
-    this.proofData.co_gateway.progress_revert_redeem.proof_data = progressRevertRedeemProofData;
+    const progressRevertRedeem = {};
+    progressRevertRedeem.params = progressRevertRedeemParams;
+    progressRevertRedeem.return_value = progressRevertRedeemResult;
+    progressRevertRedeem.proof_data = progressRevertRedeemProofData;
+    this.proofData.co_gateway.progress_revert_redeem = progressRevertRedeem;
   }
 }
 
