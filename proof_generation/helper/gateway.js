@@ -21,22 +21,42 @@
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 /**
- * Object contains input parameter needed for confirmRedeemIntent.
+ * Object contains input parameters for staking flow.
  *
- * @typedef {object} params.
- * @property {string} params.redeemer Redeemer address.
- * @property {string} params.redeemerNonce Redeemer nonce.
- * @property {string} params.beneficiary Address where the redeemed tokens
+ * @typedef {Object} StakeParams
+ * @property {string} staker Staker address.
+ * @property {string} nonce Staker nonce.
+ * @property {string} beneficiary Beneficiary address.
+ * @property {string} amount Stake amount.
+ * @property {string} gasPrice Gas price.
+ * @property {string} gasLimit Gas limit.
+ * @property {string} hashLock Hash lock
+ * @property {string} blockHeight Block height.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} unlockSecret Unlock secret.
+ * @property {string} facilitator Facilitator address.
+ * @property {string} storageRoot Storage root for proof.
+ */
+
+/**
+ * Object contains input parameter needed for redeem flow.
+ *
+ * @typedef {object} RedeemParams.
+ * @property {string} redeemer Redeemer address.
+ * @property {string} redeemerNonce Redeemer nonce.
+ * @property {string} beneficiary Address where the redeemed tokens
  *                                    will be transferred.
- * @property {string} params.amount Redeem amount.
- * @property {string} params.gasPrice Gas price that redeemer is ready to pay to
+ * @property {string} amount Redeem amount.
+ * @property {string} gasPrice Gas price that redeemer is ready to pay to*
  *                             get the redeem and unstake process done.
- * @property {string} params.gasLimit Gas limit that redeemer is ready to pay.
- * @property {string} params.blockHeight Block number for which the proof is valid.
- * @property {string} params.hashLock Hash lock.
- * @property {string} params.rlpParentNodes RLP encoded proof data.
- * @property {string} params.storageRoot Storage root for proof.
- * @property {string} params.facilitator Facilitator address for progress mint.
+ * @property {string} gasLimit Gas limit that redeemer is ready to pay.
+ * @property {string} messageHash Message hash
+ * @property {string} blockHeight Block number for which the proof is valid.
+ * @property {string} hashLock Hash lock.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} unlockSecret Unlock secret.
+ * @property {string} storageRoot Storage root for proof.
+ * @property {string} facilitator Facilitator address for progress mint.
  */
 
 /**
@@ -58,17 +78,7 @@ class Gateway {
    * Initiates the stake process and returns the event and return value of
    * stake function.
    *
-   * @param {Object} params.
-   * @param {BN} params.amount Stake amount that will be transferred from
-   *                            the staker account.
-   * @param {string} params.beneficiary Beneficiary address where the utility
-   *                                     tokens will be minted.
-   * @param {BN} params.gasPrice Gas price that staker is ready to pay to get
-   *                              the stake and mint process done.
-   * @param {BN} params.gasLimit Gas limit that staker is ready to pay.
-   * @param {BN} params.nonce Nonce of the staker address.
-   * @param {string} params.hashLock Hash Lock provided by the facilitator.
-   * @param {string} params.staker Staker address.
+   * @param {StakeParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -134,12 +144,7 @@ class Gateway {
   /**
    * Progresses stake.
    *
-   * @param {object} params.
-   * @param {string} params.messageHash Message hash of stake request.
-   * @param {string} params.unlockSecret Unlock secret for the hashLock
-   *                                      provided by the staker while
-   *                                      initiating the stake.
-   * @param {string} params.facilitator Facilitator address for progress stake.
+   * @param {StakeParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -174,9 +179,7 @@ class Gateway {
   /**
    * Revert stake.
    *
-   * @param {object} params.
-   * @param {string} params.messageHash Message hash of revert stake request.
-   * @param {string} params.staker Staker address for revert stake.
+   * @param {StakeParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -213,14 +216,7 @@ class Gateway {
   /**
    * Progress revert stake.
    *
-   * @param {object} params.
-   * @param {string} params.messageHash Message hash for confirm revert
-   *                                     stake intent.
-   * @param {BN} params.blockHeight Block height for which the proof
-   *                                     will be verified.
-   * @param {string} params.rlpParentNodes RLP encoded proof data.
-   * @param {string} params.facilitator Facilitator address for progress mint.
-   * @param {string} options.storageRoot Storage root for proof.
+   * @param {StakeParams} params Please see above typedef for more details..
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -265,20 +261,7 @@ class Gateway {
   /**
    * Confirm redeem intent.
    *
-   * @param {object} params.
-   * @param {string} params.redeemer Redeemer address.
-   * @param {BN} params.redeemerNonce Redeemer nonce.
-   * @param {string} params.beneficiary Address where the redeemed tokens
-   *                                    will be transferred.
-   * @param {BN} params.amount Redeem amount.
-   * @param {BN} params.gasPrice Gas price that redeemer is ready to pay to
-   *                             get the redeem and unstake process done.
-   * @param {BN} params.gasLimit Gas limit that redeemer is ready to pay.
-   * @param {BN} params.blockHeight Block number for which the proof is valid.
-   * @param {string} params.hashLock Hash lock.
-   * @param {string} params.rlpParentNodes RLP encoded proof data.
-   * @param {string} params.storageRoot Storage root for proof.
-   * @param {string} params.facilitator Facilitator address for progress mint.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @return messageHash_ Message hash.
    */
@@ -340,11 +323,7 @@ class Gateway {
   /**
    * Progress unstake.
    *
-   * @param {object} params.
-   * @param {string} params.messageHash Message hash for progress unstake.
-   * @param {string} params.unlockSecret Unlock secret for progress unstake.
-   * @param {BN} params.unstakeAmount Unstake amount.
-   * @param {string} params.facilitator Facilitator address.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -388,12 +367,7 @@ class Gateway {
   /**
    * Confirm revert redeem intent.
    *
-   * @param {object} params
-   * @param {string} params.messageHash Message hash.
-   * @param {BN} params.blockHeight Block number for which the proof is valid.
-   * @param {string} params.rlpParentNodes RLP encoded proof data.
-   * @param {string} params.storageRoot Storage root for proof.
-   * @param {string} params.facilitator Facilitator address.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */

@@ -21,21 +21,42 @@
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 /**
- * Object contains input parameter for confirmStakingIntent.
+ * Object contains input parameter for staking flow.
  *
- * @typedef {Object} Params
- * @property {string} params.staker Staker address.
- * @property {string} params.nonce Staker nonce.
- * @property {string} params.beneficiary Beneficiary address.
- * @property {string} params.amount Stake amount.
- * @property {string} params.gasPrice Gas price.
- * @property {string} params.gasLimit Gas limit.
- * @property {string} params.hashLock Hash lock
- * @property {string} params.blockHeight Block height.
- * @property {string} params.rlpParentNodes RLP encoded proof data.
- * @property {string} params.unlockSecret Unlock secret.
- * @property {string} params.facilitator Facilitator address.
- * @property {string} params.storageRoot Storage root for proof.
+ * @typedef {Object} StakeParams
+ * @property {string} staker Staker address.
+ * @property {string} nonce Staker nonce.
+ * @property {string} beneficiary Beneficiary address.
+ * @property {string} amount Stake amount.
+ * @property {string} gasPrice Gas price.
+ * @property {string} gasLimit Gas limit.
+ * @property {string} hashLock Hash lock
+ * @property {string} blockHeight Block height.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} unlockSecret Unlock secret.
+ * @property {string} facilitator Facilitator address.
+ * @property {string} storageRoot Storage root for proof.
+ */
+
+/**
+ * Object contains input parameter needed for redeem flow.
+ *
+ * @typedef {object} RedeemParams.
+ * @property {string} redeemer Redeemer address.
+ * @property {string} redeemerNonce Redeemer nonce.
+ * @property {string} beneficiary Address where the redeemed tokens
+ *                                    will be transferred.
+ * @property {string} amount Redeem amount.
+ * @property {string} gasPrice Gas price that redeemer is ready to pay to*
+ *                             get the redeem and unstake process done.
+ * @property {string} gasLimit Gas limit that redeemer is ready to pay.
+ * @property {string} messageHash Message hash for confirm revert
+ * @property {string} blockHeight Block number for which the proof is valid.
+ * @property {string} hashLock Hash lock.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} unlockSecret Unlock secret.
+ * @property {string} storageRoot Storage root for proof.
+ * @property {string} facilitator Facilitator address for progress mint.
  */
 
 /**
@@ -55,14 +76,7 @@ class CoGateway {
   /**
    * Initiates the redeem process.
    *
-   * @param {Object} params.
-   * @param {BN} params.amount Redeem amount.
-   * @param {string} params.beneficiary Beneficiary address.
-   * @param {BN} params.gasPrice Gas price that redeemer is ready to pay to get the
-   *                             redeem process done.
-   * @param {BN} params.gasLimit Gas limit that redeemer is ready to pay.
-   * @param {BN} params.nonce Nonce of the redeemer address.
-   * @param {string} params.hashLock Hash Lock provided by the facilitator.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -125,11 +139,7 @@ class CoGateway {
   /**
    * Progress redeem.
    *
-   * @param {Object} params.
-   * @param {string} params.messageHash Message hash for redeem message.
-   * @param {string} params.unlockSecret Unlock secret for the hashLock provide by the
-   *                            facilitator while initiating the redeem.
-   * @param {string} params.facilitator Facilitator address for progress redeem.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -164,9 +174,7 @@ class CoGateway {
   /**
    * Revert redeem.
    *
-   * @param {Object} params.
-   * @param {string} params.messageHash Message hash.
-   * @param {string} params.redeemer Redeemer address.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -201,12 +209,7 @@ class CoGateway {
   /**
    * Progress revert redeem.
    *
-   * @param {Object} params.
-   * @param {string} params.messageHash Message hash.
-   * @param {BN} params.blockHeight Block number for which the proof is valid.
-   * @param {string} params.rlpParentNodes RLP encoded proof data.
-   * @param {string} params.facilitator Facilitator address.
-   * @param {string} params.storageRoot Storage root for proof verification.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -247,19 +250,7 @@ class CoGateway {
   /**
    * Confirm stake intent.
    *
-   * @param {object} params.
-   * @param {string} params.staker Staker address.
-   * @param {string} params.nonce Staker nonce.
-   * @param {string} params.beneficiary Beneficiary address.
-   * @param {string} params.amount Stake amount.
-   * @param {string} params.gasPrice Gas price.
-   * @param {string} params.gasLimit Gas limit.
-   * @param {string} params.hashLock Hash lock
-   * @param {string} params.blockHeight Block height.
-   * @param {string} params.rlpParentNodes RLP encoded proof data.
-   * @param {string} params.unlockSecret Unlock secret.
-   * @param {string} params.facilitator Facilitator address.
-   * @param {string} params.storageRoot Storage root for proof.
+   * @param {StakeParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -325,10 +316,7 @@ class CoGateway {
   /**
    * Progress mint.
    *
-   * @param {object} params.
-   * @param {string} options.messageHash Message hash for progress mint.
-   * @param {string} options.unlockSecret Unlock secret for progress mint.
-   * @param {string} options.facilitator Facilitator address for progress mint.
+   * @param {RedeemParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */
@@ -363,14 +351,7 @@ class CoGateway {
   /**
    * Confirm revert stake intent.
    *
-   * @param {object} params.
-   * @param {string} options.messageHash Message hash for confirm revert
-   *                                     stake intent.
-   * @param {string} options.blockHeight Block height for which the proof
-   *                                     will be verified.
-   * @param {string} options.rlpParentNodes RLP encoded proof data.
-   * @param {string} options.facilitator Facilitator address for progress mint.
-   * @param {string} options.storageRoot Storage root for proof.
+   * @param {StakeParams} params Please see above typedef for more details.
    *
    * @returns {Object} Object containing events and return values.
    */

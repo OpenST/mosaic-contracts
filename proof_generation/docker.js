@@ -20,6 +20,7 @@
 
 const waitPort = require('wait-port');
 
+// The port should be same as network integration_origin port defined in truffle.js
 const originPort = 8546;
 
 const asyncSleep = ms => new Promise(resolve => setTimeout(resolve, ms));

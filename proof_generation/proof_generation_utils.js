@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// ----------------------------------------------------------------------------
+//
 // http://www.simpletoken.org/
 //
+// ----------------------------------------------------------------------------
 
 const TestLibUtils = require('../test/test_lib/utils.js');
 const Gateway = require('./helper/gateway');
@@ -22,38 +25,38 @@ const CoGateway = require('./helper/co_gateway');
 /**
  * Object contains input parameter for confirmStakingIntent.
  *
- * @typedef {Object} stakeParams
- * @property {string} params.staker Staker address.
- * @property {string} params.nonce Staker nonce.
- * @property {string} params.beneficiary Beneficiary address.
- * @property {string} params.amount Stake amount.
- * @property {string} params.gasPrice Gas price.
- * @property {string} params.gasLimit Gas limit.
- * @property {string} params.hashLock Hash lock
- * @property {string} params.blockHeight Block height.
- * @property {string} params.rlpParentNodes RLP encoded proof data.
- * @property {string} params.unlockSecret Unlock secret.
- * @property {string} params.facilitator Facilitator address.
- * @property {string} params.storageRoot Storage root for proof.
+ * @typedef {Object} StakeParams
+ * @property {string} staker Staker address.
+ * @property {string} nonce Staker nonce.
+ * @property {string} beneficiary Beneficiary address.
+ * @property {string} amount Stake amount.
+ * @property {string} gasPrice Gas price.
+ * @property {string} gasLimit Gas limit.
+ * @property {string} hashLock Hash lock
+ * @property {string} blockHeight Block height.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} unlockSecret Unlock secret.
+ * @property {string} facilitator Facilitator address.
+ * @property {string} storageRoot Storage root for proof.
  */
 
 /**
  * Object contains input parameter needed for confirmRedeemIntent.
  *
- * @typedef {object} redeemParams
- * @property {string} params.redeemer Redeemer address.
- * @property {string} params.redeemerNonce Redeemer nonce.
- * @property {string} params.beneficiary Address where the redeemed tokens
- *                                    will be transferred.
- * @property {string} params.amount Redeem amount.
- * @property {string} params.gasPrice Gas price that redeemer is ready to pay to
- *                             get the redeem and unstake process done.
- * @property {string} params.gasLimit Gas limit that redeemer is ready to pay.
- * @property {string} params.blockHeight Block number for which the proof is valid.
- * @property {string} params.hashLock Hash lock.
- * @property {string} params.rlpParentNodes RLP encoded proof data.
- * @property {string} params.storageRoot Storage root for proof.
- * @property {string} params.facilitator Facilitator address for progress mint.
+ * @typedef {object} RedeemParams
+ * @property {string} redeemer Redeemer address.
+ * @property {string} redeemerNonce Redeemer nonce.
+ * @property {string} beneficiary Address where the redeemed tokens
+ *                    will be transferred.
+ * @property {string} amount Redeem amount.
+ * @property {string} gasPrice Gas price that redeemer is ready to pay to
+ *                    get the redeem and unstake process done.
+ * @property {string} gasLimit Gas limit that redeemer is ready to pay.
+ * @property {string} blockHeight Block number for which the proof is valid.
+ * @property {string} hashLock Hash lock.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {string} storageRoot Storage root for proof.
+ * @property {string} facilitator Facilitator address for progress mint.
  */
 
 /**
@@ -65,8 +68,8 @@ class ProofGenerationUtils {
    * Constructor
    *
    * @param registeredContracts {object} Deployed contracts.
-   * @param stakeParams {object} Contains data needed for staking.
-   * @param redeemParams {object} Contains data needed for redeeming.
+   * @param stakeParams {StakeParams} Contains data needed for staking.
+   * @param redeemParams {RedeemParams} Contains data needed for redeeming.
    * @param proofUtils {object} Proof utils object.
    */
   constructor(registeredContracts, stakeParams, redeemParams, proofUtils) {
@@ -202,7 +205,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling progressMint.
    *
-   * @param progressStakeParams {object} Contains data needed for progressStake.
+   * @param progressStakeParams {StakeParams} Contains data needed for progressStake.
    * @param confirmStakeIntentResult {object} Result after calling confirmStakeIntent.
    *
    * @returns {Promise<void>}
@@ -257,7 +260,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling confirm revert stake.
    *
-   * @param revertStakeParams {object} Contains revert stake parameters.
+   * @param revertStakeParams {StakeParams} Contains revert stake parameters.
    * @param revertStakeProofData {object} Contains revert stake proof data.
    *
    * @returns {Promise<{confirmRevertStakeProofData}>}
@@ -293,7 +296,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling progress revert stake.
    *
-   * @param revertStakeParams {object} Contains revert stake data.
+   * @param revertStakeParams {StakeParams} Contains revert stake data.
    * @param confirmRevertStakeProofData {object} Contains confirm revert stake proof data.
    *
    * @returns {Promise<void>}
@@ -412,7 +415,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling progress unstake.
    *
-   * @param progressRedeemParams {object} Contains data needed for progress redeem.
+   * @param progressRedeemParams {RedeemParams} Contains data needed for progress redeem.
    *
    * @returns {Promise<void>}
    */
@@ -465,7 +468,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling confirm revert redeem.
    *
-   * @param revertRedeemParams {object} Contains data needed for calling revert redeem.
+   * @param revertRedeemParams {RedeemParams} Contains data needed for calling revert redeem.
    * @param revertRedeemProofData {object} Contains revert redeem proof data.
    *
    * @returns {Promise<{confirmRevertRedeemProofData, confirmRevertRedeemIntentParams}>}
@@ -503,7 +506,7 @@ class ProofGenerationUtils {
   /**
    * Populates proof data after calling progress revert redeem.
    *
-   * @param revertRedeemParams {object} Contains data needed for calling revert redeem.
+   * @param revertRedeemParams {RedeemParams} Contains data needed for calling revert redeem.
    * @param confirmRevertRedeemProofData {object} Contains revert redeem proof data.
    *
    * @returns {Promise<void>}
