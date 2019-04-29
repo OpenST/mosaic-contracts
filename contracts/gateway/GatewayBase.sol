@@ -68,15 +68,15 @@ contract GatewayBase is Organized {
     /* Constants */
 
     /** Position of message bus in the storage. */
-    uint8 constant MESSAGE_BOX_OFFSET = 7;
+    uint8 public constant MESSAGE_BOX_OFFSET = 7;
 
     /** The max number of storage roots to store. */
-    uint256 private constant MAX_STORAGE_ROOTS = 256;
+    uint256 public constant MAX_STORAGE_ROOTS = 256;
 
     /**
      * Penalty in bounty amount percentage charged to message sender on revert message.
      */
-    uint8 constant REVOCATION_PENALTY = 150;
+    uint8 public constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
     /**
@@ -151,7 +151,6 @@ contract GatewayBase is Organized {
      * nonce of the particular address. Refer getNonce for the details.
      */
     mapping(address => bytes32) private outboxActiveProcess;
-
 
     CircularBufferUintLib.BufferUint storageRootBuffer;
 
