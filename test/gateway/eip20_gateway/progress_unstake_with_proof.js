@@ -27,7 +27,6 @@ const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const cogatewayUtils = require('../../../test/gateway/eip20_cogateway/helpers/co_gateway_utils');
 const StubData = require('../../data/redeem_progressed_0.json');
-const StubDataRedeemFailure = require('../../data/redeem_amount_less_than_reward.json');
 const StubDataRedeemReward = require('../../data/redeem_progressed_reward_based_on_gas_consumption.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
