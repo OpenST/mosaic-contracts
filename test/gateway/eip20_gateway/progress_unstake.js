@@ -83,6 +83,7 @@ contract('EIP20Gateway.progressUnstake()', (accounts) => {
       bountyAmount,
       organizationAddress,
       burnerAddress,
+      new BN(100),
     );
 
     unstakeRequest = {

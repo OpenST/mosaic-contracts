@@ -54,6 +54,7 @@ contract('GatewayBase.sol', (accounts) => {
         mockAnchor.address,
         bounty,
         mockOrganization.address,
+        new BN(100),
       );
     });
 

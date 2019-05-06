@@ -190,6 +190,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       organizationAddress,
       gatewayAddress,
       burnerAddress,
+      new BN(100),
     );
 
     // Set CoGateway address in mocked utility token.

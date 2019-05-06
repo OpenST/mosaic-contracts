@@ -80,6 +80,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
+        new BN(100),
       );
     });
 
@@ -147,6 +148,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
+        new BN(100),
       );
       unlockHeight = await proposeBountyChange(
         gatewayBaseInstance,
@@ -223,6 +225,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
+        new BN(100),
       );
     });
 

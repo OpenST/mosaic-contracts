@@ -47,17 +47,21 @@ contract TestGatewayBase is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                message transfers.
      * @param _organization Address of a contract that manages workers.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         public
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
     {}
 

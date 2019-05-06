@@ -63,6 +63,7 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
       bountyAmount,
       organization,
       burner,
+      new BN(100),
     );
 
     const hashLockObj = Utils.generateHashLock();

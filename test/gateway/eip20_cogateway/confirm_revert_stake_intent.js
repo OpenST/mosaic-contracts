@@ -68,6 +68,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
       organization,
       StubData.contracts.gateway,
       StubData.co_gateway.constructor.burner,
+      new BN(100),
     );
 
     amount = new BN(stakeRequest.amount, 16);

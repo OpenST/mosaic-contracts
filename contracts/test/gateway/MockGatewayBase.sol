@@ -22,17 +22,21 @@ contract MockGatewayBase is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _organization Address of a contract that manages workers.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         public
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
     {}
 
@@ -102,9 +106,9 @@ contract MockGatewayBase is GatewayBase {
             // return true
             return true;
         }
-        
+
         // On successful proof verification storage root is returned other wise
-        // transaction is reverted. 
+        // transaction is reverted.
         bytes32 storageRoot = MockGatewayLib.proveAccount(
             _rlpAccount,
             _rlpParentNodes,

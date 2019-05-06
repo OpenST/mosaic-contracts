@@ -71,6 +71,7 @@ contract('EIP20CoGateway.progressRedeem() ', (accounts) => {
       accounts[2], // organization
       accounts[3], // gateway
       accounts[10], // burner
+      new BN(100),
     );
 
     messageHash = await eip20CoGateway.setMessage.call(

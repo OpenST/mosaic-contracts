@@ -21,10 +21,12 @@
 const rlp = require('rlp');
 
 // This is the position of message outbox defined in GatewayBase.sol
-const MESSAGE_OUTBOX_OFFSET = '7';
+// @dev, this is in hex value (in string) without 0x prefix.
+const MESSAGE_OUTBOX_OFFSET = '9';
 
 // This is the position of message inbox defined in GatewayBase.sol
-const MESSAGE_INBOX_OFFSET = '8';
+// @dev, this is in hex (in string) without 0x prefix.
+const MESSAGE_INBOX_OFFSET = 'a';
 
 /**
  * Utils class to generate inbox and outbox proof.

@@ -36,6 +36,7 @@ contract('EIP20Gateway.penalty()', (accounts) => {
       bounty,
       accounts[4],
       accounts[5],
+      new BN(100),
     );
 
     messageHash = web3.utils.sha3('message_hash');
