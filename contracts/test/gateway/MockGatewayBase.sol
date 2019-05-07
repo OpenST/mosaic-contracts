@@ -117,6 +117,8 @@ contract MockGatewayBase is GatewayBase {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete storageRoots[oldestStoredBlockHeight];
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
@@ -128,5 +130,24 @@ contract MockGatewayBase is GatewayBase {
         );
 
         return true;
+    }
+
+    /**
+     *  @notice Get the storage root for the given block height. This is only
+     *          testing
+     *
+     *  @param _blockHeight Block height for which the storage root is to be
+     *                      fetched.
+     *
+     *  @return storageRoot_ Storage root for the given block height.
+     */
+    function getStorageRoot(
+        uint256 _blockHeight
+    )
+        external
+        view
+        returns (bytes32 storageRoot_)
+    {
+        storageRoot_ = storageRoots[_blockHeight];
     }
 }
