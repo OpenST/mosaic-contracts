@@ -25,7 +25,7 @@ import "./MosaicCoreInterface.sol";
 import "./Stake.sol";
 import "../lib/MetaBlock.sol";
 import "../lib/OstInterface.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/StateRootInterface.sol";
 
 /**

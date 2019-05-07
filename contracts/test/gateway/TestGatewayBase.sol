@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../../gateway/GatewayBase.sol";
-import "../../lib/OrganizationInterface.sol";
+import "../../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 import "../../lib/StateRootInterface.sol";
 
 /**

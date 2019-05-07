@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../lib/EIP20Interface.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  *  @title SimpleStake contract

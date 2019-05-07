@@ -19,9 +19,11 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
-const Utils = require('../../test_lib/utils');
-const messageBus = require('../../test_lib/message_bus.js');
+
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
+const messageBus = require('../../test_lib/message_bus.js');
+const Utils = require('../../test_lib/utils');
+const web3 = require('../../test_lib/web3');
 
 const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockToken = artifacts.require('MockToken');
@@ -222,7 +224,6 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Underflow when subtracting.',
     );
   });
 
@@ -261,7 +262,6 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Underflow when subtracting.',
     );
   });
 

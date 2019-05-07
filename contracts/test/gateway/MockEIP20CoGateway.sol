@@ -20,7 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../../gateway/CoGatewayUtilityTokenInterface.sol";
+import "../../utilitytoken/contracts/CoGatewayUtilityTokenInterface.sol";
 
 /**
  * @title MockEIP20CoGateway contract.
