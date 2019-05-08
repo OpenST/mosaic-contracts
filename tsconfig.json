@@ -1,0 +1,34 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "alwaysStrict": true,
+        "strictNullChecks": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noErrorTruncation": true,
+        "sourceMap": true,
+        "types": [
+            "chai",
+            "fs-extra",
+            "node",
+            "mocha",
+            "web3"
+        ],
+        "resolveJsonModule": true
+    },
+    "include": [
+        "*.ts",
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

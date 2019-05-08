@@ -1,8 +1,46 @@
 {
   "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "modules": true
+    }
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "json"
   ],
   "rules": {
+    "@typescript-eslint/indent": ["error", 2],
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-for-in-array": "error",
+    "@typescript-eslint/no-unnecessary-qualifier": "error",
+    "@typescript-eslint/no-unnecessary-type-assertion": "error",
+    "@typescript-eslint/no-extraneous-class": "error",
+    "@typescript-eslint/prefer-includes": "error",
+    "@typescript-eslint/restrict-plus-operands": "error",
+    "@typescript-eslint/no-useless-constructor": "error",
+    "@typescript-eslint/unified-signatures": "error",
+    "@typescript-eslint/unbound-method": [
+      "error",
+      {
+        "ignoreStatic": true
+      }
+    ],
+    "@typescript-eslint/promise-function-async": [
+      "error",
+      {
+        "checkArrowFunctions": true,
+        "checkFunctionDeclarations": true,
+        "checkFunctionExpressions": true,
+        "checkMethodDeclarations": true
+      }
+    ],
     "no-console": "off",
     "no-underscore-dangle": "off",
     "import/no-extraneous-dependencies": "off",
