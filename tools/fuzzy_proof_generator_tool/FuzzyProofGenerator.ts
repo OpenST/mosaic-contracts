@@ -32,7 +32,7 @@ class FuzzyProofGenerator {
 
     /* Public Functions */
 
-    generate(pattern: string, path: string, value: string): ProofData {
+    static generate(pattern: string, path: string, value: string): ProofData {
 
         const nibblePath: number[] = Util.stringToNibbles(path);
         assert(Util.assertNibbleArray(nibblePath));

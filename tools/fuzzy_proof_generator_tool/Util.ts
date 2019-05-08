@@ -1,5 +1,3 @@
-import { nibblesToBuffer } from "../../merkle-patricia-tree/src/util/nibbles";
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,69 +16,78 @@ import { nibblesToBuffer } from "../../merkle-patricia-tree/src/util/nibbles";
 
 const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
-
-import { NodeType } from './Types';
-
 export class Util {
-    static generateRandomeKey(): string {
+
+    static generateRandomKey(): string {
         return ethUtil.sha3(
-            Array.from({ length: 32 }, () => Math.floor(Math.random() * 17)).join()
+            Math.random().toString(36).substring(2, 10) +
+            Math.random().toString(36).substring(2, 10) +
+            Math.random().toString(36).substring(2, 10) +
+            Math.random().toString(36).substring(2, 10)
         );
     }
 
-    static stringToNibbles(path: string): number[] {
-        const bytes = Buffer.from(path);
-        const nibbles = []
+    static stringToNibbles(path: string): Buffer {
 
-        for (let i = 0; i < bytes.length; i += 1) {
+        const nibbles: Buffer = Buffer.allocUnsafe(2 * path.length);
+
+        for (let i = 0; i < path.length; i += 1) {
             let q = i * 2;
-            nibbles[q] = bytes[i] >> 4;
-            ++q;
-            nibbles[q] = bytes[i] % 16;
+            const c: number = path.charCodeAt(i) & 0xFF;
+            nibbles[q] = c >> 4;
+            q += 1;
+            nibbles[q] = c & 0xF;
         }
 
         return nibbles;
     }
 
-    static nibblesToBuffer(nibbleArray: number[]): Buffer {
+    static nibblesToBuffer(nibbleArray: Buffer): Buffer {
         assert(nibbleArray.length % 2 === 0);
 
-        const buf = new Buffer(nibbleArray.length / 2);
-        for (let i = 0; i < buf.length; i++) {
+        const buffer = Buffer.allocUnsafe(nibbleArray.length / 2);
+        for (let i = 0; i < buffer.length; i++) {
             let q: number = i * 2;
-            buf[i] = (nibbleArray[q] << 4) + nibbleArray[q + 1]
+            buffer[i] = ((nibbleArray[q] << 4) | nibbleArray[q + 1]);
         }
-        return buf;
+        return buffer;
     }
 
-    static encodeCompactLeafPath(nibblePath: number[]): Buffer {
+    static encodeCompactLeafPath(nibblePath: Buffer): Buffer {
+        assert(nibblePath.length !== 0);
+
         const evenLength: boolean = (nibblePath.length % 2 === 0);
-        let extendedNibblePath: number[] = [];
-        if (evenLength) {
-            extendedNibblePath = [2, 0, ...nibblePath]
-        } else {
-            extendedNibblePath = [3, ...nibblePath]
-        }
 
-        return Util.nibblesToBuffer(extendedNibblePath);
+        if (evenLength) {
+            return Util.nibblesToBuffer(
+                Buffer.concat([Buffer.from([2, 0]), nibblePath])
+            );
+        } else {
+            return Util.nibblesToBuffer(
+                Buffer.concat([Buffer.from([3]), nibblePath])
+            );
+        }
     }
 
-    static encodeCompactExtensionPath(nibblePath: number[]): Buffer {
+    static encodeCompactExtensionPath(nibblePath: Buffer): Buffer {
+        assert(nibblePath.length !== 0);
+
         const evenLength: boolean = (nibblePath.length % 2 === 0);
-        let extendedNibblePath: number[] = [];
         if (evenLength) {
-            extendedNibblePath = [0, 0, ...nibblePath]
+            return Util.nibblesToBuffer(
+                Buffer.concat([Buffer.from([0, 0]), nibblePath])
+            );
         } else {
-            extendedNibblePath = [1, ...nibblePath]
+            return Util.nibblesToBuffer(
+                Buffer.concat([Buffer.from([1]), nibblePath])
+            );
         }
-
-        return Util.nibblesToBuffer(extendedNibblePath);
     }
 
-    static assertNibbleArray(nibbleArray: number[]) {
+    static assertNibbleArray(nibbleArray: Buffer) {
         nibbleArray.forEach(
             (n) => {
-                assert(n >= 0 && n <= 15);
+                assert(0 === (n & 0xF0));
             }
         );
     }
