@@ -16,37 +16,32 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import { Util } from '../../Util';
+import Util from '../../Util';
 
-describe('Util::assertNibbleArray', () => {
+describe('Util::assertNibbleArray', (): void => {
+  it('Reverts on a negative input.', (): void => {
+    assert.throws(
+      (): void => Util.assertNibbleArray(Buffer.from([-1])),
+    );
+  });
 
-    it('Reverts on a negative input.', () => {
-        assert.throws(
-            () => Util.assertNibbleArray(Buffer.from([
-                -1,
-            ]))
-        );
-    });
+  it('Reverts on an input bigger than 0xF.', (): void => {
+    assert.throws(
+      (): void => Util.assertNibbleArray(Buffer.from([0xF + 1])),
+    );
+  });
 
-    it('Reverts on an input bigger than 0xF.', () => {
-        assert.throws(
-            () => Util.assertNibbleArray(Buffer.from([
-                0xF + 1,
-            ]))
-        );
-    });
+  it('Checks an empty array.', (): void => {
+    assert.doesNotThrow(
+      (): void => Util.assertNibbleArray(Buffer.from([])),
+    );
+  });
 
-    it('Checks an empty array.', () => {
-        assert.doesNotThrow(
-            () => Util.assertNibbleArray(Buffer.from([]))
-        );
-    });
-
-    it('Checks a valid array.', () => {
-        assert.doesNotThrow(
-            () => Util.assertNibbleArray(Buffer.from([
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-            ]))
-        );
-    });
+  it('Checks a valid array.', (): void => {
+    assert.doesNotThrow(
+      (): void => Util.assertNibbleArray(Buffer.from([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+      ])),
+    );
+  });
 });

@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/chai": "4.1.7",
+    "@types/ethereumjs-util": "5.2.0",
     "@types/mocha": "5.2.6",
     "@typescript-eslint/eslint-plugin": "1.7.0",
     "@typescript-eslint/parser": "1.7.0",
@@ -33,6 +34,7 @@
     "eslint": "5.10.0",
     "eslint-config-airbnb-base": "13.1.0",
     "eslint-plugin-import": "2.14.0",
+    "eslint-plugin-json": "^1.4.0",
     "ethereumjs-util": "6.1.0",
     "ganache-cli": "6.1.8",
     "inquirer": "6.2.1",
@@ -59,7 +61,7 @@
     "build-package": "node tools/build_package.js",
     "prepare": "npm run compile-all && npm run build-package",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
-    "lint": "eslint {migrations,test,test_integration,tools} -c .eslintrc.json --ext js"
+    "lint": "eslint {migrations,test,test_integration,tools} -c .eslintrc.json --ext js,ts"
   },
   "main": "dist/index.js",
   "files": [

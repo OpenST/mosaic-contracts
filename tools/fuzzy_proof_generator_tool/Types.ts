@@ -15,11 +15,9 @@
 // ----------------------------------------------------------------------------
 
 enum NodeType {
-    Branch = 'Branch',
-    Extension = 'Extension',
-    Leaf = 'Leaf',
+  Branch = 'Branch',
+  Extension = 'Extension',
+  Leaf = 'Leaf',
 }
 
-export {
-    NodeType,
-}
+export default NodeType;

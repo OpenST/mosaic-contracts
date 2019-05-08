@@ -16,28 +16,26 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import { Util } from '../../Util';
+import Util from '../../Util';
 
-describe('Util::encodeCompactLeafPath', () => {
+describe('Util::encodeCompactLeafPath', (): void => {
+  it('Reverts if a buffer\'s is empty.', (): void => {
+    assert.throws(
+      (): void => Util.encodeCompactLeafPath(Buffer.from([])),
+    );
+  });
 
-    it('Reverts if a buffer\'s is empty.', () => {
-        assert.throws(
-            () => Util.encodeCompactLeafPath(Buffer.from([]))
-        );
-    });
+  it('Checks an odd-length buffer conversion.', (): void => {
+    assert.deepEqual(
+      Util.encodeCompactLeafPath(Buffer.from([0xF, 1, 0xC, 0xB, 8])),
+      Buffer.from([0x3F, 0x1C, 0xB8]),
+    );
+  });
 
-    it('Checks an odd-length buffer conversion.', () => {
-        assert.deepEqual(
-            Util.encodeCompactLeafPath(Buffer.from([0xF, 1, 0xC, 0xB, 8])),
-            Buffer.from([0x3F, 0x1C, 0xB8]),
-        );
-    });
-
-    it('Checks an even-length buffer conversion.', () => {
-        assert.deepEqual(
-            Util.encodeCompactLeafPath(Buffer.from([0, 0xF, 1, 0xC, 0xB, 8])),
-            Buffer.from([0x20, 0xF, 0x1C, 0xB8]),
-        );
-    });
-
+  it('Checks an even-length buffer conversion.', (): void => {
+    assert.deepEqual(
+      Util.encodeCompactLeafPath(Buffer.from([0, 0xF, 1, 0xC, 0xB, 8])),
+      Buffer.from([0x20, 0xF, 0x1C, 0xB8]),
+    );
+  });
 });

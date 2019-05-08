@@ -14,276 +14,266 @@
 //
 // ----------------------------------------------------------------------------
 
-const assert = require('assert');
-const ethUtil = require('ethereumjs-util');
-const rlp = require('rlp');
+import Util from './Util';
+import {
+  NodeBase, BranchNode, ExtensionNode, LeafNode,
+} from './Nodes';
 
-import { Util } from './Util';
-import { NodeBase, BranchNode, ExtensionNode, LeafNode } from './Nodes';
+import assert = require('assert');
+import ethUtil = require('ethereumjs-util');
+import rlp = require('rlp');
 
 interface ProofData {
-    root: string;
-    value: string;
-    proof: string;
-    path: string;
+  root: string;
+  value: string;
+  proof: string;
+  path: string;
 }
 
-class FuzzyProofGenerator {
+const FuzzyProofGenerator = {
 
-    /* Public Functions */
+  generate(pattern: string, path: string, value: string): ProofData {
+    const nibblePath: Buffer = Util.stringToNibbles(path);
+    assert(Util.assertNibbleArray(nibblePath));
+    assert(nibblePath.length >= pattern.length);
 
-    static generate(pattern: string, path: string, value: string): ProofData {
+    assert(value.length !== 0);
+    const valueHash: string = ethUtil.sha3(value);
 
-        const nibblePath: number[] = Util.stringToNibbles(path);
-        assert(Util.assertNibbleArray(nibblePath));
-        assert(nibblePath.length >= pattern.length);
+    this.assertPatternValidity(pattern);
 
-        assert(value.length !== 0);
-        const valueHash: string = ethUtil.sha3(value);
+    const nibblePathFuzzyData: number[][] = this.generatePathFuzzyData(
+      pattern, nibblePath,
+    );
+    assert(nibblePathFuzzyData.length === pattern.length);
 
-        this.assertPatternValidity(pattern);
+    const nodes: NodeBase[] = this.createNodes(
+      pattern, valueHash, nibblePathFuzzyData,
+    );
+    assert(nodes.length === pattern.length);
 
-        const nibblePathFuzzyData: number[][] = this.generatePathFuzzyData(
-            pattern, nibblePath
-        );
-        assert(nibblePathFuzzyData.length == pattern.length);
+    const rlpEncodedNodes: string[] = [];
+    nodes.forEach((n): void => {
+      rlpEncodedNodes.push(n.serialize());
+    });
 
-        const nodes: NodeBase[] = this.createNodes(pattern, valueHash, nibblePathFuzzyData);
-        assert(nodes.length === pattern.length);
+    const proofData = {
+      value: valueHash,
+      path,
+      proof: rlp.encode(rlpEncodedNodes),
+      root: nodes[0].hash(),
+    };
 
-        const rlpEncodedNodes: string[] = [];
-        nodes.forEach((n) => {
-            rlpEncodedNodes.push(n.serialize());
-        });
+    return proofData;
+  },
 
-        const proofData = {
-            value: valueHash,
-            path: path,
-            proof: rlp.encode(rlpEncodedNodes),
-            root: nodes[0].hash(),
-        };
-
-        return proofData;
+  assertPatternValidity(pattern): void {
+    if (pattern.length === 0) {
+      throw new Error('The pattern is empty.');
     }
 
+    switch (pattern[0]) {
+      case 'b': {
+        this.processBranch(pattern.substring(1));
+        break;
+      }
+      case 'e': {
+        this.processExtension(pattern.substring(1));
+        break;
+      }
+      case 'l': {
+        this.processLeaf(pattern.substring(1));
+        break;
+      }
+      default: {
+        throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
+      }
+    }
+  },
 
-    /* Private Functions */
+  processLeaf(pattern: string): void {
+    if (pattern.length !== 0) {
+      throw new Error('Pattern does not end with leaf node.');
+    }
+  },
 
-    private assertPatternValidity(pattern) {
-
-        if (pattern.length === 0) {
-            throw new Error('The pattern is empty.');
-        }
-
-        switch (pattern[0]) {
-            case 'b': {
-                this.processBranch(pattern.substring(1));
-                break;
-            }
-            case 'e': {
-                this.processExtension(pattern.substring(1));
-                break;
-            }
-            case 'l': {
-                this.processLeaf(pattern.substring(1));
-                break;
-            }
-            default: {
-                throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
-            }
-        }
+  processBranch(pattern: string): void {
+    if (pattern.length === 0) {
+      return;
     }
 
-    private processLeaf(
-        pattern: string,
-    ) {
-        if (pattern.length !== 0) {
-            throw new Error('Pattern does not end with leaf node.');
-        }
+    switch (pattern[0]) {
+      case 'b': {
+        this.processBranch(pattern.substring(1));
+        break;
+      }
+      case 'e': {
+        this.processExtension(pattern.substring(1));
+        break;
+      }
+      case 'l': {
+        this.processLeaf(pattern.substring(1));
+        break;
+      }
+      default: {
+        throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
+      }
+    }
+  },
+
+  processExtension(pattern: string): void {
+    if (pattern.length === 0) {
+      throw new Error('Pattern ends with an extension node.');
     }
 
-    private processBranch(
-        pattern: string,
-    ) {
-        if (pattern.length === 0) {
-            return;
-        }
+    switch (pattern[0]) {
+      case 'b': {
+        this.processBranch(pattern.substring(1));
+        break;
+      }
+      case 'e': {
+        throw new Error('Pattern contains two consecutive extension nodes.');
+      }
+      case 'l': {
+        throw new Error('Pattern contains a leaf node after an extension node.');
+      }
+      default: {
+        throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
+      }
+    }
+  },
 
-        switch (pattern[0]) {
-            case 'b': {
-                this.processBranch(pattern.substring(1));
-                break;
-            }
-            case 'e': {
-                this.processExtension(pattern.substring(1));
-                break;
-            }
-            case 'l': {
-                this.processLeaf(pattern.substring(1));
-                break;
-            }
-            default: {
-                throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
-            }
+  generatePathFuzzyData(
+    pattern: string,
+    nibblePath: number[],
+  ): number[][] {
+    assert(nibblePath.length >= pattern.length);
+
+
+    const numberCount: number = pattern.length - (pattern.split('b').length - 1);
+    const sum: number = nibblePath.length - pattern.length;
+
+    const randomNumbers: number[] = this.generateRandomNumbers(sum, numberCount);
+    const randomNumbersIndex = 0;
+
+    const fuzzyData: number[][] = [];
+    let nibblePathIndex = 0;
+
+    for (let i = 0; i < pattern.length; i += 1) {
+      switch (pattern[i]) {
+        case 'b': {
+          assert(nibblePathIndex < nibblePath.length);
+          fuzzyData.push(nibblePath.slice(nibblePathIndex, nibblePathIndex + 1));
+          nibblePathIndex += 1;
+          break;
         }
+        case 'e':
+        case 'l': {
+          fuzzyData.push(
+            nibblePath.slice(
+              nibblePathIndex,
+              nibblePathIndex + randomNumbers[randomNumbersIndex] + 1,
+            ),
+          );
+          break;
+        }
+        default: {
+          throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
+        }
+      }
     }
 
-    private processExtension(pattern: string) {
+    return fuzzyData;
+  },
 
-        if (pattern.length === 0) {
-            throw new Error('Pattern ends with an extension node.');
-        }
-
-        switch (pattern[0]) {
-            case 'b': {
-                this.processBranch(pattern.substring(1));
-                break;
-            }
-            case 'e': {
-                throw new Error('Pattern contains two consecutive extension nodes.');
-            }
-            case 'l': {
-                throw new Error('Pattern contains a leaf node after an extension node.');
-            }
-            default: {
-                throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
-            }
-        }
+  // https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+  // https://math.stackexchange.com/questions/1276206/method-of-generating-random-numbers-that-sum-to-100-is-this-truly-random
+  generateRandomNumbers(sum: number, numberCount: number): number[] {
+    if (numberCount === 0) {
+      return [];
     }
 
-    private generatePathFuzzyData(
-        pattern: string,
-        nibblePath: number[]
-    ): number[][] {
-
-        assert(nibblePath.length >= pattern.length);
-
-
-        const numberCount: number = pattern.length - (pattern.split('b').length - 1);
-        const sum: number = nibblePath.length - pattern.length;
-
-        const randomNumbers: number[] = this.generateRandomNumbers(sum, numberCount);
-        let randomNumbersIndex = 0;
-
-        const fuzzyData: number[][] = [];
-        let nibblePathIndex = 0;
-
-        for (let i = 0; i < pattern.length; i += 1) {
-            switch (pattern[i]) {
-                case 'b': {
-                    assert(nibblePathIndex < nibblePath.length);
-                    fuzzyData.push(nibblePath.slice(nibblePathIndex, nibblePathIndex + 1));
-                    nibblePathIndex += 1;
-                    break;
-                }
-                case 'e':
-                case 'l': {
-                    fuzzyData.push(
-                        nibblePath.slice(
-                            nibblePathIndex,
-                            nibblePathIndex + randomNumbers[randomNumbersIndex] + 1 // +1 is because generated comes with 0
-                        )
-                    );
-                }
-                default: {
-                    throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
-                }
-            }
-        }
-
-        return fuzzyData;
-
+    if (numberCount === 1) {
+      return [sum];
     }
 
-    // https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
-    // https://math.stackexchange.com/questions/1276206/method-of-generating-random-numbers-that-sum-to-100-is-this-truly-random
-    private generateRandomNumbers(sum: number, numberCount: number): number[] {
+    const lowerBoundInclusive = 1;
+    const upperBoundInclusive = sum + numberCount - 1;
 
-        if (numberCount === 0) {
-            return [];
-        }
+    const pickedRandoms: number[] = [];
 
-        if (numberCount === 1) {
-            return [sum];
-        }
+    for (let i = 0; i < numberCount - 1; i += 1) {
+      let x: number = -1;
+      do {
+        x = lowerBoundInclusive + Math.floor(Math.random() * upperBoundInclusive);
+      } while (pickedRandoms.includes(x));
 
-        const lowerBoundInclusive = 1;
-        const upperBoundInclusive = sum + numberCount - 1;
-
-        const pickedRandoms: number[] = [];
-
-        for (let i = 0; i < numberCount - 1; i += 1) {
-            let x: number = -1;
-            do {
-                x = lowerBoundInclusive + Math.floor(Math.random() * upperBoundInclusive);
-            } while (pickedRandoms.includes(x))
-
-            pickedRandoms.push(x);
-        }
-
-        assert(pickedRandoms.length !== 0);
-
-        pickedRandoms.sort();
-
-        const generatedRandoms: number[] = [];
-        generatedRandoms.push(pickedRandoms[0] - 1);
-        for (let i = 1; i < numberCount - 1; ++i) {
-            generatedRandoms.push(pickedRandoms[i] - pickedRandoms[i - 1] - 1);
-        }
-        generatedRandoms.push(upperBoundInclusive - pickedRandoms[pickedRandoms.length - 1]);
-
-        return generatedRandoms;
+      pickedRandoms.push(x);
     }
 
-    private createNodes(
-        pattern: string, valueHash: string, nibblePathFuzzyData: number[][],
-    ): NodeBase[] {
-        const nodes: NodeBase[] = [];
-        let previousNodeHash: string = '';
+    assert(pickedRandoms.length !== 0);
 
-        for (let i = pattern.length - 1; i >= 0; i -= 1) {
-            switch (pattern[i]) {
-                case 'b': {
-                    assert(1 === nibblePathFuzzyData[i].length);
-                    assert(nibblePathFuzzyData[i][0] >= 0 && nibblePathFuzzyData[i][0] <= 16);
+    pickedRandoms.sort();
 
-                    let bv: string = '';
-                    if (i === pattern.length - 1) {
-                        bv = valueHash;
-                    }
-
-                    const bks: string[] = new Array<string>(16);
-                    bks[nibblePathFuzzyData[i][0]] = previousNodeHash;
-                    const bn = new BranchNode(bks, bv);
-                    previousNodeHash = bn.hash();
-                    nodes.push(bn);
-                    break;
-                }
-                case 'e': {
-                    assert(nibblePathFuzzyData[i].length >= 1);
-                    const en = new ExtensionNode(nibblePathFuzzyData[i], previousNodeHash);
-                    previousNodeHash = en.hash();
-                    nodes.push(en);
-
-                    break;
-                }
-                case 'l': {
-                    assert(nibblePathFuzzyData[i].length >= 1);
-                    const ln = new LeafNode(nibblePathFuzzyData[i], valueHash);
-                    previousNodeHash = ln.hash();
-                    nodes.push(ln);
-
-                    break;
-                }
-                default: {
-                    throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
-                }
-            }
-        }
-        nodes.reverse();
-
-        return nodes;
+    const generatedRandoms: number[] = [];
+    generatedRandoms.push(pickedRandoms[0] - 1);
+    for (let i = 1; i < numberCount - 1; i += 1) {
+      generatedRandoms.push(pickedRandoms[i] - pickedRandoms[i - 1] - 1);
     }
+    generatedRandoms.push(upperBoundInclusive - pickedRandoms[pickedRandoms.length - 1]);
 
-}
+    return generatedRandoms;
+  },
 
+  createNodes(
+    pattern: string, valueHash: string, nibblePathFuzzyData: number[][],
+  ): NodeBase[] {
+    const nodes: NodeBase[] = [];
+    let previousNodeHash = '';
+
+    for (let i = pattern.length - 1; i >= 0; i -= 1) {
+      switch (pattern[i]) {
+        case 'b': {
+          assert(nibblePathFuzzyData[i].length === 1);
+          assert(nibblePathFuzzyData[i][0] >= 0 && nibblePathFuzzyData[i][0] <= 16);
+
+          let bv = '';
+          if (i === pattern.length - 1) {
+            bv = valueHash;
+          }
+
+          const bks: string[] = new Array<string>(16);
+          bks[nibblePathFuzzyData[i][0]] = previousNodeHash;
+          const bn = new BranchNode(bks, bv);
+          previousNodeHash = bn.hash();
+          nodes.push(bn);
+          break;
+        }
+        case 'e': {
+          assert(nibblePathFuzzyData[i].length >= 1);
+          const en = new ExtensionNode(nibblePathFuzzyData[i], previousNodeHash);
+          previousNodeHash = en.hash();
+          nodes.push(en);
+
+          break;
+        }
+        case 'l': {
+          assert(nibblePathFuzzyData[i].length >= 1);
+          const ln = new LeafNode(nibblePathFuzzyData[i], valueHash);
+          previousNodeHash = ln.hash();
+          nodes.push(ln);
+
+          break;
+        }
+        default: {
+          throw new Error(`An unexpected symbol (${pattern[0]}) in the pattern.`);
+        }
+      }
+    }
+    nodes.reverse();
+
+    return nodes;
+  },
+};
+
+export { FuzzyProofGenerator as default };

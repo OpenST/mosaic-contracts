@@ -14,81 +14,83 @@
 //
 // ----------------------------------------------------------------------------
 
-const assert = require('assert');
-const ethUtil = require('ethereumjs-util');
-export class Util {
+/* eslint-disable no-bitwise */
 
-    static generateRandomKey(): string {
-        return ethUtil.sha3(
-            Math.random().toString(36).substring(2, 10) +
-            Math.random().toString(36).substring(2, 10) +
-            Math.random().toString(36).substring(2, 10) +
-            Math.random().toString(36).substring(2, 10)
-        );
+import assert = require('assert');
+
+import ethUtil = require('ethereumjs-util');
+
+const Util = {
+  generateRandomKey(): string {
+    return ethUtil.sha3(
+      Math.random().toString(36).substring(2, 10)
+            + Math.random().toString(36).substring(2, 10)
+            + Math.random().toString(36).substring(2, 10)
+            + Math.random().toString(36).substring(2, 10),
+    );
+  },
+
+  stringToNibbles(path: string): Buffer {
+    const nibbles: Buffer = Buffer.allocUnsafe(2 * path.length);
+
+    for (let i = 0; i < path.length; i += 1) {
+      let q = i * 2;
+      const c: number = path.charCodeAt(i) & 0xFF;
+      nibbles[q] = c >> 4;
+      q += 1;
+      nibbles[q] = c & 0xF;
     }
 
-    static stringToNibbles(path: string): Buffer {
+    return nibbles;
+  },
 
-        const nibbles: Buffer = Buffer.allocUnsafe(2 * path.length);
+  nibblesToBuffer(nibbleArray: Buffer): Buffer {
+    assert(nibbleArray.length % 2 === 0);
 
-        for (let i = 0; i < path.length; i += 1) {
-            let q = i * 2;
-            const c: number = path.charCodeAt(i) & 0xFF;
-            nibbles[q] = c >> 4;
-            q += 1;
-            nibbles[q] = c & 0xF;
-        }
-
-        return nibbles;
+    const buffer = Buffer.allocUnsafe(nibbleArray.length / 2);
+    for (let i = 0; i < buffer.length; i += 1) {
+      const q: number = i * 2;
+      buffer[i] = ((nibbleArray[q] << 4) | nibbleArray[q + 1]);
     }
+    return buffer;
+  },
 
-    static nibblesToBuffer(nibbleArray: Buffer): Buffer {
-        assert(nibbleArray.length % 2 === 0);
+  encodeCompactLeafPath(nibblePath: Buffer): Buffer {
+    assert(nibblePath.length !== 0);
 
-        const buffer = Buffer.allocUnsafe(nibbleArray.length / 2);
-        for (let i = 0; i < buffer.length; i++) {
-            let q: number = i * 2;
-            buffer[i] = ((nibbleArray[q] << 4) | nibbleArray[q + 1]);
-        }
-        return buffer;
+    const evenLength: boolean = (nibblePath.length % 2 === 0);
+
+    if (evenLength) {
+      return Util.nibblesToBuffer(
+        Buffer.concat([Buffer.from([2, 0]), nibblePath]),
+      );
     }
+    return Util.nibblesToBuffer(
+      Buffer.concat([Buffer.from([3]), nibblePath]),
+    );
+  },
 
-    static encodeCompactLeafPath(nibblePath: Buffer): Buffer {
-        assert(nibblePath.length !== 0);
+  encodeCompactExtensionPath(nibblePath: Buffer): Buffer {
+    assert(nibblePath.length !== 0);
 
-        const evenLength: boolean = (nibblePath.length % 2 === 0);
-
-        if (evenLength) {
-            return Util.nibblesToBuffer(
-                Buffer.concat([Buffer.from([2, 0]), nibblePath])
-            );
-        } else {
-            return Util.nibblesToBuffer(
-                Buffer.concat([Buffer.from([3]), nibblePath])
-            );
-        }
+    const evenLength: boolean = (nibblePath.length % 2 === 0);
+    if (evenLength) {
+      return Util.nibblesToBuffer(
+        Buffer.concat([Buffer.from([0, 0]), nibblePath]),
+      );
     }
+    return Util.nibblesToBuffer(
+      Buffer.concat([Buffer.from([1]), nibblePath]),
+    );
+  },
 
-    static encodeCompactExtensionPath(nibblePath: Buffer): Buffer {
-        assert(nibblePath.length !== 0);
+  assertNibbleArray(nibbleArray: Buffer): void {
+    nibbleArray.forEach(
+      (n): void => {
+        assert((n & 0xF0) === 0);
+      },
+    );
+  },
+};
 
-        const evenLength: boolean = (nibblePath.length % 2 === 0);
-        if (evenLength) {
-            return Util.nibblesToBuffer(
-                Buffer.concat([Buffer.from([0, 0]), nibblePath])
-            );
-        } else {
-            return Util.nibblesToBuffer(
-                Buffer.concat([Buffer.from([1]), nibblePath])
-            );
-        }
-    }
-
-    static assertNibbleArray(nibbleArray: Buffer) {
-        nibbleArray.forEach(
-            (n) => {
-                assert(0 === (n & 0xF0));
-            }
-        );
-    }
-}
+export { Util as default };
