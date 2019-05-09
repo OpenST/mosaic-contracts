@@ -28,10 +28,10 @@ pragma solidity ^0.5.0;
  * the auxiliary chain.
  */
 import "./OSTPrimeConfig.sol";
-import "./UtilityToken.sol";
+import "../utilitytoken/contracts/UtilityToken.sol";
 import "../lib/Mutex.sol";
-import "../lib/OrganizationInterface.sol";
-import "../lib/SafeMath.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  *  @title OSTPrime contract implements UtilityToken and
@@ -121,7 +121,7 @@ contract OSTPrime is UtilityToken, OSTPrimeConfig, Mutex {
      *      minted as base coin.
      *
      * @return success_ `true` if initialize was successful.
-     */    
+     */
     function initialize()
         external
         payable

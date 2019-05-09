@@ -24,7 +24,7 @@ import "../lib/RLP.sol";
 import "./BlockStoreInterface.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/MetaBlock.sol";
 import "./AuxiliaryTransitionObjectInterface.sol";
 import "./KernelGatewayInterface.sol";
@@ -666,7 +666,7 @@ contract KernelGateway is KernelGatewayInterface {
     {
         bytes32 transitionHash =
             AuxiliaryTransitionObjectInterface(address(auxiliaryBlockStore))
-                .auxiliaryTransitionHashAtBlock(_blockHash);
+            .auxiliaryTransitionHashAtBlock(_blockHash);
 
         metaBlockHash_ = MetaBlock.hashMetaBlock(
             activeKernelHash,

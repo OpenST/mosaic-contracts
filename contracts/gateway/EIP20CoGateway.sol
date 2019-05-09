@@ -52,9 +52,9 @@ pragma solidity ^0.5.0;
 -------------------------------------------------------------------------------
 */
 
-import "./UtilityTokenInterface.sol";
+import "../utilitytoken/contracts/UtilityTokenInterface.sol";
 import "./GatewayBase.sol";
-import "../lib/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract

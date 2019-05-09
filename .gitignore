@@ -20,6 +20,8 @@ build/
 .idea/
 .vscode/
 *.iml
+*.swp
+tags
 
 # LaTeX auxiliary files
 *.aux

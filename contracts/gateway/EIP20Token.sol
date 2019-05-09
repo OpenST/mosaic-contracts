@@ -13,7 +13,7 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 //
 // http://www.simpletoken.org/
@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../lib/EIP20Interface.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title EIP20Token contract.
