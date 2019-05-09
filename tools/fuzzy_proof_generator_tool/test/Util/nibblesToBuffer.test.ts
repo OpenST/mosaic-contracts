@@ -21,18 +21,18 @@ import Util from '../../Util';
 describe('Util::nibblesToBuffer', (): void => {
   it('Reverts if a buffer\'s length is odd.', (): void => {
     assert.throws(
-      (): void => Util.nibblesToBuffer(Buffer.from([1])),
+      (): Buffer => Util.nibblesToBuffer(Buffer.from([1])),
     );
 
     assert.throws(
-      (): void => Util.nibblesToBuffer(Buffer.from([1, 2, 3])),
+      (): Buffer => Util.nibblesToBuffer(Buffer.from([1, 2, 3])),
     );
   });
 
   it('Checks an empty buffer conversion.', (): void => {
     assert.deepEqual(
-      Util.nibblesToBuffer(Buffer.from([])),
-      Buffer.from([]),
+      Util.nibblesToBuffer(Buffer.alloc(0)),
+      Buffer.alloc(0),
     );
   });
 

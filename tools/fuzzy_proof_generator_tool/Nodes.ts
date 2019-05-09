@@ -27,19 +27,16 @@ abstract class NodeBase {
   private _type: NodeType;
 
 
-  /* Abstract Functions */
+  /* Public Functions */
 
   public abstract serialize(): Buffer;
 
-
-  /* Public Functions */
+  public hash(): Buffer {
+    return ethUtil.keccak256(this.serialize());
+  }
 
   public get type(): NodeType {
     return this._type;
-  }
-
-  public hash(): Buffer {
-    return ethUtil.keccak256(this.serialize());
   }
 
   /* Protected Functions */
@@ -73,20 +70,18 @@ class BranchNode extends NodeBase {
     return rlp.encode(raw);
   }
 
-  public get value(): Buffer {
-    return this._value;
-  }
-
   public updateKey(index: number, key: Buffer): void {
     assert(index >= 0 && index <= 15);
-    assert(key.length !== 0);
 
     this._keys[index] = key;
   }
 
-  public key(index: number): Buffer {
-    assert(index >= 0 && index <= 15);
-    return this._keys[index];
+  public get keys(): Buffer[] {
+    return this._keys;
+  }
+
+  public get value(): Buffer {
+    return this._value;
   }
 }
 
@@ -140,6 +135,9 @@ class LeafNode extends NodeBase {
   public constructor(nibblePath: Buffer, value: Buffer) {
     super(NodeType.Leaf);
 
+    assert(nibblePath.length !== 0);
+    assert(value.length !== 0);
+
     Util.assertNibbleArray(nibblePath);
 
     this._nibblePath = nibblePath;
@@ -147,7 +145,7 @@ class LeafNode extends NodeBase {
   }
 
   public serialize(): Buffer {
-    const encodedPath: Buffer = Util.encodeCompactExtensionPath(this._nibblePath);
+    const encodedPath: Buffer = Util.encodeCompactLeafPath(this._nibblePath);
     const raw: Buffer[] = [encodedPath, Buffer.from(this._value)];
 
     return rlp.encode(raw);

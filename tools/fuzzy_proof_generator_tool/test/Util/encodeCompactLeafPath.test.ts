@@ -21,7 +21,7 @@ import Util from '../../Util';
 describe('Util::encodeCompactLeafPath', (): void => {
   it('Reverts if a buffer\'s is empty.', (): void => {
     assert.throws(
-      (): void => Util.encodeCompactLeafPath(Buffer.from([])),
+      (): Buffer => Util.encodeCompactLeafPath(Buffer.alloc(0)),
     );
   });
 

@@ -16,6 +16,7 @@
 
 import 'mocha';
 import { assert } from 'chai';
+
 import Util from '../../Util';
 
 describe('Util::stringToNibbles', (): void => {
@@ -23,7 +24,7 @@ describe('Util::stringToNibbles', (): void => {
     const nibbleArray: Buffer = Util.stringToNibbles('');
     assert.deepEqual(
       nibbleArray,
-      Buffer.from([]),
+      Buffer.alloc(0),
     );
   });
 

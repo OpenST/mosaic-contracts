@@ -24,25 +24,25 @@ import ethUtil = require('ethereumjs-util');
 import rlp = require('rlp');
 
 interface ProofData {
-  root: string;
-  value: string;
-  proof: string;
-  path: string;
+  root: Buffer;
+  value: Buffer;
+  proof: Buffer;
+  path: Buffer;
 }
 
 const FuzzyProofGenerator = {
 
   generate(pattern: string, path: string, value: string): ProofData {
+    this.assertPatternValidity(pattern);
+
     const nibblePath: Buffer = Util.stringToNibbles(path);
     assert(Util.assertNibbleArray(nibblePath));
     assert(nibblePath.length >= pattern.length);
 
     assert(value.length !== 0);
-    const valueHash: string = ethUtil.sha3(value);
+    const valueHash: Buffer = ethUtil.keccak256(value);
 
-    this.assertPatternValidity(pattern);
-
-    const nibblePathFuzzyData: number[][] = this.generatePathFuzzyData(
+    const nibblePathFuzzyData: Buffer[] = this.generatePathFuzzyData(
       pattern, nibblePath,
     );
     assert(nibblePathFuzzyData.length === pattern.length);
@@ -52,14 +52,14 @@ const FuzzyProofGenerator = {
     );
     assert(nodes.length === pattern.length);
 
-    const rlpEncodedNodes: string[] = [];
+    const rlpEncodedNodes: Buffer[] = [];
     nodes.forEach((n): void => {
       rlpEncodedNodes.push(n.serialize());
     });
 
     const proofData = {
       value: valueHash,
-      path,
+      path: Buffer.from(path),
       proof: rlp.encode(rlpEncodedNodes),
       root: nodes[0].hash(),
     };
@@ -67,7 +67,7 @@ const FuzzyProofGenerator = {
     return proofData;
   },
 
-  assertPatternValidity(pattern): void {
+  assertPatternValidity(pattern: string): void {
     if (pattern.length === 0) {
       throw new Error('The pattern is empty.');
     }
@@ -145,24 +145,24 @@ const FuzzyProofGenerator = {
 
   generatePathFuzzyData(
     pattern: string,
-    nibblePath: number[],
-  ): number[][] {
+    nibblePath: Buffer,
+  ): Buffer[] {
     assert(nibblePath.length >= pattern.length);
-
 
     const numberCount: number = pattern.length - (pattern.split('b').length - 1);
     const sum: number = nibblePath.length - pattern.length;
 
     const randomNumbers: number[] = this.generateRandomNumbers(sum, numberCount);
-    const randomNumbersIndex = 0;
+    let randomNumbersIndex = 0;
 
-    const fuzzyData: number[][] = [];
+    const fuzzyData: Buffer[] = [];
     let nibblePathIndex = 0;
 
     for (let i = 0; i < pattern.length; i += 1) {
+      assert(nibblePathIndex < nibblePath.length);
+      assert(randomNumbersIndex < randomNumbers.length);
       switch (pattern[i]) {
         case 'b': {
-          assert(nibblePathIndex < nibblePath.length);
           fuzzyData.push(nibblePath.slice(nibblePathIndex, nibblePathIndex + 1));
           nibblePathIndex += 1;
           break;
@@ -175,6 +175,8 @@ const FuzzyProofGenerator = {
               nibblePathIndex + randomNumbers[randomNumbersIndex] + 1,
             ),
           );
+          nibblePathIndex += (randomNumbers[randomNumbersIndex] + 1);
+          randomNumbersIndex += 1;
           break;
         }
         default: {
@@ -211,7 +213,7 @@ const FuzzyProofGenerator = {
       pickedRandoms.push(x);
     }
 
-    assert(pickedRandoms.length !== 0);
+    assert(pickedRandoms.length === numberCount - 1);
 
     pickedRandoms.sort();
 
@@ -222,27 +224,30 @@ const FuzzyProofGenerator = {
     }
     generatedRandoms.push(upperBoundInclusive - pickedRandoms[pickedRandoms.length - 1]);
 
+    assert(generatedRandoms.length === numberCount);
+    assert(generatedRandoms.reduce((a, b): number => a + b) === sum);
+
     return generatedRandoms;
   },
 
   createNodes(
-    pattern: string, valueHash: string, nibblePathFuzzyData: number[][],
+    pattern: string, valueHash: Buffer, nibblePathFuzzyData: Buffer[],
   ): NodeBase[] {
     const nodes: NodeBase[] = [];
-    let previousNodeHash = '';
+    let previousNodeHash: Buffer = Buffer.alloc(0);
 
     for (let i = pattern.length - 1; i >= 0; i -= 1) {
       switch (pattern[i]) {
         case 'b': {
           assert(nibblePathFuzzyData[i].length === 1);
-          assert(nibblePathFuzzyData[i][0] >= 0 && nibblePathFuzzyData[i][0] <= 16);
+          assert(nibblePathFuzzyData[i][0] >= 0 && nibblePathFuzzyData[i][0] <= 15);
 
-          let bv = '';
+          let bv = Buffer.alloc(0);
           if (i === pattern.length - 1) {
             bv = valueHash;
           }
 
-          const bks: string[] = new Array<string>(16);
+          const bks: Buffer[] = new Array<Buffer>(16);
           bks[nibblePathFuzzyData[i][0]] = previousNodeHash;
           const bn = new BranchNode(bks, bv);
           previousNodeHash = bn.hash();

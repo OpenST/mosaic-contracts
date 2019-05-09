@@ -21,7 +21,7 @@ import Util from '../../Util';
 describe('Util::encodeCompactExtensionPath', (): void => {
   it('Reverts if a buffer\'s is empty.', (): void => {
     assert.throws(
-      (): void => Util.encodeCompactExtensionPath(Buffer.from([])),
+      (): Buffer => Util.encodeCompactExtensionPath(Buffer.alloc(0)),
     );
   });
 

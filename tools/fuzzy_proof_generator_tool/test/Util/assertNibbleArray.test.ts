@@ -33,7 +33,7 @@ describe('Util::assertNibbleArray', (): void => {
 
   it('Checks an empty array.', (): void => {
     assert.doesNotThrow(
-      (): void => Util.assertNibbleArray(Buffer.from([])),
+      (): void => Util.assertNibbleArray(Buffer.alloc(0)),
     );
   });
 

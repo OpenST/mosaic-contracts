@@ -18,15 +18,13 @@
         "sourceMap": true,
         "types": [
             "chai",
-            "fs-extra",
             "node",
             "mocha",
-            "web3"
         ],
         "resolveJsonModule": true
     },
     "include": [
-        "*.ts",
+        "tools/fuzzy_proof_generator_tool/*.ts",
     ],
     "exclude": [
         "node_modules"

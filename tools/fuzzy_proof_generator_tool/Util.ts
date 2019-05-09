@@ -21,8 +21,9 @@ import assert = require('assert');
 import ethUtil = require('ethereumjs-util');
 
 const Util = {
-  generateRandomKey(): string {
-    return ethUtil.sha3(
+
+  generateRandomKey(): Buffer {
+    return ethUtil.keccak256(
       Math.random().toString(36).substring(2, 10)
             + Math.random().toString(36).substring(2, 10)
             + Math.random().toString(36).substring(2, 10)
@@ -31,7 +32,7 @@ const Util = {
   },
 
   stringToNibbles(path: string): Buffer {
-    const nibbles: Buffer = Buffer.allocUnsafe(2 * path.length);
+    const nibbles: Buffer = Buffer.alloc(2 * path.length);
 
     for (let i = 0; i < path.length; i += 1) {
       let q = i * 2;
@@ -47,7 +48,7 @@ const Util = {
   nibblesToBuffer(nibbleArray: Buffer): Buffer {
     assert(nibbleArray.length % 2 === 0);
 
-    const buffer = Buffer.allocUnsafe(nibbleArray.length / 2);
+    const buffer = Buffer.alloc(nibbleArray.length / 2);
     for (let i = 0; i < buffer.length; i += 1) {
       const q: number = i * 2;
       buffer[i] = ((nibbleArray[q] << 4) | nibbleArray[q + 1]);
