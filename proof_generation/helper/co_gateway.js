@@ -359,48 +359,6 @@ class CoGateway {
   }
 
   /**
-   * Progress mint with proof.
-   *
-   * @param {ProgressMintWithProofParams} params Please see above typedef for
-   *                                             more details.
-   *
-   * @returns {Object} Object containing events and return values.
-   */
-  async progressMintWithProof(params) {
-    const {
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      facilitator,
-    } = params;
-
-    const result = await this.coGateway.progressMintWithProof.call(
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      { from: facilitator },
-    );
-
-    const tx = await this.coGateway.progressMintWithProof(
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      { from: facilitator },
-    );
-
-    const events = EventDecoder.getEvents(tx, this.coGateway);
-
-    return {
-      returned_value: result,
-      events,
-      block_number: tx.receipt.blockNumber,
-    };
-  }
-
-  /**
    * Confirm revert stake intent.
    *
    * @param {StakeParams} params Please see above typedef for more details.

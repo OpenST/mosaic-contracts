@@ -188,48 +188,6 @@ class Gateway {
   }
 
   /**
-   * Progresses stake with proof.
-   *
-   * @param {ProgressStakeWithProofParams} params Please see above typedef for
-   *                                              more details.
-   *
-   * @returns {Object} Object containing events and return values.
-   */
-  async progressStakeWithProof(params) {
-    const {
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      facilitator,
-    } = params;
-
-    const result = await this.gateway.progressStakeWithProof.call(
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      { from: facilitator },
-    );
-
-    const tx = await this.gateway.progressStakeWithProof(
-      messageHash,
-      rlpParentNodes,
-      blockHeight,
-      messageStatus,
-      { from: facilitator },
-    );
-
-    const events = EventDecoder.getEvents(tx, this.gateway);
-
-    return {
-      returned_value: result,
-      events,
-      block_number: tx.receipt.blockNumber,
-    };
-  }
-
-  /**
    * Revert stake.
    *
    * @param {StakeParams} params Please see above typedef for more details.
