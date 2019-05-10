@@ -62,7 +62,7 @@ const MessageStatus = {
 };
 
 describe('Stake and mint (with proof)', async () => {
-  before_each(async () => {
+  beforeEach(async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
@@ -115,7 +115,6 @@ describe('Stake and mint (with proof)', async () => {
     await progressMintWithProof(MessageStatus.Declared);
     await progressStakeWithProof(MessageStatus.Progressed);
   });
-
 });
 
 /**
@@ -137,14 +136,14 @@ const proveGateway = async () => {
   );
 
   // Prove gateway.
-  let tx = await cogateway.proveGateway(
+  const tx = await cogateway.proveGateway(
     new BN(blockNumber),
     outboxProof.encodedAccountValue,
     outboxProof.serializedAccountProof,
     { from: auxiliaryAccounts[0] },
   );
 
-  let event = EventDecoder.getEvents(tx, cogateway);
+  const event = EventDecoder.getEvents(tx, cogateway);
   ProveGatewayAssertion.verify(
     event,
     new BN(blockNumber),
@@ -152,7 +151,7 @@ const proveGateway = async () => {
     gateway.address,
   );
 
-  return {outboxProof, blockNumber: new BN(blockNumber)};
+  return { outboxProof, blockNumber: new BN(blockNumber) };
 };
 
 /**
@@ -173,14 +172,14 @@ const proveCoGateway = async () => {
   );
 
   // Prove gateway.
-  let proofTx = await gateway.proveGateway(
+  const proofTx = await gateway.proveGateway(
     new BN(blockNumber),
     inboxProof.encodedAccountValue,
     inboxProof.serializedAccountProof,
     { from: originAccounts[0] },
   );
 
-  let proofEvent = EventDecoder.getEvents(proofTx, gateway);
+  const proofEvent = EventDecoder.getEvents(proofTx, gateway);
   ProveGatewayAssertion.verify(
     proofEvent,
     new BN(blockNumber),
@@ -188,7 +187,7 @@ const proveCoGateway = async () => {
     cogateway.address,
   );
 
-  return {inboxProof,  blockNumber: new BN(blockNumber)};
+  return { inboxProof, blockNumber: new BN(blockNumber) };
 };
 
 /**
@@ -224,10 +223,10 @@ const stake = async () => {
  * @return {Promise<void>}
  */
 const confirmStakeIntent = async () => {
-  const {outboxProof, blockNumber} = await proveGateway();
+  const { outboxProof, blockNumber } = await proveGateway();
 
   stakeRequest.blockHeight = new BN(blockNumber);
-  let tx = await cogateway.confirmStakeIntent(
+  const tx = await cogateway.confirmStakeIntent(
     stakeRequest.staker,
     stakeRequest.nonce,
     stakeRequest.beneficiary,
@@ -240,7 +239,7 @@ const confirmStakeIntent = async () => {
     { from: auxiliaryAccounts[0] },
   );
 
-  let event = EventDecoder.getEvents(tx, cogateway);
+  const event = EventDecoder.getEvents(tx, cogateway);
   // Assert event.
   ConfirmStakeIntentAssertion.verify(event, stakeRequest);
 };
@@ -251,7 +250,7 @@ const confirmStakeIntent = async () => {
  * @return {Promise<void>}
  */
 const progressStakeWithProof = async (coGatewayInboxMessageStatus) => {
-  const {inboxProof, blockNumber} = await proveCoGateway();
+  const { inboxProof, blockNumber } = await proveCoGateway();
 
   // Capture initial token and base token balance of staker and gateway.
   const initialBalancesBeforeProgress = await assertProgressStake.captureBalances(
@@ -273,11 +272,11 @@ const progressStakeWithProof = async (coGatewayInboxMessageStatus) => {
 
 /**
  * Progress mint with proof.
- * @param {number} gatewayInboxMessageStatus Outbox message status in gateway.
+ * @param {number} gatewayOutboxMessageStatus Outbox message status in gateway.
  * @return {Promise<void>}
  */
 const progressMintWithProof = async (gatewayOutboxMessageStatus) => {
-  const {outboxProof, blockNumber} = await proveGateway();
+  const { outboxProof, blockNumber } = await proveGateway();
 
   // Capture initial OST prime ERC20 and base token balance of
   // beneficiary, OST prime contract address and gateway.
