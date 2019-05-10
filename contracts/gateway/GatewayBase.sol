@@ -68,12 +68,12 @@ contract GatewayBase is Organized, CircularBufferUint {
     /* Constants */
 
     /** Position of message bus in the storage. */
-    uint8 constant public MESSAGE_BOX_OFFSET = 9;
+    uint8 public constant MESSAGE_BOX_OFFSET = 9;
 
     /**
      * Penalty in bounty amount percentage charged to message sender on revert message.
      */
-    uint8 constant public REVOCATION_PENALTY = 150;
+    uint8 public constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
     /**
