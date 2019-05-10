@@ -70,15 +70,16 @@ class ProgressRedeemAssertion {
    * @param {RedeemRequest} redeemRequest Redeem request parameter.
    * @param {BN} transactionFees Transaction fees in redeem request.
    * @param {Balances} initialBalances Initial baseToken and token balances.
+   * @param {Boolean} proofProgress `true` if progress is with proof.
    */
-  async verify(event, redeemRequest, transactionFees, initialBalances) {
+  async verify(event, redeemRequest, transactionFees, initialBalances, proofProgress) {
     await this._assertBalancesForRedeem(
       redeemRequest,
       initialBalances,
       transactionFees,
     );
 
-    ProgressRedeemAssertion._assertProgressRedeemEvent(event, redeemRequest);
+    ProgressRedeemAssertion._assertProgressRedeemEvent(event, redeemRequest, proofProgress);
   }
 
   /**
@@ -159,9 +160,10 @@ class ProgressRedeemAssertion {
    * Assert event after Redeem method.
    * @param {Object} event Event object after decoding.
    * @param {RedeemRequest} redeemRequest Redeem request parameters.
+   * @param {Boolean} proofProgress `true` if progress is with proof.
    * @private
    */
-  static _assertProgressRedeemEvent(event, redeemRequest) {
+  static _assertProgressRedeemEvent(event, redeemRequest, proofProgress) {
     const eventData = event.RedeemProgressed;
 
     assert.strictEqual(
@@ -192,7 +194,7 @@ class ProgressRedeemAssertion {
 
     assert.strictEqual(
       eventData._proofProgress,
-      false,
+      proofProgress,
       'Proof progress flag should be false.',
     );
 
