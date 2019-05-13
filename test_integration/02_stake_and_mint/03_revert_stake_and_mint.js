@@ -82,6 +82,7 @@ describe('Revert Stake and mint', async () => {
   let auxiliaryAnchor;
   let originAnchor;
   let stakeRequest;
+  let messageBoxOffset;
 
   before(async () => {
     originWeb3 = shared.origin.web3;
@@ -120,6 +121,7 @@ describe('Revert Stake and mint', async () => {
       shared.origin.contracts.Anchor,
       shared.origin.organizationAddress,
     );
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
 
@@ -157,6 +159,7 @@ describe('Revert Stake and mint', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       gateway.address,
       [stakeRequest.messageHash],
+      messageBoxOffset,
       originWeb3.utils.toHex(blockNumber),
     );
 
@@ -235,6 +238,7 @@ describe('Revert Stake and mint', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       gateway.address,
       [stakeRequest.messageHash],
+      messageBoxOffset,
       originWeb3.utils.toHex(blockNumber),
     );
 
@@ -288,6 +292,7 @@ describe('Revert Stake and mint', async () => {
     const inboxProof = await proofUtils.getInboxProof(
       cogateway.address,
       [stakeRequest.messageHash],
+      messageBoxOffset,
       originWeb3.utils.toHex(blockNumber),
     );
 
