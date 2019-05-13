@@ -24,9 +24,9 @@ import assert = require('assert');
 class LeafNode extends NodeBase {
   /* Storage */
 
-  private _nibblePath: Buffer;
+  public readonly nibblePath: Buffer;
 
-  private _value: Buffer;
+  public readonly value: Buffer;
 
 
   /* Public Functions */
@@ -53,32 +53,24 @@ class LeafNode extends NodeBase {
 
     Util.assertNibbleArray(nibblePath);
 
-    this._nibblePath = nibblePath;
-    this._value = value;
+    this.nibblePath = nibblePath;
+    this.value = value;
   }
 
   /**
    * Returns a raw representation of an underlying data of a leaf node as a
    * buffers array:
-   *    [...compact_encode_leaf(this._nibblePath), this._value]
+   *    [...compact_encode_leaf(this.nibblePath), this.value]
    *
    * @remarks
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
    */
   public raw(): Buffer[] {
-    const encodedPath: Buffer = Util.encodeCompactLeafPath(this._nibblePath);
-    const raw: Buffer[] = [encodedPath, this._value];
+    const encodedPath: Buffer = Util.encodeCompactLeafPath(this.nibblePath);
+    const raw: Buffer[] = [encodedPath, this.value];
 
     return raw;
-  }
-
-  public get value(): Buffer {
-    return this._value;
-  }
-
-  public get nibblePath(): Buffer {
-    return this._nibblePath;
   }
 }
 

@@ -23,7 +23,7 @@ import ethUtil = require('ethereumjs-util');
 abstract class NodeBase {
   /* Storage */
 
-  private _type: NodeType;
+  public readonly type: NodeType;
 
 
   /* Public Functions */
@@ -42,15 +42,11 @@ abstract class NodeBase {
     return ethUtil.keccak256(s);
   }
 
-  public get type(): NodeType {
-    return this._type;
-  }
-
 
   /* Protected Functions */
 
   protected constructor(type: NodeType) {
-    this._type = type;
+    this.type = type;
   }
 }
 

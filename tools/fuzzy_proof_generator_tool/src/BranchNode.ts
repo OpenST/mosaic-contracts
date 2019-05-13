@@ -23,9 +23,9 @@ import assert = require('assert');
 class BranchNode extends NodeBase {
   /* Storage */
 
-  private _keys: Buffer[];
+  public readonly keys: Buffer[];
 
-  private _value: Buffer;
+  public readonly value: Buffer;
 
 
   /* Public Functions */
@@ -47,31 +47,23 @@ class BranchNode extends NodeBase {
 
     assert(keys.length === 16);
 
-    this._keys = keys;
-    this._value = value;
+    this.keys = keys;
+    this.value = value;
   }
 
   /**
    * Returns a raw representation of an underlying data of a branch node as a
    * buffers array:
-   *    [...this._keys, this._value]
+   *    [...this.keys, this.value]
    *
    * @remarks
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
    */
   public raw(): Buffer[] {
-    const raw: Buffer[] = [...this._keys, this._value];
+    const raw: Buffer[] = [...this.keys, this.value];
     assert(raw.length === 17);
     return raw;
-  }
-
-  public get keys(): Buffer[] {
-    return this._keys;
-  }
-
-  public get value(): Buffer {
-    return this._value;
   }
 }
 
