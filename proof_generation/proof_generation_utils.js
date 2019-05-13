@@ -115,6 +115,7 @@ class ProofGenerationUtils {
     this.proofData.gateway.constructor = await this.gateway.getConstructorParams();
     this.proofData.co_gateway = {};
     this.proofData.co_gateway.constructor = await this.coGateway.getConstructorParams();
+    this.messageBoxOffset = await this.gateway.MESSAGE_BOX_OFFSET.call();
   }
 
   /**
@@ -131,6 +132,7 @@ class ProofGenerationUtils {
     const stakeProofData = await this.proofUtils.getOutboxProof(
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
+      this.messageBoxOffset
     );
     const stake = {};
     stake.params = this.stakeParams;
@@ -164,6 +166,7 @@ class ProofGenerationUtils {
     const confirmStakeIntentProofData = await this.proofUtils.getInboxProof(
       this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
     const confirmStakeIntent = {};
     confirmStakeIntent.params = confirmStakeIntentParams;
@@ -194,6 +197,7 @@ class ProofGenerationUtils {
     const progressStakeProofData = await this.proofUtils.getOutboxProof(
       this.gateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
     const progressStake = {};
     progressStake.params = progressStakeParams;
@@ -223,6 +227,7 @@ class ProofGenerationUtils {
     const progressMintProofData = await this.proofUtils.getInboxProof(
       this.coGateway.address,
       [confirmStakeIntentResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
 
     const progressMint = {};
@@ -250,6 +255,7 @@ class ProofGenerationUtils {
     const revertStakeProofData = await this.proofUtils.getOutboxProof(
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
     const revertStake = {};
     revertStake.params = revertStakeParams;
@@ -287,6 +293,7 @@ class ProofGenerationUtils {
     const confirmRevertStakeProofData = await this.proofUtils.getInboxProof(
       this.coGateway.address,
       [confirmRevertStakeParams.messageHash],
+      this.messageBoxOffset,
     );
 
     const confirmRevertStakeIntent = {};
@@ -324,6 +331,7 @@ class ProofGenerationUtils {
     const progressRevertStakeProofData = await this.proofUtils.getOutboxProof(
       this.gateway.address,
       [progressRevertStakeParams.messageHash],
+      this.messageBoxOffset,
     );
     const progressRevertStakeIntent = {};
     progressRevertStakeIntent.params = progressRevertStakeParams;
@@ -345,6 +353,7 @@ class ProofGenerationUtils {
     const redeemProofData = await this.proofUtils.getOutboxProof(
       this.coGateway.address,
       [redeemResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
     const redeem = {};
     redeem.params = this.redeemParams;
@@ -380,6 +389,7 @@ class ProofGenerationUtils {
     const confirmRedeemIntentProofData = await this.proofUtils.getInboxProof(
       this.gateway.address,
       [confirmRedeemIntentResult.returned_value.messageHash_],
+      this.messageBoxOffset,
     );
     const confirmRedeemIntent = {};
     confirmRedeemIntent.params = confirmRedeemIntentParams;
@@ -411,6 +421,7 @@ class ProofGenerationUtils {
     const progressRedeemProofData = await this.proofUtils.getOutboxProof(
       this.coGateway.address,
       [progressRedeemParams.messageHash],
+      this.messageBoxOffset,
     );
     const progressRedeem = {};
     progressRedeem.params = progressRedeemParams;
@@ -439,6 +450,7 @@ class ProofGenerationUtils {
     const progressUnstakeProofData = await this.proofUtils.getInboxProof(
       this.gateway.address,
       [progressUnstakeParams.messageHash],
+      this.messageBoxOffset,
     );
     const progressUnstake = {};
     progressUnstake.params = progressUnstakeParams;
@@ -464,6 +476,7 @@ class ProofGenerationUtils {
     const revertRedeemProofData = await this.proofUtils.getOutboxProof(
       this.coGateway.address,
       [revertRedeemParams.messageHash],
+      this.messageBoxOffset,
     );
     const revertRedeem = {};
     revertRedeem.params = revertRedeemParams;
@@ -504,6 +517,7 @@ class ProofGenerationUtils {
     const confirmRevertRedeemProofData = await this.proofUtils.getInboxProof(
       this.gateway.address,
       [confirmRevertRedeemIntentParams.messageHash],
+      this.messageBoxOffset,
     );
     const confirmRevertRedeemIntent = {};
     confirmRevertRedeemIntent.params = confirmRevertRedeemIntentParams;
@@ -544,6 +558,7 @@ class ProofGenerationUtils {
     const progressRevertRedeemProofData = await this.proofUtils.getOutboxProof(
       this.coGateway.address,
       [progressRevertRedeemParams.messageHash],
+      this.messageBoxOffset,
     );
     const progressRevertRedeem = {};
     progressRevertRedeem.params = progressRevertRedeemParams;

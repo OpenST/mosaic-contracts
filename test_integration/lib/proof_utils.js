@@ -19,15 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const rlp = require('rlp');
-
-// This is the position of message outbox defined in GatewayBase.sol
-// @dev, this is in hex value (in string) without 0x prefix.
-const MESSAGE_OUTBOX_OFFSET = '9';
-
-// This is the position of message inbox defined in GatewayBase.sol
-// @dev, this is in hex (in string) without 0x prefix.
-const MESSAGE_INBOX_OFFSET = 'a';
-
+const BN = require('bn.js');
 /**
  * Utils class to generate inbox and outbox proof.
  */
@@ -48,13 +40,15 @@ class ProofUtils {
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
      * @param {string} blockNumber Block number in hex.
+     * @param {string} messageboxOffset Inbox message offset index.
      *
      * @return {Object} Proof data.
      */
-  async getInboxProof(address, keys = [], blockNumber) {
+  async getInboxProof(address, keys = [], blockNumber, messageboxOffset) {
+    const messageInboxOffset = await this.getMessageBoxInboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.targetWeb3,
-      MESSAGE_INBOX_OFFSET,
+      messageInboxOffset,
       address,
       keys,
       blockNumber,
@@ -69,13 +63,15 @@ class ProofUtils {
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
      * @param {string} blockNumber Block number in hex.
+     * @param {string} messageboxOffset Outbox message offset index.
      *
      * @return {Object} Proof data.
      */
-  async getOutboxProof(address, keys = [], blockNumber) {
+  async getOutboxProof(address, keys = [], blockNumber, messageboxOffset) {
+    const messageOutboxOffset = await this.getMessageBoxOutboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.sourceWeb3,
-      MESSAGE_OUTBOX_OFFSET,
+      messageOutboxOffset,
       address,
       keys,
       blockNumber,
@@ -204,6 +200,14 @@ class ProofUtils {
     const decodedProof = rlp.decode(accountProof);
     const leafElement = decodedProof[decodedProof.length - 1];
     return `0x${leafElement[leafElement.length - 1].toString('hex')}`;
+  }
+
+  async getMessageBoxOutboxOffset(messageboxOffset) {
+    return new BN(messageboxOffset).toString(16);
+  }
+
+  async getMessageBoxInboxOffset(messageboxOffset) {
+    return new BN(messageboxOffset).addn(1).toString(16);
   }
 }
 

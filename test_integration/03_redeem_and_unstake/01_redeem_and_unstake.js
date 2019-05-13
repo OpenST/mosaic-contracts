@@ -49,6 +49,7 @@ describe('Redeem and Unstake', async () => {
   let progressRedeemAssertion;
   let progressUnstakeAssertion;
   let proofUtils;
+  let messageBoxOffset;
 
   before(async () => {
     originWeb3 = shared.origin.web3;
@@ -93,6 +94,7 @@ describe('Redeem and Unstake', async () => {
       baseToken,
     );
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('redeems', async () => {
@@ -147,6 +149,7 @@ describe('Redeem and Unstake', async () => {
       cogateway.address,
       [redeemRequest.messageHash],
       auxiliaryWeb3.utils.toHex(blockNumber),
+      messageBoxOffset,
     );
     redeemRequest.blockHeight = new BN(blockNumber);
     // Prove gateway.
