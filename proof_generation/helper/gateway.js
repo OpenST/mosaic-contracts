@@ -60,6 +60,17 @@ const EventDecoder = require('../../test/test_lib/event_decoder');
  */
 
 /**
+ * Object contains input parameter needed for progressStakeWithProof.
+ *
+ * @typedef {object} ProgressStakeWithProofParams.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {BN} blockHeight Block number for which the proof is valid.
+ * @property {string} messageStatus Outbox message status in gateway.
+ * @property {string} facilitator Facilitator address for progress mint.
+ */
+
+
+/**
  * Gateway class provides helper methods for stake and mint and redeem and unstake.
  */
 class Gateway {

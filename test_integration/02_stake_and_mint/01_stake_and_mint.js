@@ -203,7 +203,7 @@ describe('Stake and mint', async () => {
 
     const event = EventDecoder.getEvents(tx, gateway);
     // Assert event and balances.
-    await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress);
+    await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress, false);
   });
 
   it('progresses mint', async () => {
@@ -221,6 +221,6 @@ describe('Stake and mint', async () => {
     const event = EventDecoder.getEvents(tx, cogateway);
 
     // Assert event and balances.
-    await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint);
+    await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint, false);
   });
 });
