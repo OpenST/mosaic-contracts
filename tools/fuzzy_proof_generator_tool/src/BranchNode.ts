@@ -19,7 +19,7 @@ import NodeBase from './NodeBase';
 
 import assert = require('assert');
 
-
+/** Represents a branch node of Modified Merkle Patricia Trie. */
 class BranchNode extends NodeBase {
   /* Storage */
 
@@ -30,6 +30,18 @@ class BranchNode extends NodeBase {
 
   /* Public Functions */
 
+  /**
+   * Creates a branch node.
+   *
+   * Requires:
+   *   - keys array's length is 16.
+   *
+   * @param keys Keys array of a branch node.
+   * @param value A value to store in a branch node.
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   */
   public constructor(keys: Buffer[], value: Buffer) {
     super(NodeType.Branch);
 
@@ -39,6 +51,15 @@ class BranchNode extends NodeBase {
     this._value = value;
   }
 
+  /**
+   * Returns a raw representation of an underlying data of a branch node as a
+   * buffers array:
+   *    [...this._keys, this._value]
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
   public raw(): Buffer[] {
     const raw: Buffer[] = [...this._keys, this._value];
     assert(raw.length === 17);

@@ -19,6 +19,7 @@ import NodeType from './Types';
 import rlp = require('rlp');
 import ethUtil = require('ethereumjs-util');
 
+/** Acts as a parent class for all nodes' types. */
 abstract class NodeBase {
   /* Storage */
 
@@ -27,15 +28,18 @@ abstract class NodeBase {
 
   /* Public Functions */
 
+  /** Returns a raw representation of an underlying data without encoding. */
   public abstract raw(): Buffer[];
 
+  /** Returns a serialized representation of an underlying data by rlp encoding. */
+  public serialize(): Buffer {
+    return rlp.encode(this.raw());
+  }
+
+  /** Returns a hash of an underlying data. */
   public hash(): Buffer {
     const s: Buffer = this.serialize();
     return ethUtil.keccak256(s);
-  }
-
-  public serialize(): Buffer {
-    return rlp.encode(this.raw());
   }
 
   public get type(): NodeType {

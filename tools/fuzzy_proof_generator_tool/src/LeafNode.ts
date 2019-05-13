@@ -20,7 +20,7 @@ import NodeBase from './NodeBase';
 
 import assert = require('assert');
 
-
+/** Represents a leaf node of Modified Merkle Patricia Trie. */
 class LeafNode extends NodeBase {
   /* Storage */
 
@@ -31,6 +31,20 @@ class LeafNode extends NodeBase {
 
   /* Public Functions */
 
+  /**
+   * Creates a leaf node.
+   *
+   * Requires:
+   *   - nibblePath is non empty.
+   *   - value is non empty.
+   *   - nibblePath is a valid nibbles buffer.
+   *
+   * @param nibblePath An non encoded (compact) nibbles path of a leaf node.
+   * @param value A value to store in a leaf node.
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   */
   public constructor(nibblePath: Buffer, value: Buffer) {
     super(NodeType.Leaf);
 
@@ -43,6 +57,15 @@ class LeafNode extends NodeBase {
     this._value = value;
   }
 
+  /**
+   * Returns a raw representation of an underlying data of a leaf node as a
+   * buffers array:
+   *    [...compact_encode_leaf(this._nibblePath), this._value]
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
   public raw(): Buffer[] {
     const encodedPath: Buffer = Util.encodeCompactLeafPath(this._nibblePath);
     const raw: Buffer[] = [encodedPath, this._value];

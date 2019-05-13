@@ -20,7 +20,7 @@ import Util from './Util';
 
 import assert = require('assert');
 
-
+/** Represents an extension node of Modified Merkle Patricia Trie. */
 class ExtensionNode extends NodeBase {
   /* Storage */
 
@@ -31,6 +31,20 @@ class ExtensionNode extends NodeBase {
 
   /* Public Functions */
 
+  /**
+   * Creates an extension node.
+   *
+   * Requires:
+   *   - nibblePath is non empty.
+   *   - key is non empty.
+   *   - nibblePath is a valid nibbles buffer.
+   *
+   * @param nibblePath An non encoded (compact) nibbles path of an extension node.
+   * @param key A key to store in an extension node.
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   */
   public constructor(nibblePath: Buffer, key: Buffer) {
     super(NodeType.Extension);
 
