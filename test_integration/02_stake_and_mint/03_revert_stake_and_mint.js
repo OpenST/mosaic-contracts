@@ -36,7 +36,7 @@ const Anchor = require('../lib/anchor');
 
 /**
  * Approve Gateway for stake amount.
- * @param {Object }token Token contract instance.
+ * @param {Object} token Token contract instance.
  * @param {Object} gateway Gateway contract instance.
  * @param {Object} stakeRequest stake request.
  * @return {Promise<void>}
@@ -95,13 +95,14 @@ describe('Revert Stake and mint', async () => {
     cogateway = shared.auxiliary.contracts.EIP20CoGateway;
 
     const hasher = Utils.generateHashLock();
+    const staker = originAccounts[0];
     stakeRequest = {
       amount: new BN(200),
       gasPrice: new BN(1),
       gasLimit: new BN(100),
-      staker: originAccounts[0],
+      staker,
       bounty: await gateway.bounty.call(),
-      nonce: await gateway.getNonce.call(originAccounts[0]),
+      nonce: await gateway.getNonce.call(staker),
       beneficiary: auxiliaryAccounts[2],
       hashLock: hasher.l,
       unlockSecret: hasher.s,
@@ -210,7 +211,8 @@ describe('Revert Stake and mint', async () => {
     } = stakeRequest;
 
     const bounty = await gateway.bounty.call();
-    const penalty = bounty.muln(1.5);
+    const penaltyFactor = await gateway.REVOCATION_PENALTY.call();
+    const penalty = bounty.mul(penaltyFactor).divn(100);
 
     await baseToken.approve(gateway.address, penalty, { from: staker });
 
@@ -228,7 +230,7 @@ describe('Revert Stake and mint', async () => {
     );
   });
 
-  it('confirm revert stake', async () => {
+  it('confirms revert stake', async () => {
     // Anchor state root.
     const blockNumber = await auxiliaryAnchor.anchorStateRoot(
       'latest',

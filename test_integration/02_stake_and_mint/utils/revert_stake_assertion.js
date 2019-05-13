@@ -112,7 +112,9 @@ class RevertStakeAssertion {
     const finalBalances = await this.captureBalances(stakeRequest.staker);
 
     // Assert gateway balance
-    const penalty = stakeRequest.bounty.muln(1.5);
+    const penaltyFactor = await this.gateway.REVOCATION_PENALTY.call();
+    const penalty = stakeRequest.bounty.mul(penaltyFactor).divn(100);
+
     const expectedGatewayBaseTokenBalance = initialBalances.baseToken.gateway;
 
     // Assert Penalty is transferred to gateway.
