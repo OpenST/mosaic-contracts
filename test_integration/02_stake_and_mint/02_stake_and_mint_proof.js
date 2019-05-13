@@ -52,6 +52,7 @@ let originAnchor;
 let auxiliaryAnchor;
 let ostPrime;
 let stakeRequest;
+let messageBoxOffset;
 
 const MessageStatus = {
   Undeclared: 0,
@@ -100,6 +101,7 @@ describe('Stake and mint (with proof)', async () => {
       shared.auxiliary.contracts.Anchor,
       shared.auxiliary.organizationAddress,
     );
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('Stake & Mint (progress stake and then progress mint)', async () => {
@@ -132,6 +134,7 @@ const proveGateway = async () => {
   const outboxProof = await proofUtils.getOutboxProof(
     gateway.address,
     [stakeRequest.messageHash],
+    messageBoxOffset,
     originWeb3.utils.toHex(blockNumber),
   );
 
@@ -168,6 +171,7 @@ const proveCoGateway = async () => {
   const inboxProof = await proofUtils.getInboxProof(
     cogateway.address,
     [stakeRequest.messageHash],
+    messageBoxOffset,
     auxiliaryWeb3.utils.toHex(blockNumber),
   );
 
