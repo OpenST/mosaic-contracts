@@ -68,6 +68,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       constructorParams.organization,
       constructorParams.gateway,
       constructorParams.burner,
+      new BN(100),
     );
 
     const hashLockObj = Utils.generateHashLock();

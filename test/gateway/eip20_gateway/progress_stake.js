@@ -69,6 +69,7 @@ contract('EIP20Gateway.progressStake()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
 
     await mockToken.transfer(gateway.address, new BN(10000), {

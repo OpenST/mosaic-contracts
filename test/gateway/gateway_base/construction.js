@@ -33,11 +33,13 @@ contract('GatewayBase.sol', (accounts) => {
     let worker;
     let organization;
     let gatewayBaseInstance;
+    let maxStorageRootItems;
 
     beforeEach(async () => {
       [organization, worker, dummyStateRootProvider] = accounts;
 
       bounty = new BN(100);
+      maxStorageRootItems = new BN(100);
 
       organization = await MockOrganization.new(organization, worker);
     });
@@ -47,6 +49,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProvider,
         bounty,
         organization.address,
+        maxStorageRootItems,
       );
 
       assert.strictEqual(
@@ -64,6 +67,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProvider,
         bounty,
         organization.address,
+        maxStorageRootItems,
       );
 
       assert.equal(
@@ -76,15 +80,23 @@ contract('GatewayBase.sol', (accounts) => {
     it('should fail if state root provider contract address is zero', async () => {
       const stateRootProvider = NullAddress;
       await Utils.expectRevert(
-        GatewayBase.new(stateRootProvider, bounty, organization.address),
+        GatewayBase.new(stateRootProvider, bounty, organization.address, maxStorageRootItems),
         'State root provider contract address must not be zero.',
       );
     });
 
     it('should fail if worker manager address is not passed', async () => {
       await Utils.expectRevert(
-        GatewayBase.new(dummyStateRootProvider, bounty, NullAddress),
+        GatewayBase.new(dummyStateRootProvider, bounty, NullAddress, maxStorageRootItems),
         'Organization contract address must not be zero.',
+      );
+    });
+
+    it('should fail when max storage root items is zero', async () => {
+      maxStorageRootItems = new BN(0);
+      await Utils.expectRevert(
+        GatewayBase.new(dummyStateRootProvider, bounty, organization.address, maxStorageRootItems),
+        'The max number of items to store in a circular buffer must be greater than 0.',
       );
     });
   });

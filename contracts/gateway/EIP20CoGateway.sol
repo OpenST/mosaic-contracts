@@ -211,6 +211,8 @@ contract EIP20CoGateway is GatewayBase {
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _burner Address where base coin will be burned.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         address _valueToken,
@@ -219,12 +221,14 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _bounty,
         OrganizationInterface _organization,
         address _gateway,
-        address payable _burner
+        address payable _burner,
+        uint256 _maxStorageRootItems
     )
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
         public
     {

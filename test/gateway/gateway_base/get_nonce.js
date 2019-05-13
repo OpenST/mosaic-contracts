@@ -44,6 +44,7 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
+        new BN(100),
       );
     });
 

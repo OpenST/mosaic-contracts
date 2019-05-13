@@ -79,7 +79,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
     );
 
     bountyAmount = new BN(StubData.co_gateway.constructor.bounty);
-    penaltyAmount = bountyAmount.muln(1.5);
+    penaltyAmount = bountyAmount.muln(PENALTY_MULTIPLIER);
 
     cogateway = await EIP20CoGateway.new(
       StubData.co_gateway.constructor.valueToken,
@@ -89,6 +89,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       StubData.co_gateway.constructor.organization,
       StubData.co_gateway.constructor.gateway,
       accounts[8], // burner
+      new BN(100),
     );
 
     await setupContractPreCondition(

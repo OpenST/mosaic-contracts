@@ -20,6 +20,8 @@
 
 const assert = require('assert');
 
+const Utils = require('../../../test/test_lib/utils.js');
+
 /**
  * Stake Request object contains all the properties for stake and mint flow.
  * @typedef {Object} stakeRequest
@@ -71,11 +73,12 @@ class ProgressStakeAssertion {
      * @param  {StakeRequest} stakeRequest Stake request parameters.
      * @param {Balances} initialBalances Initial baseToken and token
      *                                   balances before progress stake.
+     * @param {Boolean} proofProgress `true` if progress stake is with proof.
      */
-  async verify(event, stakeRequest, initialBalances) {
+  async verify(event, stakeRequest, initialBalances, proofProgress) {
     await this._assertBalancesForStake(stakeRequest, initialBalances);
 
-    ProgressStakeAssertion._assertProgressStakeEvent(event, stakeRequest);
+    ProgressStakeAssertion._assertProgressStakeEvent(event, stakeRequest, proofProgress);
   }
 
   /**
@@ -181,9 +184,10 @@ class ProgressStakeAssertion {
      * This assert event after stake method.
      * @param {Object} event Object representing stake progressed event.
      * @param {StakeRequest} stakeRequest Stake request parameters.
+     * @param {Boolean} proofProgress `true` if progress stake is with proof.
      * @private
      */
-  static _assertProgressStakeEvent(event, stakeRequest) {
+  static _assertProgressStakeEvent(event, stakeRequest, proofProgress) {
     const eventData = event.StakeProgressed;
 
     assert.strictEqual(
@@ -208,14 +212,22 @@ class ProgressStakeAssertion {
     );
     assert.strictEqual(
       eventData._proofProgress,
-      false,
-      'Proof progress flag should be false.',
+      proofProgress,
+      `Proof progress flag should be ${proofProgress}.`,
     );
-    assert.strictEqual(
-      eventData._unlockSecret,
-      stakeRequest.unlockSecret,
-      'Unlock secret must match.',
-    );
+    if (proofProgress === true) {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        Utils.ZERO_BYTES32,
+        'Unlock secret must match.',
+      );
+    } else {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        stakeRequest.unlockSecret,
+        'Unlock secret must match.',
+      );
+    }
   }
 }
 

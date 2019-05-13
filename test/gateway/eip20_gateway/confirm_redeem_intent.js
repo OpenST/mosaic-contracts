@@ -104,6 +104,7 @@ contract('EIP20Gateway.confirmRedeemIntent()', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burnerAddress,
+      new BN(100),
     );
 
     await eip20Gateway.activateGateway(TestDataJSON.contracts.coGateway, { from: owner });
