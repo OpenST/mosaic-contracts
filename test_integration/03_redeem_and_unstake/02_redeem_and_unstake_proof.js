@@ -184,8 +184,142 @@ const getTransactionFee = async (response, web3) => {
   return gasUsed.mul(gasPrice);
 };
 
+/*
+ * Performs CoGateway.redeem.
+ *
+ * @return {Promise<void>}
+ */
+const redeem = async () => {
+  await approveCoGatewayForRedeemAmount(
+    ostPrime,
+    redeemRequest,
+    cogateway,
+  );
+
+  const initialBalancesBeforeRedeem = await redeemAssertion.captureBalances(
+    redeemRequest.redeemer,
+  );
+
+  const response = await cogateway.redeem(
+    redeemRequest.amount,
+    redeemRequest.beneficiary,
+    redeemRequest.gasPrice,
+    redeemRequest.gasLimit,
+    redeemRequest.nonce,
+    redeemRequest.hashLock,
+    {
+      from: redeemRequest.redeemer,
+      value: redeemRequest.bounty,
+    },
+  );
+
+  const transactionFeeInRedeem = await getTransactionFee(
+    response,
+    auxiliaryWeb3,
+  );
+
+  const event = EventDecoder.getEvents(response, cogateway);
+
+  await redeemAssertion.verify(
+    event,
+    redeemRequest,
+    transactionFeeInRedeem,
+    initialBalancesBeforeRedeem,
+  );
+  redeemRequest.messageHash = event.RedeemIntentDeclared._messageHash;
+};
+
+/*
+ * Performs Gateway.confirmRedeemIntent.
+ *
+ * @return {Promise<void>}
+ */
+const confirmRedeemIntent = async () => {
+  const { outboxProof, blockNumber } = await proveCoGateway();
+  redeemRequest.blockHeight = blockNumber;
+
+  const tx = await gateway.confirmRedeemIntent(
+    redeemRequest.redeemer,
+    redeemRequest.nonce,
+    redeemRequest.beneficiary,
+    redeemRequest.amount,
+    redeemRequest.gasPrice,
+    redeemRequest.gasLimit,
+    redeemRequest.blockHeight,
+    redeemRequest.hashLock,
+    outboxProof.storageProof[0].serializedProof,
+    { from: originAccounts[0] },
+  );
+
+  const event = EventDecoder.getEvents(tx, gateway);
+  ConfirmRedeemIntentAssertion.verify(event, redeemRequest);
+};
+
+/*
+ * Performs CoGateway.progressRedeemWithProof.
+ *
+ * @return {Promise<void>}
+ */
+const progressRedeemWithProof = async (messageStatus) => {
+  const initialBalanceBeforeProgress = await progressRedeemAssertion.captureBalances(
+    redeemRequest.redeemer,
+  );
+  const { inboxProof, blockNumber } = await proveGateway();
+  const response = await cogateway.progressRedeemWithProof(
+    redeemRequest.messageHash,
+    inboxProof.storageProof[0].serializedProof,
+    blockNumber,
+    messageStatus,
+    { from: redeemRequest.redeemer },
+  );
+
+  const transactionFeeInProgress = await getTransactionFee(
+    response,
+    auxiliaryWeb3,
+  );
+
+  const event = EventDecoder.getEvents(response, cogateway);
+  await progressRedeemAssertion.verify(
+    event,
+    redeemRequest,
+    transactionFeeInProgress,
+    initialBalanceBeforeProgress,
+    true,
+  );
+};
+
+/*
+ * Performs Gateway.progressUnstakeWithProof.
+ *
+ * @return {Promise<void>}
+ */
+const progressUnstakeWithProof = async (messageStatus) => {
+  const facilitator = originAccounts[0];
+  const initialBalancesBeforeProgress = await progressUnstakeAssertion.captureBalances(
+    redeemRequest.beneficiary,
+    facilitator,
+  );
+  const { outboxProof, blockNumber } = await proveCoGateway();
+  const tx = await gateway.progressUnstakeWithProof(
+    redeemRequest.messageHash,
+    outboxProof.storageProof[0].serializedProof,
+    blockNumber,
+    messageStatus,
+    { from: facilitator },
+  );
+
+  const event = EventDecoder.getEvents(tx, gateway);
+  await progressUnstakeAssertion.verify(
+    event,
+    redeemRequest,
+    initialBalancesBeforeProgress,
+    facilitator,
+    true,
+  );
+};
+
 describe('Redeem and Unstake (with proof)', async () => {
-  before(async () => {
+  beforeEach(async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
@@ -234,118 +368,17 @@ describe('Redeem and Unstake (with proof)', async () => {
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
   });
 
-  it('redeems', async () => {
-    await approveCoGatewayForRedeemAmount(
-      ostPrime,
-      redeemRequest,
-      cogateway,
-    );
-
-    const initialBalancesBeforeRedeem = await redeemAssertion.captureBalances(
-      redeemRequest.redeemer,
-    );
-
-    const response = await cogateway.redeem(
-      redeemRequest.amount,
-      redeemRequest.beneficiary,
-      redeemRequest.gasPrice,
-      redeemRequest.gasLimit,
-      redeemRequest.nonce,
-      redeemRequest.hashLock,
-      {
-        from: redeemRequest.redeemer,
-        value: redeemRequest.bounty,
-      },
-    );
-
-    const transactionFeeInRedeem = await getTransactionFee(
-      response,
-      auxiliaryWeb3,
-    );
-
-    const event = EventDecoder.getEvents(response, cogateway);
-
-    await redeemAssertion.verify(
-      event,
-      redeemRequest,
-      transactionFeeInRedeem,
-      initialBalancesBeforeRedeem,
-    );
-    redeemRequest.messageHash = event.RedeemIntentDeclared._messageHash;
+  it('Redeem & Unstake (progress redeem and then progress unstake', async () => {
+    await redeem();
+    await confirmRedeemIntent();
+    await progressRedeemWithProof(MessageStatus.Declared);
+    await progressUnstakeWithProof(MessageStatus.Progressed);
   });
 
-  it('confirms redeem', async () => {
-    const { outboxProof, blockNumber } = await proveCoGateway();
-    redeemRequest.blockHeight = blockNumber;
-
-    const tx = await gateway.confirmRedeemIntent(
-      redeemRequest.redeemer,
-      redeemRequest.nonce,
-      redeemRequest.beneficiary,
-      redeemRequest.amount,
-      redeemRequest.gasPrice,
-      redeemRequest.gasLimit,
-      redeemRequest.blockHeight,
-      redeemRequest.hashLock,
-      outboxProof.storageProof[0].serializedProof,
-      { from: originAccounts[0] },
-    );
-
-    const event = EventDecoder.getEvents(tx, gateway);
-    // Assert event.
-    ConfirmRedeemIntentAssertion.verify(event, redeemRequest);
-  });
-
-  it('progresses redeem (with proof)', async () => {
-    const initialBalanceBeforeProgress = await progressRedeemAssertion.captureBalances(
-      redeemRequest.redeemer,
-    );
-    const { inboxProof, blockNumber } = await proveGateway();
-    const response = await cogateway.progressRedeemWithProof(
-      redeemRequest.messageHash,
-      inboxProof.storageProof[0].serializedProof,
-      blockNumber,
-      MessageStatus.Declared,
-      { from: redeemRequest.redeemer },
-    );
-
-    const transactionFeeInProgress = await getTransactionFee(
-      response,
-      auxiliaryWeb3,
-    );
-
-    const event = EventDecoder.getEvents(response, cogateway);
-    await progressRedeemAssertion.verify(
-      event,
-      redeemRequest,
-      transactionFeeInProgress,
-      initialBalanceBeforeProgress,
-      true,
-    );
-  });
-
-  it('progresses unstake (with proof)', async () => {
-    const facilitator = originAccounts[0];
-    const initialBalancesBeforeProgress = await progressUnstakeAssertion.captureBalances(
-      redeemRequest.beneficiary,
-      facilitator,
-    );
-    const { outboxProof, blockNumber } = await proveCoGateway();
-    const tx = await gateway.progressUnstakeWithProof(
-      redeemRequest.messageHash,
-      outboxProof.storageProof[0].serializedProof,
-      blockNumber,
-      MessageStatus.Progressed,
-      { from: facilitator },
-    );
-
-    const event = EventDecoder.getEvents(tx, gateway);
-    await progressUnstakeAssertion.verify(
-      event,
-      redeemRequest,
-      initialBalancesBeforeProgress,
-      facilitator,
-      true,
-    );
+  it('Redeem & Unstake (progress unstake and then progress redeem', async () => {
+    await redeem();
+    await confirmRedeemIntent();
+    await progressUnstakeWithProof(MessageStatus.Declared);
+    await progressRedeemWithProof(MessageStatus.Progressed);
   });
 });
