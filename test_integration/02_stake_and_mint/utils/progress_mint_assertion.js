@@ -81,7 +81,7 @@ class ProgressMintAssertion {
      * @param {StakeRequest} stakeRequest Stake request.
      * @param {balance} initialBalances Initial baseToken and token balances of
      *                                  beneficiary, ostPrime and coGateway.
-     * @param {Boolean} proofProgress `true` if progress is with with proof.
+     * @param {Boolean} proofProgress `true` if progress is with proof.
      */
   async verify(event, stakeRequest, initialBalances, proofProgress) {
     ProgressMintAssertion._assertProgressMintEvent(event, stakeRequest, proofProgress);
@@ -222,13 +222,16 @@ class ProgressMintAssertion {
     assert.strictEqual(
       eventData._proofProgress,
       proofProgress,
-      'Proof progress flag should be false.',
+      `Proof progress flag should be ${proofProgress}.`,
     );
+
+    // If the progress is done with proof instead of unlock secret, then the
+    // unlock secret emitted in the event will have bytes32(0) value.
     if (proofProgress === true) {
       assert.strictEqual(
         eventData._unlockSecret,
         Utils.ZERO_BYTES32,
-        'Unlock secret must match.',
+        `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
       );
     } else {
       assert.strictEqual(
