@@ -148,8 +148,8 @@ describe('Redeem and Unstake', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       cogateway.address,
       [redeemRequest.messageHash],
-      auxiliaryWeb3.utils.toHex(blockNumber),
       messageBoxOffset,
+      auxiliaryWeb3.utils.toHex(blockNumber),
     );
     redeemRequest.blockHeight = new BN(blockNumber);
     // Prove gateway.

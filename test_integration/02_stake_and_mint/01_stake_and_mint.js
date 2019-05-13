@@ -153,8 +153,8 @@ describe('Stake and mint', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       gateway.address,
       [stakeRequest.messageHash],
-      originWeb3.utils.toHex(blockNumber),
       messageBoxOffset,
+      originWeb3.utils.toHex(blockNumber),
     );
 
     stakeRequest.blockHeight = new BN(blockNumber);

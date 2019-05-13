@@ -431,6 +431,15 @@ class Gateway {
       burner,
     };
   }
+
+  /**
+   * Returns the message box offset
+   *
+   * @returns {BN} message box offset.
+   */
+  async getMessageBoxOffset() {
+    return await this.gateway.MESSAGE_BOX_OFFSET.call();
+  }
 }
 
 module.exports = Gateway;

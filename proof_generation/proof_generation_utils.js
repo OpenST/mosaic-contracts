@@ -115,7 +115,7 @@ class ProofGenerationUtils {
     this.proofData.gateway.constructor = await this.gateway.getConstructorParams();
     this.proofData.co_gateway = {};
     this.proofData.co_gateway.constructor = await this.coGateway.getConstructorParams();
-    this.messageBoxOffset = await this.gateway.MESSAGE_BOX_OFFSET.call();
+    this.messageBoxOffset = await this.gateway.getMessageBoxOffset();
   }
 
   /**
@@ -132,7 +132,7 @@ class ProofGenerationUtils {
     const stakeProofData = await this.proofUtils.getOutboxProof(
       this.gateway.address,
       [stakeResult.returned_value.messageHash_],
-      this.messageBoxOffset
+      this.messageBoxOffset,
     );
     const stake = {};
     stake.params = this.stakeParams;

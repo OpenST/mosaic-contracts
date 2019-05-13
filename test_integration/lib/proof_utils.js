@@ -39,12 +39,12 @@ class ProofUtils {
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
-     * @param {string} blockNumber Block number in hex.
      * @param {string} messageboxOffset Inbox message offset index.
+     * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
-  async getInboxProof(address, keys = [], blockNumber, messageboxOffset) {
+  async getInboxProof(address, keys = [], messageboxOffset, blockNumber ) {
     const messageInboxOffset = await this.getMessageBoxInboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.targetWeb3,
@@ -62,12 +62,12 @@ class ProofUtils {
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
-     * @param {string} blockNumber Block number in hex.
      * @param {string} messageboxOffset Outbox message offset index.
+     * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
-  async getOutboxProof(address, keys = [], blockNumber, messageboxOffset) {
+  async getOutboxProof(address, keys = [], messageboxOffset, blockNumber) {
     const messageOutboxOffset = await this.getMessageBoxOutboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.sourceWeb3,
