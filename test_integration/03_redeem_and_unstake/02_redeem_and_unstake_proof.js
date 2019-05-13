@@ -44,6 +44,7 @@ let ostPrime;
 let originAnchor;
 let auxiliaryAnchor;
 let redeemRequest;
+let messageBoxOffset;
 
 let redeemAssertion;
 let progressRedeemAssertion;
@@ -110,6 +111,7 @@ const proveCoGateway = async () => {
   const outboxProof = await proofUtils.getOutboxProof(
     cogateway.address,
     [redeemRequest.messageHash],
+    messageBoxOffset,
     auxiliaryWeb3.utils.toHex(blockNumber),
   );
   redeemRequest.blockHeight = new BN(blockNumber);
@@ -148,6 +150,7 @@ const proveGateway = async () => {
   const inboxProof = await proofUtils.getInboxProof(
     gateway.address,
     [redeemRequest.messageHash],
+    messageBoxOffset,
     originWeb3.utils.toHex(blockNumber),
   );
 
@@ -366,6 +369,7 @@ describe('Redeem and Unstake (with proof)', async () => {
       baseToken,
     );
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
+    messageBoxOffset = await cogateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('Redeem & Unstake (progress redeem and then progress unstake', async () => {
