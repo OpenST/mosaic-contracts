@@ -35,14 +35,17 @@ contract('GatewayBase.sol', (accounts) => {
     const storageRoot = '0x8c0ee0843488170879578464b1cadcdb7377efa787372405ff373e4cec6a56db';
 
     let gatewayBaseInstance;
+    let mockOrganization;
+    let mockAnchor;
+    let bounty;
 
     beforeEach(async () => {
       const owner = accounts[2];
       const worker = accounts[3];
-      const bounty = new BN(100);
+      bounty = new BN(100);
       const maxStateRoots = new BN(1000);
-      const mockOrganization = await MockOrganization.new(owner, worker);
-      const mockAnchor = await MockAnchor.new(
+      mockOrganization = await MockOrganization.new(owner, worker);
+      mockAnchor = await MockAnchor.new(
         1,
         0,
         stateRoot,
@@ -54,6 +57,7 @@ contract('GatewayBase.sol', (accounts) => {
         mockAnchor.address,
         bounty,
         mockOrganization.address,
+        new BN(100),
       );
     });
 
@@ -122,6 +126,53 @@ contract('GatewayBase.sol', (accounts) => {
       await Utils.expectThrow(
         gatewayBaseInstance.proveGateway(1, rlpAccount, '0x'),
       );
+    });
+
+    it('should delete the oldest stored storage root ', async () => {
+      const maxStorageRootItems = 3;
+      gatewayBaseInstance = await GatewayBase.new(
+        mockAnchor.address,
+        bounty,
+        mockOrganization.address,
+        new BN(maxStorageRootItems),
+      );
+
+      // loop to fill the buffer and verify that prove gateway pass.
+      for (let i=1; i <= maxStorageRootItems*2; i++) {
+        await gatewayBaseInstance.proveGateway(
+          i,
+          rlpAccount,
+          rlpParentNodes,
+        );
+        const storageRootFromContract = await gatewayBaseInstance.getStorageRoot.call(i);
+
+        // Assert that the storage root is stored.
+        assert.strictEqual(
+          storageRootFromContract,
+          storageRoot,
+          `Storage root from contract must be ${storageRoot}`,
+        );
+      }
+
+      // loop and check if the older storage roots are deleted
+      for (let i = maxStorageRootItems*2; i>0; i--) {
+        const storageRootFromContract = await gatewayBaseInstance.getStorageRoot.call(i);
+        if (i > maxStorageRootItems) {
+          assert.strictEqual(
+            storageRootFromContract,
+            storageRoot,
+            `Storage root from contract must be ${storageRoot}`,
+          );
+
+        } else {
+          assert.strictEqual(
+            storageRootFromContract,
+            Utils.ZERO_BYTES32,
+            `Storage root from contract must be ${Utils.ZERO_BYTES32}`,
+          );
+        }
+      }
+
     });
   });
 });

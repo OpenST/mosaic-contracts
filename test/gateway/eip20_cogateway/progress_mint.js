@@ -84,6 +84,7 @@ contract('EIP20CoGateway.progressMint() ', (accounts) => {
       organization,
       gateway,
       burner,
+      new BN(100),
     );
 
     intentHash = CoGatewayUtils.hashRedeemIntent(

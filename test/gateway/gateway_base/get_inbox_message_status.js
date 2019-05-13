@@ -30,7 +30,12 @@ contract('GatewayBase.getInboxMessageStatus()', (accounts) => {
   let messageHash;
 
   beforeEach(async () => {
-    gatewayBase = await GatewayBase.new(accounts[0], new BN(100), accounts[1]);
+    gatewayBase = await GatewayBase.new(
+      accounts[0],
+      new BN(100),
+      accounts[1],
+      new BN(100),
+    );
 
     messageHash = web3.utils.sha3('message_hash');
   });

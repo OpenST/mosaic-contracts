@@ -19,13 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const rlp = require('rlp');
-
-// This is the position of message outbox defined in GatewayBase.sol
-const MESSAGE_OUTBOX_OFFSET = '7';
-
-// This is the position of message inbox defined in GatewayBase.sol
-const MESSAGE_INBOX_OFFSET = '8';
-
+const BN = require('bn.js');
 /**
  * Utils class to generate inbox and outbox proof.
  */
@@ -45,14 +39,16 @@ class ProofUtils {
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
+     * @param {string} messageboxOffset Inbox message offset index.
      * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
-  async getInboxProof(address, keys = [], blockNumber) {
+  async getInboxProof(address, keys = [], messageboxOffset, blockNumber ) {
+    const messageInboxOffset = await this.getMessageBoxInboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.targetWeb3,
-      MESSAGE_INBOX_OFFSET,
+      messageInboxOffset,
       address,
       keys,
       blockNumber,
@@ -66,14 +62,16 @@ class ProofUtils {
      * @param {string} address Address of ethereum account for which proof needs
      *                         to be generated.
      * @param {string[]} keys Array of keys for a mapping in solidity.
+     * @param {string} messageboxOffset Outbox message offset index.
      * @param {string} blockNumber Block number in hex.
      *
      * @return {Object} Proof data.
      */
-  async getOutboxProof(address, keys = [], blockNumber) {
+  async getOutboxProof(address, keys = [], messageboxOffset, blockNumber) {
+    const messageOutboxOffset = await this.getMessageBoxOutboxOffset(messageboxOffset);
     const proof = await this._getProof(
       this.sourceWeb3,
-      MESSAGE_OUTBOX_OFFSET,
+      messageOutboxOffset,
       address,
       keys,
       blockNumber,
@@ -202,6 +200,14 @@ class ProofUtils {
     const decodedProof = rlp.decode(accountProof);
     const leafElement = decodedProof[decodedProof.length - 1];
     return `0x${leafElement[leafElement.length - 1].toString('hex')}`;
+  }
+
+  async getMessageBoxOutboxOffset(messageboxOffset) {
+    return new BN(messageboxOffset).toString(16);
+  }
+
+  async getMessageBoxInboxOffset(messageboxOffset) {
+    return new BN(messageboxOffset).addn(1).toString(16);
   }
 }
 

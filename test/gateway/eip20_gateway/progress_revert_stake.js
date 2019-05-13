@@ -93,6 +93,7 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
 
     const paramsData = revokedProofData.gateway.stake.params;

@@ -288,3 +288,74 @@ contract('Redeem and Unstake ', (accounts) => {
     }
   });
 });
+
+contract('Reward based on gas consumption', (accounts) => {
+  let registeredContracts;
+  let redeemParams;
+  let rpcEndpointOrigin;
+  let proofUtils;
+  let web3Provider;
+  let proofGenerationUtils;
+
+  before(async () => {
+    ({ rpcEndpointOrigin } = await docker());
+    web3Provider = new Web3(rpcEndpointOrigin);
+    proofUtils = new ProofUtils(web3Provider, web3Provider);
+  });
+
+  beforeEach(async () => {
+    registeredContracts = await deployer(web3Provider, accounts);
+    redeemParams = {
+      amount: new BN(1000000000000000),
+      gasPrice: new BN(10000000),
+      gasLimit: new BN(10000000),
+      nonce: new BN(0),
+      redeemer: accounts[0],
+      beneficiary: accounts[2],
+    };
+    proofGenerationUtils = new ProofGenerationUtils(
+      registeredContracts,
+      null,
+      redeemParams,
+      proofUtils,
+    );
+  });
+
+  it('Generates proof data for "Redeem progressed"', async () => {
+    const numberOfProofs = 1;
+
+    for (let i = 0; i < numberOfProofs; i++) {
+      proofGenerationUtils.resetProofData();
+      await proofGenerationUtils.initializeProofData();
+
+      const {
+        redeemProofData,
+      } = await proofGenerationUtils.populateRedeemProofData();
+
+      const {
+        confirmRedeemIntentResult,
+      } = await proofGenerationUtils.populateConfirmRedeemIntentProofData(
+        redeemProofData,
+      );
+
+      const {
+        progressRedeemParams,
+      } = await proofGenerationUtils.populateProgressRedeemProofData(
+        confirmRedeemIntentResult,
+      );
+
+      await proofGenerationUtils.populateProgressUnstakeProofData(
+        progressRedeemParams,
+      );
+
+      // Write the proof data in to the files.
+      writeToFile(
+        `${PROOF_GENERATED_PATH}redeem_progressed_reward_based_on_gas_consumption.json`,
+        JSON.stringify(proofGenerationUtils.proofData),
+      );
+
+      // proof data is generated starting from nonce 0.
+      redeemParams.nonce = redeemParams.nonce.addn(1);
+    }
+  });
+});

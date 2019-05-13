@@ -81,6 +81,7 @@ describe('Stake and mint', async () => {
   let auxiliaryAnchor;
   let ostPrime;
   let stakeRequest;
+  let messageBoxOffset;
 
   before(async () => {
     originWeb3 = shared.origin.web3;
@@ -115,6 +116,7 @@ describe('Stake and mint', async () => {
       shared.auxiliary.contracts.Anchor,
       shared.auxiliary.organizationAddress,
     );
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('stakes', async () => {
@@ -151,6 +153,7 @@ describe('Stake and mint', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       gateway.address,
       [stakeRequest.messageHash],
+      messageBoxOffset,
       originWeb3.utils.toHex(blockNumber),
     );
 

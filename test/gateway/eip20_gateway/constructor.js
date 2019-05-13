@@ -36,6 +36,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
   let gateway;
   let owner;
   let worker;
+  let maxStorageRootItems;
 
   const burner = NullAddress;
 
@@ -44,7 +45,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
     baseToken = await MockToken.new();
     dummyRootProviderAddress = accounts[1];
     bountyAmount = new BN(100);
-
+    maxStorageRootItems = new BN(25);
     owner = accounts[2];
     worker = accounts[3];
     mockOrganization = await MockOrganization.new(owner, worker);
@@ -58,6 +59,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
     assert(
@@ -74,6 +76,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
     const valueTokenAddress = await gateway.valueToken.call();
@@ -125,6 +128,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
       'Value token contract address must not be zero.',
     );
@@ -141,6 +145,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
       'Base token contract address for bounty must not be zero.',
     );
@@ -157,6 +162,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
       'State root provider contract address must not be zero.',
     );
@@ -173,8 +179,26 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         organization,
         burner,
+        maxStorageRootItems,
       ),
       'Organization contract address must not be zero.',
+    );
+  });
+
+  it('should fail when max storage root items is zero', async () => {
+    maxStorageRootItems = new BN(0);
+
+    await Utils.expectRevert(
+      Gateway.new(
+        mockToken.address,
+        baseToken.address,
+        dummyRootProviderAddress,
+        bountyAmount,
+        mockOrganization.address,
+        burner,
+        maxStorageRootItems,
+      ),
+      'The max number of items to store in a circular buffer must be greater than 0.',
     );
   });
 
@@ -188,6 +212,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
     assert(

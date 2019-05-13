@@ -47,6 +47,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
      * @param _burner An address where base tokens are sent when they should be burnt.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         address _valueToken,
@@ -55,7 +57,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
         uint256 _bounty,
         OrganizationInterface _organization,
         address _gateway,
-        address payable _burner
+        address payable _burner,
+        uint256 _maxStorageRootItems
     )
         EIP20CoGateway(
             _valueToken,
@@ -64,7 +67,8 @@ contract TestEIP20CoGateway is EIP20CoGateway {
             _bounty,
             _organization,
             _gateway,
-            _burner
+            _burner,
+            _maxStorageRootItems
     )
         public
     {}

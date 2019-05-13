@@ -52,6 +52,7 @@ contract('EIP20Gateway.activateGateway()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
   });
 
