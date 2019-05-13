@@ -35,6 +35,7 @@ interface ProofData {
 
 const FuzzyProofGenerator = {
 
+  /** Generates a proof data. */
   generateByPattern(
     pattern: string,
     pathMaxLength: number = 40,
@@ -53,6 +54,7 @@ const FuzzyProofGenerator = {
     return this.generate(pattern, path, value);
   },
 
+  /** Generates a proof data. */
   generate(pattern: string, path: Buffer, value: Buffer): ProofData {
     this.assertPatternValidity(pattern);
 
@@ -101,6 +103,7 @@ const FuzzyProofGenerator = {
     return proofData;
   },
 
+  /** Asserts a pattern validity by traversing through state machine. */
   assertPatternValidity(pattern: string): void {
     if (pattern.length === 0) {
       throw new Error('The pattern is empty.');
@@ -185,6 +188,10 @@ const FuzzyProofGenerator = {
     }
   },
 
+  /**
+   * Divides a path into a random consecutive sections according to the
+   * specified pattern.
+   */
   generateRandomPathData(
     pattern: string,
     nibblePath: Buffer,
@@ -208,6 +215,10 @@ const FuzzyProofGenerator = {
     return pathData;
   },
 
+  /**
+   * Divides a path into a random consecutive sections according to the
+   * specified pattern and random lengths parameter.
+   */
   generatePathData(
     pattern: string,
     nibblePath: Buffer,
@@ -259,8 +270,13 @@ const FuzzyProofGenerator = {
     return pathData;
   },
 
-  // https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
-  // https://math.stackexchange.com/questions/1276206/method-of-generating-random-numbers-that-sum-to-100-is-this-truly-random
+  /**
+   * Generates random non-negative numbers that sum to the specified value.
+   *
+   * @remarks:
+   * See: https://math.stackexchange.com/questions/1276206/method-of-generating-random-numbers-that-sum-to-100-is-this-truly-random
+   * See: https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+   */
   generateRandomNumbers(sum: number, numberCount: number): number[] {
     assert(sum >= 0);
     assert(numberCount >= 0);
@@ -311,6 +327,7 @@ const FuzzyProofGenerator = {
     return generatedRandoms;
   },
 
+  /** Generates an array of random branch node's keys. */
   generateRandomBranchesKeysData(branchAmount: number): Buffer[][] {
     assert(branchAmount >= 0);
 
@@ -322,6 +339,7 @@ const FuzzyProofGenerator = {
     return branchesKeysData;
   },
 
+  /** Generates a random branch node's keys. */
   generateRandomBranchKeysData(): Buffer[] {
     const branchKeysData: Buffer[] = new Array<Buffer>(16);
     branchKeysData.fill(Buffer.from([]));
@@ -351,6 +369,16 @@ const FuzzyProofGenerator = {
     return branchKeysData;
   },
 
+  /**
+   * Creates nodes.
+   *
+   * Creates nodes bottom up by passing a previous node hash up by stack.
+   *
+   * @param pattern A pattern for a path.
+   * @param value A value to store in an ending node (either leaf or branch node).
+   * @param nibblePathData A buffer array containing the path segment for each node.
+   * @param branchKeysData A buffer array containing the keys for each branch node.
+   */
   createNodes(
     pattern: string,
     value: Buffer,

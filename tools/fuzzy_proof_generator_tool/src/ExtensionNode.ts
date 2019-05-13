@@ -57,6 +57,15 @@ class ExtensionNode extends NodeBase {
     this._key = key;
   }
 
+  /**
+   * Returns a raw representation of an underlying data of an extension node as a
+   * buffers array:
+   *    [...compact_encode_extension(this._nibblePath), this._value]
+   *
+   * @remarks
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
   public raw(): Buffer[] {
     const encodedPath: Buffer = Util.encodeCompactExtensionPath(this._nibblePath);
     const raw: Buffer[] = [encodedPath, this._key];
