@@ -16,7 +16,7 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import FuzzyProofGenerator from '../../FuzzyProofGenerator';
+import FuzzyProofGenerator from '../../src/FuzzyProofGenerator';
 
 describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
   it('Reverts if a pattern is empty.', (): void => {
@@ -57,11 +57,25 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
 
   it('Reverts if a leaf node is not the last one in pattern.', (): void => {
     assert.throws(
-      (): void => FuzzyProofGenerator.assertPatternValidity('lb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('lbb'),
     );
 
     assert.throws(
-      (): void => FuzzyProofGenerator.assertPatternValidity('blb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('blbb'),
+    );
+  });
+
+  it('Reverts if a pattern does not end with two branch nodes.', (): void => {
+    assert.throws(
+      (): void => FuzzyProofGenerator.assertPatternValidity('b'),
+    );
+
+    assert.throws(
+      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+    );
+
+    assert.throws(
+      (): void => FuzzyProofGenerator.assertPatternValidity('beb'),
     );
   });
 
@@ -71,13 +85,13 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
     );
 
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('ebb'),
     );
   });
 
   it('Checks that a branch node can start a pattern.', (): void => {
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('b'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('bb'),
     );
 
     assert.doesNotThrow(
@@ -85,7 +99,7 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
     );
 
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('beb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('bebb'),
     );
   });
 
@@ -101,7 +115,7 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
     );
 
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('ebb'),
     );
   });
 
@@ -125,7 +139,7 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
     );
 
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('ebb'),
     );
   });
 
@@ -141,7 +155,7 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
 
   it('Checks that an extension node can follow a branch node.', (): void => {
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('ebb'),
     );
 
     assert.doesNotThrow(
@@ -165,11 +179,11 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
 
   it('Checks that a branch node can follow an extension node.', (): void => {
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('beb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('bebb'),
     );
 
     assert.doesNotThrow(
-      (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      (): void => FuzzyProofGenerator.assertPatternValidity('ebb'),
     );
   });
 });

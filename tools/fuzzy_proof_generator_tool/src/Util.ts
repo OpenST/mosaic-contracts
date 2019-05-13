@@ -22,7 +22,7 @@ import ethUtil = require('ethereumjs-util');
 
 const Util = {
 
-  generateRandomKey(): Buffer {
+  generateRandomKeccak256(): Buffer {
     return ethUtil.keccak256(
       Math.random().toString(36).substring(2, 10)
             + Math.random().toString(36).substring(2, 10)
@@ -31,15 +31,14 @@ const Util = {
     );
   },
 
-  stringToNibbles(path: string): Buffer {
+  toNibbles(path: Buffer): Buffer {
     const nibbles: Buffer = Buffer.alloc(2 * path.length);
 
     for (let i = 0; i < path.length; i += 1) {
       let q = i * 2;
-      const c: number = path.charCodeAt(i) & 0xFF;
-      nibbles[q] = c >> 4;
+      nibbles[q] = path[i] >> 4;
       q += 1;
-      nibbles[q] = c & 0xF;
+      nibbles[q] = path[i] & 0xF;
     }
 
     return nibbles;

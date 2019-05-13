@@ -17,11 +17,11 @@
 import 'mocha';
 import { assert } from 'chai';
 
-import Util from '../../Util';
+import Util from '../../src/Util';
 
-describe('Util::stringToNibbles', (): void => {
+describe('Util::toNibbles', (): void => {
   it('Checks an empty string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.stringToNibbles('');
+    const nibbleArray: Buffer = Util.toNibbles(Buffer.from(''));
     assert.deepEqual(
       nibbleArray,
       Buffer.alloc(0),
@@ -29,7 +29,7 @@ describe('Util::stringToNibbles', (): void => {
   });
 
   it('Checks an one element string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.stringToNibbles('d');
+    const nibbleArray: Buffer = Util.toNibbles(Buffer.from('d'));
     assert.deepEqual(
       nibbleArray,
       Buffer.from([6, 4]),
@@ -37,7 +37,7 @@ describe('Util::stringToNibbles', (): void => {
   });
 
   it('Checks a multielement string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.stringToNibbles('coin');
+    const nibbleArray: Buffer = Util.toNibbles(Buffer.from('coin'));
     assert.deepEqual(
       nibbleArray,
       Buffer.from([6, 3, 6, 0xF, 6, 9, 6, 0xE]),

@@ -48,7 +48,7 @@ library MerklePatriciaProof {
 
             if(currentNodeList.length == 17) {
                 if(pathPtr == path.length) {
-                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[16]))) == value) {
                         return true;
                     } else {
                         return false;
@@ -129,7 +129,7 @@ library MerklePatriciaProof {
 
             if(currentNodeList.length == 17) {
                 if(pathPtr == path.length) {
-                    if(keccak256(abi.encodePacked(RLP.toBytes(currentNodeList[16]))) == value) {
+                    if(keccak256(abi.encodePacked(RLP.toData(currentNodeList[16]))) == value) {
                         res_ = true;
                         return (res_, loc_, path_debug_);
                     } else {

@@ -19,12 +19,12 @@
         "types": [
             "chai",
             "node",
-            "mocha",
+            "mocha"
         ],
         "resolveJsonModule": true
     },
     "include": [
-        "tools/fuzzy_proof_generator_tool/*.ts",
+        "tools/fuzzy_proof_generator_tool/src/*.ts"
     ],
     "exclude": [
         "node_modules"

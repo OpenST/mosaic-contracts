@@ -16,7 +16,7 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../Util';
+import Util from '../../src/Util';
 
 describe('Util::nibblesToBuffer', (): void => {
   it('Reverts if a buffer\'s length is odd.', (): void => {

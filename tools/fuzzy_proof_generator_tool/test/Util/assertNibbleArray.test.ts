@@ -16,7 +16,7 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../Util';
+import Util from '../../src/Util';
 
 describe('Util::assertNibbleArray', (): void => {
   it('Reverts on a negative input.', (): void => {

@@ -16,7 +16,7 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../Util';
+import Util from '../../src/Util';
 
 describe('Util::encodeCompactLeafPath', (): void => {
   it('Reverts if a buffer\'s is empty.', (): void => {
