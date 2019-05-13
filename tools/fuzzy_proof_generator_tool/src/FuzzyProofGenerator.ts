@@ -24,6 +24,7 @@ import LeafNode from './LeafNode';
 import assert = require('assert');
 import ethUtil = require('ethereumjs-util');
 import rlp = require('rlp');
+import crypto = require('crypto');
 
 interface ProofData {
   value: Buffer;
@@ -34,16 +35,35 @@ interface ProofData {
 
 const FuzzyProofGenerator = {
 
-  generate(pattern: string, path: string, value: string): ProofData {
+  generateByPattern(
+    pattern: string,
+    pathMaxLength: number = 40,
+    valueMaxLength: number = 40,
+  ): ProofData {
+    this.assertPatternValidity(pattern);
+
+    const pathMinLength: number = Math.floor(pattern.length / 2) + 1;
+    const pathLength: number = pathMinLength + Math.floor(Math.random() * pathMaxLength);
+
+    const path: Buffer = crypto.randomBytes(pathLength);
+
+    const valueLength = 1 + Math.floor(Math.random() * valueMaxLength);
+    const value: Buffer = crypto.randomBytes(valueLength);
+
+    return this.generate(pattern, path, value);
+  },
+
+  generate(pattern: string, path: Buffer, value: Buffer): ProofData {
     this.assertPatternValidity(pattern);
 
     const endingWithBranchNode: boolean = (pattern[pattern.length - 1] === 'b');
 
-    const nibblePath: Buffer = Util.toNibbles(Buffer.from(path));
+    const nibblePath: Buffer = Util.toNibbles(path);
     Util.assertNibbleArray(nibblePath);
     assert(nibblePath.length >= pattern.length - (endingWithBranchNode ? 1 : 0));
 
-    const valueHash: Buffer = ethUtil.keccak256(value);
+    const rlpValue: Buffer = rlp.encode(value);
+    const rlpValueHash: Buffer = ethUtil.keccak256(rlpValue);
 
     const pathData: Buffer[] = this.generateRandomPathData(
       (endingWithBranchNode ? pattern.substring(0, pattern.length - 1) : pattern),
@@ -60,7 +80,7 @@ const FuzzyProofGenerator = {
 
     const nodes: NodeBase[] = this.createNodes(
       pattern,
-      Buffer.from(value),
+      rlpValue,
       pathData,
       branchesKeysData,
     );
@@ -72,8 +92,8 @@ const FuzzyProofGenerator = {
     });
 
     const proofData = {
-      value: valueHash,
-      encodedPath: Buffer.from(path),
+      value: rlpValueHash,
+      encodedPath: path,
       rlpParentNodes: rlp.encode(rlpParentNodesArray),
       root: nodes[0].hash(),
     };
