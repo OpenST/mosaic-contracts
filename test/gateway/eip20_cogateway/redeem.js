@@ -75,6 +75,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       organization,
       gateway,
       burner,
+      new BN(100),
     );
 
     await utilityToken.transfer(redeemer, redeemerBalance, { from: owner });

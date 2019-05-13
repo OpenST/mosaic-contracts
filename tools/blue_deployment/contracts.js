@@ -114,6 +114,7 @@ const createEIP20Gateway = (
   bounty,
   organizationAddress,
   burnerAddress = '0x0000000000000000000000000000000000000000',
+  maxStorageRootItems = '100',
 ) => Contract.loadTruffleContract(
   'EIP20Gateway',
   [
@@ -123,6 +124,7 @@ const createEIP20Gateway = (
     bounty,
     organizationAddress,
     burnerAddress,
+    maxStorageRootItems,
   ],
   { rootDir },
 );
@@ -135,6 +137,7 @@ const createEIP20CoGateway = (
   organizationAddress,
   gatewayAddress,
   burnerAddress = '0x0000000000000000000000000000000000000000',
+  maxStorageRootItems = '100',
 ) => Contract.loadTruffleContract(
   'EIP20CoGateway',
   [
@@ -145,6 +148,7 @@ const createEIP20CoGateway = (
     organizationAddress,
     gatewayAddress,
     burnerAddress,
+    maxStorageRootItems,
   ],
   { rootDir },
 );

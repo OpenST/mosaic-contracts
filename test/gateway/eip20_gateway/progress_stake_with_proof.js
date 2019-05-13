@@ -139,6 +139,7 @@ contract('EIP20Gateway.progressStakeWithProof()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
 
     await prepareTestData(proofData);

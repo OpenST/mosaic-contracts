@@ -60,6 +60,16 @@ const EventDecoder = require('../../test/test_lib/event_decoder');
  */
 
 /**
+ * Object contains input parameter needed for progressMintWithProof.
+ *
+ * @typedef {object} ProgressMintWithProofParams.
+ * @property {string} rlpParentNodes RLP encoded proof data.
+ * @property {BN} blockHeight Block number for which the proof is valid.
+ * @property {string} messageStatus Inbox message status in cogateway.
+ * @property {string} facilitator Facilitator address for progress mint.
+ */
+
+/**
  * CoGateway Class provides helper methods for stake and mint and redeem and unstake.
  */
 class CoGateway {

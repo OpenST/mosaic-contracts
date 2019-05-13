@@ -48,6 +48,7 @@ async function deployer(web3Provider, accounts) {
   const bounty = new BN(100);
   const organization = await MockOrganization.new(owner, worker);
   const burner = Utils.NULL_ADDRESS;
+  const maxStorageRootItems = new BN(50);
 
   const anchor = await Anchor.new(
     remoteChainId,
@@ -75,6 +76,7 @@ async function deployer(web3Provider, accounts) {
     bounty,
     organization.address,
     burner,
+    maxStorageRootItems,
   );
 
   const coGateway = await CoGateway.new(
@@ -85,6 +87,7 @@ async function deployer(web3Provider, accounts) {
     organization.address,
     gateway.address,
     burner,
+    maxStorageRootItems,
   );
 
   await mockUtilityToken.setCoGateway(coGateway.address, { from: owner });

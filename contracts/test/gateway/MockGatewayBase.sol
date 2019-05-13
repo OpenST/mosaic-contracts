@@ -22,17 +22,21 @@ contract MockGatewayBase is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _organization Address of a contract that manages workers.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         public
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
     {}
 
@@ -102,9 +106,9 @@ contract MockGatewayBase is GatewayBase {
             // return true
             return true;
         }
-        
+
         // On successful proof verification storage root is returned other wise
-        // transaction is reverted. 
+        // transaction is reverted.
         bytes32 storageRoot = MockGatewayLib.proveAccount(
             _rlpAccount,
             _rlpParentNodes,
@@ -113,6 +117,8 @@ contract MockGatewayBase is GatewayBase {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete storageRoots[oldestStoredBlockHeight];
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
@@ -124,5 +130,24 @@ contract MockGatewayBase is GatewayBase {
         );
 
         return true;
+    }
+
+    /**
+     *  @notice Get the storage root for the given block height. This is only
+     *          testing
+     *
+     *  @param _blockHeight Block height for which the storage root is to be
+     *                      fetched.
+     *
+     *  @return storageRoot_ Storage root for the given block height.
+     */
+    function getStorageRoot(
+        uint256 _blockHeight
+    )
+        external
+        view
+        returns (bytes32 storageRoot_)
+    {
+        storageRoot_ = storageRoots[_blockHeight];
     }
 }
