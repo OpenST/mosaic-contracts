@@ -58,8 +58,133 @@ const MessageStatus = {
   Revoked: 4,
 };
 
-describe('Redeem and Unstake (with proof)', async () => {
+/**
+ * @typedef {Object} ProofCoGatewayResponse
+ *
+ * @property {string} outboxProof Outbox proof for a block height for which
+ *                    state root is anchored.
+ * @property {blockNumber} Latest anchor state root block height.
+ */
 
+/**
+ * @typedef {Object} ProofGatewayResponse
+ *
+ * @property {string} inboxProof Inbox proof for a block height for which
+ *                    state root is anchored.
+ * @property {blockNumber} Latest anchor state root block height.
+ */
+
+/**
+ * This approves the cogateway for redeem amount by wrapping the base token.
+ *
+ * @return {Promise<void>}
+ */
+const approveCoGatewayForRedeemAmount = async () => {
+  await ostPrime.wrap(
+    {
+      value: redeemRequest.amount,
+      from: redeemRequest.redeemer,
+    },
+  );
+
+  await ostPrime.approve(
+    cogateway.address,
+    redeemRequest.amount,
+    { from: redeemRequest.redeemer },
+  );
+};
+
+/**
+ * Prove cogateway account on gateway contract on origin chain.
+ *
+ * @return {Promise<ProofCoGatewayResponse>} Promise contains ProofCoGatewayResponse object.
+ */
+const proveCoGateway = async () => {
+  // Anchor state root.
+  const blockNumber = await originAnchor.anchorStateRoot(
+    'latest',
+  );
+
+  // Generate outbox proof for block height for which state root is
+  // anchored.
+  const outboxProof = await proofUtils.getOutboxProof(
+    cogateway.address,
+    [redeemRequest.messageHash],
+    auxiliaryWeb3.utils.toHex(blockNumber),
+  );
+  redeemRequest.blockHeight = new BN(blockNumber);
+  // Prove gateway.
+  const tx = await gateway.proveGateway(
+    redeemRequest.blockHeight,
+    outboxProof.encodedAccountValue,
+    outboxProof.serializedAccountProof,
+    { from: originAccounts[0] },
+  );
+
+  const event = EventDecoder.getEvents(tx, gateway);
+  ProveGatewayAssertion.verify(
+    event,
+    redeemRequest.blockHeight,
+    outboxProof.storageHash,
+    cogateway.address,
+  );
+
+  return { outboxProof, blockNumber: new BN(blockNumber) };
+};
+
+/**
+ * Prove gateway account on cogateway contract on auxiliary chain.
+ *
+ * @return {Promise<ProofGatewayResponse>} Promise contains ProofGatewayResponse object.
+ */
+const proveGateway = async () => {
+  // Anchor state root.
+  const blockNumber = await auxiliaryAnchor.anchorStateRoot(
+    'latest',
+  );
+
+  // Generate inbox proof for block height for which state root is
+  // anchored.
+  const inboxProof = await proofUtils.getInboxProof(
+    gateway.address,
+    [redeemRequest.messageHash],
+    originWeb3.utils.toHex(blockNumber),
+  );
+
+  // Prove gateway.
+  const tx = await cogateway.proveGateway(
+    new BN(blockNumber),
+    inboxProof.encodedAccountValue,
+    inboxProof.serializedAccountProof,
+    { from: auxiliaryAccounts[0] },
+  );
+
+  const event = EventDecoder.getEvents(tx, cogateway);
+  ProveGatewayAssertion.verify(
+    event,
+    new BN(blockNumber),
+    inboxProof.storageHash,
+    gateway.address,
+  );
+
+  return { inboxProof, blockNumber: new BN(blockNumber) };
+};
+
+/**
+ * This returns transaction fee.
+ *
+ * @param {Object} response Transaction object by truffle.
+ * @param {Web3} web3
+ * @return {Promise<BN>} transaction fee.
+ */
+const getTransactionFee = async (response, web3) => {
+  const transaction = await web3.eth.getTransaction(response.tx);
+  const gasUsed = new BN(response.receipt.gasUsed);
+  const gasPrice = new BN(transaction.gasPrice);
+  return gasUsed.mul(gasPrice);
+};
+
+describe('Redeem and Unstake (with proof)', async () => {
   before(async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
@@ -84,7 +209,6 @@ describe('Redeem and Unstake (with proof)', async () => {
       hashLock: hasher.l,
       unlockSecret: hasher.s,
     };
-
     originAnchor = new Anchor(
       auxiliaryWeb3,
       shared.origin.contracts.Anchor,
@@ -116,8 +240,6 @@ describe('Redeem and Unstake (with proof)', async () => {
       redeemRequest,
       cogateway,
     );
-
-    // ApproveCoGatewayForBounty
 
     const initialBalancesBeforeRedeem = await redeemAssertion.captureBalances(
       redeemRequest.redeemer,
@@ -153,7 +275,7 @@ describe('Redeem and Unstake (with proof)', async () => {
   });
 
   it('confirms redeem', async () => {
-    const { outboxProof, blockNumber } = proveCoGateway();
+    const { outboxProof, blockNumber } = await proveCoGateway();
     redeemRequest.blockHeight = blockNumber;
 
     const tx = await gateway.confirmRedeemIntent(
@@ -178,28 +300,27 @@ describe('Redeem and Unstake (with proof)', async () => {
     const initialBalanceBeforeProgress = await progressRedeemAssertion.captureBalances(
       redeemRequest.redeemer,
     );
-
     const { inboxProof, blockNumber } = await proveGateway();
-
     const response = await cogateway.progressRedeemWithProof(
       redeemRequest.messageHash,
       inboxProof.storageProof[0].serializedProof,
       blockNumber,
-      MessageStatus.declared,
-      { from: auxiliaryAccounts[0] },
+      MessageStatus.Declared,
+      { from: redeemRequest.redeemer },
     );
 
     const transactionFeeInProgress = await getTransactionFee(
       response,
       auxiliaryWeb3,
     );
-    const event = EventDecoder.getEvents(response, cogateway);
 
+    const event = EventDecoder.getEvents(response, cogateway);
     await progressRedeemAssertion.verify(
       event,
       redeemRequest,
       transactionFeeInProgress,
       initialBalanceBeforeProgress,
+      true,
     );
   });
 
@@ -209,19 +330,16 @@ describe('Redeem and Unstake (with proof)', async () => {
       redeemRequest.beneficiary,
       facilitator,
     );
-
     const { outboxProof, blockNumber } = await proveCoGateway();
-
     const tx = await gateway.progressUnstakeWithProof(
       redeemRequest.messageHash,
       outboxProof.storageProof[0].serializedProof,
       blockNumber,
-      MessageStatus.progressed,
+      MessageStatus.Progressed,
       { from: facilitator },
     );
 
     const event = EventDecoder.getEvents(tx, gateway);
-
     await progressUnstakeAssertion.verify(
       event,
       redeemRequest,
@@ -230,115 +348,4 @@ describe('Redeem and Unstake (with proof)', async () => {
       true,
     );
   });
-
 });
-
-/**
- * This approves the cogateway for redeem amount by wrapping the base token.
- *
- * @param {Object} ostPrime OSTPrime contract instance.
- * @return {Promise<void>}
- */
-const approveCoGatewayForRedeemAmount = async (ostPrime) => {
-  await ostPrime.wrap(
-    {
-      value: redeemRequest.amount,
-      from: redeemRequest.redeemer,
-    },
-  );
-
-  await ostPrime.approve(
-    cogateway.address,
-    redeemRequest.amount,
-    { from: redeemRequest.redeemer },
-  );
-};
-
-/**
- * Prove cogateway account on gateway contract.
- * @return {Promise<object>}
- */
-const proveCoGateway = async () => {
-  // Anchor state root.
-  const blockNumber = await originAnchor.anchorStateRoot(
-    'latest',
-  );
-
-  // Generate outbox proof for block height for which state root is
-  // anchored.
-  const outboxProof = await proofUtils.getOutboxProof(
-    cogateway.address,
-    [redeemRequest.messageHash],
-    auxiliaryWeb3.utils.toHex(blockNumber),
-  );
-  redeemRequest.blockHeight = new BN(blockNumber);
-  // Prove gateway.
-  let tx = await gateway.proveGateway(
-    redeemRequest.blockHeight,
-    outboxProof.encodedAccountValue,
-    outboxProof.serializedAccountProof,
-    { from: originAccounts[0] },
-  );
-
-  let event = EventDecoder.getEvents(tx, gateway);
-  ProveGatewayAssertion.verify(
-    event,
-    redeemRequest.blockHeight,
-    outboxProof.storageHash,
-    cogateway.address,
-  );
-
-  return { outboxProof, blockNumber: new BN(blockNumber) };
-};
-
-/**
- * Prove gateway account on cogateway contract.
- * @return {Promise<object>}
- */
-const proveGateway = async () => {
-  // Anchor state root.
-  const blockNumber = await auxiliaryAnchor.anchorStateRoot(
-    'latest',
-  );
-
-  // Generate inbox proof for block height for which state root is
-  // anchored.
-  const inboxProof = await proofUtils.getOutboxProof(
-    gateway.address,
-    [redeemRequest.messageHash],
-    originWeb3.utils.toHex(blockNumber),
-  );
-
-  // Prove gateway.
-  const tx = await cogateway.proveGateway(
-    new BN(blockNumber),
-    inboxProof.encodedAccountValue,
-    inboxProof.serializedAccountProof,
-    { from: auxiliaryAccounts[0] },
-  );
-
-  const event = EventDecoder.getEvents(tx, cogateway);
-  ProveGatewayAssertion.verify(
-    event,
-    new BN(blockNumber),
-    inboxProof.storageHash,
-    gateway.address,
-  );
-
-  return { inboxProof, blockNumber: new BN(blockNumber) };
-};
-
-/**
- * This returns transaction fee.
- * @param {Object} response Transaction object by truffle.
- * @param {Web3} web3
- * @return {Promise<BN>} transaction fee.
- */
-const getTransactionFee = async (response, web3) => {
-  const transaction = await web3.eth.getTransaction(response.tx);
-  const gasUsed = new BN(response.receipt.gasUsed);
-  const gasPrice = new BN(transaction.gasPrice);
-  return gasUsed.mul(gasPrice);
-};
-
-

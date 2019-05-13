@@ -21,6 +21,8 @@
 const assert = require('assert');
 const BN = require('bn.js');
 
+const Utils = require('../../../test/test_lib/utils.js');
+
 /**
  * Redeem Request object contains all the properties for redeem and unStake.
  * @typedef {Object} RedeemRequest
@@ -195,14 +197,25 @@ class ProgressRedeemAssertion {
     assert.strictEqual(
       eventData._proofProgress,
       proofProgress,
-      'Proof progress flag should be false.',
+      `Proof progress flag should be ${proofProgress}.`,
     );
 
-    assert.strictEqual(
-      eventData._unlockSecret,
-      redeemRequest.unlockSecret,
-      'Unlock secret must match.',
-    );
+    // If the progress is done with proof instead of unlock secret, then the
+    // unlock secret emitted in the event will have bytes32(0) value.
+    if (proofProgress === true) {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        Utils.ZERO_BYTES32,
+        `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
+      );
+    }
+    else {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        redeemRequest.unlockSecret,
+        'Unlock secret must match.',
+      );
+    }
   }
 
   /**
