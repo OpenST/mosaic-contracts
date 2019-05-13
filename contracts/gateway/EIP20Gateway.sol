@@ -55,7 +55,7 @@ pragma solidity ^0.5.0;
 
 import "./SimpleStake.sol";
 import "./GatewayBase.sol";
-import "../lib/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 
 /**
  * @title EIP20Gateway Contract

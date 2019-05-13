@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "./MockMerklePatriciaProof.sol";
-import "../../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../../lib/BytesLib.sol";
 
 library MockMessageBus {

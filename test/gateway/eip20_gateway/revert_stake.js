@@ -344,7 +344,6 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
       gateway.revertStake(stakeMessage.messageHash, {
         from: stakeMessage.staker,
       }),
-      'Underflow when subtracting.',
     );
   });
 });

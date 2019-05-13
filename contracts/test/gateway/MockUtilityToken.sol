@@ -20,7 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../../gateway/UtilityToken.sol";
+import "../../utilitytoken/contracts/UtilityToken.sol";
 
 /**
  * @title MockUtilityToken contract.
@@ -98,3 +98,4 @@ contract MockUtilityToken is UtilityToken {
     }
 
 }
+

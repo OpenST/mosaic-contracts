@@ -23,9 +23,9 @@ pragma solidity ^0.5.0;
 import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
 import "../lib/MessageBus.sol";
-import "../lib/OrganizationInterface.sol";
-import "../lib/Organized.sol";
-import "../lib/SafeMath.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/Organized.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/StateRootInterface.sol";
 
 /**
@@ -178,7 +178,7 @@ contract GatewayBase is Organized {
 
         // The following variables are not known at construction:
         messageBox = MessageBus.MessageBox();
-        encodedGatewayPath = '';
+        encodedGatewayPath = "";
         remoteGateway = address(0);
     }
 
