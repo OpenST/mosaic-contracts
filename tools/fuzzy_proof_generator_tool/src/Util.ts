@@ -17,33 +17,64 @@
 /* eslint-disable no-bitwise */
 
 import assert = require('assert');
-
 import ethUtil = require('ethereumjs-util');
+import crypto = require('crypto');
 
 const Util = {
 
+  /** Generates random keccak256 value. */
   generateRandomKeccak256(): Buffer {
     return ethUtil.keccak256(
-      Math.random().toString(36).substring(2, 10)
-            + Math.random().toString(36).substring(2, 10)
-            + Math.random().toString(36).substring(2, 10)
-            + Math.random().toString(36).substring(2, 10),
+      crypto.randomBytes(256),
     );
   },
 
-  toNibbles(path: Buffer): Buffer {
-    const nibbles: Buffer = Buffer.alloc(2 * path.length);
+  /**
+   * Converts a buffer to a nibbles buffer.
+   *
+   * Converts each byte within the input buffer into two nibbles and
+   * stores each nibble as an entry in the returned buffer.
+   * As a result, the returned buffer's length is twice as the input one.
+   *
+   * For example:
+   *    String 'do' is stored in a buffer as: Buffer<64 6f>
+   *    The returned buffer's content in this case is: Buffer<6 4 6 f>
+   *
+   * @remarks
+   * See also {@link Utils#nibblesToBuffer}
+   *
+   * @param path buffer The buffer to convert into nibbles.
+   *
+   * @returns Buffer containing converted nibbles.
+   */
+  toNibbles(buffer: Buffer): Buffer {
+    const nibbles: Buffer = Buffer.alloc(2 * buffer.length);
 
-    for (let i = 0; i < path.length; i += 1) {
+    for (let i = 0; i < buffer.length; i += 1) {
       let q = i * 2;
-      nibbles[q] = path[i] >> 4;
+      nibbles[q] = buffer[i] >> 4;
       q += 1;
-      nibbles[q] = path[i] & 0xF;
+      nibbles[q] = buffer[i] & 0xF;
     }
 
     return nibbles;
   },
 
+  /**
+   * Converts a nibbles buffer to a buffer.
+   *
+   * Combines two consecutive entries from the input nibbles buffer
+   * into one byte and stores in the returned result.
+   * The input buffer's length must be even.
+   * For example:
+   *    The input buffer is: Buffer<6 4 6 f>
+   *    The returned buffer's content in this case is: Buffer<64 6f>
+   *
+   * @remarks
+   * See also {@link Utils#toNibbles}
+   *
+   * @param nibbleArray The nibbles buffer to convert.
+   */
   nibblesToBuffer(nibbleArray: Buffer): Buffer {
     assert(nibbleArray.length % 2 === 0);
 
@@ -55,6 +86,12 @@ const Util = {
     return buffer;
   },
 
+  /**
+   * Encodes a nibble buffer into a compact path encoding for leaf node's path.
+   *
+   * @remark
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
   encodeCompactLeafPath(nibblePath: Buffer): Buffer {
     assert(nibblePath.length !== 0);
 
@@ -70,6 +107,12 @@ const Util = {
     );
   },
 
+  /**
+   * Encodes a nibble buffer into a compact path encoding for extension node's path.
+   *
+   * @remark
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
   encodeCompactExtensionPath(nibblePath: Buffer): Buffer {
     assert(nibblePath.length !== 0);
 
@@ -84,6 +127,7 @@ const Util = {
     );
   },
 
+  /** Asserts that input buffer is a valid nibbles buffer. */
   assertNibbleArray(nibbleArray: Buffer): void {
     nibbleArray.forEach(
       (n): void => {

@@ -14,6 +14,7 @@
 //
 // ----------------------------------------------------------------------------
 
+/** Enumeration for node types. */
 enum NodeType {
   Branch = 'Branch',
   Extension = 'Extension',
