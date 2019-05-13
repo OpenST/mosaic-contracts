@@ -48,6 +48,7 @@ contract('EIP20Gateway.deactivateGateway()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
 
     await gateway.activateGateway(coGateway, { from: owner });

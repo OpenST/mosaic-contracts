@@ -42,6 +42,8 @@ contract TestEIP20Gateway is EIP20Gateway {
      *                stake process.
      * @param _organization Address of an organization contract.
      * @param _burner Address where base tokens will be burned.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         EIP20Interface _valueToken,
@@ -49,7 +51,8 @@ contract TestEIP20Gateway is EIP20Gateway {
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
         OrganizationInterface _organization,
-        address payable _burner
+        address payable _burner,
+        uint256 _maxStorageRootItems
     )
         EIP20Gateway(
             _valueToken,
@@ -57,7 +60,8 @@ contract TestEIP20Gateway is EIP20Gateway {
             _stateRootProvider,
             _bounty,
             _organization,
-            _burner
+            _burner,
+            _maxStorageRootItems
         )
         public
     {

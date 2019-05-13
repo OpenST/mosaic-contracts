@@ -20,6 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
+import "../lib/CircularBufferUint.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
 import "../lib/MessageBus.sol";
@@ -31,7 +32,7 @@ import "../lib/StateRootInterface.sol";
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
  */
-contract GatewayBase is Organized {
+contract GatewayBase is Organized, CircularBufferUint {
 
     /* Usings */
 
@@ -67,12 +68,12 @@ contract GatewayBase is Organized {
     /* Constants */
 
     /** Position of message bus in the storage. */
-    uint8 constant MESSAGE_BOX_OFFSET = 7;
+    uint8 public constant MESSAGE_BOX_OFFSET = 9;
 
     /**
      * Penalty in bounty amount percentage charged to message sender on revert message.
      */
-    uint8 constant REVOCATION_PENALTY = 150;
+    uint8 public constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
     /**
@@ -112,8 +113,8 @@ contract GatewayBase is Organized {
 
     /**
      * Message box.
-     * @dev Keep this is at location 1, in case this is changed then update
-     *      constant MESSAGE_BOX_OFFSET accordingly.
+     * @dev update constant MESSAGE_BOX_OFFSET according to the index of messageBox.
+     *
      */
     MessageBus.MessageBox internal messageBox;
 
@@ -159,13 +160,17 @@ contract GatewayBase is Organized {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                message transfers.
      * @param _organization Address of an organization contract.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         Organized(_organization)
+        CircularBufferUint(_maxStorageRootItems)
         public
     {
         require(
@@ -257,6 +262,8 @@ contract GatewayBase is Organized {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete storageRoots[oldestStoredBlockHeight];
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height

@@ -11,6 +11,7 @@ module.exports = {
             host: 'localhost',
             network_id: '*',
             port: 8546,
+            gas: 8000000,
         },
         integration_auxiliary: {
             host: 'localhost',

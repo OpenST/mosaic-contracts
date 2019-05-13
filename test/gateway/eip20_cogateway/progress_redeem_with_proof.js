@@ -99,6 +99,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', (accounts) => {
       proofData.co_gateway.constructor.organization,
       proofData.co_gateway.constructor.gateway,
       proofData.co_gateway.constructor.burner,
+      new BN(100),
     );
 
     const redeemIntentHash = coGatewayUtils.hashRedeemIntent(
