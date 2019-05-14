@@ -261,6 +261,7 @@ const confirmRedeemIntent = async () => {
 /*
  * Performs CoGateway.progressRedeemWithProof.
  *
+ * @param {number} messageStatus Inbox message status in Gateway.
  * @return {Promise<void>}
  */
 const progressRedeemWithProof = async (messageStatus) => {
@@ -294,6 +295,7 @@ const progressRedeemWithProof = async (messageStatus) => {
 /*
  * Performs Gateway.progressUnstakeWithProof.
  *
+ *  @param {number} messageStatus Outbox message status in CoGateway.
  * @return {Promise<void>}
  */
 const progressUnstakeWithProof = async (messageStatus) => {
