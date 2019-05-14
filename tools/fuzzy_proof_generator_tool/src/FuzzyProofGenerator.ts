@@ -65,7 +65,8 @@ const FuzzyProofGenerator = {
     assert(nibblePath.length >= pattern.length - (endingWithBranchNode ? 1 : 0));
 
     const rlpValue: Buffer = rlp.encode(value);
-    const rlpValueHash: Buffer = ethUtil.keccak256(rlpValue);
+    const valueHash: Buffer = ethUtil.keccak256(value);
+    const rlpValuehash: Buffer = ethUtil.keccak256(rlpValue);
 
     const pathData: Buffer[] = this.generateRandomPathData(
       (endingWithBranchNode ? pattern.substring(0, pattern.length - 1) : pattern),
@@ -82,7 +83,7 @@ const FuzzyProofGenerator = {
 
     const nodes: NodeBase[] = this.createNodes(
       pattern,
-      rlpValue,
+      value,
       pathData,
       branchesKeysData,
     );
@@ -94,7 +95,7 @@ const FuzzyProofGenerator = {
     });
 
     const proofData = {
-      value: rlpValueHash,
+      value: (endingWithBranchNode ? rlpValuehash : valueHash),
       encodedPath: path,
       rlpParentNodes: rlp.encode(rlpParentNodesArray),
       root: nodes[0].hash(),
