@@ -374,14 +374,14 @@ describe('Redeem and Unstake (with proof)', async () => {
     messageBoxOffset = await cogateway.MESSAGE_BOX_OFFSET.call();
   });
 
-  it('Redeem & Unstake (progress redeem and then progress unstake', async () => {
+  it('Redeem & Unstake (progress redeem and then progress unstake)', async () => {
     await redeem();
     await confirmRedeemIntent();
     await progressRedeemWithProof(MessageStatus.Declared);
     await progressUnstakeWithProof(MessageStatus.Progressed);
   });
 
-  it('Redeem & Unstake (progress unstake and then progress redeem', async () => {
+  it('Redeem & Unstake (progress unstake and then progress redeem)', async () => {
     await redeem();
     await confirmRedeemIntent();
     await progressUnstakeWithProof(MessageStatus.Declared);
