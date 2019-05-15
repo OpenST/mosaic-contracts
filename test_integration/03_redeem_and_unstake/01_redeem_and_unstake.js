@@ -208,6 +208,7 @@ describe('Redeem and Unstake', async () => {
       redeemRequest,
       transactionFeeInProgress,
       initialBalanceBeforeProgress,
+      false,
     );
   });
 
@@ -231,6 +232,7 @@ describe('Redeem and Unstake', async () => {
       redeemRequest,
       initialBalancesBeforeProgress,
       facilitator,
+      false,
     );
   });
 });
