@@ -1,0 +1,3 @@
+[submodule "contracts/utilitytoken"]
+	path = contracts/utilitytoken
+	url = https://github.com/OpenST/utilitytoken-contracts.git

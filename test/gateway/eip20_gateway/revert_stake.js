@@ -63,6 +63,7 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
       bountyAmount,
       organization,
       burner,
+      new BN(100),
     );
 
     const hashLockObj = Utils.generateHashLock();
@@ -344,7 +345,6 @@ contract('EIP20Gateway.revertStake()', (accounts) => {
       gateway.revertStake(stakeMessage.messageHash, {
         from: stakeMessage.staker,
       }),
-      'Underflow when subtracting.',
     );
   });
 });

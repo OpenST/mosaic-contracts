@@ -68,6 +68,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
       bountyAmount,
       organizationAddress,
       NullAddress, // burner address
+      new BN(100),
     );
 
     unstakeRequest = {

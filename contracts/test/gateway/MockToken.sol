@@ -13,9 +13,9 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Contracts: MockToken 
+// Contracts: MockToken
 //
 // http://www.simpletoken.org/
 //
@@ -24,7 +24,7 @@ pragma solidity ^0.5.0;
 
 import "./MockTokenConfig.sol";
 import "../../lib/EIP20Interface.sol";
-import "../../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract MockToken is EIP20Interface, MockTokenConfig {
 

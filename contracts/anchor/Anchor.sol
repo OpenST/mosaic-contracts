@@ -22,10 +22,10 @@ pragma solidity ^0.5.0;
 
 import "../lib/CircularBufferUint.sol";
 import "../lib/MerklePatriciaProof.sol";
-import "../lib/OrganizationInterface.sol";
-import "../lib/Organized.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/Organized.sol";
 import "../lib/RLP.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/StateRootInterface.sol";
 
 /**

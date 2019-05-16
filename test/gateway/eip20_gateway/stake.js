@@ -122,6 +122,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      new BN(100),
     );
     await gateway.activateGateway(coGateway, { from: organization });
 
@@ -273,6 +274,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      new BN(100),
     );
 
     /*

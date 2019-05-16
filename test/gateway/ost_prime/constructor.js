@@ -39,26 +39,17 @@ contract('OSTPrime.constructor()', (accounts) => {
   let worker;
 
   beforeEach(async () => {
-    valueTokenAddress = accounts[2];
-    owner = accounts[3];
-    worker = accounts[4];
+    // Starting at accounts[2]:
+    [,, valueTokenAddress, owner, worker] = accounts;
     organization = await MockOrganization.new(owner, worker);
   });
 
   it('should pass with right set of parameters', async () => {
     ostPrime = await OSTPrime.new(valueTokenAddress, organization.address);
 
-    const valueToken = await ostPrime.valueToken.call();
+    const valueToken = await ostPrime.token.call();
     assert.strictEqual(
       valueToken,
-      valueTokenAddress,
-      `Token address from contract must be ${valueTokenAddress}.`,
-    );
-
-    // token supports previous ABIs
-    const token = await ostPrime.token.call();
-    assert.strictEqual(
-      token,
       valueTokenAddress,
       `Token address from contract must be ${valueTokenAddress}.`,
     );
@@ -105,7 +96,7 @@ contract('OSTPrime.constructor()', (accounts) => {
     valueTokenAddress = NullAddress;
     await Utils.expectRevert(
       OSTPrime.new(valueTokenAddress, organization.address),
-      'Value token address should not be zero.',
+      'Token address should not be zero.',
     );
   });
 

@@ -26,16 +26,17 @@ const Utils = require('../../test/test_lib/utils');
 const EventDecoder = require('../../test/test_lib/event_decoder');
 
 const StakeAssertion = require('./utils/stake_assertion');
+const RevertStakeAssertion = require('./utils/revert_stake_assertion');
+const ProgressRevertStakeAssertion = require('./utils/progress_revert_stake_assertion');
 const ProveGatewayAssertion = require('../lib/prove_gateway_assertion');
 const ConfirmStakeIntentAssertion = require('./utils/confirm_stake_intent_assertion');
-const ProgressStakeAssertion = require('./utils/progress_stake_assertion');
-const ProgressMintAssertion = require('./utils/progress_mint_assertion');
+const ConfirmRevertStakeIntentAssertion = require('./utils/confirm_revert_stake_intent_assertion');
 const ProofUtils = require('../lib/proof_utils');
 const Anchor = require('../lib/anchor');
 
 /**
  * Approve Gateway for stake amount.
- * @param {Object }token Token contract instance.
+ * @param {Object} token Token contract instance.
  * @param {Object} gateway Gateway contract instance.
  * @param {Object} stakeRequest stake request.
  * @return {Promise<void>}
@@ -63,10 +64,10 @@ async function approveGatewayForBounty(baseToken, gateway, stakeRequest) {
   );
 }
 
-describe('Stake and mint', async () => {
+describe('Revert Stake and mint', async () => {
   let assertStake;
-  let assertProgressStake;
-  let assertProgressMint;
+  let assertRevertStake;
+  let assertProgressRevertStake;
   let proofUtils;
 
   let originAccounts;
@@ -79,7 +80,7 @@ describe('Stake and mint', async () => {
   let token;
   let baseToken;
   let auxiliaryAnchor;
-  let ostPrime;
+  let originAnchor;
   let stakeRequest;
   let messageBoxOffset;
 
@@ -92,32 +93,38 @@ describe('Stake and mint', async () => {
     baseToken = shared.origin.contracts.BaseToken;
     gateway = shared.origin.contracts.EIP20Gateway;
     cogateway = shared.auxiliary.contracts.EIP20CoGateway;
-    ostPrime = shared.auxiliary.contracts.OSTPrime;
 
     const hasher = Utils.generateHashLock();
+    const staker = originAccounts[0];
     stakeRequest = {
       amount: new BN(200),
       gasPrice: new BN(1),
       gasLimit: new BN(100),
-      staker: originAccounts[0],
+      staker,
       bounty: await gateway.bounty.call(),
-      nonce: await gateway.getNonce.call(originAccounts[0]),
+      nonce: await gateway.getNonce.call(staker),
       beneficiary: auxiliaryAccounts[2],
       hashLock: hasher.l,
       unlockSecret: hasher.s,
     };
 
     assertStake = new StakeAssertion(gateway, token, baseToken);
-    assertProgressStake = new ProgressStakeAssertion(gateway, token, baseToken);
-    assertProgressMint = new ProgressMintAssertion(auxiliaryWeb3, cogateway, ostPrime);
+    assertRevertStake = new RevertStakeAssertion(gateway, token, baseToken);
+    assertProgressRevertStake = new ProgressRevertStakeAssertion(gateway, token, baseToken);
     proofUtils = new ProofUtils(originWeb3, auxiliaryWeb3);
     auxiliaryAnchor = new Anchor(
       originWeb3,
       shared.auxiliary.contracts.Anchor,
       shared.auxiliary.organizationAddress,
     );
+    originAnchor = new Anchor(
+      auxiliaryWeb3,
+      shared.origin.contracts.Anchor,
+      shared.origin.organizationAddress,
+    );
     messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
+
 
   it('stakes', async () => {
     // Capture initial token and base token balance of staker and gateway.
@@ -192,38 +199,141 @@ describe('Stake and mint', async () => {
     ConfirmStakeIntentAssertion.verify(event, stakeRequest);
   });
 
-  it('progresses stake', async () => {
+  it('revert stake', async () => {
     // Capture initial token and base token balance of staker and gateway.
-    const initialBalancesBeforeProgress = await assertProgressStake.captureBalances(
+    const initialBalances = await assertRevertStake.captureBalances(
       stakeRequest.staker,
     );
 
-    const tx = await gateway.progressStake(
-      stakeRequest.messageHash,
-      stakeRequest.unlockSecret,
+    const {
+      messageHash,
+      staker,
+    } = stakeRequest;
+
+    const bounty = await gateway.bounty.call();
+    const penaltyFactor = await gateway.REVOCATION_PENALTY.call();
+    const penalty = bounty.mul(penaltyFactor).divn(100);
+
+    await baseToken.approve(gateway.address, penalty, { from: staker });
+
+    const tx = await gateway.revertStake(
+      messageHash,
+      { from: staker },
+    );
+
+    const events = EventDecoder.getEvents(tx, gateway);
+
+    await assertRevertStake.verify(
+      events,
+      stakeRequest,
+      initialBalances,
+    );
+  });
+
+  it('confirms revert stake', async () => {
+    // Anchor state root.
+    const blockNumber = await auxiliaryAnchor.anchorStateRoot(
+      'latest',
+    );
+    // Generate outbox proof for block height for which state root is
+    // anchored.
+    const outboxProof = await proofUtils.getOutboxProof(
+      gateway.address,
+      [stakeRequest.messageHash],
+      messageBoxOffset,
+      originWeb3.utils.toHex(blockNumber),
+    );
+
+    stakeRequest.blockHeight = new BN(blockNumber);
+    // Prove gateway.
+    let tx = await cogateway.proveGateway(
+      stakeRequest.blockHeight,
+      outboxProof.encodedAccountValue,
+      outboxProof.serializedAccountProof,
+      { from: auxiliaryAccounts[0] },
+    );
+
+    const event = EventDecoder.getEvents(tx, cogateway);
+    ProveGatewayAssertion.verify(
+      event,
+      stakeRequest.blockHeight,
+      outboxProof.storageHash,
+      gateway.address,
+    );
+
+    const {
+      messageHash,
+      blockHeight,
+    } = stakeRequest;
+
+    const rlpParentNodes = outboxProof.storageProof[0].serializedProof;
+    const facilitator = auxiliaryAccounts[0];
+
+    tx = await cogateway.confirmRevertStakeIntent(
+      messageHash,
+      blockHeight,
+      rlpParentNodes,
+      { from: facilitator },
+    );
+
+    const events = EventDecoder.getEvents(tx, cogateway);
+
+    ConfirmRevertStakeIntentAssertion.verify(events, stakeRequest);
+  });
+
+  it('progress revert stake', async () => {
+    // Capture initial token and base token balance of staker and gateway.
+    const initialBalances = await assertProgressRevertStake.captureBalances(
+      stakeRequest.staker,
+    );
+    const blockNumber = await originAnchor.anchorStateRoot(
+      'latest',
+    );
+    // Generate inbox proof for block height for which state root is
+    // anchored.
+    const inboxProof = await proofUtils.getInboxProof(
+      cogateway.address,
+      [stakeRequest.messageHash],
+      messageBoxOffset,
+      originWeb3.utils.toHex(blockNumber),
+    );
+
+    stakeRequest.blockHeight = new BN(blockNumber);
+    // Prove gateway.
+    let tx = await gateway.proveGateway(
+      stakeRequest.blockHeight,
+      inboxProof.encodedAccountValue,
+      inboxProof.serializedAccountProof,
       { from: originAccounts[0] },
     );
 
     const event = EventDecoder.getEvents(tx, gateway);
-    // Assert event and balances.
-    await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress, false);
-  });
-
-  it('progresses mint', async () => {
-    // Capture initial OST prime ERC20 and base token balance of
-    // beneficiary, OST prime contract address and gateway.
-    const initialBalancesBeforeMint = await assertProgressMint.captureBalances(
-      stakeRequest.beneficiary,
+    ProveGatewayAssertion.verify(
+      event,
+      stakeRequest.blockHeight,
+      inboxProof.storageHash,
+      cogateway.address,
     );
 
-    const tx = await cogateway.progressMint(
-      stakeRequest.messageHash,
-      stakeRequest.unlockSecret,
-      { from: auxiliaryAccounts[0] },
-    );
-    const event = EventDecoder.getEvents(tx, cogateway);
+    const {
+      messageHash,
+      blockHeight,
+    } = stakeRequest;
 
-    // Assert event and balances.
-    await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint, false);
+    const rlpParentNodes = inboxProof.storageProof[0].serializedProof;
+
+    tx = await gateway.progressRevertStake(
+      messageHash,
+      blockHeight,
+      rlpParentNodes,
+      { from: originAccounts[0] },
+    );
+
+    const events = EventDecoder.getEvents(tx, gateway);
+    await assertProgressRevertStake.verify(
+      events,
+      stakeRequest,
+      initialBalances,
+    );
   });
 });

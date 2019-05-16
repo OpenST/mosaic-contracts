@@ -116,7 +116,6 @@ contract('SimpleStake.releaseTo()', (accounts) => {
 
     await Utils.expectRevert(
       simpleStake.releaseTo(beneficiary, releasedAmount, { from: gateway }),
-      'Underflow when subtracting.',
     );
   });
 
