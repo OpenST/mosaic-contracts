@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,7 @@
 //
 // ----------------------------------------------------------------------------
 
-import NibblesUtil from './NibblesUtil';
+import Nibbles from './Nibbles';
 import NodeBase from './NodeBase';
 import BranchNode from './BranchNode';
 import ExtensionNode from './ExtensionNode';
@@ -38,17 +37,28 @@ const FuzzyProofGenerator = {
   /** Generates a proof data. */
   generateByPattern(
     pattern: string,
-    pathMaxLength: number = 40,
-    valueMaxLength: number = 40,
+    pathMaxLength: number = 32,
+    valueMaxLength: number = 32,
   ): ProofData {
+    assert(pathMaxLength >= 1);
+    assert(valueMaxLength >= 1);
+
     this.assertPatternValidity(pattern);
 
-    const pathMinLength: number = Math.floor(pattern.length / 2) + 1;
-    const pathLength: number = pathMinLength + Math.floor(Math.random() * pathMaxLength);
+    const pathMinLength: number = Math.ceil(pattern.length / 2);
+    assert(pathMaxLength >= pathMinLength);
+
+    const pathLength: number = pathMinLength + Math.floor(
+      Math.random() * (pathMaxLength - pathMinLength + 1),
+    );
+    assert(pathLength <= pathMaxLength);
+    assert(pathLength >= pathMinLength);
 
     const path: Buffer = crypto.randomBytes(pathLength);
 
     const valueLength = 1 + Math.floor(Math.random() * valueMaxLength);
+    assert(valueLength <= valueMaxLength);
+    assert(valueLength >= 1);
     const value: Buffer = crypto.randomBytes(valueLength);
 
     return this.generate(pattern, path, value);
@@ -60,8 +70,11 @@ const FuzzyProofGenerator = {
 
     const endingWithBranchNode: boolean = (pattern[pattern.length - 1] === 'b');
 
-    const nibblePath: Buffer = NibblesUtil.toNibbles(path);
-    NibblesUtil.assertNibbleArray(nibblePath);
+    const nibblePath: Buffer = Nibbles.toNibbles(path);
+    Nibbles.assertNibbleArray(nibblePath);
+
+    // If a pattern ends with a branch node, that branch node is not going
+    // to contain any nibble from the pattern and only value.
     assert(nibblePath.length >= pattern.length - (endingWithBranchNode ? 1 : 0));
 
     const rlpValue: Buffer = rlp.encode(value);
@@ -73,6 +86,11 @@ const FuzzyProofGenerator = {
       nibblePath,
     );
 
+    // If a pattern ends with a branch node, that branch node is not going
+    // to contain any nibble from the pattern and only value. That's why
+    // during generation of path sections according to the pattern ending
+    // branch node is not counted and we add an empty Buffer representing
+    // ending branch node path section.
     if (endingWithBranchNode) {
       pathData.push(Buffer.from([]));
     }
@@ -195,37 +213,49 @@ const FuzzyProofGenerator = {
     assert(pattern.length > 0);
     assert(nibblePath.length >= pattern.length);
 
+    // "numberCount" variable below is the count of extension and leaf nodes
+    // in the pattern.
     const numberCount: number = pattern.length
       - (pattern.split('b').length - 1);
 
+    // Each node in the pattern is going to use at least one nibble.
+    // Hence, we are calculating nibbles' amount, left after subtracting
+    // nibbles path's length from pattern's length.
+    // Variable is named "sum", as in the next step, we will randomly choose
+    // numbers ("numberCount" is the count of numbers) that sum up to "sum".
     const sum: number = nibblePath.length - pattern.length;
 
+    // Generates non-negative numbers that sum up to "sum".
     const randomNumbers: number[] = this.generateRandomNumbers(sum, numberCount);
+
+    // Numbers generated above, were non-negative numbers (includes 0)
+    // that sum up to "sum", which was calculated by taking out pattern length.
+    const pathSectionsLengths: number[] = randomNumbers.map(x => x + 1);
 
     const pathData = this.generatePathData(
       pattern,
       nibblePath,
-      randomNumbers,
+      pathSectionsLengths,
     );
 
     return pathData;
   },
 
   /**
-   * Divides a path into a random consecutive sections according to the
-   * specified pattern and random lengths parameter.
+   * Divides a path into a consecutive sections according to the
+   * specified pattern and lengths parameter.
    */
   generatePathData(
     pattern: string,
     nibblePath: Buffer,
-    randomNumbers: number[],
+    pathSectionsLengths: number[],
   ): Buffer[] {
     assert(pattern.length !== 0);
     assert(nibblePath.length >= pattern.length);
 
     const pathData: Buffer[] = [];
 
-    let randomNumbersIndex = 0;
+    let pathSectionsIndex = 0;
     let nibblePathIndex = 0;
 
     for (let i = 0; i < pattern.length; i += 1) {
@@ -238,15 +268,15 @@ const FuzzyProofGenerator = {
         }
         case 'e':
         case 'l': {
-          assert(randomNumbersIndex < randomNumbers.length);
+          assert(pathSectionsIndex < pathSectionsLengths.length);
           pathData.push(
             nibblePath.slice(
               nibblePathIndex,
-              nibblePathIndex + randomNumbers[randomNumbersIndex] + 1,
+              nibblePathIndex + pathSectionsLengths[pathSectionsIndex],
             ),
           );
-          nibblePathIndex += (randomNumbers[randomNumbersIndex] + 1);
-          randomNumbersIndex += 1;
+          nibblePathIndex += (pathSectionsLengths[pathSectionsIndex]);
+          pathSectionsIndex += 1;
           break;
         }
         default: {
@@ -256,7 +286,7 @@ const FuzzyProofGenerator = {
     }
 
     assert(nibblePathIndex === nibblePath.length);
-    assert(randomNumbersIndex === randomNumbers.length);
+    assert(pathSectionsIndex === pathSectionsLengths.length);
 
     assert.deepEqual(
       pathData.reduce((acc: Buffer, val: Buffer): Buffer => Buffer.concat([acc, val])),
@@ -323,43 +353,52 @@ const FuzzyProofGenerator = {
     return generatedRandoms;
   },
 
-  /** Generates an array of random branch node's keys. */
-  generateRandomBranchesKeysData(branchAmount: number): Buffer[][] {
-    assert(branchAmount >= 0);
+  /**
+   * Generates an array of branch nodes with random values for keys.
+   *
+   * @param branchNodeAmount An amount of branch nodes to generate data for.
+   */
+  generateRandomBranchesKeysData(branchNodeAmount: number): Buffer[][] {
+    assert(branchNodeAmount >= 0);
 
     const branchesKeysData: Buffer[][] = [];
-    for (let i = 0; i < branchAmount; i += 1) {
+    for (let i = 0; i < branchNodeAmount; i += 1) {
       branchesKeysData.push(this.generateRandomBranchKeysData());
     }
 
     return branchesKeysData;
   },
 
-  /** Generates a random branch node's keys. */
+  /**
+   * Generates a branch node with random values for keys.
+   * First, function generates random number between 0 and 16 (max amount of
+   * keys for a branch node). Afterwards, generates a random index for each
+   * key and random value to be stored in that index.
+   */
   generateRandomBranchKeysData(): Buffer[] {
     const branchKeysData: Buffer[] = new Array<Buffer>(16);
     branchKeysData.fill(Buffer.from([]));
 
-    const rAmount: number = Math.floor(Math.random() * 16);
-    assert(rAmount >= 0 && rAmount < 16);
+    const amount: number = Math.floor(Math.random() * 16);
+    assert(amount >= 0 && amount < 16);
 
-    const rIndexes: number[] = [];
+    const indexes: number[] = [];
 
-    for (let i = 0; i < rAmount; i += 1) {
+    for (let i = 0; i < amount; i += 1) {
       let x = -1;
       do {
         x = Math.floor(Math.random() * 16);
         assert(x >= 0 && x < 16);
-      } while (rIndexes.includes(x));
+      } while (indexes.includes(x));
 
-      rIndexes.push(x);
+      indexes.push(x);
     }
 
-    assert(rIndexes.length === rAmount);
+    assert(indexes.length === amount);
 
-    for (let i = 0; i < rIndexes.length; i += 1) {
-      assert(rIndexes[i] >= 0 && rIndexes[i] < 16);
-      branchKeysData[rIndexes[i]] = this.generateRandomKeccak256();
+    for (let i = 0; i < indexes.length; i += 1) {
+      assert(indexes[i] >= 0 && indexes[i] < 16);
+      branchKeysData[indexes[i]] = this.generateRandomKeccak256();
     }
 
     return branchKeysData;

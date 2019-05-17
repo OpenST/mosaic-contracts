@@ -18,7 +18,7 @@
 
 import assert = require('assert');
 
-const NibblesUtil = {
+const Nibbles = {
 
   /**
    * Converts a buffer to a nibbles buffer.
@@ -32,7 +32,7 @@ const NibblesUtil = {
    *    The returned buffer's content in this case is: Buffer<6 4 6 f> (length 4)
    *
    * @remarks
-   * See also {@link NibblesUtils#nibblesToBuffer}
+   * See also {@link Nibbless#nibblesToBuffer}
    *
    * @param path buffer The buffer to convert into nibbles.
    *
@@ -71,7 +71,7 @@ const NibblesUtil = {
    *    The returned buffer's content in this case is: Buffer<64 6f>
    *
    * @remarks
-   * See also {@link NibblesUtils#toNibbles}
+   * See also {@link Nibbless#toNibbles}
    *
    * @param nibbleArray The nibbles buffer to convert.
    */
@@ -111,4 +111,4 @@ const NibblesUtil = {
   },
 };
 
-export { NibblesUtil as default };
+export { Nibbles as default };

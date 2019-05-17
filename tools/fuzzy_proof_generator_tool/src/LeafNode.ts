@@ -15,7 +15,7 @@
 // ----------------------------------------------------------------------------
 
 import NodeType from './Types';
-import NibblesUtil from './NibblesUtil';
+import Nibbles from './Nibbles';
 import NodeBase from './NodeBase';
 
 import assert = require('assert');
@@ -57,7 +57,7 @@ class LeafNode extends NodeBase {
       'Leaf node\'s value is empty.',
     );
 
-    NibblesUtil.assertNibbleArray(nibblePath);
+    Nibbles.assertNibbleArray(nibblePath);
 
     this.nibblePath = nibblePath;
     this.value = value;
@@ -94,11 +94,11 @@ class LeafNode extends NodeBase {
     const evenLength: boolean = (nibblePath.length % 2 === 0);
 
     if (evenLength) {
-      return NibblesUtil.nibblesToBuffer(
+      return Nibbles.nibblesToBuffer(
         Buffer.concat([Buffer.from([2, 0]), nibblePath]),
       );
     }
-    return NibblesUtil.nibblesToBuffer(
+    return Nibbles.nibblesToBuffer(
       Buffer.concat([Buffer.from([3]), nibblePath]),
     );
   }

@@ -16,7 +16,7 @@
 
 import NodeType from './Types';
 import NodeBase from './NodeBase';
-import NibblesUtil from './NibblesUtil';
+import Nibbles from './Nibbles';
 
 import assert = require('assert');
 
@@ -57,7 +57,7 @@ class ExtensionNode extends NodeBase {
       'Extension node\'s key is empty.',
     );
 
-    NibblesUtil.assertNibbleArray(
+    Nibbles.assertNibbleArray(
       nibblePath,
     );
 
@@ -94,11 +94,11 @@ class ExtensionNode extends NodeBase {
 
     const evenLength: boolean = (nibblePath.length % 2 === 0);
     if (evenLength) {
-      return NibblesUtil.nibblesToBuffer(
+      return Nibbles.nibblesToBuffer(
         Buffer.concat([Buffer.from([0, 0]), nibblePath]),
       );
     }
-    return NibblesUtil.nibblesToBuffer(
+    return Nibbles.nibblesToBuffer(
       Buffer.concat([Buffer.from([1]), nibblePath]),
     );
   }

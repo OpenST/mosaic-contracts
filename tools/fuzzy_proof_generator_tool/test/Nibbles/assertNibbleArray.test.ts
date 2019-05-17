@@ -16,32 +16,32 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import NibblesUtil from '../../src/NibblesUtil';
+import Nibbles from '../../src/Nibbles';
 
-describe('NibblesUtil::assertNibbleArray', (): void => {
+describe('Nibbles::assertNibbleArray', (): void => {
   it('Reverts on a negative input.', (): void => {
     assert.throws(
-      (): void => NibblesUtil.assertNibbleArray(Buffer.from([-1])),
+      (): void => Nibbles.assertNibbleArray(Buffer.from([-1])),
       'An array is not a nibble array.',
     );
   });
 
   it('Reverts on an input bigger than 0x0F.', (): void => {
     assert.throws(
-      (): void => NibblesUtil.assertNibbleArray(Buffer.from([0xF + 1])),
+      (): void => Nibbles.assertNibbleArray(Buffer.from([0xF + 1])),
       'An array is not a nibble array.',
     );
   });
 
   it('Checks an empty array.', (): void => {
     assert.doesNotThrow(
-      (): void => NibblesUtil.assertNibbleArray(Buffer.alloc(0)),
+      (): void => Nibbles.assertNibbleArray(Buffer.alloc(0)),
     );
   });
 
   it('Checks a valid array.', (): void => {
     assert.doesNotThrow(
-      (): void => NibblesUtil.assertNibbleArray(Buffer.from([
+      (): void => Nibbles.assertNibbleArray(Buffer.from([
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
       ])),
     );
