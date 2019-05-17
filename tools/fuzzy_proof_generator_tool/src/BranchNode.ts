@@ -45,7 +45,10 @@ class BranchNode extends NodeBase {
   public constructor(keys: Buffer[], value: Buffer) {
     super(NodeType.Branch);
 
-    assert(keys.length === 16);
+    assert(
+      keys.length === 16,
+      'Branch node\'s keys length is not 16.',
+    );
 
     this.keys = keys;
     this.value = value;
@@ -62,7 +65,10 @@ class BranchNode extends NodeBase {
    */
   public raw(): Buffer[] {
     const raw: Buffer[] = [...this.keys, this.value];
-    assert(raw.length === 17);
+    assert(
+      raw.length === 17,
+      'Branch node\'s raw representation length is not 17.',
+    );
     return raw;
   }
 }

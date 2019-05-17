@@ -25,8 +25,13 @@ const FuzzyProofGenerator = require('../../src/FuzzyProofGenerator').default;
 
 const MerklePatriciaProof = artifacts.require('./MerklePatriciaProof.sol');
 
-async function verify(pattern, pathMaxLength, merklePatriciaLib) {
-  const proofData = FuzzyProofGenerator.generateByPattern(pattern, pathMaxLength);
+const TEST_PATH_LENGTHS = [1, 2, 3, 5, 8, 13, 21, 34, 55];
+const TEST_VALUE_LENGTHS = [1, 2, 3, 5, 8, 13, 21, 34, 55];
+
+async function verifyProof(pattern, pathMaxLength, valueMaxLength, merklePatriciaLib) {
+  const proofData = FuzzyProofGenerator.generateByPattern(
+    pattern, pathMaxLength, valueMaxLength,
+  );
 
   const proofStatus = await merklePatriciaLib.verify.call(
     `0x${proofData.value.toString('hex')}`,
@@ -47,26 +52,42 @@ async function verify(pattern, pathMaxLength, merklePatriciaLib) {
   assert.strictEqual(proofStatus, true);
 }
 
-describe('FuzzyProofGenerator::generate', () => {
+async function verifyProofs(pattern, merklePatriciaLib) {
+  for (let pathMaxLength = 0; pathMaxLength < TEST_PATH_LENGTHS.length; pathMaxLength += 1) {
+    for (let valueMaxLength = 0; valueMaxLength < TEST_VALUE_LENGTHS.length; valueMaxLength += 1) {
+      await verifyProof(pattern, pathMaxLength, valueMaxLength, merklePatriciaLib);
+    }
+  }
+}
+
+describe('FuzzyProofGenerator::generateByPattern', () => {
   let merklePatriciaLib;
 
   before(async () => {
     merklePatriciaLib = await MerklePatriciaProof.deployed();
   });
 
-  it('Verifies a pattern with length equal to 1.', async () => {
-    await verify('l', 1, merklePatriciaLib);
-  });
+  it('Pattern: l', async () => {
+    await verifyProofs('l', merklePatriciaLib);
+  }).timeout(0);
 
-  it('Verifies a pattern with length equal to 2.', async () => {
-    await verify('bl', 2, merklePatriciaLib);
-  });
+  it('Pattern: bl', async () => {
+    await verifyProofs('bl', merklePatriciaLib);
+  }).timeout(0);
 
-  it('Verifies a pattern with length equal to 5.', async () => {
-    await verify('ebebl', 5, merklePatriciaLib);
-  });
+  it('Pattern: ebb', async () => {
+    await verifyProofs('ebebl', merklePatriciaLib);
+  }).timeout(0);
 
-  it('Verifies a pattern with length equal to 40.', async () => {
-    await verify('bbebebbbebl', 40, merklePatriciaLib);
-  });
+  it('Pattern: ebebl', async () => {
+    await verifyProofs('ebebl', merklePatriciaLib);
+  }).timeout(0);
+
+  it('Pattern: eebebb', async () => {
+    await verifyProofs('ebebl', merklePatriciaLib);
+  }).timeout(0);
+
+  it('Pattern: bbebebbbebl', async () => {
+    await verifyProofs('bbebebbbebl', merklePatriciaLib);
+  }).timeout(0);
 });

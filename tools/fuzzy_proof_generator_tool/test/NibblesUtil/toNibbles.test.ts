@@ -16,26 +16,31 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../src/Util';
 
-describe('Util::encodeCompactExtensionPath', (): void => {
-  it('Reverts if a buffer\'s is empty.', (): void => {
-    assert.throws(
-      (): Buffer => Util.encodeCompactExtensionPath(Buffer.alloc(0)),
+import NibblesUtil from '../../src/NibblesUtil';
+
+describe('NibblesUtil::toNibbles', (): void => {
+  it('Checks an empty string conversion.', (): void => {
+    const nibbleArray: Buffer = NibblesUtil.toNibbles(Buffer.from(''));
+    assert.deepEqual(
+      nibbleArray,
+      Buffer.alloc(0),
     );
   });
 
-  it('Checks an odd-length buffer conversion.', (): void => {
+  it('Checks a one element string conversion.', (): void => {
+    const nibbleArray: Buffer = NibblesUtil.toNibbles(Buffer.from([0x64]));
     assert.deepEqual(
-      Util.encodeCompactExtensionPath(Buffer.from([1, 2, 3, 4, 5])),
-      Buffer.from(String.fromCharCode(0x11, 0x23, 0x45)),
+      nibbleArray,
+      Buffer.from([6, 4]),
     );
   });
 
-  it('Checks an even-length buffer conversion.', (): void => {
+  it('Checks a multielement string conversion.', (): void => {
+    const nibbleArray: Buffer = NibblesUtil.toNibbles(Buffer.from([0x63, 0x6F, 0x69, 0x6E]));
     assert.deepEqual(
-      Util.encodeCompactExtensionPath(Buffer.from([0, 1, 2, 3, 4, 5])),
-      Buffer.from(String.fromCharCode(0x00, 0x01, 0x23, 0x45)),
+      nibbleArray,
+      Buffer.from([6, 3, 6, 0xF, 6, 9, 6, 0xE]),
     );
   });
 });

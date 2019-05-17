@@ -16,25 +16,26 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../src/Util';
+import LeafNode from '../../src/LeafNode';
 
-describe('Util::encodeCompactLeafPath', (): void => {
-  it('Reverts if a buffer\'s is empty.', (): void => {
+describe('LeafNode::encodeCompact', (): void => {
+  it('Reverts if a buffer is empty.', (): void => {
     assert.throws(
-      (): Buffer => Util.encodeCompactLeafPath(Buffer.alloc(0)),
+      (): Buffer => LeafNode.encodeCompact(Buffer.alloc(0)),
+      'A nibble path to encode compact is empty.',
     );
   });
 
   it('Checks an odd-length buffer conversion.', (): void => {
     assert.deepEqual(
-      Util.encodeCompactLeafPath(Buffer.from([0xF, 1, 0xC, 0xB, 8])),
+      LeafNode.encodeCompact(Buffer.from([0xF, 1, 0xC, 0xB, 8])),
       Buffer.from([0x3F, 0x1C, 0xB8]),
     );
   });
 
   it('Checks an even-length buffer conversion.', (): void => {
     assert.deepEqual(
-      Util.encodeCompactLeafPath(Buffer.from([0, 0xF, 1, 0xC, 0xB, 8])),
+      LeafNode.encodeCompact(Buffer.from([0, 0xF, 1, 0xC, 0xB, 8])),
       Buffer.from([0x20, 0xF, 0x1C, 0xB8]),
     );
   });

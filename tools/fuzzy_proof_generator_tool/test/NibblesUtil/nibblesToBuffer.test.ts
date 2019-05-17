@@ -16,31 +16,39 @@
 
 import 'mocha';
 import { assert } from 'chai';
+import NibblesUtil from '../../src/NibblesUtil';
 
-import Util from '../../src/Util';
+describe('NibblesUtil::nibblesToBuffer', (): void => {
+  it('Reverts if a buffer\'s length is odd.', (): void => {
+    assert.throws(
+      (): Buffer => NibblesUtil.nibblesToBuffer(Buffer.from([1])),
+      'Nibbles array\'s length is odd.',
+    );
 
-describe('Util::toNibbles', (): void => {
-  it('Checks an empty string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.toNibbles(Buffer.from(''));
+    assert.throws(
+      (): Buffer => NibblesUtil.nibblesToBuffer(Buffer.from([1, 2, 3])),
+      'Nibbles array\'s length is odd.',
+    );
+  });
+
+  it('Checks an empty buffer conversion.', (): void => {
     assert.deepEqual(
-      nibbleArray,
+      NibblesUtil.nibblesToBuffer(Buffer.alloc(0)),
       Buffer.alloc(0),
     );
   });
 
-  it('Checks an one element string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.toNibbles(Buffer.from('d'));
+  it('Checks a one element buffer conversion.', (): void => {
     assert.deepEqual(
-      nibbleArray,
-      Buffer.from([6, 4]),
+      NibblesUtil.nibblesToBuffer(Buffer.from([6, 4])),
+      Buffer.from('d'),
     );
   });
 
   it('Checks a multielement string conversion.', (): void => {
-    const nibbleArray: Buffer = Util.toNibbles(Buffer.from('coin'));
     assert.deepEqual(
-      nibbleArray,
-      Buffer.from([6, 3, 6, 0xF, 6, 9, 6, 0xE]),
+      NibblesUtil.nibblesToBuffer(Buffer.from([6, 3, 6, 0xF, 6, 9, 6, 0xE])),
+      Buffer.from('coin'),
     );
   });
 });

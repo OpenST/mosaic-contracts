@@ -22,60 +22,72 @@ describe('FuzzyProofGenerator::assertPatternValidity', (): void => {
   it('Reverts if a pattern is empty.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity(''),
+      'The pattern is empty.',
     );
   });
 
   it('Reverts if a pattern ends with an extension node.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('e'),
+      'Pattern ends with an extension node.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('be'),
+      'Pattern ends with an extension node.',
     );
   });
 
   it('Reverts if a pattern contains two consecutive extension nodes.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('eel'),
+      'Pattern contains two consecutive extension nodes.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('beel'),
+      'Pattern contains two consecutive extension nodes.',
     );
   });
 
   it('Reverts if a leaf node follows an extension nodes.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('el'),
+      'Pattern contains a leaf node after an extension node.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('bel'),
+      'Pattern contains a leaf node after an extension node.',
     );
   });
 
   it('Reverts if a leaf node is not the last one in pattern.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('lbb'),
+      'Pattern does not end with leaf node.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('blbb'),
+      'Pattern does not end with leaf node.',
     );
   });
 
   it('Reverts if a pattern does not end with two branch nodes.', (): void => {
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('b'),
+      'Pattern can end with double branch node only.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('eb'),
+      'Pattern can end with double branch node only.',
     );
 
     assert.throws(
       (): void => FuzzyProofGenerator.assertPatternValidity('beb'),
+      'Pattern can end with double branch node only.',
     );
   });
 

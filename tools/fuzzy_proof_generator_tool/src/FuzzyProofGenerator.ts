@@ -15,7 +15,7 @@
 //
 // ----------------------------------------------------------------------------
 
-import Util from './Util';
+import NibblesUtil from './NibblesUtil';
 import NodeBase from './NodeBase';
 import BranchNode from './BranchNode';
 import ExtensionNode from './ExtensionNode';
@@ -60,8 +60,8 @@ const FuzzyProofGenerator = {
 
     const endingWithBranchNode: boolean = (pattern[pattern.length - 1] === 'b');
 
-    const nibblePath: Buffer = Util.toNibbles(path);
-    Util.assertNibbleArray(nibblePath);
+    const nibblePath: Buffer = NibblesUtil.toNibbles(path);
+    NibblesUtil.assertNibbleArray(nibblePath);
     assert(nibblePath.length >= pattern.length - (endingWithBranchNode ? 1 : 0));
 
     const rlpValue: Buffer = rlp.encode(value);
@@ -130,15 +130,12 @@ const FuzzyProofGenerator = {
   },
 
   processLeaf(pattern: string, index: number): void {
-    assert(index > 0);
     if (index !== pattern.length) {
       throw new Error('Pattern does not end with leaf node.');
     }
   },
 
   processBranch(pattern: string, index: number): void {
-    assert(index > 0);
-
     if (index === pattern.length) {
       if (pattern.length === 1 || pattern[index - 2] !== 'b') {
         throw new Error('Pattern can end with double branch node only.');
@@ -166,9 +163,7 @@ const FuzzyProofGenerator = {
   },
 
   processExtension(pattern: string, index: number): void {
-    assert(index > 0);
-
-    if (pattern.length === 0) {
+    if (pattern.length === index) {
       throw new Error('Pattern ends with an extension node.');
     }
 
@@ -296,7 +291,7 @@ const FuzzyProofGenerator = {
     const pickedRandoms: number[] = [];
 
     for (let i = 0; i < numberCount - 1; i += 1) {
-      let x: number = -1;
+      let x = -1;
       do {
         x = lowerBoundInclusive + Math.floor(Math.random() * upperBoundInclusive);
       } while (pickedRandoms.includes(x));
@@ -351,7 +346,7 @@ const FuzzyProofGenerator = {
     const rIndexes: number[] = [];
 
     for (let i = 0; i < rAmount; i += 1) {
-      let x: number = -1;
+      let x = -1;
       do {
         x = Math.floor(Math.random() * 16);
         assert(x >= 0 && x < 16);
@@ -364,7 +359,7 @@ const FuzzyProofGenerator = {
 
     for (let i = 0; i < rIndexes.length; i += 1) {
       assert(rIndexes[i] >= 0 && rIndexes[i] < 16);
-      branchKeysData[rIndexes[i]] = Util.generateRandomKeccak256();
+      branchKeysData[rIndexes[i]] = this.generateRandomKeccak256();
     }
 
     return branchKeysData;
@@ -459,6 +454,14 @@ const FuzzyProofGenerator = {
 
     return nodes;
   },
+
+  /** Generates random keccak256 value. */
+  generateRandomKeccak256(): Buffer {
+    return ethUtil.keccak256(
+      crypto.randomBytes(256),
+    );
+  },
+
 };
 
 export { FuzzyProofGenerator as default };

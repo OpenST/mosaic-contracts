@@ -34,15 +34,6 @@ async function verify(pattern, path, merklePatriciaLib) {
     `0x${proofData.root.toString('hex')}`,
   );
 
-  if (!proofStatus) {
-    console.log(
-      `0x${proofData.value.toString('hex')}`,
-      `0x${proofData.encodedPath.toString('hex')}`,
-      `0x${proofData.rlpParentNodes.toString('hex')}`,
-      `0x${proofData.root.toString('hex')}`,
-    );
-  }
-
   assert.strictEqual(proofStatus, true);
 }
 

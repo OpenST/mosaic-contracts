@@ -16,7 +16,7 @@
 
 import NodeType from './Types';
 import NodeBase from './NodeBase';
-import Util from './Util';
+import NibblesUtil from './NibblesUtil';
 
 import assert = require('assert');
 
@@ -48,10 +48,18 @@ class ExtensionNode extends NodeBase {
   public constructor(nibblePath: Buffer, key: Buffer) {
     super(NodeType.Extension);
 
-    assert(nibblePath.length !== 0);
-    assert(key.length !== 0);
+    assert(
+      nibblePath.length !== 0,
+      'Extension node\'s nibble path is empty.',
+    );
+    assert(
+      key.length !== 0,
+      'Extension node\'s key is empty.',
+    );
 
-    Util.assertNibbleArray(nibblePath);
+    NibblesUtil.assertNibbleArray(
+      nibblePath,
+    );
 
     this.nibblePath = nibblePath;
     this.key = key;
@@ -67,9 +75,32 @@ class ExtensionNode extends NodeBase {
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
    */
   public raw(): Buffer[] {
-    const encodedPath: Buffer = Util.encodeCompactExtensionPath(this.nibblePath);
+    const encodedPath: Buffer = ExtensionNode.encodeCompact(this.nibblePath);
     const raw: Buffer[] = [encodedPath, this.key];
     return raw;
+  }
+
+  /**
+   * Encodes a nibble buffer into a compact path encoding for extension node's path.
+   *
+   * @remark
+   * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#specification-compact-encoding-of-hex-sequence-with-optional-terminator
+   */
+  public static encodeCompact(nibblePath: Buffer): Buffer {
+    assert(
+      nibblePath.length !== 0,
+      'A nibble path to encode compact is empty.',
+    );
+
+    const evenLength: boolean = (nibblePath.length % 2 === 0);
+    if (evenLength) {
+      return NibblesUtil.nibblesToBuffer(
+        Buffer.concat([Buffer.from([0, 0]), nibblePath]),
+      );
+    }
+    return NibblesUtil.nibblesToBuffer(
+      Buffer.concat([Buffer.from([1]), nibblePath]),
+    );
   }
 }
 

@@ -16,37 +16,27 @@
 
 import 'mocha';
 import { assert } from 'chai';
-import Util from '../../src/Util';
+import ExtensionNode from '../../src/ExtensionNode';
 
-describe('Util::nibblesToBuffer', (): void => {
-  it('Reverts if a buffer\'s length is odd.', (): void => {
+describe('ExtensionNode::encodeCompact', (): void => {
+  it('Reverts if a buffer is empty.', (): void => {
     assert.throws(
-      (): Buffer => Util.nibblesToBuffer(Buffer.from([1])),
-    );
-
-    assert.throws(
-      (): Buffer => Util.nibblesToBuffer(Buffer.from([1, 2, 3])),
+      (): Buffer => ExtensionNode.encodeCompact(Buffer.alloc(0)),
+      'A nibble path to encode compact is empty.',
     );
   });
 
-  it('Checks an empty buffer conversion.', (): void => {
+  it('Checks an odd-length buffer conversion.', (): void => {
     assert.deepEqual(
-      Util.nibblesToBuffer(Buffer.alloc(0)),
-      Buffer.alloc(0),
+      ExtensionNode.encodeCompact(Buffer.from([1, 2, 3, 4, 5])),
+      Buffer.from(String.fromCharCode(0x11, 0x23, 0x45)),
     );
   });
 
-  it('Checks an one element buffer conversion.', (): void => {
+  it('Checks an even-length buffer conversion.', (): void => {
     assert.deepEqual(
-      Util.nibblesToBuffer(Buffer.from([6, 4])),
-      Buffer.from('d'),
-    );
-  });
-
-  it('Checks a multielement string conversion.', (): void => {
-    assert.deepEqual(
-      Util.nibblesToBuffer(Buffer.from([6, 3, 6, 0xF, 6, 9, 6, 0xE])),
-      Buffer.from('coin'),
+      ExtensionNode.encodeCompact(Buffer.from([0, 1, 2, 3, 4, 5])),
+      Buffer.from(String.fromCharCode(0x00, 0x01, 0x23, 0x45)),
     );
   });
 });
