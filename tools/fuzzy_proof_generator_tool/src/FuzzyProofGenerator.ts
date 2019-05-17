@@ -16,7 +16,8 @@
 
 import Nibbles from './Nibbles';
 import NodeBase from './NodeBase';
-import BranchNode from './BranchNode';
+import { BranchNode } from './BranchNode';
+import { BranchKeys } from './BranchNode';
 import ExtensionNode from './ExtensionNode';
 import LeafNode from './LeafNode';
 
@@ -95,7 +96,7 @@ const FuzzyProofGenerator = {
       pathData.push(Buffer.from([]));
     }
 
-    const branchesKeysData: Buffer[][] = this.generateRandomBranchesKeysData(
+    const branchesKeysData: BranchKeys[] = this.generateRandomBranchesKeysData(
       pattern.split('b').length - 1,
     );
 
@@ -156,6 +157,11 @@ const FuzzyProofGenerator = {
   processBranch(pattern: string, index: number): void {
     if (index === pattern.length) {
       if (pattern.length === 1 || pattern[index - 2] !== 'b') {
+
+        // The verification library we are using in our project would accept
+        // as a valid proof only a path ending with double 'b' (putting aside
+        // an ending leaf node, as it's always allowed).
+
         throw new Error('Pattern can end with double branch node only.');
       }
       return;
@@ -358,10 +364,10 @@ const FuzzyProofGenerator = {
    *
    * @param branchNodeAmount An amount of branch nodes to generate data for.
    */
-  generateRandomBranchesKeysData(branchNodeAmount: number): Buffer[][] {
+  generateRandomBranchesKeysData(branchNodeAmount: number): BranchKeys[] {
     assert(branchNodeAmount >= 0);
 
-    const branchesKeysData: Buffer[][] = [];
+    const branchesKeysData: BranchKeys[] = [];
     for (let i = 0; i < branchNodeAmount; i += 1) {
       branchesKeysData.push(this.generateRandomBranchKeysData());
     }
@@ -418,7 +424,7 @@ const FuzzyProofGenerator = {
     pattern: string,
     value: Buffer,
     nibblePathData: Buffer[],
-    branchKeysData: Buffer[][],
+    branchKeysData: BranchKeys[],
   ): NodeBase[] {
     assert(pattern.length !== 0);
     assert(value.length !== 0);

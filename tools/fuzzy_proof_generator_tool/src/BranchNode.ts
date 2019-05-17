@@ -19,11 +19,14 @@ import NodeBase from './NodeBase';
 
 import assert = require('assert');
 
+type BranchKeys = Buffer[];
+
 /** Represents a branch node of Modified Merkle Patricia Trie. */
 class BranchNode extends NodeBase {
+
   /* Storage */
 
-  public readonly keys: Buffer[];
+  public readonly keys: BranchKeys;
 
   public readonly value: Buffer;
 
@@ -42,7 +45,7 @@ class BranchNode extends NodeBase {
    * @remarks
    * See: https://github.com/ethereum/wiki/wiki/Patricia-Tree#optimization
    */
-  public constructor(keys: Buffer[], value: Buffer) {
+  public constructor(keys: BranchKeys, value: Buffer) {
     super(NodeType.Branch);
 
     assert(
@@ -73,4 +76,7 @@ class BranchNode extends NodeBase {
   }
 }
 
-export { BranchNode as default };
+export {
+  BranchKeys,
+  BranchNode,
+};
