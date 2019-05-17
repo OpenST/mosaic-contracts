@@ -55,7 +55,12 @@ async function verifyProof(pattern, pathMaxLength, valueMaxLength, merklePatrici
 async function verifyProofs(pattern, merklePatriciaLib) {
   for (let i = 0; i < TEST_PATH_LENGTHS.length; i += 1) {
     for (let j = 0; j < TEST_VALUE_LENGTHS.length; j += 1) {
-      await verifyProof(pattern, TEST_PATH_LENGTHS[i], TEST_VALUE_LENGTHS[j], merklePatriciaLib);
+      await verifyProof(
+        pattern,
+        Math.max(TEST_PATH_LENGTHS[i], Math.ceil(pattern.length / 2)),
+        Math.max(TEST_VALUE_LENGTHS[j], Math.ceil(pattern.length / 2)),
+        merklePatriciaLib
+      );
     }
   }
 }
