@@ -1,0 +1,3 @@
+node_modules/*
+tools/fuzzy_proof_generator_tool/src/*.js
+tools/fuzzy_proof_generator_tool/src/*.js.map

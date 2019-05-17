@@ -36,3 +36,7 @@ dist/contracts.json
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+# Compiled js artifacts.
+tools/fuzzy_proof_generator_tool/src/*.js
+tools/fuzzy_proof_generator_tool/src/*.js.map
