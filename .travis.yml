@@ -1,6 +1,11 @@
 dist: trusty
 language: node_js
 sudo: required
+env:
+  - TEST_SUITE="test"
+  - TEST_SUITE="test:integration"
+  - TEST_SUITE="test:tools"
+  - TEST_SUITE="build_package"
 branches:
   only:
   - master
@@ -27,11 +32,6 @@ before_script:
   - npm run compile
   - npm run compile:ts
 script:
-  - npm run test
-  - npm run test:deployment_tool
-  - npm run test:integration
-  - npm run test:generate_proof
-  - npm run test:fuzzy_proof_generator
-  - npm run build-package
+  - npm run ${TEST_SUITE}
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
