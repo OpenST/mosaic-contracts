@@ -21,6 +21,8 @@
 const assert = require('assert');
 const BN = require('bn.js');
 
+const Utils = require('../../../test/test_lib/utils.js');
+
 /**
  * Redeem Request object contains all the properties for redeem and unStake.
  * @typedef {Object} RedeemRequest
@@ -70,15 +72,16 @@ class ProgressRedeemAssertion {
    * @param {RedeemRequest} redeemRequest Redeem request parameter.
    * @param {BN} transactionFees Transaction fees in redeem request.
    * @param {Balances} initialBalances Initial baseToken and token balances.
+   * @param {Boolean} proofProgress `true` if progress is with proof.
    */
-  async verify(event, redeemRequest, transactionFees, initialBalances) {
+  async verify(event, redeemRequest, transactionFees, initialBalances, proofProgress) {
     await this._assertBalancesForRedeem(
       redeemRequest,
       initialBalances,
       transactionFees,
     );
 
-    ProgressRedeemAssertion._assertProgressRedeemEvent(event, redeemRequest);
+    ProgressRedeemAssertion._assertProgressRedeemEvent(event, redeemRequest, proofProgress);
   }
 
   /**
@@ -159,9 +162,10 @@ class ProgressRedeemAssertion {
    * Assert event after Redeem method.
    * @param {Object} event Event object after decoding.
    * @param {RedeemRequest} redeemRequest Redeem request parameters.
+   * @param {Boolean} proofProgress `true` if progress is with proof.
    * @private
    */
-  static _assertProgressRedeemEvent(event, redeemRequest) {
+  static _assertProgressRedeemEvent(event, redeemRequest, proofProgress) {
     const eventData = event.RedeemProgressed;
 
     assert.strictEqual(
@@ -192,15 +196,26 @@ class ProgressRedeemAssertion {
 
     assert.strictEqual(
       eventData._proofProgress,
-      false,
-      'Proof progress flag should be false.',
+      proofProgress,
+      `Proof progress flag should be ${proofProgress}.`,
     );
 
-    assert.strictEqual(
-      eventData._unlockSecret,
-      redeemRequest.unlockSecret,
-      'Unlock secret must match.',
-    );
+    // If the progress is done with proof instead of unlock secret, then the
+    // unlock secret emitted in the event will have bytes32(0) value.
+    if (proofProgress === true) {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        Utils.ZERO_BYTES32,
+        `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
+      );
+    }
+    else {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        redeemRequest.unlockSecret,
+        'Unlock secret must match.',
+      );
+    }
   }
 
   /**
