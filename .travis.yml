@@ -5,7 +5,7 @@ env:
   - TEST_SUITE="test"
   - TEST_SUITE="test:integration"
   - TEST_SUITE="test:tools"
-  - TEST_SUITE="build_package"
+  - TEST_SUITE="build-package"
 branches:
   only:
   - master
