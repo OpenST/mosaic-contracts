@@ -214,7 +214,7 @@ describe('Revert Redeem', async () => {
     const { proofData, blockNumber } = await proveCoGateway();
     redeemRequest.blockHeight = new BN(blockNumber);
 
-    let tx = await gateway.confirmRedeemIntent(
+    const tx = await gateway.confirmRedeemIntent(
       redeemRequest.redeemer,
       redeemRequest.nonce,
       redeemRequest.beneficiary,
@@ -290,7 +290,7 @@ describe('Revert Redeem', async () => {
     const { proofData, blockNumber } = await proveGateway();
     redeemRequest.blockHeight = new BN(blockNumber);
 
-    let tx = await cogateway.progressRevertRedeem(
+    const tx = await cogateway.progressRevertRedeem(
       redeemRequest.messageHash,
       redeemRequest.blockHeight,
       proofData.storageProof[0].serializedProof,
@@ -304,7 +304,6 @@ describe('Revert Redeem', async () => {
       initialBalances,
     );
   });
-
 });
 
 /**

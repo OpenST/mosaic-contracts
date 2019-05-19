@@ -120,8 +120,8 @@ class RevertRedeemAssertion {
       expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.cogateway),
       true,
       `CoGateway base token balance must be ${
-          expectedCoGatewayBaseTokenBalance.toString(10)
-        } instead of ${finalBalances.baseToken.cogateway.toString(10)}`,
+        expectedCoGatewayBaseTokenBalance.toString(10)
+      } instead of ${finalBalances.baseToken.cogateway.toString(10)}`,
     );
 
     const expectedCoGatewayTokenBalance = initialBalances.token.cogateway;
@@ -131,8 +131,8 @@ class RevertRedeemAssertion {
       expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
       true,
       `CoGateway token balance must be ${
-          expectedCoGatewayBaseTokenBalance.toString(10)
-        } instead of ${finalBalances.token.cogateway.toString(10)}`,
+        expectedCoGatewayBaseTokenBalance.toString(10)
+      } instead of ${finalBalances.token.cogateway.toString(10)}`,
     );
 
     // Assert redeemer balance
@@ -144,8 +144,8 @@ class RevertRedeemAssertion {
       expectedRedeemerBaseTokenBalance.eq(finalBalances.baseToken.redeemer),
       true,
       `Redeemer base token balance must be ${
-          expectedRedeemerBaseTokenBalance.toString(10)
-        } instead of ${finalBalances.baseToken.redeemer.toString(10)}`,
+        expectedRedeemerBaseTokenBalance.toString(10)
+      } instead of ${finalBalances.baseToken.redeemer.toString(10)}`,
     );
 
     const expectedRedeemerTokenBalance = initialBalances.token.redeemer;
@@ -154,8 +154,8 @@ class RevertRedeemAssertion {
       expectedRedeemerTokenBalance.eq(finalBalances.token.redeemer),
       true,
       `Redeemer token balance must be ${
-          expectedRedeemerTokenBalance.toString(10)
-        } instead of ${finalBalances.token.redeemer.toString(10)}`,
+        expectedRedeemerTokenBalance.toString(10)
+      } instead of ${finalBalances.token.redeemer.toString(10)}`,
     );
 
     // Assert burner balance
@@ -165,8 +165,8 @@ class RevertRedeemAssertion {
       expectedBurnerBaseTokenBalance.eq(finalBalances.baseToken.burner),
       true,
       `Burner base token balance must be ${
-          expectedBurnerBaseTokenBalance.toString(10)
-        } instead of ${finalBalances.baseToken.burner.toString(10)}`,
+        expectedBurnerBaseTokenBalance.toString(10)
+      } instead of ${finalBalances.baseToken.burner.toString(10)}`,
     );
 
     const expectedBurnerTokenBalance = initialBalances.token.burner;
@@ -175,8 +175,8 @@ class RevertRedeemAssertion {
       expectedBurnerTokenBalance.eq(finalBalances.token.burner),
       true,
       `Burner token balance must be ${
-          expectedBurnerTokenBalance.toString(10)
-        } instead of ${finalBalances.token.burner.toString()}`,
+        expectedBurnerTokenBalance.toString(10)
+      } instead of ${finalBalances.token.burner.toString()}`,
     );
   }
 
@@ -193,29 +193,29 @@ class RevertRedeemAssertion {
       eventData._messageHash,
       redeemRequest.messageHash,
       `Expected message hash ${
-          eventData._messageHash
-        } is different from actual message hash ${redeemRequest.messageHash}`,
+        eventData._messageHash
+      } is different from actual message hash ${redeemRequest.messageHash}`,
     );
     assert.strictEqual(
       eventData._redeemer,
       redeemRequest.redeemer,
       `Expected redeemer address ${
-          eventData._redeemer
-        } is different from actual message hash ${redeemRequest.redeemer}`,
+        eventData._redeemer
+      } is different from actual message hash ${redeemRequest.redeemer}`,
     );
     assert.strictEqual(
       eventData._amount.eq(redeemRequest.amount),
       true,
       `Expected redeem amount ${
-          eventData._amount
-        } is different from actual redeem amount ${redeemRequest.amount}`,
+        eventData._amount
+      } is different from actual redeem amount ${redeemRequest.amount}`,
     );
     assert.strictEqual(
       eventData._redeemerNonce.eq(redeemRequest.nonce),
       true,
       `Expected redeemer nonce ${
-          eventData._redeemerNonce
-        } is different from actual redeemer nonce ${redeemRequest.nonce}`,
+        eventData._redeemerNonce
+      } is different from actual redeemer nonce ${redeemRequest.nonce}`,
     );
   }
 

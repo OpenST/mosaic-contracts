@@ -208,8 +208,7 @@ class ProgressRedeemAssertion {
         Utils.ZERO_BYTES32,
         `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
       );
-    }
-    else {
+    } else {
       assert.strictEqual(
         eventData._unlockSecret,
         redeemRequest.unlockSecret,

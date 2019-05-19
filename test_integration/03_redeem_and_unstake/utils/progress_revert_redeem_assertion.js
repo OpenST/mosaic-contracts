@@ -166,8 +166,8 @@ class ProgressRevertRedeemAssertion {
       expectedBurnerBaseTokenBalance.eq(finalBalances.baseToken.burner),
       true,
       `Burner base token balance must be ${
-          expectedBurnerBaseTokenBalance.toString(10)
-        } instead of ${finalBalances.baseToken.burner.toString(10)}`,
+        expectedBurnerBaseTokenBalance.toString(10)
+      } instead of ${finalBalances.baseToken.burner.toString(10)}`,
     );
 
     const expectedBurnerTokenBalance = initialBalances.token.burner;
@@ -176,8 +176,8 @@ class ProgressRevertRedeemAssertion {
       expectedBurnerTokenBalance.eq(finalBalances.token.burner),
       true,
       `Burner token balance must be ${
-          expectedBurnerTokenBalance.toString(10)
-        } instead of ${finalBalances.token.burner.toString()}`,
+        expectedBurnerTokenBalance.toString(10)
+      } instead of ${finalBalances.token.burner.toString()}`,
     );
   }
 
