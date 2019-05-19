@@ -193,7 +193,7 @@ class RevertStakeAssertion {
     assert.strictEqual(
       eventData._staker,
       stakeRequest.staker,
-      `Expected message hash ${
+      `Expected staker address ${
         eventData._staker
       } is different from actual message hash ${stakeRequest.staker}`,
     );
