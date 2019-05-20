@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "./ComposerInterface.sol";
-import "./EIP20Gateway.sol";
+import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 
 
@@ -120,7 +120,7 @@ contract StakerProxy {
         uint256 _gasLimit,
         uint256 _nonce,
         bytes32 _hashLock,
-        EIP20Gateway _gateway
+        EIP20GatewayInterface _gateway
     )
         external
         onlyComposer
@@ -189,7 +189,7 @@ contract StakerProxy {
      * @param _gateway The gateway to approve the transfer for.
      * @param _amount The amount to stake.
      */
-    function approveTransfers(EIP20Gateway _gateway, uint256 _amount) private {
+    function approveTransfers(EIP20GatewayInterface _gateway, uint256 _amount) private {
         EIP20Interface valueToken = _gateway.valueToken();
         valueToken.approve(address(_gateway), _amount);
 
