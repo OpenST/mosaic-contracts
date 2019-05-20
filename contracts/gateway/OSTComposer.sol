@@ -24,11 +24,17 @@ import "../utilitytoken/contracts/organization/contracts/Organized.sol";
 import "./StakerProxy.sol";
 import "../lib/GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * OSTComposer contract facilitates the staker to get the OSTPrime on sidechain.
  */
 contract OSTComposer is Organized {
+
+     /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Constants */
 
@@ -38,14 +44,11 @@ contract OSTComposer is Organized {
         )
     );
 
-    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(address verifyingContract)"
-    );
 
     /* Events */
 
     event StakeRequested(
-        bytes32 stakeRequestHash
+        bytes32 indexed stakeRequestHash
     );
 
 
@@ -70,10 +73,10 @@ contract OSTComposer is Organized {
     /* Stores StakerProxy contract address for the staker */
     mapping (address => StakerProxy) public stakerProxies;
 
-    /* Stores */
-    mapping (address => bytes32) public stakeRequestHashes; //TODO : may not be needed
+    /* Stores number of active request to gateways per staker */
+    mapping(address => uint256) public activeGatewayPerStaker;
 
-    /* */
+    /* Stores stake request per stake request hashes */
     mapping (bytes32 => StakeRequest) public stakeRequests;
 
 
@@ -97,11 +100,12 @@ contract OSTComposer is Organized {
     /* External Functions */
 
     /**
-     * @notice Initiates the stake process. In order to stake, the stake and
-     *         bounty amounts must first be transferred to the OSTComposer.
-     *         Staked amount is then transferred to the respective stakerproxy
-     *         contract. Bounty amount is also transferred to the stakerproxy
-     *         contract of the staker.
+     * @notice Staker calls the method to show its intention of staking. In order
+     *         to stake, the stake and bounty amounts must first be transferred
+     *         to the OSTComposer. Staked amount is then transferred to the
+     *         respective stakerproxy contract. Bounty amount is also transferred
+     *         to the stakerproxy contract of the staker. Staker should approve
+     *         OSTComposer for token transfer.
      *
      * @param _gateway Address of the gateway to stake.
      * @param _amount Amount that is to be staked.
@@ -115,7 +119,7 @@ contract OSTComposer is Organized {
      * @return stakeRequestHash_ Message hash is unique for each request.
      */
     function requestStake(
-        address _gateway,
+        GatewayInterface _gateway,
         uint256 _amount,
         address _beneficiary,
         uint256 _gasPrice,
@@ -125,6 +129,7 @@ contract OSTComposer is Organized {
         external
         returns (bytes32 stakeRequestHash_)
     {
+        // store bounty as well
         require(
             _amount > uint256(0),
             "Stake amount must not be zero."
@@ -134,15 +139,15 @@ contract OSTComposer is Organized {
             "Beneficiary address must not be zero."
         );
 
-        bytes32 stakerGateway = stakerToGateway[msg.sender][_gateway];
+        bytes32 stakerGateway = stakerToGateway[msg.sender][address(_gateway)];
 
         require(
             stakerGateway == bytes32(0),
             "Request for this gateway is already in process"
         );
 
-        stakeRequestHash_ = hashStakeRequest( // TODO: EIP-712
-                                        _gateway,
+        stakeRequestHash_ = hashStakeRequest(
+                                        address(_gateway),
                                         _amount,
                                         msg.sender,
                                         _beneficiary,
@@ -152,9 +157,11 @@ contract OSTComposer is Organized {
                                     );
 
 
-        stakerToGateway[msg.sender][_gateway] = stakeRequestHash_;
+        stakerToGateway[msg.sender][address(_gateway)] = stakeRequestHash_;
 
         StakerProxy stakerProxy = stakerProxies[msg.sender];
+
+        activeGatewayPerStaker[msg.sender].add(1);
 
         if(address(stakerProxy) == address(0)) {
             StakerProxy proxy = new StakerProxy(address(this), msg.sender);
@@ -180,7 +187,7 @@ contract OSTComposer is Organized {
             gasLimit: _gasLimit,
             nonce: _nonce,
             staker: msg.sender,
-            gateway: _gateway
+            gateway: address(_gateway)
         });
 
         address token = GatewayInterface(_gateway).token();
@@ -194,8 +201,17 @@ contract OSTComposer is Organized {
 
     }
 
-    // revisit it
-    // take removeProxyStaker into consideration
+    /**
+     * @notice Facilitator calls the method to initiate the stake process.Staked
+     *         amount bounty amount is then transferred to the respective
+     *         stakerproxy contract of the staker.
+     *
+     * @param _stakeRequestHash Unique hash for the stake request which is to be
+     *                          Processed.
+     * @param _hashLock Hashlock provided by the facilitator.
+     *
+     * @return messageHash_ Hash unique for each request.
+     */
     function acceptStakeRequest(
         bytes32 _stakeRequestHash,
         bytes32 _hashLock
@@ -230,14 +246,15 @@ contract OSTComposer is Organized {
         address token = gateway.token();
         StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
         require(
-            EIP20Interface(token).transferFrom(msg.sender, address(stakerProxy), stakeRequest.amount),
-            "bounty amount must be transferred to stakerProxy."
+            EIP20Interface(token).transfer(address(stakerProxy), stakeRequest.amount),
+            "Insufficient staked amount"
         );
 
         address baseToken = GatewayInterface(gateway).baseToken();
+
         require(
-            EIP20Interface(baseToken).transfer(address(stakerProxy), bounty),
-            "Stake amount must be transferred to stakerProxy."
+            EIP20Interface(baseToken).transferFrom(msg.sender, address(stakerProxy), bounty),
+            "Bounty amount must be transferred to stakerProxy."
         );
 
         messageHash_ = StakerProxy(stakerProxy).stake(
@@ -249,12 +266,11 @@ contract OSTComposer is Organized {
             _hashLock,
             stakeRequest.gateway
         );
-
     }
 
     /**
-     * It can only be called by Staker of the stake request. It deletes the
-     * previously requested stake request.
+     * @notice It can only be called by Staker of the stake request. It deletes the
+     *         previously requested stake request.
      *
      * @param _stakeRequestHash Hash of the stake request.
      *
@@ -267,19 +283,34 @@ contract OSTComposer is Organized {
         returns(bool success_)
     {
         StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
-        require(stakeRequest.staker == address(0),"Invalid stake request hash.");
-        require(stakeRequest.staker == msg.sender,"Only valid staker can revoke the stake request.");
+        require(
+            stakeRequest.staker == address(0),
+            "Invalid stake request hash."
+        );
+        require(
+            stakeRequest.staker == msg.sender,
+            "Only valid staker can revoke the stake request."
+        );
 
-        delete stakeRequestHashes[stakeRequest.staker];
+        activeGatewayPerStaker[msg.sender].sub(1);
+
         delete stakeRequests[_stakeRequestHash];
         delete stakerToGateway[stakeRequest.staker][stakeRequest.gateway];
+
+        address gateway = stakeRequest.gateway;
+        address token = GatewayInterface(gateway).token();
+
+        require(
+            EIP20Interface(token).transfer(stakeRequest.staker, stakeRequest.amount),
+            "Bounty amount must be transferred to staker proxy."
+        );
 
         success_ = true;
     }
 
     /**
-     * It can only be called by Facilitator. It deletes the previously requested
-     * stake request.
+     * @notice It can only be called by Facilitator. It deletes the previously requested
+     *         stake request.
      *
      * @param _stakeRequestHash Hash of the stake request.
      *
@@ -295,7 +326,8 @@ contract OSTComposer is Organized {
         StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
         require(stakeRequest.staker == address(0),"Invalid stake request hash.");
 
-        delete stakeRequestHashes[stakeRequest.staker];
+        activeGatewayPerStaker[msg.sender].sub(1);
+
         delete stakeRequests[_stakeRequestHash];
         delete stakerToGateway[stakeRequest.staker][stakeRequest.gateway];
 
@@ -303,31 +335,27 @@ contract OSTComposer is Organized {
     }
 
     /**
-     * It can only be called by StakerProxy contract of the staker. It deletes
-     * the StakerProxy contract of the staker.
+     * @notice It can only be called by StakerProxy contract of the staker. It deletes
+     *         the StakerProxy contract of the staker.
      *
      * @param _owner Owner of the StakerProxy contract.
      *
      * @return success_ `true` if StakerProxy contract of the staker is deleted.
      */
-    function removeStakerProxy(address _owner) external returns(bool success_)
+    function removeStakerProxy(
+        address _owner
+    )
+        external
+        returns(bool success_)
     {
 
         StakerProxy stakerProxy = stakerProxies[_owner];
         require(address(stakerProxy) == msg.sender, "Caller is invalid proxy address");
 
-        // verify if any stakeRequest is present
+        // Verify if any previous stake requests are pending.
+        require(activeGatewayPerStaker[_owner] == 0, "Stake request is active on gateways");
 
-        bytes32 activeStakeRequest = stakeRequestHashes[_owner];
-
-        StakeRequest storage stakeRequest = stakeRequests[activeStakeRequest];
-
-        require(
-            stakeRequest.staker != address(0),
-            "Stake request is in already active state"
-        );
-
-        // resetting the proxy address for the staker.
+        // Resetting the proxy address of the staker.
         delete stakerProxies[_owner];
         success_ = true;
 
@@ -337,7 +365,7 @@ contract OSTComposer is Organized {
     /* Private Functions */
 
     /**
-     *
+     * @notice It returns hashing of stake request as per EIP-712.
      */
     function hashStakeRequest(
         address _gateway,
@@ -363,22 +391,5 @@ contract OSTComposer is Organized {
             _nonce
         ));
     }
-
-//    function hashEIP712TypedData(
-//        bytes32 _structHash
-//    )
-//        private
-//        view
-//        returns (bytes32 eip712TypedDataHash_)
-//    {
-//        eip712TypedDataHash_ = keccak256(
-//            abi.encodePacked(
-//                "\x19",
-//                "\x01",
-//                domainSeparator,
-//                _structHash
-//            )
-//        );
-//    }
 
 }

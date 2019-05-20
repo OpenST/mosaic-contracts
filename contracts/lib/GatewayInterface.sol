@@ -1,13 +1,13 @@
 pragma solidity ^0.5.0;
 
-contract GatewayInterface { // make it interface
+interface GatewayInterface {
 
-    function getNonce(address _staker) public returns(uint256);
+    function getNonce(address _staker) external returns(uint256);
 
-    function token() public returns(address);
+    function token() external returns(address);
 
-    function baseToken() public returns(address);
+    function baseToken() external returns(address);
 
-    function bounty() public returns(uint256);
+    function bounty() external returns(uint256);
     
 }
