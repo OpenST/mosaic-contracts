@@ -1,7 +1,7 @@
 const patterns: string[] = [
   'l',
   'bl',
-  'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl',
+  'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl',
   'ebl',
   'bebl',
   'bbebbl',
@@ -10,6 +10,10 @@ const patterns: string[] = [
   'ebebl',
   'ebebebebebl',
   'bbebbebebebebbbebebl',
+  'bebb',
+  'bebebb',
+  'ebb',
+  'ebebebebbb',
 ];
 
 export { patterns as default };
