@@ -127,12 +127,13 @@ contract StakerProxy {
         mutexed
         returns (bytes32 messageHash_)
     {
-        approveTransfers(_gateway, _amount);
         uint256 nonce = _gateway.getNonce(address(this));
         require(
             nonce == _nonce,
             "Nonce must match nonce expected by gateway."
         );
+
+        approveTransfers(_gateway, _amount);
 
         messageHash_ = _gateway.stake(
             _amount,
