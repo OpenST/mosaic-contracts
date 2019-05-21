@@ -158,11 +158,12 @@ contract StakerProxy {
         uint256 _value
     )
         external
+        mutexed
         onlyOwner
     {
         require(
-            address(_token) != address(0),
-            "EIP20 token address is zero."
+            _to != address(0),
+            "Recipient may not be address zero."
         );
         require(
             _token.transfer(_to, _value),
