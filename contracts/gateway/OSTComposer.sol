@@ -242,18 +242,15 @@ contract OSTComposer is Organized {
         );
 
         StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
-        address staker = stakeRequest.staker;
         require(
-            staker != address(0),
+            stakeRequest.staker != address(0),
             "Stake request must exists."
         );
 
         EIP20GatewayInterface gateway = EIP20GatewayInterface(stakeRequest.gateway);
 
-        StakerProxy stakerProxy = stakerProxies[staker];
+        StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
 
-        delete stakeRequests[_stakeRequestHash];
-        delete stakeRequestHashes[stakeRequest.staker][stakeRequest.gateway];
         EIP20Interface token = gateway.valueToken();
         require(
             token.transfer(address(stakerProxy), stakeRequest.amount),
@@ -276,6 +273,9 @@ contract OSTComposer is Organized {
             _hashLock,
             stakeRequest.gateway
         );
+
+        delete stakeRequests[_stakeRequestHash];
+        delete stakeRequestHashes[stakeRequest.staker][stakeRequest.gateway];
     }
 
     /**
