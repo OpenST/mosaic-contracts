@@ -173,7 +173,8 @@ contract StakerProxy {
 
     /**
      * @notice Destroys this contract. Make sure that you use `transferToken`
-     *         to transfer all remaining token balance of this contract.
+     *         to transfer all remaining token balance of this contract before
+     *         calling this method.
      */
     function selfDestruct() external onlyOwner {
         composer.removeStakerProxy(owner);

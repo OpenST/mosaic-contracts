@@ -57,7 +57,7 @@ interface EIP20GatewayInterface {
     /**
      * @notice Get the nonce for the given account address.
      *
-     * @param _account Account address for which the nonce is to fetched.
+     * @param _account Account address for which the nonce is to be fetched.
      *
      * @return The nonce.
      */

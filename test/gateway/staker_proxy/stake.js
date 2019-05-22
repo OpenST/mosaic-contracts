@@ -77,63 +77,63 @@ contract('StakerProxy.stake()', (accounts) => {
     assert.strictEqual(
       (await spyGateway.gasPrice.call()).toString(10),
       gasPrice,
-      'The spy did not record the correct gas price staked',
+      'The spy did not record the correct gas price staked.',
     );
 
     assert.strictEqual(
       (await spyGateway.gasLimit.call()).toString(10),
       gasLimit,
-      'The spy did not record the correct gas limit staked',
+      'The spy did not record the correct gas limit staked.',
     );
 
     assert.strictEqual(
       (await spyGateway.nonce.call()).toString(10),
       nonce,
-      'The spy did not record the correct nonce staked',
+      'The spy did not record the correct nonce staked.',
     );
 
     assert.strictEqual(
       (await spyGateway.hashLock.call()),
       hashLock,
-      'The spy did not record the correct hash lock staked',
+      'The spy did not record the correct hash lock staked.',
     );
 
 
     assert.strictEqual(
       (await spyValueToken.approveFrom.call()),
       stakerProxy.address,
-      'The spy did not record the correct approval from',
+      'The spy did not record the correct approval from.',
     );
 
     assert.strictEqual(
       (await spyValueToken.approveTo.call()),
       spyGateway.address,
-      'The spy did not record the correct approval to',
+      'The spy did not record the correct approval to.',
     );
 
     assert.strictEqual(
       (await spyValueToken.approveAmount.call()).toString(10),
       amount,
-      'The spy did not record the correct approval amount',
+      'The spy did not record the correct approval amount.',
     );
 
-
+    // Below assertions concern the tokens:
     assert.strictEqual(
       (await spyBaseToken.approveFrom.call()),
       stakerProxy.address,
-      'The spy did not record the correct approval from',
+      'The spy did not record the correct approval from.',
     );
 
     assert.strictEqual(
       (await spyBaseToken.approveTo.call()),
       spyGateway.address,
-      'The spy did not record the correct approval to',
+      'The spy did not record the correct approval to.',
     );
 
     assert.strictEqual(
       (await spyBaseToken.approveAmount.call()).toString(10),
       (await spyGateway.bounty.call()).toString(10),
-      'The spy did not record the correct approval amount',
+      'The spy did not record the correct approval amount.',
     );
   });
 
@@ -152,7 +152,7 @@ contract('StakerProxy.stake()', (accounts) => {
     assert.strictEqual(
       messageHash,
       (await spyGateway.messageHash.call()),
-      'The spy did not record the correct amount staked.',
+      'The spy did not record the correct message hash.',
     );
   });
 
