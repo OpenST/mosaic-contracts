@@ -20,18 +20,13 @@ import { BranchNode } from './BranchNode';
 import { BranchKeys } from './BranchNode';
 import ExtensionNode from './ExtensionNode';
 import LeafNode from './LeafNode';
+import ProofData from './ProofData';
 
 import assert = require('assert');
 import ethUtil = require('ethereumjs-util');
 import rlp = require('rlp');
 import crypto = require('crypto');
 
-interface ProofData {
-  value: Buffer;
-  encodedPath: Buffer;
-  rlpParentNodes: Buffer;
-  root: Buffer;
-}
 
 const FuzzyProofGenerator = {
 
