@@ -192,7 +192,12 @@ contract StakerProxy {
      * @param _gateway The gateway to approve the transfer for.
      * @param _amount The amount to stake.
      */
-    function approveTransfers(EIP20GatewayInterface _gateway, uint256 _amount) private {
+    function approveTransfers(
+        EIP20GatewayInterface _gateway,
+        uint256 _amount
+    )
+        private
+    {
         EIP20Interface valueToken = _gateway.valueToken();
         valueToken.approve(address(_gateway), _amount);
 

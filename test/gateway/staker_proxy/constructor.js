@@ -43,12 +43,12 @@ contract('StakerProxy.constructor()', (accounts) => {
     assert.strictEqual(
       composer,
       deployer,
-      'Expected token address is different from actual address.',
+      'Expected composer address is different from the actual address.',
     );
     assert.strictEqual(
       ownerFromContract,
       owner,
-      'Expected token address is different from actual address.',
+      'Expected owner address is different from the actual address.',
     );
   });
 });
