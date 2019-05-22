@@ -23,9 +23,6 @@ const proofJson = require('../data/proof.json');
 const generatedProofData = require('../data/generatedProofData.json');
 const Utils = require('../test_lib/utils.js');
 
-/** Converts a buffer that was unmarshalled into a JavaScript object into a hex string. */
-const jsonBufferToHex = json => `0x${Buffer.from(json).toString('hex')}`;
-
 contract('MerklePatriciaProof.verify()', () => {
   let merklePatriciaLib;
 
@@ -48,16 +45,11 @@ contract('MerklePatriciaProof.verify()', () => {
       await Promise.all(
         generatedProofData.map(
           async (data) => {
-            const value = jsonBufferToHex(data.value);
-            const path = jsonBufferToHex(data.encodedPath);
-            const parentNodes = jsonBufferToHex(data.rlpParentNodes);
-            const root = jsonBufferToHex(data.root);
-
             const result = await merklePatriciaLib.verify.call(
-              value,
-              path,
-              parentNodes,
-              root,
+              data.value,
+              data.encodedPath,
+              data.rlpParentNodes,
+              data.root,
             );
 
             assert.strictEqual(
