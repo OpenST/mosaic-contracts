@@ -56,5 +56,12 @@
     "artifacts": false,
     "contract": false,
     "assert": false
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   }
 }
