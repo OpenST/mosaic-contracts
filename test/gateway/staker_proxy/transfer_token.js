@@ -75,16 +75,16 @@ contract('StakerProxy.transferToken()', (accounts) => {
     );
   });
 
-  it('should fail if attempting transfer to zero address', async () => {
+  it('should fail if attempting to transfer at token address zero.', async () => {
     // Other function arguments are only placeholders as the call will fail on first require.
     await Utils.expectRevert(
       stakerProxy.transferToken(
-        someoneElse,
         Utils.NULL_ADDRESS,
+        someoneElse,
         transferValue,
         { from: owner },
       ),
-      'Recipient may not be address zero.',
+      'The token address may not be address zero.',
     );
   });
 });
