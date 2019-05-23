@@ -20,10 +20,20 @@
 
 'use strict';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { env } = require('process');
+
 /** Test wide configuration for various tests. */
 const config = {
+  /** Defaults to 18. Can be overriden with the environment variable OPENST_DECIMALS. */
   get decimals() {
-    return 18;
+    let decimals = 18;
+
+    if (env.OPENST_DECIMALS) {
+      decimals = Number.parseInt(env.OPENST_DECIMALS, 10);
+    }
+
+    return decimals;
   },
 };
 

@@ -56,6 +56,7 @@
     "compile-all": "truffle compile --all",
     "compile:ts": "tsc --target es5",
     "test": "truffle test",
+    "test:range": "./tools/test_range.sh",
     "test:integration": "cd test_integration && ./main.sh",
     "test:tools": "npm run test:deployment_tool && npm run test:generate_proof && npm run test:fuzzy_proof_generator",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
