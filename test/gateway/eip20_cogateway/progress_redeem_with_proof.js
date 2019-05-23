@@ -22,7 +22,7 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockUtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 
-const config = require('../../test_lib/config..js');
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
