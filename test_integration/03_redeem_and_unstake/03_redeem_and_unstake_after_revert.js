@@ -18,6 +18,10 @@
 //
 // ----------------------------------------------------------------------------
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+'use strict';
+
 const BN = require('bn.js');
 
 const shared = require('../shared');
@@ -52,14 +56,6 @@ let redeemAssertion;
 let progressRedeemAssertion;
 let progressUnstakeAssertion;
 let proofUtils;
-
-const MessageStatus = {
-  Undeclared: 0,
-  Declared: 1,
-  Progressed: 2,
-  DeclaredRevocation: 3,
-  Revoked: 4,
-};
 
 /**
  * @typedef {Object} ProofCoGatewayResponse
