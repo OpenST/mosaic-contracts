@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
+
 const shared = require('../shared');
 const Utils = require('../../test/test_lib/utils');
 const EventDecoder = require('../../test/test_lib/event_decoder');
@@ -276,7 +277,7 @@ const revertRedeem = async () => {
       value: penalty,
     },
   );
-  const event = EventDecoder.getEvents(tx, cogateway);;
+  const event = EventDecoder.getEvents(tx, cogateway);
   RevertRedeemAssertion.verify(event, redeemRequest);
 };
 
@@ -391,7 +392,8 @@ describe('Redeem and Unstake after revert', async () => {
     progressUnstakeAssertion = new ProgressUnstakeAssertion(
       gateway,
       token,
-      baseToken,1
+      baseToken,
+      1,
     );
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
     messageBoxOffset = await cogateway.MESSAGE_BOX_OFFSET.call();
