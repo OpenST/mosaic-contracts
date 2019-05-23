@@ -24,11 +24,11 @@ const BN = require('bn.js');
 const Utils = require('../../../test/test_lib/utils.js');
 
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unStake process done.
+ *                         redeem and unstake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message

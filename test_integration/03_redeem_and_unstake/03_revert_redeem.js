@@ -133,7 +133,7 @@ describe('Revert Redeem', async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
-    auxiliaryAccounts = shared.origin.accounts;
+    auxiliaryAccounts = shared.auxiliary.accounts;
     gateway = shared.origin.contracts.EIP20Gateway;
     cogateway = shared.auxiliary.contracts.EIP20CoGateway;
     ostPrime = shared.auxiliary.contracts.OSTPrime;
@@ -238,9 +238,7 @@ describe('Revert Redeem', async () => {
       redeemRequest.redeemer,
     );
 
-    const bounty = await cogateway.bounty.call();
-    const penaltyFactor = await cogateway.REVOCATION_PENALTY.call();
-    const penalty = bounty.mul(penaltyFactor).divn(100);
+    const penalty = await cogateway.penalty.call(redeemRequest.messageHash);
 
     const tx = await cogateway.revertRedeem(
       redeemRequest.messageHash,
@@ -273,7 +271,7 @@ describe('Revert Redeem', async () => {
       redeemRequest.messageHash,
       redeemRequest.blockHeight,
       proofData.storageProof[0].serializedProof,
-      { from: auxiliaryAccounts[0] },
+      { from: originAccounts[0] },
     );
 
     event = EventDecoder.getEvents(tx, gateway);
@@ -294,7 +292,7 @@ describe('Revert Redeem', async () => {
       redeemRequest.messageHash,
       redeemRequest.blockHeight,
       proofData.storageProof[0].serializedProof,
-      { from: originAccounts[0] },
+      { from: auxiliaryAccounts[0] },
     );
 
     const events = EventDecoder.getEvents(tx, cogateway);

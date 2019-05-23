@@ -22,11 +22,11 @@ const assert = require('assert');
 const BN = require('bn.js');
 
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unStake process done.
+ *                         redeem and unstake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message
@@ -67,7 +67,7 @@ class RevertRedeemAssertion {
   /**
    * This verifies event and balances.
    * @param {Object} event Event object after decoding.
-   * @param {RedeemRequest}redeemRequest Redeem request parameters.
+   * @param {RedeemRequest} redeemRequest Redeem request parameters.
    * @param {BN} transactionFees Transaction fees in revert redeem request.
    * @param {Balances} initialBalances Initial baseToken and token balances.
    */
@@ -110,8 +110,7 @@ class RevertRedeemAssertion {
     const finalBalances = await this.captureBalances(redeemRequest.redeemer);
 
     // Assert cogateway balance
-    const penaltyFactor = await this.cogateway.REVOCATION_PENALTY.call();
-    const penalty = redeemRequest.bounty.mul(penaltyFactor).divn(100);
+    const penalty = await this.cogateway.penalty.call(redeemRequest.messageHash);
 
     const expectedCoGatewayBaseTokenBalance = initialBalances.baseToken.cogateway;
 
@@ -131,7 +130,7 @@ class RevertRedeemAssertion {
       expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
       true,
       `CoGateway token balance must be ${
-        expectedCoGatewayBaseTokenBalance.toString(10)
+        expectedCoGatewayTokenBalance.toString(10)
       } instead of ${finalBalances.token.cogateway.toString(10)}`,
     );
 
