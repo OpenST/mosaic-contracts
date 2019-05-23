@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "./ComposerInterface.sol";
-import "../lib/EIP20GatewayInterface.sol";
+import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 
 

@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 import "../utilitytoken/contracts/organization/contracts/Organized.sol";
 import "./StakerProxy.sol";
-import "../lib/EIP20GatewayInterface.sol";
+import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 

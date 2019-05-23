@@ -50,7 +50,8 @@ contract TestOSTComposer is OSTComposer {
     /* Public Functions */
 
     /**
-     * @notice This is used for testing.
+     * @notice This is used for testing. It is used to set stakeRequestHashes
+     *         storage.
      *
      * @param _stakeRequestHash Hash of the stake request.
      * @param _staker Address of the staker.
