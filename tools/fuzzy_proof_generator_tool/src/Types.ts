@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +13,12 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-//
-// http://www.simpletoken.org/
-//
-// ----------------------------------------------------------------------------
 
-
-interface ComposerInterface {
-    function removeStakerProxy(address _owner) external returns(bool);
+/** Enumeration for node types. */
+enum NodeType {
+  Branch = 'Branch',
+  Extension = 'Extension',
+  Leaf = 'Leaf',
 }
+
+export default NodeType;

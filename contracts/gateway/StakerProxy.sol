@@ -148,6 +148,8 @@ contract StakerProxy {
     /**
      * @notice Transfers EIP20 token to destination address.
      *
+     * @dev It is ok to to be able to transfer to the zero address.
+     *
      * @param _token EIP20 token address.
      * @param _to Address to which tokens are transferred.
      * @param _value Amount of tokens to be transferred.
@@ -162,8 +164,8 @@ contract StakerProxy {
         onlyOwner
     {
         require(
-            _to != address(0),
-            "Recipient may not be address zero."
+            address(_token) != address(0),
+            "The token address may not be address zero."
         );
         require(
             _token.transfer(_to, _value),
@@ -192,7 +194,12 @@ contract StakerProxy {
      * @param _gateway The gateway to approve the transfer for.
      * @param _amount The amount to stake.
      */
-    function approveTransfers(EIP20GatewayInterface _gateway, uint256 _amount) private {
+    function approveTransfers(
+        EIP20GatewayInterface _gateway,
+        uint256 _amount
+    )
+        private
+    {
         EIP20Interface valueToken = _gateway.valueToken();
         valueToken.approve(address(_gateway), _amount);
 

@@ -20,9 +20,10 @@
 
 const MerklePatriciaProof = artifacts.require('./MerklePatriciaProof.sol');
 const proofJson = require('../data/proof.json');
+const generatedProofData = require('../data/generatedProofData.json');
 const Utils = require('../test_lib/utils.js');
 
-contract('MerklePatriciaProof.verify()', (accounts) => {
+contract('MerklePatriciaProof.verify()', () => {
   let merklePatriciaLib;
 
   describe('Test Cases for Account proof verification', async () => {
@@ -37,7 +38,28 @@ contract('MerklePatriciaProof.verify()', (accounts) => {
         proofJson.account.rlpParentNodes,
         proofJson.account.stateRoot,
       );
-      assert.equal(proofStatus, true);
+      assert.strictEqual(proofStatus, true);
+
+      // Iterate over the stored data set and test all proofs in parallel.
+      // The data set was pre-generated with the fuzzy proof generator (see `./tools`).
+      await Promise.all(
+        generatedProofData.map(
+          async (data) => {
+            const result = await merklePatriciaLib.verify.call(
+              data.value,
+              data.encodedPath,
+              data.rlpParentNodes,
+              data.root,
+            );
+
+            assert.strictEqual(
+              result,
+              true,
+              `Could not verify data point: ${JSON.stringify(data)}`,
+            );
+          },
+        ),
+      );
     });
 
     it('Should fail when path is incorrect', async () => {

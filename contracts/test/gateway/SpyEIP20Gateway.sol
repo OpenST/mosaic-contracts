@@ -64,7 +64,6 @@ contract SpyEIP20Gateway {
         beneficiary = _beneficiary;
         gasPrice = _gasPrice;
         gasLimit = _gasLimit;
-
         nonce = _nonce;
         hashLock = _hashLock;
 

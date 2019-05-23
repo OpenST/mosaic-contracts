@@ -39,7 +39,7 @@ library MerklePatriciaProof {
         bytes memory path = _getNibbleArray2(encodedPath);
         if(path.length == 0) {return false;}
 
-        for (uint i=0; i<parentNodes.length; i++) {
+        for (uint i = 0; i < parentNodes.length; i++) {
             if(pathPtr > path.length) {return false;}
 
             currentNode = RLP.toBytes(parentNodes[i]);
@@ -110,7 +110,7 @@ library MerklePatriciaProof {
             return (res_, loc_, path_debug_);
         }
 
-        for (uint i=0; i<parentNodes.length; i++) {
+        for (uint i = 0; i < parentNodes.length; i++) {
             if(pathPtr > path.length) {
                 loc_ = 1;
                 res_ = false;
