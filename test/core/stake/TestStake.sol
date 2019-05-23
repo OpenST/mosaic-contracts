@@ -41,7 +41,7 @@ contract TestStake {
     function beforeEach() external {
         uint256 minimumWeight = 1;
 
-        mockToken = new MockToken();
+        mockToken = new MockToken(18);
         stake = new Stake(
             address(mockToken),
             address(this),

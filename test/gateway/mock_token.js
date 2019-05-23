@@ -22,6 +22,7 @@
 const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
 
+const config = require('../test_lib/config.js');
 const Utils = require('../test_lib/utils.js');
 const EIP20TokenUtils = require('./EIP20_token_utils.js');
 const EventsDecoder = require('../test_lib/event_decoder.js');
@@ -66,7 +67,7 @@ const MockToken = artifacts.require('./MockToken.sol');
 contract('MockToken', (accounts) => {
   const SYMBOL = 'MOCK';
   const NAME = 'Mock Token';
-  const DECIMALS = 18;
+  const DECIMALS = config.decimals;
   const TOTAL_SUPPLY = web3.utils.toWei(new BN('800000000'), 'ether');
 
   const ST10000 = web3.utils.toWei(new BN('10000'), 'ether');
@@ -76,7 +77,7 @@ contract('MockToken', (accounts) => {
   const ST1 = web3.utils.toWei(new BN('1'), 'ether');
 
   async function createToken() {
-    return MockToken.new();
+    return MockToken.new(config.decimals);
   }
 
   describe('Basic properties', async () => {
