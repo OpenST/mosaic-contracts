@@ -18,7 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
-const OSTComposer = artifacts.require('MockOSTComposer');
+const OSTComposer = artifacts.require('TestOSTComposer');
 const MockOrganization = artifacts.require('MockOrganization');
 const Gateway = artifacts.require('SpyEIP20Gateway');
 const StakerProxy = artifacts.require('StakerProxy');
