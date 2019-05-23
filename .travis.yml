@@ -1,6 +1,12 @@
 dist: trusty
 language: node_js
+cache: npm
 sudo: required
+env:
+  - TEST_SUITE="test"
+  - TEST_SUITE="test:integration"
+  - TEST_SUITE="test:tools"
+  - TEST_SUITE="build-package"
 branches:
   only:
   - master
@@ -16,22 +22,10 @@ notifications:
     on_failure: always
 node_js:
   - "8"
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install nodejs
-  - sudo apt-get install npm
-install:
-  - npm ci
 before_script:
   - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
-  - npm run compile
   - npm run compile:ts
 script:
-  - npm run test
-  - npm run test:deployment_tool
-  - npm run test:integration
-  - npm run test:generate_proof
-  - npm run test:fuzzy_proof_generator
-  - npm run build-package
+  - npm run ${TEST_SUITE}
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
