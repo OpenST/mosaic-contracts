@@ -21,6 +21,7 @@
 const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const UtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('./../../test_lib/utils');
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -55,7 +56,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
       accounts[9],
       'Dummy', // Name
       'Dummy', // Symbol
-      18, // Decimal
+      config.decimals,
       organization,
       { from: owner },
     );

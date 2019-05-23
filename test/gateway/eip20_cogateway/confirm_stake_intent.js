@@ -21,6 +21,7 @@
 const CoGateway = artifacts.require('TestEIP20CoGateway');
 const Token = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('./../../test_lib/utils');
 const StubDataWithNonceOne = require('../../data/stake_progressed_0');
 const StubDataWithNonceTwo = require('../../data/stake_progressed_1');
@@ -176,7 +177,7 @@ contract('EIP20CoGateway.confirmStakeIntent() ', (accounts) => {
       valueTokenAddress,
       '',
       '',
-      18,
+      config.decimals,
       organizationAddress,
       { from: sender },
     );
