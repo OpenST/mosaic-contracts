@@ -22,6 +22,7 @@
 
 const MockToken = artifacts.require('./MockToken.sol');
 const StakerProxy = artifacts.require('./StakerProxy.sol');
+const config = require('../../test_lib/config');
 const Utils = require('../../test_lib/utils');
 
 contract('StakerProxy.transferToken()', (accounts) => {
@@ -39,7 +40,7 @@ contract('StakerProxy.transferToken()', (accounts) => {
   });
 
   it('should send the tokens to the desired recipient', async () => {
-    const mockToken = await MockToken.new({ from: deployer });
+    const mockToken = await MockToken.new(config.decimals, { from: deployer });
     await mockToken.transfer(
       stakerProxy.address,
       transferValue,

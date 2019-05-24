@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Events = require('../../test_lib/event_decoder.js');
 const StakeUtils = require('./helpers/stake_utils.js');
 const Utils = require('../../test_lib/utils.js');
@@ -33,7 +34,7 @@ contract('Stake.closeMetaBlock()', async (accounts) => {
   let stake;
 
   beforeEach(async () => {
-    token = await MockToken.new();
+    token = await MockToken.new(config.decimals);
     stake = await Stake.new(token.address, mosaicCoreAccount, minimumWeight);
     await StakeUtils.initializeStake(
       stake,

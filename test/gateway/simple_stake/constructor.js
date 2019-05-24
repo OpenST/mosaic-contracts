@@ -22,6 +22,7 @@ const SimpleStake = artifacts.require('./SimpleStake.sol');
 const MockToken = artifacts.require('./MockToken.sol');
 
 const web3 = require('../../../test/test_lib/web3.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('../../../test/test_lib/utils.js');
 
 const zeroAddress = Utils.NULL_ADDRESS;
@@ -29,7 +30,7 @@ contract('SimpleStake.constructor()', (accounts) => {
   const gateway = accounts[4];
   let mockToken;
   beforeEach(async () => {
-    mockToken = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new(config.decimals, { from: accounts[0] });
   });
 
   it('should pass with correct parameters', async () => {

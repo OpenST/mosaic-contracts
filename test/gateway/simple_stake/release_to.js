@@ -22,6 +22,7 @@ const SimpleStake = artifacts.require('./SimpleStake.sol');
 const MockToken = artifacts.require('./MockToken.sol');
 const BN = require('bn.js');
 
+const config = require('../../test_lib/config.js');
 const Utils = require('../../../test/test_lib/utils.js');
 const Events = require('../../test_lib/event_decoder.js');
 
@@ -30,7 +31,7 @@ contract('SimpleStake.releaseTo()', (accounts) => {
   let token;
   let simpleStake;
   beforeEach(async () => {
-    token = await MockToken.new({ from: accounts[0] });
+    token = await MockToken.new(config.decimals, { from: accounts[0] });
     const amount = new BN(100);
 
     simpleStake = await SimpleStake.new(token.address, gateway, {

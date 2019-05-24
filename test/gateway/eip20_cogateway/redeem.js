@@ -21,6 +21,7 @@
 const BN = require('bn.js');
 
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils');
 const web3 = require('../../test_lib/web3');
@@ -63,7 +64,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       burner,
     ] = accounts;
 
-    utilityToken = await MockToken.new({ from: owner });
+    utilityToken = await MockToken.new(config.decimals, { from: owner });
     bountyAmount = new BN(100);
     redeemerBalance = new BN(100000);
 

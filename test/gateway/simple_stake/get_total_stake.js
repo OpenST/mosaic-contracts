@@ -21,13 +21,14 @@
 const SimpleStake = artifacts.require('./SimpleStake.sol');
 const MockToken = artifacts.require('./MockToken.sol');
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 
 contract('SimpleStake.getTotalStake()', (accounts) => {
   const gateway = accounts[4];
   let token;
   let simpleStake;
   beforeEach(async () => {
-    token = await MockToken.new({ from: accounts[0] });
+    token = await MockToken.new(config.decimals, { from: accounts[0] });
 
     simpleStake = await SimpleStake.new(token.address, gateway, {
       from: accounts[0],

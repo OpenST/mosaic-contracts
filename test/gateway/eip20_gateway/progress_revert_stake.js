@@ -23,6 +23,7 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -72,8 +73,8 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
   };
 
   beforeEach(async () => {
-    mockToken = await MockToken.new({ from: accounts[0] });
-    baseToken = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new(config.decimals, { from: accounts[0] });
+    baseToken = await MockToken.new(config.decimals, { from: accounts[0] });
 
     const owner = accounts[2];
     const worker = accounts[7];

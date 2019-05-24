@@ -49,6 +49,7 @@ async function deployer(web3Provider, accounts) {
   const organization = await MockOrganization.new(owner, worker);
   const burner = Utils.NULL_ADDRESS;
   const maxStorageRootItems = new BN(50);
+  const tokenDecimals = 18;
 
   const anchor = await Anchor.new(
     remoteChainId,
@@ -57,14 +58,14 @@ async function deployer(web3Provider, accounts) {
     maxNumberOfStateRoots,
     organization.address,
   );
-  const mockToken = await MockToken.new({ from: accounts[0] });
-  const baseToken = await MockToken.new({ from: accounts[0] });
+  const mockToken = await MockToken.new(tokenDecimals, { from: accounts[0] });
+  const baseToken = await MockToken.new(tokenDecimals, { from: accounts[0] });
 
   const mockUtilityToken = await MockUtilityToken.new(
     mockToken.address,
     '',
     '',
-    18,
+    tokenDecimals,
     organization.address,
     { from: owner },
   );

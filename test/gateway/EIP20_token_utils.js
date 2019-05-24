@@ -21,6 +21,7 @@
 
 const Assert = require('assert');
 const BN = require('bn.js');
+const config = require('../test_lib/config.js');
 const web3 = require('../test_lib/web3.js');
 
 const EIP20Token = artifacts.require('MockEIP20Token');
@@ -48,9 +49,12 @@ const assertTransferEvent = (
 
 // / @dev Deploy
 module.exports.deployEIP20Token = async (artifacts, accounts) => {
-  const token = await EIP20Token.new('SYMBOL', 'Name', 18, {
-    from: accounts[0],
-  });
+  const token = await EIP20Token.new(
+    'SYMBOL',
+    'Name',
+    config.decimals,
+    { from: accounts[0] },
+  );
 
   return {
     token,

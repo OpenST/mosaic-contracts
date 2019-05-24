@@ -22,6 +22,7 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockUtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
@@ -64,7 +65,6 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       messageStatus: MessageStatusEnum.Declared,
     };
 
-    const decimal = 18;
     const token = accounts[9];
     const symbol = 'DUM';
     const name = 'Dummy';
@@ -73,7 +73,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       token,
       symbol,
       name,
-      decimal,
+      config.decimals,
       organization,
       { from: owner },
     );
