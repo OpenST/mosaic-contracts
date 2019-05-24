@@ -33,6 +33,39 @@
 # decimal.
 ###
 
+# Tracking the exit code to run further tests if they fail for a spcefic decimal.
+EXIT_CODE=0
+
+# Tracking failed decimals for error output.
+FAILED_DECIMALS=""
+
+function handle_error {
+    # On first iteration, no extra comma
+    if [ $EXIT_CODE -eq 0 ];
+    then
+        FAILED_DECIMALS="$1"
+    else
+        FAILED_DECIMALS="${FAILED_DECIMALS}, $1"
+    fi
+    EXIT_CODE=1
+}
+
+function handle_exit {
+    if [ $EXIT_CODE -ne 0 ];
+    then
+        echo ""
+        echo "### Errors for the following decimals:"
+        echo "${FAILED_DECIMALS}"
+        echo ""
+    else
+        echo ""
+        echo "### Done"
+        echo ""
+    fi
+
+    exit $EXIT_CODE
+}
+
 echo ""
 
 if [ $# -ne 1 ] && [ $# -ne 2 ];
@@ -61,9 +94,8 @@ for DECIMALS in $(seq "${START}" "${END}");
 do
     echo "### Running tests with ${DECIMALS} decimals."
     export OPENST_DECIMALS=$DECIMALS
-    npm test || exit 2
+    npm test || handle_error $DECIMALS
 done
 
-echo ""
-echo "### Done"
-echo ""
+handle_exit
+
