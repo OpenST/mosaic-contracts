@@ -28,23 +28,34 @@
 # ```bash
 # npm run test:range -- 12 18
 # ```
+#
+# You can provide only one argument and the tests will run for that specific
+# decimal.
 ###
 
 echo ""
 
-if [ $# -ne 2 ];
+if [ $# -ne 1 ] && [ $# -ne 2 ];
 then
     echo "Wrong number of parameters given."
     echo "Run with two arguments: start and end of range inclusive."
     echo "Example:"
     echo "npm run test:range -- 16 20"
     echo ""
+    echo "If you provide only one argument, the tests will be run for that value."
+    echo ""
     exit 1
 fi
 
 # Start and end values should be provided on the command line.
 START=$1
-END=$2
+
+if [ $# -eq 1 ];
+then
+    END=$START
+else
+    END=$2
+fi
 
 for DECIMALS in $(seq "${START}" "${END}");
 do
