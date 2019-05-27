@@ -72,7 +72,6 @@ contract SpyToken {
             transferAmount = _amount;
 
             success_ = true;
-
         }
     }
 }

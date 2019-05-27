@@ -25,7 +25,7 @@ const StakerProxy = artifacts.require('StakerProxy');
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils');
 
-contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
+contract('OSTComposer.removeStakerProxy() ', (accounts) => {
   let organization;
   let ostComposer;
   const stakeRequest = {};
