@@ -18,9 +18,13 @@
 //
 // ----------------------------------------------------------------------------
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 const chai = require('chai');
 
 const { assert } = chai;
+
+const config = require('../../../test/test_lib/config');
 
 const {
   Contract,
@@ -36,7 +40,7 @@ describe('Contract', () => {
   describe('.setAddress()', () => {
     it('correctly sets a fixed address for contract', () => {
       const constructorAbi = EIP20TokenFile.abi.find(n => n.type === 'constructor');
-      const EIP20Token = new Contract(EIP20TokenFile.contractName, EIP20TokenFile.bytecode, constructorAbi, ['MYT', 'MyToken', 18]);
+      const EIP20Token = new Contract(EIP20TokenFile.contractName, EIP20TokenFile.bytecode, constructorAbi, ['MYT', 'MyToken', config.decimals]);
 
       EIP20Token.setAddress('0x0000000000444440000000000000000000000100');
 
@@ -50,7 +54,7 @@ describe('Contract', () => {
 
     it('can not set address after instantiation', () => {
       const constructorAbi = EIP20TokenFile.abi.find(n => n.type === 'constructor');
-      const EIP20Token = new Contract(EIP20TokenFile.contractName, EIP20TokenFile.bytecode, constructorAbi, ['MYT', 'MyToken', 18]);
+      const EIP20Token = new Contract(EIP20TokenFile.contractName, EIP20TokenFile.bytecode, constructorAbi, ['MYT', 'MyToken', config.decimals]);
 
       EIP20Token.setAddress('0x0000000000444440000000000000000000000100');
       EIP20Token.instantiate();
@@ -68,7 +72,7 @@ describe('Contract', () => {
     it('loads correct contract when provided with rootDir option', () => {
       const EIP20Token = Contract.loadTruffleContract(
         'EIP20Token',
-        ['MYT', 'MyToken', 18],
+        ['MYT', 'MyToken', config.decimals],
         { rootDir: `${__dirname}/../../../` },
       );
 
@@ -147,7 +151,7 @@ describe('ContractRegistry', () => {
     it('orders contracts correctly (address reference in constructor)', () => {
       const EIP20Token = Contract.loadTruffleContract(
         'EIP20Token',
-        ['MYT', 'MyToken', 18],
+        ['MYT', 'MyToken', config.decimals],
         { rootDir },
       );
       const MosaicCore = Contract.loadTruffleContract('MosaicCore', [
@@ -185,7 +189,7 @@ describe('ContractRegistry', () => {
     it('returns correctly formed transaction objects', () => {
       const EIP20Token = Contract.loadTruffleContract(
         'EIP20Token',
-        ['MYT', 'MyToken', 18],
+        ['MYT', 'MyToken', config.decimals],
         { rootDir },
       );
 
