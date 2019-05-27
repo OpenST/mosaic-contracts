@@ -83,7 +83,7 @@ contract TestOSTComposer is OSTComposer {
      */
     function setStakeRequests(
         address _staker,
-        address _gateway,
+        EIP20GatewayInterface _gateway,
         uint256 _amount,
         uint256 _gasPrice,
         uint256 _gasLimit,

@@ -103,7 +103,7 @@ contract OSTComposer is Organized {
         address staker;
 
         /** Address of the gateway where amount will be staked. */
-        address gateway;
+        EIP20GatewayInterface gateway;
     }
 
 
@@ -216,7 +216,7 @@ contract OSTComposer is Organized {
             gasLimit: _gasLimit,
             nonce: _nonce,
             staker: msg.sender,
-            gateway: address(_gateway)
+            gateway: _gateway
         });
         activeStakeRequestCount[msg.sender] = activeStakeRequestCount[msg.sender].add(1);
 
@@ -268,9 +268,9 @@ contract OSTComposer is Organized {
             "Stake request must exists."
         );
 
-        EIP20GatewayInterface gateway = EIP20GatewayInterface(stakeRequest.gateway);
+        EIP20GatewayInterface gateway = stakeRequest.gateway;
 
-        StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
+        StakerProxy stakerProxy = stakerProxies[address(stakeRequest.staker)];
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
@@ -292,12 +292,12 @@ contract OSTComposer is Organized {
             stakeRequest.gasLimit,
             stakeRequest.nonce,
             _hashLock,
-            EIP20GatewayInterface(stakeRequest.gateway)
+            stakeRequest.gateway
         );
 
         activeStakeRequestCount[stakeRequest.staker] = activeStakeRequestCount[stakeRequest.staker].sub(1);
 
-        delete stakeRequestHashes[stakeRequest.staker][stakeRequest.gateway];
+        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
         delete stakeRequests[_stakeRequestHash];
     }
 
@@ -323,7 +323,7 @@ contract OSTComposer is Organized {
 
         activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
 
-        EIP20GatewayInterface gateway = EIP20GatewayInterface(stakeRequests[_stakeRequestHash].gateway);
+        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
         uint256 amount = stakeRequests[_stakeRequestHash].amount;
         EIP20Interface valueToken = gateway.valueToken();
 
@@ -364,11 +364,11 @@ contract OSTComposer is Organized {
         address staker = stakeRequests[_stakeRequestHash].staker;
         activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
 
-        address gateway = stakeRequests[_stakeRequestHash].gateway;
+        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
         uint256 amount = stakeRequests[_stakeRequestHash].amount;
-        EIP20Interface token = EIP20GatewayInterface(gateway).valueToken();
+        EIP20Interface token = gateway.valueToken();
 
-        delete stakeRequestHashes[stakeRequest.staker][stakeRequest.gateway];
+        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
         delete stakeRequests[_stakeRequestHash];
 
         require(

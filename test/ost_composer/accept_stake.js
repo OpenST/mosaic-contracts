@@ -25,7 +25,7 @@ const MockOrganization = artifacts.require('MockOrganization');
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils');
 
-contract('OSTComposer.constructor() ', (accounts) => {
+contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
   let organization;
   let ostComposer;
   let gateway;
