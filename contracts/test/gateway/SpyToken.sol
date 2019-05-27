@@ -36,16 +36,10 @@ contract SpyToken {
     address public toAddress;
     uint256 public transferAmount;
 
-    /**
-     * It helps in emulating transfer method of EIP20Token. If true then
-     * it emulates positive case otherwise negative.
-     */
+    /** It represents return value of the transfer method. */
     bool transferFakeResponse = true;
 
-    /**
-     * It helps in emulating transferFrom method of EIP20Token. If true then
-     * it emulates positive case otherwise negative.
-     */
+    /** It represents return value of the transferFrom method. */
     bool transferFromFakeResponse = true;
 
     /**
@@ -75,7 +69,7 @@ contract SpyToken {
     }
 
     /**
-     * @notice It is used to test EIP20Token passing and failure cases.
+     * @notice It is used to test passing and failure cases of EIP20Token transfer.
      *         If `transferFromFakeResponse` is set to false then failure case
      *         is being tested.
      *
@@ -100,9 +94,9 @@ contract SpyToken {
     }
 
     /**
-     * @notice It is used to test EIP20Token passing and failure cases.
-     *         If `transferFromFakeResponse` is set to false then failure case
-     *         is being tested.
+     * @notice It is used to test passing and failure cases of EIP20Token
+     *         transferFrom. If `transferFakeResponse` is set to false then
+     *         failure case is being tested.
      *
      * @param _to Receiver of the tokens.
      * @param _amount Number of tokens to be transferred.
