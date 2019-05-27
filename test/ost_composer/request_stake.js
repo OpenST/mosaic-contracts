@@ -180,7 +180,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     );
 
     assert.strictEqual(
-      await valueToken.transferAddress.call(),
+      await valueToken.fromAddress.call(),
       stakeRequest.staker,
       'The spy did not record staker address correctly',
     );
@@ -213,12 +213,41 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     const events = EventDecoder.getEvents(tx, ostComposer);
     const eventData = events.StakeRequested;
 
-    assert.strictEqual(eventData.staker, stakeRequest.staker);
-    assert.strictEqual(eventData.amount.eq(stakeRequest.amount), true);
-    assert.strictEqual(eventData.gasLimit.eq(stakeRequest.gasLimit), true);
-    assert.strictEqual(eventData.gasPrice.eq(stakeRequest.gasPrice), true);
-    assert.strictEqual(eventData.gateway, gateway.address);
-    assert.strictEqual(eventData.beneficiary, stakeRequest.beneficiary);
+    assert.strictEqual(
+      eventData.staker,
+      stakeRequest.staker,
+      'Invalid staker address',
+    );
+    assert.strictEqual(
+      eventData.amount.eq(stakeRequest.amount),
+      true,
+      `Expected staked amount is ${stakeRequest.amount} but got ${eventData.amount}`,
+    );
+    assert.strictEqual(
+      eventData.gasLimit.eq(stakeRequest.gasLimit),
+      true,
+      `Expected gasLimit amount is ${stakeRequest.gasLimit} but got ${eventData.gasLimit}`,
+    );
+    assert.strictEqual(
+      eventData.gasPrice.eq(stakeRequest.gasPrice),
+      true,
+      `Expected gasPrice amount is ${stakeRequest.gasPrice} but got ${eventData.gasPrice}`,
+    );
+    assert.strictEqual(
+      eventData.gateway,
+      gateway.address,
+      'Invalid gateway address',
+    );
+    assert.strictEqual(
+      eventData.beneficiary,
+      stakeRequest.beneficiary,
+      'Invalid beneficiary address',
+    );
+    assert.strictEqual(
+      eventData.nonce.eq(stakeRequest.nonce),
+      true,
+      `Expected nonce amount is ${stakeRequest.nonce} but got ${eventData.nonce}`,
+    );
   });
 
   it('should fail when staked amount is 0', async () => {
@@ -253,8 +282,8 @@ contract('OSTComposer.requestStake() ', (accounts) => {
   });
 
   it('should fail when staker nonce is incorrect', async () => {
-    // Here the correct nonce is 0.
-    const nonce = new BN(1);
+    // Here, the correct nonce is 0.
+    const nonce = stakeRequest.nonce.addn(1) ;
     await Utils.expectRevert(
       ostComposer.requestStake(
         gateway.address,
@@ -309,7 +338,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
         stakeRequest.nonce,
         { from: stakeRequest.staker },
       ),
-      'Staked amount must be approved and transferred to Composer.',
+      'Value token transfer returned false.',
     );
   });
 });

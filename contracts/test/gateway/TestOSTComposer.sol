@@ -62,7 +62,7 @@ contract TestOSTComposer is OSTComposer {
         address _staker,
         address _gateway
     )
-        public
+        external
     {
         stakeRequestHashes[_staker][_gateway] = _stakeRequestHash;
     }
@@ -91,7 +91,7 @@ contract TestOSTComposer is OSTComposer {
         uint256 _nonce,
         bytes32 _stakeHash
     )
-        public
+        external
     {
         stakeRequests[_stakeHash] = StakeRequest({
             amount: _amount,
@@ -115,7 +115,7 @@ contract TestOSTComposer is OSTComposer {
         address _staker,
         StakerProxy _stakerProxy
     )
-        public
+        external
     {
         stakerProxies[_staker] = _stakerProxy;
     }
@@ -131,7 +131,7 @@ contract TestOSTComposer is OSTComposer {
         address _staker,
         uint256 _count
     )
-        public
+        external
     {
         activeStakeRequestCount[_staker] = _count;
     }
@@ -147,7 +147,7 @@ contract TestOSTComposer is OSTComposer {
     function generateStakerProxy(
         address payable _staker
     )
-        public
+        external
         returns(StakerProxy stakerProxy_)
     {
         stakerProxy_ = new StakerProxy(_staker);

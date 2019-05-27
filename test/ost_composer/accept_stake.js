@@ -34,6 +34,7 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
   let hashLock;
   let worker;
   let activeGatewayCountForStaker;
+  let stakerProxy;
 
   beforeEach(async () => {
     const owner = accounts[6];
@@ -61,6 +62,7 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       stakeHash,
     );
     activeGatewayCountForStaker = 1;
+    stakerProxy = await ostComposer.generateStakerProxy.call(stakeRequest.staker);
     await ostComposer.generateStakerProxy(stakeRequest.staker);
     await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, activeGatewayCountForStaker);
   });
@@ -90,8 +92,8 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       + `but got ${activeGatewayRequestCountAfterAS}`,
     );
 
-    // Verifying the storage stakeRequestHash and stakeRequests. After the revokeStakeRequest
-    // is successful, these two storage are references are cleared.
+    // Verifying the storage stakeRequestHash and stakeRequests references. After the acceptStakeRequest
+    // is successful, these two storage references are deleted.
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
       gateway.address,
@@ -148,35 +150,93 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
   });
 
-  it('should fail when stake request hash is null', async () => {
-    await Utils.expectRevert(ostComposer.acceptStakeRequest(
-      Utils.ZERO_BYTES32,
+  it('should be able to transfer the value tokens to staker\'s staker proxy contract address', async () => {
+    const valueToken = await SpyToken.at(await gateway.valueToken.call());
+    await ostComposer.acceptStakeRequest(
+      stakeHash,
       hashLock,
       { from: worker },
-    ),
-    'Stake request hash is zero.');
+    );
+
+    assert.strictEqual(
+      await valueToken.toAddress.call(),
+      stakerProxy,
+      'The spy did not record staker address correctly',
+    );
+    assert.strictEqual(
+      stakeRequest.amount.eq(await valueToken.transferAmount.call()),
+      true,
+      `Expected amount to be returned to ${stakeRequest.staker} is ${stakeRequest.amount} `
+      + `but got ${await valueToken.transferAmount.call()}`,
+    );
+  });
+
+  it('should be able to transfer the base tokens to staker\'s staker proxy contract address', async () => {
+    const baseToken = await SpyToken.at(await gateway.baseToken.call());
+
+    await ostComposer.acceptStakeRequest(
+      stakeHash,
+      hashLock,
+      { from: worker },
+    );
+
+    assert.strictEqual(
+      await baseToken.fromAddress.call(),
+      worker,
+      'The spy did not record facilitator address correctly',
+    );
+    assert.strictEqual(
+      await baseToken.toAddress.call(),
+      stakerProxy,
+      'The spy did not record staker address correctly',
+    );
+
+    const bounty = await gateway.bounty.call();
+
+    assert.strictEqual(
+      bounty.eq(await baseToken.transferAmount.call()),
+      true,
+      `Expected amount to be returned to ${stakeRequest.staker} is ${bounty} `
+      + `but got ${await baseToken.transferAmount.call()}`,
+    );
+
+  });
+
+  it('should fail when stake request hash is null', async () => {
+    await Utils.expectRevert(
+      ostComposer.acceptStakeRequest(
+        Utils.ZERO_BYTES32,
+        hashLock,
+        { from: worker },
+      ),
+      'Stake request must exists.',
+    );
   });
 
   it('should fail when value tokens transfer to staker proxy fails', async () => {
     const spyValueToken = await SpyToken.at(await gateway.valueToken.call());
     await spyValueToken.setTransferFakeResponse(false);
 
-    await Utils.expectRevert(ostComposer.acceptStakeRequest(
-      stakeHash,
-      hashLock,
-      { from: worker },
-    ),
-    'Staked amount must be transferred to the staker proxy.');
+    await Utils.expectRevert(
+      ostComposer.acceptStakeRequest(
+        stakeHash,
+        hashLock,
+        { from: worker },
+      ),
+      'Staked amount must be transferred to the staker proxy.',
+    );
   });
 
   it('should fail when bounty transfer to staker proxy fails', async () => {
     const spyBaseToken = await SpyToken.at(await gateway.baseToken.call());
     await spyBaseToken.setTransferFromFakeResponse(false);
-    await Utils.expectRevert(ostComposer.acceptStakeRequest(
-      stakeHash,
-      hashLock,
-      { from: worker },
-    ),
-    'Bounty amount must be transferred to stakerProxy.');
+    await Utils.expectRevert(
+      ostComposer.acceptStakeRequest(
+        stakeHash,
+        hashLock,
+        { from: worker },
+      ),
+      'Bounty amount must be transferred to stakerProxy.',
+    );
   });
 });

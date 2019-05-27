@@ -51,25 +51,26 @@ contract OSTComposer is Organized {
 
     /** Emitted whenever a request stake is called. */
     event StakeRequested(
-        bytes32 stakeRequestHash,
-        address indexed staker,
         uint256 amount,
-        uint256 gasLimit,
+        address beneficiary,
         uint256 gasPrice,
+        uint256 gasLimit,
+        uint256 nonce,
+        address indexed staker,
         address gateway,
-        address beneficiary
+        bytes32 stakeRequestHash
     );
 
     /** Emitted whenever a revoke stake is called. */
     event StakeRevoked(
-        bytes32 stakeRequestHash,
-        address indexed staker
+        address indexed staker,
+        bytes32 stakeRequestHash
     );
 
     /** Emitted whenever a reject stake is called. */
     event StakeRejected(
-        bytes32 stakeRequestHash,
-        address indexed staker
+        address indexed staker,
+        bytes32 stakeRequestHash
     );
 
 
@@ -143,8 +144,8 @@ contract OSTComposer is Organized {
 
     /**
      * @notice Staker calls the method to show its intention of staking. In order
-     *         to stake, the stake and bounty amounts must first be transferred
-     *         to the OSTComposer. Staker should approve OSTComposer for token
+     *         to stake, the staked amount must first be transferred to
+     *         OSTComposer. Staker should approve OSTComposer for token
      *         transfer.
      *
      * @param _gateway Address of the gateway to stake.
@@ -154,9 +155,9 @@ contract OSTComposer is Organized {
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _nonce The nonce to verify it is as expected.
+     * @param _nonce Staker nonce specific to gateway.
      *
-     * @return stakeRequestHash_ Message hash is unique for each request.
+     * @return stakeRequestHash_ A unique hash for stake request.
      */
     function requestStake(
         EIP20GatewayInterface _gateway,
@@ -202,10 +203,8 @@ contract OSTComposer is Organized {
             stakerProxies[msg.sender] = stakerProxy;
         }
 
-        uint256 stakerNonceFromGateway = _gateway.getNonce(address(stakerProxy));
-
         require(
-            stakerNonceFromGateway == _nonce,
+            _gateway.getNonce(address(stakerProxy)) == _nonce,
             "Incorrect staker nonce."
         );
 
@@ -224,17 +223,18 @@ contract OSTComposer is Organized {
 
         require(
             valueToken.transferFrom(msg.sender, address(this), _amount),
-            "Staked amount must be approved and transferred to Composer."
+            "Value token transfer returned false."
         );
 
         emit StakeRequested(
-            stakeRequestHash_,
-            msg.sender,
             _amount,
-            _gasLimit,
+            _beneficiary,
             _gasPrice,
+            _gasLimit,
+            _nonce,
+            msg.sender,
             address(_gateway),
-            _beneficiary
+            stakeRequestHash_
         );
     }
 
@@ -257,11 +257,6 @@ contract OSTComposer is Organized {
         onlyWorker
         returns(bytes32 messageHash_)
     {
-        require(
-            _stakeRequestHash != bytes32(0),
-            "Stake request hash is zero."
-        );
-
         StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
         require(
             stakeRequest.staker != address(0),
@@ -306,14 +301,11 @@ contract OSTComposer is Organized {
      *         previously requested stake request.
      *
      * @param _stakeRequestHash Hash of the stake request.
-     *
-     * @return success_ `true` if stake request is deleted.
      */
     function revokeStakeRequest(
         bytes32 _stakeRequestHash
     )
         external
-        returns(bool success_)
     {
         address staker = stakeRequests[_stakeRequestHash].staker;
         require(
@@ -321,23 +313,8 @@ contract OSTComposer is Organized {
             "Only valid staker can revoke the stake request."
         );
 
-        activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
-
-        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
-        uint256 amount = stakeRequests[_stakeRequestHash].amount;
-        EIP20Interface valueToken = gateway.valueToken();
-
-        delete stakeRequestHashes[staker][address(gateway)];
-        delete stakeRequests[_stakeRequestHash];
-
-        require(
-            valueToken.transfer(staker, amount),
-            "Staked amount must be transferred to staker."
-        );
-
-        emit StakeRevoked(_stakeRequestHash, staker);
-
-        success_ = true;
+        removeStakeRequest(_stakeRequestHash);
+        emit StakeRevoked(staker, _stakeRequestHash);
     }
 
     /**
@@ -345,40 +322,22 @@ contract OSTComposer is Organized {
      *         requested stake request.
      *
      * @param _stakeRequestHash Hash of the stake request.
-     *
-     * @return success_ `true` if stake request is deleted.
      */
     function rejectStakeRequest(
         bytes32 _stakeRequestHash
     )
         external
         onlyWorker
-        returns(bool success_)
     {
-        StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
+        address staker = stakeRequests[_stakeRequestHash].staker;
         require(
-            stakeRequest.staker != address(0),
+            staker != address(0),
             "Invalid stake request hash."
         );
 
-        address staker = stakeRequests[_stakeRequestHash].staker;
-        activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
+        removeStakeRequest(_stakeRequestHash);
 
-        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
-        uint256 amount = stakeRequests[_stakeRequestHash].amount;
-        EIP20Interface token = gateway.valueToken();
-
-        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
-        delete stakeRequests[_stakeRequestHash];
-
-        require(
-            token.transfer(staker, amount),
-            "Staked amount must be transferred to staker."
-        );
-
-        emit StakeRejected(_stakeRequestHash, staker);
-
-        success_ = true;
+        emit StakeRejected(staker, _stakeRequestHash);
     }
 
     /**
@@ -386,14 +345,11 @@ contract OSTComposer is Organized {
      *         the StakerProxy contract of the staker.
      *
      * @param _owner Owner of the StakerProxy contract.
-     *
-     * @return success_ `true` if StakerProxy contract of the staker is deleted.
      */
     function removeStakerProxy(
         address _owner
     )
         external
-        returns(bool success_)
     {
         StakerProxy stakerProxy = stakerProxies[_owner];
         require(
@@ -409,11 +365,39 @@ contract OSTComposer is Organized {
 
         // Resetting the proxy address of the staker.
         delete stakerProxies[_owner];
-        success_ = true;
     }
 
 
     /* Private Functions */
+
+    /**
+     * @notice It is used by revokeStakeRequest and removeStakeRequest methods.
+     *         It transfers the value tokens to staker and deletes
+     *         `stakeRequestHashes` and `stakeRequests` storage references.
+     *
+     * @param _stakeRequestHash Hash of the stake request.
+     */
+    function removeStakeRequest(
+        bytes32 _stakeRequestHash
+    )
+        private
+    {
+        StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
+        address staker = stakeRequests[_stakeRequestHash].staker;
+        activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
+
+        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
+        uint256 amount = stakeRequests[_stakeRequestHash].amount;
+        EIP20Interface valueToken = gateway.valueToken();
+
+        delete stakeRequestHashes[staker][address(stakeRequest.gateway)];
+        delete stakeRequests[_stakeRequestHash];
+
+        require(
+            valueToken.transfer(staker, amount),
+            "Staked amount must be transferred to staker."
+        );
+    }
 
     /**
      * @notice It returns hashing of stake request as per EIP-712.

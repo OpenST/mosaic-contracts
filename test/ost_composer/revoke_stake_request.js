@@ -59,7 +59,7 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
     await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, gatewayCount);
   });
 
-  it('should be able to successfully request stake', async () => {
+  it('should be able to successfully revoke stake request', async () => {
     const response = await ostComposer.revokeStakeRequest(
       stakeHash,
       { from: stakeRequest.staker },

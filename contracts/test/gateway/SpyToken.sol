@@ -32,18 +32,36 @@ contract SpyToken {
     address public approveTo;
     uint256 public approveAmount;
 
-    address public transferAddress;
+    address public fromAddress;
     address public toAddress;
     uint256 public transferAmount;
 
+    /**
+     * It helps in emulating transfer method of EIP20Token. If true then
+     * it emulates positive case otherwise negative.
+     */
     bool transferFakeResponse = true;
 
+    /**
+     * It helps in emulating transferFrom method of EIP20Token. If true then
+     * it emulates positive case otherwise negative.
+     */
     bool transferFromFakeResponse = true;
 
+    /**
+     * @notice It is used to set the value of transferFakeResponse.
+     *
+     * @param status Boolean value to be set.
+     */
     function setTransferFakeResponse(bool status) public {
         transferFakeResponse = status;
     }
 
+    /**
+     * @notice It is used to set the value of transferFromFakeResponse.
+     *
+     * @param status Boolean value to be set.
+     */
     function setTransferFromFakeResponse(bool status) public {
         transferFromFakeResponse = status;
     }
@@ -56,22 +74,50 @@ contract SpyToken {
         success_ = true;
     }
 
-    function transferFrom(address _from, address _to, uint256 _amount) external returns (bool success_) {
-        if(transferFromFakeResponse) {
-            transferAddress = _from;
-            toAddress = _to;
-            transferAmount = _amount;
-
-            success_ = true;
-        }
+    /**
+     * @notice It is used to test EIP20Token passing and failure cases.
+     *         If `transferFromFakeResponse` is set to false then failure case
+     *         is being tested.
+     *
+     * @param _from Address of the account from where tokens will be transferred.
+     * @param _to Receiver of the tokens.
+     * @param _amount Number of tokens to be transferred.
+     *
+     * @return bool `true` if `transferFromFakeResponse` is True otherwise false.
+     */
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _amount
+    )
+        external
+        returns (bool success_)
+    {
+        fromAddress = _from;
+        toAddress = _to;
+        transferAmount = _amount;
+        success_ = transferFromFakeResponse;
     }
 
-    function transfer(address _to, uint256 _amount) external returns (bool success_) {
-        if(transferFakeResponse) {
-            toAddress = _to;
-            transferAmount = _amount;
-
-            success_ = true;
-        }
+    /**
+     * @notice It is used to test EIP20Token passing and failure cases.
+     *         If `transferFromFakeResponse` is set to false then failure case
+     *         is being tested.
+     *
+     * @param _to Receiver of the tokens.
+     * @param _amount Number of tokens to be transferred.
+     *
+     * @return bool `true` if `transferFromFakeResponse` is True otherwise false.
+     */
+    function transfer(
+        address _to,
+        uint256 _amount
+    )
+        external
+        returns (bool success_)
+    {
+        toAddress = _to;
+        transferAmount = _amount;
+        success_ = transferFakeResponse;
     }
 }

@@ -20,7 +20,6 @@
 
 const OSTComposer = artifacts.require('TestOSTComposer');
 const MockOrganization = artifacts.require('MockOrganization');
-const Gateway = artifacts.require('SpyEIP20Gateway');
 const StakerProxy = artifacts.require('StakerProxy');
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils');
@@ -78,6 +77,17 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
       ostComposer.removeStakerProxy(
         stakeRequest.staker,
         { from: nonProxy },
+      ),
+      'Caller is invalid proxy address.',
+    );
+  });
+
+  it('should fail when owner doesn\'t have any deployed staker proxy', async () => {
+    const nonOwner = accounts[12];
+    await Utils.expectRevert(
+      ostComposer.removeStakerProxy(
+        nonOwner,
+        { from: stakerProxy },
       ),
       'Caller is invalid proxy address.',
     );
