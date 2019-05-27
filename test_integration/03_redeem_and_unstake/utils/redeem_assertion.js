@@ -42,10 +42,10 @@ const BN = require('bn.js');
 /**
  * BaseToken(ETH) and OSTPrime ERC20 balance of cogateway, redeemer.
  * @typedef {Object} Balances
- * @property balances.ostPrime.cogateway ERC20 balance of cogateway contract.
- * @property balances.ostPrime.redeemer ERC20 balance of beneficiary.
- * @property balances.baseToken.cogateway Base token(ETH) balance of cogateway.
- * @property balances.baseToken.redeemer Base token(ETH) balance of redeemer.
+ * @property {BN} balances.ostPrime.cogateway ERC20 balance of cogateway contract.
+ * @property {BN} balances.ostPrime.redeemer ERC20 balance of beneficiary.
+ * @property {BN} balances.baseToken.cogateway Base token(ETH) balance of cogateway.
+ * @property {BN} balances.baseToken.redeemer Base token(ETH) balance of redeemer.
  */
 
 /**
