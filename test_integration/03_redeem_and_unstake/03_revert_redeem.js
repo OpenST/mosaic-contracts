@@ -227,7 +227,7 @@ describe('Revert Redeem', async () => {
       { from: originAccounts[0] },
     );
 
-    event = EventDecoder.getEvents(tx, gateway);
+    const event = EventDecoder.getEvents(tx, gateway);
     // Assert event.
     ConfirmRedeemIntentAssertion.verify(event, redeemRequest);
   });
@@ -267,14 +267,14 @@ describe('Revert Redeem', async () => {
     const { proofData, blockNumber } = await proveCoGateway();
     redeemRequest.blockHeight = new BN(blockNumber);
 
-    tx = await gateway.confirmRevertRedeemIntent(
+    const tx = await gateway.confirmRevertRedeemIntent(
       redeemRequest.messageHash,
       redeemRequest.blockHeight,
       proofData.storageProof[0].serializedProof,
       { from: originAccounts[0] },
     );
 
-    event = EventDecoder.getEvents(tx, gateway);
+    const event = EventDecoder.getEvents(tx, gateway);
     // Assert event.
     ConfirmRevertRedeemIntentAssertion.verify(event, redeemRequest);
   });

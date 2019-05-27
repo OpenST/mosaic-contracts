@@ -114,7 +114,7 @@ class RevertRedeemAssertion {
 
     const expectedCoGatewayBaseTokenBalance = initialBalances.baseToken.cogateway;
 
-    // Assert Penalty is transferred to cogateway.
+    // Assert cogateway's base token balance is unchanged.
     assert.strictEqual(
       expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.cogateway),
       true,
@@ -125,7 +125,7 @@ class RevertRedeemAssertion {
 
     const expectedCoGatewayTokenBalance = initialBalances.token.cogateway;
 
-    // Assert redeem amount is transferred to cogateway.
+    // Assert cogateway's token balance is unchanged.
     assert.strictEqual(
       expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
       true,
