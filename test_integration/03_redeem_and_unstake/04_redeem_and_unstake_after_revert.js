@@ -263,9 +263,7 @@ const confirmRedeemIntent = async () => {
  * @return {Promise<void>}
  */
 const revertRedeem = async () => {
-  const bounty = await cogateway.bounty.call();
-  const penaltyFactor = await cogateway.REVOCATION_PENALTY.call();
-  const penalty = bounty.mul(penaltyFactor).divn(100);
+  const penalty = await cogateway.penalty.call(redeemRequest.messageHash);
   const tx = await cogateway.revertRedeem(
     redeemRequest.messageHash,
     {
@@ -348,7 +346,7 @@ describe('Redeem and Unstake after revert', async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
-    auxiliaryAccounts = shared.origin.accounts;
+    auxiliaryAccounts = shared.auxiliary.accounts;
     token = shared.origin.contracts.Token;
     baseToken = shared.origin.contracts.BaseToken;
     gateway = shared.origin.contracts.EIP20Gateway;
