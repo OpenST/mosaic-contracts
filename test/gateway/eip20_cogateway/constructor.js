@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const CoGateway = artifacts.require('EIP20CoGateway');
+const config = require('../../test_lib/config.js');
 const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
@@ -42,8 +43,8 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
   const burner = NullAddress;
 
   beforeEach(async () => {
-    valueToken = await MockToken.new();
-    utilityToken = await MockToken.new();
+    valueToken = await MockToken.new(config.decimals);
+    utilityToken = await MockToken.new(config.decimals);
     dummyStateRootProvider = accounts[1];
     bountyAmount = new BN(100);
     maxStorageRootItems = new BN(25);

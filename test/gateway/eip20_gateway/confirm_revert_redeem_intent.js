@@ -22,6 +22,7 @@ const Gateway = artifacts.require('./TestEIP20Gateway.sol');
 const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
@@ -56,8 +57,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
 
   beforeEach(async () => {
     redeemRequest = StubData.co_gateway.redeem.params;
-    mockToken = await MockToken.new({ from: accounts[0] });
-    baseToken = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new(config.decimals, { from: accounts[0] });
+    baseToken = await MockToken.new(config.decimals, { from: accounts[0] });
 
     const organizationAddress = accounts[3];
     const coreAddress = accounts[5];

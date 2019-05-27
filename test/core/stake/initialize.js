@@ -20,6 +20,7 @@
 
 const BN = require('bn.js');
 const StakeUtils = require('./helpers/stake_utils.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('../../test_lib/utils.js');
 
 const MockToken = artifacts.require('MockToken');
@@ -37,7 +38,7 @@ contract('Stake.initialize()', async (accounts) => {
   let initialStakes;
 
   beforeEach(async () => {
-    token = await MockToken.new({ from: tokenDeployer });
+    token = await MockToken.new(config.decimals, { from: tokenDeployer });
     stake = await Stake.new(token.address, mosaicCoreAccount, minimumWeight);
 
     initialDepositors = [accounts[2], accounts[3], accounts[4]];

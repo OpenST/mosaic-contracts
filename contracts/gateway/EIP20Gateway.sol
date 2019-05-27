@@ -55,6 +55,7 @@ pragma solidity ^0.5.0;
 
 import "./SimpleStake.sol";
 import "./GatewayBase.sol";
+import "./EIP20GatewayInterface.sol";
 import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 
 /**
@@ -63,7 +64,7 @@ import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.s
  * @notice EIP20Gateway act as medium to send messages from origin chain to
  *         auxiliary chain. Currently gateway supports stake and revert stake message.
  */
-contract EIP20Gateway is GatewayBase {
+contract EIP20Gateway is EIP20GatewayInterface, GatewayBase {
 
     /* Events */
 

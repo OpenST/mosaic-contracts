@@ -23,6 +23,7 @@ const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('./../../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
@@ -41,8 +42,8 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
   const burner = NullAddress;
 
   beforeEach(async () => {
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
+    mockToken = await MockToken.new(config.decimals);
+    baseToken = await MockToken.new(config.decimals);
     dummyRootProviderAddress = accounts[1];
     bountyAmount = new BN(100);
     maxStorageRootItems = new BN(25);

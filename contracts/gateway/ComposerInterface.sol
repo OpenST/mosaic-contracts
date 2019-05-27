@@ -13,17 +13,14 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Contracts: MockTokenConfig 
 //
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
 
 
-contract MockTokenConfig {
-
-    string  public constant TOKEN_SYMBOL   = "MOCK";
-    string  public constant TOKEN_NAME     = "Mock Token";
+interface ComposerInterface {
+    function removeStakerProxy(address _owner) external returns(bool);
 }

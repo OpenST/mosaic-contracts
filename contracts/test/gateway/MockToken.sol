@@ -38,16 +38,19 @@ contract MockToken is EIP20Interface, MockTokenConfig {
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
 
-    constructor() public {
+    constructor(uint8 _decimals) public {
+        uint256 decimalsFactor = 10**uint256(_decimals);
+        uint256 tokensMax = 800000000 * decimalsFactor;
+
         tokenSymbol = TOKEN_SYMBOL;
         tokenName = TOKEN_NAME;
-        tokenDecimals = TOKEN_DECIMALS;
-        tokenTotalSupply = TOKENS_MAX;
-        balances[msg.sender] = TOKENS_MAX;
+        tokenDecimals = _decimals;
+        tokenTotalSupply = tokensMax;
+        balances[msg.sender] = tokensMax;
 
         // According to the ERC20 standard, a token contract which creates new tokens should trigger
         // a Transfer event and transfers of 0 values must also fire the event.
-        emit Transfer(address(0), msg.sender, TOKENS_MAX);
+        emit Transfer(address(0), msg.sender, tokensMax);
     }
 
     function name() public view returns (string memory) {
