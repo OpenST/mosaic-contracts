@@ -184,14 +184,14 @@ contract OSTComposer is Organized {
         );
 
         stakeRequestHash_ = hashStakeRequest(
-                                msg.sender,
-                                address(_gateway),
-                                _amount,
-                                _beneficiary,
-                                _gasPrice,
-                                _gasLimit,
-                                _nonce
-                             );
+            msg.sender,
+            address(_gateway),
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce
+        );
 
         stakeRequestHashes[msg.sender][address(_gateway)] = stakeRequestHash_;
 
@@ -431,15 +431,16 @@ contract OSTComposer is Organized {
         pure
         returns(bytes32 stakeRequestIntentHash_)
     {
-        stakeRequestIntentHash_ = keccak256(abi.encodePacked(
-            STAKEREQUEST_INTENT_TYPEHASH,
-            _gateway,
-            _amount,
-            _staker,
-            _beneficiary,
-            _gasPrice,
-            _gasLimit,
-            _nonce
-        ));
+        stakeRequestIntentHash_ = keccak256(
+            abi.encodePacked(
+                STAKEREQUEST_INTENT_TYPEHASH,
+                _gateway,
+                _amount,
+                _staker,
+                _beneficiary,
+                _gasPrice,
+                _gasLimit,
+                _nonce
+            ));
     }
 }
