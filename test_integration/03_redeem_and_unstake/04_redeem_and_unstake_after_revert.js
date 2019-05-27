@@ -55,6 +55,7 @@ let messageBoxOffset;
 let redeemAssertion;
 let progressRedeemAssertion;
 let progressUnstakeAssertion;
+let assertRevertRedeem;
 let proofUtils;
 
 /**
@@ -263,6 +264,10 @@ const confirmRedeemIntent = async () => {
  * @return {Promise<void>}
  */
 const revertRedeem = async () => {
+  // Capture initial token and base token balance of redeemer and cogateway.
+  const initialBalances = await assertRevertRedeem.captureBalances(
+    redeemRequest.redeemer,
+  );
   const penalty = await cogateway.penalty.call(redeemRequest.messageHash);
   const tx = await cogateway.revertRedeem(
     redeemRequest.messageHash,
@@ -271,8 +276,18 @@ const revertRedeem = async () => {
       value: penalty,
     },
   );
-  const event = EventDecoder.getEvents(tx, cogateway);
-  RevertRedeemAssertion.verify(event, redeemRequest);
+  const events = EventDecoder.getEvents(tx, cogateway);
+  const transactionFeeInRevertRedeem = await getTransactionFee(
+    tx,
+    auxiliaryWeb3,
+  );
+
+  await assertRevertRedeem.verify(
+    events,
+    redeemRequest,
+    transactionFeeInRevertRedeem,
+    initialBalances,
+  );
 };
 
 /*
@@ -390,6 +405,7 @@ describe('Redeem and Unstake after revert', async () => {
       1,
     );
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
+    assertRevertRedeem = new RevertRedeemAssertion(cogateway, ostPrime, auxiliaryWeb3);
     messageBoxOffset = await cogateway.MESSAGE_BOX_OFFSET.call();
   });
 
