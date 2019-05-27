@@ -75,6 +75,8 @@ describe('Deploy', async () => {
       web3Origin,
       deployerAddressOrigin,
       'new',
+      undefined,
+      shared.decimals,
     );
     assert(
       Web3.utils.isAddress(tokenAddressOrigin),
@@ -85,6 +87,8 @@ describe('Deploy', async () => {
       web3Origin,
       deployerAddressOrigin,
       'new',
+      undefined,
+      shared.decimals,
     );
     assert(
       Web3.utils.isAddress(baseTokenAddressOrigin),
