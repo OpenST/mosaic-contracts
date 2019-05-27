@@ -21,7 +21,7 @@
 const assert = require('assert');
 
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
@@ -39,16 +39,16 @@ const assert = require('assert');
  */
 
 /**
- * Class to assert confirm redeem intent.
+ * Class to assert confirm revert redeem intent.
  */
-class ConfirmRedeemIntentAssertion {
+class ConfirmRevertRedeemIntentAssertion {
   /**
-     * This verifies event.
-     * @param {Object} event Event object after decoding.
-     * @param {RedeemRequest} redeemRequest Redeem request parameters.
-     */
+   * This verifies event.
+   * @param {Object} event Event object after decoding.
+   * @param {RedeemRequest} redeemRequest Redeem request parameters.
+   */
   static verify(event, redeemRequest) {
-    const eventData = event.RedeemIntentConfirmed;
+    const eventData = event.RevertRedeemIntentConfirmed;
 
     assert.strictEqual(
       eventData._messageHash,
@@ -69,29 +69,11 @@ class ConfirmRedeemIntentAssertion {
     );
 
     assert.strictEqual(
-      eventData._beneficiary,
-      redeemRequest.beneficiary,
-      `Beneficiary address from event must be equal to ${redeemRequest.beneficiary}.`,
-    );
-
-    assert.strictEqual(
       redeemRequest.amount.eq(eventData._amount),
       true,
       `Amount from event must be equal to ${redeemRequest.amount.toString(10)}.`,
     );
-
-    assert.strictEqual(
-      redeemRequest.blockHeight.eq(eventData._blockHeight),
-      true,
-      `Block height from event must be equal to ${redeemRequest.blockHeight.toString(10)}.`,
-    );
-
-    assert.strictEqual(
-      eventData._hashLock,
-      redeemRequest.hashLock,
-      `Hash lock from event must be equal to ${redeemRequest.hashLock}.`,
-    );
   }
 }
 
-module.exports = ConfirmRedeemIntentAssertion;
+module.exports = ConfirmRevertRedeemIntentAssertion;

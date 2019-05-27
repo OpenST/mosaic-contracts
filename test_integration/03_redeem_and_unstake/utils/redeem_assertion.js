@@ -22,11 +22,11 @@ const assert = require('assert');
 const BN = require('bn.js');
 
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unStake process done.
+ *                         redeem and unstake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message
@@ -42,10 +42,10 @@ const BN = require('bn.js');
 /**
  * BaseToken(ETH) and OSTPrime ERC20 balance of cogateway, redeemer.
  * @typedef {Object} Balances
- * @property balances.ostPrime.cogateway ERC20 balance of cogateway contract.
- * @property balances.ostPrime.redeemer ERC20 balance of beneficiary.
- * @property balances.baseToken.cogateway Base token(ETH) balance of cogateway.
- * @property balances.baseToken.redeemer Base token(ETH) balance of redeemer.
+ * @property {BN} balances.ostPrime.cogateway ERC20 balance of cogateway contract.
+ * @property {BN} balances.ostPrime.redeemer ERC20 balance of beneficiary.
+ * @property {BN} balances.baseToken.cogateway Base token(ETH) balance of cogateway.
+ * @property {BN} balances.baseToken.redeemer Base token(ETH) balance of redeemer.
  */
 
 /**

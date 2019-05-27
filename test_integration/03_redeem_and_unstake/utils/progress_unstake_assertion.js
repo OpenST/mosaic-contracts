@@ -23,11 +23,11 @@ const assert = require('assert');
 const Utils = require('../../../test/test_lib/utils.js');
 
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unStake process done.
+ *                         redeem and unstake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message
@@ -44,12 +44,12 @@ const Utils = require('../../../test/test_lib/utils.js');
  * BaseToken(ETH) and token ERC20 balance of gateway, beneficiary and
  * stakeVault.
  * @typedef {Object} Balances
- * @property balances.token.gateway ERC20 balance of gateway contract.
- * @property balances.token.beneficiary ERC20 balance of beneficiary.
- * @property balances.token.stakeVault ERC20 balance of stakeVault contract.
- * @property balances.baseToken.gateway Base token(ETH) balance of gateway.
- * @property balances.baseToken.beneficiary Base token(ETH) balance of beneficiary.
- * @property balances.baseToken.stakeVault Base token(ETH) balance of stakeVault
+ * @property {BN} balances.token.gateway ERC20 balance of gateway contract.
+ * @property {BN} balances.token.beneficiary ERC20 balance of beneficiary.
+ * @property {BN} balances.token.stakeVault ERC20 balance of stakeVault contract.
+ * @property {BN} balances.baseToken.gateway Base token(ETH) balance of gateway.
+ * @property {BN} balances.baseToken.beneficiary Base token(ETH) balance of beneficiary.
+ * @property {BN} balances.baseToken.stakeVault Base token(ETH) balance of stakeVault
  */
 
 /**
@@ -270,8 +270,7 @@ class ProgressUnStakeAssertion {
         Utils.ZERO_BYTES32,
         `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
       );
-    }
-    else {
+    } else {
       assert.strictEqual(
         eventData._unlockSecret,
         redeemRequest.unlockSecret,
