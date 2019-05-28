@@ -24,14 +24,16 @@ import "../utilitytoken/contracts/organization/contracts/Organized.sol";
 import "./StakerProxy.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
+import "../lib/Mutex.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
- * @title OSTComposer implements Organized contract.
+ * @title OSTComposer implements Organized contract. Reentrancy is prevented
+ *        by using Mutex contract.
  *
  * @notice It facilitates the staker to get the OSTPrime on sidechains.
  */
-contract OSTComposer is Organized {
+contract OSTComposer is Organized, Mutex {
 
      /* Usings */
 
@@ -168,6 +170,7 @@ contract OSTComposer is Organized {
         uint256 _nonce
     )
         external
+        mutex
         returns (bytes32 stakeRequestHash_)
     {
         require(
@@ -254,6 +257,7 @@ contract OSTComposer is Organized {
         bytes32 _hashLock
     )
         external
+        mutex
         onlyWorker
         returns(bytes32 messageHash_)
     {
@@ -306,6 +310,7 @@ contract OSTComposer is Organized {
         bytes32 _stakeRequestHash
     )
         external
+        mutex
     {
         address staker = stakeRequests[_stakeRequestHash].staker;
         require(
@@ -327,6 +332,7 @@ contract OSTComposer is Organized {
         bytes32 _stakeRequestHash
     )
         external
+        mutex
         onlyWorker
     {
         address staker = stakeRequests[_stakeRequestHash].staker;
