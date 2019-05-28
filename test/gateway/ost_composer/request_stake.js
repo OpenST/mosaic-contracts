@@ -22,8 +22,8 @@ const OSTComposer = artifacts.require('OSTComposer');
 const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils');
-const EventDecoder = require('../test_lib/event_decoder.js');
+const Utils = require('../../test_lib/utils');
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
 function getStakeRequestHash(stakeRequest, gateway) {
   const stakeRequestMethod = 'StakeRequest(address gateway,uint256 amount,address staker,address beneficiary,uint256 gasPrice,uint256 gasLimit, uint256 nonce)';

@@ -22,7 +22,7 @@ const OSTComposer = artifacts.require('TestOSTComposer');
 const MockOrganization = artifacts.require('MockOrganization');
 const StakerProxy = artifacts.require('StakerProxy');
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils');
+const Utils = require('../../test_lib/utils');
 
 contract('OSTComposer.removeStakerProxy() ', (accounts) => {
   let organization;

@@ -20,24 +20,25 @@
 
 const OSTComposer = artifacts.require('TestOSTComposer');
 const SpyToken = artifacts.require('SpyToken');
-const Gateway = artifacts.require('SpyEIP20Gateway');
 const MockOrganization = artifacts.require('MockOrganization');
+const Gateway = artifacts.require('SpyEIP20Gateway');
+const StakerProxy = artifacts.require('StakerProxy');
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils');
+const Utils = require('../../test_lib/utils');
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
-contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
+contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
   let organization;
   let ostComposer;
   let gateway;
   const stakeRequest = {};
   let stakeHash;
-  let hashLock;
-  let worker;
-  let activeGatewayCountForStaker;
   let stakerProxy;
-
+  let gatewayCount;
+  let owner;
+  let worker;
   beforeEach(async () => {
-    const owner = accounts[6];
+    owner = accounts[6];
     worker = accounts[7];
     organization = await MockOrganization.new(owner, worker);
     stakeRequest.staker = accounts[2];
@@ -46,10 +47,9 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     stakeRequest.beneficiary = accounts[4];
     stakeRequest.gasPrice = new BN(100);
     stakeRequest.gasLimit = new BN(100);
-    stakeRequest.nonce = new BN(42);
+    stakeRequest.nonce = new BN(0);
     gateway = await Gateway.new();
     stakeHash = await web3.utils.sha3('mockedhash');
-    hashLock = Utils.generateHashLock().l;
     await ostComposer.setStakeRequestHash(stakeHash, stakeRequest.staker, gateway.address);
     await ostComposer.setStakeRequests(
       stakeRequest.staker,
@@ -61,39 +61,33 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       stakeRequest.nonce,
       stakeHash,
     );
-    activeGatewayCountForStaker = 1;
-    stakerProxy = await ostComposer.generateStakerProxy.call(stakeRequest.staker);
-    await ostComposer.generateStakerProxy(stakeRequest.staker);
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, activeGatewayCountForStaker);
+    gatewayCount = new BN(2);
+    stakerProxy = await StakerProxy.new(stakeRequest.staker);
+    await ostComposer.setStakerProxy(stakeRequest.staker, stakerProxy.address);
+    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, gatewayCount);
   });
 
-  it('should be able to successfully accept stake', async () => {
-    const activeGatewayRequestCountBeforeAS = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    const response = await ostComposer.acceptStakeRequest(
+  it('should be able to successfully reject stake', async () => {
+    const response = await ostComposer.rejectStakeRequest(
       stakeHash,
-      hashLock,
       { from: worker },
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
-    const activeGatewayRequestCountAfterAS = await ostComposer.activeStakeRequestCount(
+    const activeGatewayRequestCount = await ostComposer.activeStakeRequestCount(
       stakeRequest.staker,
     );
 
     assert.strictEqual(
-      (activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)).eqn(1),
+      activeGatewayRequestCount.eq(gatewayCount.subn(1)),
       true,
-      `Expected active gateway request for ${stakeRequest.staker} is `
-      + `${activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)}`
-      + `but got ${activeGatewayRequestCountAfterAS}`,
+      `Expected active gateway request for ${stakeRequest.staker} is ${gatewayCount.subn(1)}`
+      + `but got ${activeGatewayRequestCount}`,
     );
 
-    // Verifying the storage stakeRequestHash and stakeRequests references. After the acceptStakeRequest
-    // is successful, these two storage references are deleted.
+    // Verifying the storage stakeRequestHash and stakeRequests. After the rejectStakeRequest
+    // is successful, these two storage references are cleared.
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
       gateway.address,
@@ -150,17 +144,38 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
   });
 
-  it('should be able to transfer the value tokens to staker\'s staker proxy contract address', async () => {
-    const valueToken = await SpyToken.at(await gateway.valueToken.call());
-    await ostComposer.acceptStakeRequest(
+  it('should emit StakeRejected event', async () => {
+    const tx = await ostComposer.rejectStakeRequest(
       stakeHash,
-      hashLock,
+      { from: worker },
+    );
+
+    const events = EventDecoder.getEvents(tx, ostComposer);
+    const eventData = events.StakeRejected;
+
+    assert.strictEqual(
+      eventData.stakeRequestHash,
+      stakeHash,
+      'Incorrect stake request hash',
+    );
+    assert.strictEqual(
+      eventData.staker,
+      stakeRequest.staker,
+      'Incorrect staker address',
+    );
+  });
+
+  it('should be able to transfer the value tokens to staker', async () => {
+    const valueToken = await SpyToken.at(await gateway.valueToken.call());
+
+    await ostComposer.rejectStakeRequest(
+      stakeHash,
       { from: worker },
     );
 
     assert.strictEqual(
       await valueToken.toAddress.call(),
-      stakerProxy,
+      stakeRequest.staker,
       'The spy did not record staker address correctly',
     );
     assert.strictEqual(
@@ -171,72 +186,27 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
   });
 
-  it('should be able to transfer the base tokens to staker\'s staker proxy contract address', async () => {
-    const baseToken = await SpyToken.at(await gateway.baseToken.call());
-
-    await ostComposer.acceptStakeRequest(
-      stakeHash,
-      hashLock,
-      { from: worker },
-    );
-
-    assert.strictEqual(
-      await baseToken.fromAddress.call(),
-      worker,
-      'The spy did not record facilitator address correctly',
-    );
-    assert.strictEqual(
-      await baseToken.toAddress.call(),
-      stakerProxy,
-      'The spy did not record staker address correctly',
-    );
-
-    const bounty = await gateway.bounty.call();
-
-    assert.strictEqual(
-      bounty.eq(await baseToken.transferAmount.call()),
-      true,
-      `Expected amount to be returned to ${stakeRequest.staker} is ${bounty} `
-      + `but got ${await baseToken.transferAmount.call()}`,
-    );
-
-  });
-
-  it('should fail when stake request hash is null', async () => {
+  it('should fail when non-worker address requests rejection of stake request', async () => {
+    const nonWorker = accounts[10];
     await Utils.expectRevert(
-      ostComposer.acceptStakeRequest(
-        Utils.ZERO_BYTES32,
-        hashLock,
-        { from: worker },
+      ostComposer.rejectStakeRequest(
+        stakeHash,
+        { from: nonWorker },
       ),
-      'Stake request must exists.',
+      'Only whitelisted workers are allowed to call this method.',
     );
   });
 
-  it('should fail when value tokens transfer to staker proxy fails', async () => {
+  it('should fail when transfer of value tokens to staker fails', async () => {
     const spyValueToken = await SpyToken.at(await gateway.valueToken.call());
     await spyValueToken.setTransferFakeResponse(false);
 
     await Utils.expectRevert(
-      ostComposer.acceptStakeRequest(
+      ostComposer.revokeStakeRequest(
         stakeHash,
-        hashLock,
-        { from: worker },
+        { from: stakeRequest.staker },
       ),
-      'Staked amount must be transferred to the staker proxy.',
-    );
-  });
-
-  it('should fail when bounty transfer to staker proxy fails', async () => {
-    const spyBaseToken = await SpyToken.at(await gateway.baseToken.call());
-    await spyBaseToken.setTransferFromFakeResponse(false);
-    await Utils.expectRevert(
-      ostComposer.acceptStakeRequest(
-        stakeHash,
-        hashLock,
-        { from: worker },
-      ),
-      'Bounty amount must be transferred to stakerProxy.',
+      'Staked amount must be transferred to staker.',
     );
   });
 });

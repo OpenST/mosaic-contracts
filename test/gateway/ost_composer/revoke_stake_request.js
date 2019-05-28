@@ -22,8 +22,8 @@ const OSTComposer = artifacts.require('TestOSTComposer');
 const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils');
-const EventDecoder = require('../test_lib/event_decoder.js');
+const Utils = require('../../test_lib/utils');
+const EventDecoder = require('../../test_lib/event_decoder.js');
 
 contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
   let organization;

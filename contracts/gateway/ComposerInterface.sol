@@ -22,5 +22,11 @@ pragma solidity ^0.5.0;
 
 
 interface ComposerInterface {
-    function removeStakerProxy(address _owner) external returns(bool);
+
+	/**
+     * @notice It deletes the StakerProxy contract for the staker.
+     *
+     * @param _owner Owner of the StakerProxy contract.
+     */
+    function removeStakerProxy(address _owner) external;
 }

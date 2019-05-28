@@ -26,6 +26,7 @@ import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./ComposerInterface.sol";
 
 /**
  * @title OSTComposer implements Organized contract. Reentrancy is prevented
@@ -33,7 +34,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  *
  * @notice It facilitates the staker to get the OSTPrime on sidechains.
  */
-contract OSTComposer is Organized, Mutex {
+contract OSTComposer is Organized, Mutex, ComposerInterface {
 
      /* Usings */
 
