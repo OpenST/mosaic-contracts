@@ -269,7 +269,7 @@ contract OSTComposer is Organized, Mutex {
 
         EIP20GatewayInterface gateway = stakeRequest.gateway;
 
-        StakerProxy stakerProxy = stakerProxies[address(stakeRequest.staker)];
+        StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
@@ -319,6 +319,7 @@ contract OSTComposer is Organized, Mutex {
         );
 
         removeStakeRequest(_stakeRequestHash);
+
         emit StakeRevoked(staker, _stakeRequestHash);
     }
 
@@ -347,8 +348,8 @@ contract OSTComposer is Organized, Mutex {
     }
 
     /**
-     * @notice It can only be called by StakerProxy contract of the staker. It deletes
-     *         the StakerProxy contract of the staker.
+     * @notice It can only be called by StakerProxy contract of the staker. It
+     *         deletes the StakerProxy contract of the staker.
      *
      * @param _owner Owner of the StakerProxy contract.
      */
