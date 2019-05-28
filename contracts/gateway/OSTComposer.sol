@@ -125,6 +125,19 @@ contract OSTComposer is Organized, Mutex {
     mapping (bytes32 => StakeRequest) public stakeRequests;
 
 
+    /* Modifiers */
+
+    /** Requires that caller is valid proxy address. */
+    modifier onlyStakerProxy(address _owner) {
+        StakerProxy stakerProxy = stakerProxies[_owner];
+        require(
+            address(stakerProxy) == msg.sender,
+            "Caller is invalid proxy address."
+        );
+        _;
+    }
+
+
     /* Special Functions */
 
     /**
@@ -357,13 +370,8 @@ contract OSTComposer is Organized, Mutex {
         address _owner
     )
         external
+        onlyStakerProxy(_owner)
     {
-        StakerProxy stakerProxy = stakerProxies[_owner];
-        require(
-            address(stakerProxy) == msg.sender,
-            "Caller is invalid proxy address."
-        );
-
         // Verify if any previous stake requests are pending.
         require(
             activeStakeRequestCount[_owner] == 0,
