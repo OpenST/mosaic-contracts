@@ -16,8 +16,7 @@
 
 import Nibbles from './Nibbles';
 import NodeBase from './NodeBase';
-import { BranchNode } from './BranchNode';
-import { BranchKeys } from './BranchNode';
+import { BranchNode, BranchKeys } from './BranchNode';
 import ExtensionNode from './ExtensionNode';
 import LeafNode from './LeafNode';
 import ProofData from './ProofData';
@@ -109,6 +108,7 @@ const FuzzyProofGenerator = {
     });
 
     const proofData = {
+      pattern,
       value: (endingWithBranchNode ? rlpValuehash : valueHash),
       encodedPath: path,
       rlpParentNodes: rlp.encode(rlpParentNodesArray),
@@ -152,7 +152,6 @@ const FuzzyProofGenerator = {
   processBranch(pattern: string, index: number): void {
     if (index === pattern.length) {
       if (pattern.length === 1 || pattern[index - 2] !== 'b') {
-
         // The verification library we are using in our project would accept
         // as a valid proof only a path ending with double 'b' (putting aside
         // an ending leaf node, as it's always allowed).
