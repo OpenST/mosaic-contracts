@@ -275,7 +275,7 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         onlyWorker
         returns(bytes32 messageHash_)
     {
-        StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
+        StakeRequest memory stakeRequest = stakeRequests[_stakeRequestHash];
         require(
             stakeRequest.staker != address(0),
             "Stake request must exists."
@@ -284,6 +284,11 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         EIP20GatewayInterface gateway = stakeRequest.gateway;
 
         StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
+
+        activeStakeRequestCount[stakeRequest.staker] = activeStakeRequestCount[stakeRequest.staker].sub(1);
+
+        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
+        delete stakeRequests[_stakeRequestHash];
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
@@ -307,11 +312,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
             _hashLock,
             stakeRequest.gateway
         );
-
-        activeStakeRequestCount[stakeRequest.staker] = activeStakeRequestCount[stakeRequest.staker].sub(1);
-
-        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
-        delete stakeRequests[_stakeRequestHash];
     }
 
     /**
@@ -404,10 +404,11 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
 
         EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
         uint256 amount = stakeRequests[_stakeRequestHash].amount;
-        EIP20Interface valueToken = gateway.valueToken();
 
         delete stakeRequestHashes[staker][address(stakeRequest.gateway)];
         delete stakeRequests[_stakeRequestHash];
+
+        EIP20Interface valueToken = gateway.valueToken();
 
         require(
             valueToken.transfer(staker, amount),
