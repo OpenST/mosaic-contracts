@@ -23,7 +23,7 @@ pragma solidity ^0.5.0;
 
 interface ComposerInterface {
 
-	/**
+    /**
      * @notice It deletes the StakerProxy contract for the staker.
      *
      * @param _owner Owner of the StakerProxy contract.

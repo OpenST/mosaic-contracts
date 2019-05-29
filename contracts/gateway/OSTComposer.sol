@@ -45,7 +45,7 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
 
     bytes32 constant public STAKEREQUEST_INTENT_TYPEHASH = keccak256(
         abi.encode(
-            "StakeRequest(address gateway,uint256 amount,address staker,address beneficiary,uint256 gasPrice,uint256 gasLimit, uint256 nonce)"
+            "StakeRequest(uint256 amount,address beneficiary,uint256 gasPrice,uint256 gasLimit,uint256 nonce,address staker,address gateway)"
         )
     );
 
@@ -164,7 +164,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
      *         OSTComposer. Staker should approve OSTComposer for token
      *         transfer.
      *
-     * @param _gateway Address of the gateway to stake.
      * @param _amount Amount that is to be staked.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted.
@@ -172,16 +171,17 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
      *                  and mint process done.
      * @param _gasLimit Gas limit that staker is ready to pay.
      * @param _nonce Staker nonce specific to gateway.
+     * @param _gateway Address of the gateway to stake.
      *
      * @return stakeRequestHash_ A unique hash for stake request.
      */
     function requestStake(
-        EIP20GatewayInterface _gateway,
         uint256 _amount,
         address _beneficiary,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        uint256 _nonce
+        uint256 _nonce,
+        EIP20GatewayInterface _gateway
     )
         external
         mutex
@@ -202,13 +202,13 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         );
 
         stakeRequestHash_ = hashStakeRequest(
-            msg.sender,
-            address(_gateway),
             _amount,
             _beneficiary,
             _gasPrice,
             _gasLimit,
-            _nonce
+            _nonce,
+            msg.sender,
+            address(_gateway)
         );
 
         stakeRequestHashes[msg.sender][address(_gateway)] = stakeRequestHash_;
@@ -419,13 +419,13 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
      * @notice It returns hashing of stake request as per EIP-712.
      */
     function hashStakeRequest(
-        address _staker,
-        address _gateway,
         uint256 _amount,
         address _beneficiary,
         uint256 _gasPrice,
         uint256 _gasLimit,
-        uint256 _nonce
+        uint256 _nonce,
+        address _staker,
+        address _gateway
     )
         private
         pure
@@ -434,13 +434,13 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         stakeRequestIntentHash_ = keccak256(
             abi.encodePacked(
                 STAKEREQUEST_INTENT_TYPEHASH,
-                _gateway,
                 _amount,
-                _staker,
                 _beneficiary,
                 _gasPrice,
                 _gasLimit,
-                _nonce
+                _nonce,
+                _staker,
+                _gateway
             ));
     }
 }

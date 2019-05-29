@@ -26,18 +26,18 @@ const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
 function getStakeRequestHash(stakeRequest, gateway) {
-  const stakeRequestMethod = 'StakeRequest(address gateway,uint256 amount,address staker,address beneficiary,uint256 gasPrice,uint256 gasLimit, uint256 nonce)';
+  const stakeRequestMethod = 'StakeRequest(uint256 amount,address beneficiary,uint256 gasPrice,uint256 gasLimit,uint256 nonce,address staker,address gateway)';
   const encodedTypeHash = web3.utils.sha3(web3.eth.abi.encodeParameter('string', stakeRequestMethod));
 
   const stakeIntentTypeHash = web3.utils.soliditySha3(
     { type: 'bytes32', value: encodedTypeHash },
-    { type: 'address', value: gateway.address },
     { type: 'uint256', value: stakeRequest.amount },
-    { type: 'address', value: stakeRequest.staker },
     { type: 'address', value: stakeRequest.beneficiary },
     { type: 'uint256', value: stakeRequest.gasPrice },
     { type: 'uint256', value: stakeRequest.gasLimit },
     { type: 'uint256', value: stakeRequest.nonce },
+    { type: 'address', value: stakeRequest.staker },
+    { type: 'address', value: gateway.address },
   );
 
   return stakeIntentTypeHash;
@@ -67,12 +67,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     );
 
     const response = await ostComposer.requestStake(
-      gateway.address,
       stakeRequest.amount,
       stakeRequest.beneficiary,
       stakeRequest.gasPrice,
       stakeRequest.gasLimit,
       stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -150,12 +150,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
 
   it('should verify the returned stakeRequestHash', async () => {
     const response = await ostComposer.requestStake.call(
-      gateway.address,
       stakeRequest.amount,
       stakeRequest.beneficiary,
       stakeRequest.gasPrice,
       stakeRequest.gasLimit,
       stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -170,12 +170,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
   it('should verify the transfer of staked value token', async () => {
     const valueToken = await SpyToken.at(await gateway.valueToken.call());
     await ostComposer.requestStake(
-      gateway.address,
       stakeRequest.amount,
       stakeRequest.beneficiary,
       stakeRequest.gasPrice,
       stakeRequest.gasLimit,
       stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -201,12 +201,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
 
   it('should emit StakeRequested event', async () => {
     const tx = await ostComposer.requestStake(
-      gateway.address,
       stakeRequest.amount,
       stakeRequest.beneficiary,
       stakeRequest.gasPrice,
       stakeRequest.gasLimit,
       stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -254,12 +254,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     const amount = 0;
     await Utils.expectRevert(
       ostComposer.requestStake(
-        gateway.address,
         amount,
         stakeRequest.beneficiary,
         stakeRequest.gasPrice,
         stakeRequest.gasLimit,
         stakeRequest.nonce,
+        gateway.address,
       ),
       { from: stakeRequest.staker },
       'Stake amount must not be zero.',
@@ -269,12 +269,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
   it('should fail when beneficiary is null', async () => {
     await Utils.expectRevert(
       ostComposer.requestStake(
-        gateway.address,
         stakeRequest.amount,
         Utils.NULL_ADDRESS,
         stakeRequest.gasPrice,
         stakeRequest.gasLimit,
         stakeRequest.nonce,
+        gateway.address,
       ),
       { from: stakeRequest.staker },
       'Stake amount must not be zero.',
@@ -286,12 +286,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     const nonce = stakeRequest.nonce.addn(1) ;
     await Utils.expectRevert(
       ostComposer.requestStake(
-        gateway.address,
         stakeRequest.amount,
         stakeRequest.beneficiary,
         stakeRequest.gasPrice,
         stakeRequest.gasLimit,
         nonce,
+        gateway.address,
       ),
       { from: stakeRequest.staker },
       'Incorrect staker nonce.',
@@ -300,23 +300,23 @@ contract('OSTComposer.requestStake() ', (accounts) => {
 
   it('should fail when an request from staker is already pending at same gateway', async () => {
     await ostComposer.requestStake(
-      gateway.address,
       stakeRequest.amount,
       stakeRequest.beneficiary,
       stakeRequest.gasPrice,
       stakeRequest.gasLimit,
       stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
     await Utils.expectRevert(
       ostComposer.requestStake(
-        gateway.address,
         stakeRequest.amount,
         stakeRequest.beneficiary,
         stakeRequest.gasPrice,
         stakeRequest.gasLimit,
         stakeRequest.nonce,
+        gateway.address,
         { from: stakeRequest.staker },
       ),
       'Request for this staker at this gateway is already in process.',
@@ -330,12 +330,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
 
     await Utils.expectRevert(
       ostComposer.requestStake(
-        gateway.address,
         stakeRequest.amount,
         stakeRequest.beneficiary,
         stakeRequest.gasPrice,
         stakeRequest.gasLimit,
         stakeRequest.nonce,
+        gateway.address,
         { from: stakeRequest.staker },
       ),
       'Value token transfer returned false.',

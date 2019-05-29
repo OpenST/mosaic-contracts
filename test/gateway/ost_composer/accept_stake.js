@@ -148,6 +148,39 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       Utils.NULL_ADDRESS,
       'Gateway address must be reset to null address',
     );
+
+    // Verifying the stake method of SpyEIP20Gateway is called.
+
+    assert.strictEqual(
+      stakeRequest.amount.eq(await gateway.amount.call()),
+      true,
+      "The spy did not record the amount correctly",
+    );
+
+    assert.strictEqual(
+      stakeRequest.beneficiary,
+      await gateway.beneficiary(),
+      "The spy did not record the beneficiary correctly",
+    );
+
+    assert.strictEqual(
+      stakeRequest.gasPrice.eq(await gateway.gasPrice()),
+      true,
+      "The spy did not record the gasPrice correctly",
+    );
+
+    assert.strictEqual(
+      stakeRequest.gasLimit.eq(await gateway.gasLimit()),
+      true,
+      "The spy did not record the gasLimit correctly",
+    );
+
+    assert.strictEqual(
+      stakeRequest.nonce.eq(await gateway.nonce()),
+      true,
+      "The spy did not record the nonce correctly",
+    );
+
   });
 
   it('should be able to transfer the value tokens to staker\'s staker proxy contract address', async () => {
