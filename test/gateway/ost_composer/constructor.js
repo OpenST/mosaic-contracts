@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +18,32 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
+const OSTComposer = artifacts.require('OSTComposer');
 
-interface ComposerInterface {
+contract('OSTComposer.constructor() ', (accounts) => {
+  let organization;
+  let ostComposer;
 
-    /**
-     * @notice It deletes the StakerProxy contract for the staker.
-     *
-     * @param _owner Owner of the StakerProxy contract.
-     */
-    function removeStakerProxy(address _owner) external;
-}
+  beforeEach(async () => {
+    organization = accounts[4];
+  });
+
+  it('should able to deploy contract successfully', async () => {
+    ostComposer = await OSTComposer.new(organization);
+
+    assert(
+      web3.utils.isAddress(ostComposer.address),
+      'Returned value is not a valid address.',
+    );
+  });
+
+  it('should deploy with correct organization address', async () => {
+    ostComposer = await OSTComposer.new(organization);
+
+    assert.strictEqual(
+      await ostComposer.organization(),
+      organization,
+      'Incorrect organization is set',
+    );
+  });
+});
