@@ -6,6 +6,7 @@ import ProofData from './src/ProofData';
 import patterns from './patterns';
 
 interface HexProof {
+  pattern: string;
   value: string;
   encodedPath: string;
   rlpParentNodes: string;
@@ -20,6 +21,7 @@ function bufferToHex(buffer: Buffer): string {
 /** Converts a proof to a hex proof. */
 function proofToHexProof(proof: ProofData): HexProof {
   return {
+    pattern: proof.pattern,
     value: bufferToHex(proof.value),
     encodedPath: bufferToHex(proof.encodedPath),
     rlpParentNodes: bufferToHex(proof.rlpParentNodes),

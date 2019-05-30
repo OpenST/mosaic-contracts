@@ -42,6 +42,7 @@ async function verifyProof(pattern, pathMaxLength, valueMaxLength, merklePatrici
 
   if (!proofStatus) {
     console.log(
+      proofData.pattern,
       `0x${proofData.value.toString('hex')}`,
       `0x${proofData.encodedPath.toString('hex')}`,
       `0x${proofData.rlpParentNodes.toString('hex')}`,
@@ -55,11 +56,12 @@ async function verifyProof(pattern, pathMaxLength, valueMaxLength, merklePatrici
 async function verifyProofs(pattern, merklePatriciaLib) {
   for (let i = 0; i < TEST_PATH_LENGTHS.length; i += 1) {
     for (let j = 0; j < TEST_VALUE_LENGTHS.length; j += 1) {
+      // eslint-disable-next-line no-await-in-loop
       await verifyProof(
         pattern,
         Math.max(TEST_PATH_LENGTHS[i], Math.ceil(pattern.length / 2)),
         Math.max(TEST_VALUE_LENGTHS[j], Math.ceil(pattern.length / 2)),
-        merklePatriciaLib
+        merklePatriciaLib,
       );
     }
   }
