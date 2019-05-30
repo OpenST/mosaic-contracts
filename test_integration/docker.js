@@ -30,7 +30,7 @@ const docker = () => {
   const waitForAuxiliaryNode = waitPort({ port: auxiliaryPort, output: 'silent' });
   return Promise.all([waitForOriginNode, waitForAuxiliaryNode]).then(
     // even after the ports are available the nodes need a bit of time to get online
-    () => asyncSleep(10000),
+    () => asyncSleep(5000),
   ).then(() => ({
     rpcEndpointOrigin: `http://localhost:${originPort}`,
     rpcEndpointAuxiliary: `http://localhost:${auxiliaryPort}`,
