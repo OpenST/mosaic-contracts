@@ -41,7 +41,6 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
     expectedActiveGatewayCount = new BN(0);
     stakerProxy = accounts[10];
     await ostComposer.setStakerProxy(stakeRequest.staker, stakerProxy);
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, expectedActiveGatewayCount);
   });
 
   it('should be able to successfully remove staker proxy', async () => {
@@ -51,17 +50,6 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
-
-    const activeGatewayRequestCount = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    assert.strictEqual(
-      activeGatewayRequestCount.eq(expectedActiveGatewayCount),
-      true,
-      `Expected active gateway request for ${stakeRequest.staker} is ${expectedActiveGatewayCount}`
-      + `but got ${activeGatewayRequestCount}`,
-    );
 
     const stakerProxyAddress = await ostComposer.stakerProxies.call(stakeRequest.staker);
     assert.strictEqual(
@@ -90,19 +78,6 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
         { from: stakerProxy },
       ),
       'Caller is invalid proxy address.',
-    );
-  });
-
-  it('should fail when previous stake request is active for a staker at the gateway', async () => {
-    // It would fail for any value greater than 0.
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, 1);
-
-    await Utils.expectRevert(
-      ostComposer.removeStakerProxy(
-        stakeRequest.staker,
-        { from: stakerProxy },
-      ),
-      'Stake request is active on gateways.',
     );
   });
 });

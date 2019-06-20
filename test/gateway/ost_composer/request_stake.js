@@ -62,10 +62,6 @@ contract('OSTComposer.requestStake() ', (accounts) => {
   });
 
   it('should be able to successfully request stake', async () => {
-    const beforeRSActiveGatewayRequestCount = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
     const response = await ostComposer.requestStake(
       stakeRequest.amount,
       stakeRequest.beneficiary,
@@ -77,18 +73,6 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
-
-    const afterRSActiveGatewayRequestCount = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    assert.strictEqual(
-      (afterRSActiveGatewayRequestCount.sub(beforeRSActiveGatewayRequestCount)).eqn(1),
-      true,
-      `Expected active gateway request for ${stakeRequest.staker} is `
-      + `${afterRSActiveGatewayRequestCount.sub(beforeRSActiveGatewayRequestCount)} but got `
-      + `${afterRSActiveGatewayRequestCount}`,
-    );
 
     // Verifying the storage `stakeRequestHash` and `stakeRequests`.
     const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway);

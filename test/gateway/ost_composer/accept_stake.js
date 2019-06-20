@@ -64,14 +64,9 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     activeGatewayCountForStaker = 1;
     stakerProxy = await ostComposer.generateStakerProxy.call(stakeRequest.staker);
     await ostComposer.generateStakerProxy(stakeRequest.staker);
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, activeGatewayCountForStaker);
   });
 
   it('should be able to successfully accept stake', async () => {
-    const activeGatewayRequestCountBeforeAS = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
     const response = await ostComposer.acceptStakeRequest(
       stakeHash,
       hashLock,
@@ -79,18 +74,6 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
-
-    const activeGatewayRequestCountAfterAS = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    assert.strictEqual(
-      (activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)).eqn(1),
-      true,
-      `Expected active gateway request for ${stakeRequest.staker} is `
-      + `${activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)}`
-      + `but got ${activeGatewayRequestCountAfterAS}`,
-    );
 
     // Verifying the storage stakeRequestHash and stakeRequests references. After the acceptStakeRequest
     // is successful, these two storage references are deleted.
