@@ -23,6 +23,7 @@ pragma solidity ^0.5.0;
 import "./ComposerInterface.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
+import "../lib/Mutex.sol";
 
 
 /**
@@ -32,7 +33,7 @@ import "../lib/EIP20Interface.sol";
  *         the owner. Only the owner can self-destruct the StakerProxy and
  *         receive all stored value.
  */
-contract StakerProxy {
+contract StakerProxy is Mutex {
 
     /* Storage */
 
@@ -41,9 +42,6 @@ contract StakerProxy {
 
     /** The composer deployed the StakerProxy on behalf of the owner. */
     address payable public owner;
-
-    /** A mutex to prevent reentrancy from a malicious gateway. */
-    bool stakeMutex;
 
 
     /* Modifiers */
@@ -66,16 +64,6 @@ contract StakerProxy {
         );
 
         _;
-    }
-
-    /** Mutex to prevent reentrancy attack. */
-    modifier mutexed() {
-        assert(!stakeMutex);
-        stakeMutex = true;
-
-        _;
-
-        stakeMutex = false;
     }
 
 
@@ -124,15 +112,9 @@ contract StakerProxy {
     )
         external
         onlyComposer
-        mutexed
+        mutex
         returns (bytes32 messageHash_)
     {
-        uint256 nonce = _gateway.getNonce(address(this));
-        require(
-            nonce == _nonce,
-            "Nonce must match nonce expected by gateway."
-        );
-
         approveTransfers(_gateway, _amount);
 
         messageHash_ = _gateway.stake(
@@ -140,7 +122,7 @@ contract StakerProxy {
             _beneficiary,
             _gasPrice,
             _gasLimit,
-            nonce,
+            _nonce,
             _hashLock
         );
     }
@@ -160,7 +142,7 @@ contract StakerProxy {
         uint256 _value
     )
         external
-        mutexed
+        mutex
         onlyOwner
     {
         require(

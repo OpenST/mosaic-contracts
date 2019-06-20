@@ -271,7 +271,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         bytes32 _hashLock
     )
         external
-        mutex
         onlyWorker
         returns(bytes32 messageHash_)
     {
@@ -280,15 +279,14 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
             stakeRequest.staker != address(0),
             "Stake request must exists."
         );
+        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
+        delete stakeRequests[_stakeRequestHash];
 
         EIP20GatewayInterface gateway = stakeRequest.gateway;
 
         StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
 
         activeStakeRequestCount[stakeRequest.staker] = activeStakeRequestCount[stakeRequest.staker].sub(1);
-
-        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
-        delete stakeRequests[_stakeRequestHash];
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
@@ -324,7 +322,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         bytes32 _stakeRequestHash
     )
         external
-        mutex
     {
         address staker = stakeRequests[_stakeRequestHash].staker;
         require(
@@ -347,7 +344,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         bytes32 _stakeRequestHash
     )
         external
-        mutex
         onlyWorker
     {
         address staker = stakeRequests[_stakeRequestHash].staker;

@@ -171,21 +171,4 @@ contract('StakerProxy.stake()', (accounts) => {
       'This function can only be called by the composer.',
     );
   });
-
-  it('should fail if nonces do not match', async () => {
-    const wrongNonce = nonce - 5;
-    await Utils.expectRevert(
-      stakerProxy.stake.call(
-        amount,
-        beneficiary,
-        gasPrice,
-        gasLimit,
-        wrongNonce,
-        hashLock,
-        spyGateway.address,
-        { from: composer },
-      ),
-      'Nonce must match nonce expected by gateway.',
-    );
-  });
 });
