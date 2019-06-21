@@ -25,7 +25,6 @@ import "./StakerProxy.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ComposerInterface.sol";
 
 /**
@@ -35,11 +34,6 @@ import "./ComposerInterface.sol";
  * @notice It facilitates the staker to get the OSTPrime on sidechains.
  */
 contract OSTComposer is Organized, Mutex, ComposerInterface {
-
-     /* Usings */
-
-    using SafeMath for uint256;
-
 
     /* Constants */
 
@@ -281,6 +275,10 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         EIP20GatewayInterface gateway = stakeRequest.gateway;
 
         StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
+        require(
+            address(stakerProxy) != address(0),
+            "StakerProxy address is null."
+        );
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
