@@ -52,7 +52,7 @@
     "web3": "1.0.0-beta.36"
   },
   "scripts": {
-    "update": "git submodule update --init --recursive && npm ci",
+    "update": "git submodule update --init --recursive && npm ci && cd contracts/utilitytoken && npm ci && cd -",
     "compile": "truffle compile",
     "compile-all": "truffle compile --all",
     "compile:ts": "tsc --target es5",
