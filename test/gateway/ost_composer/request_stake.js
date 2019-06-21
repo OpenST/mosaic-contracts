@@ -18,6 +18,7 @@
 //
 // ----------------------------------------------------------------------------
 
+const EthUtils = require('ethereumjs-util');
 const OSTComposer = artifacts.require('OSTComposer');
 const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
@@ -25,7 +26,7 @@ const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-function getStakeRequestHash(stakeRequest, gateway) {
+function getStakeRequestHash(stakeRequest, gateway, ostComposer) {
   const stakeRequestMethod = 'StakeRequest(uint256 amount,address beneficiary,uint256 gasPrice,uint256 gasLimit,uint256 nonce,address staker,address gateway)';
   const encodedTypeHash = web3.utils.sha3(web3.eth.abi.encodeParameter('string', stakeRequestMethod));
 
@@ -40,7 +41,29 @@ function getStakeRequestHash(stakeRequest, gateway) {
     { type: 'address', value: gateway.address },
   );
 
-  return stakeIntentTypeHash;
+  const EIP712_DOMAIN_TYPEHASH = web3.utils.soliditySha3(
+    'EIP712Domain(address verifyingContract)',
+  );
+  const DOMAIN_SEPARATOR = web3.utils.soliditySha3(
+    web3.eth.abi.encodeParameters(
+      ['bytes32', 'address'],
+      [EIP712_DOMAIN_TYPEHASH, ostComposer.address],
+    ),
+  );
+
+  const eip712TypeData = EthUtils.keccak(
+    Buffer.concat(
+      [
+        Buffer.from('19', 'hex'),
+        Buffer.from('01', 'hex'),
+        EthUtils.toBuffer(DOMAIN_SEPARATOR),
+        EthUtils.toBuffer(stakeIntentTypeHash),
+      ],
+    ),
+  );
+
+  return EthUtils.bufferToHex(eip712TypeData);
+
 }
 
 contract('OSTComposer.requestStake() ', (accounts) => {
@@ -91,7 +114,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     );
 
     // Verifying the storage `stakeRequestHash` and `stakeRequests`.
-    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway);
+    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway, ostComposer);
 
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
@@ -159,7 +182,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       { from: stakeRequest.staker },
     );
 
-    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway);
+    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway, ostComposer);
     assert.strictEqual(
       response,
       stakeIntentTypeHash,

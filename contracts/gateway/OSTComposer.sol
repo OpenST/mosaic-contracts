@@ -125,6 +125,21 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
     /* Stores all the parameters of stake request based on stake request hash. */
     mapping (bytes32 => StakeRequest) public stakeRequests;
 
+    /* Private Variables */
+
+    /** Domain separator encoding per EIP 712. */
+    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(
+        "EIP712Domain(address verifyingContract)"
+    );
+
+    /** Domain separator per EIP 712. */
+    bytes32 private DOMAIN_SEPARATOR = keccak256(
+        abi.encode(
+            EIP712_DOMAIN_TYPEHASH,
+            address(this)
+        )
+    );
+
 
     /* Modifiers */
 
@@ -414,6 +429,15 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
 
     /**
      * @notice It returns hashing of stake request as per EIP-712.
+     *
+     * @dev Hashing of stakeRequest should confirm with EIP-712.
+     *      As specified by EIP 712, it requires
+     *          - an initial byte
+     *          - the version byte for structured data
+     *          - the domain separator
+     *          - hash obtained from params
+     *
+     *      See: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md
      */
     function hashStakeRequest(
         uint256 _amount,
@@ -425,10 +449,11 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         address _gateway
     )
         private
-        pure
+        view
         returns(bytes32 stakeRequestIntentHash_)
     {
-        stakeRequestIntentHash_ = keccak256(
+
+        bytes32 hash = keccak256(
             abi.encodePacked(
                 STAKEREQUEST_INTENT_TYPEHASH,
                 _amount,
@@ -439,5 +464,15 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
                 _staker,
                 _gateway
             ));
+
+        // See: https://github.com/ethereum/EIPs/blob/master/assets/eip-712/Example.sol
+        stakeRequestIntentHash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19), // the initial 0x19 byte
+                byte(0x01), // the version byte for structured data
+                DOMAIN_SEPARATOR,
+                hash
+            )
+        );
     }
 }
