@@ -218,6 +218,18 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
   });
 
+  it('should fail if a staker proxy associated with the stake request does not exist', async () => {
+    await ostComposer.destroyStakerProxy(stakeRequest.staker);
+    await Utils.expectRevert(
+      ostComposer.acceptStakeRequest(
+        stakeHash,
+        hashLock,
+        { from: worker },
+      ),
+      'StakerProxy address is null.',
+    );
+  });
+
   it('should fail when stake request hash is null', async () => {
     await Utils.expectRevert(
       ostComposer.acceptStakeRequest(

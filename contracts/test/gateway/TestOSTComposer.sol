@@ -137,4 +137,13 @@ contract TestOSTComposer is OSTComposer {
         stakerProxy_ = new StakerProxy(_staker);
         stakerProxies[_staker] = stakerProxy_;
     }
+
+    /** Removes a staker proxy for the specified staker for test purposes. */
+    function destroyStakerProxy(
+        address payable _staker
+    )
+        external
+    {
+        delete stakerProxies[_staker];
+    }
 }
