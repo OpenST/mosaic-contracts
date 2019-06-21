@@ -25,7 +25,6 @@ import "./StakerProxy.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ComposerInterface.sol";
 
 /**
@@ -35,11 +34,6 @@ import "./ComposerInterface.sol";
  * @notice It facilitates the staker to get the OSTPrime on sidechains.
  */
 contract OSTComposer is Organized, Mutex, ComposerInterface {
-
-     /* Usings */
-
-    using SafeMath for uint256;
-
 
     /* Constants */
 
@@ -118,9 +112,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
 
     /* Mapping of staker addresses to their StakerProxy. */
     mapping (address => StakerProxy) public stakerProxies;
-
-    /* Stores number of all active stake request per staker. */
-    mapping(address => uint256) public activeStakeRequestCount;
 
     /* Stores all the parameters of stake request based on stake request hash. */
     mapping (bytes32 => StakeRequest) public stakeRequests;
@@ -234,7 +225,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
             staker: msg.sender,
             gateway: _gateway
         });
-        activeStakeRequestCount[msg.sender] = activeStakeRequestCount[msg.sender].add(1);
 
         EIP20Interface valueToken = _gateway.valueToken();
 
@@ -285,8 +275,10 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         EIP20GatewayInterface gateway = stakeRequest.gateway;
 
         StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
-
-        activeStakeRequestCount[stakeRequest.staker] = activeStakeRequestCount[stakeRequest.staker].sub(1);
+        require(
+            address(stakerProxy) != address(0),
+            "StakerProxy address is null."
+        );
 
         EIP20Interface valueToken = gateway.valueToken();
         require(
@@ -369,12 +361,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
         external
         onlyStakerProxy(_owner)
     {
-        // Verify if any previous stake requests are pending.
-        require(
-            activeStakeRequestCount[_owner] == 0,
-            "Stake request is active on gateways."
-        );
-
         // Resetting the proxy address of the staker.
         delete stakerProxies[_owner];
     }
@@ -396,7 +382,6 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
     {
         StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
         address staker = stakeRequests[_stakeRequestHash].staker;
-        activeStakeRequestCount[staker] = activeStakeRequestCount[staker].sub(1);
 
         EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
         uint256 amount = stakeRequests[_stakeRequestHash].amount;

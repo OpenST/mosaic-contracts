@@ -22,8 +22,10 @@ const OSTComposer = artifacts.require('TestOSTComposer');
 const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
 const MockOrganization = artifacts.require('MockOrganization');
+
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
+const web3 = require('../../test_lib/web3');
 
 contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
   let organization;
@@ -33,7 +35,6 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
   let stakeHash;
   let hashLock;
   let worker;
-  let activeGatewayCountForStaker;
   let stakerProxy;
 
   beforeEach(async () => {
@@ -61,17 +62,11 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       stakeRequest.nonce,
       stakeHash,
     );
-    activeGatewayCountForStaker = 1;
     stakerProxy = await ostComposer.generateStakerProxy.call(stakeRequest.staker);
     await ostComposer.generateStakerProxy(stakeRequest.staker);
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, activeGatewayCountForStaker);
   });
 
   it('should be able to successfully accept stake', async () => {
-    const activeGatewayRequestCountBeforeAS = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
     const response = await ostComposer.acceptStakeRequest(
       stakeHash,
       hashLock,
@@ -80,20 +75,8 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
-    const activeGatewayRequestCountAfterAS = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    assert.strictEqual(
-      (activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)).eqn(1),
-      true,
-      `Expected active gateway request for ${stakeRequest.staker} is `
-      + `${activeGatewayRequestCountBeforeAS.sub(activeGatewayRequestCountAfterAS)}`
-      + `but got ${activeGatewayRequestCountAfterAS}`,
-    );
-
-    // Verifying the storage stakeRequestHash and stakeRequests references. After the acceptStakeRequest
-    // is successful, these two storage references are deleted.
+    // Verifying the storage stakeRequestHash and stakeRequests references.
+    // After the acceptStakeRequest is successful, these two storage references are deleted.
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
       gateway.address,
@@ -154,36 +137,36 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     assert.strictEqual(
       stakeRequest.amount.eq(await gateway.amount.call()),
       true,
-      "The spy did not record the amount correctly",
+      'The spy did not record the amount correctly',
     );
 
     assert.strictEqual(
       stakeRequest.beneficiary,
       await gateway.beneficiary(),
-      "The spy did not record the beneficiary correctly",
+      'The spy did not record the beneficiary correctly',
     );
 
     assert.strictEqual(
       stakeRequest.gasPrice.eq(await gateway.gasPrice()),
       true,
-      "The spy did not record the gasPrice correctly",
+      'The spy did not record the gasPrice correctly',
     );
 
     assert.strictEqual(
       stakeRequest.gasLimit.eq(await gateway.gasLimit()),
       true,
-      "The spy did not record the gasLimit correctly",
+      'The spy did not record the gasLimit correctly',
     );
 
     assert.strictEqual(
       stakeRequest.nonce.eq(await gateway.nonce()),
       true,
-      "The spy did not record the nonce correctly",
+      'The spy did not record the nonce correctly',
     );
-
   });
 
-  it('should be able to transfer the value tokens to staker\'s staker proxy contract address', async () => {
+  it('should be able to transfer the value tokens to staker\'s staker '
+    + 'proxy contract address', async () => {
     const valueToken = await SpyToken.at(await gateway.valueToken.call());
     await ostComposer.acceptStakeRequest(
       stakeHash,
@@ -204,7 +187,8 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     );
   });
 
-  it('should be able to transfer the base tokens to staker\'s staker proxy contract address', async () => {
+  it('should be able to transfer the base tokens to staker\'s staker '
+    + 'proxy contract address', async () => {
     const baseToken = await SpyToken.at(await gateway.baseToken.call());
 
     await ostComposer.acceptStakeRequest(
@@ -232,7 +216,18 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
       `Expected amount to be returned to ${stakeRequest.staker} is ${bounty} `
       + `but got ${await baseToken.transferAmount.call()}`,
     );
+  });
 
+  it('should fail if a staker proxy associated with the stake request does not exist', async () => {
+    await ostComposer.destroyStakerProxy(stakeRequest.staker);
+    await Utils.expectRevert(
+      ostComposer.acceptStakeRequest(
+        stakeHash,
+        hashLock,
+        { from: worker },
+      ),
+      'StakerProxy address is null.',
+    );
   });
 
   it('should fail when stake request hash is null', async () => {

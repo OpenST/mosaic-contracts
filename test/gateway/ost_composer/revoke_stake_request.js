@@ -56,7 +56,6 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
       stakeHash,
     );
     gatewayCount = new BN(2);
-    await ostComposer.setActiveStakeRequestCount(stakeRequest.staker, gatewayCount);
   });
 
   it('should be able to successfully revoke stake request', async () => {
@@ -66,17 +65,6 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
-
-    const activeGatewayRequestCount = await ostComposer.activeStakeRequestCount(
-      stakeRequest.staker,
-    );
-
-    assert.strictEqual(
-      activeGatewayRequestCount.eq(gatewayCount.subn(1)),
-      true,
-      `Expected active gateway request for ${stakeRequest.staker} is ${gatewayCount.subn(1)}`
-      + `but got ${activeGatewayRequestCount}`,
-    );
 
     // Verifying the storage stakeRequestHash and stakeRequests. After the revokeStakeRequest
     // is successful, these two storage references are cleared.

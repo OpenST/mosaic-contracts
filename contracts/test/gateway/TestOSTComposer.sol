@@ -120,22 +120,6 @@ contract TestOSTComposer is OSTComposer {
         stakerProxies[_staker] = _stakerProxy;
     }
 
-     /**
-      * @notice This is used for testing. It is used to set the
-      *         activeStakeRequestCount storage.
-      *
-      * @param _staker Address of the staker.
-      * @param _count Count of the active gateway request by the staker.
-      */
-    function setActiveStakeRequestCount(
-        address _staker,
-        uint256 _count
-    )
-        external
-    {
-        activeStakeRequestCount[_staker] = _count;
-    }
-
     /**
      * @notice This is used for testing. It is used to set the stakerProxy
      *         storage by creating the StakerProxy contract address for the staker.
@@ -152,5 +136,14 @@ contract TestOSTComposer is OSTComposer {
     {
         stakerProxy_ = new StakerProxy(_staker);
         stakerProxies[_staker] = stakerProxy_;
+    }
+
+    /** Removes a staker proxy for the specified staker for test purposes. */
+    function destroyStakerProxy(
+        address payable _staker
+    )
+        external
+    {
+        delete stakerProxies[_staker];
     }
 }
