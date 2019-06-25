@@ -20,16 +20,14 @@
 
 const OSTComposer = artifacts.require('TestOSTComposer');
 const MockOrganization = artifacts.require('MockOrganization');
-const StakerProxy = artifacts.require('StakerProxy');
-const BN = require('bn.js');
+const StakerProxy = artifacts.require('MockStakerProxy');
 const Utils = require('../../test_lib/utils');
 
-contract('OSTComposer.removeStakerProxy() ', (accounts) => {
+contract('OSTComposer.destructStakerProxy() ', (accounts) => {
   let organization;
   let ostComposer;
   const stakeRequest = {};
   let stakerProxy;
-  let expectedActiveGatewayCount;
   let owner;
   let worker;
   beforeEach(async () => {
@@ -38,15 +36,13 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
     organization = await MockOrganization.new(owner, worker);
     stakeRequest.staker = accounts[2];
     ostComposer = await OSTComposer.new(organization.address);
-    expectedActiveGatewayCount = new BN(0);
-    stakerProxy = accounts[10];
-    await ostComposer.setStakerProxy(stakeRequest.staker, stakerProxy);
+    stakerProxy = await StakerProxy.new();
+    await ostComposer.setStakerProxy(stakeRequest.staker, stakerProxy.address);
   });
 
   it('should be able to successfully remove staker proxy', async () => {
-    const response = await ostComposer.removeStakerProxy(
-      stakeRequest.staker,
-      { from: stakerProxy },
+    const response = await ostComposer.destructStakerProxy(
+      { from: stakeRequest.staker },
     );
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
@@ -57,27 +53,22 @@ contract('OSTComposer.removeStakerProxy() ', (accounts) => {
       Utils.NULL_ADDRESS,
       'Staker\'s proxy address must be reset to null',
     );
-  });
 
-  it('should fail when non proxy address request removal of staker proxy', async () => {
-    const nonProxy = accounts[8];
-    await Utils.expectRevert(
-      ostComposer.removeStakerProxy(
-        stakeRequest.staker,
-        { from: nonProxy },
-      ),
-      'Caller is invalid proxy address.',
+    const isSelfDestructed = await stakerProxy.selfDestruted.call();
+    assert.strictEqual(
+      isSelfDestructed,
+      true,
+      'Staker proxy self destruct must be called',
     );
   });
 
   it('should fail when owner doesn\'t have any deployed staker proxy', async () => {
-    const nonOwner = accounts[12];
+    const nonProxy = accounts[8];
     await Utils.expectRevert(
-      ostComposer.removeStakerProxy(
-        nonOwner,
-        { from: stakerProxy },
+      ostComposer.destructStakerProxy(
+        { from: nonProxy },
       ),
-      'Caller is invalid proxy address.',
+      'Staker proxy doesnot exist for this owner.',
     );
   });
 });
