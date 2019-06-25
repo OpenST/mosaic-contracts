@@ -375,7 +375,7 @@ contract OSTComposer is Organized, Mutex {
         StakerProxy stakerProxy = stakerProxies[msg.sender];
         require(
             address(stakerProxy) != address(0),
-            "Staker proxy doesnot exist for this owner."
+            "Staker proxy does not exist for the caller."
         );
         // Resetting the proxy address of the staker.
         delete stakerProxies[msg.sender];

@@ -68,7 +68,7 @@ contract('OSTComposer.destructStakerProxy() ', (accounts) => {
       ostComposer.destructStakerProxy(
         { from: nonProxy },
       ),
-      'Staker proxy doesnot exist for this owner.',
+      'Staker proxy does not exist for the caller.',
     );
   });
 });
