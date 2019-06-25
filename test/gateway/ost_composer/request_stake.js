@@ -18,7 +18,6 @@
 //
 // ----------------------------------------------------------------------------
 
-const EthUtils = require('ethereumjs-util');
 const OSTComposer = artifacts.require('OSTComposer');
 const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
@@ -59,7 +58,11 @@ contract('OSTComposer.requestStake() ', (accounts) => {
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
     // Verifying the storage `stakeRequestHash` and `stakeRequests`.
-    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address, ostComposer.address);
+    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
 
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
@@ -91,7 +94,11 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       { from: stakeRequest.staker },
     );
 
-    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address, ostComposer.address);
+    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
     assert.strictEqual(
       response,
       stakeIntentTypeHash,
@@ -215,7 +222,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
 
   it('should fail when staker nonce is incorrect', async () => {
     // Here, the correct nonce is 0.
-    const nonce = stakeRequest.nonce.addn(1) ;
+    const nonce = stakeRequest.nonce.addn(1);
     await Utils.expectRevert(
       ostComposer.requestStake(
         stakeRequest.amount,

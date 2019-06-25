@@ -50,7 +50,11 @@ contract('OSTComposer.acceptStakeRequest() ', (accounts) => {
     stakeRequest.gasLimit = new BN(100);
     stakeRequest.nonce = new BN(42);
     gateway = await Gateway.new();
-    stakeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address);
+    stakeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
     hashLock = Utils.generateHashLock().l;
     await ostComposer.setStakeRequestHash(stakeHash, stakeRequest.staker, gateway.address);
     await ostComposer.setStakeRequests(

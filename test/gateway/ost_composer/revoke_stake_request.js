@@ -44,7 +44,11 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
     stakeRequest.gasLimit = new BN(100);
     stakeRequest.nonce = new BN(0);
     gateway = await Gateway.new();
-    stakeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address);
+    stakeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
     await ostComposer.setStakeRequestHash(stakeHash, stakeRequest.staker, gateway.address);
     await ostComposer.setStakeRequests(
       stakeHash,

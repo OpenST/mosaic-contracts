@@ -32,6 +32,7 @@
  * @property {string} staker Address of staker.
  */
 
+const EthUtils = require('ethereumjs-util');
 const web3 = require('../../../test_lib/web3.js');
 
 class ComposerUtils {
@@ -41,9 +42,10 @@ class ComposerUtils {
    *
    * @param {object} stakeRequest StakeRequest object
    * @param {string} gateway Gateway contract address.
+   * @param {string} ostComposer OSTComposer contract address.
    * @return {string} Stake request hash.
    */
-  static getStakeRequestHash(stakeRequest, gateway) {
+  static getStakeRequestHash(stakeRequest, gateway, ostComposer) {
     const stakeRequestMethod = 'StakeRequest(uint256 amount,address beneficiary,uint256 gasPrice,uint256 gasLimit,uint256 nonce,address staker,address gateway)';
     const encodedTypeHash = web3.utils.sha3(web3.eth.abi.encodeParameter('string', stakeRequestMethod));
 
@@ -58,7 +60,28 @@ class ComposerUtils {
       { type: 'address', value: gateway },
     );
 
-    return stakeIntentTypeHash;
+    const EIP712_DOMAIN_TYPEHASH = web3.utils.soliditySha3(
+      'EIP712Domain(address verifyingContract)',
+    );
+    const DOMAIN_SEPARATOR = web3.utils.soliditySha3(
+      web3.eth.abi.encodeParameters(
+        ['bytes32', 'address'],
+        [EIP712_DOMAIN_TYPEHASH, ostComposer],
+      ),
+    );
+
+    const eip712TypeData = EthUtils.keccak(
+      Buffer.concat(
+        [
+          Buffer.from('19', 'hex'),
+          Buffer.from('01', 'hex'),
+          EthUtils.toBuffer(DOMAIN_SEPARATOR),
+          EthUtils.toBuffer(stakeIntentTypeHash),
+        ],
+      ),
+    );
+
+    return EthUtils.bufferToHex(eip712TypeData);
   }
 }
 
