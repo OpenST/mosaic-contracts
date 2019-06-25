@@ -71,37 +71,16 @@ contract TestOSTComposer is OSTComposer {
      * @notice This is used for testing. It is used to set the stakeRequests
      *         storage.
      *
-     * @param _staker Address of the staker.
-     * @param _gateway Address of the gateway contract.
-     * @param _amount Amount to be staked.
-     * @param _gasPrice Gas price which staker is willing to pay.
-     * @param _gasLimit Gas limit which staker is willing to pay.
-     * @param _beneficiary Address of the account on sidechains which will
-     *                     receive OSTPrime.
-     * @param _nonce Nonce of the staker.
      * @param _stakeHash Unique hash for the request.
+     * @param _value True/false boolean value.
      */
     function setStakeRequests(
-        address _staker,
-        EIP20GatewayInterface _gateway,
-        uint256 _amount,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _beneficiary,
-        uint256 _nonce,
-        bytes32 _stakeHash
+        bytes32 _stakeHash,
+        bool _value
     )
         external
     {
-        stakeRequests[_stakeHash] = StakeRequest({
-            amount: _amount,
-            beneficiary: _beneficiary,
-            gasPrice: _gasPrice,
-            gasLimit: _gasLimit,
-            nonce: _nonce,
-            staker: _staker,
-            gateway: _gateway
-        });
+        stakeRequests[_stakeHash] = _value;
     }
 
     /**

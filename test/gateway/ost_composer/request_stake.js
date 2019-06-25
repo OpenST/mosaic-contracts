@@ -23,25 +23,8 @@ const SpyToken = artifacts.require('SpyToken');
 const Gateway = artifacts.require('SpyEIP20Gateway');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
+const ComposerUtils = require('./helpers/composer_utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
-
-function getStakeRequestHash(stakeRequest, gateway) {
-  const stakeRequestMethod = 'StakeRequest(uint256 amount,address beneficiary,uint256 gasPrice,uint256 gasLimit,uint256 nonce,address staker,address gateway)';
-  const encodedTypeHash = web3.utils.sha3(web3.eth.abi.encodeParameter('string', stakeRequestMethod));
-
-  const stakeIntentTypeHash = web3.utils.soliditySha3(
-    { type: 'bytes32', value: encodedTypeHash },
-    { type: 'uint256', value: stakeRequest.amount },
-    { type: 'address', value: stakeRequest.beneficiary },
-    { type: 'uint256', value: stakeRequest.gasPrice },
-    { type: 'uint256', value: stakeRequest.gasLimit },
-    { type: 'uint256', value: stakeRequest.nonce },
-    { type: 'address', value: stakeRequest.staker },
-    { type: 'address', value: gateway.address },
-  );
-
-  return stakeIntentTypeHash;
-}
 
 contract('OSTComposer.requestStake() ', (accounts) => {
   let organization;
@@ -71,11 +54,10 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       gateway.address,
       { from: stakeRequest.staker },
     );
-
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
     // Verifying the storage `stakeRequestHash` and `stakeRequests`.
-    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway);
+    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address);
 
     const stakeRequestHashStorage = await ostComposer.stakeRequestHashes.call(
       stakeRequest.staker,
@@ -87,48 +69,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       `Stake requests of ${stakeRequest.staker} for ${gateway.address} is not cleared`,
     );
 
-    const stakeRequestsStorage = await ostComposer.stakeRequests.call(stakeIntentTypeHash);
+    const boolValue = await ostComposer.stakeRequests.call(stakeIntentTypeHash);
 
     assert.strictEqual(
-      stakeRequestsStorage.gateway,
-      gateway.address,
-      'Gateway address for the request is incorrect',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.amount.eq(stakeRequest.amount),
+      boolValue,
       true,
-      `Expected staked amount is ${stakeRequest.amount} but got ${stakeRequestsStorage.amount}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.beneficiary,
-      stakeRequest.beneficiary,
-      'Incorrect beneficiary address',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasPrice.eq(stakeRequest.gasPrice),
-      true,
-      `Expected gasPrice is ${stakeRequest.gasPrice} but got ${stakeRequestsStorage.gasPrice}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasLimit.eq(stakeRequest.gasLimit),
-      true,
-      `Expected gasLimit is ${stakeRequest.gasLimit} but got ${stakeRequestsStorage.gasLimit}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.nonce.eq(stakeRequest.nonce),
-      true,
-      `Expected nonce is ${stakeRequest.nonce} but got ${stakeRequestsStorage.nonce}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.staker,
-      stakeRequest.staker,
-      'Incorrect staker address',
+      'Invalid stake request.',
     );
   });
 
@@ -143,7 +89,7 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       { from: stakeRequest.staker },
     );
 
-    const stakeIntentTypeHash = getStakeRequestHash(stakeRequest, gateway);
+    const stakeIntentTypeHash = ComposerUtils.getStakeRequestHash(stakeRequest, gateway.address);
     assert.strictEqual(
       response,
       stakeIntentTypeHash,
