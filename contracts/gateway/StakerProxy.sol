@@ -20,7 +20,6 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./ComposerInterface.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
@@ -38,7 +37,7 @@ contract StakerProxy is Mutex {
     /* Storage */
 
     /** The composer that deployed this contract. */
-    ComposerInterface public composer;
+    address public composer;
 
     /** The composer deployed the StakerProxy on behalf of the owner. */
     address payable public owner;
@@ -70,13 +69,12 @@ contract StakerProxy is Mutex {
     /* Special Functions */
 
     /**
-     * @notice Must be constructed by a contract that implements the
-     *         `ComposerInterface`.
+     * @notice Must be constructed by a composer contract.
      *
      * @param _owner The owner that this proxy is deployed for.
      */
     constructor(address payable _owner) public {
-        composer = ComposerInterface(msg.sender);
+        composer = msg.sender;
         owner = _owner;
     }
 
@@ -160,9 +158,7 @@ contract StakerProxy is Mutex {
      *         to transfer all remaining token balance of this contract before
      *         calling this method.
      */
-    function selfDestruct() external onlyOwner {
-        composer.removeStakerProxy(owner);
-
+    function selfDestruct() external onlyComposer {
         selfdestruct(owner);
     }
 
