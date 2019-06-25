@@ -38,6 +38,14 @@ contract('StakerProxy.selfDestruct()', (accounts) => {
     const response = await stakerProxy.selfDestruct({ from: composer });
 
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
+
+    const stakerProxyCode = await web3.eth.getCode(stakerProxy.address);
+
+    assert.strictEqual(
+      stakerProxyCode,
+      '0x',
+      'Staker proxy contract code should be 0x after self destructing',
+    );
   });
 
   it('should not allow self destruct by  non composer address ', async () => {
