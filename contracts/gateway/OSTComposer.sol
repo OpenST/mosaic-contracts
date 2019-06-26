@@ -249,6 +249,12 @@ contract OSTComposer is Organized, Mutex {
         onlyWorker
         returns(bytes32 messageHash_)
     {
+        StakerProxy stakerProxy = stakerProxies[_staker];
+        require(
+            address(stakerProxy) != address(0),
+            "StakerProxy address is null."
+        );
+
         bytes32 stakeRequestHash = hashStakeRequest(
             _amount,
             _beneficiary,
@@ -264,12 +270,6 @@ contract OSTComposer is Organized, Mutex {
         );
         delete stakeRequestHashes[_staker][address(_gateway)];
         delete stakeRequests[stakeRequestHash];
-
-        StakerProxy stakerProxy = stakerProxies[_staker];
-        require(
-            address(stakerProxy) != address(0),
-            "StakerProxy address is null."
-        );
 
         EIP20Interface valueToken = _gateway.valueToken();
         require(
