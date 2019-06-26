@@ -70,40 +70,6 @@ contract OSTComposer is Organized, Mutex {
     );
 
 
-    /* Struct */
-
-    /**
-     * StakeRequest stores the stake amount, beneficiary address, gas price, gas
-     * limit, nonce, staker and gateway address.
-     */
-    struct StakeRequest {
-
-        /** Amount that will be staked. */
-        uint256 amount;
-
-        /**
-         * Address where the utility tokens will be minted in the
-         * auxiliary chain.
-         */
-        address beneficiary;
-
-        /** Gas price that staker is willing to pay. */
-        uint256 gasPrice;
-
-        /** Gas limit that staker is willing to pay. */
-        uint256 gasLimit;
-
-        /** Staker nonce at the gateway. */
-        uint256 nonce;
-
-        /** Address of the staker. */
-        address staker;
-
-        /** Address of the gateway where amount will be staked. */
-        EIP20GatewayInterface gateway;
-    }
-
-
     /* Public Variables */
 
     /* Mapping of staker to gateway to store stake request hash. */
@@ -112,8 +78,8 @@ contract OSTComposer is Organized, Mutex {
     /* Mapping of staker addresses to their StakerProxy. */
     mapping (address => StakerProxy) public stakerProxies;
 
-    /* Stores all the parameters of stake request based on stake request hash. */
-    mapping (bytes32 => StakeRequest) public stakeRequests;
+    /* Stores boolean based on stake request hash. */
+    mapping (bytes32 => bool) public stakeRequests;
 
     /* Private Variables */
 
@@ -230,15 +196,7 @@ contract OSTComposer is Organized, Mutex {
             "Incorrect staker nonce."
         );
 
-        stakeRequests[stakeRequestHash_] = StakeRequest({
-            amount: _amount,
-            beneficiary: _beneficiary,
-            gasPrice: _gasPrice,
-            gasLimit: _gasLimit,
-            nonce: _nonce,
-            staker: msg.sender,
-            gateway: _gateway
-        });
+        stakeRequests[stakeRequestHash_] = true;
 
         EIP20Interface valueToken = _gateway.valueToken();
 
@@ -264,57 +222,76 @@ contract OSTComposer is Organized, Mutex {
      *         Staked amount from composer and bounty amount from facilitator
      *         is then transferred to the StakerProxy contract of the staker.
      *
-     * @param _stakeRequestHash Unique hash for the stake request which is to
-     *                          be Processed.
+     * @param _amount Amount that is to be staked.
+     * @param _beneficiary The address in the auxiliary chain where the utility
+     *                     tokens will be minted.
+     * @param _gasPrice Gas price that staker is ready to pay to get the stake
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
+     * @param _nonce Staker nonce specific to gateway.
+     * @param _staker StakerProxy contract address of staker.
+     * @param _gateway Address of the gateway to stake.
      * @param _hashLock Hashlock provided by the facilitator.
      *
      * @return messageHash_ Hash unique for each request.
      */
     function acceptStakeRequest(
-        bytes32 _stakeRequestHash,
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        uint256 _nonce,
+        address _staker,
+        EIP20GatewayInterface _gateway,
         bytes32 _hashLock
     )
         external
         onlyWorker
         returns(bytes32 messageHash_)
     {
-        StakeRequest memory stakeRequest = stakeRequests[_stakeRequestHash];
-        require(
-            stakeRequest.staker != address(0),
-            "Stake request must exists."
-        );
-        delete stakeRequestHashes[stakeRequest.staker][address(stakeRequest.gateway)];
-        delete stakeRequests[_stakeRequestHash];
-
-        EIP20GatewayInterface gateway = stakeRequest.gateway;
-
-        StakerProxy stakerProxy = stakerProxies[stakeRequest.staker];
+        StakerProxy stakerProxy = stakerProxies[_staker];
         require(
             address(stakerProxy) != address(0),
             "StakerProxy address is null."
         );
 
-        EIP20Interface valueToken = gateway.valueToken();
+        bytes32 stakeRequestHash = hashStakeRequest(
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce,
+            _staker,
+            address(_gateway)
+        );
         require(
-            valueToken.transfer(address(stakerProxy), stakeRequest.amount),
+            stakeRequests[stakeRequestHash],
+            "Stake request must exists."
+        );
+        delete stakeRequestHashes[_staker][address(_gateway)];
+        delete stakeRequests[stakeRequestHash];
+
+        EIP20Interface valueToken = _gateway.valueToken();
+        require(
+            valueToken.transfer(address(stakerProxy), _amount),
             "Staked amount must be transferred to the staker proxy."
         );
 
-        EIP20Interface baseToken = gateway.baseToken();
-        uint256 bounty = gateway.bounty();
+        EIP20Interface baseToken = _gateway.baseToken();
+        uint256 bounty = _gateway.bounty();
         require(
             baseToken.transferFrom(msg.sender, address(stakerProxy), bounty),
             "Bounty amount must be transferred to stakerProxy."
         );
 
         messageHash_ = stakerProxy.stake(
-            stakeRequest.amount,
-            stakeRequest.beneficiary,
-            stakeRequest.gasPrice,
-            stakeRequest.gasLimit,
-            stakeRequest.nonce,
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce,
             _hashLock,
-            stakeRequest.gateway
+            _gateway
         );
     }
 
@@ -322,45 +299,89 @@ contract OSTComposer is Organized, Mutex {
      * @notice It can only be called by Staker of the stake request. It deletes the
      *         previously requested stake request.
      *
-     * @param _stakeRequestHash Hash of the stake request.
+     * @param _amount Amount that is to be staked.
+     * @param _beneficiary The address in the auxiliary chain where the utility
+     *                     tokens will be minted.
+     * @param _gasPrice Gas price that staker is ready to pay to get the stake
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
+     * @param _nonce Staker nonce specific to gateway.
+     * @param _gateway Address of the gateway to stake.
      */
     function revokeStakeRequest(
-        bytes32 _stakeRequestHash
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        uint256 _nonce,
+        EIP20GatewayInterface _gateway
     )
         external
     {
-        address staker = stakeRequests[_stakeRequestHash].staker;
+        address staker = msg.sender;
+        bytes32 stakeRequestHash = hashStakeRequest(
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce,
+            staker,
+            address(_gateway)
+        );
+
         require(
-            staker == msg.sender,
+            stakeRequests[stakeRequestHash],
             "Only valid staker can revoke the stake request."
         );
 
-        removeStakeRequest(_stakeRequestHash);
+        removeStakeRequest(staker, _amount, _gateway, stakeRequestHash);
 
-        emit StakeRevoked(staker, _stakeRequestHash);
+        emit StakeRevoked(staker, stakeRequestHash);
     }
 
     /**
      * @notice It can only be called by Facilitator. It deletes the previously
      *         requested stake request.
      *
-     * @param _stakeRequestHash Hash of the stake request.
+     * @param _amount Amount that is to be staked.
+     * @param _beneficiary The address in the auxiliary chain where the utility
+     *                     tokens will be minted.
+     * @param _gasPrice Gas price that staker is ready to pay to get the stake
+     *                  and mint process done.
+     * @param _gasLimit Gas limit that staker is ready to pay.
+     * @param _nonce Staker nonce specific to gateway.
+     * @param _staker StakerProxy contract address of staker.
+     * @param _gateway Address of the gateway to stake.
      */
     function rejectStakeRequest(
-        bytes32 _stakeRequestHash
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        uint256 _nonce,
+        address _staker,
+        EIP20GatewayInterface _gateway
     )
         external
         onlyWorker
     {
-        address staker = stakeRequests[_stakeRequestHash].staker;
+        bytes32 stakeRequestHash = hashStakeRequest(
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce,
+            _staker,
+            address(_gateway)
+        );
         require(
-            staker != address(0),
+            stakeRequests[stakeRequestHash],
             "Invalid stake request hash."
         );
 
-        removeStakeRequest(_stakeRequestHash);
+        removeStakeRequest(_staker, _amount, _gateway, stakeRequestHash);
 
-        emit StakeRejected(staker, _stakeRequestHash);
+        emit StakeRejected(_staker, stakeRequestHash);
     }
 
     /**
@@ -388,28 +409,28 @@ contract OSTComposer is Organized, Mutex {
     /**
      * @notice It is used by revokeStakeRequest and removeStakeRequest methods.
      *         It transfers the value tokens to staker and deletes
-     *         `stakeRequestHashes` and `stakeRequests` storage references.
+     *         `stakeRequestHashes` storage references.
      *
-     * @param _stakeRequestHash Hash of the stake request.
+     * @param _staker StakerProxy contract address of staker.
+     * @param _amount Amount that is to be staked.
+     * @param _gateway Address of the gateway to stake.
+     * @param _stakeRequestHash Stake request intent hash.
      */
     function removeStakeRequest(
+        address _staker,
+        uint256 _amount,
+        EIP20GatewayInterface _gateway,
         bytes32 _stakeRequestHash
     )
         private
     {
-        StakeRequest storage stakeRequest = stakeRequests[_stakeRequestHash];
-        address staker = stakeRequests[_stakeRequestHash].staker;
-
-        EIP20GatewayInterface gateway = stakeRequests[_stakeRequestHash].gateway;
-        uint256 amount = stakeRequests[_stakeRequestHash].amount;
-
-        delete stakeRequestHashes[staker][address(stakeRequest.gateway)];
+        delete stakeRequestHashes[_staker][address(_gateway)];
         delete stakeRequests[_stakeRequestHash];
 
-        EIP20Interface valueToken = gateway.valueToken();
+        EIP20Interface valueToken = _gateway.valueToken();
 
         require(
-            valueToken.transfer(staker, amount),
+            valueToken.transfer(_staker, _amount),
             "Staked amount must be transferred to staker."
         );
     }

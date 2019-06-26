@@ -26,6 +26,7 @@ const StakerProxy = artifacts.require('StakerProxy');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
+const ComposerUtils = require('./helpers/composer_utils');
 
 contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
   let organization;
@@ -49,17 +50,15 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
     stakeRequest.gasLimit = new BN(100);
     stakeRequest.nonce = new BN(0);
     gateway = await Gateway.new();
-    stakeHash = await web3.utils.sha3('mockedhash');
+    stakeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
     await ostComposer.setStakeRequestHash(stakeHash, stakeRequest.staker, gateway.address);
     await ostComposer.setStakeRequests(
-      stakeRequest.staker,
-      gateway.address,
-      stakeRequest.amount,
-      stakeRequest.gasPrice,
-      stakeRequest.gasLimit,
-      stakeRequest.beneficiary,
-      stakeRequest.nonce,
       stakeHash,
+      true,
     );
     gatewayCount = new BN(2);
     stakerProxy = await StakerProxy.new(stakeRequest.staker);
@@ -68,10 +67,15 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
 
   it('should be able to successfully reject stake', async () => {
     const response = await ostComposer.rejectStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      stakeRequest.staker,
+      gateway.address,
       { from: worker },
     );
-
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
     // Verifying the storage stakeRequestHash and stakeRequests. After the rejectStakeRequest
@@ -81,60 +85,29 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
       gateway.address,
     );
 
-    const stakeRequestsStorage = await ostComposer.stakeRequests.call(stakeHash);
-
     assert.strictEqual(
       stakeRequestHashStorage,
       Utils.ZERO_BYTES32,
       `Stake requests of ${stakeRequest.staker} for ${gateway.address} is not cleared`,
     );
 
+    const boolValue = await ostComposer.stakeRequests.call(stakeHash);
     assert.strictEqual(
-      stakeRequestsStorage.amount.eqn(0),
-      true,
-      `Expected amount is 0 but got ${stakeRequestsStorage.amount}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.beneficiary,
-      Utils.NULL_ADDRESS,
-      'Beneficiary address must be reset to null address',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasPrice.eqn(0),
-      true,
-      `Expected gasPrice is 0 but got ${stakeRequestsStorage.gasPrice}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasLimit.eqn(0),
-      true,
-      `Expected gasLimit is 0 but got ${stakeRequestsStorage.gasLimit}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.nonce.eqn(0),
-      true,
-      `Expected nonce is 0 but got ${stakeRequestsStorage.nonce}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.staker,
-      Utils.NULL_ADDRESS,
-      'Staker address must be reset to null address',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gateway,
-      Utils.NULL_ADDRESS,
-      'Gateway address must be reset to null address',
+      boolValue,
+      false,
+      `Expected value is false but got ${boolValue}`,
     );
   });
 
   it('should emit StakeRejected event', async () => {
     const tx = await ostComposer.rejectStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      stakeRequest.staker,
+      gateway.address,
       { from: worker },
     );
 
@@ -157,7 +130,13 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
     const valueToken = await SpyToken.at(await gateway.valueToken.call());
 
     await ostComposer.rejectStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      stakeRequest.staker,
+      gateway.address,
       { from: worker },
     );
 
@@ -178,10 +157,32 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
     const nonWorker = accounts[10];
     await Utils.expectRevert(
       ostComposer.rejectStakeRequest(
-        stakeHash,
+        stakeRequest.amount,
+        stakeRequest.beneficiary,
+        stakeRequest.gasPrice,
+        stakeRequest.gasLimit,
+        stakeRequest.nonce,
+        stakeRequest.staker,
+        gateway.address,
         { from: nonWorker },
       ),
       'Only whitelisted workers are allowed to call this method.',
+    );
+  });
+
+  it('should fail when there is mismatch while constructing stake request hash ', async () => {
+    await Utils.expectRevert(
+      ostComposer.rejectStakeRequest(
+        stakeRequest.amount,
+        stakeRequest.beneficiary,
+        stakeRequest.gasPrice,
+        stakeRequest.gasLimit,
+        stakeRequest.nonce,
+        accounts[3],
+        gateway.address,
+        { from: worker },
+      ),
+      'Invalid stake request hash.',
     );
   });
 
@@ -190,9 +191,15 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
     await spyValueToken.setTransferFakeResponse(false);
 
     await Utils.expectRevert(
-      ostComposer.revokeStakeRequest(
-        stakeHash,
-        { from: stakeRequest.staker },
+      ostComposer.rejectStakeRequest(
+        stakeRequest.amount,
+        stakeRequest.beneficiary,
+        stakeRequest.gasPrice,
+        stakeRequest.gasLimit,
+        stakeRequest.nonce,
+        stakeRequest.staker,
+        gateway.address,
+        { from: worker },
       ),
       'Staked amount must be transferred to staker.',
     );

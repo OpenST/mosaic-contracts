@@ -24,6 +24,7 @@ const Gateway = artifacts.require('SpyEIP20Gateway');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
+const ComposerUtils = require('./helpers/composer_utils');
 
 contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
   let organization;
@@ -43,27 +44,29 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
     stakeRequest.gasLimit = new BN(100);
     stakeRequest.nonce = new BN(0);
     gateway = await Gateway.new();
-    stakeHash = await web3.utils.sha3('mockedhash');
+    stakeHash = ComposerUtils.getStakeRequestHash(
+      stakeRequest,
+      gateway.address,
+      ostComposer.address,
+    );
     await ostComposer.setStakeRequestHash(stakeHash, stakeRequest.staker, gateway.address);
     await ostComposer.setStakeRequests(
-      stakeRequest.staker,
-      gateway.address,
-      stakeRequest.amount,
-      stakeRequest.gasPrice,
-      stakeRequest.gasLimit,
-      stakeRequest.beneficiary,
-      stakeRequest.nonce,
       stakeHash,
+      true,
     );
     gatewayCount = new BN(2);
   });
 
   it('should be able to successfully revoke stake request', async () => {
     const response = await ostComposer.revokeStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
-
     assert.strictEqual(response.receipt.status, true, 'Receipt status is unsuccessful');
 
     // Verifying the storage stakeRequestHash and stakeRequests. After the revokeStakeRequest
@@ -78,53 +81,22 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
       `Stake requests of ${stakeRequest.staker} for ${gateway.address} is not cleared`,
     );
 
-    const stakeRequestsStorage = await ostComposer.stakeRequests.call(stakeHash);
+    const boolValue = await ostComposer.stakeRequests.call(stakeHash);
     assert.strictEqual(
-      stakeRequestsStorage.amount.eqn(0),
-      true,
-      `Expected amount is 0 but got ${stakeRequestsStorage.amount}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.beneficiary,
-      Utils.NULL_ADDRESS,
-      'Beneficiary address must be reset to null address',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasPrice.eqn(0),
-      true,
-      `Expected gasPrice is 0 but got ${stakeRequestsStorage.gasPrice}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gasLimit.eqn(0),
-      true,
-      `Expected gasLimit is 0 but got ${stakeRequestsStorage.gasLimit}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.nonce.eqn(0),
-      true,
-      `Expected nonce is 0 but got ${stakeRequestsStorage.nonce}`,
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.staker,
-      Utils.NULL_ADDRESS,
-      'Staker address must be reset to null address',
-    );
-
-    assert.strictEqual(
-      stakeRequestsStorage.gateway,
-      Utils.NULL_ADDRESS,
-      'Gateway address must be reset to null address',
+      boolValue,
+      false,
+      `Expected value is false but got ${boolValue}`,
     );
   });
 
   it('should emit StakeRevoked event', async () => {
     const tx = await ostComposer.revokeStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -146,7 +118,12 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
   it('should be able to transfer the value tokens to staker', async () => {
     const valueToken = await SpyToken.at(await gateway.valueToken.call());
     await ostComposer.revokeStakeRequest(
-      stakeHash,
+      stakeRequest.amount,
+      stakeRequest.beneficiary,
+      stakeRequest.gasPrice,
+      stakeRequest.gasLimit,
+      stakeRequest.nonce,
+      gateway.address,
       { from: stakeRequest.staker },
     );
 
@@ -167,7 +144,12 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
     const nonStaker = accounts[10];
     await Utils.expectRevert(
       ostComposer.revokeStakeRequest(
-        stakeHash,
+        stakeRequest.amount,
+        stakeRequest.beneficiary,
+        stakeRequest.gasPrice,
+        stakeRequest.gasLimit,
+        stakeRequest.nonce,
+        gateway.address,
         { from: nonStaker },
       ),
       'Only valid staker can revoke the stake request.',
@@ -180,7 +162,12 @@ contract('OSTComposer.revokeStakeRequest() ', (accounts) => {
 
     await Utils.expectRevert(
       ostComposer.revokeStakeRequest(
-        stakeHash,
+        stakeRequest.amount,
+        stakeRequest.beneficiary,
+        stakeRequest.gasPrice,
+        stakeRequest.gasLimit,
+        stakeRequest.nonce,
+        gateway.address,
         { from: stakeRequest.staker },
       ),
       'Staked amount must be transferred to staker.',
