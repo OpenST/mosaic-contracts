@@ -25,7 +25,6 @@ import "./StakerProxy.sol";
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
-import "./ComposerInterface.sol";
 
 /**
  * @title OSTComposer implements Organized contract. Reentrancy is prevented
@@ -33,7 +32,7 @@ import "./ComposerInterface.sol";
  *
  * @notice It facilitates the staker to get the OSTPrime on sidechains.
  */
-contract OSTComposer is Organized, Mutex, ComposerInterface {
+contract OSTComposer is Organized, Mutex {
 
     /* Constants */
 
@@ -386,19 +385,22 @@ contract OSTComposer is Organized, Mutex, ComposerInterface {
     }
 
     /**
-     * @notice It can only be called by StakerProxy contract of the staker. It
-     *         deletes the StakerProxy contract of the staker.
-     *
-     * @param _owner Owner of the StakerProxy contract.
+     * @notice It can only be called by owner of the staker proxy. It
+     *         deletes the StakerProxy contract of the staker and calls self
+     *         destruct on StakerProxy contract.
      */
-    function removeStakerProxy(
-        address _owner
-    )
+    function destructStakerProxy()
         external
-        onlyStakerProxy(_owner)
     {
+
+        StakerProxy stakerProxy = stakerProxies[msg.sender];
+        require(
+            address(stakerProxy) != address(0),
+            "Staker proxy does not exist for the caller."
+        );
         // Resetting the proxy address of the staker.
-        delete stakerProxies[_owner];
+        delete stakerProxies[msg.sender];
+        stakerProxy.selfDestruct();
     }
 
 

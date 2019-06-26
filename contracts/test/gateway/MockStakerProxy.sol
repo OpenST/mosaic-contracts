@@ -20,13 +20,29 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
+/**
+ * @title MockStakerProxy is a contract used for unit testing of ostComposer
+ *        method `destructStakerProxy`.
+ */
+contract MockStakerProxy {
 
-interface ComposerInterface {
+    /* Storage */
+
+    /** Flag to assert if self destruct is called. */
+    bool public selfDestruted;
+
+
+    /* Special Functions */
+
+    constructor () public {
+        selfDestruted = false;
+    }
 
     /**
-     * @notice It deletes the StakerProxy contract for the staker.
-     *
-     * @param _owner Owner of the StakerProxy contract.
+     * @notice Mock method called from ost composer during unit testing of
+     *         `destructStakerProxy`.
      */
-    function removeStakerProxy(address _owner) external;
+    function selfDestruct() external {
+        selfDestruted = true;
+    }
 }
