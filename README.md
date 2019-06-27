@@ -64,15 +64,16 @@ This section is only required if you want to *set up a **new** mosaic chain.*
 #### Installation
 
 ```bash
-git clone git@github.com:OpenST/mosaic-contracts.git
+git clone https://github.com/OpenST/mosaic-contracts.git
 cd mosaic-contracts
-npm install
-npm run compile-all
+npm run update # Runs `git submodule update --init --recursive && npm ci`
+npm run compile:all
 ```
 
 #### Usage
 
 There is a deployment tool available for deployment and set-up:
+
 ```bash
 node ./tools/blue_deployment/index.js
 ```
@@ -89,15 +90,12 @@ You can use [mosaic.js] directly to deploy the contracts and interact with them.
 ### Set-up
 
 ```bash
-git clone git@github.com:OpenST/mosaic-contracts.git
+git clone https://github.com/OpenST/mosaic-contracts.git
 cd mosaic-contracts
-npm install
-npm run compile-all
+npm run update # Runs `git submodule update --init --recursive && npm ci`
+npm run compile:all
 npm run ganache
 npm run test
-
-# Requires docker, stop ganache first:
-npm run test:integration
 ```
 
 ### Guidelines

@@ -54,10 +54,10 @@
     "typechain": "0.3.14"
   },
   "scripts": {
-    "update": "git submodule update --init --recursive && npm ci && cd contracts/utilitytoken && npm ci && cd -",
+    "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile",
-    "compile-all": "truffle compile --all",
     "compile:ts": "tsc --target es5",
+    "compile:all": "truffle compile --all && tsc --target es5",
     "generate_test_proofs": "./proof_generation/main.sh",
     "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
     "test:range": "./tools/test_range.sh",
@@ -67,7 +67,7 @@
     "test:unit": "truffle test",
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
-    "prepare": "npm run compile-all && npm run build-package",
+    "prepare": "npm run compile:all && npm run build-package",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
     "generate:interacts": "ts-generator ts-generator.json",
