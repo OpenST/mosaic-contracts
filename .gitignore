@@ -40,3 +40,6 @@ dist/contracts.json
 # Compiled js artifacts.
 tools/fuzzy_proof_generator_tool/src/*.js
 tools/fuzzy_proof_generator_tool/src/*.js.map
+
+# Do not track generated wrapper, it should be part of build script
+interacts/*
