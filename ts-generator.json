@@ -1,0 +1,8 @@
+[
+  {
+    "generator":"typechain",
+    "files":"./build/**/*/!(Migrations.json|MessageBus.json|BytesLib.json|SafeMath.json|MetaBlock.json|RLP.json|RLPEncode.sol|*Mock.json|Mock*|Test*|*Test.json|*Interface.json|Spy*)",
+    "target":"web3-1.0.0",
+    "outDir":"interacts"
+  }
+]
