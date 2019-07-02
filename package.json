@@ -71,7 +71,7 @@
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
     "generate:interacts": "ts-generator ts-generator.json",
-    "postinstall": "npm run compile-all && npm run generate:interacts"
+    "postinstall": "npm run compile:all && npm run generate:interacts"
   },
   "main": "dist/index.js",
   "files": [
