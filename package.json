@@ -49,7 +49,7 @@
     "ts-node": "8.1.0",
     "typescript": "3.4.5",
     "wait-port": "0.2.2",
-    "web3": "1.0.0-beta.37",
+    "web3": "1.0.0-beta.55",
     "ts-generator": "0.0.8",
     "typechain": "0.3.14"
   },
@@ -70,7 +70,7 @@
     "prepare": "npm run compile:all && npm run build-package",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
-    "generate:interacts": "ts-generator ts-generator.json",
+    "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
     "postinstall": "npm run compile:all && npm run generate:interacts"
   },
   "main": "dist/index.js",
