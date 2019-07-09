@@ -20,17 +20,20 @@
 //
 // ----------------------------------------------------------------------------
 
+/**
+ * This file reads the contents from `contract_build/contracts.json` and
+ * auto-generates the contract interacts factory methods.
+ */
+
 const fs = require('fs');
 const path = require('path');
-
-var imports = 'import { ContractOptions } from "web3-eth-contract";\nimport * as contracts from "../contract_build/contracts.json";\n';
-var interacts = '';
 
 const contractPath = path.join(
   __dirname,
   `../contract_build/contracts.json`,
 );
 
+// Check if the contract.json file exists.
 if (!fs.existsSync(contractPath)) {
   throw new Error(
     `Cannot read file ${contractPath}.`
@@ -39,11 +42,15 @@ if (!fs.existsSync(contractPath)) {
   );
 }
 
-const contractFile = fs.readFileSync(contractPath);
-const contractData = JSON.parse(contractFile);
-const contractNames = Object.keys(contractData);
+// This variable holds all the import statements as string.
+let imports = 'import { ContractOptions } from "web3-eth-contract";\nimport * as contracts from "../contract_build/contracts.json";\n';
 
-interacts = `${ interacts }const Interacts = {\n`;
+// This variable holds all the interact factor methods as string.
+let interacts = `const Interacts = {\n`;
+
+// Get all the contract names.
+const contractNames = Object.keys(JSON.parse(fs.readFileSync(contractPath)));
+
 contractNames.forEach((contract) => {
   const declarationFilePath = path.join(
     __dirname,
@@ -71,8 +78,12 @@ contractNames.forEach((contract) => {
 
 interacts = `${ interacts }\n}; 
 
-module.exports = Interacts;
+export default Interacts;
 
 `;
 
-fs.writeFileSync('interacts/Interacts.ts', `${ imports }\n${interacts}`);
+// Create the file.
+fs.writeFileSync(
+  'interacts/Interacts.ts',
+  `${ imports }\n${interacts}`
+);

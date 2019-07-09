@@ -20,12 +20,13 @@
             "node",
             "mocha"
         ],
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "outDir": "./dist",
+        "declaration": true
     },
-    "include": [
-        "tools/fuzzy_proof_generator_tool/src/*.ts"
-    ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "tools"
     ]
 }

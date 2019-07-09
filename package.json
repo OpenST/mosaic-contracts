@@ -1,6 +1,6 @@
 {
   "name": "@openst/mosaic-contracts",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "keywords": [
     "Mosaic",
@@ -57,8 +57,8 @@
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile",
-    "compile:ts": "tsc --target es5",
-    "compile:all": "truffle compile --all && tsc --target es5",
+    "compile:ts": "tsc",
+    "compile:all": "truffle compile --all && tsc",
     "generate_test_proofs": "./proof_generation/main.sh",
     "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
     "test:range": "./tools/test_range.sh",
@@ -68,13 +68,14 @@
     "test:unit": "truffle test",
     "ganache": "sh tools/runGanacheCli.sh",
     "build-package": "node tools/build_package.js",
-    "prepare": "npm run compile:all && npm run build-package",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
     "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
-    "postinstall": "npm run compile:all && npm run generate:interacts"
+    "copy:interacts": "cp interacts/*.d.ts dist/interacts",
+    "prepare_publish": "rm -r contract_build/contracts.json dist/* interacts/* build/* && npm run compile && npm run build-package && npm run generate:interacts && npm run compile:ts && npm run copy:interacts"
   },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],

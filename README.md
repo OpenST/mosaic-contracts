@@ -33,28 +33,21 @@ npm install @openst/mosaic-contracts
 
 ```js
 // Load the contracts' meta-data from the package:
-const {
-  Anchor,
-  CoGatewayUtilityTokenInterface,
-  EIP20CoGateway,
-  EIP20Gateway,
-  EIP20Interface,
-  EIP20Token,
-  GatewayLib,
-  MerklePatriciaProof,
-  MessageBus,
-  Organization,
-  OrganizationInterface,
-  Organized,
-  OSTPrime,
-  StateRootInterface,
-  UtilityToken,
-  UtilityTokenInterface,
-} = require('@openst/mosaic-contracts');
+import { contracts } from "@openst/mosaic-contracts";
 
 // Access the ABIs and BINs directly on the contracts. For example:
-const anchorAbi = Anchor.abi;
-const anchorBinary = Anchor.bin;
+const anchorAbi = contracts.Anchor.abi;
+const anchorBinary = contracts.Anchor.bin;
+```
+
+`@openst/mosaic-contracts` also includes the contract interacts.
+
+Example of using the contract interacts. 
+```js
+import { Interacts} from "@openst/mosaic-contracts";
+
+const anchor:Anchor = Interacts.getAnchor(web3, '0xAnchorContractAddress');
+const gateway:EIP20Gateway = Interacts.getEIP20Gateway(web3, '0xEIP20GatewayContactAddress');
 ```
 
 ### For Direct Users
