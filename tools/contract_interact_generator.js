@@ -23,12 +23,12 @@
 const fs = require('fs');
 const path = require('path');
 
-var imports = 'import { ContractOptions } from "web3-eth-contract";\nimport * as contracts from "../dist/contracts.json";\n';
+var imports = 'import { ContractOptions } from "web3-eth-contract";\nimport * as contracts from "../contract_build/contracts.json";\n';
 var interacts = '';
 
 const contractPath = path.join(
   __dirname,
-  `../dist/contracts.json`,
+  `../contract_build/contracts.json`,
 );
 
 if (!fs.existsSync(contractPath)) {
