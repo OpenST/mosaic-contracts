@@ -46,7 +46,7 @@
     "rlp": "2.2.3",
     "solidity-coverage": "0.5.11",
     "solparse": "2.2.5",
-    "truffle": "5.0.26",
+    "truffle": "beta",
     "ts-node": "8.1.0",
     "typescript": "3.5.3",
     "wait-port": "0.2.2",
