@@ -58,8 +58,8 @@
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile",
-    "compile:ts": "tsc --resolveJsonModule",
-    "compile:all": "truffle compile --all && tsc --resolveJsonModule",
+    "compile:ts": "tsc",
+    "compile:all": "truffle compile --all && tsc",
     "generate:test_proofs": "./proof_generation/main.sh",
     "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
     "test:range": "./tools/test_range.sh",
