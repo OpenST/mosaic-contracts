@@ -1,3 +1,4 @@
+
 {
     "compilerOptions": {
         "target": "es6",
@@ -8,18 +9,13 @@
         "strictFunctionTypes": true,
         "strictPropertyInitialization": true,
         "noImplicitThis": true,
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noErrorTruncation": true,
         "sourceMap": true,
-        "types": [
-            "chai",
-            "node",
-            "mocha"
-        ],
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "outDir": "./dist",
@@ -27,6 +23,8 @@
     },
     "exclude": [
         "node_modules",
-        "tools"
+        "tools",
+        "dist",
+        "contracts"
     ]
 }
