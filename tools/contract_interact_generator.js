@@ -43,7 +43,7 @@ if (!fs.existsSync(contractPath)) {
 }
 
 // This variable holds all the import statements as string.
-let imports = 'import { ContractOptions } from "web3-eth-contract";\nimport * as contracts from "../contract_build/contracts.json";\n';
+let imports = 'import { ContractOptions } from \'web3-eth-contract\';\nimport * as contracts from \'../contract_build/contracts.json\';\n';
 
 // This variable holds all the interact factor methods as string.
 let interacts = `const Interacts = {\n`;
@@ -57,7 +57,7 @@ contractNames.forEach((contract) => {
     `../interacts/${contract}.d.ts`,
   );
   if (fs.existsSync(declarationFilePath)) {
-    imports = `${ imports }import { ${contract} } from "../interacts/${contract}";\n`;
+    imports = `${ imports }import { ${contract} } from \'./${contract}\';\n`;
 
     interacts = `${ interacts } 
   /**
@@ -68,7 +68,7 @@ contractNames.forEach((contract) => {
    *
    * @returns The ${contract} contract interact object.
    */
-  get${contract}: (web3: any, address?: string, options?: ContractOptions)=> {
+  get${contract}: (web3: any, address?: string, options?: ContractOptions): ${contract} => {
     const jsonInterface = contracts.${contract}.abi;
     const contract = new web3.eth.Contract(jsonInterface, address, options);
     return contract as ${contract};

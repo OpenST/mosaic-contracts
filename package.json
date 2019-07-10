@@ -58,8 +58,8 @@
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile",
-    "compile:ts": "tsc",
-    "compile:all": "truffle compile --all && tsc",
+    "compile:ts": "tsc --resolveJsonModule",
+    "compile:all": "truffle compile --all && tsc --resolveJsonModule",
     "generate:test_proofs": "./proof_generation/main.sh",
     "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
     "test:range": "./tools/test_range.sh",
@@ -72,8 +72,9 @@
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
     "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
+    "clean": "rm -r contract_build/contracts.json dist/* interacts/* build/*",
     "copy:interacts": "cp interacts/*.d.ts dist/interacts",
-    "prepare:publish": "rm -r contract_build/contracts.json dist/* interacts/* build/* && npm run compile && npm run build:package && npm run generate:interacts && npm run compile:ts && npm run copy:interacts"
+    "prepare:publish": "npm run compile && npm run build:package && npm run generate:interacts && npm run compile:ts && npm run copy:interacts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

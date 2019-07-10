@@ -1,4 +1,4 @@
 import * as contracts from './contract_build/contracts.json';
-import Interacts from './interacts/Interacts';
+import interacts from './interacts/Interacts';
 
-export {contracts, Interacts};
+export {contracts, interacts};
