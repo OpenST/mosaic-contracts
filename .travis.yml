@@ -24,6 +24,7 @@ notifications:
 node_js:
   - "8"
 before_script:
+  - npm run compile
   - npm run build:package
   - npm run generate:interacts
   - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
