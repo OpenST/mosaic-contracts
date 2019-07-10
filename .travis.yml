@@ -7,7 +7,7 @@ env:
   - TEST_SUITE="test:fuzzy_proof_generator",
   - TEST_SUITE="test:integration",
   - TEST_SUITE="test:unit",
-  - TEST_SUITE="build-package"
+  - TEST_SUITE="build:package"
 branches:
   only:
   - master
