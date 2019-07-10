@@ -1,6 +1,6 @@
 {
   "name": "@openst/mosaic-contracts",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Mosaic contracts provide ABIs and BINs for EVM smart contracts to run mosaic.",
   "keywords": [
     "Mosaic",
@@ -23,6 +23,7 @@
     "@types/chai": "4.1.7",
     "@types/ethereumjs-util": "5.2.0",
     "@types/mocha": "5.2.6",
+    "@types/web3": "1.0.19",
     "@typescript-eslint/eslint-plugin": "1.9.0",
     "@typescript-eslint/parser": "1.9.0",
     "@typescript-eslint/typescript-estree": "1.9.0",
@@ -47,18 +48,19 @@
     "solparse": "2.2.5",
     "truffle": "5.0.19",
     "ts-node": "8.1.0",
-    "typescript": "3.4.5",
+    "typescript": "3.5.3",
     "wait-port": "0.2.2",
     "web3": "1.0.0-beta.37",
     "ts-generator": "0.0.8",
-    "typechain": "0.3.14"
+    "typechain": "0.3.14",
+    "fs-extra": "7.0.1"
   },
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile",
-    "compile:ts": "tsc --target es5",
-    "compile:all": "truffle compile --all && tsc --target es5",
-    "generate_test_proofs": "./proof_generation/main.sh",
+    "compile:ts": "tsc",
+    "compile:all": "truffle compile --all && tsc",
+    "generate:test_proofs": "./proof_generation/main.sh",
     "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
     "test:range": "./tools/test_range.sh",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
@@ -66,14 +68,16 @@
     "test:integration": "cd test_integration && ./main.sh",
     "test:unit": "truffle test",
     "ganache": "sh tools/runGanacheCli.sh",
-    "build-package": "node tools/build_package.js",
-    "prepare": "npm run compile:all && npm run build-package",
+    "build:package": "node tools/build_package.js",
     "deploy:gateway": "npm run compile && node tools/blue_deployment/scripts/step1_origin_contracts.js",
     "lint": "eslint {test,test_integration,tools,proof_generation} -c .eslintrc.json --ext .js --ext .ts",
-    "generate:interacts": "ts-generator ts-generator.json",
-    "postinstall": "npm run compile:all && npm run generate:interacts"
+    "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
+    "clean": "rm -r contract_build/contracts.json dist/* interacts/* build/* 2> /dev/null || true",
+    "copy:interacts": "cp interacts/*.d.ts dist/interacts",
+    "prepare:publish": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts && npm run compile:ts && npm run copy:interacts"
   },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
