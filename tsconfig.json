@@ -17,7 +17,6 @@
         "noErrorTruncation": true,
         "sourceMap": true,
         "resolveJsonModule": true,
-        "esModuleInterop": true,
         "outDir": "./dist",
         "declaration": true
     },

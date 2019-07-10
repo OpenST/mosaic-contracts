@@ -27,8 +27,8 @@ before_script:
   - npm run compile
   - npm run build:package
   - npm run generate:interacts
-  - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
   - npm run compile:ts
+  - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
 script:
   - npm run ${TEST_SUITE}
 after_script:
