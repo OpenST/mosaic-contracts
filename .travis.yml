@@ -24,10 +24,11 @@ notifications:
 node_js:
   - "8"
 before_script:
+  - npm run build:package
+  - npm run generate:interacts
   - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
   - npm run compile:ts
 script:
   - npm run ${TEST_SUITE}
-  - npm run generate:interacts
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
