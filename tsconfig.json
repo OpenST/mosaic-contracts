@@ -1,3 +1,4 @@
+
 {
     "compilerOptions": {
         "target": "es6",
@@ -8,24 +9,21 @@
         "strictFunctionTypes": true,
         "strictPropertyInitialization": true,
         "noImplicitThis": true,
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noErrorTruncation": true,
         "sourceMap": true,
-        "types": [
-            "chai",
-            "node",
-            "mocha"
-        ],
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "outDir": "./dist",
+        "declaration": true
     },
-    "include": [
-        "tools/fuzzy_proof_generator_tool/src/*.ts"
-    ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "tools",
+        "dist",
+        "contracts"
     ]
 }

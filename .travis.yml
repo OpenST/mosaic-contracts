@@ -7,7 +7,7 @@ env:
   - TEST_SUITE="test:fuzzy_proof_generator",
   - TEST_SUITE="test:integration",
   - TEST_SUITE="test:unit",
-  - TEST_SUITE="build-package"
+  - TEST_SUITE="build:package"
 branches:
   only:
   - master
@@ -24,10 +24,12 @@ notifications:
 node_js:
   - "8"
 before_script:
-  - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
+  - npm run compile
+  - npm run build:package
+  - npm run generate:interacts
   - npm run compile:ts
+  - ./tools/runGanacheCli.sh </dev/null 1>/dev/null 2>&1 &
 script:
   - npm run ${TEST_SUITE}
-  - npm run generate:interacts
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')

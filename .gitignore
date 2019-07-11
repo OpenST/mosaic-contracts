@@ -28,7 +28,9 @@ tags
 *.log
 
 # NPM package generated files:
-dist/contracts.json
+dist
+contract_build
+
 
 ## Build tool auxiliary files:
 *.synctex
