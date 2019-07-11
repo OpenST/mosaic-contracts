@@ -31,7 +31,7 @@ contract TestEIP20Gateway is EIP20Gateway {
     /**
      * @notice Instantiate TestEIP20Gateway for unit testing.
      *
-     * @param _token The ERC20 token contract address that will be
+     * @param _valueToken The ERC20 token contract address that will be
      *               staked and corresponding utility tokens will be minted
      *               in auxiliary chain.
      * @param _baseToken The ERC20 token address that will be used for
@@ -41,23 +41,27 @@ contract TestEIP20Gateway is EIP20Gateway {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                stake process.
      * @param _organization Address of an organization contract.
-     * @param _burner Address where tokens will be burned.
+     * @param _burner Address where base tokens will be burned.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
-        EIP20Interface _token,
+        EIP20Interface _valueToken,
         EIP20Interface _baseToken,
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
         OrganizationInterface _organization,
-        address payable _burner
+        address payable _burner,
+        uint256 _maxStorageRootItems
     )
         EIP20Gateway(
-            _token,
+            _valueToken,
             _baseToken,
             _stateRootProvider,
             _bounty,
             _organization,
-            _burner
+            _burner,
+            _maxStorageRootItems
         )
         public
     {

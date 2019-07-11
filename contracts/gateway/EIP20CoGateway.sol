@@ -52,9 +52,9 @@ pragma solidity ^0.5.0;
 -------------------------------------------------------------------------------
 */
 
-import "./UtilityTokenInterface.sol";
+import "../utilitytoken/contracts/UtilityTokenInterface.sol";
 import "./GatewayBase.sol";
-import "../lib/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 
 /**
  * @title EIP20CoGateway Contract
@@ -184,7 +184,7 @@ contract EIP20CoGateway is GatewayBase {
     /** Address of value token. */
     address public valueToken;
 
-    /** Address where token will be burned. */
+    /** Address where base coin will be burned. */
     address payable public burner;
 
     /** Maps messageHash to the Mint object. */
@@ -210,7 +210,9 @@ contract EIP20CoGateway is GatewayBase {
      *                process.
      * @param _organization Address of an organization contract.
      * @param _gateway Gateway contract address.
-     * @param _burner Address where tokens will be burned.
+     * @param _burner Address where base coin will be burned.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         address _valueToken,
@@ -219,12 +221,14 @@ contract EIP20CoGateway is GatewayBase {
         uint256 _bounty,
         OrganizationInterface _organization,
         address _gateway,
-        address payable _burner
+        address payable _burner,
+        uint256 _maxStorageRootItems
     )
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
         public
     {
@@ -456,7 +460,7 @@ contract EIP20CoGateway is GatewayBase {
     }
 
     /**
-     * @notice Completes the redeem process. This decreases token supply
+     * @notice Completes the redeem process. This decreases utility token supply
      *         on successful redeem.
      *
      * @dev Message bus ensures correct execution sequence of methods and also
@@ -729,8 +733,8 @@ contract EIP20CoGateway is GatewayBase {
      * @param _stakerNonce Nonce of the staker address.
      * @param _beneficiary The address in the auxiliary chain where the utility
      *                     tokens will be minted. This is payable so that it
-     *                     provides flexibility of transferring base token
-     *                     to account on minting.
+     *                     provides flexibility of transferring base coin to account
+     *                     on minting.
      * @param _amount Staked amount.
      * @param _gasPrice Gas price that staker is ready to pay to get the stake
      *                  and mint process done
@@ -782,7 +786,7 @@ contract EIP20CoGateway is GatewayBase {
 
         /*
          * Maximum reward possible is _gasPrice * _gasLimit, we check this
-         * upfront in this function to make sure that after minting of the
+         * upfront in this function to ensure that after minting the utility
          * tokens it is possible to give the reward to the facilitator.
          */
         require(
@@ -850,7 +854,7 @@ contract EIP20CoGateway is GatewayBase {
      * @dev In order to redeem the redeemer needs to approve CoGateway contract
      *      for redeem amount. Redeem amount is transferred from redeemer
      *      address to CoGateway contract.
-     *      This is a payable function. The bounty is transferred in base token.
+     *      This is a payable function. The bounty is transferred in base coin.
      *      Redeemer is always msg.sender.
      *
      * @param _amount Redeem amount that will be transferred from redeemer
@@ -1098,7 +1102,7 @@ contract EIP20CoGateway is GatewayBase {
 
         delete mints[_messageHash];
 
-        // Increase token supply with mint amount to beneficiary
+        // Increase utility token supply with mint amount to beneficiary
         // after subtracting reward amount.
         UtilityTokenInterface(utilityToken).increaseSupply(
             payableBeneficiary,
@@ -1164,7 +1168,7 @@ contract EIP20CoGateway is GatewayBase {
 
         delete redeems[_messageHash];
 
-        // Decrease the token supply.
+        // Decrease the utility token supply.
         UtilityTokenInterface(utilityToken).decreaseSupply(redeemAmount_);
 
         // Transfer the bounty amount to the facilitator.

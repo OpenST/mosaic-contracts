@@ -22,12 +22,13 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockUtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder');
 const coGatewayUtils = require('./helpers/co_gateway_utils.js');
-const proofData = require('../../../test/data/redeem_progressed_1.json');
+const proofData = require('../../../test/data/redeem_progressed_0.json');
 
 const ZeroBytes = Utils.ZERO_BYTES32;
 const { MessageStatusEnum } = messageBus;
@@ -74,17 +75,16 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', (accounts) => {
       messageStatus: MessageStatusEnum.Declared,
     };
 
-    const tokenAddress = accounts[9];
+    const valueTokenAddress = accounts[9];
     const symbol = 'DMY';
     const tokenName = 'Dummy token';
-    const tokenDecimal = 18;
     const organization = accounts[2];
 
     utilityToken = await MockUtilityToken.new(
-      tokenAddress,
+      valueTokenAddress,
       symbol,
       tokenName,
-      tokenDecimal,
+      config.decimals,
       organization,
     );
 
@@ -99,6 +99,7 @@ contract('EIP20CoGateway.progressRedeemWithProof() ', (accounts) => {
       proofData.co_gateway.constructor.organization,
       proofData.co_gateway.constructor.gateway,
       proofData.co_gateway.constructor.burner,
+      new BN(100),
     );
 
     const redeemIntentHash = coGatewayUtils.hashRedeemIntent(

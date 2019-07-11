@@ -34,7 +34,12 @@ contract('GatewayBase.getInboxActiveProcess()', (accounts) => {
   let accountAddress;
 
   beforeEach(async () => {
-    gatewayBase = await GatewayBase.new(accounts[0], new BN(100), accounts[1]);
+    gatewayBase = await GatewayBase.new(
+      accounts[0],
+      new BN(100),
+      accounts[1],
+      new BN(100),
+    );
 
     accountAddress = accounts[2];
     messageHash = web3.utils.sha3('message_hash');

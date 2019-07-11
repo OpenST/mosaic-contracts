@@ -81,12 +81,13 @@ describe('Stake and mint', async () => {
   let auxiliaryAnchor;
   let ostPrime;
   let stakeRequest;
+  let messageBoxOffset;
 
   before(async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
-    auxiliaryAccounts = shared.origin.accounts;
+    auxiliaryAccounts = shared.auxiliary.accounts;
     token = shared.origin.contracts.Token;
     baseToken = shared.origin.contracts.BaseToken;
     gateway = shared.origin.contracts.EIP20Gateway;
@@ -115,6 +116,7 @@ describe('Stake and mint', async () => {
       shared.auxiliary.contracts.Anchor,
       shared.auxiliary.organizationAddress,
     );
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('stakes', async () => {
@@ -151,6 +153,7 @@ describe('Stake and mint', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       gateway.address,
       [stakeRequest.messageHash],
+      messageBoxOffset,
       originWeb3.utils.toHex(blockNumber),
     );
 
@@ -203,7 +206,7 @@ describe('Stake and mint', async () => {
 
     const event = EventDecoder.getEvents(tx, gateway);
     // Assert event and balances.
-    await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress);
+    await assertProgressStake.verify(event, stakeRequest, initialBalancesBeforeProgress, false);
   });
 
   it('progresses mint', async () => {
@@ -221,6 +224,6 @@ describe('Stake and mint', async () => {
     const event = EventDecoder.getEvents(tx, cogateway);
 
     // Assert event and balances.
-    await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint);
+    await assertProgressMint.verify(event, stakeRequest, initialBalancesBeforeMint, false);
   });
 });

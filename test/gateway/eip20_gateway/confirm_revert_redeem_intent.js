@@ -22,11 +22,12 @@ const Gateway = artifacts.require('./TestEIP20Gateway.sol');
 const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const cogatewayUtils = require('../../../test/gateway/eip20_cogateway/helpers/co_gateway_utils');
-const StubData = require('../../data/redeem_revoked_1.json');
+const StubData = require('../../data/redeem_revoked_0.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
@@ -56,8 +57,8 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
 
   beforeEach(async () => {
     redeemRequest = StubData.co_gateway.redeem.params;
-    mockToken = await MockToken.new({ from: accounts[0] });
-    baseToken = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new(config.decimals, { from: accounts[0] });
+    baseToken = await MockToken.new(config.decimals, { from: accounts[0] });
 
     const organizationAddress = accounts[3];
     const coreAddress = accounts[5];
@@ -68,6 +69,7 @@ contract('EIP20Gateway.confirmRevertRedeemIntent()', (accounts) => {
       bountyAmount,
       organizationAddress,
       NullAddress, // burner address
+      new BN(100),
     );
 
     unstakeRequest = {

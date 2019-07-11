@@ -20,12 +20,14 @@
 
 const assert = require('assert');
 
+const Utils = require('../../../test/test_lib/utils.js');
+
 /**
- * Redeem Request object contains all the properties for redeem and unStake.
+ * Redeem Request object contains all the properties for redeem and unstake.
  * @typedef {Object} RedeemRequest
  * @property {BN} amount Redeem amount.
  * @property {BN} gasPrice Gas price that Redeemer is ready to pay to get the
- *                         redeem and unStake process done.
+ *                         redeem and unstake process done.
  * @property {BN} gasLimit Gas limit that redeemer is ready to pay.
  * @property {string} redeemer Address of Redeemer.
  * @property {BN} bounty Bounty amount paid for redeem and unstake message
@@ -42,12 +44,12 @@ const assert = require('assert');
  * BaseToken(ETH) and token ERC20 balance of gateway, beneficiary and
  * stakeVault.
  * @typedef {Object} Balances
- * @property balances.token.gateway ERC20 balance of gateway contract.
- * @property balances.token.beneficiary ERC20 balance of beneficiary.
- * @property balances.token.stakeVault ERC20 balance of stakeVault contract.
- * @property balances.baseToken.gateway Base token(ETH) balance of gateway.
- * @property balances.baseToken.beneficiary Base token(ETH) balance of beneficiary.
- * @property balances.baseToken.stakeVault Base token(ETH) balance of stakeVault
+ * @property {BN} balances.token.gateway ERC20 balance of gateway contract.
+ * @property {BN} balances.token.beneficiary ERC20 balance of beneficiary.
+ * @property {BN} balances.token.stakeVault ERC20 balance of stakeVault contract.
+ * @property {BN} balances.baseToken.gateway Base token(ETH) balance of gateway.
+ * @property {BN} balances.baseToken.beneficiary Base token(ETH) balance of beneficiary.
+ * @property {BN} balances.baseToken.stakeVault Base token(ETH) balance of stakeVault
  */
 
 /**
@@ -72,15 +74,16 @@ class ProgressUnStakeAssertion {
      * @param {Balances} initialBalances Initial baseToken and token
      *                                   balances before progress unstake.
      * @param {string} facilitator Address of facilitator.
+     * @param {Boolean} proofProgress `true` if progress is with proof.
      */
-  async verify(event, redeemRequest, initialBalances, facilitator) {
+  async verify(event, redeemRequest, initialBalances, facilitator, proofProgress) {
     await this._assertBalancesForUnStake(
       redeemRequest,
       initialBalances,
       facilitator,
     );
 
-    ProgressUnStakeAssertion._assertProgressUnStakeEvent(event, redeemRequest);
+    ProgressUnStakeAssertion._assertProgressUnStakeEvent(event, redeemRequest, proofProgress);
   }
 
   /**
@@ -213,9 +216,10 @@ class ProgressUnStakeAssertion {
      * Assert event after progress unstake method.
      * @param {Object} event Object representing unstake progressed event.
      * @param {RedeemRequest} redeemRequest Redeem request parameters.
+     * @param {Boolean} proofProgress `true` if progress is with proof.
      * @private
      */
-  static _assertProgressUnStakeEvent(event, redeemRequest) {
+  static _assertProgressUnStakeEvent(event, redeemRequest, proofProgress) {
     const eventData = event.UnstakeProgressed;
 
     const reward = redeemRequest.gasPrice.mul(redeemRequest.gasLimit);
@@ -254,14 +258,25 @@ class ProgressUnStakeAssertion {
     );
     assert.strictEqual(
       eventData._proofProgress,
-      false,
-      'Proof progress flag should be false.',
+      proofProgress,
+      `Proof progress flag should be ${proofProgress}.`,
     );
-    assert.strictEqual(
-      eventData._unlockSecret,
-      redeemRequest.unlockSecret,
-      'Unlock secret must match.',
-    );
+
+    // If the progress is done with proof instead of unlock secret, then the
+    // unlock secret emitted in the event will have bytes32(0) value.
+    if (proofProgress === true) {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        Utils.ZERO_BYTES32,
+        `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
+      );
+    } else {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        redeemRequest.unlockSecret,
+        'Unlock secret must match.',
+      );
+    }
   }
 }
 

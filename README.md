@@ -31,32 +31,34 @@ npm install @openst/mosaic-contracts
 
 #### Usage
 
-```js
+```typescript
 // Load the contracts' meta-data from the package:
-const {
-  Anchor,
-  CoGatewayUtilityTokenInterface,
-  EIP20CoGateway,
-  EIP20Gateway,
-  EIP20Interface,
-  EIP20Token,
-  GatewayLib,
-  MerklePatriciaProof,
-  MessageBus,
-  Organization,
-  OrganizationInterface,
-  Organized,
-  OSTPrime,
-  StateRootInterface,
-  UtilityToken,
-  UtilityTokenInterface,
-} = require('@openst/mosaic-contracts');
+import { contracts } from "@openst/mosaic-contracts";
 
 // Access the ABIs and BINs directly on the contracts. For example:
-const anchorAbi = Anchor.abi;
-const anchorBinary = Anchor.bin;
+const anchorAbi = contracts.Anchor.abi;
+const anchorBinary = contracts.Anchor.bin;
 ```
 
+`@openst/mosaic-contracts` also includes the contract interacts.
+
+Example of using the contract interacts. 
+```typescript
+import { Interacts} from "@openst/mosaic-contracts";
+
+const anchor:Anchor = Interacts.getAnchor(web3, '0xAnchorContractAddress');
+const gateway:EIP20Gateway = Interacts.getEIP20Gateway(web3, '0xEIP20GatewayContactAddress');
+```
+Example with Web3 contracts.
+```typescript
+import { contracts } from "@openst/mosaic-contracts";
+
+const jsonInterface = contracts.Anchor.abi;
+const contract = new web3.eth.Contract(jsonInterface, address, options);
+
+const anchor:Anchor = contract as Anchor;
+
+```
 ### For Direct Users
 
 This section is only required if you want to *set up a **new** mosaic chain.*
@@ -64,15 +66,16 @@ This section is only required if you want to *set up a **new** mosaic chain.*
 #### Installation
 
 ```bash
-git clone git@github.com:OpenST/mosaic-contracts.git
+git clone https://github.com/OpenST/mosaic-contracts.git
 cd mosaic-contracts
-npm install
-npm run compile-all
+npm run update # Runs `git submodule update --init --recursive && npm ci`
+npm run compile:all
 ```
 
 #### Usage
 
 There is a deployment tool available for deployment and set-up:
+
 ```bash
 node ./tools/blue_deployment/index.js
 ```
@@ -89,15 +92,12 @@ You can use [mosaic.js] directly to deploy the contracts and interact with them.
 ### Set-up
 
 ```bash
-git clone git@github.com:OpenST/mosaic-contracts.git
+git clone https://github.com/OpenST/mosaic-contracts.git
 cd mosaic-contracts
-npm install
-npm run compile-all
+npm run update # Runs `git submodule update --init --recursive && npm ci`
+npm run compile:all
 npm run ganache
 npm run test
-
-# Requires docker, stop ganache first:
-npm run test:integration
 ```
 
 ### Guidelines

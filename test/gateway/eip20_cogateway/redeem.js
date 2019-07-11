@@ -19,16 +19,19 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
-const Utils = require('../../test_lib/utils');
-const messageBus = require('../../test_lib/message_bus.js');
+
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
+const config = require('../../test_lib/config.js');
+const messageBus = require('../../test_lib/message_bus.js');
+const Utils = require('../../test_lib/utils');
+const web3 = require('../../test_lib/web3');
 
 const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockToken = artifacts.require('MockToken');
 
 const { MessageStatusEnum } = messageBus;
 
-const nonce = new BN(1);
+const nonce = new BN(0);
 const hashLockObj = Utils.generateHashLock();
 const hashLock = hashLockObj.l;
 
@@ -61,7 +64,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       burner,
     ] = accounts;
 
-    utilityToken = await MockToken.new({ from: owner });
+    utilityToken = await MockToken.new(config.decimals, { from: owner });
     bountyAmount = new BN(100);
     redeemerBalance = new BN(100000);
 
@@ -73,6 +76,7 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
       organization,
       gateway,
       burner,
+      new BN(100),
     );
 
     await utilityToken.transfer(redeemer, redeemerBalance, { from: owner });
@@ -222,7 +226,6 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Underflow when subtracting.',
     );
   });
 
@@ -261,7 +264,6 @@ contract('EIP20CoGateway.redeem()', (accounts) => {
         hashLock,
         { from: redeemer, value: bountyAmount },
       ),
-      'Underflow when subtracting.',
     );
   });
 

@@ -20,7 +20,7 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/MetaBlock.sol";
 import "./BlockStoreInterface.sol";
 import "./PollingPlaceInterface.sol";

@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const utils = require('../../test_lib/utils');
 const GatewayUtils = require('./helpers/gateway_utils');
 const messageBus = require('../../test_lib/message_bus.js');
@@ -110,8 +111,8 @@ contract('EIP20Gateway.stake() ', (accounts) => {
   beforeEach(async () => {
     [core, stakerAddress, beneficiary, coGateway, organization] = accounts;
 
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
+    mockToken = await MockToken.new(config.decimals);
+    baseToken = await MockToken.new(config.decimals);
     mockOrganization = await MockOrganization.new(organization, organization);
 
     bountyAmount = new BN(100);
@@ -122,6 +123,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      new BN(100),
     );
     await gateway.activateGateway(coGateway, { from: organization });
 
@@ -234,7 +236,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
     await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
     await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-    nonce = new BN(2);
+    nonce = new BN(1);
     await prepareData();
     errorMessage = 'Previous process is not completed';
     await stake(utils.ResultType.FAIL);
@@ -259,7 +261,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
     await mockToken.approve(gateway.address, stakeAmount, { from: stakerAddress });
     await baseToken.approve(gateway.address, bountyAmount, { from: stakerAddress });
 
-    nonce = new BN(2);
+    nonce = new BN(1);
     await prepareData();
     errorMessage = 'Previous process is not completed';
     await stake(utils.ResultType.FAIL);
@@ -273,6 +275,7 @@ contract('EIP20Gateway.stake() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      new BN(100),
     );
 
     /*

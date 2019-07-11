@@ -1,0 +1,29 @@
+
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "alwaysStrict": true,
+        "strictNullChecks": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "noImplicitAny": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noErrorTruncation": true,
+        "sourceMap": true,
+        "resolveJsonModule": true,
+        "outDir": "./dist",
+        "declaration": true
+    },
+    "exclude": [
+        "node_modules",
+        "tools",
+        "dist",
+        "contracts"
+    ]
+}

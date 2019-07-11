@@ -21,8 +21,8 @@
 const BN = require('bn.js');
 
 const Utils = require('../../test_lib/utils');
-const TestDataJSON = require('./test_data/redeem_progressed_1');
-const TestDataJSON2 = require('./test_data/redeem_progressed_2');
+const TestDataJSON = require('./../../data/redeem_progressed_0');
+const TestDataJSON2 = require('./../../data/redeem_progressed_1');
 const messageBus = require('../../test_lib/message_bus.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
@@ -104,6 +104,7 @@ contract('EIP20Gateway.confirmRedeemIntent()', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burnerAddress,
+      new BN(100),
     );
 
     await eip20Gateway.activateGateway(TestDataJSON.contracts.coGateway, { from: owner });
@@ -323,24 +324,6 @@ contract('EIP20Gateway.confirmRedeemIntent()', (accounts) => {
         rlpParentNodes,
       ),
       'RLP encoded parent nodes must not be zero.',
-    );
-  });
-
-  it('should fail when redeemer nonce is already consumed', async () => {
-    const redeemerNonce = new BN(0);
-    await Utils.expectRevert(
-      eip20Gateway.confirmRedeemIntent(
-        redeemRequest.redeemer,
-        redeemerNonce,
-        redeemRequest.beneficiary,
-        redeemRequest.amount,
-        redeemRequest.gasPrice,
-        redeemRequest.gasLimit,
-        redeemRequest.blockNumber,
-        redeemRequest.hashLock,
-        redeemRequest.storageProof,
-      ),
-      'Invalid nonce.',
     );
   });
 

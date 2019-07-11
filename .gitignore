@@ -13,9 +13,6 @@ contracts/abi/
 # don't commit node_modules
 node_modules
 
-# Don't commit package-lock.json file
-package-lock.json
-
 # Do not track builds
 build/
 
@@ -23,13 +20,17 @@ build/
 .idea/
 .vscode/
 *.iml
+*.swp
+tags
 
 # LaTeX auxiliary files
 *.aux
 *.log
 
 # NPM package generated files:
-dist/contracts.json
+dist
+contract_build
+
 
 ## Build tool auxiliary files:
 *.synctex
@@ -37,3 +38,10 @@ dist/contracts.json
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+# Compiled js artifacts.
+tools/fuzzy_proof_generator_tool/src/*.js
+tools/fuzzy_proof_generator_tool/src/*.js.map
+
+# Do not track generated wrapper, it should be part of build script
+interacts/*

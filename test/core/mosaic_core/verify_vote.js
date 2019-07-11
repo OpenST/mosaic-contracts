@@ -20,6 +20,7 @@
 
 const BN = require('bn.js');
 const web3 = require('../../test_lib/web3.js');
+const config = require('../../test_lib/config.js');
 
 const EventsDecoder = require('../../test_lib/event_decoder.js');
 const Utils = require('../../test_lib/utils.js');
@@ -99,7 +100,7 @@ contract('MosaicCore.verifyVote()', async (accounts) => {
     requiredWeight = new BN(21400);
 
     [tokenDeployer] = accounts;
-    erc20 = await MockToken.new({ from: tokenDeployer });
+    erc20 = await MockToken.new(config.decimals, { from: tokenDeployer });
 
     mosaicCore = await MosaicCore.new(
       auxiliaryCoreIdentifier,
@@ -329,7 +330,7 @@ contract('MosaicCore.verifyVote() [commit meta-block]', async (accounts) => {
   beforeEach(async () => {
     [auxiliaryCoreIdentifier] = accounts;
     [tokenDeployer] = accounts;
-    erc20 = await MockToken.new({ from: tokenDeployer });
+    erc20 = await MockToken.new(config.decimals, { from: tokenDeployer });
 
     mosaicCore = await MosaicCore.new(
       auxiliaryCoreIdentifier,

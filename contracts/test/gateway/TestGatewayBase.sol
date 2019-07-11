@@ -21,7 +21,7 @@ pragma solidity ^0.5.0;
 // ----------------------------------------------------------------------------
 
 import "../../gateway/GatewayBase.sol";
-import "../../lib/OrganizationInterface.sol";
+import "../../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
 import "../../lib/StateRootInterface.sol";
 
 /**
@@ -47,17 +47,21 @@ contract TestGatewayBase is GatewayBase {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                message transfers.
      * @param _organization Address of a contract that manages workers.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         public
         GatewayBase(
             _stateRootProvider,
             _bounty,
-            _organization
+            _organization,
+            _maxStorageRootItems
         )
     {}
 
@@ -159,7 +163,8 @@ contract TestGatewayBase is GatewayBase {
     )
         external
     {
-        super.registerInboxProcess(_account, 1, _messageHash);
+        uint256 nonce = super._getInboxNonce(_account);
+        super.registerInboxProcess(_account, nonce, _messageHash);
     }
 
     /**
@@ -176,7 +181,8 @@ contract TestGatewayBase is GatewayBase {
     )
         external
     {
-        super.registerOutboxProcess(_account, 1, _messageHash);
+        uint256 nonce = super._getOutboxNonce(_account);
+        super.registerOutboxProcess(_account, nonce, _messageHash);
     }
 
     /**

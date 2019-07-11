@@ -21,8 +21,8 @@
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
-const TestData = require('./test_data/stake_progressed_1');
-const TestDataWithZeroGasPrice = require('./test_data/stake_progressed_3');
+const TestData = require('./../../data/stake_progressed_0');
+const TestDataWithZeroGasPrice = require('./../../data/stake_progressed_1');
 const messageBus = require('../../test_lib/message_bus.js');
 
 const TestEIP20CoGateway = artifacts.require('TestEIP20CoGateway');
@@ -79,6 +79,7 @@ contract('EIP20CoGateway.progressMintWithProof() ', (accounts) => {
       TestData.contracts.organization,
       TestData.contracts.gateway,
       burner,
+      new BN(100),
     );
 
     intentHash = CoGatewayUtils.hashStakeIntent(

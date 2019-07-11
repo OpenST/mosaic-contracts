@@ -21,11 +21,12 @@
 const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const UtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('./../../test_lib/utils');
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
-const StubData = require('../../data/stake_revoked_1.json');
+const StubData = require('../../data/stake_revoked_0.json');
 
 const { MessageStatusEnum } = messageBus;
 
@@ -55,7 +56,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
       accounts[9],
       'Dummy', // Name
       'Dummy', // Symbol
-      18, // Decimal
+      config.decimals,
       organization,
       { from: owner },
     );
@@ -68,6 +69,7 @@ contract('EIP20CoGateway.confirmRevertStakeIntent() ', (accounts) => {
       organization,
       StubData.contracts.gateway,
       StubData.co_gateway.constructor.burner,
+      new BN(100),
     );
 
     amount = new BN(stakeRequest.amount, 16);

@@ -19,6 +19,7 @@
 // ----------------------------------------------------------------------------
 
 const CoGateway = artifacts.require('EIP20CoGateway');
+const config = require('../../test_lib/config.js');
 const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
@@ -36,16 +37,17 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
   let worker;
   let organization;
   let coGateway;
+  let maxStorageRootItems;
 
   const gatewayAddress = accounts[6];
   const burner = NullAddress;
 
   beforeEach(async () => {
-    valueToken = await MockToken.new();
-    utilityToken = await MockToken.new();
+    valueToken = await MockToken.new(config.decimals);
+    utilityToken = await MockToken.new(config.decimals);
     dummyStateRootProvider = accounts[1];
     bountyAmount = new BN(100);
-
+    maxStorageRootItems = new BN(25);
     owner = accounts[2];
     worker = accounts[3];
     organization = await MockOrganization.new(owner, worker);
@@ -60,6 +62,7 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
       organization.address,
       gatewayAddress,
       burner,
+      maxStorageRootItems,
     );
 
     assert(
@@ -77,6 +80,7 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
       organization.address,
       gatewayAddress,
       burner,
+      maxStorageRootItems,
     );
 
     const valueTokenAddress = await coGateway.valueToken.call();
@@ -117,6 +121,7 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
         organization.address,
         gatewayAddress,
         burner,
+        maxStorageRootItems,
       ),
       'Value token address must not be zero.',
     );
@@ -134,6 +139,7 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
         organization.address,
         gatewayAddress,
         burner,
+        maxStorageRootItems,
       ),
       'Utility token address must not be zero.',
     );
@@ -151,6 +157,7 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
         organization.address,
         gatewayAddress,
         burner,
+        maxStorageRootItems,
       ),
       'State root provider contract address must not be zero.',
     );
@@ -167,11 +174,30 @@ contract('EIP20CoGateway.constructor() ', (accounts) => {
       organization.address,
       gatewayAddress,
       burner,
+      maxStorageRootItems,
     );
 
     assert(
       web3.utils.isAddress(coGateway.address),
       'Returned value is not a valid address.',
+    );
+  });
+
+  it('should fail when max storage root items is zero.', async () => {
+    maxStorageRootItems = new BN(0);
+
+    await Utils.expectRevert(
+      CoGateway.new(
+        valueToken.address,
+        utilityToken.address,
+        dummyStateRootProvider,
+        bountyAmount,
+        organization.address,
+        gatewayAddress,
+        burner,
+        maxStorageRootItems,
+      ),
+      'The max number of items to store in a circular buffer must be greater than 0.',
     );
   });
 });

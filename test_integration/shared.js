@@ -31,6 +31,12 @@
  * case-sensitive!
  */
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { env } = require('process');
+
+/** The default decimals to use for integration tests. */
+const DEFAULT_DECIMALS = 18;
+
 /**
  * Contains all relevant data on a chain.
  *
@@ -88,6 +94,17 @@ const shared = {
   origin: new Chain(),
   auxiliary: new Chain(),
   artifacts: {},
+
+  /** Has a default value. Can be overriden with the environment variable OPENST_DECIMALS. */
+  get decimals() {
+    let decimals = DEFAULT_DECIMALS;
+
+    if (env.OPENST_DECIMALS) {
+      decimals = Number.parseInt(env.OPENST_DECIMALS, 10);
+    }
+
+    return decimals;
+  },
 };
 
 /**

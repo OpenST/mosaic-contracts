@@ -20,18 +20,19 @@ pragma solidity ^0.5.0;
 //
 // ----------------------------------------------------------------------------
 
+import "../lib/CircularBufferUint.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/GatewayLib.sol";
 import "../lib/MessageBus.sol";
-import "../lib/OrganizationInterface.sol";
-import "../lib/Organized.sol";
-import "../lib/SafeMath.sol";
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
+import "../utilitytoken/contracts/organization/contracts/Organized.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/StateRootInterface.sol";
 
 /**
  *  @title GatewayBase is the base contract for EIP20Gateway and EIP20CoGateway.
  */
-contract GatewayBase is Organized {
+contract GatewayBase is Organized, CircularBufferUint {
 
     /* Usings */
 
@@ -67,12 +68,12 @@ contract GatewayBase is Organized {
     /* Constants */
 
     /** Position of message bus in the storage. */
-    uint8 constant MESSAGE_BOX_OFFSET = 7;
+    uint8 public constant MESSAGE_BOX_OFFSET = 9;
 
     /**
-     * Penalty in bounty amount percentage charged to staker on revert stake.
+     * Penalty in bounty amount percentage charged to message sender on revert message.
      */
-    uint8 constant REVOCATION_PENALTY = 150;
+    uint8 public constant REVOCATION_PENALTY = 150;
 
     //todo identify how to get block time for both chains
     /**
@@ -112,8 +113,8 @@ contract GatewayBase is Organized {
 
     /**
      * Message box.
-     * @dev Keep this is at location 1, in case this is changed then update
-     *      constant MESSAGE_BOX_OFFSET accordingly.
+     * @dev update constant MESSAGE_BOX_OFFSET according to the index of messageBox.
+     *
      */
     MessageBus.MessageBox internal messageBox;
 
@@ -159,13 +160,17 @@ contract GatewayBase is Organized {
      * @param _bounty The amount that facilitator will stakes to initiate the
      *                message transfers.
      * @param _organization Address of an organization contract.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
      */
     constructor(
         StateRootInterface _stateRootProvider,
         uint256 _bounty,
-        OrganizationInterface _organization
+        OrganizationInterface _organization,
+        uint256 _maxStorageRootItems
     )
         Organized(_organization)
+        CircularBufferUint(_maxStorageRootItems)
         public
     {
         require(
@@ -178,7 +183,7 @@ contract GatewayBase is Organized {
 
         // The following variables are not known at construction:
         messageBox = MessageBus.MessageBox();
-        encodedGatewayPath = '';
+        encodedGatewayPath = "";
         remoteGateway = address(0);
     }
 
@@ -257,6 +262,8 @@ contract GatewayBase is Organized {
         );
 
         storageRoots[_blockHeight] = storageRoot;
+        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
+        delete storageRoots[oldestStoredBlockHeight];
 
         // wasAlreadyProved is false since Gateway is called for the first time
         // for a block height
@@ -271,11 +278,11 @@ contract GatewayBase is Organized {
     }
 
     /**
-     * @notice Get the nonce for the given account address
+     * @notice Get the nonce for the given account address.
      *
-     * @param _account Account address for which the nonce is to fetched
+     * @param _account Account address for which the nonce is to be fetched.
      *
-     * @return nonce
+     * @return nonce.
      */
     function getNonce(address _account)
         external
@@ -431,35 +438,35 @@ contract GatewayBase is Organized {
      * @notice Calculate the fee amount which is rewarded to facilitator for
      *         performing message transfers.
      *
-     * @param _gasConsumed Gas consumption during message confirmation.
+     * @param _gasUsedDuringConfirmMessage Gas consumption during message confirmation.
      * @param _gasLimit Maximum amount of gas can be used for reward.
      * @param _gasPrice Gas price at which reward is calculated.
-     * @param _initialGas Initial gas at the start of the process.
+     * @param _currentTransactionInitialGas Gas at the start of the current transaction.
      *
      * @return fee_ Fee amount.
-     * @return totalGasConsumed_ Total gas consumed during message transfer.
+     * @return totalGasUsedInMessageTransfer_ Total gas consumed during message transfer.
      */
     function feeAmount(
-        uint256 _gasConsumed,
+        uint256 _gasUsedDuringConfirmMessage,
         uint256 _gasLimit,
         uint256 _gasPrice,
-        uint256 _initialGas
+        uint256 _currentTransactionInitialGas
     )
         internal
         view
         returns (
             uint256 fee_,
-            uint256 totalGasConsumed_
+            uint256 totalGasUsedInMessageTransfer_
         )
     {
-        totalGasConsumed_ = _initialGas.add(
-            _gasConsumed
+        totalGasUsedInMessageTransfer_ = _currentTransactionInitialGas.add(
+            _gasUsedDuringConfirmMessage
         ).sub(
             gasleft()
         );
 
-        if (totalGasConsumed_ < _gasLimit) {
-            fee_ = totalGasConsumed_.mul(_gasPrice);
+        if (totalGasUsedInMessageTransfer_ < _gasLimit) {
+            fee_ = totalGasUsedInMessageTransfer_.mul(_gasPrice);
         } else {
             fee_ = _gasLimit.mul(_gasPrice);
         }
@@ -706,7 +713,7 @@ contract GatewayBase is Organized {
         returns(uint256)
     {
         if (_messageHash == bytes32(0)) {
-            return 1;
+            return 0;
         }
 
         MessageBus.Message storage message =

@@ -23,6 +23,7 @@ const MockToken = artifacts.require('MockToken');
 const MockOrganization = artifacts.require('MockOrganization.sol');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const Utils = require('./../../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
@@ -36,15 +37,16 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
   let gateway;
   let owner;
   let worker;
+  let maxStorageRootItems;
 
   const burner = NullAddress;
 
   beforeEach(async () => {
-    mockToken = await MockToken.new();
-    baseToken = await MockToken.new();
+    mockToken = await MockToken.new(config.decimals);
+    baseToken = await MockToken.new(config.decimals);
     dummyRootProviderAddress = accounts[1];
     bountyAmount = new BN(100);
-
+    maxStorageRootItems = new BN(25);
     owner = accounts[2];
     worker = accounts[3];
     mockOrganization = await MockOrganization.new(owner, worker);
@@ -58,6 +60,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
     assert(
@@ -74,14 +77,24 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
+    const valueTokenAddress = await gateway.valueToken.call();
+
+    assert.equal(
+      valueTokenAddress,
+      mockToken.address,
+      'Invalid valueTokenAddress address from contract.',
+    );
+
+    // token supports previous ABIs
     const tokenAddress = await gateway.token.call();
 
     assert.equal(
       tokenAddress,
       mockToken.address,
-      'Invalid valueTokenAddress address from contract.',
+      'Invalid tokenAddress address from contract.',
     );
 
     const bountyTokenAdd = await gateway.baseToken.call();
@@ -116,8 +129,9 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
-      'Token contract address must not be zero.',
+      'Value token contract address must not be zero.',
     );
   });
 
@@ -132,6 +146,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
       'Base token contract address for bounty must not be zero.',
     );
@@ -148,6 +163,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         mockOrganization.address,
         burner,
+        maxStorageRootItems,
       ),
       'State root provider contract address must not be zero.',
     );
@@ -164,8 +180,26 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
         bountyAmount,
         organization,
         burner,
+        maxStorageRootItems,
       ),
       'Organization contract address must not be zero.',
+    );
+  });
+
+  it('should fail when max storage root items is zero', async () => {
+    maxStorageRootItems = new BN(0);
+
+    await Utils.expectRevert(
+      Gateway.new(
+        mockToken.address,
+        baseToken.address,
+        dummyRootProviderAddress,
+        bountyAmount,
+        mockOrganization.address,
+        burner,
+        maxStorageRootItems,
+      ),
+      'The max number of items to store in a circular buffer must be greater than 0.',
     );
   });
 
@@ -179,6 +213,7 @@ contract('EIP20Gateway.constructor() ', (accounts) => {
       bountyAmount,
       mockOrganization.address,
       burner,
+      maxStorageRootItems,
     );
 
     assert(

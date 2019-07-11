@@ -1,5 +1,39 @@
 # Mosaic Contracts Change Log
 
+
+## Version 0.11.0
+
+### Notable Changes
+* Gateways should store roots in ring buffer [#726](https://github.com/OpenST/mosaic-contracts/pull/726)
+* Autogenerate contract interacts using typechain/ts-generator [#781](https://github.com/OpenST/mosaic-contracts/pull/781)
+* OSTComposer StakeRequest object storage optimization [#778](https://github.com/OpenST/mosaic-contracts/pull/778)
+* Destructing staker proxy via ost composer contract [#777](https://github.com/OpenST/mosaic-contracts/pull/777)
+* Hashing of a stake request now confirms EIP-712 [#776](https://github.com/OpenST/mosaic-contracts/pull/776)
+* `activeStakeRequestCount` removed from OSTComposer contract [#775](https://github.com/OpenST/mosaic-contracts/pull/775)
+* Mutex refactoring and nonce removal check from StakerProxy.stake [#774](https://github.com/OpenST/mosaic-contracts/pull/774)
+* Ost composer contract [#750](https://github.com/OpenST/mosaic-contracts/pull/750)
+* Staker proxy contract [#745](https://github.com/OpenST/mosaic-contracts/pull/745)
+* Generate proof data [#743](https://github.com/OpenST/mosaic-contracts/pull/743)
+* Retains a pattern of generated proof data [#760](https://github.com/OpenST/mosaic-contracts/pull/760)
+* Parallelize Travis CI [#746](https://github.com/OpenST/mosaic-contracts/pull/746)
+* Fuzzer that generates the valid Merkel Patricia Proofs. [#729](https://github.com/OpenST/mosaic-contracts/pull/729)
+* Integration tests for redeem and unstake after revert stake [#753](https://github.com/OpenST/mosaic-contracts/pull/753)
+* Integration tests for revert redeem [#747](https://github.com/OpenST/mosaic-contracts/pull/747)
+* Integration tests for progress stake and mint after revert [#752](https://github.com/OpenST/mosaic-contracts/pull/752)
+* Integration tests for redeem & unstake with proof [#734](https://github.com/OpenST/mosaic-contracts/pull/734)
+* Integration tests for revert stake [#732](https://github.com/OpenST/mosaic-contracts/pull/732)
+* Integration tests for stake & Mint with proof [#730](https://github.com/OpenST/mosaic-contracts/pull/730)
+* Correct setting of auxiliaryAccounts in integration tests [#761](https://github.com/OpenST/mosaic-contracts/pull/761)
+* Merkle Patricia Proof Generator Tool [#717](https://github.com/OpenST/mosaic-contracts/pull/717)
+* Code deduplication, `UtilityToken`, `Organization` dependencies are imported using git submodules, `SafeMath` dependency is imported as npm package [#728](https://github.com/OpenST/mosaic-contracts/pull/728)
+* Change references from (branded) token to value token [#710](https://github.com/OpenST/mosaic-contracts/pull/710)
+* Gateway nonce now starts at zero [#715](https://github.com/OpenST/mosaic-contracts/pull/715)
+* Improved variable names in GateawayBase.feeAmount() [#713](https://github.com/OpenST/mosaic-contracts/pull/713/files)
+* Token type as `address` instead of `EIP20Interface` in `UtilityToken` [#714](https://github.com/OpenST/mosaic-contracts/pull/714/files) 
+* Improved message bus documentation, using explicit `inboxMessageStatus` and `outboxMessageStatus` [#709](https://github.com/OpenST/mosaic-contracts/pull/709/files)
+* Updated vocabulary, coin and ost instead of base token and token [#686](https://github.com/OpenST/mosaic-contracts/pull/686)
+
+
 ## Version 0.10.0 ⚓️ Anchor
 
 <!-- [**Release 0.10.0, (<date-here>)**](https://github.com/OpenSTFoundation/mosaic-contracts/releases/tag/0.10.0) -->

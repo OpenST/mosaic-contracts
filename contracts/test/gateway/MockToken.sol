@@ -13,9 +13,9 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Contracts: MockToken 
+// Contracts: MockToken
 //
 // http://www.simpletoken.org/
 //
@@ -24,7 +24,7 @@ pragma solidity ^0.5.0;
 
 import "./MockTokenConfig.sol";
 import "../../lib/EIP20Interface.sol";
-import "../../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract MockToken is EIP20Interface, MockTokenConfig {
 
@@ -38,16 +38,19 @@ contract MockToken is EIP20Interface, MockTokenConfig {
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
 
-    constructor() public {
+    constructor(uint8 _decimals) public {
+        uint256 decimalsFactor = 10**uint256(_decimals);
+        uint256 tokensMax = 800000000 * decimalsFactor;
+
         tokenSymbol = TOKEN_SYMBOL;
         tokenName = TOKEN_NAME;
-        tokenDecimals = TOKEN_DECIMALS;
-        tokenTotalSupply = TOKENS_MAX;
-        balances[msg.sender] = TOKENS_MAX;
+        tokenDecimals = _decimals;
+        tokenTotalSupply = tokensMax;
+        balances[msg.sender] = tokensMax;
 
         // According to the ERC20 standard, a token contract which creates new tokens should trigger
         // a Transfer event and transfers of 0 values must also fire the event.
-        emit Transfer(address(0), msg.sender, TOKENS_MAX);
+        emit Transfer(address(0), msg.sender, tokensMax);
     }
 
     function name() public view returns (string memory) {

@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 import "../lib/EIP20Interface.sol";
 import "./StakeInterface.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title The Stake contract tracks deposits, logouts, slashings etc. on origin.
@@ -60,7 +60,7 @@ contract Stake is StakeInterface {
 
         /**
          * The stake initially equals the deposit. It can decrease due to
-         * withdrawal or slashing. Initially, the weight on auxiliary will 
+         * withdrawal or slashing. Initially, the weight on auxiliary will
          * equal the stake.
          */
         uint256 stake;

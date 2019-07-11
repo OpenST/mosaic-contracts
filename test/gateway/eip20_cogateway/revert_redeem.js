@@ -22,6 +22,7 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const BN = require('bn.js');
 
 const MockUtilityToken = artifacts.require('MockUtilityToken');
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
@@ -53,7 +54,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       constructorParams.valueToken, // Token address.
       'DMY', // Symbol.
       'Dummy token', // Token name.
-      18, // Token decimal.
+      config.decimals,
       constructorParams.organization, // Organisation address.
       { from: constructorParams.owner },
     );
@@ -68,6 +69,7 @@ contract('EIP20CoGateway.revertRedeem()', (accounts) => {
       constructorParams.organization,
       constructorParams.gateway,
       constructorParams.burner,
+      new BN(100),
     );
 
     const hashLockObj = Utils.generateHashLock();

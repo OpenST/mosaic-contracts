@@ -70,7 +70,13 @@ const rootDir = `${__dirname}/../../`;
  * @returns {Address} The address of either the provided EIP20Token or the
  *                   newly deployed one.
  */
-const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions) => {
+const deployedToken = async (
+  web3,
+  deployerAddress,
+  eip20Address,
+  deployOptions,
+  tokenDecimals = 18,
+) => {
   if (eip20Address !== 'new') {
     return eip20Address;
   }
@@ -84,7 +90,7 @@ const deployedToken = async (web3, deployerAddress, eip20Address, deployOptions)
    */
   const EIP20StandardToken = Contract.loadTruffleContract(
     'EIP20StandardToken',
-    ['MYT', 'MyToken', 800000000, 18],
+    ['MYT', 'MyToken', 800000000, tokenDecimals],
     { rootDir },
   );
 

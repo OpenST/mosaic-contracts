@@ -23,14 +23,15 @@ const MockOrganization = artifacts.require('MockOrganization.sol');
 const MockToken = artifacts.require('MockToken');
 
 const BN = require('bn.js');
+const config = require('../../test_lib/config.js');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../../test/test_lib/utils');
 const web3 = require('../../../test/test_lib/web3.js');
 const GatewayUtils = require('./helpers/gateway_utils');
 
-const revokedProofData = require('../../../test/data/stake_revoked_1.json');
-const progressedProofData = require('../../../test/data/stake_progressed_1.json');
+const revokedProofData = require('../../../test/data/stake_revoked_0.json');
+const progressedProofData = require('../../../test/data/stake_progressed_0.json');
 
 const NullAddress = Utils.NULL_ADDRESS;
 const ZeroBytes = Utils.ZERO_BYTES32;
@@ -72,8 +73,8 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
   };
 
   beforeEach(async () => {
-    mockToken = await MockToken.new({ from: accounts[0] });
-    baseToken = await MockToken.new({ from: accounts[0] });
+    mockToken = await MockToken.new(config.decimals, { from: accounts[0] });
+    baseToken = await MockToken.new(config.decimals, { from: accounts[0] });
 
     const owner = accounts[2];
     const worker = accounts[7];
@@ -93,6 +94,7 @@ contract('EIP20Gateway.progressRevertStake()', (accounts) => {
       bountyAmount,
       organization.address,
       burner,
+      new BN(100),
     );
 
     const paramsData = revokedProofData.gateway.stake.params;

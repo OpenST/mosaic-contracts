@@ -20,10 +20,11 @@
 // ----------------------------------------------------------------------------
 
 const MockToken = artifacts.require('./MockToken.sol');
+const config = require('../test_lib/config.js');
 
 // / @dev Deploy
 module.exports.deployMockToken = async (artifacts, accounts) => {
-  const token = await MockToken.new({ from: accounts[0], gas: 3500000 });
+  const token = await MockToken.new(config.decimals, { from: accounts[0], gas: 3500000 });
 
   return {
     token,

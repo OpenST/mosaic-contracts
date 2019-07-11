@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 import "../lib/Block.sol";
 import "../lib/MetaBlock.sol";
-import "../lib/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./BlockStore.sol";
 import "./PollingPlaceInterface.sol";
 import "./KernelGatewayInterface.sol";
@@ -269,8 +269,8 @@ contract AuxiliaryBlockStore is
 
         coreIdentifier_ = coreIdentifier;
         kernelHash_ = kernelHashes[_blockHash];
-        auxiliaryDynasty_= checkpoints[_blockHash].dynasty;
-        auxiliaryBlockHash_=checkpoints[_blockHash].blockHash;
+        auxiliaryDynasty_ = checkpoints[_blockHash].dynasty;
+        auxiliaryBlockHash_ = checkpoints[_blockHash].blockHash;
         accumulatedGas_ = accumulatedGases[_blockHash];
         originDynasty_ = originDynasties[_blockHash];
         originBlockHash_ = originBlockHashes[_blockHash];
@@ -497,5 +497,4 @@ contract AuxiliaryBlockStore is
 
         isAncestor_ = currentCheckpoint.blockHash == _ancestor;
     }
-    
 }

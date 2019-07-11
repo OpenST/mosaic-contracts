@@ -20,6 +20,7 @@
 
 const assert = require('assert');
 const BN = require('bn.js');
+const Utils = require('../../../test/test_lib/utils.js');
 
 /**
  * Stake Request object contains all the properties for stake and mint flow.
@@ -80,9 +81,10 @@ class ProgressMintAssertion {
      * @param {StakeRequest} stakeRequest Stake request.
      * @param {balance} initialBalances Initial baseToken and token balances of
      *                                  beneficiary, ostPrime and coGateway.
+     * @param {Boolean} proofProgress `true` if progress is with proof.
      */
-  async verify(event, stakeRequest, initialBalances) {
-    ProgressMintAssertion._assertProgressMintEvent(event, stakeRequest);
+  async verify(event, stakeRequest, initialBalances, proofProgress) {
+    ProgressMintAssertion._assertProgressMintEvent(event, stakeRequest, proofProgress);
 
     await this._assertBalancesForMint(stakeRequest, initialBalances);
   }
@@ -177,9 +179,10 @@ class ProgressMintAssertion {
      * This asserts event after progress mint.
      * @param {Object} event Object representing mint progressed event.
      * @param {stakeRequest} stakeRequest Stake request parameters.
+     * @param {Boolean} proofProgress `true` if progress mint is with proof.
      * @private
      */
-  static _assertProgressMintEvent(event, stakeRequest) {
+  static _assertProgressMintEvent(event, stakeRequest, proofProgress) {
     const eventData = event.MintProgressed;
 
     const reward = stakeRequest.gasPrice.mul(stakeRequest.gasLimit);
@@ -218,14 +221,25 @@ class ProgressMintAssertion {
     );
     assert.strictEqual(
       eventData._proofProgress,
-      false,
-      'Proof progress flag should be false.',
+      proofProgress,
+      `Proof progress flag should be ${proofProgress}.`,
     );
-    assert.strictEqual(
-      eventData._unlockSecret,
-      stakeRequest.unlockSecret,
-      'Unlock secret must match.',
-    );
+
+    // If the progress is done with proof instead of unlock secret, then the
+    // unlock secret emitted in the event will have bytes32(0) value.
+    if (proofProgress === true) {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        Utils.ZERO_BYTES32,
+        `Unlock secret must be ${Utils.ZERO_BYTES32}.`,
+      );
+    } else {
+      assert.strictEqual(
+        eventData._unlockSecret,
+        stakeRequest.unlockSecret,
+        'Unlock secret must match.',
+      );
+    }
   }
 
   /**

@@ -22,12 +22,13 @@ const EIP20CoGateway = artifacts.require('TestEIP20CoGateway');
 const MockUtilityToken = artifacts.require('MockUtilityToken');
 const BN = require('bn.js');
 
+const config = require('../../test_lib/config.js');
 const messageBus = require('../../test_lib/message_bus.js');
 const Utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
 const EventDecoder = require('../../test_lib/event_decoder');
 const CoGatewayUtils = require('./helpers/co_gateway_utils.js');
-const StubData = require('../../../test/data/redeem_revoked_1.json');
+const StubData = require('../../../test/data/redeem_revoked_0.json');
 
 const ZeroBytes = Utils.ZERO_BYTES32;
 const { MessageStatusEnum } = messageBus;
@@ -64,7 +65,6 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       messageStatus: MessageStatusEnum.Declared,
     };
 
-    const decimal = 18;
     const token = accounts[9];
     const symbol = 'DUM';
     const name = 'Dummy';
@@ -73,13 +73,13 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       token,
       symbol,
       name,
-      decimal,
+      config.decimals,
       organization,
       { from: owner },
     );
 
     bountyAmount = new BN(StubData.co_gateway.constructor.bounty);
-    penaltyAmount = bountyAmount.muln(1.5);
+    penaltyAmount = bountyAmount.muln(PENALTY_MULTIPLIER);
 
     cogateway = await EIP20CoGateway.new(
       StubData.co_gateway.constructor.valueToken,
@@ -89,6 +89,7 @@ contract('EIP20CoGateway.progressRevertRedeem()', (accounts) => {
       StubData.co_gateway.constructor.organization,
       StubData.co_gateway.constructor.gateway,
       accounts[8], // burner
+      new BN(100),
     );
 
     await setupContractPreCondition(

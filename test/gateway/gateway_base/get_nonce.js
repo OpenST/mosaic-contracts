@@ -44,11 +44,12 @@ contract('GatewayBase.sol', (accounts) => {
         dummyStateRootProviderAddress,
         bounty,
         organization.address,
+        new BN(100),
       );
     });
 
-    it('should return nonce `1` if there is no active process', async () => {
-      const expectedNonce = new BN(1);
+    it('should return nonce `0` if there is no active process', async () => {
+      const expectedNonce = new BN(0);
       const nonce = await gatewayBaseInstance.getNonce.call(accounts[0]);
       assert(nonce.eq(expectedNonce));
     });

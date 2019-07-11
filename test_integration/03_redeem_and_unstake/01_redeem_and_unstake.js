@@ -49,12 +49,13 @@ describe('Redeem and Unstake', async () => {
   let progressRedeemAssertion;
   let progressUnstakeAssertion;
   let proofUtils;
+  let messageBoxOffset;
 
   before(async () => {
     originWeb3 = shared.origin.web3;
     auxiliaryWeb3 = shared.auxiliary.web3;
     originAccounts = shared.origin.accounts;
-    auxiliaryAccounts = shared.origin.accounts;
+    auxiliaryAccounts = shared.auxiliary.accounts;
     token = shared.origin.contracts.Token;
     baseToken = shared.origin.contracts.BaseToken;
     gateway = shared.origin.contracts.EIP20Gateway;
@@ -93,6 +94,7 @@ describe('Redeem and Unstake', async () => {
       baseToken,
     );
     proofUtils = new ProofUtils(auxiliaryWeb3, originWeb3);
+    messageBoxOffset = await gateway.MESSAGE_BOX_OFFSET.call();
   });
 
   it('redeems', async () => {
@@ -146,6 +148,7 @@ describe('Redeem and Unstake', async () => {
     const outboxProof = await proofUtils.getOutboxProof(
       cogateway.address,
       [redeemRequest.messageHash],
+      messageBoxOffset,
       auxiliaryWeb3.utils.toHex(blockNumber),
     );
     redeemRequest.blockHeight = new BN(blockNumber);
@@ -205,6 +208,7 @@ describe('Redeem and Unstake', async () => {
       redeemRequest,
       transactionFeeInProgress,
       initialBalanceBeforeProgress,
+      false,
     );
   });
 
@@ -228,6 +232,7 @@ describe('Redeem and Unstake', async () => {
       redeemRequest,
       initialBalancesBeforeProgress,
       facilitator,
+      false,
     );
   });
 });
