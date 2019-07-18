@@ -34,7 +34,7 @@ contract SpyEIP20Gateway {
     uint256 public expectedNonce = 42;
     bytes32 public messageHash = "b";
 
-    SpyToken public valueToken;
+    SpyToken public token;
     SpyToken public baseToken;
 
     uint256 public amount;
@@ -45,7 +45,7 @@ contract SpyEIP20Gateway {
     bytes32 public hashLock;
 
     constructor() public {
-        valueToken = new SpyToken();
+        token = new SpyToken();
         baseToken = new SpyToken();
     }
 

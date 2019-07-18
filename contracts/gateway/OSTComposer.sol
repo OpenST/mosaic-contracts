@@ -198,7 +198,7 @@ contract OSTComposer is Organized, Mutex {
 
         stakeRequests[stakeRequestHash_] = true;
 
-        EIP20Interface valueToken = _gateway.valueToken();
+        EIP20Interface valueToken = _gateway.token();
 
         require(
             valueToken.transferFrom(msg.sender, address(this), _amount),
@@ -271,7 +271,7 @@ contract OSTComposer is Organized, Mutex {
         delete stakeRequestHashes[_staker][address(_gateway)];
         delete stakeRequests[stakeRequestHash];
 
-        EIP20Interface valueToken = _gateway.valueToken();
+        EIP20Interface valueToken = _gateway.token();
         require(
             valueToken.transfer(address(stakerProxy), _amount),
             "Staked amount must be transferred to the staker proxy."
@@ -427,7 +427,7 @@ contract OSTComposer is Organized, Mutex {
         delete stakeRequestHashes[_staker][address(_gateway)];
         delete stakeRequests[_stakeRequestHash];
 
-        EIP20Interface valueToken = _gateway.valueToken();
+        EIP20Interface valueToken = _gateway.token();
 
         require(
             valueToken.transfer(_staker, _amount),

@@ -78,6 +78,13 @@ interface EIP20GatewayInterface {
      *
      * @return The address of the value token.
      */
+    function token() external view returns (EIP20Interface);
+
+    /**
+     * @notice Get the value token of this gateway.
+     *
+     * @return The address of the value token.
+     */
     function valueToken() external view returns (EIP20Interface);
 
     /**

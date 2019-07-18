@@ -127,7 +127,7 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
   });
 
   it('should be able to transfer the value tokens to staker', async () => {
-    const valueToken = await SpyToken.at(await gateway.valueToken.call());
+    const valueToken = await SpyToken.at(await gateway.token.call());
 
     await ostComposer.rejectStakeRequest(
       stakeRequest.amount,
@@ -187,7 +187,7 @@ contract('OSTComposer.rejectStakeRequest() ', (accounts) => {
   });
 
   it('should fail when transfer of value tokens to staker fails', async () => {
-    const spyValueToken = await SpyToken.at(await gateway.valueToken.call());
+    const spyValueToken = await SpyToken.at(await gateway.token.call());
     await spyValueToken.setTransferFakeResponse(false);
 
     await Utils.expectRevert(
