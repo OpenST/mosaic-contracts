@@ -178,7 +178,7 @@ contract StakerProxy is Mutex {
     )
         private
     {
-        EIP20Interface valueToken = _gateway.valueToken();
+        EIP20Interface valueToken = _gateway.token();
         valueToken.approve(address(_gateway), _amount);
 
         uint256 bounty = _gateway.bounty();

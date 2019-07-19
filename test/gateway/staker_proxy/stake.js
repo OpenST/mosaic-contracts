@@ -48,7 +48,7 @@ contract('StakerProxy.stake()', (accounts) => {
   });
 
   it('should approve and stake on the gateway', async () => {
-    const spyValueToken = await SpyToken.at(await spyGateway.valueToken.call());
+    const spyValueToken = await SpyToken.at(await spyGateway.token.call());
     const spyBaseToken = await SpyToken.at(await spyGateway.baseToken.call());
 
     await stakerProxy.stake(
