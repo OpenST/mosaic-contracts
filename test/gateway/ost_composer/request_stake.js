@@ -187,6 +187,12 @@ contract('OSTComposer.requestStake() ', (accounts) => {
       true,
       `Expected nonce amount is ${stakeRequest.nonce} but got ${eventData.nonce}`,
     );
+    const stakerProxy = await ostComposer.stakerProxies.call(stakeRequest.staker);
+    assert.strictEqual(
+      eventData.stakerProxy,
+      stakerProxy,
+      `Invalid staker proxy address`,
+    );
   });
 
   it('should fail when staked amount is 0', async () => {
