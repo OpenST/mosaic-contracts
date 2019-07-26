@@ -73,4 +73,8 @@ contract SpyEIP20Gateway {
     function getNonce(address) external view returns(uint256) {
         return expectedNonce;
     }
+
+    function setBaseToken(SpyToken _baseToken) public {
+        baseToken = _baseToken;
+    }
 }
