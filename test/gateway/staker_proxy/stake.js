@@ -154,42 +154,6 @@ contract('StakerProxy.stake()', (accounts) => {
       { from: composer },
     );
 
-    assert.strictEqual(
-      (await spyGateway.amount.call()).toString(10),
-      amount,
-      'The spy did not record the correct amount staked.',
-    );
-
-    assert.strictEqual(
-      (await spyGateway.beneficiary.call()),
-      beneficiary,
-      'The spy did not record the correct beneficiary.',
-    );
-
-    assert.strictEqual(
-      (await spyGateway.gasPrice.call()).toString(10),
-      gasPrice,
-      'The spy did not record the correct gas price staked.',
-    );
-
-    assert.strictEqual(
-      (await spyGateway.gasLimit.call()).toString(10),
-      gasLimit,
-      'The spy did not record the correct gas limit staked.',
-    );
-
-    assert.strictEqual(
-      (await spyGateway.nonce.call()).toString(10),
-      nonce,
-      'The spy did not record the correct nonce staked.',
-    );
-
-    assert.strictEqual(
-      (await spyGateway.hashLock.call()),
-      hashLock,
-      'The spy did not record the correct hash lock staked.',
-    );
-
     const bounty = new BN(await spyGateway.bounty.call());
     const expectedApprovalAmount = bounty.addn(parseInt(amount));
     const actualApprovedAmount = await spyValueToken.approveAmount.call();
