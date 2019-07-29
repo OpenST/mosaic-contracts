@@ -213,8 +213,6 @@ contract('StakerProxy.stake()', (accounts) => {
 
   });
 
-
-
   it('should return the message hash from the gateway', async () => {
     const messageHash = await stakerProxy.stake.call(
       amount,
