@@ -23,6 +23,7 @@ pragma solidity ^0.5.0;
 import "./EIP20GatewayInterface.sol";
 import "../lib/EIP20Interface.sol";
 import "../lib/Mutex.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 /**
@@ -33,6 +34,11 @@ import "../lib/Mutex.sol";
  *         receive all stored value.
  */
 contract StakerProxy is Mutex {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Storage */
 
@@ -178,11 +184,21 @@ contract StakerProxy is Mutex {
     )
         private
     {
-        EIP20Interface valueToken = _gateway.valueToken();
-        valueToken.approve(address(_gateway), _amount);
-
-        uint256 bounty = _gateway.bounty();
+        EIP20Interface valueToken = _gateway.token();
         EIP20Interface baseToken = _gateway.baseToken();
-        baseToken.approve(address(_gateway), bounty);
+        uint256 bounty = _gateway.bounty();
+
+        /*
+         * When valueToken and baseToken addresses are same, then the second
+         * approval will override the first approval. So, in this case, total
+         * approval amount is sum of bounty and staked amount.
+         */
+        if (address(valueToken) == address(baseToken)) {
+            uint256 totalAmountToBeApproved = _amount.add(bounty);
+            valueToken.approve(address(_gateway), totalAmountToBeApproved);
+        } else {
+            valueToken.approve(address(_gateway), _amount);
+            baseToken.approve(address(_gateway), bounty);
+        }
     }
 }
