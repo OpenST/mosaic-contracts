@@ -53,6 +53,7 @@ contract OSTComposer is Organized, Mutex {
         uint256 gasLimit,
         uint256 nonce,
         address indexed staker,
+        address stakerProxy,
         address gateway,
         bytes32 stakeRequestHash
     );
@@ -212,6 +213,7 @@ contract OSTComposer is Organized, Mutex {
             _gasLimit,
             _nonce,
             msg.sender,
+            address(stakerProxy),
             address(_gateway),
             stakeRequestHash_
         );

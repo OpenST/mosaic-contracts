@@ -20,6 +20,8 @@
 
 'use strict';
 
+const BN = require('bn.js');
+
 const SpyGateway = artifacts.require('./SpyEIP20Gateway.sol');
 const SpyToken = artifacts.require('./SpyToken.sol');
 const StakerProxy = artifacts.require('./StakerProxy.sol');
@@ -98,7 +100,6 @@ contract('StakerProxy.stake()', (accounts) => {
       'The spy did not record the correct hash lock staked.',
     );
 
-
     assert.strictEqual(
       (await spyValueToken.approveFrom.call()),
       stakerProxy.address,
@@ -135,6 +136,45 @@ contract('StakerProxy.stake()', (accounts) => {
       (await spyGateway.bounty.call()).toString(10),
       'The spy did not record the correct approval amount.',
     );
+  });
+
+  it('should approve sum of staked and bounty amount to gateway when base token and value token addresses ' +
+    'are same', async () => {
+    const spyValueToken = await SpyToken.at(await spyGateway.token.call());
+    await spyGateway.setBaseToken(spyValueToken.address);
+
+    await stakerProxy.stake(
+      amount,
+      beneficiary,
+      gasPrice,
+      gasLimit,
+      nonce,
+      hashLock,
+      spyGateway.address,
+      { from: composer },
+    );
+
+    const bounty = new BN(await spyGateway.bounty.call());
+    const expectedApprovalAmount = bounty.addn(parseInt(amount));
+    const actualApprovedAmount = await spyValueToken.approveAmount.call();
+    assert.strictEqual(
+      expectedApprovalAmount.cmp(actualApprovedAmount),
+       0,
+      `Expected approval is ${expectedApprovalAmount} but got ${actualApprovedAmount}`,
+    );
+
+    assert.strictEqual(
+      (await spyValueToken.approveFrom.call()),
+      stakerProxy.address,
+      'The spy did not record the correct approval from.',
+    );
+
+    assert.strictEqual(
+      (await spyValueToken.approveTo.call()),
+      spyGateway.address,
+      'The spy did not record the correct approval to.',
+    );
+
   });
 
   it('should return the message hash from the gateway', async () => {
