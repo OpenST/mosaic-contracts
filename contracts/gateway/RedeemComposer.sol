@@ -294,7 +294,7 @@ contract RedeemComposer is Organized, Mutex {
             'Redeem request must exists.'
         );
 
-        removeRedeemRequest(redeemer, _amount, _cogateway, redeemRequestHash);
+        removeRedeemRequest(redeemer, _amount, _cogateway);
         emit RedeemRevoked(redeemer, redeemRequestHash);
     }
 
@@ -338,17 +338,17 @@ contract RedeemComposer is Organized, Mutex {
             'Redeem request must exists.'
         );
 
-        removeRedeemRequest(_redeemer, _amount, _cogateway, redeemRequestHash);
+        removeRedeemRequest(_redeemer, _amount, _cogateway);
 
         emit RedeemRejected(_redeemer, redeemRequestHash);
     }
 
     /**
-     * @notice It can only be called by owner of the staker proxy. It
-     *         deletes the StakerProxy contract of the staker and calls self
-     *         destruct on StakerProxy contract.
+     * @notice It can only be called by owner of the redeemer proxy. It
+     *         deletes the RedeemProxy contract of the redeemer and calls self
+     *         destruct on RedeemProxy contract.
      */
-    function destructStakerProxy()
+    function destructRedeemProxy()
     external
     {
 
@@ -420,13 +420,11 @@ contract RedeemComposer is Organized, Mutex {
      * @param _redeemer address who initiates redeem.
      * @param _amount Amount that is to be redeemed.
      * @param _cogateway Address of the cogateway.
-     * @param _redeemRequestHash Redeem request hash.
      */
     function removeRedeemRequest(
         address _redeemer,
         uint256 _amount,
-        EIP20CoGatewayInterface _cogateway,
-        bytes32 _redeemRequestHash
+        EIP20CoGatewayInterface _cogateway
     )
         private
     {

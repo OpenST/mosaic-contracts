@@ -30,7 +30,7 @@ contract RedeemProxy is Mutex {
     /** The composer that deployed this contract. */
     address public composer;
 
-    /** The composer deployed the StakerProxy on behalf of the owner. */
+    /** The composer deployed the RedeemProxy on behalf of the owner. */
     address payable public owner;
 
 
@@ -70,7 +70,23 @@ contract RedeemProxy is Mutex {
         composer = msg.sender;
         owner = _owner;
     }
-
+    /**
+     * @notice Initiates the redeem process. In order to redeem, the redeem amount
+     *         and bounty must first be transferred to the RedeemProxy.
+     *         Redeem amount and bounty is transferred to co-gateway contract.
+     *
+     * @param _amount Amount that is to be redeem.
+     * @param _beneficiary The address in the origin chain where value token
+     *                     will be returned.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the redeem
+     *                  and unstake process done.
+     * @param _gasLimit Gas limit that redeemer is ready to pay.
+     * @param _nonce Redeem proxy nonce specific to co-gateway.
+     * @param _hashLock Hashlock provided by the facilitator.
+     * @param _cogateway Address of the cogateway contract.
+     *
+     * @return messageHash_ Hash unique for each request.
+     */
     function redeem(
         uint256 _amount,
         address _beneficiary,
@@ -86,10 +102,60 @@ contract RedeemProxy is Mutex {
         onlyComposer
         returns(bytes32 messageHash_)
     {
+        EIP20Interface utilityToken = _cogateway.utilityToken();
+        uint256 bounty = _cogateway.bounty();
 
+        require(
+            bounty == msg.value,
+            'Bounty amount must be received.'
+        );
+
+        utilityToken.approve(address(_cogateway),_amount);
+        messageHash_  = _cogateway.redeem.value(bounty)(
+            _amount,
+            _beneficiary,
+            _gasPrice,
+            _gasLimit,
+            _nonce,
+            _hashLock
+        );
     }
 
+    /**
+     * @notice Destroys this contract. Make sure that you use `transferToken`
+     *         to transfer all remaining token balance of this contract before
+     *         calling this method.
+     */
     function selfDestruct() external onlyComposer {
         selfdestruct(owner);
     }
+
+    /**
+     * @notice Transfers EIP20 token to destination address.
+     *
+     * @dev It is ok to to be able to transfer to the zero address.
+     *
+     * @param _token EIP20 token address.
+     * @param _to Address to which tokens are transferred.
+     * @param _value Amount of tokens to be transferred.
+     */
+    function transferToken(
+        EIP20Interface _token,
+        address _to,
+        uint256 _value
+    )
+        external
+        mutex
+        onlyOwner
+    {
+        require(
+            address(_token) != address(0),
+            "The token address may not be address zero."
+        );
+        require(
+            _token.transfer(_to, _value),
+            "EIP20Token transfer returned false."
+        );
+    }
+
 }
