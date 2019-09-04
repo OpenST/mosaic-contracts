@@ -23,7 +23,7 @@ import "../lib/Mutex.sol";
 //
 // ----------------------------------------------------------------------------
 
-contract RedeemProxy is Mutex {
+contract RedeemerProxy is Mutex {
 
     /* Storage */
 

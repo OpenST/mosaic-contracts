@@ -4,7 +4,7 @@ import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.s
 import "../lib/Mutex.sol";
 import "../utilitytoken/contracts/organization/contracts/Organized.sol";
 import "./EIP20CoGatewayInterface.sol";
-import "./RedeemProxy.sol";
+import "./RedeemerProxy.sol";
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -81,10 +81,17 @@ contract RedeemComposer is Organized, Mutex {
     /* Mapping of redeemer to co-gateway to store redeem request hash. */
     mapping (address => mapping(address => bytes32)) public redeemRequestHashes;
 
-    /* Mapping of redeemer addresses to their RedeemProxy. */
-    mapping (address => RedeemProxy) public redeemProxies;
+    /* Mapping of redeemer addresses to their RedeemerProxy. */
+    mapping (address => RedeemerProxy) public redeemerProxies;
 
 
+    /* Special Functions */
+
+    /**
+     * @notice Contract constructor.
+     *
+     * @param _organization Address of an organization contract.
+     */
     constructor(
         OrganizationInterface _organization
     )
@@ -144,10 +151,10 @@ contract RedeemComposer is Organized, Mutex {
         );
 
         redeemRequestHashes[msg.sender][address(_cogateway)] == redeemRequestHash_;
-        RedeemProxy redeemerProxy = redeemProxies[msg.sender];
+        RedeemerProxy redeemerProxy = redeemerProxies[msg.sender];
         if(address(redeemerProxy) == address(0)) {
-            redeemerProxy = new RedeemProxy(msg.sender);
-            redeemProxies[msg.sender] = redeemerProxy;
+            redeemerProxy = new RedeemerProxy(msg.sender);
+            redeemerProxies[msg.sender] = redeemerProxy;
         }
 
         require(
@@ -180,7 +187,7 @@ contract RedeemComposer is Organized, Mutex {
     /**
      * @notice Facilitator calls the method to initiate the redeem process.
      *         Redeem amount from composer and bounty amount from facilitator
-     *         is then transferred to the RedeemProxy contract of the redeemer.
+     *         is then transferred to the RedeemerProxy contract of the redeemer.
      *
      * @param _amount Amount that is to be redeem.
      * @param _beneficiary The address in the origin chain where value token
@@ -209,7 +216,7 @@ contract RedeemComposer is Organized, Mutex {
         onlyWorker
         returns(bytes32 messageHash_)
     {
-        RedeemProxy redeemerProxy = redeemProxies[_redeemer];
+        RedeemerProxy redeemerProxy = redeemerProxies[_redeemer];
         require(
             address(redeemerProxy) != address(0),
             "RedeemerProxy address is null."
@@ -308,7 +315,7 @@ contract RedeemComposer is Organized, Mutex {
      *                  and unstake process done.
      * @param _gasLimit Gas limit that redeemer is ready to pay.
      * @param _nonce Redeem proxy nonce specific to co-gateway.
-     * @param _redeemer RedeemProxy contract address of redeemer.
+     * @param _redeemer RedeemerProxy contract address of redeemer.
      * @param _cogateway Address of the cogateway.
      */
     function rejectRedeemRequest(
@@ -345,21 +352,21 @@ contract RedeemComposer is Organized, Mutex {
 
     /**
      * @notice It can only be called by owner of the redeemer proxy. It
-     *         deletes the RedeemProxy contract of the redeemer and calls self
-     *         destruct on RedeemProxy contract.
+     *         deletes the RedeemerProxy contract of the redeemer and calls self
+     *         destruct on RedeemerProxy contract.
      */
-    function destructRedeemProxy()
-    external
+    function destructRedeemerProxy()
+        external
     {
 
-        RedeemProxy redeemProxy = redeemProxies[msg.sender];
+        RedeemerProxy redeemerProxy = redeemerProxies[msg.sender];
         require(
-            address(redeemProxy) != address(0),
+            address(redeemerProxy) != address(0),
             "Redeem proxy does not exist for the caller."
         );
         // Resetting the proxy address of the redeemer.
-        delete redeemProxies[msg.sender];
-        redeemProxy.selfDestruct();
+        delete redeemerProxies[msg.sender];
+        redeemerProxy.selfDestruct();
     }
 
     /**
