@@ -222,6 +222,12 @@ contract RedeemPool is Organized, Mutex {
             "RedeemerProxy address is null."
         );
 
+        uint256 bounty = _cogateway.bounty();
+        require(
+            bounty == msg.value,
+            'Bounty amount must be received.'
+        );
+
         bytes32 redeemRequestHash = hashRedeemRequest(
             _amount,
             _beneficiary,
@@ -243,12 +249,6 @@ contract RedeemPool is Organized, Mutex {
         require(
             utilityToken.transfer(address(redeemerProxy), _amount),
             "Redeem amount must be transferred to the redeem proxy."
-        );
-
-        uint256 bounty = _cogateway.bounty();
-        require(
-            bounty == msg.value,
-            'Bounty amount must be received.'
         );
 
         messageHash_ = redeemerProxy.redeem.value(bounty)(
