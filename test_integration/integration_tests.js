@@ -30,6 +30,8 @@ const EIP20Gateway = artifacts.require('EIP20Gateway');
 const EIP20CoGateway = artifacts.require('EIP20CoGateway');
 const EIP20StandardToken = artifacts.require('EIP20StandardToken');
 const OSTPrime = artifacts.require('OSTPrime');
+const OSTComposer = artifacts.require('OSTComposer');
+const RedeemComposer = artifacts.require('RedeemComposer');
 
 const setupArtifacts = () => {
   shared.artifacts = {
@@ -38,6 +40,8 @@ const setupArtifacts = () => {
     EIP20CoGateway,
     EIP20StandardToken,
     OSTPrime,
+    OSTComposer,
+    RedeemComposer,
   };
 };
 

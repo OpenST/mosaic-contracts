@@ -143,10 +143,12 @@ describe('Deploy', async () => {
 
     await shared.origin.addContract('EIP20Gateway');
     await shared.origin.addContract('Anchor');
+    await shared.origin.addContract('OSTComposer');
 
     await shared.auxiliary.addContract('EIP20CoGateway');
     await shared.auxiliary.addContract('Anchor');
     await shared.auxiliary.addContract('OSTPrime');
+    await shared.auxiliary.addContract('RedeemComposer');
   });
 
   it('activates the gateway ', async () => {

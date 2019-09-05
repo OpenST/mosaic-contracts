@@ -150,7 +150,7 @@ contract RedeemComposer is Organized, Mutex {
             address(_cogateway)
         );
 
-        redeemRequestHashes[msg.sender][address(_cogateway)] == redeemRequestHash_;
+        redeemRequestHashes[msg.sender][address(_cogateway)] = redeemRequestHash_;
         RedeemerProxy redeemerProxy = redeemerProxies[msg.sender];
         if(address(redeemerProxy) == address(0)) {
             redeemerProxy = new RedeemerProxy(msg.sender);
