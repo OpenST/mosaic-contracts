@@ -25,7 +25,7 @@ import "./RedeemerProxy.sol";
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
-contract RedeemComposer is Organized, Mutex {
+contract RedeemPool is Organized, Mutex {
 
     /* Constants */
 

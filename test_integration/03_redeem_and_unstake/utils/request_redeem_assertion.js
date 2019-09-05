@@ -42,11 +42,10 @@ const BN = require('bn.js');
 /**
  * BaseToken(ETH) and OSTPrime ERC20 balance of cogateway, redeemer.
  * @typedef {Object} Balances
- * @property {BN} balances.ostPrime.redeemComposer ERC20 balance of
- * redeemComposer
+ * @property {BN} balances.ostPrime.redeemPool ERC20 balance of redeemPool
  * contract.
  * @property {BN} balances.ostPrime.redeemer ERC20 balance of beneficiary.
- * @property {BN} balances.baseToken.redeemComposer Base token(ETH) balance of
+ * @property {BN} balances.baseToken.redeemPool Base token(ETH) balance of
  * redeem composer.
  * @property {BN} balances.baseToken.redeemer Base token(ETH) balance of redeemer.
  */
@@ -57,12 +56,12 @@ const BN = require('bn.js');
 class RequestRedeemAssertion {
   /**
      * Constructor.
-     * @param {Object} redeemComposer Truffle redeemComposer instance.
+     * @param {Object} redeemPool Truffle redeemPool instance.
      * @param {Object} ostPrime Truffle token instance.
      * @param {Web3} web3 Web3 instance.
      */
-  constructor(redeemComposer, ostPrime, web3) {
-    this.redeemComposer = redeemComposer;
+  constructor(redeemPool, ostPrime, web3) {
+    this.redeemPool = redeemPool;
     this.token = ostPrime;
     this.web3 = web3;
   }
@@ -92,11 +91,11 @@ class RequestRedeemAssertion {
   async captureBalances(redeemer) {
     return {
       baseToken: {
-        redeemComposer: await this._getEthBalance(this.redeemComposer.address),
+        redeemPool: await this._getEthBalance(this.redeemPool.address),
         redeemer: await this._getEthBalance(redeemer),
       },
       token: {
-        redeemComposer: await this.token.balanceOf(this.redeemComposer.address),
+        redeemPool: await this.token.balanceOf(this.redeemPool.address),
         redeemer: await this.token.balanceOf(redeemer),
       },
     };
@@ -114,25 +113,25 @@ class RequestRedeemAssertion {
     const finalBalances = await this.captureBalances(redeemRequest.redeemer);
 
     // Assert redeem composer balance.
-    const expectedRedeemComposerBaseTokenBalance = initialBalances.baseToken.redeemComposer;
+    const expectedRedeemPoolBaseTokenBalance = initialBalances.baseToken.redeemPool;
 
     // Assert no change in redeem composer balance.
     assert.strictEqual(
-      expectedRedeemComposerBaseTokenBalance.eq(finalBalances.baseToken.redeemComposer),
+      expectedRedeemPoolBaseTokenBalance.eq(finalBalances.baseToken.redeemPool),
       true,
-      `Redeem composer base token balance must be ${expectedRedeemComposerBaseTokenBalance.toString(10)}`
-           + ` instead of ${finalBalances.baseToken.redeemComposer.toString(10)}`,
+      `Redeem composer base token balance must be ${expectedRedeemPoolBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.baseToken.redeemPool.toString(10)}`,
     );
 
-    const expectedRedeemComposerTokenBalance = initialBalances.token.redeemComposer
+    const expectedRedeemPoolTokenBalance = initialBalances.token.redeemPool
       .add(redeemRequest.amount);
 
-    // Assert Redeem amount is transferred to RedeemComposer.
+    // Assert Redeem amount is transferred to RedeemPool.
     assert.strictEqual(
-      expectedRedeemComposerTokenBalance.eq(finalBalances.token.redeemComposer),
+      expectedRedeemPoolTokenBalance.eq(finalBalances.token.redeemPool),
       true,
-      `RedeemComposer token balance must be ${expectedRedeemComposerBaseTokenBalance.toString(10)}`
-           + ` instead of ${finalBalances.token.redeemComposer.toString(10)}`,
+      `RedeemPool token balance must be ${expectedRedeemPoolBaseTokenBalance.toString(10)}`
+           + ` instead of ${finalBalances.token.redeemPool.toString(10)}`,
     );
 
     // Assert redeemer balance.

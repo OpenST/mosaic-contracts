@@ -39,7 +39,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
 
   let gateway;
   let cogateway;
-  let redeemComposer;
+  let redeemPool;
   let token;
   let baseToken;
   let ostPrime;
@@ -63,7 +63,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
     gateway = shared.origin.contracts.EIP20Gateway;
     cogateway = shared.auxiliary.contracts.EIP20CoGateway;
     ostPrime = shared.auxiliary.contracts.OSTPrime;
-    redeemComposer = shared.auxiliary.contracts.RedeemComposer;
+    redeemPool = shared.auxiliary.contracts.RedeemPool;
 
     const hasher = Utils.generateHashLock();
 
@@ -79,7 +79,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
       unlockSecret: hasher.s,
     };
 
-    const proxy = await redeemComposer.redeemerProxies.call(redeemRequest.redeemer);
+    const proxy = await redeemPool.redeemerProxies.call(redeemRequest.redeemer);
     redeemRequest.nonce = await cogateway.getNonce.call(proxy);
     originAnchor = new Anchor(
       auxiliaryWeb3,
@@ -87,7 +87,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
       shared.origin.organizationAddress,
     );
 
-    requestRedeemAssertion = new RequestRedeemAssertion(redeemComposer, ostPrime, auxiliaryWeb3);
+    requestRedeemAssertion = new RequestRedeemAssertion(redeemPool, ostPrime, auxiliaryWeb3);
     progressRedeemAssertion = new ProgressRedeemAssertion(
       cogateway,
       ostPrime,
@@ -103,17 +103,17 @@ describe('Redeem and Unstake with redeem composer', async () => {
   });
 
   it('request redeem', async () => {
-    await approveRedeemComposerForRedeemAmount(
+    await approveRedeemPoolForRedeemAmount(
       ostPrime,
       redeemRequest,
-      redeemComposer,
+      redeemPool,
     );
 
     const initialBalancesBeforeRedeem = await requestRedeemAssertion.captureBalances(
       redeemRequest.redeemer,
     );
 
-    const response = await redeemComposer.requestRedeem(
+    const response = await redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,
       redeemRequest.gasPrice,
@@ -130,7 +130,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
       response,
       auxiliaryWeb3,
     );
-    const requestEvent = EventDecoder.getEvents(response, redeemComposer);
+    const requestEvent = EventDecoder.getEvents(response, redeemPool);
 
     await requestRedeemAssertion.verify(
       requestEvent,
@@ -143,7 +143,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
 
   it('aceept redeem', async () => {
     redeemRequest.facilitator = shared.auxiliary.deployerAddress;
-    const acceptResponse = await redeemComposer.acceptRedeemRequest(
+    const acceptResponse = await redeemPool.acceptRedeemRequest(
       redeemRequest.amount,
       redeemRequest.beneficiary,
       redeemRequest.gasPrice,
@@ -159,7 +159,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
     );
 
     redeemRequest.redeemer = originWeb3.utils.toChecksumAddress(
-      await redeemComposer.redeemerProxies.call(redeemRequest.redeemer),
+      await redeemPool.redeemerProxies.call(redeemRequest.redeemer),
     );
     const event = EventDecoder.getEvents(acceptResponse, cogateway);
 
@@ -274,10 +274,10 @@ describe('Redeem and Unstake with redeem composer', async () => {
  * This approves the cogateway for redeem amount by wrapping the base token.
  * @param {Object} ostPrime OSTPrime contract instance.
  * @param {Object} redeemRequest Redeem request object.
- * @param {Object} redeemComposer redeemComposer contract instance.
+ * @param {Object} redeemPool redeemPool contract instance.
  * @return {Promise<void>}
 */
-async function approveRedeemComposerForRedeemAmount(ostPrime, redeemRequest, redeemComposer) {
+async function approveRedeemPoolForRedeemAmount(ostPrime, redeemRequest, redeemPool) {
   await ostPrime.wrap(
     {
       value: redeemRequest.amount,
@@ -286,7 +286,7 @@ async function approveRedeemComposerForRedeemAmount(ostPrime, redeemRequest, red
   );
 
   await ostPrime.approve(
-    redeemComposer.address,
+    redeemPool.address,
     redeemRequest.amount,
     { from: redeemRequest.redeemer },
   );

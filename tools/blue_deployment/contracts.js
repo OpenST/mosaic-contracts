@@ -159,8 +159,8 @@ const createOSTComposer = originOrganizationAddress => Contract.loadTruffleContr
   { rootDir },
 );
 
-const createRedeemComposer = auxiliaryOrganizationAddress => Contract.loadTruffleContract(
-  'RedeemComposer',
+const createRedeemPool = auxiliaryOrganizationAddress => Contract.loadTruffleContract(
+  'RedeemPool',
   [auxiliaryOrganizationAddress],
   { rootDir },
 );
@@ -173,5 +173,5 @@ module.exports = {
   createOSTPrime,
   createOrganization,
   createOSTComposer,
-  createRedeemComposer,
+  createRedeemPool,
 };

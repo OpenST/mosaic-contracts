@@ -55,13 +55,13 @@ const BN = require('bn.js');
 class AcceptRedeemAssertion {
   /**
      * Constructor.
-     * @param {Object} redeemComposer Truffle redeemComposer instance.
+     * @param {Object} redeemPool Truffle redeemPool instance.
      * @param {Object} cogateway Truffle cogateway instance.
      * @param {Object} ostPrime Truffle token instance.
      * @param {Web3} web3 Web3 instance.
      */
-  constructor(redeemComposer, cogateway, ostPrime, web3) {
-    this.redeemComposer = redeemComposer;
+  constructor(redeemPool, cogateway, ostPrime, web3) {
+    this.redeemPool = redeemPool;
     this.cogateway = cogateway;
     this.token = ostPrime;
     this.web3 = web3;
@@ -92,13 +92,13 @@ class AcceptRedeemAssertion {
   async captureBalances(facilitator) {
     return {
       baseToken: {
-        redeemComposer: await this._getEthBalance(this.redeemComposer.address),
+        redeemPool: await this._getEthBalance(this.redeemPool.address),
         cogateway: await this._getEthBalance(this.cogateway.address),
         facilitator: await this._getEthBalance(facilitator),
 
       },
       token: {
-        redeemComposer: await this.token.balanceOf(this.redeemComposer.address),
+        redeemPool: await this.token.balanceOf(this.redeemPool.address),
         facilitator: await this.token.balanceOf(facilitator),
         cogateway: await this.token.balanceOf(this.cogateway.address),
       },
@@ -122,10 +122,10 @@ class AcceptRedeemAssertion {
 
     // Assert bounty is transferred to cogateway.
     assert.strictEqual(
-      expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.redeemComposer),
+      expectedCoGatewayBaseTokenBalance.eq(finalBalances.baseToken.cogateway),
       true,
       `CoGateway base token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
-           + ` instead of ${finalBalances.baseToken.redeemComposer.toString(10)}`,
+           + ` instead of ${finalBalances.baseToken.cogateway.toString(10)}`,
     );
 
     const expectedCoGatewayTokenBalance = initialBalances.token.cogateway
@@ -133,30 +133,30 @@ class AcceptRedeemAssertion {
 
     // Assert Redeem amount is transferred to cogateway.
     assert.strictEqual(
-      expectedCoGatewayTokenBalance.eq(finalBalances.token.redeemComposer),
+      expectedCoGatewayTokenBalance.eq(finalBalances.token.cogateway),
       true,
       `CoGateway token balance must be ${expectedCoGatewayBaseTokenBalance.toString(10)}`
-           + ` instead of ${finalBalances.token.redeemComposer.toString(10)}`,
+           + ` instead of ${finalBalances.token.cogateway.toString(10)}`,
     );
 
-    // Assert redeemComposer balance.
-    const expectedRedeemComposerBaseTokenBalance = initialBalances.baseToken.redeemComposer;
+    // Assert redeemPool balance.
+    const expectedRedeemPoolBaseTokenBalance = initialBalances.baseToken.redeemPool;
 
     assert.strictEqual(
-      expectedRedeemComposerBaseTokenBalance.eq(finalBalances.baseToken.redeemer),
+      expectedRedeemPoolBaseTokenBalance.eq(finalBalances.baseToken.redeemer),
       true,
-      `Redeem composer base token balance must be ${expectedRedeemComposerBaseTokenBalance.toString(10)}`
+      `Redeem composer base token balance must be ${expectedRedeemPoolBaseTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.baseToken.redeemer.toString(10)}`,
     );
 
-    const expectedRedeemComposerTokenBalance = initialBalances.token.redeemComposer
+    const expectedRedeemPoolTokenBalance = initialBalances.token.redeemPool
       .sub(redeemRequest.amount);
 
     // Assert Redeem amount is transferred from redeemer composer.
     assert.strictEqual(
-      expectedRedeemComposerTokenBalance.eq(finalBalances.token.redeemer),
+      expectedRedeemPoolTokenBalance.eq(finalBalances.token.redeemer),
       true,
-      `Redeemer token balance must be ${expectedRedeemComposerTokenBalance.toString(10)}`
+      `Redeemer token balance must be ${expectedRedeemPoolTokenBalance.toString(10)}`
            + ` instead of ${finalBalances.token.redeemer.toString(10)}`,
     );
 
