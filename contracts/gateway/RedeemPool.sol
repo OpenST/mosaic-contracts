@@ -361,7 +361,7 @@ contract RedeemPool is Organized, Mutex {
         RedeemerProxy redeemerProxy = redeemerProxies[msg.sender];
         require(
             address(redeemerProxy) != address(0),
-            "Redeem proxy does not exist for the caller."
+            "Redeemer proxy does not exist for the caller."
         );
         // Resetting the proxy address of the redeemer.
         delete redeemerProxies[msg.sender];
