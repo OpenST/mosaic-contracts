@@ -24,15 +24,11 @@ const MockOrganization = artifacts.require('MockOrganization');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const web3 = require('../../test_lib/web3');
-const EventDecoder = require('../../test_lib/event_decoder.js');
-
 contract('RedeemPool.destructRedeemerProxy() ', (accounts) => {
   let eip20CoGateway;
   let redeemPool;
   let worker;
   let redeemRequest;
-  let utilityToken;
-
   beforeEach(async () => {
     worker = accounts[2];
     eip20CoGateway = await EIP20CoGateway.new();

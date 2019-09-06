@@ -33,20 +33,58 @@ contract SpyEIP20CoGateway {
     SpyToken public utilityToken;
     uint256 public expectedNonce = 1;
     uint256 public bounty = 100;
+    uint256 public amount;
+    address public beneficiary;
+    uint256 public gasPrice;
+    uint256 public gasLimit;
+    uint256 public nonce;
+    bytes32 public hashLock;
 
     constructor() public {
         utilityToken = new SpyToken();
     }
 
+    /**
+     *  This method is used for testing. It returns fix nonce.
+     */
     function getNonce(address) external view returns(uint256) {
         return expectedNonce;
     }
 
-    function redeem(uint256, address, uint256, uint256, uint256, bytes32)
+    /**
+     * @notice Used for testing of redeem feature. This method spy on co-gateway redeem.
+     *
+     *
+     * @param _amount Redeem amount that will be transferred from redeemer
+     *                account.
+     * @param _beneficiary The address in the origin chain where the value
+     *                     tok ens will be released.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the
+     *                  redeem process done.
+     * @param _gasLimit Gas limit that redeemer is ready to pay.
+     * @param _nonce Nonce of the redeemer address.
+     * @param _hashLock Hash Lock provided by the facilitator.
+     *
+     * @return messageHash_ Hash of message.
+     */
+    function redeem(
+            uint256 _amount,
+            address _beneficiary,
+            uint256 _gasPrice,
+            uint256 _gasLimit,
+            uint256 _nonce,
+            bytes32 _hashLock
+        )
         external
         payable
         returns(bytes32)
     {
+        amount = _amount;
+        beneficiary = _beneficiary;
+        gasPrice = _gasPrice;
+        gasLimit = _gasLimit;
+        nonce = _nonce;
+        hashLock = _hashLock;
         return bytes32('1');
     }
 }
