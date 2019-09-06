@@ -32,6 +32,7 @@ contract SpyEIP20CoGateway {
 
     SpyToken public utilityToken;
     uint256 public expectedNonce = 1;
+    uint256 public bounty = 100;
 
     constructor() public {
         utilityToken = new SpyToken();
@@ -39,5 +40,13 @@ contract SpyEIP20CoGateway {
 
     function getNonce(address) external view returns(uint256) {
         return expectedNonce;
+    }
+
+    function redeem(uint256, address, uint256, uint256, uint256, bytes32)
+        external
+        payable
+        returns(bytes32)
+    {
+        return bytes32('1');
     }
 }

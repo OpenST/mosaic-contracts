@@ -180,7 +180,6 @@ contract RedeemPool is Organized, Mutex {
             address(_cogateway),
             redeemRequestHash_
         );
-
     }
 
 
