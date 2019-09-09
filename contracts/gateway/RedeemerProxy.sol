@@ -1,8 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "./EIP20CoGatewayInterface.sol";
-import "../lib/Mutex.sol";
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +20,17 @@ import "../lib/Mutex.sol";
 //
 // ----------------------------------------------------------------------------
 
+import "./EIP20CoGatewayInterface.sol";
+import "../lib/Mutex.sol";
+
+
+/**
+ * @title RedeemerProxy is a contract that is deployed by the redeem pool to allow
+ *        redeem of multiple users from within the same redeem pool contract.
+ * @notice The redeem pool contract will deploy RedeemerProxy contract on behalf of
+ *         the owner. Only the owner can self-destruct the Redeemer Proxy and
+ *         receive all stored value.
+ */
 contract RedeemerProxy is Mutex {
 
     /* Storage */
@@ -70,6 +78,7 @@ contract RedeemerProxy is Mutex {
         composer = msg.sender;
         owner = _owner;
     }
+
     /**
      * @notice Initiates the redeem process. In order to redeem, the redeem amount
      *         and bounty must first be transferred to the RedeemProxy.
