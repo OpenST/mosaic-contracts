@@ -61,7 +61,7 @@
     "compile:ts": "tsc",
     "compile:all": "truffle compile --all && tsc",
     "generate:test_proofs": "./proof_generation/main.sh",
-    "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build-package",
+    "test": "npm run test:deployment_tool && npm run test:fuzzy_proof_generator && npm run test:integration && npm run test:unit && npm run build:package",
     "test:range": "./tools/test_range.sh",
     "test:deployment_tool": "mocha tools/deployment_tool/test",
     "test:fuzzy_proof_generator": "./tools/fuzzy_proof_generator_tool/test/run.sh",

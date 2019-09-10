@@ -52,6 +52,8 @@ const {
   createLibraryConracts,
   createOSTPrime,
   createOrganization,
+  createOSTComposer,
+  createRedeemPool,
 } = require('./contracts');
 
 // root directory of npm project
@@ -188,6 +190,11 @@ const deployOrigin = async (
     Organization.reference(),
     '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
   );
+
+  const OSTComposer = createOSTComposer(
+    Organization.reference(),
+  );
+
   EIP20Gateway.addLinkedDependency(GatewayLib);
   EIP20Gateway.addLinkedDependency(MessageBus);
 
@@ -199,6 +206,7 @@ const deployOrigin = async (
     MessageBus,
     Organization,
     Anchor,
+    OSTComposer,
   ]);
 
   const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
@@ -278,6 +286,9 @@ const deployAuxiliary = async (
     gatewayAddress,
     '0x0000000000000000000000000000000000000000', // FIXME: #623; burner address
   );
+
+  const RedeemPool = createRedeemPool(Organization.reference());
+
   EIP20CoGateway.addLinkedDependency(GatewayLib);
   EIP20CoGateway.addLinkedDependency(MessageBus);
 
@@ -290,6 +301,7 @@ const deployAuxiliary = async (
     MessageBus,
     Organization,
     Anchor,
+    RedeemPool,
   ]);
 
   const deploymentObjects = registry.toLiveTransactionObjects(deployerAddress, startingNonce);
