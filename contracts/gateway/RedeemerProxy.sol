@@ -162,7 +162,7 @@ contract RedeemerProxy is Mutex {
     {
         require(
             address(_token) != address(0),
-            "The token address may not be address zero."
+            "The token address must not be address zero."
         );
         require(
             _token.transfer(_to, _value),
