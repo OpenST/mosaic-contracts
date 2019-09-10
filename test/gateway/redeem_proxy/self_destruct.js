@@ -27,10 +27,10 @@ contract('RedeemerProxy.selfDestruct()', (accounts) => {
       'Contract must be self destructed',
     );
 
-    assert.notStrictEqual(
-      codeBeforeSelfDestruct,
-      '0x',
-      'Contract must have deployed code before self destructed',
+    assert.strictEqual(
+      codeBeforeSelfDestruct.length > 2,
+      true,
+      `Contract must have deployed byte code but found ${codeBeforeSelfDestruct}`,
     );
   });
 
