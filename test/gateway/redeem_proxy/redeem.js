@@ -19,7 +19,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
     redeemPool = accounts[1];
     owner = accounts[2];
     eip20CoGateway = await EIP20CoGateway.new();
-    proxy = await RedeemerProxy.new(owner, {from: redeemPool});
+    proxy = await RedeemerProxy.new(owner, { from: redeemPool });
     bounty = await eip20CoGateway.bounty.call();
     redeemRequest = {
       amount: new BN('100'),
@@ -44,7 +44,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: redeemPool, value: bounty},
+      { from: redeemPool, value: bounty },
     );
   });
 
@@ -57,7 +57,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: redeemPool, value: bounty},
+      { from: redeemPool, value: bounty },
     );
 
     const approveTo = await utilityToken.approveTo.call();
@@ -93,7 +93,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: redeemPool, value: bounty},
+      { from: redeemPool, value: bounty },
     );
     const cogatewayFinalBalance = await web3.eth.getBalance(redeemRequest.cogateway);
 
@@ -105,7 +105,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
     );
   });
 
-  it('should call cogateway redeem with correct param ', async () => {
+  it('should call cogateway redeem with correct param', async () => {
     await proxy.redeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,
@@ -114,7 +114,7 @@ contract('RedeemerProxy.redeem()', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: redeemPool, value: bounty},
+      { from: redeemPool, value: bounty },
     );
 
     const amount = await eip20CoGateway.amount.call();

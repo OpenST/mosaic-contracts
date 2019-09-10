@@ -1,6 +1,6 @@
 const RedeemerProxy = artifacts.require('RedeemerProxy');
 
-contract('RedeemerProxy.constructor() ', (accounts) => {
+contract('RedeemerProxy.constructor()', (accounts) => {
   it('should construct successfully', async () => {
     const redeemPool = accounts[1];
     const owner = accounts[2];

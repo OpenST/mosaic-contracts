@@ -6,7 +6,7 @@ const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-contract('RedeemPool.requestRedeem() ', (accounts) => {
+contract('RedeemPool.requestRedeem()', (accounts) => {
   let eip20CoGateway;
   let redeemPool;
   let worker;
@@ -209,6 +209,4 @@ contract('RedeemPool.requestRedeem() ', (accounts) => {
     ),
     'Incorrect redeemer nonce.');
   });
-
-
 });

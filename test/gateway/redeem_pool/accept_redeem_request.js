@@ -6,7 +6,7 @@ const BN = require('bn.js');
 const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 
-contract('RedeemPool.acceptRedeem() ', (accounts) => {
+contract('RedeemPool.acceptRedeem()', (accounts) => {
   let eip20CoGateway;
   let redeemPool;
   let worker;
@@ -65,7 +65,6 @@ contract('RedeemPool.acceptRedeem() ', (accounts) => {
   });
 
   it('should transfer token to redeemer proxy', async () => {
-
     await redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,
@@ -244,7 +243,8 @@ contract('RedeemPool.acceptRedeem() ', (accounts) => {
     'Redeem request must exists.');
   });
 
-  it('should fail if the token transfer fails from redeem pool to redeemer proxy ', async () => {
+  it('should fail if the token transfer fails from redeem pool to redeemer'
+    + ' proxy', async () => {
     await redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,
