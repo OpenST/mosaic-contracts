@@ -25,7 +25,6 @@ import "../lib/EIP20Interface.sol";
 
 interface EIP20CoGatewayInterface {
 
-
     /**
      * @notice Initiates the redeem process.
      *
@@ -55,9 +54,9 @@ interface EIP20CoGatewayInterface {
         uint256 _nonce,
         bytes32 _hashLock
     )
-    external
-    payable
-    returns (bytes32 messageHash_);
+        external
+        payable
+        returns (bytes32 messageHash_);
 
     /**
      * @notice Get the nonce for the given account address.

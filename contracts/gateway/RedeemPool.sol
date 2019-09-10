@@ -1,11 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
-import "../lib/Mutex.sol";
-import "../utilitytoken/contracts/organization/contracts/Organized.sol";
-import "./EIP20CoGatewayInterface.sol";
-import "./RedeemerProxy.sol";
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +19,19 @@ import "./RedeemerProxy.sol";
 // http://www.simpletoken.org/
 //
 // ----------------------------------------------------------------------------
+
+import "../utilitytoken/contracts/organization/contracts/OrganizationInterface.sol";
+import "../lib/Mutex.sol";
+import "../utilitytoken/contracts/organization/contracts/Organized.sol";
+import "./EIP20CoGatewayInterface.sol";
+import "./RedeemerProxy.sol";
+
+/**
+ *  @title RedeemPool contract. Reentrancy is prevented
+ *        by using Mutex contract.
+ *
+ *  @notice It facilitates the redeemer to get redeem ost on origin chain.
+ */
 contract RedeemPool is Organized, Mutex {
 
     /* Constants */
@@ -68,6 +75,7 @@ contract RedeemPool is Organized, Mutex {
         bytes32 redeemRequestHash
     );
 
+
     /* Public Variables */
 
     /** Domain separator per EIP 712. */
@@ -100,6 +108,9 @@ contract RedeemPool is Organized, Mutex {
     {
 
     }
+
+
+    /* External Functions */
 
     /**
      * @notice Redeemer calls the method to show its intention of redeem. In order
@@ -182,7 +193,6 @@ contract RedeemPool is Organized, Mutex {
         );
     }
 
-
     /**
      * @notice Facilitator calls the method to initiate the redeem process.
      *         Redeem amount from composer and bounty amount from facilitator
@@ -259,7 +269,6 @@ contract RedeemPool is Organized, Mutex {
             _hashLock,
             _cogateway
         );
-
     }
 
     /**
@@ -295,12 +304,8 @@ contract RedeemPool is Organized, Mutex {
             address(_cogateway)
         );
 
-        require(
-            redeemRequestHash == redeemRequestHashes[redeemer][address(_cogateway)],
-            'Redeem request must exists.'
-        );
+        removeRedeemRequest(redeemer, _amount, _cogateway, redeemRequestHash);
 
-        removeRedeemRequest(redeemer, _amount, _cogateway);
         emit RedeemRevoked(redeemer, redeemRequestHash);
     }
 
@@ -339,12 +344,7 @@ contract RedeemPool is Organized, Mutex {
             address(_cogateway)
         );
 
-        require(
-            redeemRequestHash == redeemRequestHashes[_redeemer][address(_cogateway)],
-            'Redeem request must exists.'
-        );
-
-        removeRedeemRequest(_redeemer, _amount, _cogateway);
+        removeRedeemRequest(_redeemer, _amount, _cogateway, redeemRequestHash);
 
         emit RedeemRejected(_redeemer, redeemRequestHash);
     }
@@ -367,6 +367,9 @@ contract RedeemPool is Organized, Mutex {
         delete redeemerProxies[msg.sender];
         redeemerProxy.selfDestruct();
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice It returns hash of redeem request as per EIP-712.
@@ -416,6 +419,7 @@ contract RedeemPool is Organized, Mutex {
         );
     }
 
+
     /* Private Functions */
 
     /**
@@ -426,14 +430,22 @@ contract RedeemPool is Organized, Mutex {
      * @param _redeemer address who initiates redeem.
      * @param _amount Amount that is to be redeemed.
      * @param _cogateway Address of the cogateway.
+     * @param _redeemRequestHash Hash of redeem request.
      */
     function removeRedeemRequest(
         address _redeemer,
         uint256 _amount,
-        EIP20CoGatewayInterface _cogateway
+        EIP20CoGatewayInterface _cogateway,
+        bytes32 _redeemRequestHash
     )
         private
     {
+
+        require(
+            _redeemRequestHash == redeemRequestHashes[_redeemer][address(_cogateway)],
+            'Redeem request must exists.'
+        );
+
         delete redeemRequestHashes[_redeemer][address(_cogateway)];
 
         EIP20Interface utilityToken = _cogateway.utilityToken();

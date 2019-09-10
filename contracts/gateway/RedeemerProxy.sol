@@ -1,8 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "./EIP20CoGatewayInterface.sol";
-import "../lib/Mutex.sol";
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,24 +20,35 @@ import "../lib/Mutex.sol";
 //
 // ----------------------------------------------------------------------------
 
+import "./EIP20CoGatewayInterface.sol";
+import "../lib/Mutex.sol";
+
+
+/**
+ * @title RedeemerProxy is a contract that is deployed by the redeem pool to allow
+ *        redeem of multiple users from within the same redeem pool contract.
+ * @notice The redeem pool contract will deploy RedeemerProxy contract on behalf of
+ *         the owner. Only the owner can self-destruct the Redeemer Proxy and
+ *         receive all stored value.
+ */
 contract RedeemerProxy is Mutex {
 
     /* Storage */
 
-    /** The composer that deployed this contract. */
-    address public composer;
+    /** The Redeem Pool contract address that deployed this contract. */
+    address public redeemPool;
 
-    /** The composer deployed the RedeemProxy on behalf of the owner. */
+    /** The Redeem Pool deployed the RedeemProxy on behalf of the owner. */
     address payable public owner;
 
 
     /* Modifiers */
 
-    /** Requires that msg.sender is the composer */
-    modifier onlyComposer() {
+    /** Requires that msg.sender is the Redeem Pool */
+    modifier onlyRedeemPool() {
         require(
-            msg.sender == address(composer),
-            "This function can only be called by the composer."
+            msg.sender == address(redeemPool),
+            "This function can only be called by the Redeem Pool."
         );
 
         _;
@@ -60,16 +68,20 @@ contract RedeemerProxy is Mutex {
     /* Special Functions */
 
     /**
-     * @notice Must be constructed by a composer contract.
+     * @notice Must be constructed by a RedeemPool contract.
      *
      * @param _owner The owner that this proxy is deployed for.
      */
     constructor(address payable _owner)
         public
     {
-        composer = msg.sender;
+        redeemPool = msg.sender;
         owner = _owner;
     }
+
+
+    /* External Functions */
+
     /**
      * @notice Initiates the redeem process. In order to redeem, the redeem amount
      *         and bounty must first be transferred to the RedeemProxy.
@@ -99,7 +111,7 @@ contract RedeemerProxy is Mutex {
         external
         payable
         mutex
-        onlyComposer
+        onlyRedeemPool
         returns(bytes32 messageHash_)
     {
         EIP20Interface utilityToken = _cogateway.utilityToken();
@@ -126,7 +138,7 @@ contract RedeemerProxy is Mutex {
      *         to transfer all remaining token balance of this contract before
      *         calling this method.
      */
-    function selfDestruct() external onlyComposer {
+    function selfDestruct() external onlyRedeemPool {
         selfdestruct(owner);
     }
 
