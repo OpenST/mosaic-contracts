@@ -2,17 +2,17 @@ const RedeemerProxy = artifacts.require('RedeemerProxy');
 
 contract('RedeemerProxy.constructor() ', (accounts) => {
   it('should construct successfully', async () => {
-    const composer = accounts[1];
+    const redeemPool = accounts[1];
     const owner = accounts[2];
-    const proxy = await RedeemerProxy.new(owner, { from: composer });
+    const proxy = await RedeemerProxy.new(owner, { from: redeemPool });
 
-    const actualComposer = await proxy.composer.call();
+    const actualComposer = await proxy.redeemPool.call();
     const actualOwner = await proxy.owner.call();
 
     assert.strictEqual(
       actualComposer,
-      composer,
-      'Composer address must match',
+      redeemPool,
+      'Redeem Pool address must match',
     );
 
     assert.strictEqual(

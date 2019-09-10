@@ -7,7 +7,7 @@ const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 
 contract('RedeemerProxy.redeem() ', (accounts) => {
-  let composer;
+  let redeemPool;
   let owner;
   let proxy;
   let eip20CoGateway;
@@ -16,10 +16,10 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
   let utilityToken;
 
   beforeEach(async () => {
-    composer = accounts[1];
+    redeemPool = accounts[1];
     owner = accounts[2];
     eip20CoGateway = await EIP20CoGateway.new();
-    proxy = await RedeemerProxy.new(owner, {from: composer});
+    proxy = await RedeemerProxy.new(owner, {from: redeemPool});
     bounty = await eip20CoGateway.bounty.call();
     redeemRequest = {
       amount: new BN('100'),
@@ -44,7 +44,7 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: composer, value: bounty},
+      {from: redeemPool, value: bounty},
     );
   });
 
@@ -57,7 +57,7 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: composer, value: bounty},
+      {from: redeemPool, value: bounty},
     );
 
     const approveTo = await utilityToken.approveTo.call();
@@ -93,7 +93,7 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: composer, value: bounty},
+      {from: redeemPool, value: bounty},
     );
     const cogatewayFinalBalance = await web3.eth.getBalance(redeemRequest.cogateway);
 
@@ -114,7 +114,7 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
       redeemRequest.nonce,
       redeemRequest.hashLock,
       redeemRequest.cogateway,
-      {from: composer, value: bounty},
+      {from: redeemPool, value: bounty},
     );
 
     const amount = await eip20CoGateway.amount.call();
@@ -156,8 +156,8 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
     );
   });
 
-  it('should fail if non composer request redeems', async () => {
-    const nonComposer = accounts[6];
+  it('should fail if non redeemPool address request redeems', async () => {
+    const nonRedeemPoolAddress = accounts[6];
     await Utils.expectRevert(
       proxy.redeem(
         redeemRequest.amount,
@@ -167,9 +167,9 @@ contract('RedeemerProxy.redeem() ', (accounts) => {
         redeemRequest.nonce,
         redeemRequest.hashLock,
         redeemRequest.cogateway,
-        { from: nonComposer, value: bounty },
+        { from: nonRedeemPoolAddress, value: bounty },
       ),
-      'This function can only be called by the composer.',
+      'This function can only be called by the Redeem Pool.',
     );
   });
 });

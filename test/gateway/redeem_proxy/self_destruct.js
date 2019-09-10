@@ -4,18 +4,18 @@ const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 
 contract('RedeemerProxy.selfDestruct() ', (accounts) => {
-  let composer;
+  let redeemPool;
   let owner;
   let proxy;
 
   beforeEach(async () => {
-    composer = accounts[1];
+    redeemPool = accounts[1];
     owner = accounts[2];
-    proxy = await RedeemerProxy.new(owner, { from: composer });
+    proxy = await RedeemerProxy.new(owner, { from: redeemPool });
   });
 
   it('should successfully self destruct', async () => {
-    await proxy.selfDestruct({ from: composer });
+    await proxy.selfDestruct({ from: redeemPool });
 
     const code = await web3.eth.getCode(proxy.address);
 
@@ -26,11 +26,11 @@ contract('RedeemerProxy.selfDestruct() ', (accounts) => {
     );
   });
 
-  it('should fail to  self destruct for non composer address', async () => {
+  it('should fail to  self destruct for non redeemPool address', async () => {
     const nonComposerAddress = accounts[6];
     await Utils.expectRevert(
       proxy.selfDestruct({ from: nonComposerAddress }),
-      'This function can only be called by the composer.',
+      'This function can only be called by the Redeem Pool.',
     );
   });
 });
