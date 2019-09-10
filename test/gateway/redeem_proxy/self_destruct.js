@@ -15,14 +15,22 @@ contract('RedeemerProxy.selfDestruct() ', (accounts) => {
   });
 
   it('should successfully self destruct', async () => {
+    const codeBeforeSelfDestruct = await web3.eth.getCode(proxy.address);
+
     await proxy.selfDestruct({ from: redeemPool });
 
-    const code = await web3.eth.getCode(proxy.address);
+    const codeAfterSelfDestruct = await web3.eth.getCode(proxy.address);
 
     assert.strictEqual(
-      code,
+      codeAfterSelfDestruct,
       '0x',
       'Contract must be self destructed',
+    );
+
+    assert.notStrictEqual(
+      codeBeforeSelfDestruct,
+      '0x',
+      'Contract must have deployed code before self destructed',
     );
   });
 
