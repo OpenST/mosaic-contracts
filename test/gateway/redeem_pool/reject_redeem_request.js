@@ -7,7 +7,7 @@ const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 const EventDecoder = require('../../test_lib/event_decoder.js');
 
-contract('RedeemPool.rejectRedeemRequest() ', (accounts) => {
+contract('RedeemPool.rejectRedeemRequest()', (accounts) => {
   let eip20CoGateway;
   let redeemPool;
   let worker;

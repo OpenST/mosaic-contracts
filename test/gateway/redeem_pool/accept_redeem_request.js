@@ -185,7 +185,7 @@ contract('RedeemPool.acceptRedeem() ', (accounts) => {
     );
   });
 
-  it('should fail if redeemer proxy doesnot exists', async () => {
+  it('should fail if redeemer proxy does not exists', async () => {
     await Utils.expectRevert(redeemPool.acceptRedeemRequest(
       redeemRequest.amount,
       redeemRequest.beneficiary,
@@ -203,7 +203,7 @@ contract('RedeemPool.acceptRedeem() ', (accounts) => {
     'RedeemerProxy address is null.');
   });
 
-  it('should fail if there is not open request redeem', async () => {
+  it('should fail if there is no open request redeem', async () => {
     await redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,
@@ -244,7 +244,7 @@ contract('RedeemPool.acceptRedeem() ', (accounts) => {
     'Redeem request must exists.');
   });
 
-  it('should fail if token transfer fail for redeem pool to redeemer proxy', async () => {
+  it('should fail if the token transfer fails from redeem pool to redeemer proxy ', async () => {
     await redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,

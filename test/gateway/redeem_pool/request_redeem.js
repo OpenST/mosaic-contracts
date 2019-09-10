@@ -197,7 +197,7 @@ contract('RedeemPool.requestRedeem() ', (accounts) => {
     'Redeem amount must not be zero.');
   });
 
-  it('should fail if cogateway nonce doesnot match', async () => {
+  it('should fail if cogateway nonce does not match', async () => {
     await Utils.expectRevert(redeemPool.requestRedeem(
       redeemRequest.amount,
       redeemRequest.beneficiary,

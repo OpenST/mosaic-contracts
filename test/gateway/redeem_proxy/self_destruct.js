@@ -3,7 +3,7 @@ const RedeemerProxy = artifacts.require('RedeemerProxy');
 const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 
-contract('RedeemerProxy.selfDestruct() ', (accounts) => {
+contract('RedeemerProxy.selfDestruct()', (accounts) => {
   let redeemPool;
   let owner;
   let proxy;

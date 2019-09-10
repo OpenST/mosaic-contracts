@@ -6,7 +6,7 @@ const BN = require('bn.js');
 const web3 = require('../../test_lib/web3');
 const Utils = require('../../test_lib/utils');
 
-contract('RedeemerProxy.redeem() ', (accounts) => {
+contract('RedeemerProxy.redeem()', (accounts) => {
   let redeemPool;
   let owner;
   let proxy;

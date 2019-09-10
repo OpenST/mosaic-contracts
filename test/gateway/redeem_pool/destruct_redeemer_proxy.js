@@ -24,7 +24,7 @@ const MockOrganization = artifacts.require('MockOrganization');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 const web3 = require('../../test_lib/web3');
-contract('RedeemPool.destructRedeemerProxy() ', (accounts) => {
+contract('RedeemPool.destructRedeemerProxy()', (accounts) => {
   let eip20CoGateway;
   let redeemPool;
   let worker;

@@ -4,7 +4,7 @@ const SpyToken = artifacts.require('SpyToken');
 const BN = require('bn.js');
 const Utils = require('../../test_lib/utils');
 
-contract('RedeemerProxy.transferToken() ', (accounts) => {
+contract('RedeemerProxy.transferToken()', (accounts) => {
   let composer;
   let owner;
   let proxy;
@@ -38,7 +38,7 @@ contract('RedeemerProxy.transferToken() ', (accounts) => {
     );
   });
 
-  it('should fail to  transferToken for non owner address', async () => {
+  it('should fail to transferToken for non owner address', async () => {
     const nonOwnerAddress = accounts[6];
     await Utils.expectRevert(
       proxy.transferToken(token.address, beneficiary, amount, { from: nonOwnerAddress }),
