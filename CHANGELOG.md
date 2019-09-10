@@ -1,5 +1,10 @@
 # Mosaic Contracts Change Log
 
+## Version 0.12.0
+
+### Notable Changes
+* Implementation of RedeemPool Contract ([#790](https://github.com/mosaicdao/mosaic-contracts/pull/790), [#791](https://github.com/mosaicdao/mosaic-contracts/pull/791))
+* Implementation of Redeemer Proxy Contract ([#790](https://github.com/mosaicdao/mosaic-contracts/pull/790), [#791](https://github.com/mosaicdao/mosaic-contracts/pull/791))
 
 ## Version 0.11.0
 
