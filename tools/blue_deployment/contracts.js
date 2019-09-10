@@ -153,6 +153,18 @@ const createEIP20CoGateway = (
   { rootDir },
 );
 
+const createOSTComposer = originOrganizationAddress => Contract.loadTruffleContract(
+  'OSTComposer',
+  [originOrganizationAddress],
+  { rootDir },
+);
+
+const createRedeemPool = auxiliaryOrganizationAddress => Contract.loadTruffleContract(
+  'RedeemPool',
+  [auxiliaryOrganizationAddress],
+  { rootDir },
+);
+
 module.exports = {
   createAnchor,
   createEIP20CoGateway,
@@ -160,4 +172,6 @@ module.exports = {
   createLibraryConracts,
   createOSTPrime,
   createOrganization,
+  createOSTComposer,
+  createRedeemPool,
 };
