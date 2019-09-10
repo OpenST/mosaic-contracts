@@ -109,6 +109,9 @@ contract RedeemPool is Organized, Mutex {
 
     }
 
+
+    /* External Functions */
+
     /**
      * @notice Redeemer calls the method to show its intention of redeem. In order
      *         to redeem, the redeem amount must first be transferred to
@@ -188,7 +191,6 @@ contract RedeemPool is Organized, Mutex {
             address(_cogateway),
             redeemRequestHash_
         );
-
     }
 
     /**
@@ -267,7 +269,6 @@ contract RedeemPool is Organized, Mutex {
             _hashLock,
             _cogateway
         );
-
     }
 
     /**
@@ -366,6 +367,9 @@ contract RedeemPool is Organized, Mutex {
         delete redeemerProxies[msg.sender];
         redeemerProxy.selfDestruct();
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice It returns hash of redeem request as per EIP-712.

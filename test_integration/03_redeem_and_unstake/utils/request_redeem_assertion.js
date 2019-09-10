@@ -54,6 +54,7 @@ const BN = require('bn.js');
  * Class to assert event and balances after request Redeem.
  */
 class RequestRedeemAssertion {
+
   /**
    * Constructor.
    * @param {Object} redeemPool Truffle redeemPool instance.

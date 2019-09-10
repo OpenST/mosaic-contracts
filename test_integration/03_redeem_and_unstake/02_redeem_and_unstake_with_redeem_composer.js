@@ -140,7 +140,7 @@ describe('Redeem and Unstake with redeem composer', async () => {
     );
   });
 
-  it('aceept redeem', async () => {
+  it('accept redeem', async () => {
     redeemRequest.facilitator = shared.auxiliary.deployerAddress;
     const acceptResponse = await redeemPool.acceptRedeemRequest(
       redeemRequest.amount,
