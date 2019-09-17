@@ -23,27 +23,30 @@ pragma solidity ^0.5.0;
 import "../lib/EIP20Interface.sol";
 
 
-interface EIP20GatewayInterface {
+interface EIP20CoGatewayInterface {
 
     /**
-     * @notice Initiates the stake process. In order to stake the staker
-     *         needs to approve Gateway contract for stake amount.
-     *         Staked amount is transferred from staker address to
-     *         Gateway contract. Bounty amount is also transferred from staker.
+     * @notice Initiates the redeem process.
      *
-     * @param _amount Stake amount that will be transferred from the staker
+     * @dev In order to redeem the redeemer needs to approve CoGateway contract
+     *      for redeem amount. Redeem amount is transferred from redeemer
+     *      address to CoGateway contract.
+     *      This is a payable function. The bounty is transferred in base coin.
+     *      Redeemer is always msg.sender.
+     *
+     * @param _amount Redeem amount that will be transferred from redeemer
      *                account.
-     * @param _beneficiary The address in the auxiliary chain where the utility
-     *                     tokens will be minted.
-     * @param _gasPrice Gas price that staker is ready to pay to get the stake
-     *                  and mint process done.
-     * @param _gasLimit Gas limit that staker is ready to pay.
-     * @param _nonce Nonce of the staker address.
+     * @param _beneficiary The address in the origin chain where the value
+     *                     tok ens will be released.
+     * @param _gasPrice Gas price that redeemer is ready to pay to get the
+     *                  redeem process done.
+     * @param _gasLimit Gas limit that redeemer is ready to pay.
+     * @param _nonce Nonce of the redeemer address.
      * @param _hashLock Hash Lock provided by the facilitator.
      *
-     * @return messageHash_ Message hash is unique for each request.
+     * @return messageHash_ Unique for each request.
      */
-    function stake(
+    function redeem(
         uint256 _amount,
         address _beneficiary,
         uint256 _gasPrice,
@@ -52,6 +55,7 @@ interface EIP20GatewayInterface {
         bytes32 _hashLock
     )
         external
+        payable
         returns (bytes32 messageHash_);
 
     /**
@@ -74,16 +78,10 @@ interface EIP20GatewayInterface {
     function bounty() external view returns (uint256);
 
     /**
-     * @notice Get the value token of this gateway.
+     * @notice Get the utilityToken token of this cogateway.
      *
-     * @return The address of the value token.
+     * @return The address of the utilitytoken.
      */
-    function token() external view returns (EIP20Interface);
+    function utilityToken() external view returns (EIP20Interface);
 
-    /**
-     * @notice Get the base token of this gateway.
-     *
-     * @return The address of the base token.
-     */
-    function baseToken() external view returns (EIP20Interface);
 }
