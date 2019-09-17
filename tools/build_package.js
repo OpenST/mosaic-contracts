@@ -54,6 +54,8 @@ const contractNames = [
   'UtilityTokenInterface',
   'OSTComposer',
   'StakerProxy',
+  'RedeemPool',
+  'RedeemerProxy',
 ];
 
 const contracts = {};
